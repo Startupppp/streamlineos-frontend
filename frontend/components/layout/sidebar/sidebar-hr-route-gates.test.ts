@@ -30,12 +30,6 @@ describe("permission-aware product navigation", () => {
     });
   });
 
-  /**
-   * V-044 / V-042. /hr/approvals is the single HR approvals queue and lists
-   * leave requests, which route to a holder of hr:leaves:approve. Gated on the
-   * workflow key alone, a BRANCH_HR or HR_ADMIN leave approver who is nobody's
-   * manager was sent to /access-denied and never reached their own queue.
-   */
   it("admits a leave approver to the single HR approvals queue", () => {
     expect(resolveNavRouteAccess("/hr/approvals")).toMatchObject({
       matched: true,

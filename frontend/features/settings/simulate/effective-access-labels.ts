@@ -83,24 +83,12 @@ export const SCOPE_TONES: Record<DataScope, StatusTone> = {
   none: "danger",
 };
 
-/**
- * Team scope is declarable but not implemented, and the screen has to say so —
- * presenting it as a wider grant than `own` would be a lie the reader acts on.
- * `applyScope` falls back to `eq(ownerColumn, userId)` whenever no team column
- * and team ids are supplied, and no production call site supplies them.
- */
 export const TEAM_SCOPE_EXPLANATION =
   "Team scope is not implemented. The data layer falls back to this person's own records, so it currently grants no more than Own.";
 
 export const UNAVAILABLE_MODULE_EXPLANATION =
   "This module is not enabled for the organization, so these permissions resolve but every request to the module is refused. That is different from being denied the permission.";
 
-/**
- * `grantableRanks` comes back as `ROLE_RANK` numbers. Only the three ranks
- * `describeGrantable` can return are named; anything else renders its number
- * rather than a guess, so a new rung reads as unknown instead of as the wrong
- * standing.
- */
 const GRANTABLE_RANK_LABELS: Readonly<Record<number, string>> = {
   20: "Module admin",
   30: "Module member",
@@ -111,10 +99,5 @@ export function grantableRankLabel(rank: number): string {
   return GRANTABLE_RANK_LABELS[rank] ?? `Rank ${rank}`;
 }
 
-/**
- * Only these two kinds carry a label that names something the reader can go and
- * look at — the role. Every other kind's `label` restates its own category, and
- * rendering both produced "Direct grant: Direct grant to this person".
- */
 export const GRANT_SOURCE_NAMES_ITS_GRANTOR: ReadonlySet<GrantSourceKind> =
   new Set<GrantSourceKind>(["role-grant", "role-default"]);

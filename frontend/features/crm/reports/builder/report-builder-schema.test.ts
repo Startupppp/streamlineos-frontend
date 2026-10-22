@@ -9,14 +9,6 @@ import {
 import { buildQueryDescription } from "./report-query-description";
 import { REPORT_MAX_FILTER_BRANCHES, REPORT_QUERY_LIMITS } from "./report-query-limits";
 
-/**
- * The builder refuses what the compiler would refuse.
- *
- * Every case here has a counterpart in `compiler/compile.spec.ts` or in the
- * DTO — the point of asserting them again on this side is that a control which
- * lets somebody assemble a rejected query has taught them nothing, and the two
- * bounds drift the moment nobody is checking.
- */
 
 function values(overrides: Partial<ReportBuilderValues>): ReportBuilderValues {
   return { ...DEFAULT_REPORT_BUILDER_VALUES, source: "deals", ...overrides };
@@ -119,11 +111,6 @@ describe("reportBuilderSchema", () => {
     ).toBe(false);
   });
 
-  /**
-   * `MAX_BRANCHES` is in the DTO, not in `QUERY_LIMITS`, so it is the bound most
-   * likely to be missed — a builder capped at `maxFilterNodes` would let
-   * somebody assemble 99 filters and take a 400 for the twenty-first.
-   */
   it("caps filters at the DTO's branch limit, not at the node limit", () => {
     const filter = {
       ...EMPTY_FILTER_ROW,

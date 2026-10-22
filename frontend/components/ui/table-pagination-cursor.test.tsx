@@ -2,7 +2,6 @@ import { act, render, renderHook, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 
-/** A keyset list shows its walk position without pretending it can jump. */
 describe("TablePagination cursor mode", () => {
   const noop = () => {};
 
@@ -252,11 +251,6 @@ describe("useCursorPager", () => {
     expect(result.current.hasPrevious).toBe(false);
   });
 
-  /**
-   * A cursor is only valid for the query that minted it. Replaying page two's
-   * cursor after the filters changed returns a window from a different result
-   * set, so the stack must rewind before the next request goes out.
-   */
   it("rewinds to the head when the reset key changes", () => {
     const { result, rerender } = renderHook(
       ({ key }: { key: string }) => useCursorPager(key),

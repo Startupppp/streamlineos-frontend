@@ -42,10 +42,6 @@ function patchIntakePage(page: IntakePage, queryKey: QueryKey, item: IntakeReque
   return { ...page, data, statusCounts: shiftCount(page.statusCounts, previous, item.status) };
 }
 
-/**
- * Intake only moves an item out of `pending` (a decision) or into it (a new item),
- * so the previous status is implied by the new one.
- */
 export function patchIntakeListCaches(queryClient: QueryClient, projectId: number, item: IntakeRequest): void {
   const previous: IntakeStatus | null = item.status === "pending" ? null : "pending";
   for (const [queryKey, page] of queryClient.getQueriesData<IntakePage>({

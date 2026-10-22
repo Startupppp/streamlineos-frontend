@@ -51,7 +51,6 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
     departmentId: departmentFilter === "ALL" ? undefined : departmentFilter,
   });
   const { data: departmentsData } = useHrDepartments();
-  // Gated on hr:attendance:view: a denied caller must not read "No team attendance yet".
   const pageState = usePageState({
     permission: "hr:attendance:view",
     isLoading,
@@ -222,11 +221,6 @@ export const TeamAttendanceCard = memo(function TeamAttendanceCard({
             description={filtersActive ? undefined : "No team attendance data for today yet."}
             filtersActive={filtersActive}
             onClearFilters={handleClearFilters}
-            // V-061. An org with nobody clocked in had a dead end here. The way
-            // out is shifts and rosters — offered only when the emptiness is
-            // the org's and not a filter's (EmptyState suppresses `action`
-            // while filtersActive anyway), and only to someone who may act on
-            // it (FE-44, FE-55).
             action={
               !filtersActive && canManageAttendance
                 ? {

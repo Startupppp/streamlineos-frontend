@@ -30,11 +30,6 @@ function MatrixCell({ value }: { value: boolean | string }) {
   return <span className="text-relay-label leading-label font-medium text-foreground">{value}</span>;
 }
 
-/**
- * Glass comparison table (Relay pricing card language). It scrolls sideways
- * below its 720 minimum; the feature column stays pinned on the page black so
- * the scrolled cells never show through it.
- */
 export function PricingFeatureMatrix({ groups }: PricingFeatureMatrixProps) {
   const columnCount = PRICING_TIERS.length + 1;
 
@@ -91,7 +86,6 @@ export function PricingFeatureMatrix({ groups }: PricingFeatureMatrixProps) {
 
 type FaqItem = { question: string; answer: string };
 
-/** The homepage FAQ's glass rows and accent plus (relay/home/sections/faq). */
 export function PricingFaqAccordion({ items }: { items: FaqItem[] }) {
   const [open, setOpen] = useState<number | null>(0);
 

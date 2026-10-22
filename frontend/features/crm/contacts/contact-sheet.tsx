@@ -76,7 +76,6 @@ interface ContactLinkFieldsProps {
   onDealChange: (value: string) => void;
 }
 
-/** Leads and deals are records, and the description has no kind that names one. */
 function ContactLinkFields({
   leadId,
   dealId,

@@ -28,7 +28,6 @@ function plural(count: number, word: string) {
 export function BulkOnboardPanel() {
   const { data: orgDepartments } = useOrgDepartments({ limit: 100, status: "ACTIVE" });
   const { data: policy } = useReportingManagerPolicy();
-  // Unknown until the policy loads: the server preview checks the cap meanwhile.
   const secondaryCap = policy ? policy.maxSecondaryManagersPerEmployee : null;
   const assignedDefault = policyAssignedDefault(policy);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -50,9 +49,6 @@ export function BulkOnboardPanel() {
 
   const flow = useBulkOnboardFlow(deptNames, secondaryCap, assignedDefault);
   const heldBack = flow.rows.length - flow.committableCount;
-  // BUG-HRMS-002 / BUG-HRMS-008. An onboarded employee is admitted as a member, so
-  // every row spends a plan seat. The preview said "15 ready to create" with one
-  // seat free and left the 402 to the confirm, which created nothing at all.
   const seats = flow.seats ?? null;
   const seatBlocked = seats !== null && seats.blocked > 0;
 

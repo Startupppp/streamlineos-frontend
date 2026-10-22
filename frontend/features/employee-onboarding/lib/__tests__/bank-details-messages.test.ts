@@ -1,8 +1,3 @@
-/**
- * V-035. The bank half of the same gap: the wizard's bank/statutory copy is
- * user-facing and asserted nowhere, so a refactor could reword or drop it with
- * every suite still green. No product change, only the guard.
- */
 import { buildBankDetailsSchema } from "../bank-details-schema";
 import type { OnboardingRequirements } from "../onboarding-requirements-schema";
 
@@ -28,7 +23,6 @@ function requirements(
   };
 }
 
-/** The message zod attached to `path`, or undefined. */
 function messageAt(
   req: OnboardingRequirements,
   input: Record<string, unknown>,

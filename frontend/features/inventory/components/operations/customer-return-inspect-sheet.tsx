@@ -25,15 +25,6 @@ export interface CustomerReturnInspectSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * B9, item 4 — the inspect surface the API has had since INV-209 and the UI
- * never called.
- *
- * The whole workflow lives here because it is one walk: open the boxes, record
- * what you saw, sign it off, post it. Splitting the approval onto another screen
- * would mean the person who looked at the goods is not the person the button is
- * in front of.
- */
 export function CustomerReturnInspectSheet({
   returnId,
   open,

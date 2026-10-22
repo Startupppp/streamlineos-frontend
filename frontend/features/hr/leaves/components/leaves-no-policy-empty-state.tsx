@@ -8,12 +8,6 @@ import { useCan } from "@/hooks/api/access";
 import { useSeedLeaveTypes } from "@/hooks/api/hr";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * V-051. An org that has configured no leave type used to get a hint string and
- * nothing else — no route into setup. This is the guided version: it says what
- * is missing and offers the two ways out, both gated on `hr:leaves:manage`
- * (FE-44), so a member sees the explanation without a control they cannot use.
- */
 export function LeavesNoPolicyEmptyState() {
   const canManage = useCan("hr:leaves:manage");
   const seed = useSeedLeaveTypes();

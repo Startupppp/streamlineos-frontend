@@ -2,7 +2,6 @@ import { queryKeyBase as base } from "./base";
 
 const root = [...base, "accountingDocuments"] as const;
 
-/** Files and e-invoicing state hanging off any accounting document, keyed by its ledger kind. */
 export const accountingDocumentsQueryKeys = {
   accountingDocuments: {
     all: root,

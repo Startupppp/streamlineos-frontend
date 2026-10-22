@@ -14,7 +14,6 @@ const policyLazy = lazyContract(() =>
   import("@/hooks/api/hr/reporting-lines-schema").then((m) => m.reportingManagerPolicyContract),
 );
 
-/** Read by the settings page and every onboarding/import entry point (policy-missing warning). */
 export function useReportingManagerPolicy(options?: { enabled?: boolean }) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");

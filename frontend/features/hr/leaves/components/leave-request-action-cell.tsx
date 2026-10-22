@@ -17,17 +17,6 @@ interface RequestActionCellProps {
   onCancel: (id: number) => void;
 }
 
-/**
- * The only action a requester has on their own leave: withdraw it while it is
- * pending. This cell used to also offer Approve / Reject / Revert on the same
- * rows — every one of them always 403s ("You cannot approve or reject your own
- * leave request"), since this list is the caller's own — and a "View Details"
- * item with no handler. Approvals live in the Approvals tab.
- *
- * BUG-HRMS-017/018: a sole owner's own request is routed back to them, and the
- * Action Center is where it is decided. Without a pointer this row offered only
- * "Cancel request", which read as "nobody can approve this".
- */
 export function RequestActionCell({ request, isCancelling = false, onCancel }: RequestActionCellProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const { data: session } = useSession();

@@ -68,11 +68,6 @@ describe("CallAnalysisPanel", () => {
     expect(screen.getByText("Rivalsoft")).toBeInTheDocument();
   });
 
-  /**
-   * The four kinds of nothing. Each has a different product answer, and
-   * collapsing them is how a team spends credits re-running a call that can
-   * never be analysed.
-   */
   it("offers to analyse a call nobody has run yet", () => {
     mockAnalysis.mockReturnValue(idle({ error: { status: 404, message: "not analysed" } }));
     render(<CallAnalysisPanel activityId="a-1" />);
@@ -120,7 +115,6 @@ describe("CallAnalysisPanel", () => {
     expect(screen.queryByRole("button", { name: /Analyse this call/ })).not.toBeInTheDocument();
   });
 
-  /** Ticket 26, one layer down: a denied read is not an unanalysed call. */
   it("renders denial rather than emptiness when the gate refuses", () => {
     mockAnalysis.mockReturnValue(
       idle({ access: { ...gate, allowed: false, denied: true } }),

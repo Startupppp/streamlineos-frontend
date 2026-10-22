@@ -18,12 +18,10 @@ interface Run {
   mode: Mode;
   status: Status;
   totals: BackfillTotals;
-  /** The last document id handled; a run that stopped carries on from here. */
   cursor: number;
   error: unknown;
 }
 
-/** A page that neither finished the scan nor moved past the cursor would loop forever; stop it instead. */
 function advanced(page: DocumentBackfillPage, cursor: number): boolean {
   return page.done || (page.nextCursor !== null && page.nextCursor > cursor);
 }
@@ -73,20 +71,11 @@ function summaryOf(run: Run): string {
   return `${documentsWord(totals.eligible)} of ${totals.scanned} look like company documents: ${totals.allEmployees} would be ${AUDIENCE_LABEL.ALL_EMPLOYEES.toLowerCase()} and ${totals.hrOnly} ${AUDIENCE_LABEL.HR_ONLY.toLowerCase()}.`;
 }
 
-/**
- * Every existing HR document starts as Personal, so without this HR would classify each policy by hand. This
- * previews which documents look like company documents (a preview changes nothing), and then applies it: a
- * document employees could already read becomes Internal for all employees, any other becomes Internal for HR
- * only. Nothing is added to the Knowledge Base, nothing HR already decided is changed, and personal documents
- * are never touched. It walks the library a page at a time, so it can be stopped, and it carries on from where
- * it stopped. For the person who may publish documents, and only while sharing is on.
- */
 export function DocumentBackfillPanel() {
   const canPublish = useCan("hr:documents:publish");
   const backfill = useBackfillDocuments();
   const [run, setRun] = useState<Run | null>(null);
   const [confirming, setConfirming] = useState(false);
-  // What the dialog states is fixed when it is opened, so it does not change while the run it starts replaces the preview.
   const [dialogTotals, setDialogTotals] = useState<BackfillTotals>(EMPTY_TOTALS);
   const stopRequested = useRef(false);
 
@@ -105,7 +94,6 @@ export function DocumentBackfillPanel() {
       setRun({ mode, status: "running", totals, cursor, error: null });
       try {
         for (;;) {
-          // One page at a time by design: each page is its own request and its own transaction, and its cursor is the last page's answer.
           const page = await backfill.mutateAsync({ dryRun: mode === "preview", cursor });
           totals = addPage(totals, page);
           if (!advanced(page, cursor)) throw new Error("The server did not move on to the next documents.");

@@ -21,15 +21,6 @@ interface PlanListProps {
   locale: string;
 }
 
-/**
- * The plan catalogue. "Open" shows a plan's versions and assignments, where
- * the manage writes live.
- *
- * Retirement is shown rather than hidden: a retired plan is not assignable, but
- * earnings calculated under it keep the rules that were in force when they were
- * sealed, so a plan disappearing from this list would make a past payout
- * unexplainable.
- */
 export function PlanList({ plans, locale }: PlanListProps) {
   const [openPlanId, setOpenPlanId] = useState<string | null>(null);
   const [versionTarget, setVersionTarget] = useState<CommissionPlanSheetTarget | null>(null);

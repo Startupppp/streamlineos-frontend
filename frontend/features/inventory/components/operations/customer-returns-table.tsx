@@ -95,8 +95,6 @@ export function CustomerReturnsTable({
     },
     { key: "client", header: "Customer", cell: (row) => row.client?.name ?? "—" },
     {
-      // INV-209 made the inspection the gate on posting, so "how far through the
-      // boxes are we" is the column that decides what to do next.
       key: "inspection",
       header: "Inspected",
       cell: (row) => {

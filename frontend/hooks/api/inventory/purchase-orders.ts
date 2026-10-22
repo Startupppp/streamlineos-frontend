@@ -121,13 +121,6 @@ export function useSendPurchaseOrder(poId?: number) {
   });
 }
 
-/**
- * Record and post a delivery in one call.
- *
- * The header is not optional: the endpoint takes `@IdempotencyKey()`, which
- * throws without it, so every receipt raised from this sheet was answered with
- * "An Idempotency-Key header is required for this operation". It sent none.
- */
 export function useReceiveGoods(poId: number) {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<GoodsReceiptNote, Error, ReceiveGoodsInput>("inventory:purchase-orders:receive", {

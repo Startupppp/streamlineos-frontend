@@ -13,13 +13,6 @@ import {
   type ReportFilterRow,
 } from "./report-builder-schema";
 
-/**
- * Form values to the description the compiler reads.
- *
- * Total by construction: every string that reaches it has already been checked
- * against its field type by `reportBuilderSchema`, so there is no failure arm
- * and therefore no place for a submit handler to silently do nothing.
- */
 
 function coerceScalar(raw: string, type: ReportingFieldType): ReportingScalarValue {
   const trimmed = raw.trim();
@@ -68,14 +61,6 @@ function toFilterLeaf(row: ReportFilterRow): ReportingFilterLeaf | null {
   }
 }
 
-/**
- * One flat `and`, never a bare leaf.
- *
- * A single leaf would also be accepted, but emitting the same shape for one
- * filter and for five means the depth the builder can produce is a constant —
- * two — rather than something a reader has to derive from the row count, and
- * `maxFilterDepth` is six.
- */
 function toFilterNode(values: ReportBuilderValues): ReportingFilterNode | undefined {
   const leaves = values.filters
     .map(toFilterLeaf)

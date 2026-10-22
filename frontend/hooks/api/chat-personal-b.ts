@@ -279,7 +279,6 @@ export function useChannelFiles(channelId: number) {
     ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.channelFiles(channelId),
     queryFn: ({ pageParam, signal }) =>
-      // The contract reports the end of the list as null, not an absent field.
       apiClient.get<{ files: ChannelFile[]; nextCursor?: number | null }>(
         `/chat/channels/${channelId}/files`,
         pageParam !== undefined ? { cursor: String(pageParam) } : undefined,

@@ -1,12 +1,5 @@
 import type { FieldKind, SelectOption } from "@/lib/renderer/layout";
 
-/**
- * A tenant's declaration of a field on a subject type.
- *
- * Deliberately the renderer's `FieldSpec` minus the properties only a compiled
- * layout can set, so a declaration becomes a rendered surface with no
- * translation layer in between.
- */
 export interface SubjectFieldDefinition {
   name: string;
   label: string;
@@ -42,7 +35,6 @@ export interface Subject {
   updatedAt: string;
 }
 
-/** A party as it appears on a subject: the other end of one link. */
 export interface SubjectPartyLink {
   partyId: string;
   name: string;
@@ -50,7 +42,6 @@ export interface SubjectPartyLink {
   subjectPartyLinkId: string;
 }
 
-/** A subject as it appears on a party: the same link read the other way. */
 export interface PartySubjectLink {
   subjectId: string;
   title: string;
@@ -61,12 +52,6 @@ export interface PartySubjectLink {
   subjectPartyLinkId: string;
 }
 
-/**
- * One subject read on its own, which resolves through the seam and so carries
- * its type's declaration alongside the record. Deliberately not `extends
- * Subject`: the single read is a projection, not the row, and declaring columns
- * it does not return is how a field becomes silently `undefined` at runtime.
- */
 export interface SubjectWithParties {
   subjectId: string;
   organizationId: string;
@@ -84,7 +69,6 @@ export interface SubjectWithParties {
   parties: SubjectPartyLink[];
 }
 
-/** Cursor-paginated, matching the platform's keyset page envelope. */
 export interface SubjectsPage {
   data: Subject[];
   pagination: {

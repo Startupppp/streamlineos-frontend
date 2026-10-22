@@ -8,7 +8,6 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
-/** `NONE` is a variant with no demand, so no stockout date to project. */
 type StockoutRisk = "HIGH" | "MEDIUM" | "LOW" | "NONE";
 
 function toStockoutRisk(value: string): StockoutRisk {
@@ -27,7 +26,6 @@ export interface ReplenishmentRule {
   variantSku: string;
   productName: string;
   warehouseId: number;
-  /** Null for a rule that applies to every warehouse. */
   warehouseName: string | null;
   minQty: number;
   maxQty: number;
@@ -40,12 +38,6 @@ export interface ReplenishmentRule {
   createdAt: string;
 }
 
-/**
- * A rule as `GET /inventory/replenishment/rules` returns it: the row with its
- * variant and warehouse nested and its quantities as decimal strings. The
- * screens read the flattened `ReplenishmentRule`, so the list rendered blanks
- * for SKU, product and warehouse until this was mapped.
- */
 interface RawReplenishmentRule {
   id: number;
   orgId: string;
@@ -64,7 +56,6 @@ interface RawReplenishmentRule {
   warehouse: { id: number; name: string } | null;
 }
 
-/** What a create or update answers with: the stored row, relations not loaded. */
 type RawReplenishmentRuleDetail = Omit<RawReplenishmentRule, "productVariant" | "warehouse">;
 
 function mapRule(raw: RawReplenishmentRule): ReplenishmentRule {
@@ -122,11 +113,6 @@ export interface ForecastRow {
   currentStock: number;
 }
 
-/**
- * A row as `GET /inventory/forecasting` returns it. `ForecastRow` is the shape
- * the screen reads; the names differ (`avgWeeklyDemand`, `projectedWeeks`,
- * `onHand`), so unmapped the demand, projection and stock columns were empty.
- */
 interface RawForecastItem {
   variantId: number;
   variantSku: string;
@@ -261,11 +247,6 @@ export interface ReorderEvidenceLine {
 
 export type ReorderRecommendation = "propose" | "review" | "hold";
 
-/**
- * Exact `numeric(18,4)` decimal strings, not numbers. The API owns the
- * arithmetic and hands over figures a buyer acts on; parsing them into floats
- * here would undo the exactness on the last hop.
- */
 export interface ReorderPosition {
   onHand: string;
   committed: string;
@@ -275,7 +256,6 @@ export interface ReorderPosition {
 
 export interface ReorderProposal {
   productVariantId: number;
-  /** Null when the proposal covers the whole organisation. */
   warehouseId: number | null;
   suggestedQuantity: string | null;
   position: ReorderPosition;
@@ -316,19 +296,13 @@ export interface DemandSeasonality {
 
 export interface DemandPeriod {
   period: string;
-  /** Exact decimal string — the ledger figure, not a float. */
   quantity: string;
   closingOnHand: string;
-  /**
-   * The period closed with nothing on hand, so its demand is a lower bound
-   * rather than a measurement.
-   */
   stockoutCensored: boolean;
 }
 
 export interface DemandBaselineReport {
   productVariantId: number;
-  /** Null when the report covers the whole organisation. */
   warehouseId: number | null;
   periods: number;
   history: DemandPeriod[];
@@ -366,7 +340,6 @@ export interface SimulationOutcome {
 
 export interface SimulationResult {
   productVariantId: number;
-  /** Null when the simulation covers the whole organisation. */
   warehouseId: number | null;
   applicable: boolean;
   reason?: string;
@@ -382,9 +355,6 @@ export interface SimulateInput {
 }
 
 function reorderProposalKey(productVariantId: number | null) {
-  // Its own key rather than a scoped variant of the forecasting one: the two
-  // surfaces invalidate independently, and sharing a factory means refreshing
-  // one silently drops the other's cache.
   return productVariantId === null
     ? queryKeys.inventory.forecasting({ scope: "reorder-proposal" })
     : queryKeys.inventory.reorderProposal(productVariantId);
@@ -413,8 +383,6 @@ export function useDemandBaseline(
 ) {
   const canManage = useCan("inventory:replenishment:manage");
   return useQuery<DemandBaselineReport, Error>({
-    // The query is disabled while the id is null, so the key only has to be
-    // stable and distinct for that state rather than meaningful.
     queryKey: queryKeys.inventory.demandBaseline(productVariantId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<DemandBaselineReport>(`/inventory/forecasting/baseline/${productVariantId}`, undefined, signal),

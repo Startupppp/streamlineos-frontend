@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Wire contracts for the backend's public blog projection (`/blog/*`). Published content only: the
- * backend never sends email addresses, draft data or revision history, and these shapes would reject
- * a payload that tried to.
- */
 const cover = z.object({
   src: z.string(),
   width: z.number().int(),

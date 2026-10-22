@@ -9,7 +9,6 @@ export const INDIA_COUNTRY_NAME = "India";
 
 export const INDIAN_STATE_NAMES = INDIAN_STATES.map((s) => s.stateName);
 
-/** Major cities grouped by Indian state for address dropdowns */
 export const INDIAN_CITIES_BY_STATE: Record<string, readonly string[]> = {
   "Andhra Pradesh": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati"],
   Assam: ["Guwahati", "Silchar", "Dibrugarh", "Jorhat"],

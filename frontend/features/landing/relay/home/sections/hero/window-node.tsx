@@ -4,24 +4,11 @@ import { SPRING } from "@/features/landing/relay/lib/motion";
 export interface WindowNodeProps {
   title: string;
   source: string;
-  /** Position + width utilities. */
   className?: string;
-  /** Amount over 5000 carries the accent glow; the rest the float shadow. */
   glow?: boolean;
-  /** ms into the load sequence the card comes up at. */
   delay?: number;
 }
 
-/**
- * Canvas node — 76 tall card, title over a mono source line
- * (3542:25216, 3542:25220, 3542:25223, 3542:25233). Padding is Figma's 20/14
- * less the 1px border it draws inside. Comes up 8px + fade in flow order.
- * Frosted glass (not in Figma), so the particle stream shows through.
- *
- * 1024 (3699:7, 3699:854, 3699:858, 3699:861): 188 × 64, padding 16/12, both
- * lines centred and the title down to the 14/20 label size. 768 (3834:1755 …)
- * is 172 × 60: the same content centred, 10 above and below.
- */
 export const WindowNode = ({
   title,
   source,

@@ -12,14 +12,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 const SKELETON_ROWS = [0, 1, 2];
 
-/**
- * Who was on the call, beside the analysis of it.
- *
- * Read under `crm:activities:view` rather than the call-analysis key the page is
- * gated on, which is why `access` is handed to the empty state: a reader can
- * hold one key and not the other, and an ungated empty branch would report
- * nobody on a call it was never allowed to look at.
- */
 export function CallParticipantsCard({ activityId }: { activityId: string }) {
   const { data, isLoading, error, access, refetch } = useActivityParticipants(activityId);
 

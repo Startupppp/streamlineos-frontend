@@ -16,15 +16,6 @@ import type { ProjectRequirement } from "@/hooks/api/inventory/projects";
 import { AtRiskBadge, RequirementStatusBadge } from "./requirement-status";
 import { RequirementEditSheet } from "./requirement-edit-sheet";
 
-/**
- * B1 — one material line, and the two things anybody does to it.
- *
- * "Reserve Stock" holds material out of the dark store that will serve the site;
- * "Release Reservation" gives it back. Both are confirmed rather than fired on a
- * single click, because both change what every other order can be promised — and
- * both show the four quantities beside the button so the operator is not
- * subtracting in their head.
- */
 export function RequirementRow({
   requirement,
   projectId,

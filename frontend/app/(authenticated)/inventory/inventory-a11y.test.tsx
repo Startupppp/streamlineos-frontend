@@ -4,53 +4,8 @@ import { expectNoAxeViolations } from "@/test-utils/axe";
 import { renderWithProviders } from "@/test-utils";
 import { atViewport } from "@/test-utils/viewport";
 
-/**
- * T18 — inventory's accessibility and success states, proved by rendering.
- *
- * `inventory-route-states.test.ts` beside this file reads source and asks each
- * of the 85 routes whether it *has* a loading, empty, error and denied answer.
- * That is a floor and it says so: a marker is not a rendered screen, and no
- * amount of source reading can tell a labelled control from an unlabelled one.
- * Until this file existed, `frontend/test-utils/axe.ts` had eleven users and not
- * one of them was inventory — a module with 86 routes and zero accessibility
- * assertions, in a repo where the harness was already wired.
- *
- * So this mounts inventory surfaces and asks the DOM. Every mount runs
- * `expectNoAxeViolations`, which is the same `configureAxe` instance the other
- * eleven suites use, at 1280px and at 375px.
- *
- * ## What it covers
- *
- * Six route surfaces — the module landing page and the five RF screens — plus
- * five shared surfaces every one of the 85 routes renders: the two error
- * boundaries T07 added, the empty state, the list skeleton and the detail
- * skeleton. The two lists below are read back by
- * `inventory-route-states.test.ts`, which holds the count against a floor and
- * fails if an entry names a route or a file that no longer exists. Deleting this
- * file fails that suite.
- *
- * ## What it deliberately does not claim
- *
- * **Not "inventory is accessible".** Eleven surfaces out of 86 routes is a
- * beginning, and axe itself finds roughly a third of what a manual audit finds:
- * it cannot judge whether a label reads sensibly, whether focus order matches
- * the visual order, or whether an error message tells somebody what to do.
- * Nothing here is a screen-reader run.
- *
- * **Not "it fits on a phone".** jsdom has no layout, so no width, overlap or
- * reflow is measured anywhere in this file, and a green tick would make that
- * claim convincing while it stayed untrue. `atViewport("mobile")` sets
- * `window.innerWidth` and `matchMedia` — it changes which branch a component
- * *chooses*, and nothing about how the browser would paint it. The 375px device
- * run is issue #45 and is blocked on a credential, not on a missing test.
- */
 
-// ---------------------------------------------------------------------------
-// The surfaces this file covers. Read back by `inventory-route-states.test.ts`,
-// which is why they are plain literals in a named array rather than inlined.
-// ---------------------------------------------------------------------------
 
-/** Inventory routes whose own page component is mounted and axe'd below. */
 const A11Y_COVERED_ROUTES: ReadonlyArray<{ route: string; states: string }> = [
   {
     route: "inventory",
@@ -63,13 +18,6 @@ const A11Y_COVERED_ROUTES: ReadonlyArray<{ route: string; states: string }> = [
   { route: "inventory/rf/putaway/[taskId]", states: "success — the putaway runner" },
 ];
 
-/**
- * Shared surfaces every inventory route renders, mounted and axe'd below.
- *
- * These are worth more per assertion than a route is: the empty state is on all
- * 85 routes, so one violation here is 85 broken screens, and one pass covers a
- * state that no route-level mount would reach without stubbing its data away.
- */
 const A11Y_COVERED_SHARED: ReadonlyArray<{ file: string; reason: string }> = [
   {
     file: "app/(authenticated)/inventory/error.tsx",
@@ -93,22 +41,7 @@ const A11Y_COVERED_SHARED: ReadonlyArray<{ file: string; reason: string }> = [
   },
 ];
 
-/**
- * The `heading-order` debt this file used to carry is gone.
- *
- * `EmptyState`, `ErrorState` and `NoPermissionState` each opened with an `<h3>`
- * under `PageWrapper`'s or `RfShell`'s `<h1>`, so axe reported `heading-order`
- * on six of the surfaces below and the list that recorded it said it must be
- * deleted the day those three components moved to `<h2>`. They have: all six
- * surfaces now assert a clean run through `expectAccessibleAtBothEnds`, the same
- * helper every other surface in this file uses, so a reintroduced level skip
- * fails here rather than being absorbed by an exemption.
- */
 
-// ---------------------------------------------------------------------------
-// The data layer, stubbed. What is under test is the rendered tree, not where
-// the rows came from — the same arrangement `rf-surface-render.test.tsx` uses.
-// ---------------------------------------------------------------------------
 
 const useCan = jest.fn((_key: string) => true);
 const useCanState = jest.fn((_key: string) => "granted");
@@ -307,36 +240,8 @@ beforeEach(() => {
   });
 });
 
-/**
- * How many times axe has actually run in this file.
- *
- * Counted at runtime, and checked in `afterAll`, because a *static* count is
- * gameable and was: the first version of the ratchet next door counted helper
- * call sites in this file's text, and replacing every call with
- * `await Promise.resolve(` still passed — the helper declarations and the two
- * calls inside the helper bodies made up the difference. A number that only goes
- * up when axe genuinely ran cannot be talked into a higher value.
- */
 let axeRunCount = 0;
 
-/**
- * Runs axe at both ends of the responsive range, under the providers the real
- * tree has above every inventory page.
- *
- * Both ends, not one: `atViewport` swaps `matchMedia`, so a component that
- * renders a different tree on a narrow screen — a sheet instead of a dialog, a
- * stacked card instead of a row — is a *different* tree for axe to judge, and
- * passing at 1280px says nothing about the one a phone gets. It remains a claim
- * about markup, never about layout.
- *
- * `renderWithProviders` rather than a bare `render`, and that is not a
- * convenience: `components/providers/query-provider.tsx` mounts both a
- * `QueryClientProvider` and a `TooltipProvider` above every one of these
- * screens. `PageWrapper` renders a `Tooltip`, and the module error boundary
- * resets queries through `useQueryClient` on retry — so a mount without either
- * provider throws before axe sees anything, which is the difference between
- * testing the app's tree and testing a fragment that cannot exist.
- */
 async function expectAccessibleAtBothEnds(ui: ReactElement): Promise<void> {
   const desktop = renderWithProviders(ui);
   await expectNoAxeViolations(desktop.baseElement);
@@ -356,9 +261,6 @@ async function expectAccessibleAtBothEnds(ui: ReactElement): Promise<void> {
 
 describe("T18 a11y — the inventory route surfaces", () => {
   it("covers enough surfaces that an empty run cannot pass as coverage", () => {
-    // The guard on the guard, the same one the four ratcheted states carry: a
-    // suite that mounts nothing reports zero violations, which reads exactly
-    // like an accessible module.
     expect(A11Y_COVERED_ROUTES.length).toBeGreaterThanOrEqual(6);
     expect(A11Y_COVERED_SHARED.length).toBeGreaterThanOrEqual(5);
   });
@@ -447,14 +349,6 @@ describe("T18 a11y — the shared surfaces every inventory route renders", () =>
   });
 });
 
-/**
- * The success state — §12.7's fifth, and the one the source-level ratchet next
- * door cannot see.
- *
- * "Has an `isLoading` branch" is answerable from source. "Shows the operator
- * their rows once the request lands" is not: a screen can hold every marker and
- * render an empty div. These mount the loaded state and look for the data.
- */
 describe("T18 success — a loaded inventory surface shows its data", () => {
   it("the landing page shows the totals rather than a skeleton", () => {
     renderWithProviders(<InventoryDashboardPage />);
@@ -485,8 +379,6 @@ describe("T18 success — a loaded inventory surface shows its data", () => {
   });
 
   it("BITE PROOF — the success assertion sees an empty result as empty", () => {
-    // Without this, "shows its data" could be satisfied by a screen that shows
-    // the same thing whatever comes back.
     inventoryDashboard.mockReturnValue(EMPTY_DASHBOARD);
     renderWithProviders(<InventoryDashboardPage />);
     expect(screen.queryByText("Total SKUs")).not.toBeInTheDocument();
@@ -494,14 +386,6 @@ describe("T18 success — a loaded inventory surface shows its data", () => {
   });
 });
 
-/**
- * The anti-vacuity floor, enforced after the suite has actually run.
- *
- * Two runs per named surface — one desktop, one mobile — is the minimum this
- * file promises `inventory-route-states.test.ts`, which holds the two lists and
- * this file's existence but cannot see whether the mounts happened. Deleting a
- * mount while keeping its list entry fails here.
- */
 afterAll(() => {
   const promised = 2 * (A11Y_COVERED_ROUTES.length + A11Y_COVERED_SHARED.length);
   expect(axeRunCount).toBeGreaterThanOrEqual(promised);

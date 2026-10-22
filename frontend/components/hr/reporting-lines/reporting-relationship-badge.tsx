@@ -7,14 +7,12 @@ export type ReportingRelationshipKind = "primary" | "secondary" | "fallback" | "
 const RELATIONSHIP_DISPLAY: Record<ReportingRelationshipKind, { label: string; tone: BadgeTone }> = {
   primary: { label: "Primary", tone: "accent" },
   secondary: { label: "Additional", tone: "neutral" },
-  // PRD §9: non-alarming — a fallback is a real, working assignment, not a defect.
   fallback: { label: "Temporarily assigned by onboarding policy", tone: "info" },
   topLevel: { label: "Top-level role", tone: "neutral" },
 };
 
 interface ReportingRelationshipBadgeProps {
   kind: ReportingRelationshipKind;
-  /** Descriptive secondary label ("Functional", "Project"); shown instead of "Additional". */
   label?: string | null;
   className?: string;
 }

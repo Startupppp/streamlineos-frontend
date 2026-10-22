@@ -8,7 +8,6 @@ export const USER_STATUS_FILTERS = ["active", "suspended", "archived"] as const;
 export type UsersListState = UserListParams &
   Required<Pick<UserListParams, "limit" | "sortBy" | "sortOrder">>;
 
-// The one place the members URL becomes a query key, so the server prefetch and the page agree.
 export function readUsersListState(params: SearchParamsReader): UsersListState {
   const status = params.get("status") ?? "all";
   const role = params.get("role") ?? "all";

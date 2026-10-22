@@ -146,8 +146,6 @@ export function WorkflowsSettingsPage() {
 
   const definitions = data?.data ?? [];
   const isFiltered = filterObjectType !== "all" || filterStatus !== "all";
-  // FE-40/47: without hr:workflows:view the list read is disabled, which used to
-  // render "No workflows configured" plus a no-op "Request Access" button.
   const pageState = usePageState({
     permission: "hr:workflows:view",
     isLoading,

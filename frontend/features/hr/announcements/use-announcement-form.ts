@@ -19,7 +19,6 @@ import {
   type CreateHrAnnouncementData,
 } from "@/hooks/api/hr/announcements";
 
-
 export const EMPTY_FORM: CreateHrAnnouncementData = {
   title: "",
   content: "",

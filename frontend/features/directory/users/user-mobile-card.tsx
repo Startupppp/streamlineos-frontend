@@ -10,12 +10,6 @@ import type { User } from "@/hooks/api/users";
 import type { PresenceStatus } from "@/lib/presence";
 import { UserStatusBadge } from "./user-status-badge";
 
-/**
- * The member row below `sm`. The seven-column table needs ~900px, so on a 390px
- * screen the e-mail and every trailing column sat behind a horizontal scroll the
- * reader had no way to know was there (SETTINGS-009) — the card carries the same
- * four facts in the width that exists.
- */
 export function UserMobileCard({
   user,
   presence,

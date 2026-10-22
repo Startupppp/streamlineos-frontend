@@ -65,12 +65,6 @@ const ticket = {
   version: 4,
 };
 
-/**
- * The kanban board is the surface the browser journey never reached, so it has
- * never been checked at all. These are the two claims that matter: a card is
- * operable without a mouse, and making it so did not nest one interactive
- * control inside another.
- */
 describe("a kanban ticket card", () => {
   function renderCard(onSelect = jest.fn()) {
     return {

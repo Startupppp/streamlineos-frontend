@@ -89,8 +89,6 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-// ─── Polling enabled for active states ───────────────────────────────────────
-
 describe("useAllExecutions — refetchInterval", () => {
   it("polls again after 10s when an execution has status=running", async () => {
     apiClient.get.mockResolvedValue(makeExecPage("running"));
@@ -130,8 +128,6 @@ describe("useAllExecutions — refetchInterval", () => {
 
     expect(execCallCount()).toBeGreaterThan(before);
   });
-
-// ─── Polling disabled for terminal states ────────────────────────────────────
 
   it("does not poll after 10s when all executions are completed", async () => {
     apiClient.get.mockResolvedValue(makeExecPage("completed"));

@@ -8,6 +8,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { PortalSettings, PortalPreview } from "@/hooks/api/build/client-portal-management-schema";
+import { portalSettingsQueryOptions } from "./client-portal-management-read-options";
 
 const portalSettingsContract = lazyContract(() =>
   import("@/hooks/api/build/client-portal-management-schema").then(
@@ -83,12 +84,6 @@ export function useUnpublishPortal(projectId: number) {
   });
 }
 
-export function portalSettingsQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.clientPortal.settings(projectId),
-    staleTime: 30_000,
-  } as const;
-}
 
 export function usePortalPreview(projectId: number, forPortalMembershipId?: string) {
   return useGatedQuery<PortalPreview>("build:clientvisibility:manage", {

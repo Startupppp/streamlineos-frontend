@@ -43,7 +43,6 @@ function isActiveTab(value: string): value is ActiveTab {
 
 export function CasesPageContent() {
   const canManage = useCan("hr:cases:manage");
-  // POST /hr/cases/anonymous is @RequirePermission("hr:cases:view").
   const canReport = useCan("hr:cases:view");
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);

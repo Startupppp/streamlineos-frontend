@@ -1,13 +1,3 @@
-/**
- * HRMS-E2E-012b. The Settings Expenses card pointed at `GET /hr/expenses/export`,
- * a route that has never existed — the backend serves expenses through a job:
- * `POST /hr/expenses/export/jobs`, poll, download. The browser answered
- * "Cannot GET /hr/expenses/export", so the card read as broken rather than as
- * unavailable, and the real contract was only implemented on the module's own
- * page.
- *
- * These assertions pin the job contract Settings and the page now share.
- */
 import {
   ExportJobFailedError,
   ExportJobTimeoutError,
@@ -90,7 +80,6 @@ describe("downloadExportJob", () => {
 
   it("raises the server's reason when the job fails, and saves nothing", async () => {
     post.mockResolvedValue({ id: "job-3", status: "pending" });
-    // The backend's job view carries `errorCode` / `errorMessage` (expenseExportJobViewSchema), never `error`.
     get.mockResolvedValue({ id: "job-3", status: "failed", errorCode: "EMPTY", errorMessage: "No expenses in range" });
 
     await expect(downloadExportJob(base)).rejects.toBeInstanceOf(ExportJobFailedError);

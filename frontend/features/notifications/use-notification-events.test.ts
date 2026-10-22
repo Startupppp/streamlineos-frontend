@@ -1,19 +1,3 @@
-/**
- * One failed token fetch used to kill the live notification stream for the rest of
- * the page's life.
- *
- * `connect()` read `if (!token || controller.signal.aborted) return;` with no
- * `scheduleRetry()`, and `fetchStreamToken` swallows every error into `null` — a
- * 502 from `/api/auth/session`, a network blip, or a rate-limited
- * `POST /notifications/events/token` (that route is behind `RateLimitGuard`) all
- * arrive as `null`. So the single most likely failure was the one failure that was
- * never retried: strictly worse than exhausting MAX_RETRIES, because it needed one
- * failure rather than five, and the only recovery was remounting the component.
- *
- * Compounding it, `retryCount` was reset only when a notification ARRIVED, never
- * when the stream connected — so a connection that stayed quiet (the normal case)
- * carried every earlier failure forward and gave up mid-session.
- */
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
 
@@ -55,7 +39,6 @@ jest.mock("sonner", () => ({ toast: Object.assign(jest.fn(), { error: jest.fn(),
 
 const consume = jest.mocked(consumeNotificationStream);
 
-/** Resolves once, then blocks — a connected SSE stream that has yielded nothing. */
 function neverEnding(): Promise<void> {
   return new Promise<void>(() => undefined);
 }
@@ -128,8 +111,6 @@ describe("useNotificationEvents — a single failure must not end the stream", (
   });
 
   it("retries after a token fetch that returns null", async () => {
-    // First round: the session endpoint fails, so fetchStreamToken returns null.
-    // Second round: everything works.
     fetchMock
       .mockResolvedValueOnce({ ok: false, json: async () => ({}) })
       .mockResolvedValue(sessionOk());
@@ -137,8 +118,6 @@ describe("useNotificationEvents — a single failure must not end the stream", (
 
     renderHook(() => useNotificationEvents());
 
-    // The failed round must have armed a retry timer. Without one, nothing is
-    // pending and the stream is dead until the component remounts.
     await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(jest.getTimerCount()).toBeGreaterThan(0));
   });
@@ -158,8 +137,6 @@ describe("useNotificationEvents — a single failure must not end the stream", (
     renderHook(() => useNotificationEvents());
 
     await waitFor(() => expect(opened).toBe(1));
-    // The reset signal is the point: a quiet but healthy connection must clear the
-    // failure count, or five quiet reconnects over a day exhaust the budget.
     expect(consume.mock.calls[0]).toHaveLength(5);
     expect(typeof consume.mock.calls[0]?.[4]?.onOpen).toBe("function");
   });
@@ -175,20 +152,11 @@ describe("useNotificationEvents — a single failure must not end the stream", (
       await jest.advanceTimersByTimeAsync(5 * 60_000);
     }
 
-    // Eight consecutive failures. The head form stopped scheduling after five.
     expect(fetchMock.mock.calls.length).toBeGreaterThan(5);
-    // And it is still armed, rather than having quietly given up.
     await waitFor(() => expect(jest.getTimerCount()).toBeGreaterThan(0));
   });
 });
 
-/**
- * SEC-HRMS-005. `POST /notifications/events/token` is limited to 30/min per
- * user and returned 429s: `onOpen` zeroed the backoff the instant a stream
- * connected, so a stream that opened and then dropped reconnected (and minted
- * a token) every ~1s forever; and a 429's Retry-After is not CORS-exposed, so
- * the rate-limited branch waited nothing extra.
- */
 describe("useNotificationEvents — the token endpoint is never hammered", () => {
   const fetchMock = jest.fn();
 
@@ -234,7 +202,6 @@ describe("useNotificationEvents — the token endpoint is never hammered", () =>
     renderHook(() => useNotificationEvents());
     await jest.advanceTimersByTimeAsync(20_000);
 
-    // 1s, 2s, 4s, 8s: at most five opens in 20s. Resetting on open made it ~20.
     expect(consume.mock.calls.length).toBeLessThanOrEqual(5);
   });
 
@@ -244,7 +211,6 @@ describe("useNotificationEvents — the token endpoint is never hammered", () =>
     consume.mockImplementation((_url, _token, _signal, _onNotification, handlers) => {
       handlers?.onOpen?.();
       opens += 1;
-      // Four quick drops build the backoff up; the fifth stream stays up 31s.
       const lifetime = opens === 5 ? 31_000 : 0;
       return new Promise<void>((resolve) => setTimeout(resolve, lifetime));
     });

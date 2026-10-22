@@ -40,7 +40,6 @@ export interface ResignationListParams {
   status?: string;
 }
 
-
 const _resignationListContract = lazyContract(() =>
   import("@/hooks/api/hr/exit-schema").then((m) => m.resignationListContract),
 );

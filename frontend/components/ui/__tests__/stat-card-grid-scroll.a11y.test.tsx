@@ -3,25 +3,6 @@ import { act } from "react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Users } from "lucide-react";
 
-/**
- * `StatCardGrid` is `overflow-x-auto` at every breakpoint by design — the ROW
- * scrolls so the PAGE never does. A `StatCard` is not a link and renders
- * nothing focusable, so a keyboard user could not scroll the row at all and
- * never reached the cards past the fold. axe reported
- * `scrollable-region-focusable` on it across five routes; WCAG 2.1.1.
- *
- * The literal fix axe asks for is `tabIndex={0}`, and taken literally it adds
- * a tab stop to nearly every list page in the product whether or not that
- * page's row actually overflows. So the stop is conditional on the measured
- * overflow: present when there is something off screen to reach, absent when
- * every card fits, and absent when a child is already a link or button
- * because that control is already in the tab order. That is the whole reason
- * the previous session declined the one-line version.
- *
- * jsdom reports `scrollWidth === clientWidth === 0` for everything, so the
- * measurement is driven here by defining the two properties on the element —
- * which is what makes the three branches distinguishable at all.
- */
 
 function setWidths(element: HTMLElement, scrollWidth: number, clientWidth: number) {
   Object.defineProperty(element, "scrollWidth", { value: scrollWidth, configurable: true });

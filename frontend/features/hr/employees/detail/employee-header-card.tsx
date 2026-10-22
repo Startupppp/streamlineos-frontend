@@ -71,9 +71,6 @@ export function EmployeeHeaderCard({
   showLegacyEmployeeId,
   legacyEmployeeId,
 }: EmployeeHeaderCardProps) {
-  // V-023/V-025: one name, from one place. Composing first+last here ignored
-  // `employee.name`, so a person carrying only a display name read "Employee"
-  // and an owner read their email local part.
   const employeeName = getUserDisplayName(employee);
   const canUpdate = useCan("hr:employees:update");
   const uploadPhoto = useUploadFile();
@@ -118,7 +115,7 @@ export function EmployeeHeaderCard({
       <CardContent className="p-4 sm:p-5">
         <div className="flex flex-col gap-4 sm:flex-row sm:gap-5">
           <div className="min-w-0 flex-1 space-y-3.5">
-            {/* V-023: one heading, not a mobile copy and a desktop copy. */}
+            
             <div className="flex items-start gap-3">
               <div className="flex shrink-0 flex-col items-center gap-1">
               <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
@@ -193,9 +190,6 @@ export function EmployeeHeaderCard({
                   Terminated
                 </span>
               ) : employee.hasAccepted === false ? (
-                // PROVISIONAL (product default E-4): the account flag is set at
-                // creation, so an invitee who never accepted must not read
-                // "Active" here while the directory counts them "Pending invite".
                 <span
                   className="inline-flex items-center gap-1 rounded-full border border-status-warning-rule bg-status-warning-surface px-2 py-0.5 text-micro font-semibold text-status-warning-ink"
                   title="Invited, not yet accepted"
@@ -247,17 +241,12 @@ export function EmployeeHeaderCard({
             </div>
 
             {!isSelf && !isAlreadyTerminated && (
-              // Two ways in, beside each other. Resend is the ordinary one;
-              // Copy invite link is what keeps onboarding moving when email
-              // delivery is unconfigured or silently dropping, which is the
-              // state the audited environment was in.
               <div className="space-y-1.5">
                 <div className="flex flex-wrap items-center gap-2">
                   <ResendInviteButton employeeId={employee.id} employeeName={employeeName} />
                   <CopyInviteLinkButton employeeId={employee.id} employeeName={employeeName} />
                 </div>
-                {/* HRMS-E2E-018. Beside the two buttons, because the whole reason
-                    an administrator reads the status is to decide between them. */}
+                
                 <InviteDeliveryNote delivery={employee.inviteDelivery} />
               </div>
             )}

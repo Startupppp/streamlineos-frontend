@@ -25,18 +25,6 @@ export interface GrnLifecycleActionsProps {
   onReversed: () => void;
 }
 
-/**
- * B1 — the receiving workbench's controls, driven by the document's own status.
- *
- * The forward step and the post are shown together on purpose: a clerk who has
- * finished counting a clean delivery posts it, and one who wants a second pair
- * of eyes sends it to quality first. Making them choose in the right order
- * would be a rule the warehouse does not have.
- *
- * Every control is hidden without `inventory:purchase-orders:receive` — the
- * exact key each endpoint carries. The backend guard is still the boundary;
- * this only keeps a clerk from being offered a button that will 403.
- */
 export function GrnLifecycleActions({
   grnId,
   grnNumber,

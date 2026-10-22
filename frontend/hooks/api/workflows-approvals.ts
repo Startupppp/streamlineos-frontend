@@ -15,7 +15,6 @@ const workflowApprovalActionContract = lazyContract(() =>
   import("@/hooks/api/workflows-schema").then((m) => m.workflowApprovalActionContract),
 );
 
-
 interface ApprovalActionInput {
   action: "approve" | "reject";
   comment?: string;

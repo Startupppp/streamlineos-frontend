@@ -23,24 +23,9 @@ const issueDetailLazy = lazyContract(() => import("@/hooks/api/crm/issues-schema
 const issueDeleteLazy = lazyContract(() => import("@/hooks/api/crm/issues-schema").then((m) => m.issueDeleteContract));
 
 
-/**
- * Issues, tasks and complaints.
- *
- * No hook here knows what a field is called. The layout arrives from the server
- * and the renderer consumes it, so adding a field to a record type is a server
- * change alone — which is the property the whole engine exists for and the one
- * a hand-written client would quietly give back.
- */
 
 const BASE = "/crm/issues";
 
-/**
- * The three descriptions.
- *
- * Cached hard: a layout changes when the platform ships one, not while somebody
- * is working. Refetching it per list would be a request that always returns the
- * same bytes on every keystroke of a filter.
- */
 export function useIssueRecordTypes() {
   return useGatedQuery("crm:issues:view", {
     queryKey: queryKeys.crm.issueRecordTypes(),
@@ -79,15 +64,6 @@ export function useIssue(issueRecordId: string | null) {
   });
 }
 
-/**
- * Everything under the issues prefix, invalidated together.
- *
- * The list and the open record both carry a stage, so a transition that
- * refreshed only one would leave the other showing a stage the ledger has
- * already moved past. The record-types query sits under the same prefix and is
- * refetched too — one extra request, on a mutation, for a cache that cannot
- * disagree with itself.
- */
 function useInvalidateIssues() {
   const queryClient = useQueryClient();
   return () => {
@@ -117,13 +93,6 @@ export function useUpdateIssue() {
   });
 }
 
-/**
- * Move a record's stage.
- *
- * A separate call from editing the record, and that separation is the point: the
- * generated form cannot move a stage because the field is read-only in the
- * description, so this route is the only path and the ledger cannot be bypassed.
- */
 export function useTransitionIssue() {
   const invalidate = useInvalidateIssues();
 
@@ -141,7 +110,6 @@ export function useTransitionIssue() {
   });
 }
 
-/** Raise a record above its owner. A reason is required, not optional. */
 export function useEscalateIssue() {
   const invalidate = useInvalidateIssues();
 

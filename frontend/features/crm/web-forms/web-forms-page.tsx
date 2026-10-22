@@ -30,18 +30,10 @@ import { WebFormSheet } from "./web-form-sheet";
 
 const HEADERS = ["Form", "Fields", "Submissions", "Accepting", ""];
 
-/** The visitor-facing URL of a form, on this app's own origin. */
 function leadFormUrl(origin: string, publicToken: string): string {
   return `${origin}/lead-form/${encodeURIComponent(publicToken)}`;
 }
 
-/**
- * Lead-capture forms.
- *
- * Behind both the plan feature `crm.web-forms` and `crm:web-forms:manage`: a
- * plan without the feature sees the upgrade path rather than a form list it
- * could not use, and the read never fires.
- */
 export function WebFormsPage() {
   const feature = useFeature("crm.web-forms");
   const forms = useWebForms();

@@ -170,7 +170,6 @@ async function performSessionExchange(
         return null;
       }
     } catch {
-      // A just-restarted API can reject the first exchange while it binds its port.
     } finally {
       clearTimeout(timeout);
     }

@@ -112,7 +112,6 @@ export function EmptyState({
 
   const size = illustrationSize ?? (compact ? "sm" : "md");
 
-  // Always show an illustration — use explicit prop, preset, or a sensible default SVG
   const visual = illustration ?? (
     <StateIllustration
       preset={illustrationPreset ?? "default"}

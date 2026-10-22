@@ -8,11 +8,6 @@ interface ResignationReviewSheetsProps {
   review: ResignationReview;
 }
 
-/**
- * The confirmation surface for the approval chain in `useResignationReview`.
- * It renders nothing until a step is requested, so the list page mounts it once
- * and never branches on which sheet is open.
- */
 export function ResignationReviewSheets({ review }: ResignationReviewSheetsProps) {
   return (
     <>

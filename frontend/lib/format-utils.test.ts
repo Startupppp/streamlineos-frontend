@@ -113,13 +113,6 @@ describe("formatCurrencyFull — full-precision formatter", () => {
     expect(result).toContain("5678");
   });
 
-  /**
-   * `minimumFractionDigits` was pinned at 2 while the caller chose the maximum,
-   * so asking for whole units threw `RangeError: maximumFractionDigits value is
-   * out of range` rather than rounding. Two call sites did ask for 0 — the
-   * public offer page and a payroll column — and the offer page took its whole
-   * React tree down with it for any offer carrying a salary.
-   */
   it("rounds to whole units when asked for zero fraction digits, instead of throwing", () => {
     const result = formatCurrencyFull(2_400_000, "INR", "en-IN", 0);
     expect(result).toContain("24,00,000");

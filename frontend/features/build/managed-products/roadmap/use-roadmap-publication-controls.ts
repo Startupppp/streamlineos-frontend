@@ -11,7 +11,6 @@ import {
   useUnpublishProductRoadmap,
 } from "@/hooks/api/build/roadmap-public";
 
-/** Link lifetimes offered when publishing or rotating (MP-U-007). */
 export const LINK_EXPIRY_OPTIONS = [
   { value: "never", label: "Never expires", days: null },
   { value: "7", label: "Expires in 7 days", days: 7 },

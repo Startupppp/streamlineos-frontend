@@ -24,7 +24,6 @@ interface CloseLifecycleDialogProps {
 
 const CLOSE_DEFAULTS: CloseFormValues = { status: "churned", reason: "" };
 
-/** Ending a contract — churned or cancelled, with a stated reason. Irreversible. */
 export function CloseLifecycleDialog({ customerLifecycleId, onOpenChange }: CloseLifecycleDialogProps) {
   const close = useCloseLifecycle();
   const handleSubmit = (values: CloseFormValues) => {

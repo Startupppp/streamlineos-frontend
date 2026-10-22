@@ -26,11 +26,6 @@ const SOURCE_ROUTES: Partial<Record<GlJournalSource, string>> = {
   purchase_bill: "/accounting/purchase-bills",
 };
 
-/**
- * Where the document behind an entry lives, when it has a page of its own.
- * Receipts and payments are read in a sheet on their list page, so they get a
- * label and no link rather than one that lands on a 404.
- */
 export function sourceDocumentHref(
   sourceType: GlJournalSource,
   sourceId: string | null,

@@ -61,8 +61,6 @@ export function BuildScopeSelector({
     isDirty: hasUnsavedWork,
   });
 
-  // An unknown or foreign scope id has no name; say so instead of letting the
-  // avatar fall back to "BD" next to the type label ("BD Product", MP-B-021).
   const currentRef = useMemo(
     () =>
       identity.isInaccessible

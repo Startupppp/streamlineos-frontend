@@ -62,9 +62,6 @@ describe("ResendInviteButton", () => {
 
     expect(mutate).toHaveBeenCalledWith("user-1", expect.any(Object));
     lastMutateOptions().onSuccess({ success: true, invite: { sent: true, reason: null } });
-    // The test's own name said "queued" while it asserted "sent", which is the
-    // gap the ticket is about: invite.sent means the outbox accepted the mail,
-    // not that anyone received it.
     expect(toastSuccess).toHaveBeenCalledWith(
       "Invitation queued for Priya Sharma",
       expect.objectContaining({ description: expect.stringContaining("Copy invite link") }),

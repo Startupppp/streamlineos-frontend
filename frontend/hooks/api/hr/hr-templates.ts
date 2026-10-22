@@ -7,6 +7,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { hrTemplatesQueryOptions } from "@/hooks/api/hr/hr-templates-read-options";
 import type {
   HrTemplate,
   HrTemplateKind,
@@ -16,20 +17,7 @@ import type {
   TemplateVariable,
 } from "@/types/hr/templates";
 
-interface ListParams {
-  kind?: HrTemplateKind;
-  status?: HrTemplateStatus;
-  search?: string;
-  cursor?: string;
-  limit?: number;
-}
-
-export function hrTemplatesQueryOptions(params?: ListParams) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.hrTemplates(params),
-    staleTime: 60_000,
-  } as const;
-}
+type ListParams = Parameters<typeof hrTemplatesQueryOptions>[0];
 
 export function useHrTemplates(params?: ListParams) {
   const canView = useCan("hr:templates:view");

@@ -8,12 +8,6 @@ interface ConfirmationPhraseInputProps extends Omit<ComponentPropsWithoutRef<typ
   phrase: string;
 }
 
-/**
- * The typed-phrase gate for a large bulk reporting change. Use inside a
- * `FormField` with `{...field}`: the props `FormControl` injects (id,
- * aria-invalid, aria-describedby) land on the input itself, and the phrase hint
- * is appended to the description rather than replacing it.
- */
 export const ConfirmationPhraseInput = forwardRef<HTMLInputElement, ConfirmationPhraseInputProps>(
   function ConfirmationPhraseInput({ phrase, className, "aria-describedby": describedBy, ...props }, ref) {
     const hintId = useId();

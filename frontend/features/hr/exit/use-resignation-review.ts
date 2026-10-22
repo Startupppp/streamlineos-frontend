@@ -33,11 +33,6 @@ export interface ResignationReview {
   setWithdrawOpen: (open: boolean) => void;
 }
 
-/**
- * The resignation approval chain — HR review, final review and withdrawal —
- * with the confirmation state each step needs. The list page owns none of it:
- * it renders cards and passes the `request*` callbacks down.
- */
 export function useResignationReview(): ResignationReview {
   const hrReview = useHrReviewResignation();
   const finalReview = useFinalReviewResignation();

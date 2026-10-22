@@ -1,9 +1,3 @@
-/**
- * V-022. The directory summary and the card disagreed in production: the
- * header said "Pending invite: 1" while the one card below it said "Active".
- * `isActive` is set the moment an administrator creates the account, so it
- * cannot answer "has this person accepted".
- */
 import { render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { EmployeeCard } from "./employee-card";

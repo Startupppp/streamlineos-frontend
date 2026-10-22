@@ -51,7 +51,6 @@ function renderPanel(data: DocumentKbLinkState | undefined, extra: Record<string
   render(<DocumentKbLinkPanel documentId={7} documentName="Code of Conduct" />);
 }
 
-// The dialog's confirm button carries the same label as the button that opened it, and renders last.
 async function confirmButton(name: string): Promise<HTMLElement> {
   const buttons = await screen.findAllByRole("button", { name });
   const last = buttons.at(-1);

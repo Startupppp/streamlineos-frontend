@@ -119,8 +119,6 @@ describe("EmptyState — semantic structure", () => {
         onClearFilters={jest.fn()}
       />,
     );
-    // "No contacts yet" would tell the user nothing exists org-wide, which is
-    // false while a filter is hiding rows.
     expect(screen.queryByText("No contacts yet")).not.toBeInTheDocument();
     expect(screen.getByText("No results match your filters.")).toBeInTheDocument();
   });

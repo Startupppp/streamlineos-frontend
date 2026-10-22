@@ -23,7 +23,6 @@ interface CommissionRulesFieldsProps {
 
 const PERIOD_LABEL = { MONTH: "Monthly", QUARTER: "Quarterly", YEAR: "Yearly" } as const;
 
-/** Period, quota, cap, the marginal tier table and the accelerators. */
 export function CommissionRulesFields({ form, currency }: CommissionRulesFieldsProps) {
   const tiers = useFieldArray({ control: form.control, name: "rules.tiers" });
   const accelerators = useFieldArray({ control: form.control, name: "rules.accelerators" });

@@ -7,11 +7,6 @@ function posixJoin(...segments: string[]): string {
   return path.join(...segments).split(path.sep).join("/");
 }
 
-/**
- * `fs.globSync` exists on the Node 22 this runs under but is not declared by the
- * repo's `@types/node@20`, so it compiled only because no program ever
- * typechecked this file. `readdirSync(..., { recursive: true })` is in both.
- */
 function filesUnder(
   directories: readonly string[],
   extensions: readonly string[],
@@ -26,10 +21,6 @@ function filesUnder(
   return found;
 }
 
-/**
- * Sites whose `src` is provably not an object key. Each entry states why, so a
- * new bare `src` cannot be waved through by adding a line without a reason.
- */
 const NOT_A_STORAGE_KEY: Readonly<Record<string, string>> = {
   "components/editor/plate/plate-elements.tsx":
     "external link-preview image from GET /chat/link-preview, never a /storage/upload result",

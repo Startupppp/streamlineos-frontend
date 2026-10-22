@@ -55,8 +55,6 @@ export function AssignRosterEntrySheet({
   weekEnd,
 }: AssignRosterEntrySheetProps) {
   const { data: shifts } = useHrShifts();
-  // The shift list is gated on its own read key; a denied caller must be told
-  // so, not told that no shifts exist (FE-47).
   const shiftsAccess = useCanState("hr:attendance:view");
   const shiftsDenied = shiftsAccess === "denied";
   const upsert = useUpsertRosterEntry();

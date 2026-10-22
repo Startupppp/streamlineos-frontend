@@ -1,12 +1,6 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * Three tabs and the anomaly queue behind the first of them, which is what the
- * page opens on. The queue's own in-panel skeleton is three `h-24` cards, so the
- * segment fallback shows the same shape rather than a different one that then
- * swaps — a skeleton that does not match its successor reads as a layout jump.
- */
 export default function InventoryAiLoading() {
   return (
     <PageWrapper

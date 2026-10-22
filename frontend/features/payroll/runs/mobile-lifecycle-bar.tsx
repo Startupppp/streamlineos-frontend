@@ -9,10 +9,6 @@ interface MobileLifecycleBarProps {
   className?: string;
 }
 
-/**
- * Sticky bottom action bar for high-risk lifecycle controls on phones (375–390px).
- * Desktop continues to use the page header actions; this is sm-and-below only.
- */
 export function MobileLifecycleBar({ run, className }: MobileLifecycleBarProps) {
   return (
     <div

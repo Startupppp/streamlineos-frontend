@@ -36,12 +36,6 @@ import {
   type EntityReferenceInput,
 } from "@/hooks/api/chat-entities";
 
-/**
- * One dialog for every action on every referenced record. It renders from the
- * action's declaration, so adding an action to any module needs no work here —
- * which is the whole reason the declaration carries its input kinds and, for a
- * person, where the eligible people come from.
- */
 
 interface EntityActionDialogProps {
   open: boolean;
@@ -51,7 +45,6 @@ interface EntityActionDialogProps {
   action: EntityAction;
 }
 
-/** `assigneeId` → `Assignee id`. The declaration carries no per-input label. */
 function humanize(name: string): string {
   const spaced = name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/[_-]+/g, " ");
   return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();

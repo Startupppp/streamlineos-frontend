@@ -1,11 +1,3 @@
-/**
- * A shift template typed as "morning shift" must read "Morning Shift" wherever
- * it is shown, and a name the author capitalised deliberately must survive.
- *
- * Formatting is applied at the display boundary, not on write: the stored name
- * stays exactly what was typed, so existing rows read correctly with no
- * migration and no backfill, and the edit form still shows the real value.
- */
 import { render, screen } from "@testing-library/react";
 import { ShiftTemplatesTab } from "./shift-templates-tab";
 import type { ShiftTemplate } from "@/hooks/api/hr/shifts";
@@ -44,7 +36,6 @@ jest.mock("@/hooks/api/hr/shifts", () => ({
   useDeleteShift: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-// Access is not under test here; the tab resolves it through usePageState.
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: () => ({ kind: "ready" }),
 }));

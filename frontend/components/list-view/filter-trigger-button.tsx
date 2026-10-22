@@ -14,7 +14,6 @@ type FilterTriggerButtonProps = Omit<
   label?: string;
   showLabelOnMobile?: boolean;
   iconOnly?: boolean;
-  /** Keep the mobile label while using the compact icon treatment on desktop. */
   desktopIconOnly?: boolean;
 };
 

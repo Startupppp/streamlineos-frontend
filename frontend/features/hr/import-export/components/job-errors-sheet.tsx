@@ -44,9 +44,6 @@ export function JobErrorsSheet({ jobId, open, onOpenChange }: JobErrorsSheetProp
   const { data: detail, isLoading, isError, error, refetch } = useHrImportJob(open ? jobId : null);
   const job = detail?.job;
   const rollback = useRollbackImportJob();
-  // Every row that ended in error, whichever step it failed at: a row that failed at commit (an email that matches
-  // no employee) is only on the row itself, not in the job's validation summary. The server sends at most
-  // SERVER_ERROR_ROW_CAP of them, unordered, so the total comes from the job's counters and not from this list.
   const failedRows = detail?.errorRows ?? [];
   const errorRows: ErrorRow[] =
     failedRows.length > 0

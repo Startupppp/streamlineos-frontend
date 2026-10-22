@@ -21,12 +21,6 @@ type FormValues = z.infer<typeof onboardEmployeeInputSchema>;
 
 const ESI_NUMBER_MAX_LENGTH = 20;
 
-/**
- * An ESI number is free text with a length cap rather than a code, so it keeps
- * its own rule. Truncating a long paste is the point: the previous test
- * rejected the whole edit, and a controlled input then put the old value back
- * with nothing said about why.
- */
 function esiNumberChange(
   onChange: (value: string) => void,
 ): (event: ChangeEvent<HTMLInputElement>) => void {

@@ -32,8 +32,6 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
   {
     label: "Accounting & Finance",
     module: "finance",
-    // `accounting:read` and not `accounting:view`: no route enforces the
-    // latter, so the group offered itself on a key the server never checks.
     requiredPermission: ["accounting:read", "payments:providers:view"],
     routes: [
       {
@@ -41,8 +39,6 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
         icon: Calculator,
         href: "/accounting",
         exact: true,
-        // `AccountingHubClient` gates on `accounting:read`, and 14 routes
-        // enforce it. Aligned to the page, as three earlier nav corrections were.
         requiredPermission: "accounting:read",
       },
       {
@@ -87,9 +83,6 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             label: "What customers owe us",
             icon: FileStack,
             href: "/accounting/aged-receivables",
-            // Matches the page's own gate (`requirePermission("accounting:receivables:read")`).
-            // It read `accounting:reports:read`, so anyone holding reports-but-not-receivables
-            // was shown a link that answered 403.
             requiredPermission: "accounting:receivables:read",
           },
         ],
@@ -116,13 +109,6 @@ export const FINANCE_NAV_GROUPS: NavGroup[] = [
             label: "Debit notes",
             icon: RefreshCcw,
             href: "/accounting/vendor-credits",
-            // This page renders `ApDocumentsPage`, which reads
-            // `useCan("accounting:payables:read")` and fetches AP documents —
-            // whose routes all require that same key. Nothing enforces
-            // `accounting:vendor-credits:read`; the only vendor-credit route
-            // is a POST on `:manage`. So the old gate was wrong in BOTH
-            // directions: it showed the link to someone who would be refused,
-            // and hid it from someone who could use it.
             requiredPermission: "accounting:payables:read",
           },
           {

@@ -1,7 +1,6 @@
 "use client";
 
 import { BellIcon } from "@animateicons/react/lucide";
-// @animateicons has no BellOff; §8 says anything absent falls back to static lucide.
 import { BellOff } from "lucide-react";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -12,15 +11,6 @@ import { useSession } from "next-auth/react";
 
 
 
-/**
- * RT-003/004. The browser prompt is now asked here, from a button, next to an
- * explanation of what the user gets — never on page load. A denial is effectively
- * permanent on most browsers, so this is the one attempt each user ever gets and it
- * should happen when they have context, not when the shell mounts.
- *
- * The denied state is stated plainly rather than silently ignored: the app cannot
- * re-prompt, so the only honest thing to do is say so and point at browser settings.
- */
 export function PushPermissionCard() {
   const { data: session } = useSession();
   const { permission, enable, disable, isEnabling, isDisabling, optedOut } =
@@ -38,12 +28,6 @@ export function PushPermissionCard() {
     }
   }
 
-  /**
-   * RT-005. Turning push off used to mean opening browser site settings and
-   * revoking the permission — which most browsers make permanent, so the only
-   * exit from push was one the app could never undo. This drops the browser
-   * subscription and deletes the server row, and leaves the permission alone.
-   */
   async function handleDisable() {
     try {
       await disable();

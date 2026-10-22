@@ -12,16 +12,6 @@ import type {
 import { formatQuantity } from "./forecast-format";
 import type { OverridableProposal } from "./proposal-override-dialog";
 
-/**
- * C2 — the columns that keep the engine's number and a person's apart.
- *
- * Split out of `replenishment-client.tsx` for size (root §7), but the shape is
- * the point rather than the file count: **Engine quantity** and **Ordering** are
- * two columns, not one that changes meaning. An overridden row shows the
- * engine's figure struck through beside the number that will actually be
- * bought, so a reader is never left guessing which of the two they are looking
- * at — which is what a single "Quantity" column did before this unit.
- */
 function statusBadge(row: BatchableProposal, isOverridden: boolean) {
   if (isOverridden) {
     return (

@@ -10,29 +10,10 @@ import { useRepairMeasure, useRepairs, useRevertRepair } from "@/hooks/api/crm/a
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { AutonomyRepair, RepairMeasure } from "@/types/crm/autonomy";
 
-/**
- * CRM-P1-05. What the unattended repair loop actually changed.
- *
- * The policies panel above this one has always let an organisation say which
- * classes the system may repair without asking. Nothing let it see what was
- * then repaired, measure whether that was any good, or put one back — the API
- * for all three existed and no screen called it. Granting a loop permission to
- * edit customer records and giving no way to read what it did is the half of
- * the feature that matters after the first week.
- *
- * The measure is shown the way the backend computes it, and that is deliberate.
- * The automated share alone is gameable: a loop that repaired every trivial
- * finding and left every hard one shows a rising share while the queue gets
- * harder. So what remains sits beside it.
- */
 
 function AutomatedShare({ measure }: { measure: RepairMeasure }) {
   const { automatedShare, automated, manual } = measure.resolution;
 
-  /**
-   * Null is not zero. A ratio over a window in which nothing was decided is no
-   * evidence, and rendering it as 0% would state the opposite of what is known.
-   */
   if (automatedShare === null)
     return (
       <span className="text-sm text-muted-foreground">
@@ -70,10 +51,7 @@ function RepairRow({
           <span className="font-medium">{repair.partyName ?? "A record"}</span>
           <span className="text-muted-foreground"> · {repair.field}</span>
         </p>
-        {/*
-          Both values, because "it repaired the phone number" is not reviewable
-          and "it changed 07700 900461 to +44 7700 900461" is.
-        */}
+        
         <p className="truncate text-micro text-muted-foreground">
           {repair.previousValue ?? "(empty)"} → {repair.repairedValue ?? "(empty)"}
         </p>
@@ -100,7 +78,6 @@ function RepairRow({
 }
 
 export function RepairActivityPanel() {
-  /** Reversing is its own key on the server; seeing is the review key. */
   const canRevert = useCan("crm:autonomy:reverse");
   const measure = useRepairMeasure(30);
   const repairs = useRepairs({ limit: 25 });
@@ -139,7 +116,7 @@ export function RepairActivityPanel() {
                 </dd>
               </div>
               <div>
-                {/* The correction rate: how often a person disagreed. */}
+                
                 <dt className="text-micro text-muted-foreground">Put back by a person</dt>
                 <dd className="text-sm font-medium tabular-nums">
                   {measure.data.repairs.reverted}

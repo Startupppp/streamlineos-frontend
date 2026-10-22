@@ -168,12 +168,6 @@ function BankSheet({
   const scheme = detectScheme(watchedCountry);
   const schemeConf = SCHEME_CONFIG[scheme];
 
-  /**
-   * An IFSC is uppercase alphanumeric; every other scheme's code is taken as
-   * typed. Normalising rather than merely upper-casing is what makes a code
-   * pasted from a bank statement — spaces and hyphens included — land as a
-   * valid one instead of as an invalid string the resolver then rejects.
-   */
   function makeBankCodeChange(
     onChange: (value: string) => void,
   ): (event: ChangeEvent<HTMLInputElement>) => void {

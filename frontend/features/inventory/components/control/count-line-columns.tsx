@@ -106,13 +106,7 @@ export function buildCountLineColumns({
       cell: (row) =>
         isCounting ? (
           <div className="flex justify-end">
-            {/*
-             * Keyed on the scan tally, not on `countedQty`. The field seeds
-             * itself from `initial` on mount, so a scanned count would
-             * otherwise never reach a row somebody had already opened —
-             * while keying on the server value would remount it mid-type,
-             * 300ms after every keystroke, and steal the caret.
-             */}
+            
             <DebouncedQtyInput
               key={`${row.id}:${scannedTally[row.id] ?? 0}`}
               lineId={row.id}

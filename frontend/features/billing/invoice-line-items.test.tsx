@@ -1,13 +1,3 @@
-/**
- * The edit dialog on the invoice detail screen is the only shipped caller that
- * PATCHes an invoice's line items. It used to send the legacy four-field line —
- * description, quantity, rate, amount — and nothing else, so the server had no
- * tax basis to write and replaced every line's GST rate with 0.00 and every
- * HSN/SAC code with NULL. These tests pin the wire shape that carries them.
- *
- * Money here is rupees, as decimal strings on the way in (the persisted
- * `invoice_items` row) and as JSON numbers on the way out (the write DTO).
- */
 import { fireEvent, render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -17,9 +7,6 @@ jest.mock("@/hooks/api/invoice", () => ({
   useUpdateInvoice: () => ({ mutate: mockMutate, isPending: false }),
 }));
 
-// The dialog now gates itself on PATCH /invoices/{invoiceId}'s own key. These
-// tests are about the wire shape, so they run as a caller who holds it;
-// `invoice-write-surface-gates.test.tsx` owns the deny half.
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => key === "accounting:update",
 }));
@@ -56,7 +43,6 @@ function renderDialog(overrides: { lineItems?: typeof STORED_LINES } = {}) {
         invoiceId={7}
         lineItems={overrides.lineItems ?? STORED_LINES}
         subtotal="1200.0000"
-        // The server always stores "0" here; per-line gst_rate is the real basis.
         taxRate="0"
         taxAmount="190.00"
         discount="0"
@@ -112,8 +98,6 @@ describe("the invoice edit dialog carries each line's tax basis", () => {
   it("previews the tax the server will store, not the dead blended rate", () => {
     renderDialog();
 
-    // Rupees: 1000 @ 18% = 180 plus 200 @ 5% = 10, so 190 — not the 0 the
-    // stored blended tax_rate of "0" would produce.
     expect(screen.getAllByText("₹190.00").length).toBeGreaterThan(0);
     expect(screen.getAllByText("₹1,390.00").length).toBeGreaterThan(0);
   });

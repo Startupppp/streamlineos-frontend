@@ -2,23 +2,6 @@ import { Suspense, use, useState } from "react";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 
-/**
- * PRD-C150 at the row, which is where 74 call sites turn a click into a
- * navigation.
- *
- * A row click hands control to `onRowClick`, and when that pushes a route the
- * App Router keeps the CURRENT page painted until the destination resolves. So
- * the honest question is not "does the row eventually change" but "is there a
- * marker in the DOM before the navigation has done anything". These tests
- * never advance a timer and never await between the click and the assertion:
- * the marker either committed in the same pass as the event or it did not.
- *
- * The pending window is held open with a real suspended transition rather than
- * a fake clock, because that is exactly the shape a route push has — a
- * transition that cannot commit yet. With a synchronous `onRowClick` (opening
- * a dialog, say) there is nothing to wait for and the marker clears at once,
- * which is also asserted below so the marker cannot rot into a permanent one.
- */
 
 interface Row {
   id: string;

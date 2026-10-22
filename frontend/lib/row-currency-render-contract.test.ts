@@ -13,10 +13,6 @@ const SOURCE_DIRECTORIES = [
 
 const SOURCE_EXTENSIONS = [".ts", ".tsx"] as const;
 
-/**
- * The corpus is discovered, not enumerated: a fourth site added anywhere under
- * the source roots is scanned by the same walk that found the first three.
- */
 function sourceFiles(): string[] {
   const found: string[] = [];
   for (const directory of SOURCE_DIRECTORIES)

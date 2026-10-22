@@ -63,9 +63,6 @@ export function PayslipPreviewSheet({ template, open, onOpenChange }: Props) {
           {html && (
             <iframe
               srcDoc={html}
-              // Static payslip HTML with backend-interpolated names: no scripts,
-              // and never `allow-scripts` + `allow-same-origin`, which together
-              // let the frame's scripts run as the app and lift the sandbox.
               sandbox=""
               className="w-full h-[600px] border-0"
               title="Payslip Preview"

@@ -24,7 +24,6 @@ interface ConfirmDialogBaseProps {
   cancelLabel?: string;
   destructive?: boolean;
   isPending?: boolean;
-  /** Holds the confirm button shut until the caller's precondition (a typed phrase) is met. */
   confirmDisabled?: boolean;
   confirmIcon?: ReactNode;
   hideConfirm?: boolean;
@@ -32,11 +31,6 @@ interface ConfirmDialogBaseProps {
   onConfirm: () => void;
 }
 
-/**
- * Controlled when the caller owns the open state; uncontrolled when it supplies
- * a `trigger`. The union stops a caller from passing both and ending up with a
- * dialog whose open state has two owners.
- */
 type ConfirmDialogProps = ConfirmDialogBaseProps &
   (
     | { trigger: ReactNode; open?: never; onOpenChange?: never }

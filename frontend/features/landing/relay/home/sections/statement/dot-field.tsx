@@ -2,9 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-/** The grid is the same in every frame (3888:5971, 3888:10368, 3832:7635,
- * 3893:3268): 48px pitch from (25.5, 25.5), clipped by the plate — only the
- * 1440 × 548 plate shows all 30 × 11 dots. */
 const W = 1440;
 const H = 548;
 const GRID = 48;
@@ -12,24 +9,14 @@ const OFFSET = 25.5;
 const R = 1.5;
 const COLS = Math.ceil((W - OFFSET) / GRID);
 const ROWS = Math.ceil((H - OFFSET) / GRID);
-/** Screen px per design px: 1 rem is 16 design px in every frame. */
 const unit = () =>
   parseFloat(getComputedStyle(document.documentElement).fontSize) / 16;
-/** Cursor influence radius (design px) and peak scale at the cursor. */
 const RADIUS = 120;
 const PEAK = 2.4;
-/** Under-damped per-dot spring so the swell decays with a little bounce. */
 const STIFFNESS = 170;
 const DAMPING = 11;
 const EPS = 0.002;
 
-/**
- * Dot field — 3px dots on a 48px grid, composed as one SVG pattern.
- * On desktop, dots near the cursor scale up (colour and opacity unchanged)
- * on a canvas drawn over the plate; once every dot springs back to rest the
- * canvas is cleared and the SVG pattern shows again, so the idle plate is the
- * original pattern. Runs only while the plate is in view.
- */
 export const DotField = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);

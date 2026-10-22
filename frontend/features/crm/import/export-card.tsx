@@ -8,13 +8,6 @@ import { downloadExport } from "@/hooks/api/crm/import";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EXPORT_ENTITIES } from "@/types/crm/import";
 
-/**
- * Taking everything back out.
- *
- * Shown above the import tabs, deliberately: it is ungated and needs no setup,
- * and a prospect evaluating the product should see that leaving is easy before
- * they are asked to bring anything in.
- */
 export function ExportCard() {
   const handleExport = (entity: string, format: "csv" | "json") => () =>
     void downloadExport(entity, format).catch((error) => toast.error(getErrorMessage(error)));

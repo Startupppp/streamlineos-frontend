@@ -262,8 +262,6 @@ function citationEvidenceKey(citation: KbAskCitationWithParts): string {
 export function CitationEvidenceList({ citations }: { citations: KbAskCitationWithParts[] }) {
   if (citations.length === 0) return null;
   const seen = new Set<string>();
-  // The Sources chips already name every citation; a row here without a passage would only
-  // repeat the title (KB-B-027).
   const evidence = citations.filter((citation) => {
     if (!citation.passage) return false;
     const key = citationEvidenceKey(citation);

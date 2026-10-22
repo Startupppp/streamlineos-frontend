@@ -9,13 +9,6 @@ import { useRobot } from "./robot-view";
 
 type InviewProps = ComponentProps<typeof MotionInview>;
 
-/**
- * The engine's `<Inview>`, except on the robot form (D-016): there it renders
- * the plain element at its `to` state — no in-view observer, no spring, nothing
- * to hydrate but the element (and its `innerTag` wrapper, when it has one).
- * People get the engine's `<Inview>` unchanged. Swap an import to this file;
- * the vendored engine is untouched.
- */
 export const Inview = forwardRef<HTMLElement, InviewProps>(function RobotAwareInview(props, ref) {
   const robot = useRobot();
   if (!robot) return <MotionInview ref={ref} {...props} />;

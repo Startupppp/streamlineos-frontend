@@ -9,37 +9,20 @@ import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 import type { RegionsPhase } from "./use-regions-cycle";
 
 export interface LaneBarProps {
-  /** Sets `--lane-fill`, the Figma share width per frame (e.g. 121 px, 61 at 390). */
   fillWidthClassName: string;
-  /** Fill colour class, e.g. `bg-accent`. */
   fillClassName: string;
-  /** Final copy, e.g. "46%" — the counter lands on exactly this text. */
   share: string;
-  /** Stagger before growing (and before easing back on reset), ms. */
   delay: number;
-  /** Loop phase from `useRegionsCycle`. */
   phase: RegionsPhase;
   reduced: boolean;
 }
 
-/** Overdamped and clamped — the fill must never overshoot past its Figma width. */
-/** SPRING_SOFT ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SOFT_FAST = {
   tension: SPRING_SOFT.tension * 1.5,
   friction: SPRING_SOFT.friction * 1.22,
 } as const;
 const GROW = { ...SOFT_FAST, clamp: true } as const;
 
-/**
- * Lane 3888:6511 — 262 × 10 at (214, 6) of the row; 150 × 10 at (198, 5) at
- * 1024 (3949:13178); 220 × 10 at (378, 5) at 768 (3862:36); 110 × 5 at
- * (158, 15.5) at 390 (3893:3810), where the shares halve. With its Share fill,
- * Head dot and the share value. Each `play` grows the fill from 0 to its Figma
- * width while the percentage counts up on the same spring; when it lands it sends
- * out one white halo. `reset` eases it back to 0, `off` jumps there. The head
- * lives outside the clipped lane so the halo is not cut; at rest it sits
- * exactly where Figma puts it.
- */
 export const LaneBar = ({
   fillWidthClassName,
   fillClassName,

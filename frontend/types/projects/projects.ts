@@ -80,7 +80,6 @@ export interface ProjectWithDetails extends Project {
   members?: ProjectMember[];
   tickets?: Ticket[];
   crmClient?: { id: number; name: string | null } | null;
-  /** The caller is a VIEWER of this project: every write is refused. */
   readOnly?: boolean;
 }
 
@@ -368,7 +367,6 @@ export interface ProjectFilters {
   sort?: "name_asc" | "priority_desc" | "due_asc" | "due_desc";
 }
 
-/** What `GET /build` actually answers. */
 export interface ProjectListResponse {
   data: ProjectListItem[];
   hasMore: boolean;

@@ -10,18 +10,8 @@ import {
   useStatementSeen,
 } from "./use-statement-seen";
 
-/**
- * Without the iris around it, the entrance waits until the plate's top has
- * risen to 28% of the viewport.
- */
 const SEEN_MARGIN = "0px 0px -72% 0px";
 
-/**
- * The `<section>` of 05 Statement. It owns the one trigger every leaf reads:
- * `inView` follows plain visibility; `seen` follows the iris's `data-open`
- * (true once the circle has opened, false once the plate is gone), or the
- * SEEN_MARGIN line when there is no iris — so every visit replays the timeline.
- */
 export const StatementPlate = ({
   className,
   children,
@@ -43,8 +33,6 @@ export const StatementPlate = ({
     });
     view.observe(node);
 
-    /* Inside the logo iris (views/home/transitions/logo-open) the plate is
-       pinned, so the transition says when it has opened: `data-open`. */
     const host = node.closest<HTMLElement>("[data-open]");
     if (host) {
       const sync = () => {
@@ -94,7 +82,6 @@ export const StatementPlate = ({
   );
 };
 
-/** Mono label that types in on the plate's timeline, not on its own observer. */
 export const StatementType = ({
   children,
   delay,

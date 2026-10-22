@@ -1,6 +1,3 @@
-/**
- * Every settings prefetch must land under the exact key its client hook asks with.
- */
 jest.mock("server-only", () => ({}));
 
 jest.mock("@/lib/get-server-auth", () => ({
@@ -124,7 +121,6 @@ function grantNothing(): void {
 
 const ORG_MODULES_BODY = [{ moduleKey: "HR", enabled: true }];
 
-/** Every read answers with a body that names its own path, so a swap is visible. */
 function respondByPath(): void {
   (serverGet as jest.Mock).mockImplementation((path: string) =>
     Promise.resolve(
@@ -153,7 +149,6 @@ interface ExpectedRead {
   readonly key: QueryKey;
   readonly path: string;
   readonly value?: unknown;
-  /** Reads the client itself fires with no permission gate, so the prefetch must not add one. */
   readonly ungated?: true;
 }
 
@@ -375,7 +370,6 @@ const CASES: readonly PrefetchCase[] = [
       }),
     expected: [
       {
-        // The page's own call shape: `useQuarantine({ status, cursor: pager.cursor, limit })`.
         key: platformCoreQueryKeys.privacy.quarantine({
           status: undefined,
           cursor: undefined,

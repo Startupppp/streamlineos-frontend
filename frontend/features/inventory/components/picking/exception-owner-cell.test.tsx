@@ -4,14 +4,6 @@ import { ExceptionOwnerCell } from "./exception-owner-cell";
 import { PickExceptionQueue } from "./pick-exception-queue";
 import type { PickExceptionSummary } from "@/hooks/api/inventory/pick-exceptions";
 
-/**
- * An exception could never leave the person it landed on.
- *
- * `reportException` stamps the owner as the wave's creator, so the queue always
- * had an owner and never a way to change one. `POST
- * /inventory/picking/exceptions/:pickLineId/assign` was mounted, carried
- * `inventory:picking:review` and was referenced by nothing.
- */
 
 const mockAssignMutate = jest.fn();
 const mockRefetch = jest.fn();
@@ -141,8 +133,6 @@ describe("ExceptionOwnerCell", () => {
   it("does not re-post the owner it already has", async () => {
     renderWithProviders(<ExceptionOwnerCell exception={mockException()} />);
     fireEvent.click(screen.getByRole("button", { name: /hand this exception/i }));
-    // The trigger also reads "Wave Creator", so the option is addressed by role
-    // rather than by text — clicking the trigger again would only close it.
     await waitFor(() =>
       expect(screen.getByRole("option", { name: /Wave Creator/i })).toBeInTheDocument(),
     );

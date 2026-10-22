@@ -8,19 +8,6 @@ import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
 import type { AccountingProvisioning } from "@/types/accounting/accounting-kernel-ext";
 
-/**
- * The provisioning verdict, rendered.
- *
- * The backend has computed this since ACC-02 and the API has carried it in
- * `/accounting/setup/status` ever since — and nothing displayed it, so a
- * verdict whose entire purpose is to be read arrived at a screen that dropped
- * it. Two of the three states it reports are conditions under which stock
- * movements are being refused or lost right now.
- *
- * The messages come from the server rather than being restated here. They name
- * the specific roles missing and the specific date the year ends, and a second
- * copy on this side would drift from the rule that produced them.
- */
 
 interface Presentation {
   tone: "danger" | "warning";
@@ -32,11 +19,6 @@ interface Presentation {
 function present(provisioning: AccountingProvisioning): Presentation | null {
   switch (provisioning.state) {
     case "unprovisioned":
-      /*
-        The state that looked exactly like opting out. An organisation here is
-        paying for accounting and posting into a void, so it reads as danger
-        rather than as an invitation to set something up.
-      */
       return {
         tone: "danger",
         icon: AlertTriangle,
@@ -52,12 +34,6 @@ function present(provisioning: AccountingProvisioning): Presentation | null {
         action: { label: "Map the accounts", href: "/accounting/settings" },
       };
     case "fiscal_year_ending":
-      /*
-        A warning, not an error: nothing is broken yet. It is here at all
-        because the failure it precedes is silent — receipts and invoices
-        simply start being rejected on a date, with a message about a missing
-        period rather than about a calendar.
-      */
       return {
         tone: "warning",
         icon: CalendarClock,

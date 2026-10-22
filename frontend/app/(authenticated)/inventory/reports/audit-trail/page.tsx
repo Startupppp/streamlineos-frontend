@@ -44,8 +44,6 @@ const COLUMNS: DataTableColumn<InventoryAuditEvent>[] = [
     key: "resourceId",
     header: "Reference",
     className: "font-mono tabular-nums",
-    // The record's own business reference, not an opaque identifier: the trail
-    // exists to be reconciled against the document it points at.
     cell: (row) => <span>#{row.resourceId}</span>,
   },
   {
@@ -60,9 +58,6 @@ export default function InventoryAuditTrailPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  // Free text is held locally and debounced. Controlled straight off the URL, a
-  // `router.replace` per keystroke fired a request per character and dropped
-  // typed characters, because the value came back asynchronously.
   const [resourceDraft, setResourceDraft] = useState(searchParams.get("resource") ?? "");
   const [actionDraft, setActionDraft] = useState(searchParams.get("action") ?? "");
   const resourceType = useDebouncedValue(resourceDraft, 300);
@@ -70,9 +65,6 @@ export default function InventoryAuditTrailPage() {
   const fromDate = searchParams.get("from") ?? "";
   const toDate = searchParams.get("to") ?? "";
 
-  // G1. The trail is appended to while it is read, so it walks a
-  // `(created_at, id)` keyset. There is no page count because the server is
-  // never asked to count a table that only grows.
   const {
     cursor,
     pageNumber,
@@ -174,11 +166,7 @@ export default function InventoryAuditTrailPage() {
       filters={filterBar}
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        {/*
-          Renders nothing without `inventory:audit:export`. That key exists
-          because taking evidence away is a stronger right than reading the
-          trail, and until now it governed nothing anybody could do.
-        */}
+        
         <AuditExportPanel />
 
         {query.isError ? (

@@ -35,14 +35,11 @@ export interface NavRoute {
   requiredPermission?: PermissionRequirement;
   children?: NavRoute[];
   module?: ModuleKey;
-  /** Show the route when at least one of these modules is enabled. */
   modulesAny?: ModuleKey[];
   locked?: boolean;
   hideForOwner?: boolean;
   exact?: boolean;
-  /** Extra owned subpaths, used when a sibling route has a longer prefix. */
   activePrefixes?: string[];
-  /** More-specific sibling paths that this route must never highlight. */
   inactivePrefixes?: string[];
 }
 

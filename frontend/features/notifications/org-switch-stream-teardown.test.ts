@@ -39,11 +39,6 @@ function makeWrapper() {
   };
 }
 
-/**
- * Bite-prove: if `orgId` is removed from the useEffect dependency array in
- * use-notification-events.ts, the cleanup never runs on org switch, the first
- * signal stays unaborted, and the assertion `firstSignal.aborted === true` fails.
- */
 describe("useNotificationEvents org-switch stream teardown", () => {
   let savedFetch: typeof global.fetch;
 

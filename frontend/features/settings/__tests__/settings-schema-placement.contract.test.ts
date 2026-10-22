@@ -2,7 +2,6 @@ import { readdirSync, statSync, readFileSync } from "node:fs";
 import { join, basename } from "node:path";
 import { resolve } from "node:path";
 
-// Form/domain Zod schemas belong in a sibling *-schema.ts, never inline in a settings .tsx.
 const SETTINGS_DIR = resolve(__dirname, "..");
 
 function walkTsx(dir: string, files: string[] = []): string[] {

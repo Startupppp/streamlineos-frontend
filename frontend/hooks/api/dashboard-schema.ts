@@ -1,13 +1,6 @@
 import { z } from "zod";
 
-/**
- * Response contracts for the dashboard module.
- * Derived from backend `dashboard-response-schema.ts` and
- * `dashboard-misc-response.schemas.ts`.
- * NOT `.strict()`.
- */
 
-/** `dashboardStatsResponseSchema` */
 export const dashboardStatsContract = z
   .object({
     orgName: z.string(),
@@ -18,7 +11,6 @@ export const dashboardStatsContract = z
   })
   ;
 
-/** `dashboardPersonalResponseSchema` */
 export const personalDashboardContract = z.object({
   myTasks: z.array(
     z.object({
@@ -47,7 +39,6 @@ export const personalDashboardContract = z.object({
   degraded: z.array(z.string()),
 });
 
-/** `announcementsListSchema` — array of announcements. */
 export const announcementsListContract = z.array(
   z.object({
     id: z.number().int(),
@@ -62,7 +53,6 @@ export const announcementsListContract = z.array(
   }),
 );
 
-/** `announcementCreateSchema` — full announcement row. */
 export const announcementContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -76,10 +66,8 @@ export const announcementContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `announcementDeleteSchema` */
 export const dashboardSuccessContract = z.object({ success: z.literal(true) });
 
-/** `executiveDashboardSchema` */
 export const executiveDashboardContract = z.object({
   headcount: z.number().int(),
   openRoles: z.number().int(),
@@ -90,7 +78,6 @@ export const executiveDashboardContract = z.object({
   conversionRate: z.number().int().optional(),
 });
 
-/** `leavesTodaySchema` */
 export const leavesTodayContract = z.object({
   data: z.array(
     z.object({
@@ -107,11 +94,6 @@ export const leavesTodayContract = z.object({
   hasMore: z.boolean(),
 });
 
-/**
- * `myLeaveBalanceSchema` declares `balance: z.number()` and is wrong: the column
- * is `decimal("balance", { precision: 6, scale: 2 })`, which Drizzle reads as a
- * string, so the declared schema would reject every real response.
- */
 export const leaveBalanceContract = z.array(
   z.object({
     id: z.number().int(),
@@ -122,14 +104,12 @@ export const leaveBalanceContract = z.array(
   }),
 );
 
-/** `pendingApprovalsSchema` */
 export const pendingApprovalsContract = z.object({
   pendingLeaves: z.number().int(),
   pendingResignations: z.number().int(),
   total: z.number().int(),
 });
 
-/** `upcomingHolidaysSchema` */
 export const upcomingHolidaysContract = z.array(
   z.object({
     id: z.number().int(),
@@ -139,7 +119,6 @@ export const upcomingHolidaysContract = z.array(
   }),
 );
 
-/** `myIssuesSchema`; the service coalesces status/type/priority, so none is null. */
 export const myIssuesContract = z.array(
   z.object({
     id: z.number().int(),
@@ -163,7 +142,6 @@ export const myIssuesContract = z.array(
   }),
 );
 
-/** `activeSprintSchema` — nullable sprint summary. */
 export const activeSprintContract = z
   .object({
     id: z.number().int(),
@@ -181,11 +159,6 @@ export const activeSprintContract = z
   })
   .nullable();
 
-/**
- * `recentProjectsSchema` names four keys, but the service selects no `columns:`,
- * so `status` is on the wire and the card renders it — omitting it here would
- * strip it.
- */
 export const recentProjectsContract = z.array(
   z.object({
     id: z.number().int(),
@@ -210,7 +183,6 @@ export const recentProjectsContract = z.array(
   }),
 );
 
-/** `recentActivitySchema`; every ticket column it passes through is NOT NULL. */
 export const recentActivityContract = z.array(
   z.object({
     id: z.number().int(),
@@ -234,7 +206,6 @@ export const recentActivityContract = z.array(
   }),
 );
 
-/** `teamAttendanceSchema` — the counts object `DashboardAvailabilityService.buildTeamAttendance` returns. */
 export const teamAttendanceContract = z.object({
   total: z.number().int(),
   present: z.number().int(),
@@ -254,7 +225,6 @@ export const teamAttendanceContract = z.object({
   hasMore: z.boolean(),
 });
 
-/** `listDocumentsResponseSchema`; `documents.type` is a NOT NULL pgEnum. */
 export const hrDocumentsListContract = z.object({
   data: z.array(
     z.object({
@@ -292,7 +262,6 @@ export const hrDocumentsListContract = z.object({
   }),
 });
 
-/** `birthdayEntrySchema` */
 export const birthdaysContract = z.array(
   z.object({
     id: z.string(),
@@ -305,7 +274,6 @@ export const birthdaysContract = z.array(
   }),
 );
 
-/** `todayActivitiesSchema` */
 export const todayActivitiesContract = z.array(
   z.object({
     type: z.string(),
@@ -313,7 +281,6 @@ export const todayActivitiesContract = z.array(
   }),
 );
 
-/** `crmPulseDashboardSchema` — CRM-only figures for the Business Pulse widget. */
 export const crmPulseDashboardContract = z.object({
   mrr: z.number(),
   pipelineValue: z.number(),

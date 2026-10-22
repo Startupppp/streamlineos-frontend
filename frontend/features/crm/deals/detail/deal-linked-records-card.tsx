@@ -48,13 +48,6 @@ function LinkedRow({ href, icon: Icon, label, title, detail, isLoading }: Linked
   );
 }
 
-/**
- * What the deal is with, and what it is about.
- *
- * Both are resolved to their names rather than rendered as the ids the deal
- * stores, and the card is absent rather than empty when a deal has neither --
- * most deals in most tenants will have no subject at all.
- */
 export function DealLinkedRecordsCard({ partyId, subjectId }: DealLinkedRecordsCardProps) {
   const { data: party, isLoading: partyLoading } = useParty(partyId);
   const { data: subject, isLoading: subjectLoading } = useSubject(subjectId);

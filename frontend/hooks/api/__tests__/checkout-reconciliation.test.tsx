@@ -1,13 +1,3 @@
-/**
- * AB-08: the browser callback is not the only way a purchase settles. This pins the
- * bounded reconciliation poll — that it converges when the provider webhook settles the
- * term after the callback was lost, that it stops rather than polling forever when
- * nothing settles, and that it refreshes access and entitlements and not just billing.
- *
- * The subscription read is mounted in each case because that is the real shape: the poll
- * runs while the billing screen is open. A test without the observer proves nothing about
- * whether the screen actually updates.
- */
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider, useQuery } from "@tanstack/react-query";
 import type { ReactNode } from "react";

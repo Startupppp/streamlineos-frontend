@@ -2,12 +2,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ApiError } from "@/lib/api-envelope";
 import { InputsSectionTabs } from "./inputs-section-tabs";
 
-/**
- * Every input tab destructured only `{ data, isLoading, isFetching }`, so a
- * failed snapshot read arrived as `data: undefined` and rendered "No data —
- * Build the period first." over a period that was already built. Each tab now
- * distinguishes the failure and offers a retry.
- */
 
 jest.mock("@/hooks/api/payroll/payroll-inputs", () => ({
   useAttendanceSnapshot: jest.fn(),

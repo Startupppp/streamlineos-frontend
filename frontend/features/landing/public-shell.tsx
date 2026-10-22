@@ -11,12 +11,6 @@ type Props = {
   className?: string;
 };
 
-/**
- * Chrome for every public marketing page: Relay's nav and footer on its dark
- * theme, over a soft brand glow and the dot field (styles/pages/public-shell.css)
- * so inner pages don't sit on flat black. The nav is fixed and shown at once
- * (no fade-in); PublicMain's top padding keeps its slot.
- */
 export function PublicShell({ children, className }: Props) {
   return (
     <RelayRoot>

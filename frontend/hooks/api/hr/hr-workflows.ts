@@ -20,6 +20,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { hrWorkflowDefinitionsQueryOptions } from "@/hooks/api/hr/hr-workflows-read-options";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -28,13 +29,6 @@ const noContentC = lazyContract(() =>
 const WORKFLOWS_KEY = [...queryKeyBase, "hr", "workflows"] as const;
 const INSTANCES_KEY = [...queryKeyBase, "hr", "workflow-instances"] as const;
 const DELEGATIONS_KEY = [...queryKeyBase, "hr", "workflow-delegations"] as const;
-
-export function hrWorkflowDefinitionsQueryOptions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; cursor?: string; limit?: number }) {
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.hrWorkflowsAll, params] as const,
-    staleTime: 2 * 60_000,
-  } as const;
-}
 
 export function useHrWorkflowDefinitions(params?: { objectType?: HrWorkflowObjectType; status?: HrWorkflowStatus; cursor?: string; limit?: number }) {
   return useGatedQuery("hr:workflows:view", {
@@ -206,8 +200,6 @@ interface RejectPayload { comment: string; attachments?: { url: string; name: st
 
 export function useApproveInstance() {
   const qc = useQueryClient();
-  // Backend fences this route with @Idempotent; the key must survive a retry of
-  // the same intent or a stalled-then-repeated approve is two commands.
   return useAuthorizedIdempotentMutation<HrWorkflowInstance, Error, ActPayload & { instanceId: number }>("hr:workflows:approve", {
     mutationKey: ["hr", "workflow-instances", "approve"],
     mutationFn: ({ instanceId, ...body }, idempotencyKey) =>

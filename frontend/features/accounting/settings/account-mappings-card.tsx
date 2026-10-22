@@ -23,13 +23,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { GlSystemTag } from "@/types/accounting/accounting-kernel";
 import type { AccountSystemTagMapping } from "@/types/accounting/accounting-kernel-ext";
 
-/**
- * What each role is, in the language of the person mapping it.
- *
- * The tag itself (`grni`, `ap_control`) is the ledger's vocabulary, not an
- * operations manager's. Every row says what will post to the account, because
- * "Inventory asset" alone does not tell anyone whether a scrap belongs there.
- */
 const ROLE_COPY: Partial<Record<GlSystemTag, { label: string; what: string }>> =
   {
     inventory: {
@@ -69,7 +62,6 @@ const ROLE_COPY: Partial<Record<GlSystemTag, { label: string; what: string }>> =
 const UNMAPPED = "__unmapped__";
 
 interface AccountMappingsCardProps {
-  /** Off when the org has no book — there is nothing to map into. */
   enabled: boolean;
 }
 
@@ -79,12 +71,6 @@ export function AccountMappingsCard({ enabled }: AccountMappingsCardProps) {
   const accounts = usePostableAccounts({ enabled });
   const setTag = useSetAccountSystemTag();
 
-  /*
-    Only the roles inventory depends on. The book carries forty-odd roles and a
-    screen listing all of them is a screen nobody reads; the ones that break a
-    goods receipt are the ones worth asking somebody to check. The rest are set
-    from the chart template and edited on the chart itself.
-  */
   const rows = useMemo(
     () =>
       (mappings.data ?? []).filter(
@@ -188,12 +174,7 @@ function MappingRow({
           <span className="text-label font-medium">
             {copy?.label ?? mapping.tag}
           </span>
-          {/*
-            Said plainly rather than hidden. This role is seeded and correct and
-            nothing posts to it yet; presenting it as a gap the operator caused
-            would be a lie, and omitting it would hide a mapping they may want to
-            move before it starts being used.
-          */}
+          
           {mapping.awaitingInventorySupport ? (
             <Badge variant="outline" className="h-5 px-2 text-xs">
               Not used yet
@@ -223,12 +204,7 @@ function MappingRow({
               <SelectValue placeholder="Not mapped" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-              {/*
-                Present but not choosable. Clearing a role is not the same
-                action as moving it — it would leave the book unable to post —
-                so this screen only ever moves one, and the placeholder exists
-                so an unmapped role has something honest to show.
-              */}
+              
               <SelectItem value={UNMAPPED} disabled>
                 Not mapped
               </SelectItem>

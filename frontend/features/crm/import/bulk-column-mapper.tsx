@@ -14,13 +14,11 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import { requiredFieldOf, type BulkEntity } from "./bulk-import-entities";
 
-/** A column the person has chosen to leave out. */
 export const SKIP_COLUMN = "__skip__";
 
 export interface BulkColumnMapperProps {
   entity: BulkEntity;
   headers: string[];
-  /** The first data row, so each choice can be made against a real value. */
   sample: string[] | undefined;
   mappings: Record<number, string>;
   onChange: (index: number, field: string) => void;
@@ -33,16 +31,6 @@ interface MappingRow {
   field: string;
 }
 
-/**
- * Every column in the file, and where it is going.
- *
- * A card on the page rather than a step in a wizard, and it stays on screen for
- * as long as the file does. The dialogs this replaced made mapping step two of
- * three, so correcting one column after seeing the preview meant going back —
- * and going back is the thing a modal makes expensive. Here the preview below
- * re-reads the file the moment a choice changes, so there is nothing to go back
- * to.
- */
 export function BulkColumnMapper({ entity, headers, sample, mappings, onChange }: BulkColumnMapperProps) {
   const required = requiredFieldOf(entity);
   const hasRequired = Object.values(mappings).includes(required.key);

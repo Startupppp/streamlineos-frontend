@@ -74,7 +74,6 @@ export interface EntityActionInputSpec {
   kind: EntityActionInputKind;
   required: boolean;
   choices?: string[];
-  /** Where the valid answers come from, when they are not a literal list. */
   options?: { from: EntityReferenceInput };
 }
 
@@ -92,7 +91,6 @@ export function entityReferenceKey(reference: EntityReferenceInput): string {
   return `${reference.type}:${reference.id}`;
 }
 
-// One batched ask per visible set of references; per bubble would be a request per record.
 export function useEntityActions(
   channelId: number,
   references: EntityReferenceInput[],
@@ -116,11 +114,6 @@ export function useEntityActions(
   });
 }
 
-/**
- * One route for every action on every referenced record. The action's identity
- * travels in the body, so adding one is an adapter change on the server rather
- * than a new endpoint, a new hook and a new dialog here.
- */
 export function useSubmitEntityAction() {
   const queryClient = useQueryClient();
   const operation = useIdempotentOperation();
@@ -149,20 +142,6 @@ export function useSubmitEntityAction() {
   });
 }
 
-/**
- * Stays chat-specific on purpose: the server reads the message's own text to
- * fill the new record's description, which the generic entity-action route
- * cannot do without knowing what a chat message is.
- *
- * Both action routes are `@Idempotent` on the backend and the interceptor
- * REJECTS a request without an `Idempotency-Key` header with a 400 before the
- * handler runs, so the header is part of the contract, not an optimisation.
- * `/chat/entity-actions/submit` has carried `@Idempotent("chat.action.submit")`
- * while this file sent no header, which 400s every entity action the UI submits.
- * `useIdempotentOperation` holds one key for the life of a retried attempt, so a
- * Retry after a timeout replays the first result instead of filing a second
- * ticket, and releases it on success so the next click is a new operation.
- */
 export function useCreateTaskFromMessage() {
   const queryClient = useQueryClient();
   const operation = useIdempotentOperation();
@@ -190,11 +169,6 @@ interface EntityOption {
   imageUrl?: string | null;
 }
 
-/**
- * Resolves an input's declared option source to its candidates. The caller
- * passes the reference the declaration named and never has to know which module
- * produced it — which is the whole point of the source being declared.
- */
 export function useEntityActionOptions(
   channelId: number,
   source: EntityReferenceInput | null | undefined,

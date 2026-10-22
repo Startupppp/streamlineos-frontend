@@ -27,16 +27,6 @@ import {
 } from "./segment-criteria";
 import type { SegmentFormValues } from "./segment-schema";
 
-/**
- * One criterion: a field, a comparison, and whatever the comparison needs.
- *
- * The value control is shaped like the value — a date field gets a date picker,
- * a boolean gets true/false, a membership test gets a textarea — because a text
- * box that accepts anything and then reports "Enter a date" has taught nobody
- * anything. `is empty` renders no value control at all, which is how `= NULL`,
- * the classic source of a silently empty result, stays unwritable rather than
- * merely discouraged.
- */
 
 function isComparisonOperator(value: string): value is ReportingComparisonOperator {
   return REPORTING_COMPARISON_OPERATORS.some((entry) => entry === value);
@@ -84,13 +74,6 @@ export function SegmentCriterionRow({
                 const chosen = fields.find((option) => option.name === next);
                 field.onChange(next);
                 form.setValue(`criteria.${index}.fieldType`, chosen?.type ?? "");
-                /**
-                 * Changing the field can strand the operator on a type that does
-                 * not accept it — `contains` on an enum is a compile-time
-                 * refusal, not a slow query. Resetting to `is` keeps the row in
-                 * a state the server would accept rather than leaving an error
-                 * the person did not cause.
-                 */
                 const current = form.getValues(`criteria.${index}.operator`);
                 if (chosen && !SEGMENT_OPERATORS_FOR_TYPE[chosen.type].includes(current))
                   form.setValue(`criteria.${index}.operator`, "eq", { shouldValidate: true });

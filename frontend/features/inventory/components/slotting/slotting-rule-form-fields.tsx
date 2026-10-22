@@ -39,13 +39,6 @@ interface SlottingRuleFormFieldsProps {
   form: UseFormReturn<SlottingRuleFormValues>;
 }
 
-/**
- * A rule points at a container, never at a leaf.
- *
- * `SlottingService.slotFor` expands the target to its whole subtree, and its own
- * header gives the reason: "a rule that names bins is wrong the moment one of
- * them is full". So the three container types are offered and a bin is not.
- */
 const TARGET_TYPES = new Set(["ZONE", "AISLE", "RACK"]);
 
 export function SlottingRuleFormFields({ form }: SlottingRuleFormFieldsProps) {
@@ -65,12 +58,6 @@ export function SlottingRuleFormFields({ form }: SlottingRuleFormFieldsProps) {
     [locationsQuery.data],
   );
 
-  /**
-   * Switching the match type clears the other two payloads rather than leaving
-   * them to be stripped later. The server refuses a rule carrying two, and a
-   * planner who tried a category, changed their mind and picked a class would
-   * otherwise be told their category was wrong.
-   */
   const handleMatchTypeChange = useCallback(
     (value: string) => {
       if (value !== "VELOCITY_CLASS" && value !== "CATEGORY" && value !== "PRODUCT_VARIANT") return;
@@ -83,7 +70,6 @@ export function SlottingRuleFormFields({ form }: SlottingRuleFormFieldsProps) {
     [form],
   );
 
-  /** A zone belongs to one building, so changing building retires the choice. */
   const handleWarehouseChange = useCallback(
     (value: string) => {
       form.setValue("warehouseId", value, { shouldValidate: false });

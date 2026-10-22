@@ -15,21 +15,10 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 export { gated };
 export type { Gated };
 
-/**
- * A read that carries why it has no data.
- *
- * A disabled query in TanStack v5 reports `isPending: true, isFetching: false`,
- * so `isLoading` — which is the conjunction of the two — is false. A read gated
- * shut by a missing permission therefore looks exactly like a read that
- * finished and found nothing, and every surface downstream says "none yet".
- * `access` is the missing half of that answer, and it travels with the query so
- * no screen has to ask a second time and disagree.
- */
 export type GatedQueryResult<TData, TError = Error> = Gated<
   UseQueryResult<TData, TError>
 >;
 
-/** The caller's own `enabled` is composed with the permission, never replacing it. */
 export function useGatedQuery<
   TQueryFnData,
   TError = Error,
@@ -39,7 +28,6 @@ export function useGatedQuery<
   permission: PermissionKey,
   options: UseQueryOptions<TQueryFnData, TError, TData, TQueryKey>,
 ): GatedQueryResult<TData, TError> {
-  /** The gate comes from `usePermissionGate`, the one derivation of it. */
   const access = usePermissionGate(permission);
   const queryClient = useQueryClient();
   const query = useQuery({
@@ -47,13 +35,6 @@ export function useGatedQuery<
     enabled: access.allowed && (options.enabled ?? true),
   });
 
-  /**
-   * Retrying a read whose PERMISSION could not be read has to retry the
-   * permission. This query is disabled while access is unavailable, so its own
-   * `refetch` is a no-op — a Retry button wired to it would spin for ever
-   * against a recovered server (BUG-HRMS-014). Composed here so every gated
-   * surface's existing Retry does the right thing without being rewired.
-   */
   const refetch: typeof query.refetch = async (refetchOptions) => {
     if (access.unavailable) {
       await queryClient.refetchQueries({ queryKey: platformCoreQueryKeys.access.me() });

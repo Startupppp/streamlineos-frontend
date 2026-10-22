@@ -17,16 +17,6 @@ function internalPath(value: string | null): string | null {
   return value && value.startsWith("/") && !value.startsWith("//") ? value : null;
 }
 
-/**
- * The door a switched-off module was missing (BUG-HRMS-016): an administrator
- * who lands on "Module not enabled" can turn it on where they stand instead of
- * hunting for Settings → Modules. A plan that does not include the module is
- * refused by the server, and that refusal is shown as-is.
- *
- * QA left Payroll off because the cost of enabling it on a trial was unknown.
- * `EntitlementsService.setModuleEnabled` writes `org_modules` and never touches
- * billing, so the copy says so.
- */
 export function EnableModuleButton(props: EnableModuleButtonProps) {
   const canManage = useCan("settings:manage");
   return canManage ? <EnableModuleControl {...props} /> : null;
@@ -42,8 +32,6 @@ function EnableModuleControl({ moduleKey, moduleName, compact }: EnableModuleBut
       {
         onSuccess: () => {
           toast.success(`${moduleName} enabled`);
-          // Read at click time, not through useSearchParams: this view renders on
-          // prerendered pages too, where that hook demands a Suspense boundary.
           const from = internalPath(new URLSearchParams(window.location.search).get("from"));
           if (from) window.location.assign(from);
           else router.refresh();

@@ -1,32 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * A tenant's own field on a lead, deal or contact.
- *
- * Two pieces of vocabulary carry this one, and without either it could not be
- * described at all.
- *
- * `fieldType` is `createOnly`. What kind a field is gets decided once and then
- * fixed — the update endpoint ignores it, because records already carry values
- * in that shape — so an edit form must not offer it. The old sheet rendered the
- * control disabled instead, which reads as broken rather than as settled.
- *
- * `options` applies only to a choice field, said by `visibleWhen`. It is not
- * hidden on a date field, it is not part of one: not rendered, not validated,
- * and not submitted, so a text field is never stored a list of choices left over
- * from a type somebody tried and changed their mind about.
- *
- * The pairs themselves are still not a `FieldSpec` kind, and should not become
- * one — a chip holds one string and a choice is two, `{ value, label }`. The
- * description says the field is text and the surface supplies the pair editor
- * through `controls`, the same escape hatch a person picker uses; what the
- * engine carries is one string, which is what lets the generated schema, the
- * defaults and `visibleWhen` go on working without knowing the control exists.
- *
- * `optionCount` is resolved by the surface from the options the record already
- * carries, the same way a pipeline name is: a fact about the record shown as a
- * column, which nothing writes.
- */
 export const CUSTOM_FIELD_LAYOUT: RecordLayout = {
   key: "crm:settings:custom-field",
   singular: "Custom field",

@@ -48,8 +48,6 @@ const CLOSED_EDITOR: EditorState = { open: false, editing: null };
 
 export function LeaveTypesManager({ canManage }: { canManage: boolean }) {
   const { data: types, isLoading, isError, error, refetch } = useLeaveTypesAdmin();
-  // GET /hr/leaves/types needs hr:leaves:view: a denied caller must not read
-  // "No leave types yet" beside an offer to add the defaults (FE-47).
   const pageState = usePageState({ permission: "hr:leaves:view", isLoading, isError, error });
 
   function handleRetry() {

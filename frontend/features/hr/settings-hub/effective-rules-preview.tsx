@@ -79,7 +79,6 @@ function RuleCard({ item }: { item: EffectiveRuleItem }) {
 
 export function EffectiveRulesPreview() {
   const [employeeId, setEmployeeId] = useState("");
-  // Local calendar date: toISOString() is UTC and reads as yesterday/tomorrow near midnight.
   const [date, setDate] = useState(getTodayString);
 
   const params =

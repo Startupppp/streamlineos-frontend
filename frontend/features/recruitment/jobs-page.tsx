@@ -144,14 +144,6 @@ export function JobsPage() {
       const platforms: JobBoardPlatform[] = ["LINKEDIN", "NAUKRI", "INDEED"];
       publishToBoards.mutate({ jobId: id, platforms }, {
         onSuccess: (data) => {
-          /**
-           * "Queued", not "Posted". At the moment this response is written
-           * nothing has been sent — the request is on the outbox and a consumer
-           * is what talks to the board. "Posted to N platforms" used to appear
-           * whenever an oauth token happened to be saved, for an API call that
-           * reached nobody; saying "queued" is the one claim that is true here,
-           * and Track boards is where the outcome actually lands.
-           */
           if (data.queuedCount > 0) {
             toast.success(
               `Queued for ${data.queuedCount} board${data.queuedCount !== 1 ? "s" : ""}`,

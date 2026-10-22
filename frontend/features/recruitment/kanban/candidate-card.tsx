@@ -16,16 +16,12 @@ interface CandidateCardProps {
   onClick: (candidate: AtsPipelineCandidate) => void;
 }
 
-// Where a candidate came from is a taxonomy, not a status. REFERRAL takes
-// indigo rather than the blue it shared with LINKEDIN before the migration.
 const SOURCE_COLORS: Record<string, string> = {
   LINKEDIN: "bg-category-blue-surface text-category-blue-ink",
   REFERRAL: "bg-category-indigo-surface text-category-indigo-ink",
   DIRECT: "bg-muted text-muted-foreground",
   JOB_PORTAL: "bg-category-amber-surface text-category-amber-ink",
   CAMPUS: "bg-category-emerald-surface text-category-emerald-ink",
-  // Internal moves read as their own thing on the board; they are the one
-  // source where the candidate is already an employee.
   INTERNAL: "bg-category-violet-surface text-category-violet-ink",
 };
 

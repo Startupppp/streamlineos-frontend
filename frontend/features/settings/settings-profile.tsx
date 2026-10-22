@@ -15,7 +15,6 @@ import { useConfirmedSessionClaimsRefresh } from "@/hooks/common/use-confirmed-s
 import { apiClient } from "@/lib/api-client";
 import { z } from "zod";
 
-// Endpoint-only response contract for the avatar-upload API — not form or domain validation.
 const uploadKeyContract = z.object({ key: z.string() });
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";

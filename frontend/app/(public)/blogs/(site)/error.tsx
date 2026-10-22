@@ -1,9 +1,5 @@
 "use client";
 
-/**
- * The journal could not reach its content service. Recoverable by design: this is never presented
- * as "no articles" or "not found", because neither is true.
- */
 export default function JournalError({ reset }: { error: Error & { digest?: string }; reset: () => void }) {
   return (
     <div role="alert" className="mx-auto flex max-w-xl flex-col items-center px-4 py-32 text-center">

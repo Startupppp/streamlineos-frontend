@@ -13,7 +13,6 @@ function Table({
 }: React.ComponentProps<"table"> & {
   containerClassName?: string;
   containerAriaLabel?: string;
-  /** False when an outer element scrolls and is the labelled keyboard stop. */
   containerFocusable?: boolean;
 }) {
   return (

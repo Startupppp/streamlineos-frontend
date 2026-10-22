@@ -42,17 +42,9 @@ export interface ReadinessRailProps {
   ruleVersion?: string | null;
   progressPercent?: number | null;
   className?: string;
-  /** Sticky right rail on desktop command center */
   variant?: "card" | "rail";
 }
 
-/**
- * Signature PayrollOS component — every high-risk screen answers:
- * 1. Can I safely pay?
- * 2. What is blocking me?
- * 3. What changed?
- * 4. What should I do next?
- */
 export function ReadinessRail({
   canPay,
   level,

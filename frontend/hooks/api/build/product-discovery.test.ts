@@ -9,8 +9,6 @@ import { useEvidenceThemes, useOpportunity, useOutcomeReviews } from "./product-
 jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn() } }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
-// MP-B-008: a failed Insights widget read must stay inline, not take the
-// product route to its error boundary.
 const READS: Array<[string, () => { isError: boolean }]> = [
   ["opportunity pane", () => useOpportunity(7, 99)],
   ["evidence themes", () => useEvidenceThemes(7, {})],

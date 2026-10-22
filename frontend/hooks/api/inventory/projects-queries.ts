@@ -43,8 +43,6 @@ export function useProjects(filters?: ProjectFilters) {
         signal,
       );
     },
-    // Keeping the previous page on screen while the next loads is what stops a
-    // filter change flashing an empty table at somebody mid-scan.
     placeholderData: keepPreviousData,
     staleTime: 60_000,
     enabled: canView,

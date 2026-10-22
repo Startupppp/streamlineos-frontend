@@ -40,14 +40,6 @@ export function signalAccessInvalidation(orgId: string): void {
   } catch {}
 }
 
-/**
- * `access-schema` is the shortest path from the dashboard shell to Zod, and the
- * shell renders on every authenticated route — so importing these four as
- * values put Zod's entire runtime in every route's first load, including the
- * ones that never read an access endpoint. They are loaded when the read runs
- * instead. Each is still handed to `apiClient.get` in the contract slot, so
- * every one of these four routes is parsed exactly as before.
- */
 const accessContract = lazyContract(() =>
   import("@/hooks/api/access-schema").then((m) => m.accessResponseContract),
 );
@@ -90,9 +82,6 @@ export const useAccess = (
   }, [queryClient, orgId]);
 
   return useQuery<AccessResponse, Error>({
-    // The shell draws its own retryable "Couldn't load your organization" and
-    // the permission gate reports `unavailable`; throwing instead replaced the
-    // whole app with the root boundary on one transient 503 (BUG-HRMS-014).
     ...INLINE_READ_ERROR,
     staleTime: 5 * 60_000,
     refetchOnWindowFocus: "always",
@@ -123,18 +112,6 @@ export function useCan(permissionKey: PermissionKey): boolean {
   return usePermissionGate(permissionKey).allowed;
 }
 
-/**
- * The same question, answered in three values instead of two.
- *
- * `useCan` cannot distinguish "denied" from "not known yet" -- both are `false`,
- * because until the access response lands there is nothing to check against.
- * That is fine for deciding whether to *enable* a query, which is all it was
- * built for, and wrong for deciding what to *render*: a screen that branches on
- * the boolean tells a user who does hold the permission that access is
- * restricted, for as long as their own rights take to arrive.
- *
- * Ticket 26 is the other half of the same conflation, one layer down.
- */
 export function useCanState(permissionKey: PermissionKey): AccessState {
   const { data, isLoading } = useAccess();
   return accessState({
@@ -161,24 +138,12 @@ export function useCanManageOrganizationMembership(): boolean {
   return canManageOrganizationMembership(data);
 }
 
-/**
- * Module enablement is org configuration, not a permission — owners and
- * platform admins are gated by it too (they can turn a module on in
- * Settings → Modules). Only non-toggleable namespaces read as enabled.
- */
 export function useModuleEnabled(moduleKey: string): boolean {
   const { data } = useAccess();
   if (!data) return true;
   return data.modules[normalizeOrgModuleKey(moduleKey)] === true;
 }
 
-/**
- * Gated here rather than through `useGatedQuery` because this module is what
- * `hooks/api/gated-query` imports its gate from; calling back into it would
- * close an import cycle. The composition is the same one `useGatedQuery`
- * performs — the caller's own `enabled` is ANDed with the permission, never
- * replaced — and the result carries the same `access` gate.
- */
 export const usePermissionCatalog = (
   options?: Omit<UseQueryOptions<Permission[], Error>, "queryKey" | "queryFn">,
 ): Gated<UseQueryResult<Permission[], Error>> => {
@@ -194,11 +159,6 @@ export const usePermissionCatalog = (
   return gated(query, access);
 };
 
-/**
- * Deliberately ungated: `GET /rbac/discovery/grantable` is `@AuthorizedInService`
- * — `RbacService.getDiscoveryGrantable` narrows the result to what the caller
- * may themselves delegate, so there is no route permission to mirror.
- */
 export const useRbacDiscoveryGrantable = (
   options?: Omit<
     UseQueryOptions<RbacDiscoveryGrantable, Error>,

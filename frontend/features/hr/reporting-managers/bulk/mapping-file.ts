@@ -5,12 +5,6 @@ import {
   type BulkReassignmentRowInput,
 } from "@/hooks/api/hr/reporting-line-bulk-jobs-schema";
 
-/**
- * The bulk reporting-change mapping file (PRD §7.6.1). Manager headers resolve
- * through the one shared alias map (`components/hr/reporting-lines/manager-columns`,
- * mirroring the backend's normaliser); a row whose canonical and legacy manager
- * headers disagree is refused, as the server would. The server re-validates the rest.
- */
 
 export const MAPPING_COLUMNS = [
   { key: "employeeEmail", required: "Yes", notes: "Work email of the employee whose manager changes", sample: "priya.sharma@company.com" },
@@ -41,7 +35,6 @@ export interface ParsedMapping {
   errors: string[];
 }
 
-/** Rows keyed by raw header → canonical input rows. Row numbers in errors are sheet rows (header = 1). */
 export function mapMappingRows(raw: Array<Record<string, string>>): ParsedMapping {
   const rows: BulkReassignmentRowInput[] = [];
   const errors: string[] = [];

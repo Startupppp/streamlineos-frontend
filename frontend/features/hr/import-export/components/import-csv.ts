@@ -1,4 +1,3 @@
-/** Minimal RFC-4180-ish CSV reader for the staged import wizard (quoted fields, "" escapes). */
 function splitCsvLine(line: string): string[] {
   const result: string[] = [];
   let current = "";

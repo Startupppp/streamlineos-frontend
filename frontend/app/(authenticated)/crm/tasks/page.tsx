@@ -76,21 +76,6 @@ function isTaskEntityType(v: string): v is TaskEntityType {
   return entityTypes.includes(v);
 }
 
-/**
- * The follow-up queue.
- *
- * No row is drawn here. The columns, the type and status badges, the urgency
- * verdict, the assignee's name and the mobile card all come from `TASK_LAYOUT`;
- * the buckets stay because they are the queue's own structure — a task list
- * sorted by date is a list, a task list split at "overdue" and "today" is a
- * plan — and each non-empty one holds its own `RecordList`.
- *
- * Two things the description deliberately does not carry ride beside it: the
- * tick that closes a task, in `leading`, because closing one is what this
- * screen is *for* and putting it behind a menu would put the point of the
- * screen last; and the edit/delete menu, in `actions`, because what a row can
- * do depends on the caller rather than on what a task is.
- */
 function CrmTasksContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -166,11 +151,6 @@ function CrmTasksContent() {
     return names;
   }, [members]);
 
-  /*
-    A pending completion is folded into the projection rather than tracked by
-    the row, so the tick, the status badge and the urgency verdict all move
-    together the moment somebody closes a task.
-  */
   const bucketRows = useMemo(() => {
     const allTasks = data?.tasks ?? [];
     const term = search.trim().toLowerCase();
@@ -294,7 +274,7 @@ function CrmTasksContent() {
       }
     >
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
-        {/* Tasks logged on a customer, deal or subject timeline — same rows, read by assignee. */}
+        
         <MyTasksPanel />
 
         <StatCardGrid cols={5}>

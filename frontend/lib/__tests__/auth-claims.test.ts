@@ -48,7 +48,6 @@ describe("resolveSessionClaims — fresh wins over token", () => {
       makeToken({ name: "Old Token Name" }),
     );
     expect(result.name).toBe("Alice");
-    // If inverted: "Old Token Name" ≠ "Alice" → test fails
   });
 
   it("uses fresh image over token.picture", () => {
@@ -65,7 +64,6 @@ describe("resolveSessionClaims — fresh wins over token", () => {
       makeToken({ role: "ORG_ADMIN" }),
     );
     expect(result.role).toBe("MEMBER");
-    // If inverted: "ORG_ADMIN" ≠ "MEMBER" → test fails
   });
 
   it("uses fresh orgId over token orgId", () => {
@@ -82,7 +80,6 @@ describe("resolveSessionClaims — fresh wins over token", () => {
       makeToken({ isOrgOwner: true }),
     );
     expect(result.isOrgOwner).toBe(false);
-    // If inverted: true ≠ false → a former non-owner would gain owner privileges
   });
 
   it("uses fresh orgOnboardingCompletedAt over stale token value", () => {
@@ -99,7 +96,6 @@ describe("resolveSessionClaims — fresh wins over token", () => {
       makeToken({ organizationAccess: "suspended" }),
     );
     expect(result.organizationAccess).toBe("active");
-    // If inverted: "suspended" ≠ "active" → a reactivated org would stay suspended
   });
 
   it("uses fresh suspendedOrganizationName=null over token value", () => {
@@ -217,7 +213,6 @@ describe("resolveSessionClaims — organizationAccess derivation", () => {
       organizationAccess: "suspended",
     });
     expect(result.organizationAccess).toBe("suspended");
-    // If derivation ran before token fallback: "active" ≠ "suspended" → test fails
   });
 });
 
@@ -228,7 +223,6 @@ describe("resolveSessionClaims — isActive stale-token precedence", () => {
       makeToken({ isActive: true }),
     );
     expect(result.isActive).toBe(false);
-    // If inverted: true ≠ false → a deactivated user would see themselves as active
   });
 
   it("fresh isActive=true wins over token isActive=false", () => {
@@ -237,7 +231,6 @@ describe("resolveSessionClaims — isActive stale-token precedence", () => {
       makeToken({ isActive: false }),
     );
     expect(result.isActive).toBe(true);
-    // If inverted: false ≠ true → a reactivated user would be locked out
   });
 
   it("token isActive=false is used when fresh is null", () => {
@@ -253,7 +246,6 @@ describe("resolveSessionClaims — isActive stale-token precedence", () => {
   it("defaults to true when fresh is null and token.isActive is absent", () => {
     const result = resolveSessionClaims(null, {});
     expect(result.isActive).toBe(true);
-    // absence of the claim is not evidence of deactivation
   });
 
   it("defaults to true when fresh is null and token.isActive is undefined", () => {

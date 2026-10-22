@@ -37,7 +37,6 @@ export interface ProbationReview {
   workEmail: string | null;
 }
 
-
 export interface ProbationListParams {
   cursor?: string;
   limit?: number;
@@ -51,7 +50,6 @@ export interface ProbationListResponse {
     nextCursor: string | null;
   };
 }
-
 
 export function useProbationList(params: ProbationListParams = {}) {
   const canProbation = useCan("hr:probation:view");

@@ -17,7 +17,6 @@ describe("taskAnchorHref", () => {
     );
   });
 
-  /** Identifiers come from the API, and a raw one in a query string is a broken link. */
   it("escapes an identifier that would otherwise break the URL", () => {
     expect(taskAnchorHref({ kind: "party", id: "a b&c=d", name: null })).toBe(
       "/parties?partyId=a%20b%26c%3Dd",
@@ -30,7 +29,6 @@ describe("taskAnchorLabel", () => {
     expect(taskAnchorLabel({ kind: "deal", id: "1", name: "Q3 renewal" })).toBe("Q3 renewal");
   });
 
-  /** The task outlives the record it was about; it still has to read as something. */
   it.each([
     ["party" as const, "A record"],
     ["deal" as const, "A deal"],

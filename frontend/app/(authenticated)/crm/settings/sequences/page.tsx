@@ -24,13 +24,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { SEQUENCE_LAYOUT } from "@/lib/renderer/crm/settings/sequence-layout";
 import type { CrmSequence } from "@/types/crm";
 
-/**
- * Sequences.
- *
- * Opening a row opens the sequence — its details, its steps and who is enrolled
- * — because that is what somebody came here to do. Pausing one stays a switch in
- * the row: one field on a record already on screen needs no overlay at all.
- */
 export default function SequencesPage() {
   const layout = useTenantLayout(SEQUENCE_LAYOUT);
   const [density, setDensity] = useDensity();

@@ -16,7 +16,6 @@ import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type { DealStageTransition } from "@/types/crm/stage-transitions";
 
-/** Same three classes the timeline row composes, so the two surfaces match. */
 function tone(name: StatusTone): string {
   const classes = statusToneClasses(name);
   return cn(classes.surface, classes.ink, classes.rule);
@@ -24,7 +23,6 @@ function tone(name: StatusTone): string {
 
 interface DealStageHistoryProps {
   dealId: number | null;
-  /** Bring its own card, for a sidebar that mounts sections rather than lists. */
   card?: boolean;
 }
 
@@ -40,27 +38,9 @@ function describe(transition: DealStageTransition): string {
     : `Opened at ${transition.toStage}`;
 }
 
-/**
- * Every move this deal made, and what moved it.
- *
- * Separate from the activity timeline because a transition is a change of state
- * rather than something a person did, and ticket 08 models it apart so neither
- * can be mistaken for the other. A system move is marked, because a pipeline the
- * platform advances is only trustworthy if you can see where it did.
- */
 export function DealStageHistory({ dealId, card }: DealStageHistoryProps) {
   const body = <StageHistoryBody dealId={dealId} />;
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:deals:read") === "denied")
     return <NoPermissionState permission="crm:deals:read" />;
 

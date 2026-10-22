@@ -8,21 +8,11 @@ interface LocationSelectProps {
   warehouseId: number | undefined;
   value: string;
   onChange: (value: string) => void;
-  /**
-   * The trigger's accessible name — required, see `Combobox`'s own `ariaLabel`.
-   * Required rather than optional because every existing call site had simply
-   * omitted it, and an optional prop is reintroduced by omission.
-   */
   ariaLabel: string;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
   activeOnly?: boolean;
-  /**
-   * Narrow the list to one kind of bin — a write-off's scrap location is the
-   * first caller. Extending this select rather than writing a second one, so a
-   * later change to how a location is labelled reaches every picker.
-   */
   locationTypes?: readonly LocationType[];
 }
 

@@ -15,7 +15,6 @@ import { useRegionsCycle } from "./use-regions-cycle";
 
 type RegionsCardProps = ScaleContent["regions"] & { index: number };
 
-/** Share widths 121 / 100 / 42 (61 / 50 / 21 at 390); only the first is accent. */
 const BARS = [
   {
     width: "[--lane-fill:7.5625rem] w390:[--lane-fill:3.8125rem]",
@@ -33,19 +32,9 @@ const BARS = [
 
 const MONO = "font-mono text-scale-mono leading-scale-mono";
 
-/** Footer line types in once the bars are under way. */
 const FOOTER_DELAY = 700;
-/** Lock snaps shut once the lanes have landed, every cycle. */
 const LOCK_DELAY = 1_040;
 
-/**
- * Card / Runs where your data lives — 3888:6489 (art 3888:6492), 3949:13160,
- * 3832:8151, 3893:3786. Rows start at y76 on a 72 pitch, hairline 56 below
- * each row start (1440, 768); y44 / 69 pitch at 1024; y28 / 61 pitch, hairline
- * 46 at 390.
- * The art loops (useRegionsCycle): bars grow + count, heads pulse, lock snaps,
- * hold on the Figma frame, ease back, replay. Texts enter once.
- */
 export const RegionsCard = ({
   title,
   copy,
@@ -55,8 +44,6 @@ export const RegionsCard = ({
   index,
 }: RegionsCardProps) => {
   const { ref, phase, reduced } = useRegionsCycle<HTMLUListElement>();
-  /* The lock stays centred on the footnote line; it "snaps shut" with a small
-     springy pulse (a touch smaller while the lanes are still running). */
   const { lock } = useSpring({
     from: { lock: 0.82 },
     to: { lock: phase === "play" ? 1 : 0.82 },
@@ -75,8 +62,7 @@ export const RegionsCard = ({
       <p
         className={`absolute top-6 left-0 w-129.5 text-foreground-dim w1024:top-0 w1024:left-0 w1024:w-97.5 w768:top-6 w768:w-160 w390:top-0 w390:w-77.5 ${MONO}`}
       >
-        {/* Trailing space: TypeText's round(down, n × 1ch, 1ch) lands one ch short at
-          34 chars (float error) and clips the last glyph; the space absorbs it. */}
+        
         <TypeText delay={(index + 2) * REVEAL.step}>{`${label} `}</TypeText>
       </p>
 
@@ -117,7 +103,7 @@ export const RegionsCard = ({
         ))}
       </ul>
 
-      {/* lock centred on the footnote's first line (3972:702) in every frame */}
+      
       <animated.span
         aria-hidden="true"
         style={{ scale: lock }}

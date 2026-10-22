@@ -23,7 +23,6 @@ export interface ExecuteSubjectRequestInput {
   backupsExpireBy?: string;
 }
 
-/** Newest 200, server-capped; `subjectEmail` narrows to one person. */
 export function useSubjectRequests(subjectEmail?: string) {
   const params = subjectEmail ? { subjectEmail } : undefined;
   return useGatedQuery("compliance:subject-requests:view", {
@@ -33,7 +32,6 @@ export function useSubjectRequests(subjectEmail?: string) {
   });
 }
 
-/** Runs across every region and files a record; only declared operators pass the service gate. */
 export function useExecuteSubjectRequest() {
   const qc = useQueryClient();
   return useAuthorizedMutation<ExecuteSubjectRequestResult, Error, ExecuteSubjectRequestInput>(
@@ -41,7 +39,6 @@ export function useExecuteSubjectRequest() {
     {
       mutationKey: ["privacy", "subject-requests", "execute"],
       mutationFn: (body) => apiClient.post<ExecuteSubjectRequestResult>("/compliance/subject-requests", body, undefined, executeC),
-      // The filed record's timestamps and completeness are server-decided, so the list is refetched.
       onSuccess: () => qc.invalidateQueries({ queryKey: keys.subjectRequests() }),
     },
   );

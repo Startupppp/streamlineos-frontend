@@ -69,12 +69,6 @@ export function CandidateDetailPage() {
 
   const handleStatusChange = useCallback(
     (status: CandidateStatus) => {
-      /*
-        Same rule as the board: a reject collects its reason first. This page
-        rejects through PATCH rather than the stage endpoint, and both refuse a
-        rejection with no reason — so without the dialog this select would be
-        the one control that produced a 422 instead of a rejection.
-      */
       if (status === "REJECTED") {
         setRejectOpen(true);
         return;

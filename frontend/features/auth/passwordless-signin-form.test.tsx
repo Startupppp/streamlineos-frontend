@@ -223,11 +223,6 @@ describe("PasswordlessSigninForm", () => {
       expect(results).toHaveNoViolations();
     });
 
-    // jsdom has no layout engine — `scrollWidth` and `offsetWidth` are 0 here, so
-    // no jest test can see an overflow. The real 320px verdict is
-    // `scripts/verify-identity-journey.mjs`, whose `overflowVerdict` compares
-    // `scrollWidth` against `innerWidth` in Chrome. This only pins that the form
-    // mounts inside a narrow container.
     it("mounts inside a 320px container (overflow itself is proved in the browser harness)", async () => {
       setupMocks();
       const { container } = render(

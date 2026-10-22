@@ -77,7 +77,6 @@ interface PickSalesOrderLine {
   locationId: number;
   lotId?: number;
   serialId?: number;
-  /** Decimal string at scale 4 — this closes a reservation and feeds the shipment. */
   quantityPicked: string;
 }
 

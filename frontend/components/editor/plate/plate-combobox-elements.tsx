@@ -139,15 +139,6 @@ function applySlashCommand(editor: PlateEditor, key: string, path: Path) {
       editor.tf.setNodes({ type: 'p' }, { at: blockPath });
   }
 }
-/**
- * KB-B-005 / KB-B-033. The slash, mention and emoji input nodes are inline
- * *voids*, so they hold no text: reading the query with NodeApi.string always
- * gave "", typed characters went past the node, and a window-level keydown
- * listener swallowed Arrow/Enter for the whole editor while the node lived on
- * (and was saved as a stray "/"). The query now lives in a real <input> inside
- * the void, as Plate's own combobox does, and the node is cancelled back into
- * plain text on Escape, blur, or arrowing out, or removed on Backspace when empty.
- */
 function useComboboxQueryInput(
   element: TElement,
   trigger: string,

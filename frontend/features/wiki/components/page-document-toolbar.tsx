@@ -53,7 +53,6 @@ interface PageDocumentToolbarProps {
   onOpenLinkedRecords: () => void;
   onDelete: () => void;
   onNavigate: (pageId: number) => void;
-  /** Opens the mobile details sheet (below xl). */
   onOpenDetailsPanel?: () => void;
   onSpreadsheetExport?: (format: "xlsx" | "csv") => void;
 }

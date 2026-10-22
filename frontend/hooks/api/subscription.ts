@@ -42,12 +42,6 @@ export type {
 
 export type BillingCycle = "monthly" | "annual";
 
-/**
- * Deferred: `components/billing/trial-banner.tsx` renders inside the dashboard
- * shell, so a value import of these five put the whole billing schema — and
- * Zod — in front of every authenticated route. Every one is still passed in the
- * contract slot, so all five reads parse as before.
- */
 const subscriptionContractSource = lazyContract(() =>
   import("@/hooks/api/subscription-schema").then(
     (m) => m.subscriptionResponseContract,
@@ -101,11 +95,6 @@ export function useCreateSubscriptionOrder() {
   });
 }
 
-/**
- * Everything a settled purchase changes. The browser callback and the bounded
- * reconciliation poll below share this one list so a surface can never be refreshed
- * by one path and left stale by the other.
- */
 export function invalidateSettledPurchase(queryClient: QueryClient, orgId?: string): void {
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.subscription() });
   queryClient.invalidateQueries({ queryKey: growthAndSignQueryKeys.billing.summary() });
@@ -135,14 +124,6 @@ export function useVerifySubscription() {
 export const CHECKOUT_RECONCILIATION_ATTEMPTS = 6;
 export const CHECKOUT_RECONCILIATION_INTERVAL_MS = 5_000;
 
-/**
- * The browser callback is not the only way a purchase settles: the customer can close
- * the tab, or the confirmation can fail after the provider already captured, leaving the
- * provider webhook as the only entrance. This polls the subscription a bounded number of
- * times so those cases still converge, and stops the moment the term is visible. It is
- * deliberately bounded — an unbounded poll on a tab nobody is watching is a load source,
- * and a purchase that has not settled in this window is a support case, not a slow read.
- */
 export function useAwaitCheckoutReconciliation() {
   const queryClient = useQueryClient();
 

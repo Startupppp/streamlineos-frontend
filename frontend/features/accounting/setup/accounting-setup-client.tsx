@@ -237,12 +237,7 @@ export function AccountingSetupClient() {
         subtitle="Books, chart of accounts and tax rates in one step"
       >
         <div className="space-y-4">
-          {/*
-            An org with the module on and no book is not the same as an org
-            that never asked for accounting, and this screen used to render
-            both identically — an invitation to set something up, with no hint
-            that postings were already being accepted and recorded nowhere.
-          */}
+          
           {status ? <ProvisioningNotice provisioning={status.provisioning} /> : null}
           {canManage ? (
             <EnableAccountingCard onEnabled={handleEnabled} />

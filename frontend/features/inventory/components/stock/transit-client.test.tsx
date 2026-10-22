@@ -4,17 +4,6 @@ import { renderWithProviders } from "@/test-utils";
 import { TransitClient } from "./transit-client";
 import type { StrandedTransitResult, StrandedTransitRow } from "@/hooks/api/inventory/transit";
 
-/**
- * The four answers this screen has to keep apart.
- *
- * A refused read is not "nothing is stranded". Both would otherwise render as a
- * calm empty table, and only one of them means the warehouse is clear — the
- * other means the reader has not been given `inventory:stock:read` and is being
- * told, wrongly, that there is no problem. The same distinction has to hold
- * between a failed request and an empty one, and between the two empties: no
- * stranded lines in the STRANDED view is a different sentence from no transfers
- * on the road at all.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -85,8 +74,6 @@ function renderWith(
     refetch: jest.fn(),
     ...query,
   });
-  // `PageWrapper` renders a `Tooltip`, which the real tree gets from
-  // `query-provider`. Without it the page throws before a single assertion runs.
   return renderWithProviders(
     <TooltipProvider>
       <TransitClient />
@@ -124,8 +111,6 @@ describe("in-transit queue", () => {
     expect(screen.getByText("OPC 53 Grade Cement 50kg")).toBeInTheDocument();
     expect(screen.getByText("TRF-0041")).toBeInTheDocument();
     expect(screen.getByText("North DC")).toBeInTheDocument();
-    // The line id, the variant id and the warehouse id are all in the row and
-    // none of them is a thing to show an operator.
     expect(screen.queryByText("88")).not.toBeInTheDocument();
     expect(screen.queryByText("12")).not.toBeInTheDocument();
   });

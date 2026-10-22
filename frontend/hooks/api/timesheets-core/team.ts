@@ -56,10 +56,6 @@ export function useTeamWeekSummary(
     staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: enabled && canView,
-    // The Team page draws its own ErrorState with a Try Again for this read.
-    // Without this the provider's default throws the failure to the route
-    // error boundary instead, which replaces the entire page with
-    // "Failed to load team time data" and leaves that ErrorState unreachable.
     ...INLINE_READ_ERROR,
   });
 }
@@ -68,15 +64,9 @@ interface RemindTeamMemberInput {
   userId: string;
   weekStart: string;
   weekEnd: string;
-  /** Display name for the toast only; never sent. */
   memberName: string;
 }
 
-/**
- * The team view's manual "Remind". The server sends the same notification the
- * automatic sweep sends and throttles repeats per member and week, so a 429
- * surfaces as the server's own "reminded recently" message.
- */
 export function useRemindTeamMember() {
   return useAuthorizedMutation<{ sent: true }, Error, RemindTeamMemberInput>("timesheets:team:view", {
     mutationKey: ["timesheets", "team", "remind"],

@@ -24,7 +24,6 @@ export function importJobDisplayName(
   if (job.totalItems === 1) return "1 file";
   if (job.totalItems > 1) return `${job.totalItems} files`;
 
-
   const sourceLabel =
     job.sourceType === "markdown"
       ? "Markdown"

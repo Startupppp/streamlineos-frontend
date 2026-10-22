@@ -219,8 +219,6 @@ function AllSyncLogsTab() {
 
 export function DevicesPage() {
   const canManage = useCan("hr:biometric:manage");
-  // All three tabs read hr:biometric:manage-gated queries; a denied read looks
-  // like "No sync logs yet" unless denial is resolved first (FE-47).
   const pageState = usePageState({
     permission: "hr:biometric:manage",
     isLoading: false,

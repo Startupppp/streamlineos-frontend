@@ -48,28 +48,8 @@ const READ_KEY = "inventory:replenishment:read";
 const CREATE_KEY = "inventory:purchase-orders:create";
 const MANAGE_KEY = "inventory:replenishment:manage";
 const PAGE_SIZE = 20;
-/** Sentinel: choosing it removes the filter rather than sending "all" (§9). */
 const ALL_WAREHOUSES = "all";
 
-/**
- * C2 — the replenishment screen reviews forecasts that were actually recorded.
- *
- * It used to read `GET /inventory/replenishment/suggestions`, a min/max rule
- * breach computed per request, and post the quantity it had been handed back —
- * so the number on a purchase order originated at the client and the persisted
- * forecast engine was decoration. Every row here is now an
- * `inv_demand_forecasts` row, the quantity column is the server's own, and
- * approving sends proposal ids and nothing that could be mistaken for a
- * quantity.
- *
- * A buyer who knows better is not locked out; they are asked to say so. An
- * override names its proposal, carries a reason and is recorded beside the
- * order, and the engine's own figure stays on the row next to it — struck
- * through rather than deleted, so the two numbers are never confused for one.
- *
- * Min/max rules keep their own screen (Manage rules) and their own report; what
- * they no longer do is decide what a purchase order says.
- */
 export function ReplenishmentClient() {
   const canRead = useCan(READ_KEY);
   const canCreate = useCan(CREATE_KEY);
@@ -168,9 +148,6 @@ export function ReplenishmentClient() {
   function handleWarehouseChange(value: string): void {
     setWarehouseId(value);
     setPage(1);
-    // A selection made against one site's proposals means nothing against
-    // another's, and an override carries a proposal id that is about to leave
-    // the list — so both are dropped rather than silently carried across.
     setSelected(new Set());
     setOverrides(new Map());
   }

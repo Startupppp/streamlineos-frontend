@@ -28,13 +28,6 @@ export function getTodayString(): string {
   return formatDateOnly(new Date());
 }
 
-/**
- * Date and time, for a log where "when exactly" is the question being asked.
- *
- * `formatShortDate` deliberately drops the time, which is right for a due date
- * and wrong for an audit trail: two events a minute apart would render
- * identically and the order would look arbitrary.
- */
 export function formatDateTime(value: string | Date | null | undefined): string {
   if (!value) return "";
   const d = value instanceof Date ? value : new Date(value);
@@ -42,15 +35,6 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   return format(d, "d MMM yyyy, HH:mm:ss");
 }
 
-/**
- * A calendar date the backend sent as a bare `YYYY-MM-DD` — a posting date, a
- * period boundary, an expiry.
- *
- * `new Date("2026-09-01")` is UTC midnight, which is 31 August for every reader
- * west of UTC; `parseISO` reads a date-only string as local midnight, so the day
- * that renders is the day that was stored. Use `formatShortDate` for a value
- * that carries a time (an `ISO` timestamp), and this for one that does not.
- */
 export function formatCalendarDate(value: string | null | undefined): string {
   if (!value) return "";
   const parsed = parseISO(value);
@@ -58,15 +42,6 @@ export function formatCalendarDate(value: string | null | undefined): string {
   return format(parsed, "d MMM yyyy");
 }
 
-/**
- * A `YYYY-MM-DD` from the API is a CALENDAR DATE, not an instant — `date` columns
- * (order date, expiry date, expected delivery) carry no time and no zone. Parsing
- * one with `new Date()` invents midnight UTC, and projecting that instant into the
- * reader's zone moves the day: an expiry of `2026-07-12` read as "11 Jul 2026" for
- * every reader west of UTC. A calendar date is therefore rendered in UTC, where the
- * invented instant and the intended day agree; a real instant still renders in the
- * reader's own zone, which is what a timestamp means to them.
- */
 export function formatShortDate(value: string | Date | null | undefined): string {
   if (!value) return "";
   if (typeof value === "string" && CALENDAR_DATE.test(value)) {
@@ -81,18 +56,6 @@ export function formatShortDate(value: string | Date | null | undefined): string
 
 
 
-/**
- * "2 hours ago", for a feed that is read as a stream of recent events.
- *
- * `Intl.RelativeTimeFormat` rather than a hand-rolled ladder: it is locale-aware
- * for free and gets the plural rules right, which a `n === 1 ? "" : "s"` does
- * not once the locale is not English.
- *
- * Beyond a week it falls back to an absolute date. "43 days ago" is arithmetic
- * the reader has to undo; a date is the thing they were going to work out
- * anyway. Always pair it with the exact timestamp in a `title` or `dateTime`,
- * because an audit trail has to be able to answer "when exactly".
- */
 export function formatRelativeTime(
   value: string | Date | null | undefined,
   now: Date = new Date(),
@@ -104,7 +67,6 @@ export function formatRelativeTime(
   const seconds = Math.round((then.getTime() - now.getTime()) / 1000);
   const absolute = Math.abs(seconds);
 
-  // Under a minute reads better as words than as "in 0 seconds".
   if (absolute < 45) return "just now";
 
   const formatter = new Intl.RelativeTimeFormat("en-IN", { numeric: "auto" });
@@ -195,12 +157,6 @@ export function endOfDayInTimeZone(now: Date, zone: string | null | undefined): 
   return new Date(wallEnd - zoneOffsetMs(guess, timeZone));
 }
 
-/**
- * An IANA zone the browser does not know makes `Intl.DateTimeFormat` throw a
- * `RangeError`, which would take the whole detail panel down. The backend
- * contract only promises a string, so an unknown zone degrades to the reader's
- * rather than crashing the render.
- */
 function resolveTimeZone(zone: string | null | undefined, fallback: string): string {
   if (!zone) return fallback;
   try {
@@ -211,14 +167,6 @@ function resolveTimeZone(zone: string | null | undefined, fallback: string): str
   }
 }
 
-/**
- * A calendar event's start and end are absolute instants; the zone it was
- * authored in is a separate fact. Rendering the instant in the reader's zone
- * and labelling it with the reader's zone is right about the moment and silent
- * about the intent — a 09:00 Asia/Kolkata standup reads as 03:30 Europe/London
- * with nothing saying it was not scheduled at 03:30. When the authored zone is
- * known and differs, the authored reading leads and the reader's follows.
- */
 export function formatEventTimeRange(
   start: string | Date,
   end: string | Date,

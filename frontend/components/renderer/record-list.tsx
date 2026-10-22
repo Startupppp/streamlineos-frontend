@@ -32,21 +32,17 @@ type BorrowedProps<T extends RecordValue = RecordValue> = Pick<
   | "onRowClick"
   | "minWidth"
   | "className"
-  /*
     Selection is borrowed rather than described. Which rows a person may pick,
     and what picking them does, depends on the caller's permissions and on the
     action being staged — a screen concern, like the row actions beside it. The
     table already owns the checkbox column and select-all; forwarding is what
     stops every list growing its own.
-  */
   | "selection"
-  /*
     A load-more control under the rows. Borrowed rather than described for the
     same reason selection is: whether there is another page to fetch is a fact
     about the caller's query, not about the shape of the record. Two nurture
     lists page by cursor and had nowhere to put the control, which is the only
     reason a keyset list could not be described.
-  */
   | "footer"
 >;
 
@@ -54,59 +50,10 @@ export interface RecordListProps<T extends RecordValue = RecordValue> extends Bo
   layout: RecordLayout;
   rows: T[];
   getRowKey: (row: T, index: number) => string;
-  /**
-   * A trailing column for per-row controls. Not part of the description because
-   * what a row can do depends on the caller's permissions, which is a screen
-   * concern rather than a shape one.
-   */
   actions?: (row: T) => ReactNode;
-  /**
-   * A leading column for the one control a row is *about*.
-   *
-   * Symmetric with `actions` and separate from `selection` on purpose. Selection
-   * stages a bulk action and brings a select-all header with it; this is a
-   * per-row control that changes the record on the spot — ticking a task done is
-   * the example it exists for, and putting that on the right of the row, behind
-   * a menu, is putting the point of the screen last.
-   *
-   * Not part of the description, for the same reason `actions` is not: what a
-   * row can do depends on the caller's permissions.
-   */
   leading?: (row: T) => ReactNode;
-  /**
-   * Set by the surface so the toggle can live in its toolbar. Omitted, the list
-   * renders comfortable and shows no control — a screen with no room for one
-   * should not grow a floating button.
-   */
   density?: DensityMode;
-  /**
-   * The tenant's currency, for `money` fields.
-   *
-   * Passed in rather than read from `useOrgDisplay` inside the engine, and
-   * deliberately: the renderer takes its input as data — a layout and rows — and
-   * a hook here would make every consumer, including a test of the engine
-   * itself, require a QueryClientProvider to render a table. Surfaces read the
-   * hook once and hand the value down, the same way they hand down the layout.
-   */
   money?: MoneyDisplay;
-  /**
-   * A cell for a described field whose value the engine has no vocabulary to
-   * draw. Keyed by field name.
-   *
-   * Symmetric with `RecordForm`'s `controls`, and deliberately weaker than the
-   * two slots above it: `leading` and `actions` add a column the description
-   * does not declare, whereas this one can only replace the *value* of a column
-   * it does. The header, the alignment, the width, the position, the mobile
-   * card and whether the tenant sees the column at all all still come from the
-   * layout — what the surface supplies is the pixels of one value.
-   *
-   * It exists for a field that is a series rather than a figure: a rep's talk
-   * ratio across the window is drawn as a sparkline, and a description can say
-   * "this field is that rep's trend" without the engine having to know what a
-   * basis point is or how to word the chart's label. A key naming a field the
-   * description does not carry draws nothing, because a column nobody declared
-   * is a column no tenant could rearrange or hide.
-   */
   cells?: Record<string, (row: T) => ReactNode>;
 }
 
@@ -178,11 +125,6 @@ function MobileRecordCard<T extends RecordValue>({
             {layout.list.columns
               .filter((column) => column.field !== primaryField.name)
               .map((column) => {
-                /*
-                  A drawn cell has no text to be empty, so it is asked for
-                  directly rather than gated on `formatFieldText` -- which reads
-                  a series as nothing and would drop the column off the phone.
-                */
                 const drawn = cells?.[column.field];
                 if (drawn)
                   return (
@@ -328,11 +270,6 @@ export function RecordList<T extends RecordValue = RecordValue>({
             {layout.list.columns
               .filter((column) => column.field !== primaryField.name)
               .map((column) => {
-                /*
-                  A drawn cell has no text to be empty, so it is asked for
-                  directly rather than gated on `formatFieldText` -- which reads
-                  a series as nothing and would drop the column off the phone.
-                */
                 const drawn = cells?.[column.field];
                 if (drawn)
                   return (

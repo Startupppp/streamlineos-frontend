@@ -18,18 +18,9 @@ export interface SubjectFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: SubjectType;
-  /** Absent for a create. */
   subject?: RenderableSubject;
 }
 
-/**
- * Create and edit, rendered from the tenant's declaration.
- *
- * `reference` and `status` belong to every subject whatever its type, so they
- * are split back out of the form's flat values here; everything else is a
- * declared field and travels as `values`. This split is the only place the two
- * representations meet on the way in, mirroring `subjectRecord` on the way out.
- */
 export function SubjectFormDialog({ open, onOpenChange, type, subject }: SubjectFormDialogProps) {
   const layout = subjectLayout(type);
   const createSubject = useCreateSubject();

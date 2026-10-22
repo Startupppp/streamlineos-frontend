@@ -12,14 +12,6 @@ import { DEFAULT_MONEY_DISPLAY, formatDecimal, formatMoneyRounded } from "@/lib/
 import { DarkStoreBoard } from "./dark-store-board";
 import { StockBucketBar } from "./stock-bucket-bar";
 
-/**
- * B2 — the zone board.
- *
- * One question per row: what is in each Hyderabad zone, how much of it can
- * actually be promised, and where the gaps are. The org-wide totals sit above
- * the per-store cards rather than beside them, because "we hold 15,651 units"
- * and "Uppal is out of cement" are read at different moments.
- */
 export function DarkStoresClient() {
   const canRead = useCan("inventory:stock:read");
   const { data, isLoading, error, refetch } = useOpsSummary();

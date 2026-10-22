@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 import { partialMatchKey } from "@tanstack/react-query";
 import type { QueryKey } from "@tanstack/react-query";
 import { buildWorkQueryKeys } from "./build-work";

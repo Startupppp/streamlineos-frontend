@@ -12,15 +12,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { useWorkAging, type AgeBand, type WorkAging, type WorkAgingLane } from "@/hooks/api/inventory/operations-metrics";
 
-/**
- * B10 — how old the open work is.
- *
- * Throughput answers "how much moved in this window", and it cannot answer "what
- * has been sitting here since Tuesday": a lane processing a hundred lines a day
- * with one receipt stuck for a week looks healthy by volume. The bands are the
- * part a supervisor acts on, which is why the drill-through carries the lane
- * rather than dropping the reader on an unfiltered list.
- */
 
 interface Lane {
   key: keyof Pick<WorkAging, "receipts" | "putaway" | "picking" | "pickExceptions" | "shipping">;
@@ -36,18 +27,6 @@ const LANES: Lane[] = [
   { key: "shipping", label: "Shipping", href: "/inventory/operations/shipping" },
 ];
 
-/**
- * The oldest band with anything in it decides the lane's tone — not the total.
- *
- * A lane with eighty items all under four hours is busy and fine; a lane with one
- * item three days old is not. Colouring by volume would say the opposite of what
- * the reader needs.
- *
- * Ranked by label rather than by position, so the colour does not depend on the
- * order the API happened to serialise the bands in: the type pins the four labels
- * and says nothing about their order, and a reordering upstream would otherwise
- * turn a three-day backlog green.
- */
 const BAND_SEVERITY: Record<AgeBand["label"], number> = {
   "72h+": 3,
   "24-72h": 2,
@@ -119,15 +98,6 @@ export function WorkAgingPanel({ warehouseId, className }: WorkAgingPanelProps) 
 
   if (!data) return null;
 
-  /**
-   * The distinction this panel exists to preserve.
-   *
-   * An empty `scopedWarehouseIds` means the reader is assigned no warehouse, so
-   * every count below is zero for a reason that has nothing to do with the
-   * warehouse being idle. Rendering the same all-zero cards for both tells
-   * somebody their queue is clear when in fact they cannot see any queue — and
-   * the throughput report above already makes exactly that mistake.
-   */
   if (data.scopedWarehouseIds !== null && data.scopedWarehouseIds.length === 0) {
     return (
       <section className={cn(CONTENT_PANEL_SOLID, "p-4", className)}>
@@ -182,10 +152,6 @@ export function WorkAgingPanel({ warehouseId, className }: WorkAgingPanelProps) 
                     variant="outline"
                     className={cn(
                       "h-5 px-2 py-0.5 text-xs",
-                      // `statusToneClasses` returns an object keyed by role, not
-                      // a class string. Handing it straight to `cn()` emits the
-                      // role *names* — "surface ink inkStrong rule fill" — as
-                      // class names, which silently produces an unstyled badge.
                       toneClasses.surface,
                       toneClasses.ink,
                       toneClasses.rule,

@@ -122,11 +122,6 @@ export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopB
     }
   }
 
-  /*
-    Separate from the signed PDF on purpose. They answer different questions --
-    one is WHAT was agreed, the other is HOW it was signed and by whom -- and a
-    dispute asks for the second.
-  */
   async function handleDownloadCertificate() {
     try {
       const result = await downloadCertificate.mutateAsync();

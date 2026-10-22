@@ -12,7 +12,6 @@ const mailAttachmentContract = z.object({
   sizeBytes: z.number().int().nullable(),
 });
 
-/** `mailAccountSchema` */
 export const mailAccountContract = z.object({
   id: z.number().int(),
   provider: z.enum(["gmail", "outlook"]),
@@ -22,7 +21,6 @@ export const mailAccountContract = z.object({
   isPrimary: z.boolean(),
 });
 
-/** `mailAccountListSchema` */
 export const mailAccountListContract = z.array(mailAccountContract);
 
 const mailAccountErrorContract = z.object({
@@ -31,7 +29,6 @@ const mailAccountErrorContract = z.object({
   message: z.string(),
 });
 
-/** `mailListResponseSchema` */
 export const mailListResponseContract = z.object({
   messages: z.array(
     z.object({
@@ -72,24 +69,15 @@ const mailMessageDetailContract = z.object({
   attachments: z.array(mailAttachmentContract),
 });
 
-/** `mailThreadSchema` — array of detail messages. */
 export const mailThreadContract = z.array(mailMessageDetailContract);
 
-/** `mailMessageSchema` — single message detail. */
 export const mailMessageContract = mailMessageDetailContract;
 
-/** `mailDownloadSchema` */
 export const mailDownloadContract = z.object({
   downloadUrl: z.string(),
   fileName: z.string(),
 });
 
-/**
- * `mailAiInboxSummarySchema` declares `aiUsage: { inputTokens, outputTokens }`,
- * which the gateway never emits: `MailAiService.inboxSummary` returns
- * `result.aiUsage`, an `AiUsageMeta` (`ai-gateway.types.ts`). The declared shape
- * would strip every field `AiUsageChip` reads.
- */
 const aiUsageMetaContract = z.object({
   model: z.string(),
   promptTokens: z.number().int(),
@@ -112,7 +100,6 @@ export const mailAiInboxSummaryContract = z.object({
   aiUsage: aiUsageMetaContract.optional(),
 });
 
-/** `mailAiThreadSummarySchema` */
 export const mailAiThreadSummaryContract = z.object({
   summary: z.string(),
   actionItems: z.array(z.string()),
@@ -122,7 +109,6 @@ export const mailAiThreadSummaryContract = z.object({
     .optional(),
 });
 
-/** `mailAiDraftSchema` */
 export const mailAiDraftContract = z.object({
   subject: z.string(),
   bodyHtml: z.string(),
@@ -131,8 +117,6 @@ export const mailAiDraftContract = z.object({
     .optional(),
 });
 
-/** `mailSentSchema` */
 export const mailSendResultContract = z.object({ sent: z.literal(true) });
 
-/** `mailActionSuccessSchema` */
 export const mailActionSuccessContract = z.object({ ok: z.literal(true) });

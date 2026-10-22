@@ -1,7 +1,6 @@
 import type { JobPosting } from "@/types/hr/recruitment";
 import type { CreateJobFormValues } from "./schema";
 
-/** Exported so the template mapper reads the same `=== SECTION ===` markers this writes, rather than a second parser that can drift from it. */
 export function extractSection(text: string, section: string): string {
   const marker = `=== ${section} ===`;
   const idx = text.indexOf(marker);

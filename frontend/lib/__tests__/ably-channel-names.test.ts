@@ -11,50 +11,10 @@ import {
   supportChannelName,
 } from "../ably-channels";
 
-/**
- * One Ably channel namespace, mirrored across the two repositories.
- *
- * Backend commit 5ac74c398 moved every Ably channel behind a cell prefix:
- * `chat:${orgId}:${channelId}` became `cell:legacy-1:chat:${orgId}:${channelId}`
- * in both the capability the token grants AND the channel the server publishes
- * on. The frontend was never updated. Thirteen call sites still asked Ably for
- * the pre-5ac74c398 names, which the token does not authorise, so every chat,
- * huddle, notification and support subscription was refused with a 403 that
- * `safeSubscribe` swallows — no inbound message, edit, deletion, reaction or
- * typing indicator reached an open window, and nothing in the UI said so.
- *
- * Four things have to hold, and the first three are asserted from the backend
- * source rather than from a copy of it:
- *   FORMULA    the frontend's prefix is the backend's own `cellPrefixed`
- *              formula, evaluated at the backend's own default cell id.
- *   NAMESPACES every namespace the backend prefixes has a frontend builder,
- *              and that builder emits the prefix.
- *   GRANTED    every name a frontend builder emits is a key the backend's token
- *              capability actually contains, with the operations that name needs.
- *   NO LITERALS no frontend file hands `ably.channels.get()` a channel name
- *              built inline. A literal is how the drift got in and is the only
- *              way it can come back.
- *
- * GRANTED is here because PREFIXED was not enough and this file proved it. After
- * the cell-prefix repair every builder produced a correctly prefixed name and
- * NAMESPACES went green, yet `chat:{orgId}:presence` appeared in NO key of
- * `createChatTokenRequest`'s capability map — the org-wide presence channel was
- * named correctly and granted not at all, so `useChatPresence`'s `presence.enter`
- * kept being refused with a 403 its own `.catch(() => {})` swallows. A prefix
- * assertion cannot see that; only reading the capability keys can. Note also that
- * ENTERING a presence set needs Ably's `presence` operation — `subscribe` alone
- * only reads the set — which is why the ops, not just the key, are asserted.
- *
- * ANTI-VACUITY. Every reader of foreign source carries a floor. A regex that
- * silently stops matching reports "no drift", and this repository has confirmed
- * instances of a gate passing over code it never read.
- */
 
 const MEASURED_NAMESPACE_FLOOR = 4;
 const MEASURED_CALLSITE_FLOOR = 10;
-/** Measured after the Meet cutover: notifications, chat presence, chat:{id}, huddle:{id}. */
 const MEASURED_CHAT_CAPABILITY_FLOOR = 4;
-/** Measured after the Meet cutover: chat, chat presence, huddle, notifications, support. */
 const MEASURED_BUILDER_FLOOR = 5;
 
 const BACKEND_NAMESPACE = backendPath(
@@ -85,15 +45,12 @@ function readBackendTemplate(file: string, fnName: string): string {
   return firstGroup(pattern.exec(source), `${fnName} template in ${file}`);
 }
 
-/** The backend's `cellPrefixed`, re-derived from the backend's own source text. */
 function backendCellPrefixed(cellId: string, channel: string): string {
   const prefixTemplate = readBackendTemplate(
     BACKEND_NAMESPACE,
     "cellChannelPrefix",
   );
   const prefixedTemplate = readBackendTemplate(BACKEND_NAMESPACE, "cellPrefixed");
-  // FORMULA anti-vacuity: both templates must still be interpolations, or the
-  // substitutions below would "agree" with anything.
   expect(prefixTemplate).toContain("${cellId}");
   expect(prefixedTemplate).toContain("${cellChannelPrefix(cellId)}");
   expect(prefixedTemplate).toContain("${channel}");
@@ -112,7 +69,6 @@ function backendLegacyCellId(): string {
   );
 }
 
-/** Every channel namespace the backend routes through `cellPrefixed`. */
 function backendPrefixedNamespaces(): string[] {
   const source = fs.readFileSync(BACKEND_ABLY_SERVICE, "utf8");
   const found = new Set<string>();
@@ -127,15 +83,6 @@ function backendPrefixedNamespaces(): string[] {
   return [...found].sort();
 }
 
-/**
- * The concrete values every backend template placeholder is resolved to.
- *
- * Resolution is by SUBSTITUTION, not by turning the template into a wildcard: a
- * wildcard for `${channelId}` would make `chat:org-1:presence` "match" the
- * numbered-channel template, and the missing presence grant would hide behind the
- * very key whose absence broke it. A literal `*` in a template stays a wildcard —
- * `support:${orgId}:*` really is granted with one.
- */
 const TEMPLATE_VALUES: Readonly<Record<string, string>> = {
   orgId: "org-1",
   clientId: "user-1",
@@ -156,7 +103,6 @@ function resolveTemplate(template: string): string {
   });
 }
 
-/** The brace-matched body of a named method in the backend's ably.service.ts. */
 function backendMethodBody(source: string, methodName: string): string {
   const start = source.indexOf(`${methodName}(`);
   if (start === -1) throw new Error(`${methodName} not found in ably.service.ts`);
@@ -174,7 +120,6 @@ function backendMethodBody(source: string, methodName: string): string {
   throw new Error(`${methodName} body is unbalanced`);
 }
 
-/** `presenceChannelName(orgId) { return cellPrefixed(this.cellId, \`…\`); }` -> the template. */
 function backendChannelHelperTemplate(source: string, methodName: string): string {
   const body = backendMethodBody(source, methodName);
   return firstGroup(
@@ -188,15 +133,6 @@ interface CapabilityGrant {
   readonly ops: readonly string[];
 }
 
-/**
- * Every `resource -> operations` pair `createChatTokenRequest` puts in its capability map.
- *
- * Both spellings are read: the object literal's `[expr]: [ops]` entries and the
- * per-channel `capability[expr] = [ops]` assignments in the loop below it. The
- * resource expression is either an inline `cellPrefixed(this.cellId, \`tpl\`)` or a
- * call to one of the service's own `…ChannelName` helpers, which is followed into
- * that helper rather than assumed.
- */
 function backendChatCapability(): CapabilityGrant[] {
   const source = fs.readFileSync(BACKEND_ABLY_SERVICE, "utf8");
   const body = backendMethodBody(source, "createChatTokenRequest");
@@ -227,7 +163,6 @@ function backendChatCapability(): CapabilityGrant[] {
   return grants;
 }
 
-/** The resource keys `createSupportTokenRequest` grants, both branches of it. */
 function backendSupportCapabilityKeys(): string[] {
   const source = fs.readFileSync(BACKEND_ABLY_SERVICE, "utf8");
   const body = backendMethodBody(source, "createSupportTokenRequest");
@@ -243,11 +178,6 @@ function backendSupportCapabilityKeys(): string[] {
   return keys;
 }
 
-/**
- * An Ably capability resource may carry a `*`, which matches one or more whole
- * segments. `support:${orgId}:*` is granted that way on purpose, so a name is
- * covered when it equals a key or matches one whose `*` is expanded.
- */
 function capabilityCovers(key: string, name: string): boolean {
   if (!key.includes("*")) return key === name;
   const pattern = key
@@ -264,7 +194,6 @@ function grantFor(
   return grants.find((grant) => capabilityCovers(grant.key, name));
 }
 
-/** Every exported channel-name builder in lib/ably-channels.ts, counted from its source. */
 function frontendBuilderNames(): string[] {
   const source = fs.readFileSync(
     path.join(__dirname, "..", "ably-channels.ts"),
@@ -318,8 +247,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
   it("FORMULA: the frontend prefix is the backend's own formula at its default cell id", () => {
     const legacyCellId = backendLegacyCellId();
 
-    // `CELL_ID` is optional on the backend (env.validation.ts:46) and falls back
-    // to LEGACY_CELL_ID, so an unconfigured deployment of both halves has to agree.
     expect(ABLY_CELL_ID).toBe(legacyCellId);
 
     for (const inner of [
@@ -329,7 +256,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
       "support:org-1:42",
     ]) {
       expect(cellPrefixed(inner)).toBe(backendCellPrefixed(legacyCellId, inner));
-      // and it is genuinely a prefix, not a no-op that would agree trivially
       expect(cellPrefixed(inner)).not.toBe(inner);
     }
   });
@@ -364,7 +290,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
       expect(entry.built).toBe(backendCellPrefixed(legacyCellId, entry.inner));
     }
 
-    // The presence channel shares the `chat` namespace and must be prefixed too.
     expect(chatPresenceChannelName("org-1")).toBe(
       backendCellPrefixed(legacyCellId, "chat:org-1:presence"),
     );
@@ -375,10 +300,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
       const chat = backendChatCapability();
       const support = backendSupportCapabilityKeys();
 
-      // Anti-vacuity: a regex that stopped matching would report every name
-      // ungranted, not granted — but an EMPTY read plus a `.find()` that returns
-      // undefined is exactly the shape that turns "granted" into "unchecked" if
-      // the assertions below were ever relaxed to `toBeDefined() || skip`.
       expect(chat.length).toBeGreaterThanOrEqual(MEASURED_CHAT_CAPABILITY_FLOOR);
       expect(support.length).toBeGreaterThan(0);
       for (const grant of chat) {
@@ -413,8 +334,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
       const grants = backendChatCapability();
       const presence = grantFor(grants, chatPresenceChannelName("org-1"));
 
-      // `presence.enter` needs Ably's `presence` op. `subscribe` reads the set;
-      // it does not let the client join it.
       expect(presence?.ops).toContain("presence");
       expect(presence?.ops).toContain("subscribe");
     });
@@ -438,9 +357,6 @@ describe("Ably channel names — cell prefix contract with the backend", () => {
     });
 
     it("does not report an unbuilt name as granted", () => {
-      // The coverage check must be able to say no, or every assertion above is
-      // trivially true. `chat:org-1:presence-shadow` differs from both the
-      // presence key and the numbered-channel key by one segment's content.
       const grants = backendChatCapability();
       expect(
         grantFor(grants, cellPrefixed("chat:org-1:presence-shadow")),

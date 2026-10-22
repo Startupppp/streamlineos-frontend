@@ -170,8 +170,6 @@ export default function TemplatesPage() {
   const [pendingTemplateKey, setPendingTemplateKey] = useState<string | null>(
     null,
   );
-  // KB-B-018: pendingTemplateKey only disables after a re-render, so a fast
-  // double-click created two pages. The ref closes synchronously.
   const createInFlight = useRef(false);
 
   const handleUseTemplate = useCallback(

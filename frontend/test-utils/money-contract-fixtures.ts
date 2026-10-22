@@ -1,9 +1,3 @@
-/**
- * Response bodies shaped exactly as the backend services build them, verified
- * against each controller, its service projection and the Drizzle column types.
- * Money is a string wherever the column is `decimal`/`numeric` and no server
- * side cast intervenes — which is everywhere here except `/invoices/stats`.
- */
 
 export const SUBSCRIPTION_PAYMENT = {
   id: 11,

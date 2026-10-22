@@ -19,14 +19,6 @@ import { LEAD_PRIORITY_OPTIONS, LEAD_STATUS_OPTIONS } from "@/lib/renderer/crm/l
 import type { Lead, LeadPriority, PipelineStatus } from "@/types/leads";
 import type { TeamMember } from "./leads-types";
 
-/**
- * What a row can do, in the one slot the engine leaves for it.
- *
- * The table this replaces edited status, priority and owner in the cells
- * themselves, behind a double-click nobody discovers. `RecordList` has no
- * editable cell and should not grow one — a cell renders a value — so the same
- * three transforms live here instead, on a row menu that says what it does.
- */
 
 export interface LeadRowControlsProps {
   lead: Lead;
@@ -70,8 +62,6 @@ export function LeadRowControls({
     [lead.id, lead.assignedToId, onAssign],
   );
 
-  // Opening a menu or ticking a box is not opening the lead, and the whole row
-  // is a link.
   const stopClick = useCallback((event: MouseEvent<HTMLDivElement>) => {
     event.stopPropagation();
   }, []);

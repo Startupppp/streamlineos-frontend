@@ -1,17 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * A quote template, as data.
- *
- * `branding` is deliberately absent. The endpoint accepts an arbitrary
- * `Record<string, unknown>` for it and no screen has ever offered a control; a
- * description whose fields are typed cannot name a free-form object, and a field
- * nothing edits is a column that renders nothing. It is left to whatever builds
- * branding when something does.
- *
- * The quote *settings* beside this on the page are described separately, as a
- * singleton — see `QUOTE_SETTINGS_LAYOUT` below.
- */
 export const QUOTE_TEMPLATE_LAYOUT: RecordLayout = {
   key: "crm:settings:quote-template",
   singular: "Quote template",
@@ -60,25 +48,6 @@ export const QUOTE_TEMPLATE_LAYOUT: RecordLayout = {
   },
 };
 
-/**
- * How quoting behaves across the organisation — one record, never listed.
- *
- * A singleton, and the reason `validateLayout` stopped insisting on a primary
- * column: there is exactly one of these per tenant, reached from a settings
- * page, so `list.columns` is empty rather than inventing a table nobody will
- * see. An empty list is a real shape; a list with columns and no primary one is
- * still an error, because that renders a mobile card with no title.
- *
- * `titleField` is the one thing a singleton still has to name and has no answer
- * for — nothing here titles the record, because the record is the settings. It
- * points at the figure a reader would recognise the page by, and nothing renders
- * it: there is no list, and the surface renders a form rather than a detail
- * view.
- *
- * `maxDiscountPercent` is nullable and means "no ceiling" when empty, which is
- * why the surface sends `null` for a blank rather than omitting it. The other
- * three are required, so a blank would be a form that fails on submit.
- */
 export const QUOTE_SETTINGS_LAYOUT: RecordLayout = {
   key: "crm:settings:quote-settings",
   singular: "Quoting rules",

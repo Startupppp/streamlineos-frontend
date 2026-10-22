@@ -30,8 +30,6 @@ export function LegalHoldsTable() {
   const [selectedHold, setSelectedHold] = useState<LegalHold | null>(null);
   const [pending, setPending] = useState<PendingAction | null>(null);
 
-  // The endpoint is keyset-paginated; it ignored the `page` this used to send,
-  // so every hold past the first 20 was unreachable.
   const { data, isLoading, isError, error, refetch } = useLegalHolds({ cursor: pager.cursor, limit: PAGE_SIZE });
   const release = useReleaseLegalHold();
   const remove = useDeleteLegalHold();

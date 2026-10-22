@@ -13,14 +13,6 @@ import {
 } from "@/test-utils/theme-contrast";
 import { WCAG_AA_NORMAL, WCAG_NON_TEXT } from "@/test-utils/globals-css-tokens";
 
-/**
- * `contrast-tokens.test.ts` and `contrast-status-tokens.test.ts` read
- * `globals.css` — the default Mist palette. `themes.css` carries seventeen other accents, each of
- * which replaces `--primary` and `--ring` outright and then rewrites every
- * neutral surface beneath them with `color-mix`. Judging the default and
- * calling the product accessible measures the palette that has no defect in
- * it, so this suite judges the palettes that do.
- */
 const palettes = loadThemePalettes();
 const lightPalettes = palettes.filter((palette) => palette.mode === "light");
 
@@ -128,14 +120,6 @@ describe("PRD-C138 focus indicator — SC 1.4.11 in every selectable theme", () 
   }
 });
 
-/**
- * SCOPE, stated rather than implied. This judges `components/shared/**` — the
- * loading, empty, error and permission primitives every feature renders — and
- * nothing else. The wider corpus holds 554 more `text-<token>/<alpha>` sites
- * across `features/**`, which are NOT covered here and are not claimed to be
- * clean; they are a separate, larger population and belong to the features
- * that own them.
- */
 describe("PRD-C138 alpha-composited text — the shared state primitives", () => {
   const sites = collectAlphaTextSites(resolvePath(FE_ROOT, "components/shared"));
   const SURFACES = ["background", "card", "muted"];

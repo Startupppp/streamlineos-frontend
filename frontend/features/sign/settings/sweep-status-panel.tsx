@@ -75,9 +75,6 @@ function SweepRow({ sweep }: { sweep: SignSweepRunSummary }) {
   );
 }
 
-// SIGN-P0-02 built GET /sign/admin/sweep-status and nothing rendered it, so the honesty rule it
-// exists for — an admin must be able to see last-run, because silent failure is how the unwired
-// sweep shipped — held in the API and not on any screen.
 export function SweepStatusPanel() {
   const { data, isLoading, isError, error, refetch } = useSignSweepStatus();
 

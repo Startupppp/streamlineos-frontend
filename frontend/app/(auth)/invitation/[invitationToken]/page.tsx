@@ -226,8 +226,6 @@ export default function InvitationPage() {
         toast.error("Invalid invitation");
         return;
       }
-      // An existing account joins the org it was invited to; a new one is created
-      // first. Both verify the same code, so the two branches meet here.
       if (invitation.userExists) {
         completeExistingUserAccept(values.emailOtp);
         return;

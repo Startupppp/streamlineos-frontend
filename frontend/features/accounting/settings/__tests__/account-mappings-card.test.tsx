@@ -5,17 +5,6 @@ import { backendPath, backendReachable } from "@/lib/test-support/backend-path";
 import type { AccountSystemTagMapping } from "@/types/accounting/accounting-kernel-ext";
 import { AccountMappingsCard } from "../account-mappings-card";
 
-/**
- * ACC-04. Inventory resolves GL accounts by role, and until now nothing in this
- * app could see or change which account fills one: `PATCH
- * /accounting/accounts/:id/system-tag` has existed since the kernel landed and
- * had no caller anywhere in the frontend. A role could be seeded from the chart
- * template and never moved.
- *
- * The screen's job is to show what is NOT mapped. A book missing `inventory`
- * has its next goods receipt refused outright, so the warning has to say that
- * rather than reading as a general setup nag.
- */
 
 const can = jest.fn<boolean, [string]>();
 const mappings = jest.fn();
@@ -69,11 +58,6 @@ describe("the account-mapping card", () => {
   });
 
   it("says what an unmapped role costs, not merely that one is unmapped", () => {
-    /*
-      The sentence that makes this actionable. "Finish setting up accounting"
-      would be true and would not tell anyone that the cost of ignoring it is a
-      goods receipt that does not go through.
-    */
     mappings.mockReturnValue({ data: [mapping({ account: null })], isLoading: false });
 
     render(<AccountMappingsCard enabled />);
@@ -96,11 +80,6 @@ describe("the account-mapping card", () => {
   });
 
   it("marks a seeded role nothing posts to yet as unused, not as a gap", () => {
-    /*
-      `grni` is correct, seeded and resolved by no call site. Badging it
-      "Required" would be a lie; omitting it would hide a mapping an operator
-      may want to move before it starts being used.
-    */
     mappings.mockReturnValue({
       data: [
         mapping({
@@ -136,7 +115,6 @@ describe("the account-mapping card", () => {
   });
 
   it("hides itself entirely when the org has no book", () => {
-    /* Nothing to map into; an empty mapping card would only ask an unanswerable question. */
     const { container } = render(<AccountMappingsCard enabled={false} />);
     expect(container).toBeEmptyDOMElement();
   });
@@ -163,10 +141,6 @@ describe("the account-mapping card", () => {
 
 describe("the mapping surface matches the API it reads", () => {
   it("names a route the backend actually serves", () => {
-    /*
-      Asserted, never skipped: five cross-repo guards in this repo once resolved
-      to a path that does not exist and stayed green for months.
-    */
     const relative = "src/modules/accounting/kernel/kernel.controller.ts";
     expect(backendReachable(relative)).toBe(true);
     const controller = readFileSync(backendPath(relative), "utf8");
@@ -175,13 +149,6 @@ describe("the mapping surface matches the API it reads", () => {
   });
 
   it("carries every system role the ledger can hold", () => {
-    /*
-      This screen filters the API's rows by two booleans. If the frontend union
-      drifted behind `gl_system_tag`, a role the backend flagged as required
-      would still render — but every switch and lookup keyed on the tag would
-      silently miss it, and a future role would be invisible here with no error.
-    */
-    // The enum left gl-kernel.ts when the schema split (backend c8022e61f).
     const relative = "src/db/schema/accounting/gl-enums.ts";
     expect(backendReachable(relative)).toBe(true);
     const schema = readFileSync(backendPath(relative), "utf8");

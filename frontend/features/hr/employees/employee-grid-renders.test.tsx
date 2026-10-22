@@ -1,16 +1,3 @@
-/**
- * Named journey: HR employees list, grid view, three server pages loaded
- * (60 employees), one keystroke in the search box.
- *
- * `useInfiniteHrEmployees` accumulates its pages, so the grid mounts one
- * `EmployeeCard` per loaded employee and the page re-renders on every keystroke
- * (search state), every filter change and every background refetch. The card's
- * props are already stable — `employees` is a `useMemo` over the query pages, so
- * each `Employee` keeps its identity, and `department` is a plain string.
- *
- * These count card body renders across that journey. The bound on how many are
- * mounted at all is asserted separately in `employees-grid-bound.test.tsx`.
- */
 import { useState } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";

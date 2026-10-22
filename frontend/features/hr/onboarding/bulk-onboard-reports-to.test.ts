@@ -83,7 +83,6 @@ describe("bulk onboarding reporting columns (HRM-15 §7.3)", () => {
   });
 
   it("holds a row to the organisation's cap by how many secondaries it names, not which columns", () => {
-    // The server counts the non-blank secondaries; column 2 alone is one manager.
     expect(validateAndMap(row({ secondaryManagerEmail2: "b@example.com" }), DEPARTMENTS, 1).errors).toEqual([]);
     expect(validateAndMap(row({ secondaryManagerEmail3: "c@example.com" }), DEPARTMENTS, 1).errors).toEqual([]);
 
@@ -102,7 +101,6 @@ describe("bulk onboarding reporting columns (HRM-15 §7.3)", () => {
     const message =
       "Dana Default is your organisation's default reporting manager and will be assigned as primary. Pick the primary explicitly or choose a different additional manager.";
     expect(validateAndMap(row({ secondaryManagerEmail2: "dana@example.com" }), DEPARTMENTS, 3, dana).errors).toEqual([message]);
-    // An explicit primary, another secondary, or an unknown policy: nothing to say.
     expect(validateAndMap(row({ primaryManagerEmail: "p@example.com", secondaryManagerEmail1: "dana@example.com" }), DEPARTMENTS, 3, dana).errors).toEqual([]);
     expect(validateAndMap(row({ secondaryManagerEmail1: "other@example.com" }), DEPARTMENTS, 3, dana).errors).toEqual([]);
     expect(validateAndMap(row({ secondaryManagerEmail1: "dana@example.com" }), DEPARTMENTS, null, null).errors).toEqual([]);

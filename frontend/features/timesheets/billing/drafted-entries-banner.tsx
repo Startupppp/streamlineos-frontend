@@ -14,17 +14,6 @@ interface DraftedEntriesBannerProps {
   projectId: number | null;
 }
 
-/**
- * Surfaces the stranded-record case named in the freelancer billing chain:
- * `createInvoiceDraft` (the "Export" flow) flips entries to `INVOICE_DRAFTED`
- * as a CSV/JSON snapshot, not a real invoice. Nothing else in this screen
- * ever showed that a drafted entry existed, so once created it sat invisible
- * and un-voidable (`voidEntry` refuses anything already drafted or invoiced)
- * until it happened to be picked up by a later "Create invoice draft" or
- * "Generate invoice" pass. This banner is the first place a stranded entry
- * becomes visible, and "Release" is the first way to un-stick it without
- * going through an invoice at all.
- */
 export function DraftedEntriesBanner({ startDate, endDate, projectId }: DraftedEntriesBannerProps) {
   const canRelease = useCan("timesheets:billing:invoice");
   const [confirmOpen, setConfirmOpen] = useState(false);

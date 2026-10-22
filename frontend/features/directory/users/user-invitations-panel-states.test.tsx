@@ -2,25 +2,11 @@ import type { ReactNode } from "react";
 import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import type { Invitation, InvitationsListParams } from "@/hooks/api/users/types";
 
-/**
- * A wrong contract in this repo renders as an EMPTY STATE, never as an error,
- * so "no invitations", "you may not read invitations" and "the read failed"
- * have to be three visibly different screens. Before this suite the denied case
- * fell through to the same `EmptyState` as a genuinely empty organisation: the
- * query was simply disabled, `data` stayed undefined and the panel invited the
- * viewer to invite their first teammate.
- */
 
 let searchParams = new URLSearchParams();
 const replace = jest.fn();
 const push = jest.fn();
 
-/**
- * The router object is created once, not per call. `useRouter` in Next returns a
- * stable reference, and the panel's `updateParams` is a `useCallback` keyed on
- * it; handing out a fresh object every render re-creates that callback, re-fires
- * the search-sync effect and spins the test forever against correct code.
- */
 const router = { replace, push };
 
 jest.mock("next/navigation", () => ({
@@ -225,11 +211,6 @@ describe("UserInvitationsPanel — empty, denied and failure are three distinct 
     expect(screen.queryByText("No invitations yet")).not.toBeInTheDocument();
   });
 
-  /**
-   * SETTINGS-004. An access read that failed is a failure, not a wait. While it
-   * was treated as one the tab said "Loading results…" with nothing to retry,
-   * under a header that was counting the pending invites it would not show.
-   */
   it("renders a retryable failure, not a forever-skeleton, when the access read itself failed", () => {
     gate = {
       permission: "settings:organization:manage",

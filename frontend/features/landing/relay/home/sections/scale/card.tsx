@@ -7,22 +7,12 @@ import { REVEAL, STEP } from "@/features/landing/relay/lib/motion";
 export interface ScaleCardProps {
   title: string;
   copy: string;
-  /** Position in the row, drives the reveal stagger. */
   index: number;
   children: ReactNode;
-  /** Art 3888:6492 clips its children; Art 3888:6457 does not (only the card clips its glow). */
   clipArt?: boolean;
-  /** Art box height at 390, where the two cards differ (251 / 243). */
   artClassName: string;
 }
 
-/**
- * Card shell shared by 3888:6454 and 3888:6489 — 630 × 504, padding 32,
- * gap 12, then a 566 × 336 art box. 1024 (3949:13127): 458 × 492, padding 24,
- * gap 32, art 410 × 276. 768 (3832:8118): 688 × 480, padding 24, title→copy 16,
- * copy→art 24, art 640 × 316. 390 (3893:3752): 350 wide, height from content,
- * same gaps, art 310 wide. Padding is one less than Figma for the 1px border.
- */
 export const ScaleCard = ({
   title,
   copy,

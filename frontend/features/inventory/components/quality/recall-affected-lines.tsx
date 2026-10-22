@@ -18,12 +18,6 @@ interface RecallLine {
   status?: string | null;
 }
 
-/**
- * A line names a lot, not a lot *number* — the API sends the id and never the
- * label. Linking rather than printing the id keeps the rule that a visible
- * database id is a bug: the lot page carries the number, the expiry and the
- * stock, which is what somebody clicking here is after.
- */
 export const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
   {
     key: "lot",
@@ -44,13 +38,6 @@ export const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
     className: "text-muted-foreground text-xs",
     cell: (line) => (line.serialId ? `#${line.serialId}` : "—"),
   },
-  /**
-   * INV-33. Whether the quarantine leg actually held this line's stock.
-   *
-   * The recall's own status says OPEN whether every unit was pulled off the
-   * shelf or none of them were, so a screen that renders only that is a screen
-   * that reports a failed recall as a working one.
-   */
   {
     key: "quarantine",
     header: "Quarantine",
@@ -69,15 +56,6 @@ export const RECALL_LINE_COLUMNS: DataTableColumn<RecallLine>[] = [
   },
 ];
 
-/**
- * INV-33. The one sentence an operator needs before they believe a recall
- * worked, sitting above the lines rather than inside them.
- *
- * A recall commits whether or not the quarantine held anything, so "every line
- * held" and "nothing was held anywhere" both render as an OPEN recall with a
- * list of lots. This says which happened, and stays silent when everything is
- * held so it does not become chrome people learn to ignore.
- */
 export function RecallQuarantineSummary({ lines }: { lines: RecallLine[] }) {
   const unheld = lines.filter((line) => isRecallLineUnheld(toRecallLineQuarantine(line.status)));
   if (unheld.length === 0) return null;

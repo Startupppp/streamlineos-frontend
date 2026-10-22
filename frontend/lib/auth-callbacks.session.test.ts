@@ -1,9 +1,3 @@
-/**
- * @jest-environment node
- *
- * Drives the session callback seam in `lib/auth.ts` — the `session` callback —
- * not a reimplementation of it.
- */
 jest.mock("@/lib/backend-url", () => ({ BACKEND_URL: "http://backend.test" }));
 
 jest.mock("axios", () => ({
@@ -138,11 +132,6 @@ describe("session callback — minting, caching and two device sessions", () => 
   });
 
   it("gives two device sessions of one user their own token, under their own key", async () => {
-    // The exchange body carries only `orgId`; the session id travels in the
-    // signed proof header, so which session a token BELONGS to is decided by the
-    // backend and is proved there (`pnpm verify:identity-journey` decodes the
-    // sessionId claim from the real token). What the web tier owes is that two
-    // sessions never share a cache entry, which is what this asserts.
     installMintingTransport();
 
     const a = await resolveAuthSession(makeSession(), makeToken(SESSION_A));
@@ -203,9 +192,6 @@ describe("session callback — minting, caching and two device sessions", () => 
     expect(transport.sessionDataCalls).toBe(2);
     expect(session.user.id).toBe(USER);
     expect(session.sessionId).toBe(SESSION_A);
-    // `resolveSessionClaims(null, token)` falls back to the token, so the org is
-    // still known and the exchange still runs. A session-data outage degrades
-    // freshness, it does not sign the user out.
     expect(session.orgId).toBe(ORG);
     expect(session.plan).toBeNull();
     expect(session.enabledModules).toEqual([]);

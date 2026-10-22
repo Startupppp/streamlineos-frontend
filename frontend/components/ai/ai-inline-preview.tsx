@@ -20,7 +20,6 @@ import { cn } from "@/lib/utils";
 
 export interface AiInlineSession {
   actionKey: string;
-  /** Declared by the action; gates the streaming citation placeholder. */
   expectsCitations?: boolean;
   state: AiActionResultState;
   apply: () => void;

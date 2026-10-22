@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 jest.mock("server-only", () => ({}));
 jest.mock("@/lib/backend-url", () => ({ BACKEND_URL: "http://api.test" }));
 jest.mock("@/lib/get-server-auth", () => ({ getServerAuth: jest.fn() }));
@@ -53,7 +50,6 @@ function upstreamError(status: number): Response {
   });
 }
 
-/** Exactly what a browser sends for `<img src="/api/media/image?key=…">`. */
 function imgTagRequest(key: string): Request {
   return new Request(
     `https://app.test/api/media/image?key=${encodeURIComponent(key)}`,
@@ -105,13 +101,6 @@ describe("the request an <img> really makes", () => {
     expect(response.headers.get("cache-control")).not.toContain("public");
   });
 
-  /**
-   * PRD-C103: replacement and revocation both have to reach the viewer. An
-   * `immutable` entry is never revalidated for its whole lifetime, so a replaced
-   * object keeps serving the old bytes and a viewer whose permission was revoked
-   * keeps serving the image out of its own cache — the authorization recheck at
-   * `/storage/image` is simply never asked.
-   */
   it("never marks a tenant object immutable, and varies on the session cookie", async () => {
     mockFetch.mockResolvedValue(upstreamOk("image/png"));
 
@@ -188,14 +177,6 @@ describe("the key is untrusted input", () => {
   });
 
   it("accepts a key whose filename contains spaces so Screenshot captures do not 400", async () => {
-    /*
-      Real screenshot filenames contain spaces: "Screenshot 2026-09-17 190207.png".
-      The browser encodes them as %20 in the URL, which searchParams.get() decodes
-      back to spaces before the regex runs. The previous OBJECT_KEY pattern
-      /^[a-zA-Z0-9][a-zA-Z0-9/_.-]*$/ had no space in its character class, so it
-      rejected every key whose last segment contained a space, producing 400
-      "Invalid image reference" instead of the image bytes.
-    */
     const KEY_WITH_SPACES = `${ORG_A}/uploads/Screenshot 2026-09-17 190207.png`;
     mockFetch.mockResolvedValue(upstreamOk("image/png"));
 

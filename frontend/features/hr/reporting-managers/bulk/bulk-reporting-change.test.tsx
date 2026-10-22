@@ -119,7 +119,6 @@ describe("bulk commit panel", () => {
       { jobId: job({}).jobId, rowReasons: [{ rowNumber: 2, reason: "Correcting a data error" }] },
       expect.anything(),
     );
-    // Below the threshold there is no phrase to type.
     expect(screen.queryByText(/to confirm\./)).not.toBeInTheDocument();
   });
 

@@ -5,11 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { formatInvoiceAmount } from "./invoice-detail-utils";
 
-/**
- * One editable row of the invoice edit dialog. Only description, quantity and
- * rate are editable here; the line's GST rate and HSN/SAC code ride along
- * untouched in the parent's state so the PATCH can hand them back.
- */
 interface EditLineItemRowProps {
   item: { description: string; quantity: number; rate: number; amount: number };
   idx: number;

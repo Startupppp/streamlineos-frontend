@@ -60,10 +60,6 @@ export default function MovementsPage() {
   const dirFilter: StockTransactionDirection | "all" = isDirectionOrAll(dirParam) ? dirParam : "all";
   const warehouseId = warehouseParam !== "all" ? Number(warehouseParam) || undefined : undefined;
 
-  // G1. The ledger is append-only and is written to while it is read, so the
-  // list walks a `(created_at, id)` keyset rather than counting offsets: page
-  // two is the rows after the cursor page one ended on, not rows 26-50 of a set
-  // that has since shifted down.
   const {
     cursor,
     pageNumber,

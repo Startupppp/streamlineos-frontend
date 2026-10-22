@@ -26,14 +26,6 @@ const DISPOSITION_LABEL = {
   WRITE_OFF: "Write off as lost",
 } as const;
 
-/**
- * The decision on one stranded line.
- *
- * A Sheet rather than a Dialog because the operator needs the line in front of
- * them while they answer — which document, which lot, how much was dispatched
- * against how much arrived. Losing that context is how a write-off gets raised
- * against the wrong transfer.
- */
 export function TransitExitSheet({
   row,
   onOpenChange,

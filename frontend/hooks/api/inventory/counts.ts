@@ -8,13 +8,6 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { CycleCountStatus } from "@/features/inventory/lib/inventory-status";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
-/**
- * The exact keys the counts controllers carry.
- *
- * Exported because a screen has to gate on the same string the endpoint does,
- * and a hand-typed copy at a call site is how "denied" silently became "empty"
- * on both count surfaces.
- */
 export const COUNT_READ_KEY = "inventory:stock:read";
 export const COUNT_WRITE_KEY = "inventory:stock:reconcile";
 
@@ -107,9 +100,6 @@ interface CreatePhysicalAuditInput {
 }
 
 interface CountsParams {
-  // Not `string`. A bare string is what let the RF queue ask for IN_PROGRESS —
-  // an InspectionStatus, not a cycle-count one — and type-check all the way to a
-  // 400 in a warehouse.
   status?: CycleCountStatus;
   warehouseId?: number;
   page?: number;
@@ -133,8 +123,6 @@ export function useCycleCounts(
     queryFn: ({ signal }) =>
       apiClient.get<CycleCountListResponse>("/inventory/cycle-counts", toApiParams(params), signal),
     staleTime: 2 * 60_000,
-    // Reading the list needs COUNT_READ_KEY; a caller may hold that and still
-    // have no business being offered the work, which is what `enabled` is for.
     enabled: canView && (options?.enabled ?? true),
   });
 }

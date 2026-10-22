@@ -23,14 +23,6 @@ const KIND_LABEL: Record<RfTaskKind, string> = {
   COUNT: "Count",
 };
 
-/**
- * NEO-5 - the operator's queue.
- *
- * One column, one tap per task, no table. A supervisor's desktop lists are
- * untouched and remain where they were: this is the surface for the person
- * holding the scanner, and the two audiences want opposite things from the same
- * data.
- */
 function RfQueueContent() {
   const { tasks, isLoading, isError, isDenied, refetch } = useRfQueue();
 

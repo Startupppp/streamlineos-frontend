@@ -87,30 +87,6 @@ interface CategoryConfig {
   bg: string;
 }
 
-/**
- * Eighteen categories, sixteen hues.
- *
- * A category is where a notification came from, not how urgent it is — urgency
- * is `NOTIFICATION_PRIORITY_CONFIG` below, and the two are shown side by side.
- * Reading the status scale here made six of the eighteen render as "info" and
- * four as "success", so the filter chips lied about how many kinds there were.
- *
- * Where a category matches a sidebar product it wears that product's accent —
- * CRM blue, HRMS emerald, Projects violet, Inventory orange, Support lime,
- * Surveys fuchsia — so the same module is the same colour in the rail and in
- * the tray.
- *
- * Two pairs double up, and only these two. Both are one subject arriving under
- * two names, not two subjects that ran out of hues:
- *
- *   green  — BILLING and PAYROLL. Money moving, in and out.
- *   amber  — WORKFLOW and SIGN. A routing step waiting on somebody: an
- *            automation run paused for approval, or an envelope paused for a
- *            signature.
- *
- * SYSTEM stays on the neutral rather than taking `category-slate`: it is the
- * absence of a source, which is what the muted pair already says.
- */
 export const NOTIFICATION_CATEGORY_CONFIG: Record<
   NotificationCategory,
   CategoryConfig
@@ -251,8 +227,6 @@ export const NOTIFICATION_PRIORITY_CONFIG: Record<
   CRITICAL: {
     label: "Critical",
     color: "text-status-danger-ink",
-    // `status-danger` is red; the dot beside it was rose. Now that the
-    // categorical scale has a red, the two halves of the entry agree.
     dotColor: "bg-category-red-fill",
   },
 };

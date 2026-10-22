@@ -144,11 +144,6 @@ interface ModuleGrantabilityNoteProps {
   isError: boolean;
 }
 
-/**
- * What the VIEWER may hand out in this module, never what the subject holds.
- * The screen offers only these options, so an administrator is not shown a
- * control whose grant the API would refuse.
- */
 export function ModuleGrantabilityNote({
   moduleKey,
   grantable,

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { managerRefContract } from "@/hooks/api/hr/reporting-lines-schema";
 
-/** Mirrors backend `dto/reporting-lines-requests.schemas.ts` (CONTRACT §4.8–§4.16). */
 
 export const reportingManagerRequestStatusContract = z.enum([
   "PENDING",

@@ -7,17 +7,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/**
- * The resumable import, which was written on the backend and called by nothing.
- *
- * Six routes: open a job, stage rows against it, apply the next chunk until it
- * reports `finished`, read the rows that failed, and cancel. The single-shot
- * `POST /inventory/import/jobs` the screen used instead caps at 10,000 rows in
- * one request body and has no resume — and the screen was handing it
- * `preview.sample`, which the backend defines as `rows.slice(0, 20)`. A person
- * importing five thousand products got twenty, under a job that reported
- * COMPLETED.
- */
 
 export const IMPORT_TYPES = [
   "products",
@@ -30,7 +19,6 @@ export const IMPORT_TYPES = [
 ] as const;
 export type StagedImportType = (typeof IMPORT_TYPES)[number];
 
-/** At most 5000 per call server-side; 1000 keeps a single request small enough to retry. */
 export const STAGE_CHUNK_SIZE = 1000;
 
 export interface StagedImportProgress {
@@ -64,7 +52,6 @@ export interface OpenStagedImportInput {
   importType: StagedImportType;
   fileName?: string;
   totalRows: number;
-  /** Of the file's bytes. The same key with a different checksum is refused. */
   checksum: string;
   chunkSize?: number;
 }
@@ -95,11 +82,6 @@ export function useStageImportRows() {
   });
 }
 
-/**
- * Applies the next chunk. Called until `finished` — that is the resume loop, and
- * it is deliberately not fenced: each call is meant to advance the job, so
- * replaying one would stall the loop rather than protect it.
- */
 export function useProcessImportChunk() {
   return useAuthorizedMutation<StagedImportProgress, Error, number>("inventory:import", {
     mutationKey: ["inventory", "import", "staged", "process"],
@@ -140,12 +122,6 @@ export function useStagedImportErrors(jobId: number | null, page = 1, limit = 50
   });
 }
 
-/**
- * SHA-256 of the file's own bytes.
- *
- * The backend refuses a reused idempotency key whose checksum differs, which is
- * what stops "resume my import" from silently resuming a different file.
- */
 export async function checksumOf(file: File): Promise<string> {
   const bytes = await file.arrayBuffer();
   const digest = await crypto.subtle.digest("SHA-256", bytes);

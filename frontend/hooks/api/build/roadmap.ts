@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  queryOptions,
   useQuery,
   useQueryClient,
   keepPreviousData,
@@ -15,6 +14,10 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  roadmapItemsQueryOptions,
+  type RoadmapItemFilters,
+} from "./roadmap-read-options";
 import type {
   RoadmapOwner,
   RoadmapPrioritization,
@@ -60,29 +63,6 @@ interface CursorPaginated<T> {
   };
 }
 
-export interface RoadmapItemFilters {
-  status?: string;
-  search?: string;
-  cursor?: string;
-  limit?: number;
-  managedProductId?: number;
-  sort?: string;
-  projectId?: number;
-  horizon?: string;
-  ownerId?: number;
-  goalId?: string;
-  releaseId?: number;
-  teamId?: string;
-  opportunityId?: number;
-  hasOpportunity?: boolean;
-  confidenceMin?: number;
-  confidenceMax?: number;
-  targetFrom?: string;
-  targetTo?: string;
-  segment?: string;
-  customerVisible?: boolean;
-  evidenceState?: string;
-}
 
 export interface CreateRoadmapItemInput {
   title: string;
@@ -181,8 +161,16 @@ export interface ScoredRoadmapItem {
 
 export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
   const canView = useCan("build:roadmap:view");
+  const params: Record<string, unknown> = { ...filters };
   return useQuery({
     ...roadmapItemsQueryOptions(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginated<ScoredRoadmapItem>>(
+        "/build/roadmap",
+        params,
+        signal,
+        roadmapPageContract,
+      ),
     enabled: canView,
     placeholderData: keepPreviousData,
     throwOnError: readErrorExceptNotFoundReachesBoundary,
@@ -428,17 +416,3 @@ export function usePublishRoadmapItem() {
   });
 }
 
-export function roadmapItemsQueryOptions(filters: RoadmapItemFilters = {}) {
-  const params: Record<string, unknown> = { ...filters };
-  return queryOptions<CursorPaginated<ScoredRoadmapItem>>({
-    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<CursorPaginated<ScoredRoadmapItem>>(
-        "/build/roadmap",
-        params,
-        signal,
-        roadmapPageContract,
-      ),
-    staleTime: 30_000,
-  });
-}

@@ -23,21 +23,6 @@ interface GrnEditDraftDialogProps {
   notes: string | null;
 }
 
-/**
- * Correcting the header of a receipt that has not posted yet.
- *
- * `receive-goods-sheet.tsx` stamps `receivedDate: getTodayString()` and offers
- * no field for it, so a delivery keyed the next morning — a Friday evening
- * pallet booked in on Monday — carries the wrong date from the moment it is
- * raised. `PATCH /inventory/goods-receipts/:grnId` accepted a correction the
- * whole time, carried `inventory:purchase-orders:receive`, and
- * `useUpdateGrnDraft` was referenced by nothing. The date is not decoration: it
- * is what the receipt is reconciled against.
- *
- * Offered on DRAFT and COUNTING because those are the two the service calls
- * EDITABLE. Anything later has moved stock, and the correction for that is a
- * reversal rather than an edit.
- */
 export function GrnEditDraftDialog({
   open,
   onOpenChange,

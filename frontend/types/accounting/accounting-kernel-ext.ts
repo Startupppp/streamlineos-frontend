@@ -56,14 +56,6 @@ export interface TaxRegistration {
   isPrimary: boolean;
 }
 
-/**
- * Whether this organisation's accounting can actually receive a posting.
- *
- * `unprovisioned` is the state the UI could not previously show: the accounting
- * module is switched on and no book exists, so every posting from inventory,
- * payroll and billing is accepted and recorded nowhere. It looked exactly like
- * an organisation that had opted out.
- */
 export type AccountingProvisioning =
   | { state: "not_requested" }
   | { state: "unprovisioned"; message: string }
@@ -73,11 +65,6 @@ export type AccountingProvisioning =
       missingRoles: GlSystemTag[];
       message: string;
     }
-  /**
-   * The books run out on a date. AP self-heals by creating the next year on
-   * demand; AR and the inventory bridge reject instead, so this warns 30 days
-   * before a tenant stops being able to receive goods.
-   */
   | {
       state: "fiscal_year_ending";
       bookId: string;
@@ -103,11 +90,6 @@ export interface AccountingSetupStatusEnabled {
   nextSteps: string[];
 }
 
-/**
- * One system role and the account filling it. The API returns every role,
- * mapped or not — a list that omitted the unmapped would show an operator
- * nothing to do, which is the only reason to open this screen.
- */
 export interface AccountSystemTagMapping {
   tag: GlSystemTag;
   allowedAccountTypes: GlAccountType[];
@@ -117,9 +99,7 @@ export interface AccountSystemTagMapping {
     name: string;
     accountType: GlAccountType;
   } | null;
-  /** Inventory refuses a movement without this one, today. */
   requiredByInventory: boolean;
-  /** Seeded by the chart and resolved by no call site yet. */
   awaitingInventorySupport: boolean;
 }
 

@@ -25,8 +25,6 @@ export interface BuildScopeIdentity {
   isInaccessible: boolean;
 }
 
-// A scope in another tenant (or deleted) is a 404, not a 403 (BE-22); both
-// mean the actor cannot use it, so neither may keep a remembered name (MP-B-021).
 function isMissingAccess(error: unknown): boolean {
   return isApiError(error) && (error.status === 403 || error.status === 404);
 }

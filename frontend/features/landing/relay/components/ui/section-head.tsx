@@ -9,21 +9,10 @@ export interface SectionHeadProps {
   title: TitleParts;
   aside: string;
   className?: string;
-  /** Extra classes for the aside copy — e.g. a per-frame width. At 390 the
-   *  default is `w390:w-full`; override it with an important class. */
   asideClassName?: string;
-  /** Extra classes for the badge + title stack — e.g. a per-frame gap. */
   stackClassName?: string;
 }
 
-/**
- * Section head — badge and title in a 760 column, 440 aside copy bottom-aligned
- * 48 to the right (04 Product 3488:21991; 06 3488:22269, 07 3488:22343,
- * 09 3488:22782 share the layout).
- *
- * The narrower frames stack it centred instead: badge, then the title 24 below
- * (12 at 390), then the aside 16 below that — 560 wide, full width at 390.
- */
 export const SectionHead = ({
   badge,
   title,

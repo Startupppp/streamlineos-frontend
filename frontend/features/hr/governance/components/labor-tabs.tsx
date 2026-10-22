@@ -97,8 +97,6 @@ export function LaborTabs() {
   const canManage = useCan("hr:labor:manage");
   const [activeTab, setActiveTab] = useState<ActiveTab>("memberships");
   const [sheetOpen, setSheetOpen] = useState(false);
-  // All three endpoints are keyset-paginated; the `page` sent before was
-  // ignored, so rows past the first 20 were unreachable.
   const membershipPager = useCursorPager();
   const agreementPager = useCursorPager();
   const casePager = useCursorPager();

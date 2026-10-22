@@ -31,11 +31,6 @@ import {
   SUBSCRIPTION_RESPONSE,
 } from "@/test-utils/money-contract-fixtures";
 
-/**
- * The money band. Both halves matter and the rejecting half is the point: every
- * `reject` case below is a shape the previous hand-written type would have
- * accepted in silence, and each one is a wrong number on a screen.
- */
 
 describe("platform billing accepts what the backend builds", () => {
   it("accepts a subscription with a null payment amount", () => {

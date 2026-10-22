@@ -19,7 +19,6 @@ interface TemplateTestSendDialogProps {
   onClose: () => void;
 }
 
-/** Sends the rendered template to one member through its real channel. */
 export function TemplateTestSendDialog({ template, onClose }: TemplateTestSendDialogProps) {
   const testSend = useTestSendNotificationTemplate();
 

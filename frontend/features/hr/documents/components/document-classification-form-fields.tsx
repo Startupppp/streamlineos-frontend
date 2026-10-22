@@ -22,9 +22,7 @@ import {
 import { AudienceUnitPicker } from "./document-audience-unit-picker";
 
 interface ClassificationFieldsProps {
-  /** Moving into Internal or Restricted needs the permission to publish documents. */
   canPublish: boolean;
-  /** Something other than the classification itself stops this document being shared (its type, its owner, ...). */
   sharingBlocked: boolean;
 }
 
@@ -63,7 +61,6 @@ export function DocumentClassificationFormFields({ canPublish, sharingBlocked }:
     (value: string) => form.setValue("effectiveDate", value, { shouldDirty: true }),
     [form],
   );
-  // The date picker can only pick a date, never remove one; "" is what the form maps to null for the server.
   const handleClearEffectiveDate = useCallback(
     () => form.setValue("effectiveDate", "", { shouldDirty: true }),
     [form],

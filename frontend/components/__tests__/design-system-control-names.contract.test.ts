@@ -10,31 +10,6 @@ import {
   selectValuePlaceholderName,
 } from "@/components/ui/select";
 
-/**
- * The blind spot the sibling census declares in its own header, measured.
- *
- * `aria-semantics.contract` walks lowercase JSX elements and says so: "any
- * PascalCase component" is outside it, because a component's semantics are its
- * own contract. Every control this file judges is PascalCase, and each renders
- * an element whose ARIA role requires a name and refuses to take one from
- * content — so the visible text inside a `SelectTrigger` names nothing, and
- * the visible `<Label>` beside a `Switch` names nothing either unless it is
- * associated. The browser sweep found `button-name` on eight routes / 128
- * nodes over exactly this, and 128 nodes is only what 21 routes happened to
- * paint: the corpus is the real denominator.
- *
- * A ratchet, not a target. Lowering a number is a deliberate edit; raising one
- * fails review. The per-control numbers are pinned separately so a fix in one
- * component cannot pay for a regression in another, and the heaviest files are
- * pinned by name so 300 findings cannot quietly rotate between files while the
- * total holds still.
- *
- * WHAT A ZERO HERE WOULD NOT MEAN. This cannot tell whether a name is the
- * RIGHT name: `aria-label="Select"` on all 872 triggers would pass every
- * assertion below and be worse for a screen-reader user than the failure it
- * hides. That is why `SelectTrigger` has no generic default, and why the
- * ratchet is worth more than the count.
- */
 const BASELINE = {
   minimumFiles: 3500,
   minimumControls: 1100,
@@ -45,11 +20,6 @@ const BASELINE = {
     Switch: 51,
     RadioGroupItem: 1,
   } as Record<string, number>,
-  /**
-   * Every file holding four or more unnamed controls, with its count. These
-   * are the concentrations worth fixing first, and pinning them stops the
-   * total holding still while the defects move house.
-   */
   heaviestFiles: {
     "features/build/meetings/meetings-list-page.tsx": 4,
     "features/calendar/event-recurrence-editor.tsx": 4,
@@ -78,14 +48,6 @@ describe("the control-name census sees a real corpus", () => {
     expect(result.controls).toBeGreaterThanOrEqual(BASELINE.minimumControls);
   });
 
-  /**
-   * 280 of the call sites below are counted as named ONLY because
-   * `SelectTrigger` turns a `SelectValue` placeholder into the accessible
-   * name. Take that away and the scan keeps reporting them green over a
-   * product full of anonymous comboboxes — a static rule is only as true as
-   * the primitive it describes, so the primitive is asserted here rather than
-   * assumed.
-   */
   it("the placeholder rule this scan honours is one the primitive actually implements", () => {
     expect(
       selectValuePlaceholderName(

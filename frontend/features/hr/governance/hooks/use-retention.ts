@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { toast } from "sonner";
+import { retentionPoliciesQueryOptions } from "@/features/hr/governance/hooks/use-retention-read-options";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
@@ -59,9 +60,10 @@ const RETENTION_KEY = ["hr", "governance", "retention"] as const;
 const POLICIES_KEY = [...RETENTION_KEY, "policies"] as const;
 const REQUESTS_KEY = [...RETENTION_KEY, "requests"] as const;
 
-export const retentionPoliciesQueryOptions = (params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) =>
-  queryOptions({
-    queryKey: [...humanResourcesQueryKeys.hr.hrRetentionPoliciesAll, params],
+export function useRetentionPolicies(params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) {
+  const canManageRetention = useCan("hr:retention:manage");
+  return useQuery({
+    ...retentionPoliciesQueryOptions(params),
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.recordType) p["recordType"] = params.recordType;
@@ -70,13 +72,6 @@ export const retentionPoliciesQueryOptions = (params?: { recordType?: string; ac
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/governance/retention/policies", p, signal, retentionPolicyListContract);
     },
-    staleTime: 60_000,
-  });
-
-export function useRetentionPolicies(params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) {
-  const canManageRetention = useCan("hr:retention:manage");
-  return useQuery({
-    ...retentionPoliciesQueryOptions(params),
     enabled: canManageRetention,
   });
 }

@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { AuditLogDrawer } from "@/features/module-access/components/audit-log-drawer";
 
-/** UX-07: the audit log sheet opened with a title but no accessible description. */
 
 jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => false }));
 jest.mock("@/hooks/api/module-access", () => ({

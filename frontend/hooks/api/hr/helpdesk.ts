@@ -7,6 +7,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import { employeeSupportQueryKeys } from "@/lib/query-keys/employee-support";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { helpdeskQueueListQueryOptions } from "@/hooks/api/hr/helpdesk-read-options";
 import type { HelpdeskCategory, SupportQueue } from "@/lib/employee-support";
 import type {
   HelpdeskComment,
@@ -57,13 +58,6 @@ export interface HelpdeskListParams {
   queue?: SupportQueue;
   assigneeId?: string;
   q?: string;
-}
-
-export function helpdeskQueueListQueryOptions(params: HelpdeskListParams) {
-  return {
-    queryKey: keys.queueList(params),
-    staleTime: 15_000,
-  } as const;
 }
 
 export function useSupportQueueTickets(params: HelpdeskListParams) {

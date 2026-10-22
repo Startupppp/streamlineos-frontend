@@ -26,7 +26,6 @@ interface MemberDetailSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   memberName: string;
-  /** The member and week the sheet shows; the reminder targets exactly these. */
   memberUserId: string | null;
   weekStart: string;
   weekEnd: string;

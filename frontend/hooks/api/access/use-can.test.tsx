@@ -83,10 +83,6 @@ describe("useCan — server prefetch seam", () => {
     );
 
     expect(screen.getByTestId("can-result").textContent).toBe("true");
-    // Asserted with no argument list on purpose. `toHaveBeenCalledWith` compares
-    // the WHOLE argument array, so a negative form that spells out N arguments
-    // stops being falsifiable the moment the seam grows an N+1th — which is
-    // exactly what 5582f4309 did when it added the contract slot's loader.
     expect(apiClient.get).not.toHaveBeenCalled();
   });
 
@@ -108,22 +104,6 @@ describe("useCan — server prefetch seam", () => {
     );
   });
 
-  /**
-   * The contract slot, which this spec has always been the guard for.
-   *
-   * It used to hold the Zod schema itself, so `objectContaining({ safeParse })`
-   * could see the contract directly. Since 5582f4309 it holds a `lazyContract`
-   * THUNK instead — `access-schema` was the shortest path from the dashboard
-   * shell to Zod, so importing it as a value put Zod's whole runtime in the
-   * first load of every authenticated route, including the ones that never read
-   * an access endpoint. Deferring WHEN the schema loads must not defer WHETHER
-   * it is applied, and the old assertion can no longer tell the two apart: a
-   * thunk resolving to `undefined` would satisfy `expect.any(Function)` above
-   * and would also satisfy `check:response-contracts`, which only counts how
-   * many arguments sit at the seam. So resolve the thunk and parse with what
-   * comes back. That is what the deleted `safeParse` assertion was for, and this
-   * is strictly more than it checked — it never parsed anything.
-   */
   it("hands over a loader that resolves to a contract which really parses", async () => {
     apiClient.get.mockReturnValue(new Promise(() => {}));
     const client = new QueryClient();
@@ -140,17 +120,12 @@ describe("useCan — server prefetch seam", () => {
       AbortSignal | undefined,
       ContractSource<AccessResponse>,
     ];
-    // Pinned so a future reordering here cannot quietly resolve some other
-    // route's contract and still report this one as parsed.
     expect(url).toContain("/me/access");
     const contract = await resolveContract(source);
 
     expect(contract).toBeDefined();
     expect(contract?.safeParse(GRANTED_SNAPSHOT).success).toBe(true);
 
-    // `isOrgOwner` is the field `usePermissionGate` decides on — if the backend
-    // dropped it, an owner would be denied everything while the screen still
-    // looked fine. The contract has to reject that, not cast it through.
     const drifted: Record<string, unknown> = { ...GRANTED_SNAPSHOT };
     delete drifted.isOrgOwner;
     expect(contract?.safeParse(drifted).success).toBe(false);

@@ -31,7 +31,6 @@ export function ShiftAssignmentsTab() {
     return map;
   }, [membersData]);
 
-  // Show the shift's name, never "Shift #12" (FE-85).
   const { data: shifts } = useHrShifts();
   const shiftNameById = new Map((shifts ?? []).map((shift) => [shift.id, shift.name]));
 
@@ -69,8 +68,6 @@ export function ShiftAssignmentsTab() {
     },
   ];
 
-  // No route guard; the read is gated on hr:attendance:view, so a denied
-  // caller must be told so, not "No assignments yet" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {

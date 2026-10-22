@@ -36,14 +36,6 @@ interface PricebookPatch {
   isActive?: boolean;
 }
 
-/**
- * Create and edit a pricebook, rendered from the description.
- *
- * The two flags are described as two-state badges rather than switches, so the
- * list and the form say the same word for the same state — a row reading
- * "Default" and a form reading "Set as default pricebook" were the same fact
- * under two names.
- */
 export function PricebookSheet({ open, onOpenChange, pricebook }: PricebookSheetProps) {
   const layout = useTenantLayout(PRICEBOOK_LAYOUT);
   const createPricebook = useCreatePricebook();

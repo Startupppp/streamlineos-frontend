@@ -31,33 +31,14 @@ interface PutawayLineRowProps {
   taskId: number;
   line: PutawayTaskLine;
   disabled: boolean;
-  /** The line a scan just named. It scrolls into view and takes the thumb. */
   isActive: boolean;
-  /** The warehouse the receipt landed in, for re-ranking the bins live. */
   warehouseId: number | null;
 }
 
-/**
- * Room left in a suggested bin, as the server computed it.
- *
- * Rendered, never recomputed. `remaining` is `capacity − on_hand` at scale 4 and
- * it arrives as a decimal string precisely so that it does not pass through a
- * float on the way to a screen; `null` is a bin with no capacity recorded, which
- * means unlimited rather than very large.
- */
 function capacityLabel(remaining: string | null): string {
   return remaining === null ? "unlimited room" : `${remaining} left`;
 }
 
-/**
- * One task on the walk: what it is, how much is left, which bin, confirm.
- *
- * A card rather than a table row because this is the surface an operator holds
- * in one hand at 375px, and the fields are stacked in the order the walk
- * happens. A QUARANTINE line has no bin to choose — where those goods go is a
- * fact about them, decided by the quality state of the receipt, and the server
- * refuses any other destination — so it shows the bin rather than offering it.
- */
 export function PutawayLineRow({
   taskId,
   line,
@@ -72,15 +53,6 @@ export function PutawayLineRow({
   const complete = useCompletePutaway();
   const cardRef = useRef<HTMLLIElement>(null);
 
-  /**
-   * The bins, re-ranked now rather than when the task was raised.
-   *
-   * `line.suggestions` is a snapshot taken at task creation. A bin that was
-   * empty at six in the morning can be full by two in the afternoon, so `fits`
-   * on that snapshot is a claim about the past — and an operator sent to a bin
-   * that will not hold the pallet walks it twice. The live list falls back to
-   * the stored one, which is what a QUARANTINE line and an offline read get.
-   */
   const live = usePutawaySuggestions({
     warehouseId,
     productVariantId: line.product_variant_id,
@@ -96,10 +68,6 @@ export function PutawayLineRow({
     [isActive],
   );
 
-  // Against the string, not `Number(line.remaining)`. These are `numeric(18,4)`
-  // values and the server went to some trouble to keep them off floats on the
-  // way to a decision; "is this line finished" is a decision. `remaining` is
-  // always formatted at scale 4, so zero is the only shape that closes a line.
   const closed = /^-?0(\.0+)?$/.test(line.remaining);
   const quarantined = line.disposition === "QUARANTINE";
 

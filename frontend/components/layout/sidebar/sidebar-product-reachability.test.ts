@@ -26,7 +26,6 @@ describe("every navigation group is reachable from a product", () => {
     }
   }
 
-  // Catches the Workflows case: assembled into the tree, named in no product, reachable only by URL.
   it("shows every declared group in exactly one product", () => {
     const unreachable = DECLARED_GROUPS.filter(
       (group) => (productsByGroupLabel.get(group.label) ?? []).length === 0,

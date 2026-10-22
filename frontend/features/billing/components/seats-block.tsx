@@ -85,8 +85,6 @@ export function SeatsBlock() {
     );
   }
 
-  // `total`/`available` are null on an unlimited plan; treat that as "no cap"
-  // rather than coercing to 0, which would render 100% utilisation.
   const total = seatInfo?.total ?? 0;
   const used = seatInfo?.used ?? 0;
   const available = seatInfo?.available ?? 0;

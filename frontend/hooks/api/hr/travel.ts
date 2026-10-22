@@ -3,6 +3,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { travelMineQueryOptions, travelApprovalsQueryOptions } from "@/hooks/api/hr/travel-read-options";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
@@ -40,20 +41,6 @@ export interface TravelRequest {
   rejectionReason: string | null;
   createdAt: string;
   updatedAt: string;
-}
-
-export function travelMineQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.travelMine(),
-    staleTime: 60_000,
-  } as const;
-}
-
-export function travelApprovalsQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.travelApprovals(),
-    staleTime: 30_000,
-  } as const;
 }
 
 export function useMyTravelRequests() {
@@ -123,7 +110,6 @@ export function useFinanceApproveTravelRequest() {
 
 export function useRejectTravelRequest() {
   const qc = useQueryClient();
-  // PATCH /hr/travel/:id/reject is @Idempotent: one key per intent, not per attempt.
   return useAuthorizedIdempotentMutation<unknown, Error, { travelId: number; reason: string }>("hr:travel:manage", {
     mutationKey: ["hr", "travel", "reject"],
     mutationFn: ({ travelId, reason }, idempotencyKey) =>

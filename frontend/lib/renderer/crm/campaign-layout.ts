@@ -1,20 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * Campaigns, as data.
- *
- * The surface this replaces is where the engine's vocabulary was found wanting:
- * it carried a `roiColorClass` helper painting ROI green above zero and red
- * below, and no description could say that, so the screen could not move.
- * `sign: "gain"` is what closed it — the description states that a bigger number
- * is better news, and the engine decides what better news looks like.
- *
- * Two columns the hand-written table carried are gone rather than translated.
- * "Converted" and "Revenue" rendered a literal em dash on every row for every
- * campaign; the list endpoint has never sent either. A generated table cannot
- * hold a column with nothing behind it, which is the point — the description has
- * to name a field, and there was no field to name.
- */
 export const CAMPAIGN_LAYOUT: RecordLayout = {
   key: "crm:campaign",
   singular: "Campaign",
@@ -26,9 +11,6 @@ export const CAMPAIGN_LAYOUT: RecordLayout = {
       name: "status",
       label: "Status",
       kind: "badge",
-      // Neither create nor update accepts a status — `CreateCampaignInput` omits
-      // it and update is a Partial of that — so it is read-only rather than
-      // edit-only. A control here would be one whose value is dropped.
       readOnly: true,
       options: [
         { value: "active", label: "Active", tone: "success" },
@@ -59,7 +41,6 @@ export const CAMPAIGN_LAYOUT: RecordLayout = {
       label: "ROI",
       kind: "percent",
       readOnly: true,
-      // Above zero the campaign returned more than it cost. Below, it did not.
       sign: "gain",
     },
     { name: "startDate", label: "Starts", kind: "date" },

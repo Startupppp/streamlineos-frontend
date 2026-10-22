@@ -129,7 +129,6 @@ export function DocumentTable({
           </p>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {folders.map((folder) => (
-              // A summary tile: it was a <button> with no handler (rubric test 1).
               <div
                 key={folder.name}
                 className="flex items-center gap-2.5 p-2.5 rounded-xl border border-border bg-card text-left"

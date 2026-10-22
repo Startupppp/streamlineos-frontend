@@ -17,7 +17,6 @@ function isOrgModule(value: unknown): value is OrgModule {
   );
 }
 
-// Insulates the cache from response-envelope differences between API deployments.
 export function normalizeOrgModulesResponse(response: unknown): OrgModule[] {
   let candidate = response;
 

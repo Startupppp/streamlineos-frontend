@@ -25,8 +25,6 @@ function MembershipLifecycleSync() {
       orgId: data?.orgId ?? null,
       access: data?.organizationAccess,
     };
-    // Another account signed in from a different tab: the token, query cache
-    // and avatar all still belong to the previous user, so start clean (#22).
     const userSwitched =
       previous.current.userId !== null &&
       current.userId !== null &&

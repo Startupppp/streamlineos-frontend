@@ -2,12 +2,6 @@
 
 import { useSyncExternalStore } from "react";
 
-/**
- * Which Figma frame is laid out right now — the same lines as the `w1024:`,
- * `w768:` and `w390:` Tailwind variants in globals.css. Only for the few px
- * lengths baked into motion that classes cannot carry; timings never depend
- * on it. Server render and first paint assume 1440.
- */
 export type Frame = 1440 | 1024 | 768 | 390;
 
 const QUERIES: readonly [Frame, string][] = [
@@ -33,7 +27,6 @@ const subscribe = (onChange: () => void) => {
 export const useFrame = (): Frame =>
   useSyncExternalStore(subscribe, read, () => 1440);
 
-/** Pick the value for the active frame; narrower frames fall back to wider ones. */
 export const pick = <T>(
   frame: Frame,
   values: { 1440: T; 1024?: T; 768?: T; 390?: T },

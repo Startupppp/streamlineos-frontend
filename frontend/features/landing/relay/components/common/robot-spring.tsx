@@ -13,12 +13,10 @@ import { useRobot } from "./robot-view";
 
 type SpringProps = ComponentProps<typeof MotionSpring>;
 
-/** react-spring's transform shorthands, folded into one CSS `transform`. */
 const TRANSFORM = new Set(["x", "y", "z", "scale", "scaleX", "scaleY", "rotate", "rotateX", "rotateY", "rotateZ"]);
 const px = (v: unknown) => (typeof v === "number" ? `${v}px` : String(v));
 const deg = (v: unknown) => (typeof v === "number" ? `${v}deg` : String(v));
 
-/** The spring's resting values as static CSS — the element exactly at `to`. */
 export const restStyle = (to: Record<string, unknown> = {}, style?: CSSProperties): CSSProperties => {
   const out: Record<string, unknown> = { ...style };
   const parts: string[] = [];
@@ -37,12 +35,6 @@ export const restStyle = (to: Record<string, unknown> = {}, style?: CSSPropertie
   return out as CSSProperties;
 };
 
-/**
- * The engine's `<Spring>`, except on the robot form (D-016): there it renders
- * the plain element at its `to` state — no spring, no controller, nothing to
- * hydrate but the element. People get the engine's `<Spring>` unchanged.
- * Swap an import to this file; the vendored engine is untouched.
- */
 export const Spring = forwardRef<HTMLElement, SpringProps>(function RobotAwareSpring(props, ref) {
   const robot = useRobot();
   if (!robot) return <MotionSpring ref={ref} {...props} />;
@@ -61,9 +53,6 @@ export const Spring = forwardRef<HTMLElement, SpringProps>(function RobotAwareSp
     style,
     ...rest
   } = props;
-  // An entrance reveal rests at `to`. A UI toggle (`mode="always"`, driven by
-  // `enabled` — a menu, an accordion) rests where its state says: closed menus
-  // stay closed (fromzero's phone menu rendered open on the robot form).
   const resting = mode === "always" && enabled === false ? from : to;
   return createElement(tag as string, { ...rest, ref, style: restStyle(resting, style) }, children);
 });

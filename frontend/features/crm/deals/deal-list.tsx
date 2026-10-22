@@ -28,21 +28,6 @@ import type { DensityMode } from "@/lib/design-tokens";
 import { AIPredictDealButton } from "./ai-predict-deal-button";
 import { useDealLayout } from "./use-deal-layout";
 
-/**
- * The deal list.
- *
- * No table is written here. The columns, their alignment, the stage badge and
- * the mobile card all come from `DEAL_LAYOUT`; what is left is what a
- * description cannot say — who may move a deal, and where the pipeline is.
- *
- * The table this replaces changed a stage through a `<Select>` that only
- * appeared on double-click, which is a control most people never found. The
- * engine has no editable cells and should not: a row renders a record, it does
- * not write one. The capability moved to the row-actions menu, where every other
- * per-row action in the product already lives, and it goes through the same
- * handler the board does — so the won/lost prompt and the stage-skip
- * confirmation still fire.
- */
 
 interface DealRowActionsProps {
   deal: RecordValue;
@@ -102,7 +87,6 @@ export interface DealListProps {
   canCreate: boolean;
   canUpdate: boolean;
   activeFilterLabels: string[];
-  /** Server-mode pagination over `deals` -- see the windowing note below. */
   page: number;
   pageSize: number;
   onPageChange: (page: number) => void;
@@ -134,16 +118,6 @@ export function DealList({
   const { data: stages } = useCrmStages("deal");
 
   const rows = useMemo(() => asRecordValues(deals.map(dealRecordFields)), [deals]);
-  /**
-   * CRM-P4-AUDIT. `deals` here is the tenant's whole matching set -- the same
-   * array the kanban board, the stats bar and the search box all read from
-   * (see `app/(authenticated)/crm/deals/page.tsx`), because `/deals` returns
-   * no total count and has no server-side text search. Slicing it here still
-   * gets the one thing `DataTable`'s `mode: "server"` exists for: the DOM
-   * never renders more than one page of rows. It does not shrink the network
-   * request -- that needs the backend to support paging with a count, at
-   * which point this can become a real second query instead of a slice.
-   */
   const pageStart = (page - 1) * pageSize;
   const pagedRows = useMemo(
     () => rows.slice(pageStart, pageStart + pageSize),
@@ -167,16 +141,6 @@ export function DealList({
     [stages, canUpdate, onStageChange],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:deals:read") === "denied")
     return <NoPermissionState permission="crm:deals:read" />;
 

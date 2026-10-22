@@ -1,16 +1,3 @@
-/**
- * FE-TS-003 and FE-TS-004, the two defects the manager-facing detail sheet
- * carried together.
- *
- * FE-TS-003: the period read was gated on `timesheets:entries:view` alone, so a
- * manager holding only `team:view` got a disabled query — which reports
- * `isLoading: false` with no data, i.e. "no entries logged" for a timesheet
- * nobody ever asked the server for. The sheet now has to say which it is.
- *
- * FE-TS-004: "Remind" fired `toast.success("Reminder sent to …")` with no
- * request behind it. It now calls `POST /timesheets/team/remind`; the toast
- * belongs to the mutation hook, so the sheet itself must never toast.
- */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";

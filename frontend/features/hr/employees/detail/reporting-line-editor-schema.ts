@@ -2,19 +2,12 @@ import { z } from "zod";
 import type { ReportingLineView } from "@/hooks/api/hr/reporting-lines-schema";
 import type { SetReportingLineInput } from "@/hooks/api/hr/reporting-lines";
 
-/**
- * The one client mirror of the D4 contract: a required change reason counts at
- * least this many non-whitespace characters (backend CHANGE_REASON_MIN_CHARS).
- * Everything else about the frequency guard — when it applies, who may pass it —
- * is the server's to decide; the UI only reads its counts and shows its answer.
- */
 export const CHANGE_REASON_MIN_CHARS = 10;
 
 export function nonWhitespaceLength(value: string | undefined): number {
   return (value ?? "").replace(/\s/g, "").length;
 }
 
-/** Read straight from the server's fields (CONTRACT §4.3); no client rule on top. */
 export function requiresChangeReason(line: Pick<ReportingLineView, "primaryChangesLast24h" | "changeThreshold">): boolean {
   return line.primaryChangesLast24h >= line.changeThreshold;
 }
@@ -25,7 +18,6 @@ function isCurrentOn(entry: SecondaryEntry, today: string): boolean {
   return entry.effectiveFrom <= today && (entry.effectiveTo === null || entry.effectiveTo >= today);
 }
 
-/** Additional managers scheduled to start after `today` — shown read-only, never re-dated. */
 export function upcomingSecondaries(line: ReportingLineView, today: string): SecondaryEntry[] {
   return line.secondary.filter((entry) => entry.effectiveFrom > today);
 }
@@ -56,7 +48,6 @@ export const reportingLineEditorSchema = z
     effectiveFrom: z.string(),
     reason: z.string().trim().max(1000, "Keep the reason under 1,000 characters"),
     emergency: z.boolean(),
-    /** Set by the sheet from the line's counts; not a field the user edits. */
     reasonRequired: z.boolean(),
   })
   .superRefine((value, ctx) => {
@@ -91,10 +82,6 @@ export const reportingLineEditorSchema = z
 
 export type ReportingLineEditorValues = z.infer<typeof reportingLineEditorSchema>;
 
-/**
- * `today` is the viewer's local date; the form edits only the additional
- * managers in force on it (a scheduled one would otherwise be re-dated).
- */
 export function editorDefaults(line: ReportingLineView, today: string): ReportingLineEditorValues {
   const current = line.current;
   return {
@@ -121,13 +108,6 @@ export function editorDefaults(line: ReportingLineView, today: string): Reportin
   };
 }
 
-/**
- * The PUT body (CONTRACT §4.4). Blank optional fields are omitted.
- * `secondaryManagers` is the full intended set: the current ones as edited plus
- * the scheduled ones the form shows read-only. The server keeps the existing
- * current or scheduled line of every manager still in the set (only a label
- * change replaces one), so nothing is re-dated; a top-level role ends them all.
- */
 export function editorPayload(
   employeeUserId: string,
   values: ReportingLineEditorValues,
@@ -152,7 +132,6 @@ export function editorPayload(
   };
 }
 
-/** Where a server refusal belongs on the form (FE-79). */
 export const ERROR_FIELD: Partial<Record<string, keyof ReportingLineEditorValues>> = {
   SELF_REFERENCE: "primaryManagerUserId",
   MANAGER_NOT_ELIGIBLE: "primaryManagerUserId",

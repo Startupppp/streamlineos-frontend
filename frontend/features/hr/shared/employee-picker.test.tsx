@@ -1,16 +1,3 @@
-/**
- * The employee picker showed a bare list of names. `EmployeeListItem` has
- * carried `image` all along and the list contract parses it, so the photo was
- * already being fetched on every open and then dropped at the render — which is
- * why the same person has a face in the attendance roster and none here.
- *
- * What jsdom can and cannot see, measured rather than assumed: Radix renders
- * `AvatarImage` as nothing until the browser reports the image loaded, and jsdom
- * never loads one, so the DOM holds only the fallback. These assertions
- * therefore pin the avatar element and its initials, and reach the photo URL
- * through the `window.Image` Radix preloads it with. Whether the picture is
- * round, aligned, or the right size is a browser check (FE-123).
- */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { EmployeePicker } from "./employee-picker";
@@ -87,7 +74,6 @@ describe("EmployeePicker", () => {
     await openList();
 
     const row = screen.getByRole("option", { name: /adityachalla01/ });
-    // Display name is the email local part, so the initial comes from that.
     expect(avatarIn(row)).toHaveTextContent("A");
   });
 

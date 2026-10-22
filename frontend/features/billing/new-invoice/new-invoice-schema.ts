@@ -58,11 +58,6 @@ export function grossTotal(items: InvoiceFormValues["items"]): number {
   }, 0);
 }
 
-/**
- * Re-exported so this module stays the form's single import surface. The rule
- * itself lives in ../invoice-money because the invoice detail screen's edit
- * dialog needs the same rounding and must not pull Zod in to get it.
- */
 export { roundInvoiceAmount } from "../invoice-money";
 
 export function formatInvoiceAmount(value: number): string {

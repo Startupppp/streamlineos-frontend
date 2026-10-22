@@ -21,19 +21,10 @@ export interface SubjectDetailSheetProps {
   subjectId: string | null;
   type: SubjectType;
   onOpenChange: (open: boolean) => void;
-  /** Absent when the viewer cannot manage subjects, so no control is rendered. */
   onEdit?: (subject: RenderableSubject) => void;
   canManage?: boolean;
 }
 
-/**
- * One subject, rendered from its tenant's own declaration.
- *
- * The linked parties are the other half of the ticket: the link table is read
- * from the subject's side here and from the party's side on the parties
- * surface, from the same rows. Each party is a link out, so a person following
- * a property to its owner lands on the owner, not on a dead label.
- */
 export function SubjectDetailSheet({
   subjectId,
   type,

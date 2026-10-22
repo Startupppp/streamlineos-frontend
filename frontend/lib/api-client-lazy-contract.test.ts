@@ -12,19 +12,6 @@ import {
   resolveContract,
 } from "@/lib/api-envelope";
 
-/**
- * The bite-proof for deferring the contract MODULE without deferring the
- * CONTRACT. `check:response-contracts` can only see that an argument sits in
- * the contract slot; it cannot see whether that argument is still applied at
- * runtime. A thunk that resolved to `undefined`, or one the client forgot to
- * await, would pass the gate and silently turn every deferred read back into
- * the unchecked cast the gate exists to stop.
- *
- * So this drives the real `apiClient` against a real `fetch` double and asserts
- * on what the read RETURNS or THROWS — the shape the AGENT-BRIEF's rule 11 asks
- * for — with the loader counted so "loaded once, and not before the first
- * request" is measured rather than asserted in prose.
- */
 
 interface ResponseFields {
   ok: boolean;

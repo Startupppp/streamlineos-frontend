@@ -73,7 +73,6 @@ export function ReviewsTab() {
   const { data, isLoading, isFetching, isError, error, refetch } = useHrPerformanceReviews({ status: statusParam, cursor });
   const pageState = usePageState({ permission: "hr:performance:view", isLoading: false, isError, error });
   const canManage = useCan("hr:performance:manage");
-  // PATCH /hr/performance/reviews/:id is `hr:performance:view` (performance.controller.ts:293).
   const canUpdate = useCan("hr:performance:view");
   const { data: employeesRaw } = useHrEmployees({ limit: 100 });
   const { data: cycles } = useReviewCycles();

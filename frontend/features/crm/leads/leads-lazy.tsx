@@ -7,18 +7,6 @@ import {
   LeadsSheetFallback,
 } from "./leads-lazy-fallbacks";
 
-/**
- * The pipeline's interaction-gated subtrees.
- *
- * The route opens on the table view, so the board, the funnel, both sheets and
- * the export dialog are all things a person asks for after the page has
- * painted. Kept behind `next/dynamic` so their libraries — @hello-pangea/dnd
- * for the board, react-hook-form and the record renderer for the two sheets,
- * react-day-picker for the export filters — are not in the route's first load.
- *
- * Every one of these is mounted conditionally by the page. A `next/dynamic`
- * boundary that is always rendered fetches its chunk on mount and saves nothing.
- */
 
 export const LeadsKanban = dynamic(
   () => import("./leads-kanban").then((m) => ({ default: m.LeadsKanban })),

@@ -149,7 +149,6 @@ interface MemberExpenseListProps {
   activeFilterCount: number;
   onEdit: (expense: ExpenseToEdit) => void;
   onResubmit: (expense: ExpenseWithRelations) => void;
-  /** Offered on pending rows only where the surface owns the withdraw confirm (/me/expenses). */
   onWithdraw?: (expense: ExpenseWithRelations) => void;
   onShowAll: () => void;
   onCreateNew: () => void;

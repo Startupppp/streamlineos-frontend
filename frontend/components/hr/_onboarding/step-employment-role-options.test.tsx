@@ -7,7 +7,6 @@ import { onboardEmployeeInputSchema } from "@/lib/validation/hr";
 import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { StepEmployment } from "./step-employment";
 
-// The reporting half has its own suite (step-employment-reports-to.test.tsx).
 jest.mock("./step-employment-reporting", () => ({ StepEmploymentReporting: () => null }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -70,11 +69,6 @@ function Harness() {
   );
 }
 
-/**
- * The step renders three selects since BUG-HRMS-006/007 (role, worker type,
- * location), so the role's options are read from the role select itself rather
- * than from every option on the step. Role is the first one in the step order.
- */
 function roleSelect(): HTMLElement {
   return screen.getAllByRole("combobox")[0];
 }

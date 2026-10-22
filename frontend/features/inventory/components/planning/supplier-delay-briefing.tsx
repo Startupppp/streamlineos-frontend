@@ -19,11 +19,6 @@ import {
   type SupplierDelayVendor,
 } from "@/hooks/api/inv-ai-explain";
 
-/**
- * C4. The rates arrive already derived and already rounded; this file computes
- * nothing. It used to multiply by a hundred here, and divide spend by a hundred
- * as if an 18,4 decimal were cents, in rupees regardless of the organisation.
- */
 function displayPercent(rate: ScorecardRate): string {
   return rate.percent === null ? "—" : `${rate.percent}%`;
 }
@@ -56,7 +51,6 @@ interface VendorDelayCardProps {
 const VendorDelayCard = memo(function VendorDelayCard({ vendor }: VendorDelayCardProps) {
   const display = useOrgDisplay();
   const p = vendor.performance;
-  // A threshold comparison for a colour, never a displayed value.
   const lowOnTime = p.onTime.percent !== null && Number(p.onTime.percent) < 80;
 
   return (

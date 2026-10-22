@@ -7,20 +7,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/**
- * Freight, duty, insurance and handling, landed into the cost layers of the
- * receipt that brought the goods in.
- *
- * Six routes, none of them called from this repo — so a whole document type
- * existed on the backend, with its own permission key and its own backfill
- * migration, and no way to raise one.
- *
- * Reads are gated on `inventory:valuation:read`, because a voucher discloses
- * what stock cost and supplier freight is commercially sensitive. Writes carry
- * `inventory:landed-cost:manage` rather than a receiving key: applying a voucher
- * restates what inventory is worth and posts to the ledger, which is not the
- * same authority as signing for a pallet.
- */
 
 export const LANDED_COST_CHARGE_TYPES = [
   "FREIGHT",
@@ -41,7 +27,6 @@ export interface LandedCostVoucherListItem {
   status: LandedCostStatus;
   allocationBasis: LandedCostBasis;
   currency: string;
-  /** Integer minor units as a string: this number becomes both a debit and a credit. */
   chargeTotalCents: string;
   capitalisedValue: string | null;
   expensedValue: string | null;
@@ -74,7 +59,6 @@ export interface LandedCostAllocation {
 
 export interface LandedCostVoucherDetail extends LandedCostVoucherListItem {
   notes: string | null;
-  /** The same total at the grain the cost layers are kept in. */
   chargeTotal: string;
   charges: LandedCostCharge[];
   allocations: LandedCostAllocation[];
@@ -98,20 +82,11 @@ export interface AddLandedCostChargeInput {
   voucherId: number;
   chargeType: LandedCostChargeType;
   description: string;
-  /** Integer minor units, always positive — the backend refuses a fraction. */
   amountCents: number;
   vendorId?: number;
   reference?: string;
 }
 
-/**
- * The route answers with the voucher's new total, not the voucher.
- *
- * It was typed as `LandedCostVoucherDetail`, which nothing noticed because
- * nothing called it: a caller reading `.charges` off the result would have got
- * `undefined` at runtime with the type saying otherwise. The detail query is
- * invalidated below, so the rest of the voucher comes back the honest way.
- */
 export interface AddLandedCostChargeResult {
   voucherId: number;
   chargeTotalCents: string;
@@ -207,12 +182,6 @@ export function useAddLandedCostCharge() {
   });
 }
 
-/**
- * The only route here that moves money.
- *
- * Keyed per intent: a retried apply that ran twice would put the freight into
- * the cost layers twice, and there is no movement to reverse it with.
- */
 export function useApplyLandedCostVoucher() {
   const qc = useQueryClient();
   return useIdempotentMutation<LandedCostApplyResult, Error, number>({

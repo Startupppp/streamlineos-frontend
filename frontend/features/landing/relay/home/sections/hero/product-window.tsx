@@ -20,15 +20,6 @@ import { WindowNode } from "./window-node";
 
 type ProductWindowProps = HeroContent["window"];
 
-/**
- * In-window ports. The Amount / Log in-ports end the true / else fan-out
- * (3684:95); their out-ports draw with the right connectors, Ask finance's
- * lights on arrival. Refund created's out-port sits with its card (below).
- *
- * 1024 draws no ports (only the flash, at the branch card's in-port). 768
- * (3885:12 … 3885:16) draws all of them — the two `id: null` entries are the
- * branch cards' out-ports there, the flash ids sit on the in-ports as at 1024.
- */
 const PORTS = [
   {
     id: null,
@@ -67,7 +58,6 @@ const PORTS = [
   },
 ] as const;
 
-/** Branch label 3685:11 / 3685:13 — 53 × 30 chip sitting on the connector. */
 const BranchLabel = ({
   label,
   className,
@@ -82,15 +72,6 @@ const BranchLabel = ({
   </p>
 );
 
-/**
- * Product window group 3542:24364. The window (3542:24365) is 680 × 624 at
- * x760 y44 with a 1px inside border, so its children use Figma's positions
- * minus 1. "Refund created" and its port overhang the window to the left.
- *
- * Motion: load sequence (frame → grid wave → nodes → connectors → packet, see
- * ./timeline), the live packet loop + runs feed, and the cursor tilt with
- * grid / flow / front parallax layers at 4 / 8 / 12 px.
- */
 export const ProductWindow = ({
   label,
   title,
@@ -111,9 +92,7 @@ export const ProductWindow = ({
 }: ProductWindowProps) => (
   <TiltGroup className="pointer-events-none absolute inset-0">
     <FlowLive className="absolute inset-0">
-      {/* The window itself is there from the first frame (client call): a
-          fade on its wrapper suppressed the glass (backdrop-filter) until it
-          ended. Only its contents play the load sequence. */}
+      
       <div className="absolute inset-0">
         <div role="group" aria-label={label}>
           <div className="absolute top-11 left-190 h-156 w-170 overflow-clip rounded-l-hero-window border w768:rounded-r-hero-window border-transparent [background:var(--hero-window-surface)] backdrop-blur-hero-window w1024:top-6.75 w1024:left-127 w1024:h-164.75 w1024:w-129 w768:top-88.5 w768:left-31.5 w768:h-147.5 w390:top-105.5 w390:left-5 w390:h-128.75 w390:w-87.5">
@@ -142,13 +121,13 @@ export const ProductWindow = ({
                 aria-hidden
                 className="absolute top-150.75 left-3.75 size-1 rounded-full bg-hero-corner-dot w1024:hidden"
               />
-              {/* 1024 keeps a single dot, top right (3699:828). */}
+              
               <span
                 aria-hidden
                 className="absolute -top-0.25 left-124.75 hidden size-1 rounded-full bg-hero-corner-dot w1024:block w390:left-83.25"
               />
 
-              {/* Top bar */}
+              
               <p className="absolute top-9.75 left-9.75 text-body leading-body whitespace-nowrap text-foreground-muted w1024:top-5.75 w1024:left-5.75 w390:left-4.75">
                 {title}
               </p>
@@ -164,7 +143,7 @@ export const ProductWindow = ({
                 className="absolute top-21.75 -left-px h-px w-170 bg-hero-rule w1024:top-15.75 w1024:w-129 w390:w-87.5"
               />
 
-              {/* Tool column + zoom */}
+              
               <ul
                 aria-hidden
                 className="absolute top-27.75 left-9.75 flex flex-col gap-2 w1024:top-19 w1024:left-5.75 w1024:flex-row w390:left-4.75"
@@ -200,10 +179,9 @@ export const ProductWindow = ({
               {status}
             </Reveal>
 
-            {/* Flow */}
+            
             <DepthLayer depth={TILT.depth.flow} className="absolute inset-0">
-              {/* 390 (3957:1556) is the 768 flow scaled 310 / 380 about its
-                  top-left (67, 130), shifted 48 left. */}
+              
               <div className="absolute inset-0 w390:origin-[calc(var(--spacing)*16.75)_calc(var(--spacing)*32.5)] w390:-translate-x-12 w390:scale-[0.8158]">
                 <Connectors
                   mirror
@@ -281,7 +259,7 @@ export const ProductWindow = ({
               </div>
             </DepthLayer>
 
-            {/* Last runs */}
+            
             <Reveal
               variant="fade"
               delay={LOAD.chrome}
@@ -298,21 +276,20 @@ export const ProductWindow = ({
             <LiveRuns runs={runs} pool={runPool} gaps={runGaps} />
           </div>
 
-          {/* The window's gradient stroke, on its own ring over the glass. */}
+          
           <span
             aria-hidden
             className="pointer-events-none absolute top-11 left-190 h-156 w-170 w1024:top-6.75 w1024:left-127 w1024:h-164.75 w1024:w-129 w768:top-88.5 w768:left-31.5 w768:h-147.5 w390:top-105.5 w390:left-5 w390:h-128.75 w390:w-87.5 rounded-l-hero-window border border-transparent w768:rounded-r-hero-window [background:var(--hero-window-ring)_border-box] [mask:var(--hero-window-ring-mask)]"
           />
 
-          {/* Same depth as the flow: its connector leaves this card's edge. */}
+          
           <DepthLayer depth={TILT.depth.flow} className="absolute inset-0">
             <WindowNode
               {...trigger}
               delay={LOAD.nodes[0]}
               className="top-72 left-162.5 w-50 w1024:top-38.75 w1024:left-168 w1024:w-47 w768:top-121.25 w768:left-74.5 w768:h-15 w768:w-43 w768:pt-2.75 w390:top-138.25 w390:left-31.25 w390:origin-top-left w390:scale-[0.8158]"
             />
-            {/* Out-port on the card's right edge, start of the true / else fan-out:
-                window padding (85, 275) + window origin (761, 45) in hero space. */}
+            
             <PortFlash
               id="trigger"
               className="top-80 left-211.5 w1024:top-53.25 w1024:left-190.5 w768:top-135.25 w768:left-95 w390:top-149.75 w390:left-48 w390:size-1.75"

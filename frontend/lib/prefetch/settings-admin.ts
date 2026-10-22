@@ -210,7 +210,6 @@ export async function prefetchRoleSimulation() {
   return dehydrate(queryClient);
 }
 
-/** The first page of `useQuarantine`, keyed by the same `{ status, cursor, limit }` object. */
 export async function prefetchStorageQuarantine(params: {
   status?: QuarantineStatus;
   cursor?: string;
@@ -231,7 +230,6 @@ export async function prefetchStorageQuarantine(params: {
   return dehydrate(queryClient);
 }
 
-/** The subject-request queue, filtered by `?subject=` exactly as `useSubjectRequests` is. */
 export async function prefetchPrivacyRequests(subjectEmail: string | undefined) {
   const queryClient = await createServerQueryClient();
   const gate = await resolvePrefetchGate();

@@ -3,17 +3,6 @@ import {
   valuationReportContract,
 } from "@/hooks/api/inventory/valuation-schema";
 
-/**
- * `GET /inventory/reports/valuation` reads the canonical valuation service, so
- * it answers `{ grain, items, totalValue, totalOnHand, total, page, totalPages }`
- * with every quantity and money figure a `numeric(18,4)` text column — in the
- * organisation's own currency, not minor units. The screen used to expect
- * `{ rows, byMethod, totalValue }` of numbers and divide each by 100, which
- * reported a hundredth of the stock value.
- *
- * `GET /inventory/products/variants` is the costing table's source and answers
- * the catalogue row: no costing method, no average cost, no on-hand.
- */
 
 it("accepts the valuation summary the backend builds", () => {
   const parsed = valuationReportContract.parse({

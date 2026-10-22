@@ -12,18 +12,6 @@ interface PanelRenderWindow {
   onLoadMore: () => void;
 }
 
-/**
- * The chat side panels read through `useInfiniteQuery`, so their pages
- * accumulate. Re-opening a panel restores every page fetched earlier in the
- * session at once, and the previous markup mounted all of them — the mounted
- * row count was a function of how far the reader had ever paged rather than of
- * the viewport.
- *
- * The rendered slice is bounded instead, and the panel's single control reveals
- * what is already held before it asks the server for another page, so one click
- * never both fetches a page and mounts it, and nothing is skipped between a
- * reveal and the fetch that follows it.
- */
 function resolvePanelVisibleCount(total: number, pagesShown: number): number {
   return Math.min(Math.max(0, total), Math.max(1, pagesShown) * PANEL_RENDER_PAGE_SIZE);
 }

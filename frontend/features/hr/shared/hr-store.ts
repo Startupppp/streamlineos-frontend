@@ -1,17 +1,12 @@
-/**
- * Lightweight client store for HRMS UI state.
- * Survives route changes within the HR module without a third-party store lib.
- * Prefer React Query for server data; use this for UI/session state only.
- */
 
 export type HrDirectoryView = "grid" | "list";
 export type HrDirectoryStatusFilter = "all" | "active" | "inactive";
 
 export interface HrDirectoryFilters {
   search: string;
-  departmentId: string; // "all" | id string
+  departmentId: string;
   status: HrDirectoryStatusFilter;
-  role: string; // "all" | role slug
+  role: string;
 }
 
 export type BulkImportRowStatus = "ready" | "error" | "duplicate_file" | "duplicate_org";
@@ -40,7 +35,6 @@ export interface HrUiState {
   directoryView: HrDirectoryView;
   directoryFilters: HrDirectoryFilters;
   bulkImport: BulkImportSession | null;
-  /** Last visited HR path for back-navigation affordances */
   lastPath: string | null;
 }
 
@@ -107,7 +101,6 @@ export const hrStore = {
     setState({ lastPath: path });
   },
 
-  /** Full reset (e.g. workspace switch) */
   reset: () => {
     state = {
       directoryView: "grid",

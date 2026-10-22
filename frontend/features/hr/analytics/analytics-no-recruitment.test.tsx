@@ -22,7 +22,6 @@ jest.mock("@/features/hr/analytics/leave-section", () => ({ LeaveSection: () => 
 jest.mock("@/features/hr/analytics/attrition-section", () => ({ AttritionSection: () => null }));
 jest.mock("@/features/hr/analytics/command-center-section", () => ({ CommandCenterSection: () => null }));
 
-// Recruitment analytics live in Recruitment OS (/recruitment/analytics), never in HRMS.
 describe("people analytics carries no recruitment", () => {
   it("offers no Recruitment tab and no open-positions figure", () => {
     render(<AnalyticsPageClient />);

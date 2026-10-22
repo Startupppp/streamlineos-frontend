@@ -27,14 +27,6 @@ import { useDialogReturnFocus } from "./use-dialog-return-focus";
 
 type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
-/**
- * The name field slugifies as you type, so "what it contains" and "what you typed"
- * are different questions. Three spaces slugified to `-`, which is non-empty, so
- * `name.trim()` was truthy and "Next: Add Members" enabled on a name with no
- * meaningful characters (CHAT-005). A name is valid once it holds at least one
- * alphanumeric character; a trailing hyphen is left alone because it is what
- * mid-word typing looks like ("design-" on the way to "design-team").
- */
 function toChannelSlug(value: string): string {
   return value
     .toLowerCase()
@@ -122,11 +114,6 @@ export function NewGroupDialog({
   const createPrivate = useCreatePrivateChannel();
   const [channelKind, setChannelKind] = useState<ChannelKind>("GROUP");
   const [name, setName] = useState("");
-  /**
-   * The slugifier drops everything it cannot use, so typing only spaces or
-   * punctuation leaves the field exactly as empty as it started and nothing on screen
-   * says why. This remembers that the last keystroke was rejected, so the hint can.
-   */
   const [nameRejected, setNameRejected] = useState(false);
   const [description, setDescription] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");

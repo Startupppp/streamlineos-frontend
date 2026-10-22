@@ -1,12 +1,5 @@
 import type { ReportingFieldType, ReportingSource } from "@/types/crm/reporting";
 
-/**
- * One source's fields, flattened into the list the pickers offer.
- *
- * A relation's fields arrive from the server already dotted (`party.industry`),
- * because that dotted string *is* the name the compiler resolves — so nothing
- * here builds a name, it only groups the ones that were sent.
- */
 export interface ReportFieldOption {
   readonly name: string;
   readonly label: string;
@@ -52,7 +45,6 @@ export function findFieldOption(
   return options.find((option) => option.name === name);
 }
 
-/** A field's human label, for a result column header. Falls back to the name. */
 export function fieldLabel(options: readonly ReportFieldOption[], name: string): string {
   return findFieldOption(options, name)?.label ?? name;
 }

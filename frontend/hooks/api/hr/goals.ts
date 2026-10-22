@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { lazyContract } from "@/lib/api-envelope";
+import { hrGoalsQueryOptions } from "@/hooks/api/hr/goals-read-options";
 
 const goalListLazy = lazyContract(() =>
   import("@/hooks/api/hr/goals-schema").then((m) => m.goalListContract),
@@ -34,16 +35,12 @@ export interface HrGoal {
   updatedAt: string;
 }
 
-export const hrGoalsQueryOptions = (params?: { userId?: string }) =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.goals(params?.userId),
+export function useHrGoals(params?: { userId?: string }) {
+  return useGatedQuery("hr:performance:view", {
+    ...hrGoalsQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<HrGoal[]>("/hr/performance/goals", params, signal, goalListLazy),
-    staleTime: 60_000,
   });
-
-export function useHrGoals(params?: { userId?: string }) {
-  return useGatedQuery("hr:performance:view", hrGoalsQueryOptions(params));
 }
 
 export function useCreateHrGoal() {

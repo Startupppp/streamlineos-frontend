@@ -18,7 +18,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     title: { absolute: `${category.seoTitle ?? category.name}${n > 1 ? ` — page ${n}` : ""} · ${JOURNAL_NAME}` },
     description: category.seoDescription ?? category.description ?? `Stories about ${category.name} from the journal.`,
     alternates: { canonical: blogUrl(pagedPath(`/category/${category.slug}`, n)) },
-    // An empty topic is not a page worth indexing.
     robots: category.count === 0 ? { index: false, follow: true } : undefined,
   };
 }

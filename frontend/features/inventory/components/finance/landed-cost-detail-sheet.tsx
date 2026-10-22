@@ -79,13 +79,6 @@ const ALLOCATION_COLUMNS: DataTableColumn<LandedCostAllocation>[] = [
   },
 ];
 
-/**
- * One voucher, its charges, and — once applied — where every fraction went.
- *
- * The allocation table is the evidence half: applying a voucher restates unit
- * cost on each layer, and without a before/after a person is asked to trust a
- * number that changed underneath them.
- */
 export function LandedCostDetailSheet({
   voucherId,
   canManage,
@@ -101,12 +94,6 @@ export function LandedCostDetailSheet({
     useLandedCostVoucher(voucherId);
   const apply = useApplyLandedCostVoucher();
 
-  /*
-   * `addCharge` refuses a voucher that is no longer DRAFT with a 409 — applying
-   * one restates the cost layers, and a charge arriving afterwards belongs on a
-   * second voucher, not retrospectively on this one. So the control is offered
-   * on exactly the states the handler accepts.
-   */
   const canAddCharge = canManage && data?.status === "DRAFT";
 
   function handleAddChargeOpen(): void {
@@ -245,12 +232,7 @@ export function LandedCostDetailSheet({
         )}
       </AppSheet>
 
-      {/*
-        A sibling of the sheet, not a child of it, for the reason
-        `pick-wave-sheet.tsx` gives: Radix traps focus inside each of them, and
-        a dialog mounted within the sheet's own subtree has the sheet competing
-        to pull focus back the moment it opens.
-      */}
+      
       <LandedCostAddChargeDialog
         open={addingCharge}
         onOpenChange={setAddingCharge}

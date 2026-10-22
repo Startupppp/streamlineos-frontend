@@ -20,11 +20,6 @@ export interface InventorySettings {
   expiryReservationPolicy: ExpiryPolicy;
   inspectionOnReceipt: boolean;
   inspectionOnReturn: boolean;
-  /**
-   * Decimal strings, as the columns are `decimal` and the update schema is
-   * `z.string()`. Typed as numbers, the form sent numbers the endpoint refuses,
-   * and the untouched strings it loaded failed the form's own `z.number()`.
-   */
   overReceiptTolerancePct: string;
   requirePoApproval: boolean;
   adjustmentApprovalThreshold: string | null;
@@ -39,29 +34,14 @@ export interface InventorySettings {
   packMaterials: boolean;
 }
 
-/**
- * E1 — which packs this organisation runs.
- *
- * Read through `useInventoryPacks`, which is gated on the read key every
- * inventory role holds rather than on `inventory:settings:manage`: navigation,
- * form fields and validation all have to know, and gating it on the
- * administration key would show a pharmacy's MRP field only to the person who
- * administers the module.
- */
 export interface InventoryPacks {
   warehouse: boolean;
   kirana: boolean;
   pharmacy: boolean;
   gst: boolean;
-  /** B1 — construction and interior materials: catalogue attributes, dark stores, projects. */
   materials: boolean;
 }
 
-/**
- * A document type with no stored row is still listed, with the defaults the
- * numbering service would use and `isDefault: true` — and no `id`, because
- * there is nothing to update yet.
- */
 export interface NumberSequence {
   id?: number;
   orgId?: string;
@@ -74,7 +54,6 @@ export interface NumberSequence {
   updatedAt?: string;
 }
 
-/** The fields `SettingsService.getHealth` returns, under the names it uses. */
 interface SettingsHealth {
   ledgerReconciliation: {
     sampleSize: number;
@@ -96,11 +75,6 @@ export interface ImportPreviewResult {
   sample: Record<string, unknown>[];
 }
 
-/**
- * The import-job row as the list and detail routes select it. The job's kind is
- * `jobType` and its failures `errorRows`; there is no completion timestamp, so
- * `updatedAt` is the last time the job moved.
- */
 interface ImportJobListItem {
   id: number;
   orgId: string;
@@ -220,17 +194,6 @@ export function useImportPreview() {
   });
 }
 
-/*
- * `useCreateImportJob` was removed here.
- *
- * It posted to the single-shot `POST /inventory/import/jobs`, which takes the
- * whole file in one body, and the only caller handed it `preview.sample` — the
- * backend's own `rows.slice(0, 20)`. Importing five thousand products applied
- * twenty of them under a job that reported COMPLETED. The staged routes
- * (`hooks/api/inventory/staged-import.ts`) replace it rather than sit beside it:
- * they take the file in chunks, resume from the next unprocessed row, and can
- * say which lines were rejected and why.
- */
 
 export function useImportJobs(params?: { page?: number }) {
   const canView = useCan("inventory:import");

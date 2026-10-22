@@ -3,14 +3,6 @@ import type { WizardMember } from "./use-wizard-members";
 
 export type WizardSessionUser = NamedUser & { id?: string };
 
-/**
- * Resolve a wizard Manager/Team id to a display label.
- *
- * Draft defaults seed managerId/memberIds with session.user.id. The directory
- * (org or build members) can miss that id — empty build roster, pending org
- * list, id shape miss — which previously rendered "Unknown member" while
- * Basics showed "No manager" for the same unset-looking control.
- */
 export function findWizardMember(
   userId: string | null | undefined,
   members: readonly WizardMember[],

@@ -6,30 +6,21 @@ import type { IntegrationsApp } from "@/features/landing/relay/data/integrations
 import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 
 type AppTileProps = Pick<IntegrationsApp, "name" | "initials"> & {
-  /** Label alignment under the tile — first row item hugs left, last hugs right. */
   align: "start" | "center" | "end";
-  /** The rail has reached this tile: pop in. */
   shown: boolean;
-  /** Accent "active" look (relay pass or rest-state stripe). */
   active: boolean;
-  /** Drawn in the 1024 and 768 frames (not notion, gmail). */
   in1024?: boolean;
-  /** Drawn in the 390 frame (slack, stripe, postgres, notion). */
   in390?: boolean;
 };
 
-/** 390 (3893:3065 …): every label is centred under its tile. */
 const CENTRED_390 = "w390:left-1/2 w390:-translate-x-1/2 w390:text-center";
 
 const LABEL_ALIGN: Record<AppTileProps["align"], string> = {
   start: `left-0 text-left ${CENTRED_390}`,
   center: "left-1/2 -translate-x-1/2 text-center",
-  // Figma: last label ends at x1360, 2px past the tile's right edge (1358);
-  // at 1024 and 768 (3888:10219, 3832:7486) it ends flush with the tile's right edge.
   end: `-right-0.5 w1024:right-0 text-right w390:right-auto ${CENTRED_390}`,
 };
 
-/** Show/hide per frame; 1440 draws every tile. */
 const frameClass = (in1024: boolean, in390: boolean) =>
   [
     in1024 ? "" : "w1024:hidden",
@@ -38,11 +29,6 @@ const frameClass = (in1024: boolean, in390: boolean) =>
     .filter(Boolean)
     .join(" ");
 
-/**
- * App tile 60×60 (56×56 at 390) + label (Figma 3888:5789 …5812).
- * The idle and active looks are two stacked layers cross-faded by one spring,
- * so either end state paints exactly one of Figma's two tile styles.
- */
 export const AppTile = ({
   name,
   initials,
@@ -55,7 +41,6 @@ export const AppTile = ({
   const pop = useSpring({
     s: shown ? 1 : 0.8,
     o: shown ? 1 : 0,
-    /* hiding only happens off screen (visit reset): jump, so a quick return starts clean */
     immediate: !shown,
     config: SPRING_SOFT,
   });
@@ -74,7 +59,6 @@ export const AppTile = ({
         aria-hidden="true"
         className="relative size-15 w390:size-14 overflow-clip rounded-integrations-tile backdrop-blur-integrations-tile"
         style={{
-          /* the active (accent) tile also grows a touch — 6% */
           transform: to([pop.s, look.a], (s, a) => {
             const k = s * (1 + 0.06 * a);
             return k === 1 ? "none" : `scale(${k})`;

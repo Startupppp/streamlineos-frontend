@@ -1,24 +1,9 @@
-/**
- * A `next/dynamic` boundary is one static import away from being undone: add
- * `import { Foo } from "./chart"` to a page and the chart library is back in
- * that route's first-load bundle, with nothing failing. Typecheck, lint and the
- * rest of the suite all stay green — the only signal is a slower page.
- *
- * This walks the real module graph from every route entry, following *static*
- * edges only, and asserts the heavy libraries below are never reachable that
- * way. Type-only imports are erased at compile time and CSS side-effect
- * imports are not JS, so both are excluded, exactly as the bundler treats them.
- */
 import fs from "node:fs";
 import path from "node:path";
 
 const FE = path.resolve(__dirname, "..", "..");
 const ROOTS = ["app", "features", "components", "hooks", "lib"];
 
-/**
- * Libraries with no business in a route's first load. Each is behind a
- * `next/dynamic` boundary or an `await import()` inside an event handler.
- */
 const MUST_STAY_LAZY = [
   "recharts",
   "@tiptap/react",
@@ -109,7 +94,6 @@ const routeEntries = allFiles.filter(
     !/__tests__|\.test\./.test(file),
 );
 
-/** Every module a route can reach without crossing a `dynamic()`/`import()`. */
 function eagerGraph(): Map<string, string> {
   const reachedFrom = new Map<string, string>();
   for (const entry of routeEntries) {

@@ -6,14 +6,6 @@ import {
   type ReportingFieldType,
 } from "@/types/crm/reporting";
 
-/**
- * Every bound the server refuses on, restated so the builder can refuse first.
- *
- * `compileQuery` re-checks all of this and is the actual gate; the point of the
- * copy is that a control which lets somebody assemble a query the compiler will
- * reject has taught them nothing. Sourced from `compiler/query-description.ts`
- * (`QUERY_LIMITS`) and `compiler/compile.ts` (the per-type tables).
- */
 export const REPORT_QUERY_LIMITS = {
   maxSelect: 40,
   maxFilterNodes: 100,
@@ -26,19 +18,10 @@ export const REPORT_QUERY_LIMITS = {
   maxValueLength: 1000,
 } as const;
 
-/**
- * The one bound that is not in `QUERY_LIMITS`.
- *
- * `dto/reporting.schemas.ts` caps the children of an `and`/`or` at
- * `MAX_BRANCHES = 20`, independently of `maxFilterNodes`. The builder emits one
- * flat `and`, so this — not 100 — is the number of filters it may carry.
- */
 export const REPORT_MAX_FILTER_BRANCHES = 20;
 
-/** Length of an ISO string `checkValue` will still parse. */
 export const REPORT_MAX_DATE_VALUE_LENGTH = 40;
 
-/** `OPERATORS_FOR_TYPE` in `compiler/compile.ts`. */
 export const REPORT_OPERATORS_FOR_TYPE: Record<
   ReportingFieldType,
   readonly ReportingComparisonOperator[]
@@ -74,7 +57,6 @@ export const REPORT_OPERATORS_FOR_TYPE: Record<
   boolean: [...REPORTING_UNARY_OPERATORS, "eq", "ne"],
 };
 
-/** `AGGREGATE_RULES` in `compiler/compile.ts`, inverted per field type. */
 export const REPORT_AGGREGATES_FOR_TYPE: Record<
   ReportingFieldType,
   readonly ReportingAggregate[]

@@ -22,12 +22,6 @@ interface Props {
   interviewId: number;
 }
 
-/**
- * The interview transcript: reading one, adding one, and removing one.
- *
- * Mounted only when a panel is expanded, because the backend audits every read
- * and an eager fetch would record a disclosure to somebody who never looked.
- */
 export function TranscriptPanel({ interviewId }: Props) {
   const canManage = useCan("hr:interviews:manage");
   const { data, isLoading, isError } = useInterviewTranscript(interviewId, canManage);
@@ -54,12 +48,6 @@ export function TranscriptPanel({ interviewId }: Props) {
       return;
     }
     store.mutate(
-      /*
-        The consent instant is stamped at the moment the recruiter confirms it,
-        which is the closest honest approximation available from this screen. It
-        is not defaulted on the server: a server-invented consent time would be
-        a record of agreement nobody witnessed.
-      */
       { text: text.trim(), consentAt: new Date().toISOString() },
       {
         onSuccess: () => {
@@ -72,12 +60,6 @@ export function TranscriptPanel({ interviewId }: Props) {
     );
   }, [store, text]);
 
-  /*
-    The typed reason goes into the audit row rather than a canned string. This
-    is the route a DPDP erasure request is satisfied through, and "removed by a
-    recruiter" would tell a later reader nothing about why the record no longer
-    exists.
-  */
   const handleErase = useCallback(
     (reason: string) => {
       erase.mutate(reason, {
@@ -114,12 +96,7 @@ export function TranscriptPanel({ interviewId }: Props) {
           <div className="rounded-md border bg-muted/40 px-3 py-2 max-h-64 overflow-y-auto">
             <p className="text-xs whitespace-pre-wrap text-foreground">{data.transcript}</p>
           </div>
-          {/*
-            Provenance and retention, together. "Where did this come from" and
-            "how long is it kept" are the two questions a transcript raises, and
-            answering them on the screen is cheaper than answering them in a
-            subject-access request.
-          */}
+          
           <p className="text-xs text-muted-foreground">
             {data.source === "MANUAL_UPLOAD" ? "Uploaded by hand" : "From the transcription vendor"}
             {data.storedAt ? ` on ${formatDateTime(data.storedAt)}` : ""}
@@ -132,11 +109,7 @@ export function TranscriptPanel({ interviewId }: Props) {
         </div>
       ) : (
         <div className="space-y-2">
-          {/*
-            The blocked reason sits above the upload box, not below it: a
-            recruiter typing a transcript by hand should know first whether
-            something could have done it for them, and what that would need.
-          */}
+          
           {data.providerBlockedReason && (
             <p className="text-xs text-muted-foreground rounded-md border bg-muted/40 px-3 py-2">
               {data.providerBlockedReason}

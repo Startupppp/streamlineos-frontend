@@ -3,13 +3,6 @@ import { ApprovalRoutePanel, summarizeApprovalRoute } from "@/components/shared/
 import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
 import { noApproverFix } from "./no-approver-fix";
 
-/**
- * HRMS-E2E-032. With nobody to approve, the leave button read "No approver
- * available" and the panel said to ask an HR administrator — including when the
- * person reading it WAS that administrator. §10.7 wants the why and a way out:
- * the resolver's skip reasons say which screen fixes it, and the viewer's
- * permissions say whether to offer it.
- */
 
 type SkipReason = ApprovalRoute["skipped"][number]["reason"];
 

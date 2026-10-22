@@ -17,15 +17,9 @@ interface RecommendationCopy {
   badge: string;
   headline: string;
   body: string;
-  /** Exact decimal string, as the API sends it. */
   quantity: string | null;
 }
 
-/**
- * The engine returns `null` with a reason in several shapes of demand. That
- * refusal is the answer, so each one gets its own sentence rather than
- * collapsing into a zero or an empty panel.
- */
 export function describeRecommendation(proposal: ReorderProposal): RecommendationCopy {
   const modelDeclined = proposal.reorderPoint === null;
 

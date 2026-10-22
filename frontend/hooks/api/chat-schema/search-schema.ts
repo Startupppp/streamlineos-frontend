@@ -2,7 +2,6 @@ import { z } from "zod";
 
 import { chatMessageAttachmentContract } from "./message-schema";
 
-/** `chatSearchMessagesResponseSchema` */
 export const chatSearchMessagesContract = z.object({
   results: z.array(
     z.object({
@@ -35,7 +34,6 @@ export const chatSearchMessagesContract = z.object({
   nextCursor: z.number().optional(),
 });
 
-/** `chatSearchChannelsResponseSchema` */
 export const chatSearchChannelsContract = z.array(
   z.object({
     id: z.number().int(),
@@ -47,7 +45,6 @@ export const chatSearchChannelsContract = z.array(
   }),
 );
 
-/** `chatSearchUsersResponseSchema` */
 export const chatSearchUsersContract = z.array(
   z.object({
     id: z.string(),

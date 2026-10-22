@@ -23,11 +23,6 @@ interface DisciplinaryActionsTabProps {
   onIssueAction: () => void;
 }
 
-/**
- * The second tab owns its own read, its own cursor stack and its own employee
- * name resolution — none of which the cases tab shares — so it is a module of
- * its own rather than a branch of the page.
- */
 export function DisciplinaryActionsTab({ canManage, onIssueAction }: DisciplinaryActionsTabProps) {
   const pagination = useCursorPageStack();
   const { data, isLoading, isError, error, refetch } = useDisciplinaryActions({
@@ -35,7 +30,6 @@ export function DisciplinaryActionsTab({ canManage, onIssueAction }: Disciplinar
   });
   const pageState = usePageState({ permission: "hr:cases:view", isLoading, isError, error });
 
-  // Issuers resolve through the same lookup so no raw user id is shown (FE-85).
   const employeeIds = useMemo(
     () => [...new Set((data?.data ?? []).flatMap((r) => [r.employeeId, r.issuedBy]))],
     [data?.data],

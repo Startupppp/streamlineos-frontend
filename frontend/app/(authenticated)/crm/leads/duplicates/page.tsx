@@ -22,24 +22,7 @@ import { withColumns } from "@/lib/renderer/layout-adjustment";
 import type { RecordLayout } from "@/lib/renderer/layout";
 import { cn } from "@/lib/utils";
 
-/**
- * Two lead records that look like the same person.
- *
- * Each group renders the shared lead description rather than a table written
- * here, which matters more on this screen than on most: the whole judgement a
- * user makes is "are these the same person", and they make it by comparing
- * fields side by side. When the comparison table was hand-written it showed six
- * fields chosen once and never revisited, painted statuses from its own colour
- * map, and formatted dates with its own `en-IN` call — so the same lead read
- * differently here than on the list it came from, which is precisely the
- * confusion a duplicate scan is supposed to remove.
- *
- * The group card, the match reasons and the merge itself stay hand-written.
- * A description describes one record; that two of them are suspected to be the
- * same person is not a fact about a lead.
- */
 
-/** The scan's confidence that two records are one person. */
 function scoreTone(score: number): "danger" | "warning" | "neutral" {
   if (score >= 80) return "danger";
   if (score >= 60) return "warning";
@@ -83,11 +66,6 @@ function DuplicateGroupCard({
     [leadA, leadB],
   );
 
-  /**
-   * Which of the two survives, in the slot the engine leaves for a row's own
-   * controls. Not a column in the description: that one of two records is the
-   * keeper is a fact about this comparison, not about a lead.
-   */
   const renderActions = useCallback(
     (row: RecordValue) => {
       if (!leadA) return null;
@@ -154,11 +132,6 @@ function DuplicateGroupCard({
             rows={rows}
             getRowKey={(row) => String(row.id)}
             actions={renderActions}
-            /*
-              Compact, like every other table in the product. A two-row
-              comparison is exactly where a spacious row hurts: the fields you
-              are comparing should sit close enough to read across.
-            */
             density="compact"
             money={money}
             minWidth="820px"
@@ -266,11 +239,6 @@ export default function DuplicateLeadsPage() {
           </StatCardGrid>
 
           {groups.length === 0 ? (
-            /*
-              The "done" state rather than the "nothing here yet" one: the scan
-              ran and found nothing, which is good news and should read as good
-              news rather than as an empty container.
-            */
             <EmptyState
               illustration={<EmptyLeadsIllustration />}
               title="No duplicates found"

@@ -9,7 +9,6 @@ import { pick, useFrame } from "@/features/landing/relay/hooks/use-frame";
 import { SPRING, STEP } from "@/features/landing/relay/lib/motion";
 
 import { LIVE, LOAD } from "./timeline";
-/** First screen: start as soon as it is visible, not at the VIEW_MARGIN line. */
 const HERO_MARGIN = "0px";
 
 export interface Run {
@@ -21,9 +20,7 @@ export interface Run {
 
 export interface LiveRunsProps {
   runs: readonly Run[];
-  /** Name / duration pairs the live feed cycles through. */
   pool: readonly { name: string; duration: string }[];
-  /** Seconds between consecutive run timestamps, cycled. */
   gaps: readonly number[];
 }
 
@@ -58,7 +55,6 @@ const Dot = ({ live }: { live: boolean }) => (
   />
 );
 
-/** One shift: the new run slides into the top, the rest move down a row. */
 const Shift = ({ rows }: { rows: Run[] }) => {
   const { p } = useSpring({ from: { p: 0 }, to: { p: 1 }, config: SPRING });
   const pitch = pick(useFrame(), {
@@ -100,11 +96,6 @@ const Shift = ({ rows }: { rows: Run[] }) => {
   );
 };
 
-/**
- * "last runs" — the Figma rows at rest (768 / 390 show only the newest: the
- * list is one row tall and the shift is clipped to it); while in view a new run slides into
- * the top every LIVE.runEvery and pushes the others down (3 stay visible).
- */
 export const LiveRuns = ({ runs, pool, gaps }: LiveRunsProps) => {
   const [setNode, inView] = useDynamicInView({ rootMargin: HERO_MARGIN });
   const [{ feed, n }, setState] = useState(() => ({ feed: [...runs], n: 0 }));

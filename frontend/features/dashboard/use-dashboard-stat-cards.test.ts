@@ -4,23 +4,6 @@ import { executiveKpiStats, useDashboardStatCards } from "./use-dashboard-stat-c
 import type { DashboardAccess } from "./use-dashboard-access";
 import type { DashboardStats } from "@/types/dashboard";
 
-/**
- * `/dashboard/stats` fans out over three independent sections and each one is
- * deadline-protected: `settleSection` returns the section's fallback — `null`
- * for all three counts — when its query REJECTS **or** when it merely exceeds
- * HOME_SECTION_DEADLINE_MS (2,500 ms). So `null` on the wire means "we could not
- * find out", and it is a different fact from `0`.
- *
- * `stats.totalEmployees ?? 0` erased that difference on the most prominent card
- * in the product: an org with 500 employees whose count query stalled rendered
- * "Total Employees 0". An operator reads a number as a number — the org looks
- * empty, or looks like every employee was deleted — and nothing on the screen
- * knew anything had failed, so there was no retry affordance either.
- *
- * The card list already knows the other reading of `null` ("you may not see
- * this"): it only pushes a card when the caller holds the permission, so inside
- * the branch the permission is held and `null` can only be a degraded section.
- */
 
 function access(over: Partial<DashboardAccess> = {}): DashboardAccess {
   return {
@@ -97,8 +80,6 @@ describe("useDashboardStatCards", () => {
 
   it("leaves the separately-sourced open-task count alone", () => {
     const cards = cardsFor(stats({ totalEmployees: null }));
-    // `openIssueCount` comes from /dashboard/my-issues, not from the fanout, so
-    // it carries no degraded reading and stays a plain number.
     expect(cards.get("my-tasks")?.value).toBe(7);
     expect(cards.get("my-tasks")?.unavailable).toBeFalsy();
   });

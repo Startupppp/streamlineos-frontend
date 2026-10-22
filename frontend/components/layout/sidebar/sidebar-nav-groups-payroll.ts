@@ -138,9 +138,6 @@ function routesFor(hrefs: readonly string[]): NavRoute[] {
   return hrefs.flatMap((href) => PAYROLL_ROUTES.filter((route) => route.href === href));
 }
 
-// Four short groups instead of one flat list of nineteen: run it, set up
-// salaries, pay out and report, configure. Each route keeps its own permission,
-// so regrouping changes no route gate.
 const PAYROLL_GROUP_BASE = {
   module: "payroll",
   requiredPermission: ["payroll:runs:view", "payroll:salaries:view", "self:payroll"],

@@ -9,7 +9,6 @@ interface DocumentWithdrawFormFieldsProps {
   form: UseFormReturn<DocumentWithdrawValues>;
 }
 
-/** The one thing asked when a document is taken out of the Knowledge Base: why. It goes to the audit log. */
 export function DocumentWithdrawFormFields({ form }: DocumentWithdrawFormFieldsProps) {
   return (
     <FormField

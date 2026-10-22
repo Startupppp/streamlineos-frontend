@@ -107,12 +107,6 @@ function PageSkeleton() {
   );
 }
 
-/**
- * TanStack pauses a query while the browser is offline: it neither resolves nor
- * rejects, so an offline read renders this skeleton forever. Reading the
- * connection here means every consumer says "paused" instead of "loading"
- * without a single call site changing.
- */
 export function LoadingState({
   variant = "table",
   className,

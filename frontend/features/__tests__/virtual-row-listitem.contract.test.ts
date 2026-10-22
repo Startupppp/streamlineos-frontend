@@ -2,25 +2,6 @@ import { readFileSync } from "node:fs";
 import { relative } from "node:path";
 import { collectSourceFiles, FE_ROOT } from "@/test-utils/keyboard-reachability-analysis";
 
-/**
- * react-window v2 puts `role="list"` on the scroll container itself and hands
- * each row component an `ariaAttributes` prop carrying `role="listitem"` plus
- * `aria-posinset`/`aria-setsize`. Neither role appears anywhere in this
- * repository's source, so the static ARIA census cannot see this relationship
- * at all and a rendered suite only sees the rows a fixture happened to mount.
- *
- * A row that returns early — no item yet, a "load more" sentinel, a date
- * header — and forgets the spread puts a NON-listitem child inside a
- * `role="list"`. That is `aria-required-children`, which axe rates critical,
- * and it was live on all six virtual lists in the product: notifications,
- * inbox, chat members, mail, the kanban column and the calendar panel. The
- * browser run found it on `/notifications`, `/inbox` and `/build/{id}`.
- *
- * The invariant this pins is narrow and mechanical: inside a react-window row
- * component, every element that positions itself with the injected `style`
- * prop is a row, and every row must carry the attributes that make it a
- * listitem.
- */
 const ROW_PROP_MARKER = "RowComponentProps";
 
 interface RowElement {
@@ -28,23 +9,9 @@ interface RowElement {
   line: number;
   tag: string;
   spreadsAriaAttributes: boolean;
-  /**
-   * A later `{...spread}` can carry its own `role` and silently win. On the
-   * kanban row `{...provided.dragHandleProps}` did exactly that — it replaced
-   * `role="listitem"` with `role="button"`, which cost three separate axe
-   * violations at once: the list lost a required child, `aria-posinset` became
-   * an attribute its role does not allow, and a button that contains the
-   * card's own buttons is `nested-interactive`.
-   */
   ariaAttributesWinsRole: boolean;
 }
 
-/**
- * Locates the opening tag that owns a `style={style}` / `style={{ ...style`
- * attribute by scanning back to its `<` and forward to the `>` that closes it,
- * skipping over nested braces so a `style={{ ...style, paddingBottom: 8 }}`
- * does not end the tag early.
- */
 export function findRowElements(file: string, source: string): RowElement[] {
   const out: RowElement[] = [];
   const pattern = /style=\{(?:style\b|\{\s*\.\.\.style\b|mergeRowStyle\()/g;

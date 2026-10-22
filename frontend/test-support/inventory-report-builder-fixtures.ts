@@ -4,14 +4,6 @@ import type {
   InvReportPreview,
 } from "@/hooks/api/inventory/report-builder";
 
-/**
- * Fixtures for the inventory report builder's screen tests.
- *
- * Split out of the spec rather than inlined: the assertions are about how the
- * screen reads a response, and sixty lines of response shape between them makes
- * that harder to see, not easier. `preview()` defaults to the honest case, so
- * each test states only the one field it is about.
- */
 
 export const PREVIEW_COLUMNS = [
   { key: "lotNumber", label: "Lot", numeric: false },
@@ -42,7 +34,6 @@ function entry(
 
 const REPORTS_READ = "inventory:reports:read";
 
-/** The six the controller's catalogue route returns, in its order. */
 export const CATALOG: InvReportCatalog = {
   prompt: "- stock_summary: …",
   reports: [

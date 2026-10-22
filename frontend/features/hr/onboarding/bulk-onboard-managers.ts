@@ -27,19 +27,6 @@ function read(row: ParsedRow, key: string): string {
   return (row[key] ?? "").trim();
 }
 
-/**
- * Advisory check of a row's reporting columns (PRD §7.3, §10.2). The server
- * preview is authoritative and resolves fallbacks; this only catches what can
- * be known from the file alone. A blank primary manager is valid: the
- * organisation's fallback policy decides it.
- *
- * `secondaryCap` is the organisation's `maxSecondaryManagersPerEmployee`, or
- * null while the policy is unknown — then the server preview alone judges it.
- * The server counts the secondaries a row names, not which columns hold them.
- *
- * `assignedDefault` is who a blank primary resolves to under the loaded policy
- * (null while unknown); a row naming them as a secondary would be refused.
- */
 export function validateManagerColumns(
   row: ParsedRow,
   employeeEmail: string,
@@ -92,8 +79,6 @@ export function validateManagerColumns(
   if (effectiveFrom && !isIsoDate(effectiveFrom)) errors.push("invalid effectiveFrom (use YYYY-MM-DD)");
 
   const fields: ManagerFields = {
-    // A primary read from a legacy header travels under the legacy alias so the
-    // server can count legacy-header use (legacyManagerHeader telemetry).
     ...(primary ? (read(row, LEGACY_PRIMARY_KEY) ? { reportingManagerEmail: primary } : { primaryManagerEmail: primary }) : {}),
     ...(secondaries[0] ? { secondaryManagerEmail1: secondaries[0] } : {}),
     ...(secondaries[1] ? { secondaryManagerEmail2: secondaries[1] } : {}),

@@ -62,17 +62,6 @@ export function UserInviteDialog({
 }: UserInviteDialogProps) {
   const [invited, setInvited] = useState(false);
   const [wasResent, setWasResent] = useState(false);
-  /**
-   * The refusal, kept on screen.
-   *
-   * A toast was the only thing this form said when an invitation was refused, and a
-   * toast is transient and lives in one corner of the viewport — anything floating
-   * there, and a reader who looked away for four seconds, sees a form that went
-   * "Sending…" and then came back unchanged with no success and no error. That is how
-   * a plan-limit or already-a-member refusal reads as "the button does nothing"
-   * (CHAT-002). The toast still fires; this is the copy that stays until the next
-   * attempt.
-   */
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { mutate: inviteUser, isPending } = useInviteUser();
   const canManageRbac = useCan("settings:rbac:manage");
@@ -245,13 +234,7 @@ export function UserInviteDialog({
                         <FormLabel className="mb-0">
                           Role <span className="text-destructive">*</span>
                         </FormLabel>
-                        {/*
-                          BUG-HRMS-003. QA asked for HR Admin / Manager / Finance /
-                          Viewer here. There are exactly three org standings by design
-                          (BE-102) and a fourth invite role would be a parallel role
-                          system; finer grants go through Module access, whose
-                          presets fill those four jobs (INVITE_ACCESS_PRESETS).
-                        */}
+                        
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <button

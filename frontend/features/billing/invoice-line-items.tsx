@@ -32,16 +32,10 @@ interface LineItem {
   quantity: number | string;
   rate: number | string;
   amount: number | string;
-  /**
-   * The line's own GST rate and HSN/SAC code, as the detail route returns them.
-   * They are the statutory content of the line and the server's only tax basis,
-   * so the edit below has to hand them back or they are lost.
-   */
   gstRate?: number | string | null;
   hsnSacCode?: string | null;
 }
 
-/** A line as the edit dialog holds it. Amounts and rates are rupees. */
 interface EditableLineItem {
   description: string;
   quantity: number;
@@ -117,9 +111,6 @@ export function InvoiceLineItems({
   editOpen,
   onEditOpenChange,
 }: InvoiceLineItemsProps) {
-  // PATCH /invoices/:id declares accounting:update. The edit dialog is mounted
-  // unconditionally by InvoiceDetailContent, so it carries its own gate rather
-  // than relying on the Edit button that normally opens it.
   const canUpdate = useCan("accounting:update");
   const updateInvoice = useUpdateInvoice();
 
@@ -181,8 +172,6 @@ export function InvoiceLineItems({
   }
 
   function handleAddItem() {
-    // A brand-new line has no tax basis to inherit; 0 is the honest default and
-    // the user can reclassify it from the create screen.
     setEditLineItems((p) => [
       ...p,
       { description: "", quantity: 1, rate: 0, amount: 0, gstRate: 0 },
@@ -220,8 +209,6 @@ export function InvoiceLineItems({
     updateInvoice.mutate(
       {
         id: invoiceId,
-        // gstRate and hsnSacCode travel with the line. Without them the server
-        // has no tax basis for the replacement rows and writes 0.00 / NULL.
         lineItems: validItems.map((i) => ({
           description: i.description,
           quantity: i.quantity,
@@ -246,10 +233,6 @@ export function InvoiceLineItems({
     );
   }
 
-  // Rupees. Per-line GST is the server's tax basis whenever any line carries a
-  // rate; the blended taxRate only applies to an invoice with none, which is
-  // the rule invoices-update.service.ts follows. Rounding each line then
-  // summing is what the server does, so the preview is the stored figure.
   const editSub = editLineItems.reduce((s, i) => s + i.amount, 0);
   const hasPerLineGst = editLineItems.some((i) => i.gstRate > 0);
   const editTax = hasPerLineGst
@@ -382,8 +365,7 @@ export function InvoiceLineItems({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label className="text-xs">Tax Rate (%)</Label>
-                {/* A blended rate cannot override per-line GST — the server
-                    ignores it there — so it is not offered as if it could. */}
+                
                 <Input
                   type="number"
                   min={0}

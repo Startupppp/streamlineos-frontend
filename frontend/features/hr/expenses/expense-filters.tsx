@@ -115,7 +115,6 @@ interface MemberExpenseFiltersProps {
   filters: ExpenseFilters;
   onStatusChange: (status: StatusFilter) => void;
   onDatePresetChange: (preset: DatePreset) => void;
-  /** `POST /hr/expenses/export/jobs` needs `hr:expenses:read`. */
   canExport: boolean;
 }
 

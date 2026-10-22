@@ -38,13 +38,6 @@ function isGlReconStatus(value: string): value is GlReconStatus {
   return GL_RECON_STATUSES.some((status) => status === value);
 }
 
-/**
- * Stock movements against the journal entries they should have produced.
- *
- * The one report in the module that can say "this goods receipt moved stock and
- * no money followed it". It was mounted on the backend and called from nowhere,
- * so an accounting-enabled tenant had no way to see an unposted movement at all.
- */
 export function GlReconciliationClient() {
   const canView = useCan("inventory:reports:read");
   const money = useOrgDisplay();

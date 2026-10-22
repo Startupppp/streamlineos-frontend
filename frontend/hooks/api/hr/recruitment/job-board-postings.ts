@@ -19,12 +19,6 @@ const createJobBoardPostingC = lazyContract(() =>
 const updateJobBoardPostingC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/job-board-postings-schema").then((m) => m.updateJobBoardPostingContract),
 );
-/**
- * The first four are what a recruiter may set by hand on a posting they are
- * tracking themselves. The last four are written by the distribution pipeline
- * and are not settable from the UI — `LIVE` in particular means a board
- * returned a posting id, which only the outbox consumer can establish.
- */
 export type JobBoardPostingStatus =
   | "DRAFT"
   | "POSTED"
@@ -35,7 +29,6 @@ export type JobBoardPostingStatus =
   | "FAILED"
   | "LIVE";
 
-/** Statuses a person may choose. Never includes one a vendor has to grant. */
 export const SETTABLE_POSTING_STATUSES: readonly JobBoardPostingStatus[] = [
   "DRAFT",
   "POSTED",

@@ -18,7 +18,6 @@ describe("formatMoneyCompact", () => {
   });
 
   it("groups other currencies the way their own readers expect", () => {
-    // The whole point: an American tenant is not shown a figure in crores.
     expect(formatMoneyCompact(12_300_000, USD)).toBe("$12.3M");
     expect(formatMoneyCompact(340_000, USD)).toBe("$340K");
   });
@@ -43,7 +42,6 @@ describe("formatMoneyCompact", () => {
   });
 
   it("survives a value that is not a number", () => {
-    // A null deal value must not take out every other cell in the row.
     for (const bad of [null, undefined, "", "n/a", NaN])
       expect(formatMoneyCompact(bad as number | string | null, INR)).toBe("₹0");
   });
@@ -61,8 +59,6 @@ describe("formatMoney", () => {
   });
 
   it("uses the currency's own fraction digits rather than assuming two", () => {
-    // Yen has none, so a forced two decimals would render a figure that
-    // cannot exist.
     expect(formatMoney(1000, JPY)).not.toContain(".");
   });
 });

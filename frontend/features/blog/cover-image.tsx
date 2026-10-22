@@ -4,16 +4,10 @@ import { resolveImageUrl } from "@/lib/utils";
 interface Props {
   post: Pick<BlogCard, "cover" | "coverImage" | "title">;
   sizes: string;
-  /** Only the one image that is the page's largest contentful paint. */
   priority?: boolean;
   className?: string;
 }
 
-/**
- * A responsive cover: WebP sources with a JPEG fallback, intrinsic width/height so the layout is
- * reserved before the bytes arrive, lazy below the fold. If the image fails or is missing, the
- * reserved box keeps its shape on the sage ground and the alt text stands in.
- */
 export function CoverImage({ post, sizes, priority = false, className = "" }: Props) {
   const box = `relative block overflow-hidden bg-journal-sage ${className}`;
   const cover = post.cover;

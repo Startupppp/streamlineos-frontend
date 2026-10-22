@@ -1,13 +1,3 @@
-/**
- * The channel sidebar renders one `ChannelListEntry` per channel in the compact
- * rail AND one per channel in its section, so every channel costs two of these.
- * The sidebar re-renders on each keystroke in its search box, on every unread
- * tick and on each channel selection, and all of its row props are already
- * referentially stable (`useMemo`'d lists and Sets, `useCallback`'d handlers).
- *
- * This measures the render count under exactly that pattern: an unrelated
- * parent state change, identical props.
- */
 import { useState } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { ChannelListEntry } from "./channel-list-entry";

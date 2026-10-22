@@ -32,11 +32,6 @@ export function buildChatUserMap(
   return map;
 }
 
-/**
- * `userId` is nullable because a message whose `organization_members` row is gone
- * arrives with `senderId: null`. Declared non-nullable, this signature forced
- * every caller to lie about a value the wire has always been able to omit.
- */
 export function resolveChatUserName(
   userId: string | null,
   embedded: { name?: string | null; email?: string | null } | null | undefined,
@@ -113,7 +108,6 @@ function getForwardLabel(forwardCount: number | undefined): string | null {
   return forwardCount > 3 ? "Forwarded multiple times" : "Forwarded";
 }
 
-/** Normalize legacy `> quoted` forwards and metadata-based forwards for display. */
 export function getForwardedDisplay(content: string | null, forwardCount?: number) {
   if (forwardCount && forwardCount > 0) {
     return {

@@ -46,20 +46,6 @@ interface NurtureEnrollmentsPanelProps {
   canManage: boolean;
 }
 
-/**
- * Who is in the cadence, and everybody who has left it.
- *
- * Unfiltered by default, matching the server's own default: a sequence nobody
- * is enrolled in any more and one nobody was ever enrolled in look identical
- * from an active-only list, and the exit reasons are the whole point — `replied`
- * is the number this feature is judged on.
- *
- * No table is written here. The columns, the status tone, the alignment of the
- * step count and the three ways a missing name is answered all come from
- * `NURTURE_ENROLLMENT_LAYOUT`. What is left is the status filter, the cursor
- * behind "show earlier", and the one control that changes an enrolment: stopping
- * it.
- */
 export function NurtureEnrollmentsPanel({
   nurtureSequenceId,
   sequenceStatus,
@@ -130,11 +116,6 @@ export function NurtureEnrollmentsPanel({
     );
   };
 
-  /**
-   * Stopping is the only thing anybody does to an enrolment, which is why it is
-   * a row control rather than a field: it is offered on a running enrolment, to
-   * somebody who may manage the cadence, and on nothing else.
-   */
   const rowActions = useCallback(
     (row: RecordValue) => {
       const enrollment = enrolled.find(
@@ -189,12 +170,7 @@ export function NurtureEnrollmentsPanel({
         ) : null}
       </div>
 
-      {/*
-        Denial before emptiness, and both before loading, because a disabled
-        query reports `isLoading: false` — so a reviewer without the key would
-        otherwise be told nobody is enrolled, which is a different and much
-        worse statement than "you may not look".
-      */}
+      
       <PageState
         resolution={state}
         onRetry={handleRetryEnrollments}

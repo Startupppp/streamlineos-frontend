@@ -24,32 +24,14 @@ export interface IssueFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   layout: IssueRecordLayout;
-  /** Absent for a create. */
   record?: IssueRecord;
 }
 
-/**
- * Create and edit, rendered from the served description.
- *
- * There is no form here. The controls, their types, their validation and which
- * of them appear on a create are all derived from the layout the server sent,
- * so a record type that grows a field grows a control without this file being
- * touched. What remains is the one thing a description cannot express:
- * converting the renderer's flat strings into the payload the API accepts.
- *
- * `stage` never appears, and not because this file omits it — the description
- * marks it read-only, and `formFields` drops read-only fields. That is what
- * makes the transition route the only way a stage moves, which is what makes the
- * ledger complete rather than conventional.
- */
-
-/** Empty means "not supplied" on create and "clear it" on edit. */
 function trimmed(value: string | undefined): string | undefined {
   const text = value?.trim();
   return text ? text : undefined;
 }
 
-/** A date control hands back `YYYY-MM-DD`; the API wants a full instant. */
 function asInstant(value: string | undefined): string | undefined {
   const text = trimmed(value);
   if (!text) return undefined;
@@ -64,15 +46,6 @@ function asNumber(value: string | undefined): number | undefined {
   return Number.isFinite(parsed) ? parsed : undefined;
 }
 
-/**
- * Narrowed rather than asserted.
- *
- * The renderer hands back strings and its schema already rejects a value the
- * description does not list, so this only runs on a value that passed — but
- * asserting it would mean a description that lost its options silently posted a
- * severity the API rejects. Falling back to the middle band fails visibly at the
- * boundary instead.
- */
 function asSeverity(value: string | undefined): IssueSeverity {
   const text = trimmed(value);
   return ISSUE_SEVERITIES.find((severity) => severity === text) ?? "medium";
@@ -103,12 +76,6 @@ export function IssueFormDialog({ open, onOpenChange, layout, record }: IssueFor
     };
 
     if (record) {
-      /**
-       * `null` rather than `undefined` for the clearable fields on an edit.
-       * Somebody removing an owner or a due date is making a real change, and
-       * `undefined` would be indistinguishable from not having touched it — so
-       * the field would silently keep its old value.
-       */
       const patch: UpdateIssueInput = {
         title: shared.title,
         severity: shared.severity,
@@ -151,10 +118,7 @@ export function IssueFormDialog({ open, onOpenChange, layout, record }: IssueFor
           <DialogHeader>
             <DialogTitle>{isEdit ? `Edit ${noun}` : `New ${noun}`}</DialogTitle>
             <DialogDescription>
-              {/*
-                Said out loud because it is a rule the form enforces rather than
-                a convention: a stage only moves through the ledger.
-              */}
+
               Stage is not edited here — it moves through the record&rsquo;s own
               history, so every move has somebody&rsquo;s name against it.
             </DialogDescription>

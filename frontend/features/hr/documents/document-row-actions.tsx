@@ -35,7 +35,6 @@ interface DocumentRowActionsProps {
   onDelete: (documentId: number) => Promise<void>;
   onEdit: (doc: Document) => void;
   onSendForSignature: (doc: Document) => void;
-  /** Present only when HR documents in the Knowledge Base are switched on for this tenant. Offered only to a caller who also holds the document permissions organisation-wide. */
   onClassify?: (doc: Document) => void;
 }
 
@@ -46,7 +45,6 @@ export const DocumentRowActions = forwardRef<
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const canManageDocs = useCan("hr:documents:manage");
-  // Scope-blind `useCan` is not enough here: the sheet's requests are refused below `all`, so the entry would open onto a wall of 403s.
   const canClassify = useCanClassifyDocuments();
   const canCreateEnvelope = useCan("sign:envelope:create");
   const hasFileUrl = doc.hasFile;

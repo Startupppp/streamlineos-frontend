@@ -67,10 +67,6 @@ export function ReportsView() {
 
   const startDate = searchParams.get("start") ?? defaults.start;
   const endDate = searchParams.get("end") ?? defaults.end;
-  // Still honoured so an existing deep link keeps filtering; there is no
-  // control that sets it. The picker that used to sit in the filter row offered
-  // "All members" and nothing else - no member list was ever loaded - so it
-  // promised a filter it could not apply. It comes back when it has options.
   const userId = searchParams.get("userId") ?? undefined;
   const activeTab = searchParams.get("tab") ?? "overview";
   const projectId = parseProjectId(searchParams.get("projectId"));

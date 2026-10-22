@@ -21,9 +21,6 @@ function decodeEntities(value: string): string {
   });
 }
 
-// ts_headline does not escape the plain contentText it highlights; the only
-// markup in a snippet is its own <b>…</b>. Stripping any <…> ate literal text
-// such as "a < b > c" (KB-B-014).
 function stripTags(value: string): string {
   return decodeEntities(value.replace(/<\/?b>/gi, "")).replace(/\s+/g, " ");
 }

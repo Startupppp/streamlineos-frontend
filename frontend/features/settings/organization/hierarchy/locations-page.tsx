@@ -133,7 +133,6 @@ export function OrgLocationsPage() {
 
   const handleClearSearch = useCallback(() => setSearch(""), [setSearch]);
 
-
   function handleEditSheetOpenChange(open: boolean) { if (!open) setEditing(null); }
 
   const columns = buildLocationColumns({

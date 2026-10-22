@@ -3,20 +3,6 @@ import { renderWithProviders } from "@/test-utils";
 import { InspectionDetailSheet } from "./inspection-detail-sheet";
 import type { InspectionStatus } from "@/features/inventory/lib/inventory-status";
 
-/**
- * A completed inspection result had no action at all.
- *
- * Every footer branch in this sheet is for a live inspection, so a COMPLETED or
- * CANCELLED one rendered an empty footer. `POST
- * /inventory/quality/inspections/:id/correct` was mounted, carried
- * `inventory:quality:inspect`, was fenced, and `useCorrectInspection` was
- * referenced by nothing.
- *
- * The status gate is the part worth pinning. The sheet's own `isTerminal`
- * includes PASSED; the service's `TERMINAL_STATUSES` does not, and answers a
- * PASSED inspection with a 409. Offering the control there would be a button
- * that only ever fails.
- */
 
 const mockCorrectMutate = jest.fn();
 let mockCorrectPending = false;

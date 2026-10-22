@@ -25,22 +25,6 @@ jest.mock("@/hooks/api/access", () => {
 
 const mockedGet = apiClient.get as jest.Mock;
 
-/**
- * `useMissingConsentCount` existed with no caller anywhere in the repository.
- *
- * It answers the question a DPDP review opens with — how many contacts hold no
- * consent record at all — and the contact list is the only place that question
- * can honestly be asked: a contact's own history says what one person agreed
- * to, and says nothing about the size of the gap. Wired here rather than
- * deleted, because deleting it would put `GET /crm/consent/missing` back where
- * the rest of `/crm/consent/**` was before this branch: implemented, correct,
- * and unreachable.
- *
- * The assertion that carries the file is the silence one. A refused or failed
- * read arrives as no data, and rendering "0 contacts are missing consent" out
- * of that is the strongest possible claim to make out of not knowing — on the
- * one screen where being wrong is a compliance answer.
- */
 
 function renderNotice() {
   const client = new QueryClient({
@@ -81,11 +65,6 @@ describe("ConsentGapNotice", () => {
   });
 
   it("says nothing is recorded either way, not that permission was refused", async () => {
-    /**
-     * A missing row is UNKNOWN. Reading it as a refusal would understate what
-     * may be sent; reading it as permission would overstate it, which is the
-     * error that costs money.
-     */
     renderNotice();
 
     expect(await screen.findByRole("status")).toHaveTextContent(
@@ -126,10 +105,6 @@ describe("ConsentGapNotice", () => {
   });
 
   it("is actually mounted on the contact list", () => {
-    /**
-     * The point of the change. A component nobody renders is the same dead hook
-     * one layer out, and no render test would notice.
-     */
     const page = readFileSync(join(__dirname, "contact-list-page.tsx"), "utf8");
     expect(page).toContain("<ConsentGapNotice />");
   });

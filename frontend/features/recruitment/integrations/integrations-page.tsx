@@ -56,15 +56,6 @@ function LoadingSkeleton() {
   );
 }
 
-/**
- * Every third party Recruitment OS would talk to, and the truth about each.
- *
- * The screen lists all fourteen whether or not anything is connected, because
- * the alternative — showing only what an organisation has set up — is a page
- * that is empty for a new tenant and silent about the nine capabilities that
- * cannot be set up at all. A recruiter asking "can this post to Naukri?"
- * deserves an answer on the page rather than in a support thread.
- */
 export function RecruitmentIntegrationsPage() {
   const { data, isLoading, isError, error, refetch } = useRecruitmentIntegrations();
   const connect = useConnectIntegration();
@@ -86,13 +77,6 @@ export function RecruitmentIntegrationsPage() {
       list.push(entry);
       byFamily.set(entry.family, list);
     }
-    /**
-     * Ordered by walking the map rather than by looking families up in it, so
-     * the entries come out of the same read that proved the family is present.
-     * A family the server sends that `FAMILY_ORDER` does not list sorts to the
-     * front rather than disappearing — a new capability should be visible even
-     * before this constant learns where it belongs.
-     */
     return [...byFamily.entries()]
       .map(([family, entries]) => ({ family, entries }))
       .sort((a, b) => FAMILY_ORDER.indexOf(a.family) - FAMILY_ORDER.indexOf(b.family));
@@ -109,11 +93,6 @@ export function RecruitmentIntegrationsPage() {
                 ? `${result.label} connected`
                 : `Key saved for ${result.label}`,
               {
-                /**
-                 * Saving a key for something with no adapter is allowed — an
-                 * organisation may get ready ahead of a partnership — but it
-                 * must not read as though the capability just switched on.
-                 */
                 description:
                   result.blockedCode === "not-implemented"
                     ? "It still cannot be used: " + (result.blockedBy ?? "")
@@ -175,12 +154,7 @@ export function RecruitmentIntegrationsPage() {
     >
       <PageState resolution={pageState} loading={<LoadingSkeleton />} onRetry={handleRetry}>
         <div className="space-y-6">
-          {/*
-            First, because it is the one thing on this page a recruiter can turn
-            on today without waiting on a vendor. Burying it under ten provider
-            families that mostly cannot run would read as though nothing here
-            works.
-          */}
+          
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-foreground">Sourcing</h2>
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -188,18 +162,13 @@ export function RecruitmentIntegrationsPage() {
             </div>
           </section>
 
-          {/* Moved here from HR settings: job-board ingestion is a hiring concern. */}
+          
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-foreground">Job board sync</h2>
             <JobBoardPortalsSection />
           </section>
 
-          {/*
-            The way out to the developer surface. Somebody who has just read
-            that nine providers cannot run is exactly the person who will
-            integrate over the webhook instead, and that page is otherwise
-            reachable only by typing the URL.
-          */}
+          
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-foreground">Build your own</h2>
             <Link

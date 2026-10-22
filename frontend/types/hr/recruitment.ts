@@ -86,11 +86,6 @@ export interface ScreeningQuestion {
   options?: string[];
 }
 
-/**
- * The `job_postings` row as the API sends it. The department column is
- * `orgDepartmentId` on both sides — the old `departmentId` spelling never
- * arrived, so every read of it resolved to `undefined`.
- */
 export interface JobPosting {
   id: number;
   orgId: string;
@@ -185,10 +180,8 @@ export interface AtsPipelineCandidate {
 export interface AtsPipelineStage {
   stage: CandidateStatus;
   total: number;
-  /** How many of `total` this response carries — the endpoint caps each stage. */
   shown: number;
   truncated: boolean;
-  /** Hiring-flow round names for this column, when every open job agrees. */
   roundLabel?: string | null;
   candidates: AtsPipelineCandidate[];
 }
@@ -320,12 +313,6 @@ export interface UpdateCandidateInput {
   status?: CandidateStatus;
   notes?: string;
   rating?: number;
-  /**
-   * Required by the API when `status` becomes `REJECTED`. The candidate detail
-   * page rejects through this endpoint rather than the stage one, so leaving
-   * these off here would have made the profile card the one screen that could
-   * still reject somebody without saying why.
-   */
   rejectionReason?: RejectionReason;
   rejectionNote?: string;
 }

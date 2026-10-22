@@ -79,12 +79,6 @@ export function BatchesTable({
     void refetch();
   }, [refetch]);
 
-  /**
-   * The bank file carries unmasked account numbers. It arrives as bytes over the
-   * authenticated request and is saved straight from memory — `window.open` on a
-   * presigned URL used to hand the browser a link that outlived the screen,
-   * worked without a session and sat in history.
-   */
   const handleDownloadBatchFile = useCallback(
     (batchId: number) => {
       batchFile.mutate(batchId, {

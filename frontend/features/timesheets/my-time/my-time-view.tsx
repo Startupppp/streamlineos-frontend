@@ -87,8 +87,6 @@ export function MyTimeView({ projectId }: { projectId?: number }) {
     (period.status === "OPEN" || period.status === "DRAFT" || period.status === "REJECTED");
   const approverPreview = usePeriodApproverPreview(period?.id ?? null, { enabled: awaitingSubmit });
   const approverSummary = approverPreview.data ? summarizeTimesheetApprover(approverPreview.data) : undefined;
-  // A failed entries read looks exactly like an empty week, so submitting over it
-  // would submit hours the user cannot see.
   const canSubmit =
     awaitingSubmit &&
     !entriesError &&

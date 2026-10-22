@@ -91,11 +91,6 @@ export interface CopyEntriesResult {
   failed: number;
 }
 
-/**
- * Copies a batch of entries one at a time. Looping `useCreateTimesheetEntry`
- * instead would fire a toast and a week-wide invalidation per row, so a 20-row
- * copy meant 20 toasts and 20 refetches; here the caller reports once.
- */
 export function useCopyTimesheetEntries() {
   const qc = useQueryClient();
   return useAuthorizedMutation("timesheets:entries:create", {

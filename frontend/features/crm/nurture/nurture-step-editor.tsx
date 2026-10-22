@@ -34,19 +34,6 @@ interface NurtureStepEditorProps {
   canManage: boolean;
 }
 
-/**
- * The cadence, edited whole and saved whole.
- *
- * `PUT` rather than a per-step form because step numbers must be dense: a gap
- * makes `waitMsForStep` return zero, and the sender fires two messages back to
- * back at somebody who was promised a fortnight between them. Numbering comes
- * from this array's order, so reordering is what editing a step number means and
- * there is no number field to get wrong.
- *
- * Nothing here writes a message. There is no subject, no body and no recipient
- * on this screen because there is none on the wire — a step says only "consider
- * writing to this person again, this long after the last one".
- */
 export function NurtureStepEditor({
   nurtureSequenceId,
   steps,
@@ -76,11 +63,6 @@ export function NurtureStepEditor({
       {
         onSuccess: (saved) => {
           toast.success("Cadence saved");
-          /*
-            Reset from what the server stored, not from what was typed. The
-            waits come back clamped, so the clamp becomes visible in the fields
-            rather than only in the notice under them.
-          */
           form.reset({ steps: stepsToFields(saved) });
         },
         onError: (error) => toast.error(getErrorMessage(error)),

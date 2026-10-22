@@ -90,7 +90,6 @@ export type ResponseContract<T> = ZodType<T>;
 
 export type LazyResponseContract<T> = () => Promise<ResponseContract<T>>;
 
-/** A contract, or the promise of one. Both validate; only the timing differs. */
 export type ContractSource<T> = ResponseContract<T> | LazyResponseContract<T>;
 
 export function lazyContract<T>(
@@ -107,10 +106,6 @@ export function lazyContract<T>(
   };
 }
 
-/**
- * A Zod schema is an object in Zod 4, never callable, so a function in this slot
- * is unambiguously a loader.
- */
 export function resolveContract<T>(
   source: ContractSource<T> | undefined,
 ): Promise<ResponseContract<T> | undefined> {
@@ -171,12 +166,6 @@ function issuePath(path: ReadonlyArray<PropertyKey>): string {
   return path.length === 0 ? "(root)" : path.map(String).join(".");
 }
 
-/**
- * The unchecked path. With no contract the body is *asserted* to be `T`, never
- * verified — the single cast in this module lives here, and it is the whole
- * reason a contract argument exists. Anything read through this path accepts a
- * backend rename silently and surfaces it later as an undefined field.
- */
 function assertUnchecked<T>(payload: unknown): T {
   return payload as T;
 }
@@ -214,16 +203,6 @@ function applyContract<T>(
   return rejectContractViolation(resource, status, result.error.issues, correlationId);
 }
 
-/**
- * The refusal half of `parseApiResponse`, on its own.
- *
- * A response whose body is not JSON — a CSV download, a file — still refuses in
- * exactly the same envelope, and until this was separable the download path had
- * its own reader: it took `body.error` and nothing else, so NestJS's `message`
- * (where the actual sentence lives), the status, the code and the `details`
- * carrying field-level validation issues were all discarded. One parser now
- * builds the error for both.
- */
 export async function apiErrorFromResponse(
   res: ApiResponseLike,
   endpoint?: string,
@@ -282,11 +261,6 @@ function withCorrelationId(details: unknown, correlationId?: string): unknown {
   return { details, correlationId };
 }
 
-/**
- * The one seam every response passes through — `apiClient`, `serverGet` and
- * `publicGet` all end here. Pass a `contract` and the body is validated at
- * runtime; omit it and the body is cast unchecked (see `assertUnchecked`).
- */
 export async function parseApiResponse<T>(
   res: ApiResponseLike,
   contract?: ResponseContract<T>,

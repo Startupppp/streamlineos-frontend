@@ -31,11 +31,6 @@ const STEP_LABELS: Record<Step, string> = {
   running: "3. Import",
 };
 
-/**
- * The job row under the names the import routes return: its kind is `jobType`,
- * its failures `errorRows`, and it carries no completion time, so `updatedAt`
- * is when it last moved.
- */
 interface ImportJobRow {
   id: number;
   jobType: string;
@@ -114,20 +109,7 @@ export function ImportClient() {
   const [step, setStep] = React.useState<Step>("type");
   const [selectedType, setSelectedType] = React.useState<ImportType | null>(null);
   const [preview, setPreview] = React.useState<ImportPreviewResult | null>(null);
-  /**
-   * Kept because the import is driven from the file's own rows.
-   *
-   * The previous flow sent `preview.sample` to the single-shot job endpoint, and
-   * the backend defines that sample as `rows.slice(0, 20)` — so importing five
-   * thousand products applied twenty of them under a job that read COMPLETED.
-   * The staged routes take the whole file in chunks, which means the file has to
-   * survive the preview step.
-   */
   const [file, setFile] = React.useState<File | null>(null);
-  /**
-   * A past job's rejected rows had no way in at all: the history table listed an
-   * error count and nothing opened it.
-   */
   const [inspectingJobId, setInspectingJobId] = React.useState<number | null>(null);
 
   const previewMutation = useImportPreview();
@@ -179,10 +161,6 @@ export function ImportClient() {
     if (!open) setInspectingJobId(null);
   }
 
-  // G8. Denied is not empty. Placed after every hook, not at the top of
-  // the component: an early return above a useState or useQuery makes the
-  // hook order depend on a permission, which React forbids and which only
-  // shows up for the user who lacks the key.
   if (!canView) {
     return (
       <PageWrapper title="Import & Export">
@@ -256,10 +234,6 @@ export function ImportClient() {
               <div>
                 <p className="text-xs font-semibold text-foreground mb-2">Import History</p>
                 {isJobsError ? (
-                  // G8. A failed history read used to render the empty table, so
-                  // "we could not fetch your imports" and "you have never imported
-                  // anything" looked identical — and the second sends somebody off
-                  // to re-run an import that already succeeded.
                   <ErrorState
                     className="flex-1"
                     title="Couldn't load import history"

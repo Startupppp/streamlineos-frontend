@@ -7,12 +7,6 @@ import { useCan } from "@/hooks/api/access";
 import { useLiveClassStops, useReleaseClassStop } from "@/hooks/api/crm/autonomy";
 import type { LiveClassStop } from "@/types/crm/autonomy";
 
-/**
- * Reads the stored class as a phrase rather than a token.
- *
- * Unknown values pass through as-is: the backend owns this vocabulary and a
- * class added there should show up here as itself, not as "Unknown".
- */
 const CLASS_LABEL: Record<string, string> = {
   nudge: "Chasers",
   renewal: "Renewal conversations",
@@ -65,21 +59,6 @@ function ClassStopRow({
   );
 }
 
-/**
- * CRM-P0-12. The people this organisation has stopped writing to, and the only
- * way back.
- *
- * Stopping a message stops that whole class of message for that party, with no
- * expiry — `released_at` is cleared only by a person. The API for doing that
- * has existed since the stop did; no screen ever called it, so in practice the
- * stop was a one-way door and the only exit was a database write.
- *
- * The class matters and is shown: somebody who does not want chasing may still
- * want the renewal conversation, and releasing is per class, not per person.
- *
- * Hides itself when nothing is stopped, like the pending-sends panel above it —
- * a permanently empty box teaches people to stop looking.
- */
 export function ClassStopsPanel() {
   const canRelease = useCan("crm:autonomy:manage");
   const { data: stops } = useLiveClassStops();

@@ -71,9 +71,7 @@ export interface PageStateProps {
   loading: ReactNode;
   empty?: ReactNode;
   notFound?: ReactNode;
-  /** Override any resolved branch while keeping the shared state decision. */
   views?: Partial<Record<PageStateResolution["kind"], ReactNode>>;
-  /** Restores the unfiltered collection from the default filtered-empty view. */
   onClearFilters?: () => void;
   onRetry?: () => void;
   className?: string;

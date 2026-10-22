@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Ticket 08. Mirrors `leavePolicyTemplateOfferSchema` and its siblings in the
- * backend's `time-leave-response.schemas.ts`, field for field (FE-28).
- * Not `.strict()`: an added backend field is a compatible deploy.
- */
 export const leavePolicyTemplateKeyContract = z.enum(["casual", "sick", "comp_off"]);
 
 export const leavePolicyTemplateContract = z.object({

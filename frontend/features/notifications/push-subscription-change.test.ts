@@ -2,18 +2,6 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createContext, runInContext } from "node:vm";
 
-/**
- * RT-005. `public/sw.js` is plain JavaScript served as a service worker, so no
- * import can reach it — the only honest way to pin its behaviour is to evaluate
- * the shipped file in a sandbox with a fake `self` and drive its listeners.
- *
- * What this protects: a browser that rotates a push subscription fires
- * `pushsubscriptionchange` and destroys the old endpoint. With no listener the
- * worker mints nothing, and the server keeps sending to a dead endpoint until
- * the push service answers 410. The worker cannot POST the replacement itself —
- * it holds no backend JWT — so the contract is: mint the new subscription with
- * the same application server key, and hand it to every open client.
- */
 type Listener = (event: Record<string, unknown>) => unknown;
 
 interface PushSubscriptionLike {

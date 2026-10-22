@@ -52,7 +52,6 @@ function Detail({ label, value, className }: DetailProps) {
 }
 
 function InvoicePayments({ invoice, onRecordPayment }: Pick<InvoiceDetailContentProps, "invoice" | "onRecordPayment">) {
-  // POST /invoices/:invoiceId/payments declares accounting:create.
   const canCreatePayment = useCan("accounting:create");
   if (!invoice.payments?.length) return null;
   const canRecordPayment =

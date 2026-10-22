@@ -24,7 +24,6 @@ interface CommissionPlanDetailSheetProps {
   planId: string | null;
   locale: string;
   onOpenChange: (open: boolean) => void;
-  /** Opens the shared version sheet owned by the page. */
   onEditVersion: (target: CommissionPlanSheetTarget) => void;
 }
 
@@ -43,7 +42,6 @@ function formatDay(iso: string, locale: string): string {
   });
 }
 
-/** One plan: its dated versions and who is on it, with the manage writes. */
 export function CommissionPlanDetailSheet({
   planId,
   locale,

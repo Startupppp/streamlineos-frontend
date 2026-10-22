@@ -130,11 +130,6 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
     [result],
   );
 
-  /**
-   * Only the addresses that did NOT get an invitation are put back in the box.
-   * Re-submitting the original paste would rotate a fresh token for everyone who
-   * already succeeded, so the second email is the one the recipient must ignore.
-   */
   const handleRetryFailed = useCallback(() => {
     if (!result) return;
     form.reset({
@@ -295,11 +290,7 @@ export function UserBulkInviteDialog({ open, onOpenChange }: UserBulkInviteDialo
         ) : (
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/*
-                BUG-HRMS-008. QA sent this with nine seats already held by pending
-                invitations, watched it queue 8 of 10 and then name failures, and
-                found the ceiling only in Billing afterwards.
-              */}
+              
               <InviteSeatNotice requesting={uniqueEmails.length} />
               <FormField
                 control={form.control}

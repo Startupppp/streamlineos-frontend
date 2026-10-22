@@ -96,11 +96,6 @@ interface KbArticleMetadataPatch {
   tags?: string[] | null;
 }
 
-/**
- * Writing `content` requires the revision it replaces — the backend refuses a body without
- * one — so an unguarded body write cannot be expressed. Metadata is not gated on someone
- * else's typing, because content_revision tracks the body alone.
- */
 type UpdateKbArticleInput = KbArticleMetadataPatch &
   (
     | { content: string; expectedContentRevision: number }

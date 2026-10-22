@@ -56,7 +56,6 @@ const chatEntityRefsContract = z.array(z.unknown()).transform((entries) =>
   }),
 );
 
-/** `metadata` is free-form jsonb; only the two keys the client reads are modelled. */
 export const chatMessageMetadataContract = z
   .object({
     entities: chatEntityRefsContract.optional(),

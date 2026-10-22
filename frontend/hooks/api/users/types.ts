@@ -220,7 +220,6 @@ export interface BulkUpdatePayload {
   departmentId?: string | null;
   branchId?: string | null;
   teamId?: string | null;
-  /* No managerUserId: managers change only through PUT /hr/reporting-lines/:id (HRM-15). */
 }
 
 export interface AuditEntry {

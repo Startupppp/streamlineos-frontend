@@ -21,15 +21,9 @@ export interface MobileFilterGroup {
   value: string;
   options: MobileFilterOption[];
   onChange: (value: string) => void;
-  /** Value that means "no filter" — excluded from the active count + label. Defaults to "all". */
   neutralValue?: string;
 }
 
-/**
- * Mobile-only (`sm:hidden`) collapse of secondary filter Selects into a single
- * "Filters" button that opens a Drawer (via ResponsivePopover). Render alongside
- * the desktop Selects (which should carry `hidden sm:flex`). §14 mobile-Drawer rule.
- */
 export function MobileFilterDrawer({
   groups,
   className,

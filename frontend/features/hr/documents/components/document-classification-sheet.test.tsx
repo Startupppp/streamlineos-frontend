@@ -87,7 +87,6 @@ function renderSheet(view: DocumentClassificationView | undefined, over: { docum
   const onOpenChange = over.onOpenChange ?? jest.fn();
   const document = over.document ?? docFixture();
   const { rerender } = render(<DocumentClassificationSheet open onOpenChange={onOpenChange} document={document} />);
-  /** Render again after changing what `mockView` returns: the sheet reads the cached view, and a save updates it. */
   const refreshView = () => rerender(<DocumentClassificationSheet open onOpenChange={onOpenChange} document={document} />);
   return { onOpenChange, refreshView };
 }
@@ -244,7 +243,6 @@ describe("DocumentClassificationSheet", () => {
       new ApiError("The audience could not be saved.", 500, "INTERNAL", { correlationId: "req-77" }, "/hr/documents/7/audiences"),
     );
     const { onOpenChange, refreshView } = renderSheet(viewFixture());
-    // The real hook writes the classification result into the cached view the moment the first request lands.
     mockClassify.mockImplementation(async () => {
       const saved = viewFixture({ classification: "INTERNAL", publishable: true, blockers: [] });
       mockView.mockReturnValue({ data: saved, isError: false, error: null });

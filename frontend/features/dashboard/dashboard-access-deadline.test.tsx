@@ -1,13 +1,3 @@
-/**
- * PRD-C144 — Home never starts an unbounded wait, on the client either.
- *
- * `/me/access` gates every widget's mount, so while it is in flight the page
- * renders its own skeleton and ZERO sections. Its only ceiling used to be the
- * transport's: `REQUEST_TIMEOUT_MS` (30s) x `MAX_QUERY_RETRIES` (1) = ~60s of
- * blank page, 24x the server's own 2,500ms section deadline. These cases drive
- * the real component with an access read that never answers and assert on what
- * is on screen either side of the deadline.
- */
 
 import { act, render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";

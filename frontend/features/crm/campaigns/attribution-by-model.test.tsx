@@ -7,11 +7,6 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { AttributionByModelReport } from "@/types/crm/campaigns";
 import { AttributionByModel } from "./attribution-by-model";
 
-/**
- * Radix's Select is driven by pointer capture and scrolls the chosen item into
- * view; jsdom implements neither, so the listbox never opens. Same shim as
- * `consider-outbound-panel.test.tsx`, for the same reason.
- */
 beforeAll(() => {
   Element.prototype.hasPointerCapture = () => false;
   Element.prototype.setPointerCapture = () => undefined;
@@ -23,12 +18,6 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
 
-/**
- * Only the gate is stubbed, not the query it wraps: `useGatedQuery` composes the
- * permission into `enabled`, and that composition is one of the things under
- * test. The real `permissionGate` is used so "resolved and refused" cannot be
- * confused with "not known yet".
- */
 const mockAllowed = jest.fn<boolean, []>();
 jest.mock("@/hooks/api/access", () => {
   const { permissionGate } =
@@ -43,15 +32,6 @@ jest.mock("@/hooks/api/access", () => {
 
 const mockedGet = apiClient.get as jest.Mock;
 
-/**
- * CRM-P1-01. The by-model attribution read, held to the request it makes and to
- * the totals it is obliged to show beside the campaign rows.
- *
- * The wire half matters more than usual here. Five models exist on the server
- * and the screen's whole purpose is to let somebody pick one — a control that
- * looked right and kept asking for `linear` would show the same table under
- * five different headings, which is worse than not offering the choice.
- */
 
 const REPORT: AttributionByModelReport = {
   model: "linear",
@@ -90,23 +70,13 @@ function respondWith(payload: AttributionByModelReport | Error) {
   });
 }
 
-/**
- * The value shown under one of the four headline totals.
- *
- * Read through the `<dt>` rather than by its text, because the same amount
- * appears again in the campaign table below — and because the failure worth
- * catching is attributed and unattributable swapping slots, which a bare
- * `getByText` on the number would not notice at all.
- */
 function totalFor(label: string): string {
-  /* Scoped to `dt`: "Attributed" is also a column heading in the table below. */
   const term = screen.getByText(label, { selector: "dt" });
   const value = term.parentElement?.querySelector("dd");
   if (!value) throw new Error(`no value beside "${label}"`);
   return value.textContent ?? "";
 }
 
-/** Every attribution call this render made, newest last. */
 function attributionCalls(): string[] {
   return mockedGet.mock.calls
     .map(([path]) => path as string)
@@ -131,12 +101,6 @@ describe("AttributionByModel", () => {
   });
 
   it("asks the by-model endpoint, not one of the single-touch reports", async () => {
-    /**
-     * The literal acceptance of the ticket. `attribution/first-touch` and
-     * `attribution/last-touch` both exist and both answer 200 with a different
-     * shape, so a wrong path here fails as a rendering oddity rather than as a
-     * request error.
-     */
     renderPanel();
 
     await waitFor(() => expect(attributionCalls()).toHaveLength(1));
@@ -158,10 +122,6 @@ describe("AttributionByModel", () => {
   });
 
   it("offers the half-life only for the one model that reads it, and sends it", async () => {
-    /**
-     * Every other model ignores `halfLifeDays` entirely. Offering the control
-     * beside them would tell an operator they had tuned something.
-     */
     const user = userEvent.setup();
     renderPanel();
     await screen.findByText("Diwali push");
@@ -182,11 +142,6 @@ describe("AttributionByModel", () => {
   });
 
   it("makes no request at all without the reporting key", async () => {
-    /**
-     * `useGatedQuery` composes the permission into `enabled`. If that were ever
-     * loosened the screen would look identical to a permitted one until the
-     * server refused, which is a 403 in a log rather than a gate.
-     */
     mockAllowed.mockReturnValue(false);
     renderPanel();
 
@@ -195,11 +150,6 @@ describe("AttributionByModel", () => {
   });
 
   it("shows what it could not attribute beside what it could", async () => {
-    /**
-     * The number that stops this being a vanity report. Attributed revenue on
-     * its own reads as the whole of won revenue, and the gap is exactly the
-     * part no campaign can claim.
-     */
     renderPanel();
     await screen.findByText("Diwali push");
 
@@ -231,10 +181,6 @@ describe("AttributionByModel", () => {
   });
 
   it("keeps an archived campaign that still holds credit, and marks it", async () => {
-    /**
-     * Dropping the row would move its share into "could not attribute" and
-     * understate a campaign that really did the work.
-     */
     respondWith(
       report({
         campaigns: [
@@ -255,7 +201,6 @@ describe("AttributionByModel", () => {
     expect(
       await screen.findByText("No touches on any won deal in this window."),
     ).toBeInTheDocument();
-    /* The totals still stand: revenue was won, no campaign can claim it. */
     expect(totalFor("Won revenue")).toBe("₹5,000.00");
   });
 

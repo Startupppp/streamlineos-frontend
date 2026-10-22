@@ -3,10 +3,6 @@ import type { taxDeclarationResponseContract } from "@/hooks/api/payroll/ess-ove
 import type { essOverviewContract } from "@/hooks/api/payroll/ess-overview-schema";
 import type { totalRewardsStatementContract } from "@/hooks/api/payroll/ess-overview-schema";
 
-/**
- * `EssPayslip` and `EssBankDetails` are `z.infer`red from the contracts that
- * validate them at the fetch seam (`hooks/api/payroll/ess-schema.ts`).
- */
 export type {
   EssBankDetails,
   EssPayslip,

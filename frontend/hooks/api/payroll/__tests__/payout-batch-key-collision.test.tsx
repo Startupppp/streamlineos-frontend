@@ -20,18 +20,6 @@ jest.mock("@/hooks/api/access", () => ({
 
 const mockedGet = apiClient.get as jest.Mock;
 
-/**
- * `payroll_runs.id` and `payroll_bank_batches.id` are independent sequences, so
- * "run 1 -> batch 1" is the first payroll any customer ever runs. Both hooks are
- * mounted in the SAME tree by `bank-transfers-content.tsx` (BatchesTable plus
- * BatchDetailSheet), so when the two ids coincide a single query key would be
- * observed by two hooks with incompatible response shapes: the detail sheet
- * would read the list page and crash on `data.items.data`, and the list would
- * then read the detail object and render zero batches over a run that has one.
- *
- * The org+user hash prefix from `lib/query-scope.ts` does not separate them —
- * the collision is inside one org and one user.
- */
 
 const LIST_PAGE = {
   data: [
@@ -118,17 +106,12 @@ describe("payout batch list and detail keys", () => {
 
     const detail = renderHook(() => usePayoutBatch(1), { wrapper: wrap });
 
-    // The detail hook must NOT inherit the list hook's cache entry on its first
-    // render. That inheritance is what produced the crash in
-    // batch-detail-sheet.tsx: `data?.items.data` read `items` off a
-    // PayoutBatchesPage, which has no `items`.
     expect(detail.result.current.data).toBeUndefined();
 
     await waitFor(() => expect(detail.result.current.data).toBeDefined());
     expect(detail.result.current.data?.batch.batchNumber).toBe("BATCH-0001");
     expect(detail.result.current.data?.items.data).toHaveLength(1);
 
-    // and the list is still the list, not the detail object
     expect(list.result.current.data?.data).toHaveLength(1);
     expect(list.result.current.data?.pagination.hasMore).toBe(false);
   });

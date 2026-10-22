@@ -205,8 +205,6 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
   return useAuthorizedMutation<ChatSendResponse, Error, ThreadReplyInput, RollbackContext>("chat:messages:write", {
     ...chatSendRetry,
     mutationKey: ["chat", "thread", "reply"],
-    // The thread POST answers the raw row (`chatRawMessageSchema`), not the joined
-    // timeline shape, so it parses like the main send does.
     mutationFn: (body) =>
       apiClient.post<ChatSendResponse>(
         `/chat/channels/${channelId}/messages/${parentMessageId}/thread`,

@@ -64,7 +64,6 @@ function fnfBorderClass(status: string | null): string {
 interface FnfCardProps {
   item: FnfSettlement;
   onMarkPaid: (id: number) => void;
-  /** PATCH /hr/fnf/:id needs hr:exit:manage. */
   canMarkPaid: boolean;
   isPending: boolean;
   money: MoneyDisplay;
@@ -149,7 +148,7 @@ function FnfCard({ item, onMarkPaid, canMarkPaid, isPending, money }: FnfCardPro
             )}
           </div>
 
-          {/* The backend allows only APPROVED → PAID; any other status answers 409. */}
+          
           {canMarkPaid && item.status === "APPROVED" && (
             <LoadingButton
               size="sm"

@@ -22,7 +22,6 @@ import type {
 
 interface CallAnalysisPanelProps {
   activityId: string;
-  /** The org's locale, for the one date this panel renders. */
   locale?: string;
 }
 
@@ -33,16 +32,6 @@ const HANDLING_TONE: Record<ObjectionHandling, string> = {
   unaddressed: "bg-status-danger-surface text-status-danger-ink",
 };
 
-/**
- * One call's analysis, wherever a call is shown.
- *
- * The panel distinguishes four kinds of nothing, because the product answer
- * differs for each: not analysed (offer to run it), refused by the consent rule
- * (never offer — retrying cannot change it), inside the rep's private window
- * (say when it opens), and somebody else's call. Collapsing them into one empty
- * state would have a team spending AI credits re-running a call that will never
- * become analysable.
- */
 export function CallAnalysisPanel({ activityId, locale = "en" }: CallAnalysisPanelProps) {
   const query = useCallAnalysis(activityId);
   const canRun = useCan("crm:call-analysis:run");
@@ -84,8 +73,6 @@ export function CallAnalysisPanel({ activityId, locale = "en" }: CallAnalysisPan
 
   if (query.error) {
     const status = readStatus(query.error);
-    // 422 is the consent rule refusing this call. Nothing about retrying changes
-    // it — what would is a compliance record somebody has to enter.
     if (status === 422)
       return (
         <Notice
@@ -227,7 +214,6 @@ function AnalysisBody({
   );
 }
 
-/** Analysed, but not for this viewer yet. `opensAt` is the whole message. */
 function Embargoed({
   visibility,
   locale,
@@ -287,7 +273,6 @@ function Notice({
   );
 }
 
-/** Basis points of 10000 as a percentage. Null means no speaker attribution. */
 function formatBpsPercent(bps: number | null): string {
   return bps === null ? "—" : `${(bps / 100).toFixed(0)}%`;
 }

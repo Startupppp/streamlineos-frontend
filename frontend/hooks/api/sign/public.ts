@@ -48,11 +48,6 @@ async function parseOrThrow<T>(res: Response, fallback: string): Promise<T> {
   return unwrap<T>(body);
 }
 
-/**
- * `parseOrThrow` always throws on a failed response, so it keeps owning the
- * error copy while the success path goes through the shared seam and its
- * contract.
- */
 async function publicGet<T>(
   path: string,
   fallback: string,

@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -25,27 +25,14 @@ import type {
   CreateProgramInput,
   Program,
   ProgramsPage,
-  PortfolioHealth,
-  PortfolioStatus,
   UpdateProgramInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-
-type ProgramListSort = "createdAt" | "updatedAt" | "name";
-type ProgramListOrder = "asc" | "desc";
-
-interface ProgramListFilters {
-  cursor?: string;
-  limit?: number;
-  q?: string;
-  ownerId?: string;
-  health?: PortfolioHealth;
-  status?: PortfolioStatus;
-  portfolioId?: number;
-  projectId?: number;
-  sort?: ProgramListSort;
-  order?: ProgramListOrder;
-}
+import {
+  programsListQueryOptions,
+  buildProgramsParams,
+  type ProgramListFilters,
+} from "./programs-read-options";
 
 export function useProgram(
   programId: number,
@@ -127,32 +114,13 @@ export function useDeleteProgram() {
   });
 }
 
-export function programsListQueryOptions(filters?: ProgramListFilters) {
-  const params: Record<string, string> = {};
-  if (filters?.cursor) params["cursor"] = filters.cursor;
-  if (filters?.limit) params["limit"] = String(filters.limit);
-  if (filters?.q) params["q"] = filters.q;
-  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
-  if (filters?.health) params["health"] = filters.health;
-  if (filters?.status) params["status"] = filters.status;
-  if (filters?.portfolioId) params["portfolioId"] = String(filters.portfolioId);
-  if (filters?.projectId) params["projectId"] = String(filters.projectId);
-  if (filters?.sort) params["sort"] = filters.sort;
-  if (filters?.order) params["order"] = filters.order;
-  return queryOptions<ProgramsPage>({
-    queryKey: buildWorkQueryKeys.projects.programs.list(
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProgramsPage>("/build/programs", params, signal, programPageContract),
-    staleTime: 30_000,
-  });
-}
-
 export function usePrograms(filters?: ProgramListFilters) {
   const canView = useCan("build:programs:view");
+  const params = buildProgramsParams(filters);
   return useQuery<ProgramsPage>({
     ...programsListQueryOptions(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProgramsPage>("/build/programs", params, signal, programPageContract),
     enabled: canView,
     placeholderData: keepPreviousData,
   });

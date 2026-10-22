@@ -17,7 +17,6 @@ interface MappingUploadProps {
   onRowsChange: (rows: BulkReassignmentRowInput[]) => void;
 }
 
-/** Source 2 of the wizard: a mapping file parsed in the browser; the server validates on preview. */
 export function MappingUpload({ rows, onRowsChange }: MappingUploadProps) {
   const inputId = useId();
   const [parsed, setParsed] = useState<ParsedMapping | null>(null);

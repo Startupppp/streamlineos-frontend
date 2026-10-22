@@ -45,10 +45,6 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
     setShowTraceability((prev) => !prev);
   }
 
-  // G8. Denied is not empty. Placed after every hook, not at the top of
-  // the component: an early return above a useState or useQuery makes the
-  // hook order depend on a permission, which React forbids and which only
-  // shows up for the user who lacks the key.
   if (!canViewStock) {
     return (
       <PageWrapper title="Serial">

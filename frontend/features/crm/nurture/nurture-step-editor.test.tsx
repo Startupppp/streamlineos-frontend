@@ -61,11 +61,6 @@ describe("NurtureStepEditor", () => {
     expect(screen.getByText("Due 30 days after enrolling.")).toBeInTheDocument();
   });
 
-  /**
-   * The clamp is the reason this is an editor and not a number field. A cadence
-   * typed at two days is stored at ten, and a screen that hid that would leave
-   * somebody believing they configured a sequence they did not.
-   */
   it("shows what a too-tight wait will actually run at, and why", () => {
     renderEditor();
     fireEvent.change(waitField(1), { target: { value: "48" } });
@@ -78,7 +73,6 @@ describe("NurtureStepEditor", () => {
   it("re-counts the schedule from the clamped wait, not the typed one", () => {
     renderEditor();
     fireEvent.change(waitField(1), { target: { value: "1" } });
-    // Step 1 runs at the 240-hour floor, so step 2 still lands at 240 + 480.
     expect(screen.getByText("Due 10 days after enrolling.")).toBeInTheDocument();
     expect(screen.getByText("Due 30 days after enrolling.")).toBeInTheDocument();
   });
@@ -127,7 +121,6 @@ describe("NurtureStepEditor", () => {
     });
   });
 
-  /** The server answers with what it stored, clamped — so the fields show the clamp. */
   it("resets the fields from the server's clamped answer", async () => {
     const send = mutate((_vars, opts) => opts.onSuccess?.([step(1, 240)]));
     renderEditor({ steps: [step(1, 300)] });
@@ -176,10 +169,6 @@ describe("NurtureStepEditor", () => {
     );
   });
 
-  /**
-   * An empty cadence is savable — it is how steps are cleared — so the warning
-   * has to carry the consequence instead of the field refusing it.
-   */
   it("warns that an empty cadence cannot be activated", () => {
     renderEditor({ steps: [] });
     expect(screen.getByText("This sequence has no steps")).toBeInTheDocument();

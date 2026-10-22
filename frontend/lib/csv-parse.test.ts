@@ -8,11 +8,6 @@ describe("parseCsv", () => {
     });
   });
 
-  /**
-   * The three a naive split gets wrong. Each one silently shifts every column
-   * after it, so the file imports without erroring and lands in the wrong
-   * fields.
-   */
   it("keeps a comma inside a quoted field", () => {
     expect(parseCsv('name,city\n"Acme, Inc",London').rows).toEqual([["Acme, Inc", "London"]]);
   });
@@ -26,7 +21,6 @@ describe("parseCsv", () => {
   });
 
   it("handles a file written on Windows", () => {
-    // Otherwise every last column carries a trailing carriage return.
     expect(parseCsv("name,city\r\nAcme,London\r\n").rows).toEqual([["Acme", "London"]]);
   });
 
@@ -35,7 +29,6 @@ describe("parseCsv", () => {
   });
 
   it("drops a trailing blank line but keeps a blank row in the middle", () => {
-    // The blank row is reported as skipped, naming the line of their file.
     const parsed = parseCsv("name\nAcme\n\nGlobex\n");
     expect(parsed.rows).toEqual([["Acme"], [""], ["Globex"]]);
   });
@@ -52,11 +45,6 @@ describe("parseCsv", () => {
     expect(parseCsv("a,b,c\n1,,3").rows).toEqual([["1", "", "3"]]);
   });
 
-  /**
-   * The two malformed-input paths. Both used to succeed and return a wrong
-   * answer, which is the worst outcome available to a parser: an import that
-   * reports "1 row" for a 500-row file and shows no error anywhere.
-   */
   describe("a quote that is not opening a field", () => {
     it("treats an inch mark as data rather than swallowing the rest of the file", () => {
       const csv = 'product,company,amount\nWidget 24" Display,Acme,50000\nOther,Beta,900\n';
@@ -86,8 +74,6 @@ describe("parseCsv", () => {
   });
 
   it("keeps a final row of deliberately empty quoted fields", () => {
-    // Indistinguishable from a blank line without tracking that it was quoted,
-    // and dropping it is silent data loss.
     expect(parseCsv('a,b\n1,2\n"",""\n').rows).toEqual([["1", "2"], ["", ""]]);
   });
 

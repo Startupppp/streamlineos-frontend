@@ -1,11 +1,3 @@
-/**
- * The three chat side panels read through `useInfiniteQuery`, so their pages
- * accumulate for as long as the query stays in cache: re-opening a panel
- * restored every page fetched earlier in the session and mounted all of them at
- * once. These assert the bound, that nothing behind the bound is unreachable,
- * that the bound keeps list semantics, and that revealing held rows does not
- * fire a second cursor request.
- */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SharedFilesPanel } from "./shared-files-panel";

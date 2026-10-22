@@ -9,24 +9,12 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
 import { useCandidateBgv, useInitiateBgv } from "@/hooks/api/hr/recruitment/bgv";
 
-/**
- * The three checks an accepted offer opens by default, offered here as the same
- * package so a check started by hand matches one started automatically.
- */
 const DEFAULT_CHECKS = ["IDENTITY", "EDUCATION", "EMPLOYMENT"] as const;
 
 interface Props {
   candidateId: number;
 }
 
-/**
- * Who said this candidate is cleared, and whether an agency could be asked.
- *
- * Separate from the tracker card because the tracker edits a recruiter's own
- * record while this reads the verdict's provenance — and because the sentence
- * it renders has to come from the server per candidate rather than being a
- * constant on the page.
- */
 export function BgvProvenance({ candidateId }: Props) {
   const { data, isLoading, isError } = useCandidateBgv(candidateId);
   const initiate = useInitiateBgv(candidateId);
@@ -53,11 +41,7 @@ export function BgvProvenance({ candidateId }: Props) {
   return (
     <div className="space-y-2">
       <div className="flex items-start gap-2 flex-wrap">
-        {/*
-          The badge is the one thing on this card that distinguishes a
-          recruiter's record from an agency's verdict. Both can read CLEARED and
-          only one of them is evidence.
-        */}
+        
         {data.agencyCleared ? (
           <Badge
             variant="outline"

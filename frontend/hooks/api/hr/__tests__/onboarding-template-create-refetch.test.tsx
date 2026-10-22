@@ -28,7 +28,6 @@ describe("BUG-HRMS-021: creating an onboarding plan", () => {
     }
     mockedGet
       .mockResolvedValueOnce([])
-      // A refetch slower than the POST, as on a real network.
       .mockImplementationOnce(() => new Promise((resolve) => setTimeout(() => resolve([plan]), 50)));
     mockedPost.mockResolvedValue({ success: true, templateId: plan.id });
 

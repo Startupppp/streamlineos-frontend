@@ -5,14 +5,6 @@ export type InviteEmailResult =
   | { ok: true; email: string }
   | { ok: false; error: string };
 
-/**
- * Validates one address before it joins the invite list.
- *
- * The backend's bulk-invite endpoint parses `z.array(inviteEmailSchema)`, so a
- * single malformed address rejects the *whole* request — every invitee sharing
- * that role fails with it. Catching it here keeps one typo from taking the
- * batch down.
- */
 export function validateInviteEmail(
   value: string,
   existing: readonly Invitee[],

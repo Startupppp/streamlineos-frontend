@@ -13,7 +13,6 @@ import { EditLocationAction } from "./edit-location-sheet";
 interface LocationRowProps {
   location: WarehouseLocation;
   warehouseId: number;
-  /** Every location in the warehouse, for the parent selector inside the edit sheet. */
   locations: WarehouseLocation[];
 }
 

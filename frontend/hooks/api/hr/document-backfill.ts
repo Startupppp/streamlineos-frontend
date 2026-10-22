@@ -23,18 +23,11 @@ export interface DocumentBackfillPage {
 }
 
 export interface DocumentBackfillInput {
-  /** Nothing changes unless this is `false`. */
   dryRun: boolean;
-  /** The last document id of the previous page; 0 starts from the beginning. */
   cursor: number;
   limit?: number;
 }
 
-/**
- * One page of the classification backfill. A dry run reports what would change and changes nothing; a real run
- * changes exactly the documents it reports as applied. A page that applied something refreshes the HR list, so
- * the classification badges catch up.
- */
 export function useBackfillDocuments() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:documents:publish", {

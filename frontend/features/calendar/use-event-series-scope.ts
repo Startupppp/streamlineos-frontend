@@ -61,7 +61,6 @@ export function useEventSeriesScope({
         if (scope === "occurrence") {
           await upsertOccurrenceException.mutateAsync({
             eventId: parsed.eventId,
-            // Keyed on the NOMINAL start the id carries, not the moved `start`.
             occurrenceStart: parsed.occurrenceStart ?? event.start,
             modifiedTitle: pendingPayload.title,
             ...(pendingPayload.description !== undefined

@@ -39,13 +39,10 @@ const addMemberContract = lazyContract(() =>
   ),
 );
 
-// PATCH …/members/:membershipRowId (MP-B-015). Inline until the generated
-// contracts are regenerated for the new route.
 const memberRoleSchema = z.object({ id: z.number().int(), role: z.enum(["member", "admin"]) });
 
 type MemberRole = z.infer<typeof memberRoleSchema>["role"];
 
-/** Rewrite every cached members page (first page and cursor pages) of one product. */
 function patchMemberPages(
   qc: QueryClient,
   managedProductId: number,
@@ -57,7 +54,6 @@ function patchMemberPages(
   );
 }
 
-/** Later cursor pages shift after an add or remove; mark them stale without refetching now. */
 function markMemberPagesStale(qc: QueryClient, managedProductId: number) {
   void qc.invalidateQueries({
     queryKey: buildWorkQueryKeys.projects.managedProducts.members(managedProductId),
@@ -117,7 +113,6 @@ export function useAddManagedProductMember(managedProductId: number) {
         addMemberContract,
       ),
     onSuccess: (row) => {
-      // The response is the full row: show it on the first page now (MP-B-025).
       qc.setQueryData<ManagedProductMembersResponse>(
         buildWorkQueryKeys.projects.managedProducts.members(managedProductId),
         (old) =>
@@ -147,8 +142,6 @@ export function useRemoveManagedProductMember(managedProductId: number) {
         undefined,
         noContentContract,
       ),
-    // Removed on success, not on mutate: the last admin or the owner is a
-    // 409 and must stay listed (MP-B-025).
     onSuccess: (_void, membershipRowId) => {
       patchMemberPages(qc, managedProductId, (rows) =>
         rows.filter((m) => m.id !== membershipRowId),

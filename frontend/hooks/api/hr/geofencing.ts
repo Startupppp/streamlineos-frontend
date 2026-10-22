@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { geofencesQueryOptions } from "@/hooks/api/hr/geofencing-read-options";
 
 const geofenceListLazy = lazyContract(() =>
   import("@/hooks/api/hr/geofencing-schema").then((m) => m.geofenceListContract),
@@ -24,13 +25,6 @@ export interface Geofence {
   lng: string;
   radiusMeters: number;
   isActive: boolean;
-}
-
-export function geofencesQueryOptions() {
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] as const,
-    staleTime: 5 * 60_000,
-  } as const;
 }
 
 export function useGeofences() {

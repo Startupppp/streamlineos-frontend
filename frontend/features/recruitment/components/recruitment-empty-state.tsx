@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 
 export type RecruitmentEmptyStateProps = ComponentProps<typeof EmptyState>;
 
-/** Uniform empty-state illustrations across the recruitment hub. */
 export function RecruitmentEmptyState({
   illustration,
   illustrationPreset = "person",

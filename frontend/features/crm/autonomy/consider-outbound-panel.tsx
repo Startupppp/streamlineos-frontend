@@ -24,27 +24,6 @@ import { OUTBOUND_CLASS_LABELS, OUTBOUND_REFUSAL_STAGES } from "./outbound-outco
 
 const DEAL_PAGE_LIMIT = 100;
 
-/**
- * CRM-P1-06. The one door into the outbound loop, which had no door.
- *
- * `POST crm/autonomy/outbound` is the only thing that starts a run — everything
- * after it (the drafting, the hold, the second look at the world, the send)
- * happens without anybody being asked again. Nothing in the product called it,
- * so the loop could only ever be started by the sweep: an operator looking at a
- * customer who plainly needs a follow-up had no way to say so.
- *
- * The route is deliberately not "send a message". It is "consider this
- * customer", and its most common honest answer is a refusal with a reason — so
- * this panel is built around showing the refusal, not around hiding it. A
- * screen that treated `held: false` as a failure would report an outage every
- * time the system correctly declined to write to somebody who has opted out, or
- * replied yesterday, or is asleep.
- *
- * There is no control here to send now, skip the window or choose the class.
- * The hold is the only safeguard on an action that cannot be recalled, and the
- * class is the judge's to pick; a UI offering either would make the safeguard
- * optional for whoever found the button.
- */
 export function ConsiderOutboundPanel() {
   const canCompose = useCan("crm:autonomy:manage");
   const deals = useDeals({ limit: DEAL_PAGE_LIMIT });
@@ -53,11 +32,6 @@ export function ConsiderOutboundPanel() {
   const [dealId, setDealId] = useState("");
   const [outcome, setOutcome] = useState<ComposeOutboundOutcome | null>(null);
 
-  /**
-   * A deal with no party cannot be composed for — `loadComposeContext` looks the
-   * customer up by `partyId` and returns "not on file" without one. Offering
-   * those would spend a click to be told something this list already knows.
-   */
   const composable = useMemo(
     () => (deals.data ?? []).filter((deal) => deal.partyId !== null),
     [deals.data],
@@ -74,13 +48,6 @@ export function ConsiderOutboundPanel() {
       {
         partyId: selected.partyId,
         dealId: String(selected.id),
-        /**
-         * One press, one key. Minted here rather than inside the mutation so a
-         * retry replays the first answer instead of paying for a second draft —
-         * and through the client's own helper, which falls back off
-         * `crypto.randomUUID` because that is undefined outside a secure
-         * context and this button must not throw on plain HTTP.
-         */
         intentKey: newIdempotencyKey(),
       },
       { onSuccess: setOutcome },
@@ -160,13 +127,6 @@ export function ConsiderOutboundPanel() {
   );
 }
 
-/**
- * The answer, in the two shapes it comes in.
- *
- * A refusal is rendered as information rather than as an error, because it is
- * the system working. The stage says which gate stopped it, which is the
- * difference between "we should not write to this person" and "we could not".
- */
 function OutboundOutcomeNotice({ outcome }: { outcome: ComposeOutboundOutcome }) {
   if (!outcome.held)
     return (
@@ -190,11 +150,7 @@ function OutboundOutcomeNotice({ outcome }: { outcome: ComposeOutboundOutcome })
         A message is waiting
         <Badge variant="outline">{OUTBOUND_CLASS_LABELS[outcome.outboundClass]}</Badge>
       </p>
-      {/*
-        The countdown itself belongs to the pending sends panel above, which
-        already owns one and refetches it. Restating the number here and letting
-        it go stale would be a second, wrong clock on the same screen.
-      */}
+      
       <p className="text-muted-foreground">
         It goes out in about {minutes} {minutes === 1 ? "minute" : "minutes"} unless
         somebody stops it. Stop it from the countdown at the top of this page.

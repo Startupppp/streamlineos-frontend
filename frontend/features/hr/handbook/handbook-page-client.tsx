@@ -48,8 +48,6 @@ const STATUS_FILTERS: { value: StatusFilter; label: string }[] = [
 
 export function HandbookPageClient() {
   const { data: versions, isLoading, isError, error, refetch } = useHandbookVersions();
-  // GET /hr/handbook is hr:employees:view; every write is hr:handbook:manage
-  // (the route itself is gated on hr:documents:manage, a different key).
   const pageState = usePageState({ permission: "hr:employees:view", isLoading, isError, error });
   const canManage = useCan("hr:handbook:manage");
   const create = useCreateHandbookVersion();
@@ -353,7 +351,6 @@ export function HandbookPageClient() {
   }
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {
-    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper title="Employee Handbook" subtitle="Manage and publish handbook versions">
         <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">

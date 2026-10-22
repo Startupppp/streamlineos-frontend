@@ -48,13 +48,6 @@ const schema = z.object({
     (v) => v === "" || z.string().email().safeParse(v).success,
     "Must be a valid email address",
   ),
-  /**
-   * BUG-HRMS-009. Both were never collected, so an organization's country stayed
-   * null and its time zone stayed `Asia/Kolkata` by column default — every date
-   * the org computes reads from that zone. They start on the India-first defaults
-   * the columns already applied, so an operator who changes nothing gets exactly
-   * what they got before.
-   */
   country: z.string().length(2),
   timezone: z.string().min(1).max(64),
 })
@@ -123,7 +116,6 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: CreateWorkspaceDia
     [form, onOpenChange],
   )
 
-  /** Picking a country cannot leave the form on a zone that country never uses. */
   const handleCountryChange = useCallback(
     (next: string) => {
       form.setValue("country", next)

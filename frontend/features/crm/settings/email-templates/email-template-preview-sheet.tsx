@@ -13,14 +13,6 @@ import {
 } from "@/lib/renderer/crm/settings/email-template-layout";
 import type { EmailTemplate } from "@/hooks/api/crm/settings/email-templates";
 
-/**
- * A template with its variables filled in.
- *
- * Not `RecordDetail`, and not by oversight: the detail view shows what is
- * stored, and what is stored here is `{{lead.name}}`. The reason somebody opens
- * a preview is to see what the recipient sees, which is a different thing from
- * the record.
- */
 
 function interpolate(text: string): string {
   return EMAIL_TEMPLATE_VARIABLES.reduce(

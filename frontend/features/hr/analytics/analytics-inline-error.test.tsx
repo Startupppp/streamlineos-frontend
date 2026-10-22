@@ -161,7 +161,6 @@ describe("HR analytics degrades in place, because the provider's default throwOn
 
     renderUnderBoundary(<AnalyticsPageClient />);
 
-    // The page now resolves its error through the shared PageState/ErrorState.
     expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
@@ -203,11 +202,6 @@ describe("a money-formatting read is decorative, so its failure must not take a 
 
     renderUnderBoundary(<AnalyticsPageClient />);
 
-    // V-110. The page renders "Total employees"; this assertion was written
-    // against "Total Employees" and had been red ever since, which mattered
-    // because it is the only proof that one widget's failure cannot take the
-    // whole analytics page with it. Matched case-insensitively so a copy edit
-    // cannot silence the guard again.
     expect(await screen.findByText(/^Total employees$/i)).toBeInTheDocument();
     expect(screen.queryByText("route error boundary")).not.toBeInTheDocument();
   });

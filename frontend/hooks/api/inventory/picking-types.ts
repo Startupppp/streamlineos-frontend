@@ -22,7 +22,6 @@ export interface PickWaveSummary {
   orderCount: number;
   lineCount: number;
   linesClosed: number;
-  /** B5. How many of this wave's lines are waiting on a reviewer. */
   openExceptions: number;
 }
 
@@ -41,13 +40,6 @@ export interface PickWaveFilters {
   assignment?: PickWaveAssignment;
 }
 
-/**
- * One task on the walk.
- *
- * Snake-cased because the backend returns the projection row as it reads it —
- * the wave detail is a raw SQL result rather than a mapped DTO, and renaming it
- * on the way through would be a second contract to keep in step.
- */
 export interface PickWaveLine {
   id: number;
   so_line_id: number | null;
@@ -73,14 +65,6 @@ export interface PickWaveLine {
   substitute_variant_id: number | null;
   substitute_sku: string | null;
   substitute_quantity: string | null;
-  /**
-   * B5. Whether the server considers this task finished with.
-   *
-   * Sent rather than derived here. The rule now has three clauses — picked in
-   * full, a closing reason, and a reviewer's signature where one is required —
-   * and a client copy of it would be a fourth place for it to drift, showing a
-   * picker a finished row the wave still considers outstanding.
-   */
   line_closed: boolean;
 }
 
@@ -112,7 +96,6 @@ export interface CreatePickWaveResult {
 export interface ConfirmPickInput {
   pickListId: number;
   pickLineId: number;
-  /** Decimal string at scale 4 — this moves a reservation into the picked bucket. */
   quantityPicked: string;
   locationId?: number;
   scannedPayload?: string;
@@ -130,9 +113,7 @@ export interface ReportPickExceptionInput {
   pickLineId: number;
   reason: PickExceptionReason;
   notes?: string;
-  /** `WRONG_LOCATION` only — where the picker actually found the goods. */
   foundLocationId?: number;
-  /** `SUBSTITUTED` only. Posted to its own endpoint, which has its own key. */
   substituteVariantId?: number;
   quantityPicked?: string;
 }

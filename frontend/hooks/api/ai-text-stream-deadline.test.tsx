@@ -8,22 +8,7 @@ if (typeof globalThis.TextEncoder === "undefined")
 
 installAbortSignalPolyfill();
 
-/**
- * The request timeout is the one part of `lib/api-client` the shared polyfill
- * deliberately stubs out — "the timeout half never fires here" — so no existing
- * test can see it at all. This file installs a recording stub instead, because
- * the timeout is a deadline the client imposes on the SERVER's work, and a
- * client deadline tighter than the server's aborts a paid stream the backend
- * was still producing. The surface then renders that as a cancellation nobody
- * asked for, and the retry it invites reserves and spends a second time.
- */
 
-/**
- * Every backend AI stream deadline, read from the source of truth rather than
- * guessed: `CHAT_STREAM_DEADLINE_MS` (chat-assistant.controller) is 120 s,
- * `AI_TEXT_STREAM_DEADLINE_MS` and `KB_STREAM_DEADLINE_MS` are 60 s. The client
- * must not be the tighter of the two.
- */
 const BACKEND_LONGEST_STREAM_DEADLINE_MS = 120_000;
 const ORDINARY_REQUEST_TIMEOUT_MS = 30_000;
 
@@ -59,10 +44,6 @@ function installRecordingTimeout(): { requested: number[]; fireAll: () => void }
   };
 }
 
-/**
- * A stream that has delivered its first token and is still producing — exactly
- * the shape of a long answer that outlives a client deadline.
- */
 function heldStream(chunks: string[]) {
   return (signal: AbortSignal | null) => {
     const queued: Chunk[] = chunks.map((c) => ({ done: false, value: encode(c) }));
@@ -119,8 +100,6 @@ describe("the client deadline on an AI stream must not be tighter than the backe
     await new Promise((r) => setTimeout(r, 0));
 
     expect(timeout.requested.length).toBeGreaterThan(0);
-    // Max, not last: the shared session-token read arms its own 20 s deadline
-    // too, which can land after the stream's.
     expect(Math.max(...timeout.requested)).toBeGreaterThanOrEqual(
       BACKEND_LONGEST_STREAM_DEADLINE_MS,
     );
@@ -129,11 +108,6 @@ describe("the client deadline on an AI stream must not be tighter than the backe
     await pending;
   });
 
-  /**
-   * The mechanism, so the number above is not an unexplained constant: a client
-   * deadline that fires mid-body truncates the answer and reports it as a
-   * cancellation, which is indistinguishable from the user pressing Stop.
-   */
   it("a fired client deadline truncates a live stream and reports it as cancelled", async () => {
     const timeout = installRecordingTimeout();
     installFetch(heldStream(["Senior ", "Platform "]));
@@ -152,11 +126,6 @@ describe("the client deadline on an AI stream must not be tighter than the backe
     expect(tokens.join("")).toBe("Senior Platform ");
   });
 
-  /**
-   * Without this the assertion above is satisfied by deleting the timeout
-   * everywhere, which would leave every ordinary call hanging on a dead socket.
-   * The longer deadline is for streams only.
-   */
   it("(anti-vacuous) an ordinary API call still arms the 30 s request timeout", async () => {
     const timeout = installRecordingTimeout();
     installFetch(() => ({

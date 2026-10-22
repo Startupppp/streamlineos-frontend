@@ -39,15 +39,6 @@ interface ParsedPayoutLine {
   amountPaise: number;
 }
 
-/**
- * NEO-3 - a platform payout file, pasted.
- *
- * Uploaded rather than fetched because there is no connected account, and pasted
- * rather than file-picked because a settlement export is a few hundred rows of
- * CSV and a file input would add an upload path for no gain. Parsing happens
- * here and the server re-validates every field: this is convenience, never the
- * boundary.
- */
 export function PayoutUploadSheet({ open, onOpenChange }: PayoutUploadSheetProps) {
   const upload = useUploadPayout();
 
@@ -175,12 +166,6 @@ export function PayoutUploadSheet({ open, onOpenChange }: PayoutUploadSheetProps
 const QTY = /^\d{1,14}(\.\d{1,4})?$/;
 const RUPEES = /^-?\d{1,12}(\.\d{1,2})?$/;
 
-/**
- * Rupees to integer paise, without a float.
- *
- * `Math.round(Number("41.99") * 100)` is 4199 today and is the kind of line that
- * quietly becomes 4198 for some other value. A payout is money; split the string.
- */
 function paiseFromRupees(text: string): number | null {
   const match = /^(-?)(\d{1,12})(?:\.(\d{1,2}))?$/.exec(text.trim());
   if (!match) return null;
@@ -201,8 +186,6 @@ function parseCsv(text: string): { lines: ParsedPayoutLine[]; errors: string[] }
 
   for (const [index, row] of rows.entries()) {
     const cells = row.split(",").map((cell) => cell.trim());
-    // A header row is optional, so it is skipped by shape rather than by
-    // position: the last two columns of a data row are always numbers.
     if (cells.length < 5) {
       errors.push(`Line ${index + 1}: expected po_number, sku, ean, qty, amount`);
       break;

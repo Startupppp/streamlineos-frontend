@@ -1,17 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { LeaveDecisionButtons } from "../leave-decision-controls";
 
-/**
- * BUG-HRMS-017. A one-person organisation could raise leave and never close it.
- * The router sends a sole founder's request back to themselves on purpose — no
- * rung and no queue member remains — and this control answered "Cannot approve own
- * request" over it, so the request sat PENDING for ever with balances frozen.
- *
- * The refusal has to survive everywhere it means something: an org with anyone else
- * who can decide still refuses. That is the second case, and it is the one that
- * matters — opening self-approval generally would be a worse bug than the one it
- * closes.
- */
 
 const OWNER = "u-founder";
 const ownRoute: { data: unknown } = { data: undefined };

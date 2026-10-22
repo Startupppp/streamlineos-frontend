@@ -64,9 +64,6 @@ export function resolveWizardGate(
   return null;
 }
 
-// The onboarding detour is for people HR manages. It yields when the route would deny the caller, or when the
-// caller holds no assigned HR grant at all (only member-default self-service keys, RBAC-B-003): the route's own
-// guard then decides, so a self:leaves holder sees their leave page and everyone else the denial.
 export function onboardingGateYieldsToDenial(
   destination: string,
   accessResult:

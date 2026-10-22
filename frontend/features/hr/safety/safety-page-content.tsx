@@ -384,7 +384,7 @@ export function SafetyPageContent() {
               {canManage && <WellnessPulseCard />}
             </div>
             <div className="space-y-4">
-              {/* Trend reads hr:safety:manage; ungated it rendered "Not enough data yet" to viewers (FE-47). */}
+              
               {canManage && <WellnessTrendChart />}
               {canManage && <BurnoutFlagsList />}
             </div>

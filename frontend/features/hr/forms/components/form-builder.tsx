@@ -69,7 +69,6 @@ interface FormBuilderProps {
   form?: HrForm;
   onSave: (data: CreateHrFormPayload) => void;
   isPending: boolean;
-  /** False for a caller without hr:forms:manage: PATCH/POST /hr/forms 403 for them. */
   canSave?: boolean;
 }
 

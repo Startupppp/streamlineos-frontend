@@ -31,17 +31,12 @@ export const hrImportJobRowContract = z.object({
   createdAt: z.string(),
 });
 
-/**
- * `hr_import_rows.created_record_ref`: written by `markRowCommitted`, so it is null on any row that was never
- * committed (every row `getJob` returns). `outcome` is absent on rows committed before imports became idempotent.
- */
 const importRecordRefContract = z.object({
   table: z.string(),
   id: z.union([z.string(), z.number()]),
   outcome: z.enum(["created", "updated", "unchanged"]).optional(),
 });
 
-/** One `hr_import_rows` row, exactly as `HrImportService.getJob` returns it (`hrImportRowSchema` in the backend). */
 const hrImportRowContract = z.object({
   id: z.string(),
   orgId: z.string(),
@@ -69,11 +64,6 @@ export const hrImportJobListContract = z.object({
   pagination: cursorPagination,
 });
 
-/**
- * `GET /hr/import/jobs/:jobId` (`hrImportJobDetailSchema`). `errorRows` is every `hr_import_rows` row with
- * status = 'error' — rows that failed validation AND rows that failed at commit — capped at 50 by the server with no
- * ORDER BY. It is a sample, not the full set: read the counters on `job` for how many rows there really are.
- */
 export const hrImportJobDetailContract = z.object({
   job: hrImportJobRowContract,
   errorRows: z.array(hrImportRowContract),

@@ -3,22 +3,6 @@ import {
   findNearestBoundary,
 } from "@/test-utils/route-loading-boundaries";
 
-/**
- * PRD-C150's navigation clause, measured where the router actually decides it.
- *
- * "Show navigation, skeleton, optimistic or queued feedback within 100 ms of
- * user intent" is not a property of the 177 `router.push` call sites or the
- * 226 `<Link>`s. It is a property of the DESTINATION: with a `loading.tsx`
- * boundary above it, React swaps in the skeleton in the same commit the
- * navigation starts; without one the App Router holds the previous page
- * painted until the server segment resolves, and the click looks ignored for
- * however long that takes. One boundary covers every trigger that can reach
- * the segment beneath it, which is why this is a route census rather than a
- * call-site census.
- *
- * A floor, not a ratchet. The number here is zero and the only honest way to
- * keep it zero is to add a boundary — there is no baseline to raise.
- */
 const coverage = analyzeRouteLoadingBoundaries();
 
 describe("the boundary census sees a real route tree", () => {

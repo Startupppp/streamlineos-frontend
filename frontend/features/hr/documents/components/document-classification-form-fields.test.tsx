@@ -28,7 +28,6 @@ function loadedList(units: Array<{ id: string; name: string }>, hasMore = false)
   };
 }
 
-/** What TanStack Query v5 reports for a read that is switched off: pending, and not fetching, so `isLoading` is false. */
 function disabledList() {
   return { data: undefined, isPending: true, isFetching: false, isError: false, error: null, refetch: jest.fn() };
 }

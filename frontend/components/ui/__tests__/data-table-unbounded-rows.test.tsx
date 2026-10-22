@@ -176,13 +176,6 @@ describe("DataTable — windowed rows keep honest row semantics", () => {
   });
 });
 
-/**
- * Cursor-paginated pages (`CursorPageControls` beside a `DataTable`) hand the
- * table ONE server page at a time and own the paging themselves. The internal
- * window must stay invisible to them: a second pager over a cursor page would
- * let the reader page inside a page, and the two controls would disagree about
- * where they are.
- */
 describe("DataTable — a cursor-paginated caller keeps exactly one pager", () => {
   it("adds no internal pager to a single cursor page", () => {
     render(

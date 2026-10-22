@@ -34,26 +34,11 @@ interface CreateWaveDialogProps {
   onCreated: (pickListId: number) => void;
 }
 
-/** A wave is capped server-side at 50 orders; say so before the request fails. */
 const MAX_ORDERS = 50;
 
-/**
- * Build one walk out of several orders.
- *
- * The whole point of a wave is that a picker who would otherwise visit the same
- * aisle four times for four orders visits it once, so the dialog is a
- * multi-select over the reserved queue rather than a per-order action.
- */
 export function CreateWaveDialog({ open, onOpenChange, onCreated }: CreateWaveDialogProps) {
   const [warehouseId, setWarehouseId] = useState("");
   const [selected, setSelected] = useState<number[]>([]);
-  /**
-   * The server's answer to "would these join an open wave?".
-   *
-   * Held rather than acted on: `createWave` that silently appended to somebody
-   * else's wave is the surprise waveless picking is hedged about, so the two
-   * acts stay separate here as they do at the API.
-   */
   const [proposal, setProposal] = useState<WaveJoinDecision | null>(null);
 
   const warehouses = useWarehouses({ status: "active" });

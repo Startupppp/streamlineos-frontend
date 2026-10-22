@@ -9,9 +9,7 @@ import type { Tags } from "@/features/landing/relay/types/springs";
 export interface RevealProps extends AriaAttributes {
   children?: ReactNode;
   tag?: Tags;
-  /** `rise` — 24 up + fade. `fade` — opacity only. */
   variant?: "rise" | "fade";
-  /** Delay before playing, ms (use `i * REVEAL.step` for staggers). */
   delay?: number;
   className?: string;
   id?: string;
@@ -22,10 +20,6 @@ const PRESET = {
   fade: { ...FADE, config: SPRING_SOFT },
 } as const;
 
-/**
- * Once-only scroll reveal for Server Components to wrap their blocks in.
- * Rise uses the page spring; fade uses the softer one so it reads as a fade.
- */
 export const Reveal = ({
   children,
   tag = "div",

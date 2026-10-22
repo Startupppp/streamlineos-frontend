@@ -74,9 +74,6 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
 
   const router = useRouter();
   const searchParams = useSearchParams();
-  // The URL is the only source: a state copy read once at mount ignored a
-  // ?opportunity= that arrived later (reload after a tab normalisation,
-  // Back/Forward), so the deep link did not reopen the pane (MP-B-007).
   const requestedOpportunity = Number(searchParams.get("opportunity"));
   const openOpportunityId =
     Number.isSafeInteger(requestedOpportunity) && requestedOpportunity > 0

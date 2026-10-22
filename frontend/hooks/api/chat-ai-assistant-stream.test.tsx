@@ -83,12 +83,6 @@ function controllableStream(signal: AbortSignal) {
 let lastSignal: AbortSignal | null = null;
 let lastStream: ReturnType<typeof controllableStream> | null = null;
 
-/**
- * The signal lives in `authedFetch`'s FOURTH argument, not in `init`. A signal
- * placed in `init` is silently overwritten by the request timeout inside
- * `authedFetch`, so a mock that read `init.signal` would pass while the real
- * client cancelled nothing.
- */
 function streamingResponse(...args: unknown[]) {
   const signal = args[3];
   if (!(signal instanceof AbortSignal))

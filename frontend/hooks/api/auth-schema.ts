@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for `MeController` and `AuthController` handlers.
- *
- * `/me/login-history` uses PAGE-BASED pagination (page + total + limit),
- * NOT cursor pagination. `/users/:userId/login-history` is cursor-based and
- * lives in `users/extended-users-schema.ts`.
- *
- * Dates arrive as ISO strings over JSON, so timestamps are `z.string()`.
- * NOT `.strict()`: extra response fields are backward-compatible.
- */
 
 const loginHistoryItemContract = z.object({
   id: z.string(),

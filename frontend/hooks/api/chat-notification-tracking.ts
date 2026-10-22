@@ -1,9 +1,5 @@
 import { isRecord } from "@/lib/is-record";
 
-/**
- * An Ably message body is `any`, so asserting it into a payload interface
- * checked nothing. Read the four fields the handler uses and verify each.
- */
 export function readChatNotification(data: unknown): {
   id: number;
   senderId: unknown;

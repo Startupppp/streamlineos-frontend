@@ -24,11 +24,6 @@ interface EvidenceGridProps {
   forecast: ReorderForecast;
 }
 
-/**
- * F4. Quantities arrive as exact decimal strings and are rendered as they
- * arrived. `Number(...)` on one of these would put an 18,4 ledger figure through
- * a float on its way to a cell a buyer reads before signing an order.
- */
 const EvidenceGrid = memo(function EvidenceGrid({ evidence, forecast }: EvidenceGridProps) {
   const fields: Array<{ label: string; value: string }> = [
     { label: "SKU", value: evidence.variantSku },
@@ -151,9 +146,7 @@ export const ReorderEvidenceCard = memo(function ReorderEvidenceCard({
   return (
     <div className="space-y-4">
       <EvidenceGrid evidence={evidence} forecast={forecast} />
-      {/* Null whenever the server declined to propose: there is no narration to
-          show, and an empty AI panel would read as a model with nothing to say
-          rather than as a proposal that was never made. */}
+      
       {explanation && <AiNarrationSection explanation={explanation} />}
     </div>
   );

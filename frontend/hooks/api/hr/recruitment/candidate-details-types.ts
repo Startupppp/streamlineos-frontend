@@ -1,8 +1,3 @@
-/**
- * Record shapes for the candidate detail surfaces — vault, rollout documents,
- * BGV, referrals, calibration and reference checks. Extracted so the hook module
- * stays under the file-size limit.
- */
 
 export interface VaultDocument {
   id: number;
@@ -43,7 +38,6 @@ export interface RolloutDocumentsInput {
   sendEmail: boolean;
 }
 
-/** Generation returns the freshly inserted `candidate_documents` rows, not the list projection. */
 export interface CandidateDocumentRecord {
   id: number;
   candidateId: number;

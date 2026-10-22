@@ -20,18 +20,6 @@ export interface HomeSection {
   readonly access: HomeSectionAccess;
 }
 
-/**
- * The manifest is generated, so TypeScript reads every `permission` out of it as
- * a bare `string`. `as PermissionKey` therefore asserted a membership nobody
- * checked, and the failure it allowed is silent: a key the catalogue does not
- * hold matches nothing in `useCan`, so the section is hidden from everyone
- * forever and no error is raised.
- *
- * These are the keys the manifest currently names, checked against the union by
- * `satisfies` — a key removed from the catalogue fails the build here, and a key
- * the manifest gains without being added here fails loudly at import, the same
- * way `requiredEntry` already fails for an endpoint this file does not know.
- */
 const MANIFEST_PERMISSION_KEYS = [
   "hr:analytics:read",
   "hr:leaves:view",

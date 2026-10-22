@@ -13,7 +13,6 @@ import { ProjectFormFields } from "./project-form-fields";
 import { projectFormSchema } from "./project-form-schema";
 import type { ProjectFormOutput, ProjectFormValues } from "./project-form-schema";
 
-/** An empty optional input is "not given", not an empty string the server must reject. */
 const blank = (v: string | undefined) => (v && v.length > 0 ? v : null);
 
 export function ProjectCreateSheet() {
@@ -22,8 +21,6 @@ export function ProjectCreateSheet() {
   const create = useCreateProject();
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
-  // Hidden rather than disabled: an action somebody may never take is not a
-  // thing to explain on every visit. The server refuses it regardless.
   if (!canManage) return null;
 
   return (

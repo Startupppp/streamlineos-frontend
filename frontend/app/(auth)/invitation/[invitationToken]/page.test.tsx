@@ -43,11 +43,6 @@ jest.mock("sonner", () => ({
 const acceptMutation = { mutate: jest.fn(), isPending: false };
 const claimMutation = { mutate: jest.fn(), isPending: false };
 const declineMutation = { mutate: jest.fn(), isPending: false };
-/**
- * Added to the page when the invitation email OTP landed and never stubbed here,
- * so every test in this file threw on render (BUG-HRMS-010). Succeeding by default
- * is the code being sent; a test that cares drives the code step itself.
- */
 const requestOtpMutation = {
   mutate: jest.fn((_variables: { token: string }, callbacks: { onSuccess: () => void }) => {
     callbacks.onSuccess();

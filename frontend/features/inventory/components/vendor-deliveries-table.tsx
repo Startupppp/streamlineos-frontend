@@ -28,14 +28,6 @@ interface VendorDeliveriesTableProps {
 
 const NOT_APPLICABLE = "—";
 
-/**
- * C4. The drill-through: the purchase orders and receipts each rate on the
- * scorecard above was computed from.
- *
- * A rate nobody can walk back to its documents is a number to argue with rather
- * than act on. A purchase order whose only receipt was cancelled shows no
- * receipt here, which is exactly how the scorecard counted it.
- */
 export const VendorDeliveriesTable = memo(function VendorDeliveriesTable({
   vendorId,
   items,

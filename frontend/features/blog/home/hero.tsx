@@ -2,11 +2,6 @@ import Link from "next/link";
 import type { BlogCard } from "@/lib/blog/contracts";
 import { CoverImage } from "../cover-image";
 
-/**
- * Split hero: headline and promise on one side, the featured story in an arched frame on the
- * other, with a compact card overlapping the frame on wide screens and flowing below it on small
- * ones. With no published story there is no image and no invented card.
- */
 export function JournalHero({ featured }: { featured: BlogCard | null }) {
   return (
     <section aria-labelledby="journal-hero-title" className="mx-auto grid max-w-7xl items-center gap-12 px-4 pb-16 pt-12 sm:px-6 md:grid-cols-2 md:pt-20">

@@ -7,21 +7,6 @@ import { Loader2, CheckCircle2, MailX } from "lucide-react";
 import { usePublicUnsubscribe } from "@/hooks/api/crm/consent";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * Where the "Unsubscribe" link in a CRM marketing email lands.
- *
- * It used to land on the API route, which answers `{"success":true}` because
- * its other two verbs exist for mail clients. The withdrawal was recorded and
- * the person was shown a line of JSON — an unsubscribe that works and does not
- * look like it worked is, to the recipient, an unsubscribe that did not work,
- * and the next thing they reach for is the spam button.
- *
- * The button, rather than acting on load: a GET is not a promise of intent.
- * Link scanners, corporate URL-rewriters and mail-client previews all fetch
- * links in delivered mail, so anything that opts a person out on page load opts
- * out people who never clicked. The click is the consent signal, and the POST
- * behind it is the only thing that records anything.
- */
 export default function UnsubscribePage() {
   const params = useParams<{ unsubscribeToken: string }>();
   const unsubscribeToken = params.unsubscribeToken;

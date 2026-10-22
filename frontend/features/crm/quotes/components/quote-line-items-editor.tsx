@@ -22,28 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { QuoteCreateFormValues } from "./quote-create-schema";
 
-/**
- * The line grid, which is not a list.
- *
- * This is the one CRM surface that cannot move onto `RecordList`, and the reason
- * is structural rather than an omission. `RecordList` renders a record; every
- * cell here is a control bound to one element of a `useFieldArray`, whose value
- * feeds the quote's running subtotal as it is typed. A description names the
- * fields of *one* record and has no vocabulary for a repeating sub-record
- * collection, let alone an editable one — and giving it one would make a layout
- * a description of a screen rather than of a record.
- *
- * What it stopped being is a second table implementation. It hand-rolled
- * `<table>`, `<thead className="bg-muted/50">` and its own header type scale,
- * which is a fork of the primitives every other table in the product is built
- * from — so density, borders and the dark pairing were this file's problem
- * alone. It now sits on the shared `Table` primitives, which is where a table
- * that genuinely cannot be generated should sit.
- *
- * The compact controls are deliberate and sanctioned: an inline cell editor
- * inside a table is the one place the `h-9` field canon gives way, because a
- * row of full-height controls is a grid nobody can read four lines of.
- */
 
 const EMPTY_LINE_ITEM = { description: "", quantity: "1", unitPrice: "0", taxRate: "0" };
 

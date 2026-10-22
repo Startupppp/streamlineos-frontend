@@ -172,13 +172,6 @@ export default function QuotesPage() {
         toast.success(`Quote marked as ${STATUS_LABELS[status].toLowerCase()}`);
       const onError = (e: unknown) => toast.error(getErrorMessage(e));
 
-      /*
-       * Sending has its own endpoint and the generic PATCH is not a substitute:
-       * only the dedicated route refuses a quote that is pending discount
-       * approval, refuses one with no linked contact, writes the audit row and
-       * emits `quote.sent` for the automation rules. Accept and reject are
-       * customer outcomes with no endpoint of their own and stay on the PATCH.
-       */
       if (status === "SENT") {
         sendQuote.mutate({ id }, { onSuccess, onError });
         return;

@@ -37,11 +37,6 @@ export default function CrmReportsPage() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const [period, setPeriod] = useState<Period>("month");
   const canBuildReports = useCan("crm:reporting:run");
-  /*
-    The audit read is its own key. An auditor holds `view` and not `run`, so the
-    way into the run log must not be gated on the ability to run reports — that
-    is the whole reason the controller separates the two.
-  */
   const canReviewRuns = useCan("crm:reporting:view");
 
   const dateRange = useMemo(() => periodToDateRange(period), [period]);

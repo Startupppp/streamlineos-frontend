@@ -40,11 +40,6 @@ const CHECK_LABEL: Record<ReconciliationCheck, string> = {
   orphan_projection: "Orphan projection",
 };
 
-/**
- * Arithmetic drift and orphans are the serious pair — a CHECK constraint makes
- * the first unrepresentable, so a row means the constraint is gone or predates
- * it, and the second is stock no movement accounts for.
- */
 const CHECK_TONE: Record<ReconciliationCheck, "warning" | "info" | "danger"> = {
   projection_vs_ledger: "warning",
   committed_vs_reservations: "info",
@@ -165,10 +160,6 @@ export function ReconciliationClient() {
   }
 
   if (!canReconcile) {
-    // G8. This said "Access restricted" through the *empty* component, with the
-    // same illustration and layout the screen shows when reconciliation finds no
-    // drift. Denied and empty are different answers; `NoPermissionState` says so
-    // and names the key the reader needs to ask for.
     return (
       <PageWrapper title="Stock Reconciliation">
         <NoPermissionState permission="inventory:stock:reconcile" className="flex-1" />
@@ -183,7 +174,7 @@ export function ReconciliationClient() {
         subtitle="Compares the stock projection against the movements it is derived from."
         actions={
           <div className="flex w-full items-center gap-2 sm:w-auto">
-            {/* The animated set has no refresh glyph, so this stays static. */}
+            
             <Button
               variant="outline"
               size="sm"

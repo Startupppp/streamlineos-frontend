@@ -194,9 +194,7 @@ export function LeavesTabContent({
                   statusBadgeClass,
                 )}
               >
-                {/* V-046. A decided row said only "Approved"/"Rejected" while
-                    `my()` already hydrates the approver — the one thing the
-                    reader wants to know. */}
+                
                 {decidedByLabel(status, row.approver)}
               </span>
               {row.managerComment && (
@@ -258,8 +256,6 @@ export function LeavesTabContent({
           >
             {balances
               .filter(
-                // useLeavePolicy needs hr:leaves:view; a self-service caller
-                // without it gets no policy and must still see their balances.
                 (bal) => bal.typeName && (!policy || allowedLeaveTypeNames.has(bal.typeName)),
               )
               .map((bal, index) => (

@@ -8,13 +8,11 @@ import { SPRING } from "@/features/landing/relay/lib/motion";
 interface SignupFormProps {
   emailLabel: string;
   submit: string;
-  /** The app sign-up the form hands over to once submitted. */
   href: string;
   className?: string;
 }
 
 const SENT = "Opening";
-/** Arrow slot: 8px gap + 14px glyph. */
 const ARROW = 22;
 
 const Arrow = () => (
@@ -43,14 +41,6 @@ const Check = () => (
   </svg>
 );
 
-/**
- * Signup 3488:22900 — white pill, 650 × 52, with the dark Submit 3488:22903;
- * 1024 3888:11499 — 409 × 56 (the pill gains 2px of padding each side);
- * 768 3876:127 — 640 × 56; 390 3954:725 — 310 × 56.
- * "Фокус и отправка": focus lays a soft 1px ink ring inside the pill and the
- * button slides a → out beside its label; a submit morphs the button into
- * "✓ Sent" (width + label spring) and it stays that way.
- */
 export const SignupForm = ({
   emailLabel,
   submit,
@@ -82,7 +72,6 @@ export const SignupForm = ({
   const onSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSent(true);
-    // Sign-up lives in the app; the email is not sent anywhere from here.
     window.setTimeout(() => window.location.assign(href), 600);
   };
 

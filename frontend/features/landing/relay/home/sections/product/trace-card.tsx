@@ -11,17 +11,6 @@ import { CARD } from "./feature-row";
 import { CARD_START } from "./use-card-play";
 import { useLoopCycle } from "./use-loop-cycle";
 
-/**
- * Per-step positions inside the card's padding box (Visual 3888:5827).
- * Rows step 42 from label y91; spans sit on the 0–200 ms axis at x223.
- *
- * The 1024 card (3888:10234) redraws the same run inside 528 × 324: padding
- * 24, rules 44 apart from y111, every span on the axis at x189 and scaled
- * 0.695, and the tick icon sits 4 below its label instead of beside it.
- * 768 (3849:2) is the 1024 card 321 tall: rows 45 apart from label y76.
- * 390 (3893:3101): 350 × 249, 12/18 mono, rows 35 apart from y64, 7px icons,
- * spans from x146 (the 1 ms span is dropped).
- */
 const STEP_LAYOUT = [
   {
     icon: "top-23 w1024:top-20.75 w768:top-20 w390:top-17.5",
@@ -49,14 +38,12 @@ const STEP_LAYOUT = [
   },
 ] as const;
 
-/** Rules between steps (3888:5834, 5838, 5842; 1024 3888:10241 → 10249; 768 3849:9 → 17; 390 3893:3129 → 3145). */
 const RULES = [
   "top-30.25 w1024:top-27.75 w768:top-27 w390:top-22.5",
   "top-40.75 w1024:top-38.75 w768:top-38.25 w390:top-31.25",
   "top-51.25 w1024:top-49.75 w768:top-49.5 w390:top-40",
 ] as const;
 
-/** Axis ticks at 0 / 50 / 100 / 150 / 200 ms (3888:5847 → 5855; 1024 3888:10254 → 10262; 390 Union 3893:3112). */
 const TICKS = [
   "left-55.75 w1024:left-47.25 w390:left-37.25",
   "left-79.5 w1024:left-61 w390:left-48.5",
@@ -64,7 +51,6 @@ const TICKS = [
   "left-127 w1024:left-88.25 w390:left-71",
   "left-150.75 w1024:left-102 w390:left-82",
 ] as const;
-/** Axis label centres — on the ticks, except 390 keeps only 0 / 100 / 200 ms, set off their ticks. */
 const TICK_LABELS = [
   "left-55.75 w1024:left-47.25 w390:left-38.5",
   "left-79.5 w1024:left-61 w390:hidden",
@@ -73,22 +59,17 @@ const TICK_LABELS = [
   "left-150.75 w1024:left-102 w390:left-[calc(var(--spacing)*77.125)]",
 ] as const;
 
-/** Card chrome and the two hairline widths, 1440 then 1024 / 768, then 390. */
 const RULE_LINE =
   "absolute left-7.75 h-px w-174 w1024:left-5.75 w1024:w-120 w390:left-4.75 w390:w-77.5";
 const ICON_SIZE = "size-4 w1024:size-2.75 w390:size-1.75";
 
 const MONO = "font-mono text-product-small leading-product-small";
 
-/** When each span starts growing, ms after the card enters view — a run in order. */
 const SPAN_AT = [120, 520, 680, 800].map((t) => CARD_START + t);
-/** The check draws once its span has mostly grown. */
 const CHECK_AFTER = 240;
-/** Dash + gap of the pending span's border, px; the dashes crawl one period per `CRAWL_MS`. */
 const DASH = 3;
 const GAP = 4;
 const CRAWL_MS = 1120;
-/** The summary types in after the last span, one character per this many ms. */
 const SUMMARY_AT = SPAN_AT[3] + 360;
 const TYPE_PER = 24;
 
@@ -97,11 +78,6 @@ const splitValue = (value: string) => {
   return match ? { n: Number(match[1]), unit: match[2] } : null;
 };
 
-/**
- * Row 01 trace card — "Водопад" (motion brief, product.trace): spans grow from
- * their left edge one after another, ms values count up with them, checks
- * draw, the pending span's dashes crawl while in view; run / summary type in.
- */
 export const TraceCard = ({ trace }: Pick<ProductContent, "trace">) => {
   const { ref, on, visible, reduced, snap } = useLoopCycle(
     SUMMARY_AT + trace.summary.length * TYPE_PER + 240,
@@ -116,7 +92,6 @@ export const TraceCard = ({ trace }: Pick<ProductContent, "trace">) => {
         ? { grow: 1, n: splitValue(trace.steps[i].value)?.n ?? 0, draw: 0 }
         : { grow: 0, n: 0, draw: 1 },
       config: (key: string) => (key === "draw" ? SPRING : SPRING_SOFT),
-      // Reset runs the waterfall back, last span first.
       delay: (key: string) =>
         !on
           ? (trace.steps.length - 1 - i) * 48
@@ -150,7 +125,6 @@ export const TraceCard = ({ trace }: Pick<ProductContent, "trace">) => {
     [on, snap],
   );
 
-  // Dash crawl: only while the card is on screen, never under reduced motion.
   useEffect(() => {
     const rect = dashRef.current;
     if (!visible || reduced || !rect) return;

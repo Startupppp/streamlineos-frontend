@@ -27,10 +27,6 @@ export interface WebFormInput {
   isActive: boolean;
 }
 
-/**
- * The org's lead-capture forms. Gated on the key AND the plan feature: the
- * page shows the upgrade path instead of firing a read the plan does not cover.
- */
 export function useWebForms() {
   const feature = useFeature("crm.web-forms");
   return useGatedQuery("crm:web-forms:manage", {
@@ -80,7 +76,6 @@ export function useDeleteWebForm() {
   });
 }
 
-/** Public: the form a visitor fills in. No session, no tenant. */
 export function usePublicLeadForm(leadFormToken: string) {
   return useQuery({
     queryKey: queryKeys.publicLeadForm(leadFormToken),

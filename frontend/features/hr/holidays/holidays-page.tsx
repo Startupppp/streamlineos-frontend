@@ -74,7 +74,6 @@ export function HolidaysPage() {
     setEditingHoliday(holiday);
     setSheetOpen(true);
   }
-  // Delete fired straight from the row icon with no confirmation (FE-83).
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
   function handleDeleteClick(id: string) {
     setPendingDeleteId(id);

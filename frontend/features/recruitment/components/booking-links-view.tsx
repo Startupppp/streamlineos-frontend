@@ -206,11 +206,7 @@ export function BookingLinksView({ baseUrl }: { baseUrl: string }) {
       title="Interview Booking Links"
       subtitle="Manage self-scheduling links sent to candidates"
     >
-      {/*
-        Above the list, because it is what a recruiter opens this page to do
-        before sending a link: work out which times to offer. The list below is
-        what they come back to afterwards.
-      */}
+      
       <div className="mb-4">
         <FindATimeSection />
       </div>

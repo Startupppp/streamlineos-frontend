@@ -30,27 +30,12 @@ import {
 } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 
 interface RejectCandidateDialogProps {
-  /** The candidate being rejected; null closes the dialog. */
   candidateName: string | null;
   isPending?: boolean;
   onCancel: () => void;
   onConfirm: (details: RejectionDetails) => void;
 }
 
-/**
- * The one place a rejection is composed, shared by the board, the candidate
- * list and the candidate detail page.
- *
- * One component rather than a picker per screen: the API refuses a reject with
- * no reason, so a screen that forgot to collect one would show the recruiter a
- * 422 they cannot act on — and three copies means the screen nobody tested is
- * the one that forgets.
- *
- * Nothing here is the guard. The button stays disabled until the pair is
- * complete because a confirm that will certainly fail is a worse experience
- * than one that cannot be pressed, but the backend refuses the same pair and
- * remains the thing that decides.
- */
 export function RejectCandidateDialog({
   candidateName,
   isPending = false,
@@ -73,9 +58,6 @@ export function RejectCandidateDialog({
   const handleOpenChange = useCallback(
     (open: boolean) => {
       if (open) return;
-      /* Cleared on the way out so the next candidate does not inherit the last
-         one's reason — a stale note would be attributed to a person it was
-         never written about. */
       setReason(null);
       setNote("");
       onCancel();
@@ -144,10 +126,7 @@ export function RejectCandidateDialog({
               }
               className="text-sm"
             />
-            {/*
-              Only shown once the note is long enough to be worth watching. A
-              counter on an empty optional field reads as a quota to fill.
-            */}
+            
             {note.length > 0 && (
               <p className="text-micro text-muted-foreground">{remaining} characters left</p>
             )}

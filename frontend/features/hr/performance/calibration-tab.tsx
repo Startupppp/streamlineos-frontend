@@ -39,7 +39,6 @@ export function CalibrationTab() {
   const { data: membersData } = useOrgMembers(1, 200);
   const upsert = useUpsertCalibrationEntry(selectedCycleId);
   const canManage = useCan("hr:performance:manage");
-  // Surface gate only: the entries read is resolved by the DataTable below.
   const pageState = usePageState({ permission: "hr:performance:manage", isLoading: false, isError: false, error: null });
 
   const memberById = useMemo(() => {

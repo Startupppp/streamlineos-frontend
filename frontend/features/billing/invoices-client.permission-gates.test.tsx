@@ -1,17 +1,3 @@
-/**
- * The customer-invoicing surface renders three ledger mutations — Mark Issued,
- * Mark Paid and Void — plus New Invoice. Every one of them used to render
- * unconditionally: `invoices-client.tsx` held no `useCan` at all, so a member
- * with nothing but a read grant was shown a Void control whose confirmation
- * was also missing, and whose backend route reverses the invoice's journal
- * entry.
- *
- * Each control is pinned to the key its own route declares in
- * `contracts/openapi.json`:
- *   POST /invoices                -> accounting:create
- *   PATCH /invoices/{invoiceId}   -> accounting:update
- *   POST /invoices/{invoiceId}/void -> accounting:manage
- */
 import { render as rtlRender, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TooltipProvider } from "@/components/ui/tooltip";

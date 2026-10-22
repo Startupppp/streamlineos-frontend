@@ -95,8 +95,6 @@ jest.mock("@/features/hr/assets/asset-table-section", () => ({
       <div
         key={a.name}
         data-testid="asset-row"
-        // V-082. The rows read `assignedTo`; the Assigned summary reads the
-        // backend aggregate. The test below holds the two together.
         data-assigned={a.assignedTo ? "yes" : "no"}
       >
         {a.name}
@@ -194,14 +192,6 @@ describe("AssetsPage server-prefetch seam", () => {
   });
 });
 
-/**
- * V-082. The Assigned summary card was rendered from a status-derived backend
- * count while the rows and the assignment filter both read `assignedTo` — so an
- * asset whose status said ASSIGNED but whose `assigned_to` was empty made the
- * card and the list disagree, with nothing on screen to explain it. The backend
- * half makes the aggregate count `assigned_to`; this is the frontend half's
- * guard, that the card binds to that aggregate and to nothing else.
- */
 describe("AssetsPage assignment summary", () => {
   function assetRow(id: number, overrides: Partial<Asset>): Asset {
     return { ...asset, id, name: `Asset ${id}`, ...overrides };
@@ -239,7 +229,6 @@ describe("AssetsPage assignment summary", () => {
     const assignedCard = screen.getByText("Assigned").closest("div")
       ?.parentElement as HTMLElement;
     expect(assignedCard).toHaveTextContent(String(rowsWithAssignee.length));
-    // Paired with the totals, so a card bound to the wrong aggregate cannot pass.
     expect(screen.getByText("Total Assets").closest("div")?.parentElement)
       .toHaveTextContent("4");
   });

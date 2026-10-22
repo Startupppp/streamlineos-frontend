@@ -18,16 +18,6 @@ import { EASE_OUT } from "./motion/variants";
 type PricingTierGridProps = {
   showAppsGrid?: boolean;
   defaultPeriod?: BillingPeriod;
-  /**
-   * The tiers to show, defaulting to the compiled-in table.
-   *
-   * Ticket 12: the pricing page now reads live amounts from `/public/pricing`
-   * so it quotes the number that will actually be charged, in the visitor's
-   * currency. Every other caller of this grid renders the static table, which
-   * is why this is a default rather than a required prop -- and why the static
-   * table stays: a marketing page that renders nothing because an API is down
-   * is worse than one quoting a fortnight-old price.
-   */
   tiers?: readonly PricingTier[];
 };
 
@@ -41,8 +31,7 @@ export function PricingTierGrid({
   return (
     <>
       <PricingBillingToggle period={period} onChange={setPeriod} className="mb-10 w390:mb-8" />
-      {/* Four across at 1440 (the homepage's 20 gap), 2 × 2 at 1024 and 768,
-          stacked at 390 — the homepage pricing cards' rhythm. */}
+      
       <div className="grid grid-cols-4 gap-5 w1024:grid-cols-2 w1024:gap-3 w390:grid-cols-1">
         {tiers.map((tier, i) => (
           <PricingCard key={tier.id} tier={tier} period={period} index={i} />
@@ -55,12 +44,6 @@ export function PricingTierGrid({
   );
 }
 
-/**
- * Relay plan card (features/landing/relay/home/sections/pricing/tier-card.tsx):
- * glass card on the hairline border, mono plan name, the brand-gradient tag,
- * and — on the featured plan — the accent stroke and glow plus the brand CTA.
- * Every feature line comes from `lib/pricing.ts`.
- */
 function PricingCard({
   tier,
   period,
@@ -94,8 +77,7 @@ function PricingCard({
         />
       ) : null}
 
-      {/* One row height on every card, so the tag never pushes the featured
-          plan's lines out of step with the others. */}
+      
       <div className="flex min-h-8 items-center justify-between gap-3">
         <h3 className="min-w-0 font-mono text-relay-label leading-label text-foreground-muted">
           {tier.name}
@@ -129,8 +111,7 @@ function PricingCard({
           </AnimatePresence>
         </div>
         <p className="font-mono text-relay-label leading-label text-foreground-dim">{tier.period}</p>
-        {/* Always laid out (hidden when it does not apply) so every card's
-            feature list starts on the same line. */}
+        
         <p
           className={`mt-1 font-mono text-relay-label leading-label text-accent-soft ${
             period === "annual" && tier.monthly && tier.annual ? "" : "invisible"

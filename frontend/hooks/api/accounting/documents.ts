@@ -18,10 +18,6 @@ import type {
   SubmitDocumentComplianceResult,
 } from "@/hooks/api/accounting/documents-schema";
 
-/**
- * Document-level actions shared by the invoice, credit-note and bill detail
- * pages: the printable PDF, attached files, and the e-invoicing state.
- */
 
 type QueryOpts<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
@@ -31,7 +27,6 @@ const ENTITY_STALE = 60 * 1000;
 export const ATTACHMENTS_READ = "accounting:attachments:read";
 export const ATTACHMENTS_MANAGE = "accounting:attachments:manage";
 
-/** Mirrors `ALLOWED_ATTACHMENT_MIME_TYPES` and `MAX_ATTACHMENT_BYTES` in the backend DTO. */
 export const ATTACHMENT_MIME_TYPES: readonly string[] = [
   "application/pdf",
   "image/jpeg",
@@ -73,7 +68,6 @@ const PDF_PATHS: Readonly<Record<DocumentPdfKind, string>> = {
   bill: "/accounting/payables/documents",
 };
 
-/** Saves the posted document's PDF; a draft 409s with "post it first". */
 export function useDownloadDocumentPdf(kind: DocumentPdfKind) {
   const permission =
     kind === "bill"
@@ -138,7 +132,6 @@ export function useAttachDocumentFile(documentType: AttachableDocumentType, docu
         attachmentContract,
       ),
     onSuccess: (created) => {
-      // Newest first, so the new file belongs at the head of page 1.
       queryClient.setQueriesData<DocumentAttachmentPage>(
         {
           queryKey: accountingDocumentsQueryKeys.accountingDocuments.attachments(
@@ -191,7 +184,6 @@ export function useRemoveDocumentAttachment(
   });
 }
 
-/** Streams the stored bytes back through the permission gate and saves them. */
 export function useDownloadDocumentAttachment() {
   return useAuthorizedMutation<{ filename: string; bytes: number }, Error, DocumentAttachment>(
     "accounting:attachments:read",
@@ -206,10 +198,6 @@ export function useDownloadDocumentAttachment() {
   );
 }
 
-/**
- * The document's e-reporting state. A 404 means no decision was recorded
- * (a draft, or a document posted before compliance existed) and reads as null.
- */
 export function useDocumentCompliance(
   documentType: "sales_invoice" | "credit_note",
   documentId: string,
@@ -257,7 +245,6 @@ export function useSubmitDocumentCompliance(
           submitComplianceContract,
         ),
       onSuccess: () => {
-        // The response carries only the row this adapter wrote; the full state list is the server's.
         void queryClient.invalidateQueries({
           queryKey: accountingDocumentsQueryKeys.accountingDocuments.compliance(
             documentType,

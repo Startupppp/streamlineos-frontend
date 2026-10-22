@@ -60,7 +60,6 @@ export function readAuditLogPageSize(params: SearchParamsReader): PageSize {
   return isValidPageSize(parsed) ? parsed : DEFAULT_AUDIT_LOG_PAGE_SIZE;
 }
 
-// The one place the audit-log URL becomes a query key, so the server prefetch and the page agree.
 export function readAuditLogFilters(params: SearchParamsReader): AuditLogFilters {
   const action = params.get("action") || "all";
   const targetType = params.get("target") || "all";

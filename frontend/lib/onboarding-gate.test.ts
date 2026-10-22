@@ -4,16 +4,6 @@ import {
   gateCookieName,
 } from "./onboarding-gate";
 
-/**
- * `clearGateCookies` runs on sign-out and on an organization switch. Both call
- * sites know nothing about the scope id, while every gate cookie written since
- * the cookie was scoped is `${base}--${scopeId}` — so expiring the two bare
- * bases cleared nothing at all, and the skipped-wizard mark of the person who
- * just signed out was still on the browser for the next one.
- *
- * The read side is already pinned by `wizard-gate.test.ts`, which resolves the
- * gate through `gateCookieName`. This is the clear side.
- */
 
 const ORG_ID = "org-abc";
 const OTHER_ORG_ID = "org-xyz";

@@ -8,7 +8,6 @@ interface Case {
   state: AiActionResultState;
   shows: RegExp;
   labelled?: RegExp;
-  /** What the surface declares about sources; see `expectsCitations`. */
   expectsCitations?: boolean;
   offersRetry: boolean;
 }
@@ -129,12 +128,6 @@ describe("the nine AI boundary states each render a defined surface", () => {
     expect(screen.getByLabelText(/loading sources/i)).toBeInTheDocument();
   });
 
-  /**
-   * The placeholder used to be unconditional, so 26 of the 28 files that define
-   * an `AiAction` shimmered "Loading sources" and then resolved to nothing. A
-   * promise the surface cannot keep is worse than no promise, so the default is
-   * silence and the two surfaces that really do return citations opt in.
-   */
   it("shows no citation placeholder when the action never returns sources", () => {
     render(<AiActionResultBody state={{ status: "streaming", text: "part" }} />);
     expect(screen.queryByLabelText(/loading sources/i)).toBeNull();

@@ -19,9 +19,6 @@ const runBlockerPageC = lazyContract(() =>
 );
 
 export function usePayrollReadiness(month: string) {
-  // The header cutoff chip and several HR screens read this on every page; an
-  // owner holds the permission even with Payroll off, so without the module
-  // check each page fired a 402 MODULE_NOT_ENABLED (BUG-HRMS-020).
   const canView = useCan("payroll:runs:view");
   const payrollOn = useModuleEnabled("payroll");
   return useQuery({

@@ -127,10 +127,6 @@ export function CreateInvoiceDialog({
   open: boolean;
   onOpenChange: (v: boolean) => void;
 }) {
-  // POST /invoices declares accounting:create. The dialog carries its own gate
-  // rather than trusting the opener: it is exported and mounted independently
-  // of the button that opens it, and useCreateInvoice would otherwise let the
-  // form submit and fail late with "Missing permission".
   const canCreate = useCan("accounting:create");
   const createInvoice = useCreateInvoice();
 

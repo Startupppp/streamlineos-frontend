@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/** Mirrors `findingItemSchema` in the backend's `data-quality-response.schemas.ts`. */
 const dataQualityFindingContract = z.object({
   findingId: z.string(),
   organizationId: z.string(),

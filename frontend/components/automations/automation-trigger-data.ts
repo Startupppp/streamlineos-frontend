@@ -28,12 +28,6 @@ export const NON_CRM_TRIGGER_META = TRIGGER_META.filter((t) => t.module !== "crm
 
 const META_BY_TRIGGER = new Map(TRIGGER_META.map((meta) => [meta.value, meta]));
 
-/**
- * A Map rather than an index into the record: a `string` cannot index
- * `Record<AutomationTrigger, TriggerModule>` without forcing the type, and a
- * widened index signature would resolve `"toString"` to the inherited
- * prototype method instead of null.
- */
 const MODULE_BY_TRIGGER = new Map<string, TriggerModule>(
   Object.entries(AUTOMATION_TRIGGER_MODULE),
 );

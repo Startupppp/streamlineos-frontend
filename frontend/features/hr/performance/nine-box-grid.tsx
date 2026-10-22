@@ -41,7 +41,6 @@ export function NineBoxGrid() {
   const { data: cycles = [], isError: cyclesError, error: cyclesErrorData, refetch: refetchCycles } = useReviewCycles();
   const { data: entries = [], isError: nineBoxError, error: nineBoxErrorData, refetch: refetchNineBox } = useNineBox(selectedCycleId);
   const { data: membersData } = useOrgMembers(1, 200);
-  // GET /hr/performance/calibration/nine-box is `hr:performance:manage` (calibration.controller.ts:58).
   const pageState = usePageState({ permission: "hr:performance:manage", isLoading: false, isError: false, error: null });
 
   const memberById = useMemo(() => {

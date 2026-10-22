@@ -16,17 +16,6 @@ beforeEach(() => {
   mockGet.mockResolvedValue({ url: "https://signed.example/obj?sig=1" });
 });
 
-/**
- * PRD-C103, "authorization recheck before short-lived download URLs" on the
- * client side of the seam.
- *
- * `isLocalUrl` short-circuited on the substring `/uploads/`, and `uploads` is the
- * DEFAULT folder every tenant key is minted into. Any reference the object-key
- * matcher did not recognise — a region-prefixed key `<prefix>/<orgId>/uploads/…`
- * is the live example — was therefore handed back verbatim as a relative path
- * instead of being exchanged at `/storage/download`, so no authorization recheck
- * ever ran for it.
- */
 describe("getSignedFileUrl — a tenant object key is always exchanged, never returned verbatim", () => {
   it("exchanges an organisation-prefixed key in the default uploads folder", async () => {
     const key = `${ORG}/uploads/1-report.pdf`;
@@ -70,12 +59,6 @@ describe("getSignedFileUrl — a tenant object key is always exchanged, never re
   });
 });
 
-/**
- * A signed URL opened into a named-less tab without `noopener` leaves
- * `window.opener` live on the new document, so anything the signed host serves
- * can navigate the app's own tab. The sibling helper `viewProtectedFile` already
- * passed the flags; this one did not.
- */
 describe("viewFile — opens the signed URL with the opener severed", () => {
   it("passes noopener and noreferrer", async () => {
     const open = jest.fn();

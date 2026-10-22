@@ -14,13 +14,6 @@ const STATUS_VARIANT: Record<string, "secondary" | "outline" | "destructive"> = 
   dead: "destructive",
 };
 
-/**
- * What actually left this deployment, with the receiver's own answer.
- *
- * The response status is the column that matters: a delivery can be `delivered`
- * from our side and a 500 on theirs, and a log that showed only our status
- * would let a broken receiver read as a working integration.
- */
 export function DeliveryLogSection() {
   const { data: deliveries = [], isLoading } = useSandboxDeliveries();
 

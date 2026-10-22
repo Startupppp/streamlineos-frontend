@@ -4,11 +4,6 @@ import { renderHook } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { useImportExpenses } from "@/hooks/api/use-import-expenses";
 
-/**
- * HRMS-E2E-008: the import preview lets a person map an unknown category
- * ("Flights" -> Travel), but the request never carried the choice, so the
- * server filed the row as "Other". The mapping must reach the request body.
- */
 
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: (_permission: string, options: object) => useMutation(options),
@@ -22,7 +17,6 @@ function wrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }
 
-// jsdom's File has no text(); the request reads the file with it.
 function csvFile(text: string) {
   const file = new File([text], "expenses.csv", { type: "text/csv" });
   Object.defineProperty(file, "text", { value: () => Promise.resolve(text) });

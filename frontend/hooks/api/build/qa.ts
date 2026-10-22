@@ -27,6 +27,11 @@ import {
   markRunListsStale,
   patchRunListsFromResult,
 } from "@/hooks/api/build/qa-run-result-cache";
+import {
+  testSuitesQueryOptions,
+  testCasesQueryOptions,
+  testRunDetailQueryOptions,
+} from "./qa-read-options";
 
 const testSuiteListContract = lazyContract(() =>
   import("@/hooks/api/build/qa-schema").then((m) => m.testSuiteListContract),
@@ -190,29 +195,6 @@ export function useTestRunDetail(projectId?: number, runId?: number) {
   });
 }
 
-export function testSuitesQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.qa.suites(projectId),
-    staleTime: 60_000,
-  };
-}
-
-export function testCasesQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.qa.cases(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    staleTime: 60_000,
-  };
-}
-
-export function testRunDetailQueryOptions(projectId: number, runId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.qa.run(projectId, runId),
-    staleTime: 30_000,
-  };
-}
 
 export function useCreateTestRun() {
   const qc = useQueryClient();

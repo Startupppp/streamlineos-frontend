@@ -40,12 +40,6 @@ export function parseAuthErrorCode(raw: string): ParsedAuthError {
 
 const MAX_AUTH_RETRY_AFTER_SECONDS = 15 * 60;
 
-/**
- * `AuthController.enforceRateLimit` answers a 429 with
- * `details: { retryAfterSeconds }`. Returns null for anything that is not a
- * usable 429 retry-after, so the caller keeps its own default rather than
- * inheriting a zero, a negative or a value that would strand the control.
- */
 export function readRetryAfterSeconds(error: unknown): number | null {
   if (!isApiError(error) || error.status !== 429) return null;
   if (!isRecord(error.details)) return null;

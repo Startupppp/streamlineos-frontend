@@ -38,7 +38,6 @@ const STATUS_TONE: Readonly<Record<ComplianceStatus, StatusTone>> = {
   cancelled: "neutral",
 };
 
-/** A state the person can still act on by submitting. */
 const SUBMITTABLE: ReadonlySet<ComplianceStatus> = new Set(["pending", "rejected"]);
 
 interface DocumentComplianceCardProps {
@@ -46,11 +45,6 @@ interface DocumentComplianceCardProps {
   documentId: string;
 }
 
-/**
- * What the product has, and has not, done about a posted document's
- * e-invoicing duty. The narrative comes from the backend so a mock submission
- * never reads as a filing.
- */
 export function DocumentComplianceCard({ documentType, documentId }: DocumentComplianceCardProps) {
   const readState = useCanState("accounting:receivables:read");
   const canSubmit = useCan("accounting:receivables:manage");
@@ -82,7 +76,6 @@ export function DocumentComplianceCard({ documentType, documentId }: DocumentCom
   }
 
   if (readState === "denied") return null;
-  // No decision recorded for this document: there is nothing to say about filing.
   if (query.data === null) return null;
 
   const data = query.data;

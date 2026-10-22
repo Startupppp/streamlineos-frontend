@@ -13,12 +13,6 @@ export function isUserInviteRole(value: string): value is UserInviteRole {
   return USER_INVITE_ROLE_VALUES.some((role) => role === value);
 }
 
-/**
- * The role a fresh invite starts on. Least privilege, and the same default the
- * backend applies when a bulk-invite request omits `role` — elevating someone
- * to Org Admin should always be a deliberate choice, never the path of least
- * resistance.
- */
 export const DEFAULT_INVITE_ROLE = "MEMBER";
 
 export const USER_STRUCTURAL_ROLES = [
@@ -42,11 +36,6 @@ export function formatRoleLabel(slug: string): string {
 
 export type StructuralRole = (typeof USER_STRUCTURAL_ROLES)[number]["value"];
 
-/**
- * A member's stored role is a free string — a custom role slug is legitimate —
- * but the org-membership payload only takes the three structural ones. Anything
- * else reads as MEMBER rather than being sent somewhere it would be refused.
- */
 export function toStructuralRole(value: string | null | undefined): StructuralRole {
   return USER_STRUCTURAL_ROLES.find((r) => r.value === value)?.value ?? "MEMBER";
 }

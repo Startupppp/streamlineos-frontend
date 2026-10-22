@@ -4,12 +4,6 @@ import {
   isSendableFollowUp,
 } from "./meeting-follow-up-stream-parse";
 
-/**
- * The parser is a pure function of the text received SO FAR, so the tests feed
- * it prefixes as well as whole answers. A parser that only works on a complete
- * document renders nothing until the last token and defeats the point of
- * streaming.
- */
 
 const WHOLE = [
   "## Subject",

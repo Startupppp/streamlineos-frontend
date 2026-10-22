@@ -17,15 +17,6 @@ interface Props {
   candidateId: number;
 }
 
-/**
- * Where this candidate stands on WhatsApp, above the composer that offers it.
- *
- * The channel selector below has offered WHATSAPP since before any of this
- * existed, and picking it wrote a message row and delivered nothing — a
- * recruiter saw "sent" and the candidate's phone never rang. This panel is what
- * makes that visible: it states whether a message could be delivered at all,
- * and whether this particular candidate ever agreed to receive one.
- */
 export function WhatsappConsentPanel({ candidateId }: Props) {
   const { data, isLoading, isError } = useCandidateWhatsapp(candidateId);
   const record = useRecordWhatsappConsent(candidateId);
@@ -69,12 +60,7 @@ export function WhatsappConsentPanel({ candidateId }: Props) {
         )}
       </div>
 
-      {/*
-        The refusal sentence is the server's, because "we never asked" and "they
-        asked us not to" are different situations and only the first may be
-        fixed by asking. A single "cannot send" would invite somebody to go and
-        ask a candidate who already said no.
-      */}
+      
       {data.refusal && <p className="text-xs text-muted-foreground">{data.refusal}</p>}
 
       {data.optInAt && (
@@ -84,11 +70,7 @@ export function WhatsappConsentPanel({ candidateId }: Props) {
         </p>
       )}
 
-      {/*
-        Stated even when the candidate has opted in. Consent and delivery are
-        two separate conditions, and a recruiter who fixes the first still
-        cannot send.
-      */}
+      
       {data.providerBlockedReason && (
         <p className="text-xs text-muted-foreground">
           {data.providerBlockedReason} A WhatsApp message composed below is recorded against the

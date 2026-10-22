@@ -24,14 +24,6 @@ interface JobTemplatePickerProps {
   form: UseFormReturn<CreateJobFormValues>;
 }
 
-/**
- * A value the recruiter has authored, as opposed to one that is merely present.
- *
- * The form seeds several fields with defaults, and an empty array or an empty
- * string is the shape "nothing typed here yet" takes in this wizard. Treating
- * either as authored would make the template fill nothing at all on a fresh
- * form, which is the only moment anyone uses it.
- */
 function isAuthored(value: unknown): boolean {
   if (value === undefined || value === null) return false;
   if (typeof value === "string") return value.trim().length > 0;
@@ -44,12 +36,6 @@ export function JobTemplatePicker({ form }: JobTemplatePickerProps) {
   const templates = useJobTemplates();
   const applyTemplate = useApplyJobTemplate();
 
-  /**
-   * Hands the server the posting-shaped fields a template can speak to, and
-   * nothing else. The server owns the merge so the picker cannot drift from it;
-   * sending the lifecycle fields as well would only invite a future change to
-   * start copying a status or a deadline forward.
-   */
   function currentDraft(): JobTemplateDraft {
     const values = getValues();
     const draft: JobTemplateDraft = {};
@@ -62,18 +48,6 @@ export function JobTemplatePicker({ form }: JobTemplatePickerProps) {
     return draft;
   }
 
-  /**
-   * Writes a mapped value only where the form is still empty.
-   *
-   * The server already refused to overrule anything the recruiter sent, but it
-   * sees one `description` blob where the wizard has eight separate inputs — so
-   * the per-field guard is what protects the fields the server could not see.
-   * The two rules agree by construction: both say "the recruiter wins".
-   *
-   * One `reset` rather than a loop of `setValue`: `setValue`'s value type is
-   * resolved from its path, which a `keyof` loop cannot narrow without a type
-   * assertion. Building the whole next value keeps it checked.
-   */
   function fillGaps(mapped: Partial<CreateJobFormValues>): number {
     const current = getValues();
     const next: CreateJobFormValues = { ...current };
@@ -130,11 +104,6 @@ export function JobTemplatePicker({ form }: JobTemplatePickerProps) {
     );
   }
 
-  /**
-   * Hidden rather than disabled when the read is denied. A recruiter without
-   * `hr:requisitions:view` has no library to pick from, and an always-empty
-   * dropdown reads as a broken feature rather than one they cannot use.
-   */
   if (templates.access.denied) return null;
 
   const options = templates.data ?? [];

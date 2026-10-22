@@ -34,7 +34,6 @@ interface AdminExpenseItemProps {
   rejectingId: number | null;
   rejectionReason: string;
   isPending: boolean;
-  /** The row whose decision is in flight, so only its button shows busy. */
   pendingId: number | null;
   onApprove: (id: number) => void;
   onRejectStart: (id: number) => void;
@@ -61,7 +60,6 @@ export function AdminExpenseItem({
   const CatIcon = catConfig.icon;
   const isRejecting = rejectingId === expense.id;
   const isRowPending = isPending && pendingId === expense.id;
-  // The backend refuses a decision on your own claim (403), so do not offer one.
   const isOwnExpense = !!currentUserId && expense.userId === currentUserId;
   const adminCatLabel =
     ADMIN_CATEGORY_LABELS[expense.category || ""] || catConfig.label;

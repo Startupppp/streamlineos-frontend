@@ -20,16 +20,6 @@ interface CarrierStatusDialogProps {
   trackingNumber: string;
 }
 
-/**
- * B7, item 2 — the in-app POST, which is the carrier adapter until a real one
- * is enabled.
- *
- * The shipment is addressed by our own tracking number rather than by its id,
- * because that is the contract a real carrier will be held to: a courier gets to
- * say what happened to a parcel it can name, never which record of ours to
- * write. Entering an update by hand goes through the identical path, so the
- * manual case and the first real integration cannot drift.
- */
 export function CarrierStatusDialog({
   open,
   onOpenChange,
@@ -49,10 +39,6 @@ export function CarrierStatusDialog({
       },
       {
         onSuccess: (result) => {
-          // The API distinguishes "recorded" from "moved the shipment", and so
-          // does this: telling someone their update was applied when it was
-          // filed behind a later scan is the lie the monotonic rule exists to
-          // avoid.
           toast.success(
             result.advanced
               ? `Tracking updated to ${result.status.toLowerCase().replace("_", " ")}`

@@ -30,14 +30,6 @@ function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission for this workflow action.");
 }
 
-/**
- * `GET /workflows/schedules` is a keyset page, not a list.
- *
- * The hook read it with a plain `useQuery` and the page rendered `data.data`, so an
- * organisation with more schedules than one page saw a silently truncated list with
- * no indication anything was missing — `pagination.nextCursor` came back on every
- * response and nothing ever asked for it.
- */
 export function useAllSchedules() {
   const canManage = useCan("workflows:schedules:manage");
   return useInfiniteQuery({

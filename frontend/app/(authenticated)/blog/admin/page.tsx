@@ -3,10 +3,6 @@ import { requirePermission } from "@/lib/rbac/require-permission";
 
 export const metadata = { title: "Blog Admin", robots: { index: false, follow: false } };
 
-/**
- * Editorial work moved to the standalone blog admin (Startupppp/blogs), which writes the same
- * published content this site serves. BLOG_ADMIN_URL is that deployment's origin.
- */
 export default async function BlogAdminRoute() {
   await requirePermission("blog:posts:manage");
   const adminUrl = process.env.BLOG_ADMIN_URL;

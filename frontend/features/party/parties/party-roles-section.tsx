@@ -18,7 +18,6 @@ interface PartyRolesSectionProps {
   partyId: string;
 }
 
-/** The roles a party holds (`/party/parties/:id/roles`), added and removed in place. */
 export function PartyRolesSection({ partyId }: PartyRolesSectionProps) {
   const canManage = useCan("party:roles:manage");
   const roles = usePartyRoles(partyId);

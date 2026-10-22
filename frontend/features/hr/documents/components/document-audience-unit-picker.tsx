@@ -12,10 +12,8 @@ import { useOrgDepartments } from "@/hooks/api/org-hierarchy-units";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { ClassificationFormValues } from "./document-classification-model";
 
-/** Both lists are read one page at a time; anything past this many is not offered (and the person is told so). */
 const UNIT_LIST_LIMIT = 100;
 
-/** The part of a list read this picker needs. The departments read and the locations read both satisfy it. */
 interface UnitListQuery {
   data: { data: ReadonlyArray<{ id: string; name: string }>; pageInfo: { hasMore: boolean } } | undefined;
   isPending: boolean;
@@ -69,7 +67,6 @@ function UnitListFailure({ noun, message, isRetrying, onRetry }: UnitListFailure
 interface UnitListProps {
   field: "departmentIds" | "locationIds";
   label: string;
-  /** Lower-case plural, used in the sentences about this list. */
   noun: string;
   query: UnitListQuery;
 }
@@ -130,7 +127,6 @@ function plural(count: number, singular: string): string {
   return `${count} ${count === 1 ? singular : `${singular}s`}`;
 }
 
-/** What is already chosen, said plainly, for someone who cannot see the names. */
 function chosenSummary(departments: number, locations: number): string {
   const parts = [
     departments > 0 ? plural(departments, "department") : null,
@@ -139,11 +135,6 @@ function chosenSummary(departments: number, locations: number): string {
   return parts.length > 0 ? ` Already chosen: ${parts.join(" and ")}.` : "";
 }
 
-/**
- * Departments and locations to tick. Both lists are organisation-settings reads, so a publisher without
- * `settings:view` gets a plain "not available to you" rather than a list that looks empty, and a failed read
- * says so and can be retried rather than reading as "none".
- */
 export function AudienceUnitPicker() {
   const access = useCanState("settings:view");
   const form = useFormContext<ClassificationFormValues>();

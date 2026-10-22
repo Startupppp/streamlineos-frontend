@@ -4,11 +4,6 @@ import { useEffect } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 import { isChunkLoadError, reportError } from "@/lib/observability";
 
-/**
- * Sits inside `wiki/layout.tsx`, so a page that throws is replaced here while
- * the WikiShell sidebar stays mounted. `knowledge/error.tsx` wraps the shell
- * itself and only catches failures of the shell.
- */
 export default function KnowledgeWikiPageError({
   error,
   reset,

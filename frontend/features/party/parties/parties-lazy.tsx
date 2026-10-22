@@ -3,14 +3,6 @@
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * The party list's two overlays.
- *
- * Both are opened from a row or a toolbar button, and the form dialog is the
- * only thing on this route that reaches the record renderer's form — which is
- * what put react-hook-form, @hookform/resolvers and Zod in the list's first
- * load. They are mounted when they are asked for.
- */
 
 function PartyDialogFallback({ label }: { label: string }) {
   return (

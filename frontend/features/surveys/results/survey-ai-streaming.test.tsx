@@ -11,13 +11,6 @@ if (typeof globalThis.TextEncoder === "undefined")
 
 installAbortSignalPolyfill();
 
-/**
- * The survey results surface is the second non-chat `/stream` route wired to a real user.
- * Everything below the action runs for real — `streamAiText`, `authedFetch`, the combined
- * signal — with only `global.fetch` mocked, because the defect this seam keeps reproducing
- * (a signal placed in `init`, or dropped for want of `AbortSignal.any`) is invisible to any
- * test that stubs the client.
- */
 
 const SURVEY_ID = 7;
 const STREAM_PATH = `/ai/surveys/${SURVEY_ID}/summarize-responses/stream`;
@@ -51,7 +44,6 @@ function bodyOf(chunks: string[], signal: AbortSignal | null) {
   };
 }
 
-/** Serves one delta, then hangs until the signal aborts — a stream the user stops mid-answer. */
 function heldBody(signal: AbortSignal | null, firstChunk: string) {
   let served = false;
   return {
@@ -106,7 +98,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-/** The action exactly as `ResultsTab` builds it, so the test covers the shipped wiring. */
 function summarizeAction(
   onInlineChange: (session: AiInlineSession | null) => void,
 ): AiAction {

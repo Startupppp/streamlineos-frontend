@@ -1,8 +1,3 @@
-/**
- * Behavioral contract for Create Issue close/discard (D2/D3/D4).
- * Implementation must: confirm on first Escape when dirty; clear draft on
- * discard; not truncate via maxLength.
- */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 

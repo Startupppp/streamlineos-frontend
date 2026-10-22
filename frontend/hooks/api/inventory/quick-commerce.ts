@@ -6,13 +6,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
-/**
- * NEO-2 / NEO-3 - platform purchase orders, ASNs and fill rate.
- *
- * Quantities stay decimal **strings** end to end. A fill rate is quoted back to
- * a platform and argued over; the one thing it must not be is a float that
- * disagrees with the arithmetic somebody did by hand.
- */
 export type QuickCommerceProvider = "BLINKIT" | "INSTAMART" | "ZEPTO";
 export type PlatformPoStatus = "RECEIVED" | "REJECTED" | "ACCEPTED" | "CANCELLED";
 export type AsnStatus = "DRAFT" | "CONFIRMED" | "IN_TRANSIT" | "ARRIVED" | "CLOSED" | "CANCELLED";
@@ -49,13 +42,6 @@ export interface PlatformPoDetail extends PlatformPoSummary {
   lines: PlatformPoLine[];
 }
 
-/**
- * `GET /inventory/quick-commerce/asns` — the eleven columns
- * `QuickCommerceInboundService.listAsns` projects off `inv_asns`, and the field
- * list `inventory-response-shape-drift.spec.ts` (backend) compares that
- * projection against. Restored after `useAsns` and this type were deleted as
- * collateral of an AbortSignal sweep; the endpoint never went anywhere.
- */
 export interface AsnSummary {
   id: number;
   asnNumber: string;
@@ -160,8 +146,6 @@ export function useAcceptPlatformPo() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.platformPurchaseOrdersList });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.platformPurchaseOrder(vars.platformPoId) });
-      // Accepting claims stock for the channel, so every availability figure on
-      // screen is now stale.
       qc.invalidateQueries({ queryKey: queryKeys.inventory.channelPoolsAll });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.purchaseOrdersList });
     },

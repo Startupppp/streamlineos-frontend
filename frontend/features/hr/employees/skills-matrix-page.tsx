@@ -71,8 +71,6 @@ export function SkillsMatrixPage() {
     setPage(1);
   }
 
-  // No server-side requirePermission guards this route; a caller without
-  // hr:employees:view must see the refusal, not "No skills data yet" (FE-47).
   const pageState = usePageState({
     permission: "hr:employees:view",
     isLoading,

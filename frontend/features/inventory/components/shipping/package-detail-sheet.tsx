@@ -43,8 +43,6 @@ interface PackageDetailSheetProps {
 
 export function PackageDetailSheet({ open, onOpenChange, packageId }: PackageDetailSheetProps) {
   const pkgQuery = usePackageDetail(packageId ?? 0);
-  // §5: show names, never raw ids. The API returns the variant id alone, so the
-  // name is resolved from the catalogue list at the display boundary.
   const { data: variants = [] } = useProductVariants({ activeOnly: false });
   const updateLinesMutation = useUpdatePackageLines();
   const closeMutation = useClosePackage();

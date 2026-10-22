@@ -14,10 +14,6 @@ function num(value: string | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-/**
- * Blank basic, a negative component, or deductions that exceed gross, is not a
- * payable estimate.
- */
 export function estimateTemplateNet(values: TemplatePreviewInput): {
   net: number;
   valid: boolean;

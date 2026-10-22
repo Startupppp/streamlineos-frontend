@@ -11,18 +11,7 @@ import {
   setErrorReporter,
 } from "@/lib/observability/error-reporter";
 
-/**
- * What a contract violation DOES, pinned.
- *
- * `lib/api-envelope-contract.test.ts` asserts that violations are DETECTED.
- * This asserts the decision taken about them, which is the part a future change
- * is most likely to quietly reverse: it throws, on writes as well as reads,
- * with no severity dial and no environment switch. See the block comment on
- * `rejectContractViolation` for why, and for the read/write asymmetry that was
- * considered and rejected because of `POST /organization/switch`.
- */
 
-/** The real body of `POST /organization/switch`: what the active org is set from. */
 const orgSwitchContract = z.object({
   organizationId: z.string(),
   role: z.string(),
@@ -88,7 +77,6 @@ describe("a contract violation fails closed on a WRITE, not only on a read", () 
         "/organization/switch",
       );
     } catch {
-      // the throw is the point
     }
 
     expect(leaked).toBe("untouched");

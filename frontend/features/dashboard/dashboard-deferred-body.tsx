@@ -172,13 +172,6 @@ export function DashboardDeferredBody({
   } = useRecentActivity({
     enabled: deferredVisible && projectsEnabled && canViewTickets,
   });
-  /**
-   * No `deferredVisible` here, deliberately. `DashboardClient` observes the
-   * same `queryKeys.dashboard.myIssues()` key eagerly for the above-the-fold
-   * open-issue stat card, and TanStack enables a query when ANY observer
-   * enables it — so a deferral written here would read as deferral and never
-   * postpone a request. Stating the real condition keeps the guard honest.
-   */
   const {
     data: myIssuesData,
     isLoading: ticketsLoading,

@@ -1,11 +1,4 @@
-/** @jest-environment node */
 
-/**
- * Local first-response proof for the public half of c8. These tests invoke the
- * real async route components and serialize their returned server tree. There
- * is no browser fetch or hydration step available to put the supplied records
- * into the markup, so a regression to a client-only shell fails here.
- */
 jest.mock("server-only", () => ({}));
 
 jest.mock("next/navigation", () => ({

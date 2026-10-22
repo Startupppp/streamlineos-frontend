@@ -26,20 +26,6 @@ const HANDLING_LABEL: Record<ObjectionHandling, string> = {
   unaddressed: "Unaddressed",
 };
 
-/**
- * The team digest over a trailing window.
- *
- * Two absences are reported rather than hidden, because both change what the
- * numbers mean. `suppressed` says the cohort was too small to summarise without
- * describing individuals — every metric is null and that is the answer, not a
- * failure. `embargoed` says how many analyses are still inside their rep's
- * private window; without it a manager draws conclusions from a partial cohort
- * without knowing it is partial.
- *
- * The embargoed figure is deliberately a bare count. Broken down by rep, by band
- * or by day it would become the per-rep leaderboard the private window exists to
- * prevent, arrived at from the other direction.
- */
 export function CoachingDigestView({ response }: CoachingDigestViewProps) {
   const { data: digest, meta } = response;
 

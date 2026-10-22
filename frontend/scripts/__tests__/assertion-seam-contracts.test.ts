@@ -1,21 +1,3 @@
-/**
- * C031's test clause, made real on the frontend.
- *
- * "Each exception must be local, narrow, documented with the invariant and
- * covered by a negative/runtime contract test." The first three held here as
- * prose in `scripts/check-type-assertions.mjs`. The fourth held as nothing at
- * all: no ledger entry named a test, nothing checked that one existed, and a
- * written invariant that no test exercises is a comment.
- *
- * Every EXTERNAL entry in either ledger now names a test as `path::title`, and
- * the gate's self-test proves the file is on disk and still carries that title.
- * The tests below are the ones that had no home; entries whose invariant was
- * already exercised elsewhere point at that existing test instead.
- *
- * Each test drives the assertion's OWN invariant with a value that violates it.
- * A test that only feeds the happy shape proves nothing about a cast — the cast
- * is a claim about what happens when the shape is wrong.
- */
 
 jest.mock("jose", () => ({
   decodeJwt: () => ({}),
@@ -260,9 +242,6 @@ describe("lib/api-client — the 403 organization-access code probe", () => {
       value: { pathname: "/dashboard", href: "http://localhost/dashboard", replace },
       configurable: true,
     });
-    // jsdom ships no AbortSignal.timeout. Without it `authedFetch` throws before
-    // it ever calls fetch, and all three assertions below pass on a request that
-    // never happened — a vacuous green this file exists to make impossible.
     if (typeof AbortSignal.timeout !== "function") {
       Object.defineProperty(AbortSignal, "timeout", {
         value: () => new AbortController().signal,
@@ -282,8 +261,6 @@ describe("lib/api-client — the 403 organization-access code probe", () => {
     const { apiClient } = await import("@/lib/api-client");
     const fetchMock = stubFetch(body, 403);
     await expect(apiClient.get("/organization/members")).rejects.toBeDefined();
-    // Anti-vacuity: the request must actually have been made. Every assertion
-    // about the code guard is worthless if authedFetch threw before fetch.
     expect(
       fetchMock.mock.calls.some((call) => String(call[0]).includes("/organization/members")),
     ).toBe(true);
@@ -296,10 +273,6 @@ describe("lib/api-client — the 403 organization-access code probe", () => {
   });
 
   it("(negative) does not suspend on a code outside the organization-access set", async () => {
-    // Two shapes, one guard. The `typeof body.code !== "string"` half of the
-    // condition is what makes the cast's claim type-safe, but it discriminates
-    // nothing at runtime — a Set of strings answers `has(403)` with false on its
-    // own. What actually decides is set membership, so that is what this pins.
     await get403({ code: 403, message: "forbidden" });
     expect(replace).not.toHaveBeenCalled();
 

@@ -47,7 +47,6 @@ describe("a table skeleton that has waited too long says so", () => {
 const ROOT = path.resolve(__dirname, "..", "..");
 const HRMS_LOADING_ROOTS = [
   "app/(authenticated)/hr",
-  // Recruitment OS left /hr on 2026-09-25 and keeps the invariant it had there.
   "app/(authenticated)/recruitment",
   "app/(authenticated)/payroll",
   "app/(authenticated)/timesheets",

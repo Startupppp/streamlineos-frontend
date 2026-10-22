@@ -35,7 +35,6 @@ export function AIGenerateReviewButton({ userId, userName, periodStart, periodEn
   const result = generateMutation.data;
   const failure = generateMutation.isPending ? null : generateMutation.error;
   const { enabled: featureEnabled, requiredPlan } = useFeature("ai.review-generation");
-  // POST /ai/generate-review is `hr:performance:manage` (hr-ai.controller.ts:111).
   const canGenerate = useCan("hr:performance:manage");
 
   const handleGenerate = () => {

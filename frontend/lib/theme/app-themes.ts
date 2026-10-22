@@ -1,4 +1,3 @@
-/** Present on <html> only while the authenticated shell is mounted. */
 export const AUTHENTICATED_PALETTE_CLASS = "app-neutral";
 
 export const APP_THEME_STORAGE_KEY = "streamlineos-app-theme";

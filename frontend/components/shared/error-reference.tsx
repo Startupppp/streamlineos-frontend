@@ -11,12 +11,6 @@ interface ErrorReferenceProps {
   className?: string;
 }
 
-/**
- * The request id of a failed call, with a copy control, so a person can quote it to support and support can
- * find the request. The backend echoes the id it was sent as `correlationId` on every error envelope and
- * `getCorrelationId` reads it off the `ApiError`. Renders nothing for an error that carries none (a network
- * failure, a thrown string), so it is safe to drop under any error message.
- */
 export function ErrorReference({ error, className }: ErrorReferenceProps) {
   const reference = getCorrelationId(error);
   const [copied, setCopied] = useState(false);
@@ -28,7 +22,6 @@ export function ErrorReference({ error, className }: ErrorReferenceProps) {
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Clipboard access can be refused (insecure context, permissions); the id stays on screen and selectable.
     }
   }, [reference]);
 

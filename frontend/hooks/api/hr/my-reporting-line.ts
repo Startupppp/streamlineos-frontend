@@ -14,10 +14,6 @@ import type {
   MyReportingManagerRequest,
 } from "@/hooks/api/hr/reporting-manager-requests-schema";
 
-/**
- * Employee self-service (CONTRACT §4.8–§4.13). Every route is `@Universal` behind
- * `@RequireModule("hr")`: the subject is the session, so the only gate is the module.
- */
 
 const myLineLazy = lazyContract(() =>
   import("@/hooks/api/hr/reporting-lines-schema").then((m) => m.myReportingLineContract),

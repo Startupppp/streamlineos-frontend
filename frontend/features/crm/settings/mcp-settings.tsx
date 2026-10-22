@@ -87,12 +87,6 @@ function TokenSkeleton() {
 interface TokenRowProps {
   token: AgentToken;
   onRevoke: (tokenId: string | number) => void;
-  /**
-   * CRM-P1-20. Revoking is `settings:api-tokens:write` on the server, while
-   * reading the list is `:read`. The button used to render for anyone who
-   * could see a token, so a reader was offered an action that answered 403 —
-   * the present-and-failing control this codebase avoids everywhere else.
-   */
   canRevoke: boolean;
 }
 
@@ -203,7 +197,7 @@ export function CrmMcpSettings() {
         <NoPermissionState permission="settings:api-tokens:read" />
       ) : (
         <div className="space-y-4">
-          {/* Above the tokens, because it vetoes all of them. */}
+          
           <CrmMcpAccessCard />
 
           <StatCardGrid cols={3}>

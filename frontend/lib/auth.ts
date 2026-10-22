@@ -35,15 +35,6 @@ function cleanSessionId(raw: string | undefined): string | undefined {
   return raw.startsWith("~") ? raw.slice(1) : raw;
 }
 
-/**
- * The credentials provider's `authorize`, lifted out of the config literal.
- *
- * Auth.js types the `session` callback's parameter as an intersection of the
- * database-strategy and JWT-strategy shapes, which no value can inhabit, so a
- * test cannot call it without a cast. These named functions hold the real
- * implementation and the callbacks below are one-line delegations to them, so a
- * test drives production code through a signature it can actually construct.
- */
 export async function authorizeMagicToken(
   magicToken: unknown,
   requestHeaders: Headers,
@@ -146,14 +137,6 @@ export async function resolveAuthSession(
   }
 }
 
-/**
- * The one place the web tier learns a device session has ended. It runs
- * server-side inside the Auth.js route handler with the decoded JWT, so it can
- * reach the in-process mint cache that a browser-side `signOut()` never could.
- * Revoking a DIFFERENT device is not observable here and is not meant to be:
- * that is answered by the backend's tombstone plus `user_sessions.is_revoked` on
- * every request, with this cache bounded by the token's own expiry.
- */
 export function endBackendJwtSession(token: JWT | null): void {
   if (!token) return;
   const userId = token.id;
@@ -162,10 +145,6 @@ export function endBackendJwtSession(token: JWT | null): void {
   invalidateBackendJwtSession(userId, sessionId);
 }
 
-/**
- * Exported so tests drive the REAL callbacks rather than a reimplementation of
- * them; `NextAuth` below receives this exact object.
- */
 export const authConfig = {
   trustHost: true,
   basePath: "/api/auth",
@@ -270,7 +249,6 @@ export const authConfig = {
         if (userId) {
           invalidateSessionData(userId);
           token.claimsRefreshedAt = Date.now();
-          // An org switch names its target; any other update keeps the session's own org.
           const requestedOrgId =
             isRecord(session) && typeof session.orgId === "string"
               ? session.orgId

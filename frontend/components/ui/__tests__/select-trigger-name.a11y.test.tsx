@@ -17,25 +17,6 @@ import { Label } from "@/components/ui/label";
 import { useForm } from "react-hook-form";
 import { expectNoAxeViolations } from "@/test-utils";
 
-/**
- * `SelectTrigger` renders `role="combobox"`, which is not a name-from-content
- * role: the `SelectValue` showing "Asia/Kolkata" does not name the control.
- * Confirmed in Chrome (`Accessibility.getPartialAXTree`), not only in axe — a
- * bare `<button role="combobox"><span>Asia/Kolkata</span></button>` computes
- * an accessible name of `""`; the same button with an associated `<label for>`
- * computes `"Timezone"`. The browser sweep found `button-name` on eight routes
- * over this single primitive.
- *
- * These cases pin the four ways a trigger gets a name, and — the load-bearing
- * one — pin that a trigger with NO name source stays nameless rather than
- * inheriting a generic default. "Select" on 873 comboboxes would pass every
- * automated check and leave a screen-reader user unable to tell them apart.
- *
- * jsdom does not implement the accessible-name computation, so `getByRole`'s
- * `name` option is what resolves it here; the `<label for>` case is therefore
- * asserted through testing-library's own accname implementation, and the
- * Chrome measurement above is what establishes it holds in a real engine.
- */
 
 interface TimezoneFormValues {
   timezone: string;
@@ -158,12 +139,6 @@ describe("a SelectTrigger is named by something specific to the field", () => {
 });
 
 describe("BITE — the fallback is specific, and refuses to invent a name", () => {
-  /**
-   * The whole point of the change. If a trigger with no label, no aria-label
-   * and no placeholder came out named, the gate that enumerates the remaining
-   * unnamed call sites would read zero over a product full of comboboxes
-   * announced as "Select".
-   */
   it("a trigger with no name source stays nameless and still fails axe", async () => {
     const { container } = render(
       <Select>

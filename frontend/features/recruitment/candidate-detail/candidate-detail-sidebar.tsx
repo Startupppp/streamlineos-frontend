@@ -12,17 +12,6 @@ import {
 } from "@/hooks/api/hr/recruitment/rejection-reasons-schema";
 import type { CandidateStatus } from "@/types/hr";
 
-/**
- * What a rejected candidate was rejected for.
- *
- * Shown for every rejected candidate, including the ones with no reason on
- * record: rejections made before the reason became required are real rows, and
- * rendering nothing for them would read as "this screen does not show reasons"
- * rather than "nobody recorded one".
- *
- * The label is looked up from the stored code — the code is what the row holds,
- * so rewording a label here never rewrites history.
- */
 function RejectionReasonCard({
   reason,
   note,

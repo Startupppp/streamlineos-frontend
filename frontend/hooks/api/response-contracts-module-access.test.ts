@@ -9,26 +9,6 @@ import {
   moduleRoleGroupPageContract,
 } from "@/hooks/api/module-access/module-access-schema";
 
-/**
- * Two halves, and the second one is the whole point.
- *
- * The ACCEPTS half is built from what the backend actually emits — the
- * projections in `module-access-group-crud.service.ts` (`hydrateGroups`),
- * `module-access-roster.service.ts` (`listMembers` / `listMemberCandidates`),
- * `user-permission-grants.service.ts` (`listGrants`),
- * `module-access.service.ts` (`getAuditLog`) and
- * `module-access-ownership.service.ts` (`fetchOwnership`). A contract that
- * rejects real traffic turns a working permission screen into an error page,
- * and on this surface an error page is a lockout.
- *
- * The BITE half feeds each contract the payload a plausible backend change
- * would produce. A contract copied from `module-access/types.ts` would pass
- * every test in the first half and none in the second — which is the difference
- * between a contract that is satisfiable and one that is true. Every bite here
- * is a rename or a re-nesting of the exact kind that shipped twice already:
- * `members[].membership.user` for a flat `user`, and a `{}` projection that
- * dropped `userId` so every huddle tile read "Unknown".
- */
 
 const GROUP = {
   id: 7,
@@ -235,9 +215,6 @@ describe("the module-access contracts reject the drift a cast would swallow", ()
   });
 
   it("keeps the two page envelopes apart, so a swap cannot end pagination silently", () => {
-    // `getNextPageParam` reads `lastPage.nextCursor` on the roster and
-    // `lastPage.pagination.nextCursor` on the groups route. Serve either shape
-    // to the other reader and every list stops after page one, with no error.
     const flat = { data: [MEMBER], hasMore: true, nextCursor: 41 };
     const enveloped = {
       data: [GROUP],
@@ -248,8 +225,6 @@ describe("the module-access contracts reject the drift a cast would swallow", ()
   });
 
   it("rejects a roster cursor that became a string, which `typeof === number` drops", () => {
-    // `useModuleMembersInfinite` only forwards `pageParam` when it is a number,
-    // so a cursor retyped to string would silently replay page one forever.
     expect(
       moduleMemberPageContract.safeParse({
         data: [MEMBER],

@@ -21,12 +21,6 @@ interface LeadReviewActionsProps {
 
 const SUCCESS_TONE = statusToneClasses("success");
 
-/**
- * Verify or reject a lead under review (`PATCH /leads/:id/verify|reject`).
- *
- * Verify sends no body: the endpoint's optional `notes` overwrites the lead's
- * notes rather than appending, so offering it here would silently discard them.
- */
 export function LeadReviewActions({ leadId, status, verifiedById }: LeadReviewActionsProps) {
   const canUpdate = useCan("crm:leads:update");
   const verify = useVerifyLead();

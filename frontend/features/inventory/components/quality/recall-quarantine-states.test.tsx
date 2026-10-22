@@ -3,21 +3,6 @@ import { renderWithProviders } from "@/test-utils";
 import { RecallDetailSheet } from "./recall-detail-sheet";
 import type { Recall } from "@/hooks/api/inventory/quality";
 
-/**
- * INV-33 — a recall that quarantined nothing must not read like one that worked.
- *
- * `inv_recall_events.status` is OPEN / IN_PROGRESS / CLOSED and says nothing
- * about stock. The create path commits the document whether or not a single
- * unit was held: a line naming a lot with nothing on hand raises no hold, and a
- * line naming only a serial never even flips a lot, so the goods stay pickable.
- * Both used to render as an OPEN recall with a list of lots and a green-enough
- * screen — which is how a failed recall ships.
- *
- * The fifth state matters as much as the failures: a recall raised before the
- * outcome was recorded reads `OPEN` on its lines, and that has to render as
- * PENDING. Defaulting an unknown outcome to "held" would be the same bug with
- * better manners.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),

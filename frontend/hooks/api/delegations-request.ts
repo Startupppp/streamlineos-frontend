@@ -4,7 +4,6 @@ export interface DelegationListParams {
   cursor?: string;
 }
 
-// One param set for the browser read and its server prefetch, so both request the same page.
 export function delegationListParams(
   params: DelegationListParams,
 ): Record<string, string> {

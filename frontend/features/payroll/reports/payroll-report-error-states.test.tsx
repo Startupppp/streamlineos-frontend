@@ -8,24 +8,6 @@ import { ReportCostCenter } from "./report-cost-center";
 import { CalendarManager } from "./calendar-manager";
 import { ApiError } from "@/lib/api-envelope";
 
-/**
- * Eleven payroll surfaces destructured only `{ data, isLoading }`, so a server
- * failure — schema drift, a timeout, a revoked permission — arrived as
- * `data: undefined` and fell into the EMPTY state. Two of them then issued an
- * instruction over it:
- *
- *   report-summary   "No payroll run for this period — run payroll for this
- *                     month to see summary figures."
- *   employees-tab    "No employees in this run — generate payroll to include
- *                     employees"
- *
- * A finance operator reading that after a 500 is being told to re-run payroll
- * that has already been run. `reports-page.tsx` has no error boundary either, so
- * nothing above these components caught it.
- *
- * Each assertion drives the real component with the query in its error state and
- * checks that the empty copy is NOT what renders.
- */
 
 jest.mock("@/hooks/api/payroll/reports", () => ({
   usePayrollSummary: jest.fn(),

@@ -30,7 +30,6 @@ export interface UsePartiesParams {
   page?: number;
   limit?: number;
   partyType?: "CUSTOMER" | "VENDOR" | "PARTNER" | "BOTH";
-  /** One list filtered by role, rather than a screen per role. */
   role?: string;
   search?: string;
 }

@@ -4,12 +4,6 @@ import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
 interface TeamStatsProps {
   totalHours: number;
-  /**
-   * Billable share, or null when it could not be sourced. It comes from the
-   * reports overview, which needs `timesheets:reports:view`; a team viewer
-   * without that key used to get a hard 0%, which reads as "nobody billed
-   * anything" rather than "not available to you".
-   */
   billablePercent: number | null;
   submittedCount: number;
   missingCount: number;

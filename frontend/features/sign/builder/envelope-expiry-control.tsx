@@ -18,12 +18,6 @@ import { useCan } from "@/hooks/api/access";
 import { useExtendSignEnvelopeExpiration } from "@/hooks/api/sign/envelopes";
 import type { SignEnvelope, SignEnvelopeStatus } from "@/types/sign";
 
-/**
- * Extending only reaches something while an envelope is still out with its
- * recipients, or has lapsed and can be revived — `extendExpiration` rewrites
- * `tokenExpiresAt` on every incomplete recipient, of which a draft has none and
- * a completed or voided envelope has none left that matter.
- */
 const EXTENDABLE_STATUSES: ReadonlySet<SignEnvelopeStatus> = new Set([
   "sent",
   "delivered",

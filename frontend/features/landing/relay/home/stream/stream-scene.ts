@@ -26,54 +26,22 @@ import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"
 
 import type { PagePoint } from "./stream-path";
 
-/**
- * Page-long particle stream — an original GetLayers Scene Lab scene (brief: a
- * ribbon of glowing filaments sweeping in S-curves, wrapped in sparks and
- * out-of-focus bokeh, accent instead of cyan). Technique after `sea-sparkle`:
- * additive soft billboards whose size and softness grow away from the focal
- * plane, then an UnrealBloom pass.
- *
- * The canvas is viewport-sized and fixed; the stream lives in document
- * coordinates. Its spine — a Catmull-Rom curve through the resolved
- * waypoints of ./stream-path, in document CSS px — is baked into a float
- * texture (position + pinch, in-page normal) when the layout changes. Every
- * frame the shaders map it through the current scroll, so the stream scrolls
- * with the page like any other layer and only the visible stretch costs
- * fragments. x / y land exactly where the page says at any depth — z only
- * drives size and depth of field.
- *
- * House contract: every look knob lives in CONFIG, tint through the colour
- * roles, never the shader. The four roles (`StreamColors`, #rrggbb) are read
- * from the `--stream-*` tokens by ./particle-stream.
- */
 export const CONFIG = {
-  /** Particle budget of the full tier; the low tier draws `lowShare` of it. */
   particles: 36000,
   lowShare: 0.45,
   strands: 44,
-  /** Flow speed along the curve, design px per second (±35% per particle). */
   flowPx: 90,
-  /** Scrolling pushes the flow on: px along the curve per px scrolled
-      (either way), so the stream keeps running down while the page moves up. */
   scrollFlow: 1.25,
-  /** Stream radius where it pinches and elsewhere, design px. On a tight
-      turn it is also held under `turnHold` × the turn's radius, so the
-      strands never fold over each other. */
   spread: 8,
   spreadEnds: 190,
   turnHold: 0.5,
-  /** Reach of a waypoint's pinch along the curve, design px. */
   pinchReach: 300,
-  /** A swell that travels down the stream: ± share of the radius,
-      wavelength (design px) and speed (rad/s). */
   breath: 0.35,
   breathWavelength: 900,
   breathSpeed: 0.6,
   spraySpread: 2.4,
-  /** Free-riding bokeh and dust: how far off the spine, × the local spread. */
   bokehSpread: 3.2,
   dustSpread: 5.5,
-  /** Per-particle wander, design px. */
   wobble: 4,
   size: 2.1,
   focal: 0.15,
@@ -82,23 +50,18 @@ export const CONFIG = {
   twinkle: 2.4,
   brightness: 0.79,
   heat: 1.2,
-  /** Share of particles, and of filaments, woven in the second (blue) hue. */
   altShare: 0.45,
   altStrands: 0.32,
   lineBase: 0.16,
   lineSpread: 0.9,
-  /** Filament waves: wavelength and amplitude (× spread), design px. */
   lineWavelength: 1560,
   lineWaveAmp: 0.22,
   lineWaveSpeed: 0.25,
-  /** Light pulses running down the filaments: spacing and speed, design px. */
   pulseSpacing: 1130,
   pulseSpeed: 205,
   pulseGain: 1.4,
-  /** Pulse shape: higher = shorter, sharper glow (a gaussian, not a saw). */
   pulseSharp: 9,
   parallax: 0.22,
-  /** Entrance: the head draws this far down the curve (design px) over revealMs. */
   revealPx: 2600,
   revealMs: 2200,
   bloomStr: 0.68,
@@ -106,7 +69,6 @@ export const CONFIG = {
   bloomThresh: 0.07,
 };
 
-/** Colour roles: main stream, second hue, hot pinch, far end, white glints. */
 export type StreamColors = {
   colMain: string;
   colAlt: string;
@@ -117,31 +79,21 @@ export type StreamColors = {
 
 export type Tier = "full" | "low";
 
-/** Spine samples — ~6 CSS px apart on a 1440 page. */
 const SAMPLES = 2048;
-/** Filament vertices per strand — ~9 CSS px segments, so turns stay round. */
 const SEGMENTS = 1400;
 const CAM_Z = 6;
 const FOV = 35;
-/** Damp for the pointer parallax, 1/s. */
 const DAMP = 3.2;
-/** Turn radius: samples either side it is measured over, held over and
-    smoothed over, and the radius past which a stretch counts as straight. */
 const TURN_BASE = 12;
 const TURN_HOLD = 28;
 const TURN_SMOOTH = 48;
 const TURN_OPEN = 1e4;
-/** Far enough that the reveal head no longer hides anything. */
 const REVEALED = 1e7;
 
 const DPR: Record<Tier, number> = { full: 1.35, low: 1.2 };
-/** The bloom's mip chain starts at this share of the frame on each tier: a
-    blur has no detail to lose, and at half size the low tier pays a quarter
-    of the fill for its dozen blur passes. */
 const BLOOM_SCALE: Record<Tier, number> = { full: 1, low: 0.5 };
 const HALF_H = CAM_Z * Math.tan(((FOV / 2) * Math.PI) / 180);
 
-/** mulberry32 — seeded so the stream is the same on every load. */
 const rng = (seed: number) => () => {
   seed |= 0;
   seed = (seed + 0x6d2b79f5) | 0;
@@ -150,10 +102,6 @@ const rng = (seed: number) => () => {
   return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
 };
 
-/* Shared GLSL. The spine texture: row 0 = document px x / y, depth z,
-   pinch; row 1 = the unit in-page normal. `toScreen` maps a document point
-   through the scroll into aspect-space NDC; `toWorld` places it at its depth
-   so it still lands on that screen spot. */
 const CURVE_GLSL = /* glsl */ `
   uniform sampler2D uCurve;
   uniform float uHalfH, uCamZ, uPx, uLen;
@@ -307,12 +255,6 @@ const LINES_FRAG = /* glsl */ `
 
 const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
-/**
- * The scene: one renderer, one Points + one LineSegments draw, bloom (its mip
- * chain starts at half resolution), output pass. Sized for the full tier
- * once; the low tier only narrows draw ranges and DPR (`retune`), so no
- * program compiles after init.
- */
 export class StreamScene {
   private readonly renderer: WebGLRenderer;
   private readonly composer: EffectComposer;
@@ -332,9 +274,7 @@ export class StreamScene {
     uCurve: { value: this.curve },
     uHalfH: { value: HALF_H },
     uCamZ: { value: CAM_Z },
-    /** Aspect-space NDC per design px (half the viewport height = 1). */
     uPx: { value: 1 },
-    /** Curve length, CSS px. */
     uLen: { value: 1 },
     uView: { value: new Vector3(1, 1, 0) },
     uTime: { value: 0 },
@@ -343,7 +283,6 @@ export class StreamScene {
     uBreath: { value: CONFIG.breath },
     uBreathWave: { value: CONFIG.breathWavelength },
     uBreathSpeed: { value: CONFIG.breathSpeed },
-    /** The entrance head and the fades at both ends, CSS px along the curve. */
     uRevealPx: { value: 0 },
     uFadeIn: { value: 120 },
     uFadeOut: { value: 400 },
@@ -366,11 +305,9 @@ export class StreamScene {
   private tier: Tier = "full";
   private width = 1;
   private height = 1;
-  /** design px → CSS px, from the adaptive grid's root size */
   private unit = 1;
   private scrollY = 0;
   private lastScroll = Number.NaN;
-  /** Scroll-driven advance along the curve, CSS px. */
   private scrollPx = 0;
   private revealStart = -1;
   private pointer = new Vector2();
@@ -456,7 +393,6 @@ export class StreamScene {
     this.composer.addPass(this.output);
   }
 
-  /** Particles: stream 79%, spray 14%, bokeh 3%, dust 4% — all ride the spine. */
   private buildPoints() {
     const total = CONFIG.particles;
     const rand = rng(0x5eed1e);
@@ -468,7 +404,6 @@ export class StreamScene {
     const kind = new Float32Array(total);
     const off = new Float32Array(total * 2);
     for (let i = 0; i < total; i++) {
-      // shuffle kinds through the buffer so a narrowed draw range keeps the mix
       const pick = rand();
       const k = pick < 0.79 ? 0 : pick < 0.93 ? 1 : pick < 0.96 ? 2 : 3;
       kind[i] = k;
@@ -476,15 +411,14 @@ export class StreamScene {
       seed[i] = rand();
       off[i * 2] = gauss() * 0.5;
       off[i * 2 + 1] = gauss() * 0.5;
-      // mostly fine dust, a few fat glints — the reference's sparkle
       if (k === 0) size[i] = 0.35 + Math.pow(rand(), 4) * 2.4;
       else if (k === 1) size[i] = 0.3 + rand() * 0.6;
       else if (k === 2) {
         size[i] = 1.2 + rand() * 1.6;
-        pos[i * 3 + 2] = 1.0 + rand() * 1.4; // toward the camera: soft bokeh
+        pos[i * 3 + 2] = 1.0 + rand() * 1.4;
       } else {
         size[i] = 0.25 + rand() * 0.4;
-        pos[i * 3 + 2] = -1.2 + rand() * 1.0; // behind the stream
+        pos[i * 3 + 2] = -1.2 + rand() * 1.0;
       }
     }
     const g = new BufferGeometry();
@@ -497,7 +431,6 @@ export class StreamScene {
     return g;
   }
 
-  /** Filaments: `strands` polylines along the spine, one draw as segments. */
   private buildLines() {
     const n = CONFIG.strands;
     const verts = n * (SEGMENTS + 1);
@@ -522,7 +455,6 @@ export class StreamScene {
       }
     }
     const g = new BufferGeometry();
-    // position is unused (the spine texture places every vertex) but required
     g.setAttribute(
       "position",
       new BufferAttribute(new Float32Array(verts * 3), 3),
@@ -533,11 +465,6 @@ export class StreamScene {
     return g;
   }
 
-  /**
-   * Bake the spine through the resolved waypoints: document px position,
-   * depth, the pinch profile (each waypoint's pinch, spread along the curve
-   * over `pinchReach`) and the in-page normal.
-   */
   private bakeCurve() {
     if (this.path.length < 2) return;
     const curve = new CatmullRomCurve3(
@@ -555,9 +482,6 @@ export class StreamScene {
       curve.getTangentAt(i / (SAMPLES - 1), tangent);
       angles.push(Math.atan2(tangent.y, tangent.x));
     }
-    // radius of the turn at each sample (design px), measured over a wide
-    // base, held to the tightest nearby so the width narrows before a bend,
-    // then smoothed twice — a stepped limit kinks the strands
     const step = length / (SAMPLES - 1);
     const at = (i: number) => Math.min(SAMPLES - 1, Math.max(0, i));
     const radius = angles.map((_, i) => {
@@ -591,7 +515,6 @@ export class StreamScene {
         (SAMPLES + i) * 4,
       );
     });
-    // each waypoint's place on the curve: its nearest sample
     const peaks = this.path
       .filter(({ pinch }) => pinch > 0)
       .map(({ x, y, pinch }) => {
@@ -622,7 +545,6 @@ export class StreamScene {
     this.pointsMat.uniforms.uFlow.value = (CONFIG.flowPx * this.unit) / length;
   }
 
-  /** Tint through the colour roles — never the shader. */
   setColors(colors: StreamColors) {
     this.shared.uColMain.value.set(colors.colMain);
     this.shared.uColAlt.value.set(colors.colAlt);
@@ -631,13 +553,11 @@ export class StreamScene {
     this.shared.uColSpark.value.set(colors.colSpark);
   }
 
-  /** The resolved waypoints (document px), re-set whenever the layout moves. */
   setPath(path: readonly PagePoint[]) {
     this.path = path;
     this.bakeCurve();
   }
 
-  /** Device tier: DPR and draw ranges only — never a define or a rebuild. */
   retune(tier: Tier) {
     this.tier = tier;
     const share = tier === "low" ? CONFIG.lowShare : 1;
@@ -647,7 +567,6 @@ export class StreamScene {
     this.resize(this.width, this.height);
   }
 
-  /** Viewport size, CSS px. */
   resize(width: number, height: number) {
     this.width = Math.max(1, width);
     this.height = Math.max(1, height);
@@ -656,7 +575,6 @@ export class StreamScene {
     this.renderer.setSize(this.width, this.height, false);
     this.composer.setPixelRatio(dpr);
     this.composer.setSize(this.width, this.height);
-    // the composer sized the bloom to the frame; the low tier blurs smaller
     const bloomScale = BLOOM_SCALE[this.tier];
     if (bloomScale !== 1)
       this.bloom.setSize(
@@ -670,7 +588,6 @@ export class StreamScene {
     this.pointsMat.uniforms.uScale.value = this.unit * dpr;
     this.shared.uPx.value = this.unit / (this.height / 2);
     this.shared.uFadeIn.value = 120 * this.unit;
-    // the filaments' px knobs are design px; the curve is CSS px
     const lines = this.linesMat.uniforms;
     lines.uLineWavelength.value = CONFIG.lineWavelength * this.unit;
     lines.uPulseSpacing.value = CONFIG.pulseSpacing * this.unit;
@@ -678,7 +595,6 @@ export class StreamScene {
     this.bakeCurve();
   }
 
-  /** Page scroll, CSS px: moves the view, and pushes the flow on either way. */
   setScroll(y: number) {
     if (!Number.isNaN(this.lastScroll)) {
       this.scrollPx += Math.abs(y - this.lastScroll) * CONFIG.scrollFlow;
@@ -687,25 +603,14 @@ export class StreamScene {
     this.scrollY = y;
   }
 
-  /** Pointer, −1…1 from the viewport centre. */
   setPointer(x: number, y: number) {
     this.pointer.set(x, y);
   }
 
-  /** Start the entrance: the stream draws itself in down the curve. */
   reveal(now: number, instant = false) {
     this.revealStart = instant ? now - CONFIG.revealMs : now;
   }
 
-  /**
-   * Compile every program and draw one (empty) frame before the reveal, so
-   * nothing compiles or allocates once the page is live. The stream's two
-   * programs and the passes' (bloom's high-pass, blurs, composite and blend,
-   * the output pass, the composer's copy) go through `compileAsync` —
-   * KHR_parallel_shader_compile where the GPU offers it, so the main thread
-   * is not held while they link — then the first renders allocate the
-   * render targets and upload the buffers, a task each.
-   */
   async prewarm(yieldToMain: () => Promise<void>) {
     await this.renderer.compileAsync(this.scene, this.camera);
     const passes = new Scene();
@@ -721,10 +626,6 @@ export class StreamScene {
     for (const material of materials) passes.add(new Mesh(quad, material));
     await this.renderer.compileAsync(passes, this.camera);
     quad.dispose();
-    // The first draw reads every program's uniforms and uploads the buffers —
-    // one ~60 ms task on a desktop as a whole, so in two: the stream's own
-    // programs straight to the canvas (nothing is revealed yet, so it draws
-    // black), then the composer's passes and their render targets.
     await yieldToMain();
     this.renderer.render(this.scene, this.camera);
     await yieldToMain();
@@ -757,8 +658,6 @@ export class StreamScene {
     this.shared.uView.value.set(this.width / 2, this.height / 2, this.scrollY);
     const length = this.shared.uLen.value;
     this.pointsMat.uniforms.uScrollU.value = (this.scrollPx / length) % 1;
-    // pulse travel from time and scroll, wrapped to one spacing on the CPU so
-    // the shader never sees a large number
     const spacing = CONFIG.pulseSpacing * this.unit;
     this.linesMat.uniforms.uPulseShift.value =
       ((now / 1000) * CONFIG.pulseSpeed * this.unit + this.scrollPx) % spacing;

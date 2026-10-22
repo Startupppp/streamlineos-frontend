@@ -1,9 +1,3 @@
-/**
- * V-035. Seven validation strings on the onboarding personal-info step were
- * user-facing and asserted nowhere, so a refactor could reword or drop any of
- * them and every suite would stay green. These pin the exact copy and the
- * exact field it lands on — no product change, only the guard.
- */
 import { personalInfoSchema } from "../personal-info-validation";
 
 const VALID = {
@@ -15,7 +9,6 @@ const VALID = {
   emergencyPhone: "+919876543211",
 };
 
-/** The message zod attached to `path`, or undefined. */
 function messageAt(input: Record<string, unknown>, path: string): string | undefined {
   const result = personalInfoSchema.safeParse(input);
   if (result.success) return undefined;

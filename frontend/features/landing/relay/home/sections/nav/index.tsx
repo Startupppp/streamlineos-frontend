@@ -9,21 +9,7 @@ import { BreathingDot } from "./breathing-dot";
 import { NavMenu } from "./nav-menu";
 import { NavShell } from "./nav-shell";
 
-/**
- * 01 Navigation. Brand, links and actions spread by `justify-between`, which
- * is what puts the link row where each frame has it:
- * - 1440 × 88, inset 80, link gap 40 — links at x=413 (3888:4858)
- * - 1024 × 88, inset 48, gap 32 — x=217 (3888:9263)
- * - 768 × 64, inset 32, gap 24 — x=205.5; status pill hidden, wordmark
- *   18 px (3832:6530)
- * - 390 × 56, inset 20 (16 on screen: the 390 frame is scaled so its content
- *   sits 16 px from the edges — globals.css, owner review 2) — links and status hidden, wordmark 16 px, CTA plus a
- *   menu button that opens a full-screen menu (3893:2123; owner review)
- */
 type NavProps = NavContent & {
-  /** Fade in on arrival (the homepage, behind its preloader). Inner pages pass
-   *  false: the fade is server-rendered at opacity 0, so the bar stayed
-   *  invisible until the spring ran. */
   reveal?: boolean;
 };
 

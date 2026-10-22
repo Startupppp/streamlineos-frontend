@@ -1,8 +1,3 @@
-/**
- * The response shapes are `z.infer`red from the contracts that validate them at
- * the fetch seam (`hooks/api/access-schema.ts`), so there is one definition of
- * each and it is the one enforced at runtime.
- */
 export type {
   AccessResponse,
   DataScope,

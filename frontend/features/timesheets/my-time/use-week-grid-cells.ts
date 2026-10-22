@@ -81,9 +81,6 @@ export function useWeekGridCells({
 
   const [cellError, setCellError] = useState<string | null>(null);
   const lastCommitted = useRef<{ cellKey: string; value: string } | null>(null);
-  // A create for a cell is not in `entryMap` until it lands, so a second commit
-  // on the same cell while the first is in flight creates a duplicate entry
-  // rather than updating the one being made.
   const inFlightCells = useRef(new Set<string>());
 
   const saveStatus = useMemo(() => {

@@ -103,8 +103,6 @@ beforeEach(() => {
   useModuleEnabled.mockReturnValue(false);
 });
 
-// ── useEventAttendees ────────────────────────────────────────────────────────
-
 function AttendeesHook({ eventId }: { eventId: number | null }) {
   useEventAttendees(eventId);
   return null;
@@ -129,8 +127,6 @@ describe("useEventAttendees — calendar:read gate", () => {
     expect(lastQueryEnabled).toBe(false);
   });
 });
-
-// ── useHrCalendarEventsMapped ────────────────────────────────────────────────
 
 function HrHook() {
   useHrCalendarEventsMapped(new Date("2026-09-01"), new Date("2026-09-30"), true);
@@ -170,8 +166,6 @@ describe("useHrCalendarEventsMapped — hr:helpdesk:view + module gate", () => {
     expect(lastQueryEnabled).toBe(true);
   });
 });
-
-// ── useCalendarMemberLookup key contract ─────────────────────────────────────
 
 function MemberLookupNoSearch() {
   useCalendarMemberLookup();
@@ -279,8 +273,6 @@ describe("useCalendarMemberLookup — query key contract", () => {
     expect(lastQueryEnabled).toBe(false);
   });
 });
-
-// ── useSetCalendarSourcePreference invalidation ──────────────────────────────
 
 function SourcePreferenceHook() {
   useSetCalendarSourcePreference();

@@ -91,7 +91,6 @@ describe("subscribeLogout / publishLogout — BroadcastChannel path", () => {
     removeEventListener(_type: string, listener: Listener) {
       this.listeners.delete(listener);
     }
-    // Real BroadcastChannel delivers to every other object with the same name, same tab included.
     postMessage(data: unknown) {
       for (const other of channels)
         if (other !== this && other.name === this.name)

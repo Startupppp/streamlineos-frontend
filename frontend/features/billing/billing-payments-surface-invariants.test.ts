@@ -1,31 +1,3 @@
-/**
- * Corpus invariants for the Billing/Payments client surface (PRD-C125's
- * "authorization" and "frontend states" dimensions).
- *
- * The component specs beside this file pin the surfaces that were actually
- * broken. That is not enough on its own: the first gating pass wrote a spec
- * whose corpus was exactly the files it had just fixed, so it was structurally
- * unable to see the next instance — and five more were sitting in the same
- * territory (webhooks-tab, manual-methods-panel, live-activation-panel,
- * test-payment-tab, record-payment-dialog). This file scans the WHOLE
- * territory instead, deriving both the hook inventory and the consumer set
- * from the tree, so a new file, a new hook or a regression in a fixed one
- * fails here without anyone remembering to add it.
- *
- * Corpus: every non-test `.ts`/`.tsx` under `features/billing/**` and
- * `features/payments/**`, plus the five hook modules those surfaces read and
- * write through.
- *
- * Oracle for permission keys: `contracts/openapi.json` `x-permission` — the
- * vendored backend contract. A key the backend does not declare can never be
- * granted, so a `useCan` on it is a permanent deny.
- *
- * What these invariants deliberately do NOT prove: that a rendered error
- * branch is well-worded, or that a component which destructures `isError`
- * actually branches on it. Those are the component specs' job. This file
- * proves the weaker, checkable thing — the signal is read at all — over the
- * whole corpus rather than over a hand-listed subset.
- */
 import { readdirSync, readFileSync } from "fs";
 import { join, resolve } from "path";
 
@@ -42,7 +14,6 @@ const HOOK_MODULES = [
 
 const FEATURE_ROOTS = ["features/billing", "features/payments"];
 
-/** An affordance that tells the viewer a read failed or was refused. */
 const ERROR_AFFORDANCES = ["ErrorState", "NoPermissionState", 'role="alert"', 'role="status"'];
 
 function read(relativePath: string): string {
@@ -77,8 +48,6 @@ function hookBlocks(): HookBlock[] {
   return blocks;
 }
 
-/** A read whose query is switched off without a permission — so a denial and a
- *  successful-but-empty read are indistinguishable from `data` alone. */
 function isPermissionGatedRead(block: HookBlock): boolean {
   return /useQuery/.test(block.body) && /enabled:[^,\n]*\bcan[A-Z]/.test(block.body);
 }

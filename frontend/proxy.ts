@@ -32,7 +32,6 @@ export function buildCsp(nonce: string, apiUrl?: string, frameAncestor?: string)
       })()
     : "";
 
-  /** The journal's public image domain (the blog admin's R2 public bucket); https outside development. */
   const blogMediaOrigin = (() => {
     try {
       const u = new URL(process.env.NEXT_PUBLIC_BLOG_MEDIA_ORIGIN ?? "");
@@ -55,19 +54,6 @@ export function buildCsp(nonce: string, apiUrl?: string, frameAncestor?: string)
     "https://cdn.razorpay.com",
     "https://lumberjack.razorpay.com",
     "https://api.openai.com",
-    /**
-     * Ably, which carries chat and the support inbox (`lib/ably.ts`). This is the
-     * policy a document actually receives — the middleware sets the header on every
-     * matched response, so next.config.ts's `headers()` CSP never reaches a page —
-     * and `connect-src` governs WebSocket opens as well as fetch/XHR. An omission
-     * here is a refused connection with no fallback, not a slower path.
-     *
-     * ably@2 resolves its default endpoint "main" to `main.realtime.ably.net` with
-     * `main.[a-e].fallback.ably-realtime.com` behind it, and reaches both over wss:
-     * for the WebSocket transport and https: for the comet/XHR one. CSP scheme
-     * matching does not let an `https:` source stand in for a `wss:` request, so
-     * both schemes are listed rather than relying on that.
-     */
     "https://*.realtime.ably.net",
     "wss://*.realtime.ably.net",
     "https://*.fallback.ably-realtime.com",

@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 jest.mock("jose", () => {
   function decodeJwt(token: string): Record<string, unknown> {
     const parts = token.split(".");

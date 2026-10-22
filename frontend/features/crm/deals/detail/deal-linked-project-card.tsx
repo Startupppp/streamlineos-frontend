@@ -18,11 +18,6 @@ interface DealLinkedProjectCardProps {
   dealId: number;
 }
 
-/**
- * The Build project delivering this deal (`GET /deals/:id/linked-project`), and
- * a picker to link one (`POST /deals/:id/link-project`). Linking replaces any
- * earlier link server-side, so "Change project" uses the same call.
- */
 export function DealLinkedProjectCard({ dealId }: DealLinkedProjectCardProps) {
   const canLink = useCan("crm:deals:update");
   const canSeeProjects = useCan("build:view");

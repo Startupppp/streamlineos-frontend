@@ -148,9 +148,6 @@ export function CompliancePageContent() {
     error: reqError,
     isEmpty: (reqData?.data ?? []).length === 0,
   });
-  // Listing work authorizations needs hr:employees:view, not the compliance key
-  // this page is gated on — a compliance manager without it was told "No work
-  // authorizations on record" (FE-47).
   const workAuthState = usePageState({
     permission: "hr:employees:view",
     isLoading: authLoading,

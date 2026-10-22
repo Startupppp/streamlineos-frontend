@@ -7,10 +7,6 @@ export const inviteDeliveryContract = z.object({
 
 export type InviteDelivery = z.infer<typeof inviteDeliveryContract>;
 
-/**
- * A join link an administrator can pass on when email cannot be relied on.
- * The token lives in `inviteUrl` and nowhere else.
- */
 export const inviteLinkContract = z.object({
   inviteUrl: z.string().url(),
   expiresAt: z.string(),
@@ -21,7 +17,6 @@ export type InviteLink = z.infer<typeof inviteLinkContract>;
 
 const managerResolutionContract = z.enum(["SELECTED", "IN_FILE", "FALLBACK_CONFIGURED", "FALLBACK_UPLOADER"]);
 
-/** Addendum 2: kept unwrapped (it carries `success`). `resolution` only with hr:employees:view. */
 export const onboardEmployeeResponseContract = z.object({
   success: z.boolean(),
   userId: z.string(),
@@ -60,15 +55,6 @@ export const bulkOnboardPreviewContract = z.object({
     error: z.number().int(),
     skipped: z.number().int(),
   }),
-  /**
-   * BUG-HRMS-002. An onboarded employee is admitted as an organization member, so
-   * every row spends a plan seat. The preview said "15 rows · 15 ready to create"
-   * with one seat free and the confirm step answered 402 with nothing created.
-   * The backend now reports the seat arithmetic and marks the rows that will not
-   * fit with SEAT_LIMIT, so this surface can say so before the confirm.
-   *
-   * `limit` and `available` are null on an unlimited plan.
-   */
   seats: z.object({
     limit: z.number().int().nullable(),
     used: z.number().int(),
@@ -83,10 +69,6 @@ export const resendEmployeeInviteResponseContract = z.object({
   invite: inviteDeliveryContract,
 });
 
-/**
- * Addendum 2 names the commit statuses CREATED | FAILED | SKIPPED; the DTO reuses
- * the preview's READY | WARNING | ERROR | SKIPPED. Both are accepted.
- */
 export const bulkOnboardResultContract = z.object({
   total: z.number().int(),
   created: z.number().int(),

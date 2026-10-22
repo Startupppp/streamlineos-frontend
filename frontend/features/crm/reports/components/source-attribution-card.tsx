@@ -18,22 +18,6 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useLeadSourceReport } from "@/hooks/api/crm/leads";
 import type { LeadSourceReport } from "../lib/types";
 
-/**
- * Source attribution.
- *
- * The table is gone; `SOURCE_ATTRIBUTION_LAYOUT` describes it. Three defects
- * went with it. Money came from a `formatCurrency` that printed ₹ regardless of
- * the currency the organisation keeps its books in, and now comes from the
- * engine's `money` kind and `useOrgDisplay`. The conversion rate was coloured
- * from thresholds written into one cell renderer; the description now says which
- * direction is good news and the engine tones it. And `converted` was painted
- * green on every row that had any conversions at all, which is a count wearing a
- * verdict's colour.
- *
- * Whether the load failed is asked of the same query the reports page reads —
- * identical key, so it is answered from cache. The card previously had no error
- * branch and showed a failed request as an empty report.
- */
 
 interface SourceAttributionCardProps {
   sourceReport: LeadSourceReport | undefined;
@@ -58,16 +42,6 @@ export function SourceAttributionCard({
     void refetch();
   }, [refetch]);
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:leads:view") === "denied")
     return <NoPermissionState permission="crm:leads:view" />;
 

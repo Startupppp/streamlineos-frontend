@@ -69,7 +69,6 @@ export function StockReconciliationReport() {
   const gap = unposted.data;
   const ready = gl !== undefined && gap !== undefined && currency !== undefined;
   const verdict = gl ? VERDICT[gl.verdict] : undefined;
-  // The sample is drawn from every unposted movement, including the ones that never post by design.
   const sampledFrom = gap?.byReason.reduce((sum, row) => sum + row.movements, 0) ?? 0;
   const notes = useMemo(() => [...(gl?.notes ?? []), ...(gap?.notes ?? [])], [gl, gap]);
 

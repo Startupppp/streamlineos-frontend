@@ -1,23 +1,18 @@
 import { z } from "zod";
 
-/** Simple success responses — backend `channelOkSchema` / `chatMessageOkSchema`. */
 export const chatOkContract = z.object({ ok: z.literal(true) });
 
-/** `chatReactionsResponseSchema` — reactions map keyed by emoji, values are user id arrays. */
 export const chatReactionsContract = z.object({
   reactions: z.record(z.string(), z.array(z.string())),
 });
 
-/** `chatSummarizeResponseSchema` */
 export const chatSummarizeContract = z.object({ summary: z.string() });
 
-/** `chatCreateTaskSchema` */
 export const chatCreateTaskContract = z.object({
   ticketId: z.number().int(),
   ticketNumber: z.number().int(),
 });
 
-/** `chatAvailableActionsSchema` */
 const entityActionInputSpecSchema = z.object({
   name: z.string(),
   kind: z.enum(["text", "date", "user", "choice"]),
@@ -39,7 +34,6 @@ export const chatEntityActionsContract = z.object({
   ),
 });
 
-/** `chatActionOptionsSchema` */
 export const chatEntityActionOptionsContract = z.object({
   options: z.array(z.object({
     value: z.string(),
@@ -48,5 +42,4 @@ export const chatEntityActionOptionsContract = z.object({
   })),
 });
 
-/** `chatSubmitActionSchema` */
 export const chatSubmitActionContract = z.object({ success: z.literal(true) });

@@ -26,14 +26,6 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { SCORING_RULE_LAYOUT } from "@/lib/renderer/crm/settings/scoring-rule-layout";
 
-/**
- * Lead scoring rules.
- *
- * The table is the platform's one `DataTable`, driven by the description — the
- * screen this replaces rendered a raw shadcn `<Table>` with its own header
- * classes, because one of its rows could turn into a form and a `DataTable` cell
- * cannot. Editing moved to a sheet, and the table went back to being a table.
- */
 export default function ScoringRulesPage() {
   const layout = useTenantLayout(SCORING_RULE_LAYOUT);
   const [density, setDensity] = useDensity();

@@ -6,14 +6,6 @@ import { LogoMark } from "./logo-mark";
 import { PanelGlyph } from "./panel-glyph";
 import { CUE, CueFade, CueFocus, CueLine, CueRise } from "./stage";
 
-/**
- * Brand panel 3888:7058 — 530 × 320 at (80, 96); 1024 3888:11469 —
- * 459 × 278 at (48, 0); 768 3876:97 — 688 × 278 at (40, 40); 390 3954:695 —
- * 350 × 309 at (20, 0). Children are placed from the padding box (inside
- * the 1px border), hence the Figma x/y minus one.
- * On the footer timeline it follows the CTA: tagline, hairline, then the
- * social row fades in as one.
- */
 export const BrandPanel = ({
   name,
   href,
@@ -67,8 +59,6 @@ export const BrandPanel = ({
           <li key={social.label}>
             <Link
               href={social.href}
-              // The name carries the visible chip text too ("GitHub (gh)") —
-              // label in name (WCAG 2.5.3): a speech user says what they see.
               aria-label={`${social.name} (${social.label})`}
               className="flex size-8 items-center justify-center overflow-clip rounded-footer-chip border border-footer-social-border bg-footer-social-fill font-mono text-relay-label leading-label text-footer-social-label transition-colors duration-(--motion-fast) ease-entrance hover:text-foreground"
             >

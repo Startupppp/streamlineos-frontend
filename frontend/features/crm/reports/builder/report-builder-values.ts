@@ -13,29 +13,11 @@ import {
 } from "./report-builder-schema";
 import { findFieldOption, type ReportFieldOption } from "./report-source-fields";
 
-/**
- * A stored description, read back into the form that produced it.
- *
- * The inverse of `buildQueryDescription`, and it is a *partial* inverse on
- * purpose. The builder emits one flat `and` of comparisons; the description
- * language is a six-deep tree with `or` and `not`, and a definition saved by
- * another client — or by a later, richer builder — may use it. Such a
- * description is returned as `unrepresentable` rather than approximated,
- * because the alternative is a form that silently shows fewer conditions than
- * the report actually applies and then saves that narrower report over the
- * real one.
- *
- * A field the current caller's source catalogue does not offer is a softer
- * failure and is reported separately: the row loads with an empty type, the
- * schema asks for a field, and `unknownFields` says which names could not be
- * resolved so the screen can explain why rather than looking broken.
- */
 
 export type LoadedReportValues =
   | {
       readonly kind: "loaded";
       readonly values: ReportBuilderValues;
-      /** Names in the saved report that this caller's source list does not contain. */
       readonly unknownFields: readonly string[];
     }
   | { readonly kind: "unrepresentable"; readonly reason: string };
@@ -82,12 +64,6 @@ function toFilterRow(
   return row;
 }
 
-/**
- * The filter tree, flattened to the one shape the builder can show.
- *
- * `null` means "this builder cannot represent it", which is the caller's cue to
- * refuse rather than to load something narrower.
- */
 function flattenFilter(
   description: ReportingQueryDescription,
 ): readonly ReportingFilterLeaf[] | null {

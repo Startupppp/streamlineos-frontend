@@ -5,14 +5,6 @@ import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type { ReturnStatus } from "@/hooks/api/inventory/returns";
 
-/**
- * B9. One badge for both directions of a return, because DRAFT -> APPROVED ->
- * POSTED is one lifecycle and two copies of it drift.
- *
- * APPROVED is `warning` rather than `success`: the goods have not moved yet, and
- * painting it the same green as POSTED is how somebody stops noticing that the
- * last step is still owed.
- */
 const RETURN_STATUS_TONE: Readonly<Record<ReturnStatus, StatusTone>> = {
   DRAFT: "info",
   APPROVED: "warning",

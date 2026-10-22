@@ -7,13 +7,6 @@ import {
   toCreateLoadInput,
 } from "@/features/inventory/components/shipping/load-create-schema";
 
-/**
- * `inv_loads` has a required `load_number` and no `name` column, the list
- * answers rows without their lines, and the detail answers the row plus
- * `lines` of `{ shipmentId | transferId }`. The create body is `.strict()`, so
- * a payload carrying the `name` and `members` the form used to send is a 400
- * rather than a load — which is what the New Load button did.
- */
 
 const LOAD_ROW = {
   id: 8,

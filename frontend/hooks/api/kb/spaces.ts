@@ -16,7 +16,6 @@ import type {
   KbSpaceArchiveImpact,
 } from "@/hooks/api/kb/kb-spaces-settings-schema";
 
-
 export interface KbSpacesListParams {
   q?: string;
   audience?: "internal" | "public" | "mixed";

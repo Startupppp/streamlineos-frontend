@@ -23,18 +23,6 @@ import { RecordRowActions } from "./shared/record-row-actions";
 import { ValidationRuleSheet } from "./validation-rule-sheet";
 import { ValidationRuleTestPanel } from "./validation-rule-test-panel";
 
-/**
- * The rules for one entity type.
- *
- * Both halves are generated now. The sheet used to be hand-written because a
- * rule's config fields depend on its `ruleType` and a `FieldSpec` could not say
- * "only when"; `visibleWhen` closed that, so what is left here is the list, the
- * one-click activate switch, and confirming a delete.
- *
- * The pipeline column is a `reference` whose name the description points at, so
- * the row shows the pipeline rather than its identifier without this file
- * formatting anything.
- */
 
 interface ValidationRuleListProps {
   entityType: CrmValidationEntityType;
@@ -133,16 +121,6 @@ export function ValidationRuleList({ entityType, canManage }: ValidationRuleList
     [rules, canManage, handleToggle],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:settings:view") === "denied")
     return <NoPermissionState permission="crm:settings:view" />;
 

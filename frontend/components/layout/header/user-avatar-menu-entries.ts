@@ -12,12 +12,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-/**
- * Which links the account menu shows, given what the viewer may do.
- *
- * Lives beside the menu body rather than inside it so the body stays under the
- * repo's 300-line ceiling; both sit behind the same lazy boundary.
- */
 export type MenuLink = {
   href: string;
   label: string;

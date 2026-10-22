@@ -20,14 +20,6 @@ interface Props {
   candidateId: number;
 }
 
-/**
- * Tests sent to this candidate, and their scores.
- *
- * Recruiter-only by construction: the read is gated on `hr:requisitions:view`
- * and no candidate-facing surface reads this hook. A score is an evaluation of
- * somebody, not a message to them, and showing it in a candidate portal is a
- * decision an organisation would have to make deliberately rather than inherit.
- */
 export function AssessmentsCard({ candidateId }: Props) {
   const { data, isLoading, isError } = useCandidateAssessments(candidateId);
   const invite = useInviteAssessment(candidateId);
@@ -75,11 +67,7 @@ export function AssessmentsCard({ candidateId }: Props) {
           </div>
         )}
 
-        {/*
-          When no vendor is connected the reason replaces the send control
-          entirely. Offering a "Send test" button that would refuse sends a
-          recruiter to find a key that this organisation has not bought.
-        */}
+        
         {blocked ? (
           <p className="text-xs text-muted-foreground rounded-md border bg-muted/40 px-3 py-2">
             {blocked}
@@ -120,11 +108,7 @@ function AssessmentRow({ assessment }: { assessment: AssessmentView }) {
           </Badge>
         </div>
       </div>
-      {/*
-        A score with a PENDING result is not a bug and the copy says so: the
-        organisation has set no pass mark, so nothing here decides whether that
-        number is a pass.
-      */}
+      
       {assessment.score !== null && assessment.result === "PENDING" && (
         <p className="text-xs text-muted-foreground mt-1">
           Scored, but no pass mark is set for this vendor — nobody has decided whether this passes.

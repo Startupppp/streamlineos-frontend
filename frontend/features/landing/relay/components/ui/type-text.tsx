@@ -7,25 +7,12 @@ export interface TypeTextProps {
   children: string;
   tag?: Tags;
   className?: string;
-  /** ms before typing starts. */
   delay?: number;
-  /** ms per character. */
   per?: number;
 }
 
 const cut = "round(down, calc(var(--typed) * 1ch), 1ch)";
 
-/**
- * Mono label that types itself in, letter by letter (motion brief,
- * shared.mono; the caret block was dropped at the designer's request).
- *
- * Fragment Mono is monospaced, so every glyph is exactly 1ch: a spring runs
- * `--typed` from 0 to the character count and the text is clipped to whole
- * characters with `round(down, …, 1ch)`. The copy stays one intact text node —
- * nothing is split, so screen readers and search see the plain label.
- * The spring overshoots the count by half a character so rounding never
- * drops the last glyph at rest.
- */
 export const TypeText = ({
   children,
   tag = "span",

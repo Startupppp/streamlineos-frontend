@@ -1,20 +1,6 @@
 import { z } from "zod";
 import { cursorPageInfoContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Contracts for `OrgHierarchyController` handlers.
- *
- * List endpoints use `toOrgUnitCursorPage`, which wraps in
- * `{ data, pageInfo: { limit, hasMore, nextCursor } }` — the `pageInfo` key,
- * not the global `pagination` key used by `buildCursorPage`. The two helpers
- * are NOT interchangeable; a contract that used `pagination` would silently
- * accept the real response and then derive undefined cursors from it.
- *
- * `wireDate()` serialises to ISO strings over JSON, so every timestamp column
- * is `z.string()` here (not `z.date()`).
- *
- * NOT `.strict()`: extra response fields are backward-compatible.
- */
 
 const nodeStatusEnum = z.enum(["ACTIVE", "DISABLED", "ARCHIVED"]);
 
@@ -130,18 +116,6 @@ export const hierarchyOverviewContract = z.object({
   costCenters: z.number(),
 });
 
-/**
- * `OrgHierarchyReadService.buildTree` — business_unit > branch > department >
- * team, with any node orphaned from its parent returned at the root, so all
- * four kinds are root candidates.
- *
- * The nodes are NOT the list rows. `buildTree` destructures the raw org-unit row
- * rather than calling the `toOrg*` mappers, so: a business unit DROPS `parentId`
- * (it is the root level), a branch ADDS `description` (which the branch list
- * projection does not carry) and lifts its address block out of `metadata`, and
- * a team is the only kind whose node comes from a mapper. Written from the
- * service, not from the list contracts above.
- */
 const teamNodeContract = teamItemContract.extend({
   type: z.literal("team"),
   children: z.array(z.never()),

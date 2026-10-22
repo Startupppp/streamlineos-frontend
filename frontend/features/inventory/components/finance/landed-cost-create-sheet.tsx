@@ -30,12 +30,6 @@ import {
   type CreateLandedCostVoucherFormValues,
 } from "./landed-cost-schema";
 
-/**
- * Raising a voucher against a receipt.
- *
- * The receipt is chosen by its number, never by its id: the picker lists posted
- * and open receipts by `grnNumber` and sends the id behind the scenes.
- */
 export function LandedCostCreateSheet({
   open,
   onOpenChange,

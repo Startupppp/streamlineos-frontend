@@ -20,10 +20,6 @@ const calendarOccurrenceExceptionContract = lazyContract(() =>
 import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 import type { CalendarOooConflict, CalendarEventConflict, CalendarEventsResponse, ExternalCalendarEventsResponse } from "./calendar-types";
 
-/**
- * The row `POST /calendar/events` and `PUT /calendar/events/:id` return, mirroring
- * `calendarEventWireColumns` in `calendar.service.ts` field for field.
- */
 interface CalendarEvent {
   id: number;
   orgId: string;
@@ -46,13 +42,6 @@ interface CalendarEvent {
   updatedAt: string;
 }
 
-/**
- * Mirrors `CalendarService.createEvent`'s return exactly (calendar.service.ts).
- *
- * `syncQueued` is what the server actually reports: the intent is committed,
- * the push has not happened yet. Its outcome is read from
- * `GET /calendar/events/:id/sync-status`.
- */
 interface MutateCalendarEventResponse {
   event: CalendarEvent;
   oooConflicts: CalendarOooConflict[];

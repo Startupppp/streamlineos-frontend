@@ -8,14 +8,6 @@ import { cn } from "@/lib/utils";
 import { formatShortDate } from "@/lib/date-utils";
 import type { DuplicateCandidateSide } from "@/types/party/merges";
 
-/**
- * One of the two records, as a card the reviewer picks.
- *
- * Everything shown is a reason to choose or reject: the name, the address and
- * line the detector matched on, whether it is a person or a company, and how
- * old it is. The party id is never rendered — a UUID tells the reader nothing
- * about which business they are about to destroy (§5).
- */
 export function DuplicatePartyCard({
   side,
   isSurvivor,

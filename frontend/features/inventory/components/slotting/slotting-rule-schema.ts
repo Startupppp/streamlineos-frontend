@@ -23,10 +23,8 @@ export const VELOCITY_CLASS_LABEL: Record<VelocityClass, string> = {
   C: "C — the slow tail",
 };
 
-/** The sentinel for "anywhere under the zone", which is what omitting the field means. */
 export const ANY_LOCATION_TYPE = "ANY";
 
-/** Which form field carries each match type's payload, and what to call it in prose. */
 const PAYLOAD_FIELD: Record<SlottingMatch, "velocityClass" | "categoryId" | "productVariantId"> = {
   VELOCITY_CLASS: "velocityClass",
   CATEGORY: "categoryId",
@@ -45,22 +43,6 @@ const MATCH_NOUN: Record<SlottingMatch, string> = {
   PRODUCT_VARIANT: "variant",
 };
 
-/**
- * Mirrors the backend's `createSlottingRuleSchema`, cross-field rule included.
- *
- * The `superRefine` there enforces that the discriminator and its payload move
- * together — a `VELOCITY_CLASS` rule must name a class and must not also name a
- * category or a variant. Reproducing it here is not belt-and-braces politeness:
- * a per-field `optional()` would let "fastest movers, and also category 12"
- * reach the API and come back a 400 naming a field the planner never knowingly
- * filled in. The fields form clears the other two payloads when the match type
- * changes, so the exclusivity branch below should be unreachable through the UI
- * — it is the assertion that the clearing is actually happening.
- *
- * Ids and the priority are strings all the way through the form because that is
- * what a `Select` and an `<input>` hold; they become numbers once, at the
- * boundary in `toCreateSlottingRulePayload`.
- */
 export const slottingRuleFormSchema = z
   .object({
     warehouseId: z.string().min(1, "Choose the warehouse this rule governs"),
@@ -119,12 +101,6 @@ function toVelocityClass(value: string): VelocityClass | undefined {
   return value === "A" || value === "B" || value === "C" ? value : undefined;
 }
 
-/**
- * The one place strings become the numbers the `.strict()` body wants.
- *
- * Only the payload the chosen match type owns is spread in, so a form state that
- * somehow held two of them still could not send two.
- */
 export function toCreateSlottingRulePayload(
   values: SlottingRuleFormValues,
 ): CreateSlottingRuleInput {

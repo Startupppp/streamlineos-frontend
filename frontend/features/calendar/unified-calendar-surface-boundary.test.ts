@@ -1,16 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
 
-/**
- * Root CLAUDE.md §8 — "One unified calendar. Never module-specific calendar
- * pages" — and §9's one-directional flow (features -> shared, never
- * feature -> feature).
- *
- * `/recruitment/interviews` broke both for five consecutive audit passes by
- * importing `BigCalendarWrapper` out of `features/calendar/**`. This scan is
- * the regression fence: nothing outside `features/calendar/**` may mount the
- * calendar grid, by any route in.
- */
 
 const FEATURES_DIR = join(__dirname, "..");
 const CALENDAR_DIR = join(FEATURES_DIR, "calendar");
@@ -65,31 +55,12 @@ describe("unified calendar surface boundary", () => {
   });
 });
 
-/**
- * The import scan above is necessary but NOT sufficient: it only catches a
- * module that mounts OUR grid. A module that hand-rolls its own day grid out of
- * `date-fns` and `grid-cols-7` imports nothing from `features/calendar/**` and
- * sails straight through — which is exactly the shape of every surface still
- * outstanding. This second scan closes that hole.
- *
- * The three below are recorded, not silently tolerated: each duplicates an
- * aggregate source that `/calendar` already serves. Removing one is a product
- * decision (the Build grid is per-project, which `/calendar` cannot express
- * today), so this list is the handover, and `toEqual` makes it bite in BOTH
- * directions — a new surface fails, and so does a fixed one until its entry is
- * deleted here.
- */
 const DAY_GRID_RE = /grid-cols-7/;
 const CALENDAR_DAY_SIGNAL_RE =
   /eachDayOfInterval|startOfMonth|endOfMonth|startOfWeek|getDaysInMonth|daysInMonth|"Sun"|'Sun'|WEEKDAYS/;
 
 const KNOWN_MODULE_CALENDAR_SURFACES = [
-  // Month grid of holidays with prev/next; the holidays page's DEFAULT view.
-  // Duplicates the registered `hr-holidays` source. Owner: HR / ticket 25.
   "hr/holidays/components/calendar-view.tsx",
-  // "Who's Out This Week" seven-day avatar strip. Read-only, no navigation and
-  // no view switch, so it reads as a dashboard widget rather than a calendar
-  // page; recorded here so the judgement is visible rather than assumed.
   "hr/leaves/components/leave-calendar-widget.tsx",
 ];
 

@@ -13,7 +13,6 @@ import { customFieldsLayout, mergeCustomData } from "./custom-fields-form";
 interface CustomFieldsEdit {
   canEdit: boolean;
   isPending: boolean;
-  /** Receives the whole next `customData`, merged with the keys the form does not own. */
   onSave: (customData: Record<string, unknown>, onDone: () => void) => void;
 }
 
@@ -21,7 +20,6 @@ interface CustomFieldsSectionProps {
   entityType: "lead" | "deal" | "contact";
   values: Record<string, unknown>;
   className?: string;
-  /** Omitted, the section is read-only. */
   edit?: CustomFieldsEdit;
 }
 

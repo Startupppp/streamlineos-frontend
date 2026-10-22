@@ -91,16 +91,6 @@ function ApprovalRow({ approval }: ApprovalRowProps) {
   );
 }
 
-/**
- * The decisions waiting on the viewer as somebody's manager.
- *
- * Renders nothing at all when the queue is empty, which for most people is
- * always — this section sits on a page everyone in the organisation can open,
- * and an empty "Approvals" card on it would suggest a job they do not have.
- *
- * The note the manager writes goes to HR and to the recruiter. It is never
- * shown to the applicant, and nothing on this screen implies otherwise.
- */
 export function ManagerApprovalsSection() {
   const { data: approvals = [], isLoading, isError } = useInternalApprovals();
 

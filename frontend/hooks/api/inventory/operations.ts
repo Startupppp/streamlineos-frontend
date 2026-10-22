@@ -15,13 +15,10 @@ import type {
 export interface GrnLine {
   id: number;
   poLineId: number;
-  /** Base UOM, which is the only unit the stock ledger holds. */
   quantityReceived: string;
-  /** What the counter typed, in `uomId`, and the factor that was applied. */
   quantityEntered: string | null;
   uomId: number | null;
   uomFactor: string | null;
-  /** What the purchase-order line still owed when the receipt posted. */
   quantityExpected: string | null;
   discrepancyReason: GrnDiscrepancyReason | null;
   qualityStatus: GrnQuality;
@@ -32,12 +29,6 @@ export interface GrnLine {
   serials: Array<{ id: number; serialNumber: string }>;
 }
 
-/**
- * The vendor and the order arrive nested, because that is what the endpoint
- * returns. The flat `poNumber` / `vendorName` this used to declare existed on
- * no response the API has ever sent, so the receipts table rendered a dash in
- * both columns for every row.
- */
 export interface GrnPurchaseOrderRef {
   id: number;
   poNumber: string;
@@ -66,21 +57,6 @@ export interface GrnDetail extends GrnSummary {
   poster: { id: string; name: string | null } | null;
 }
 
-/**
- * `limit`, not `pageSize`.
- *
- * The backend's `listGrnSchema` is `.strict()` and names the field `limit`, so
- * `pageSize` was not ignored — it was refused, and every consumer of this hook
- * rendered "Something went wrong · Unrecognized key: \"pageSize\"" instead of a
- * list. The Receipts workbench could never show a receipt, the putaway
- * workbench's "Raise a putaway" dialog could never offer a posted delivery to
- * put away, and the landed-cost sheet could never offer a receipt to cost.
- *
- * Caught by `e2e/inventory-receive.spec.ts`, which posts a receipt through the
- * UI and then looks for it on the screen that lists receipts. Nothing else
- * could have caught it: the paginated shape typechecks either way, and no unit
- * test asks the real endpoint what it accepts.
- */
 type GrnFilters = {
   poId?: number;
   vendorId?: number;
@@ -88,20 +64,9 @@ type GrnFilters = {
   dateFrom?: string;
   dateTo?: string;
   page?: number;
-  /** Capped at 100 by the server, which refuses anything larger. */
   limit?: number;
 };
 
-/**
- * B1. `goodsReceipts()` yields `[..., "goodsReceipts", undefined]`, and
- * TanStack's partial match walks the given key's own indexes — so index 3
- * compares `undefined` against a stored filter object and never matches. Every
- * no-argument invalidation of this list has therefore been a silent no-op.
- *
- * Derived from the factory rather than hand-typed, because the fix belongs in
- * `lib/query-keys/inventory.ts` as a `goodsReceiptsList` prefix beside
- * `productsList`, and that file is owned elsewhere this cycle.
- */
 const goodsReceiptsPrefix = queryKeys.inventory.goodsReceiptsList;
 
 interface PaginatedResponse<T> {
@@ -142,7 +107,6 @@ export function useGoodsReceipt(grnId: number) {
 
 export interface GrnDraftLineInput {
   poLineId: number;
-  /** In `uomId` when one is given, otherwise the product's base unit. */
   quantityReceived: string;
   uomId?: number;
   discrepancyReason?: GrnDiscrepancyReason;
@@ -170,11 +134,6 @@ export interface UpdateGrnDraftInput {
   lines?: GrnDraftLineInput[];
 }
 
-/**
- * Every receipt mutation moves the same two surfaces — the list and the one
- * document — and posting moves stock as well. Written once so a new lifecycle
- * action cannot forget one of them.
- */
 function useReceiptInvalidation() {
   const qc = useQueryClient();
   return (grnId: number, movedStock: boolean) => {
@@ -206,7 +165,6 @@ export function useUpdateGrnDraft() {
   });
 }
 
-/** DRAFT -> COUNTING, and back from quality review when a count is disputed. */
 export function useStartGrnCount() {
   const invalidate = useReceiptInvalidation();
   return useAuthorizedIdempotentMutation<GrnDetail, Error, { grnId: number }>("inventory:purchase-orders:receive", {
@@ -227,7 +185,6 @@ export function useSubmitGrnForQuality() {
   });
 }
 
-/** The only action here that writes to the stock ledger. */
 export function usePostGrn() {
   const invalidate = useReceiptInvalidation();
   return useAuthorizedIdempotentMutation<GrnDetail, Error, { grnId: number }>("inventory:purchase-orders:receive", {

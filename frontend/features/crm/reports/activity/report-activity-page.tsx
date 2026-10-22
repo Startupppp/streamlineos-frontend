@@ -19,28 +19,8 @@ import { ReportRunSqlDialog } from "./report-run-sql-dialog";
 
 const REPORTING_VIEW_KEY = "crm:reporting:view";
 const PAGE_SIZE = 25;
-/** Enough to name the reports a page of runs refers to without a second screen. */
 const DEFINITION_LOOKUP_LIMIT = 100;
 
-/**
- * What has been run, and what statement was executed.
- *
- * The controller puts this behind `crm:reporting:view` rather than `run`
- * because it is the audit read: somebody reviewing which questions were asked
- * of the CRM should not need the ability to ask them. Until this page existed
- * that separation was theoretical — the endpoint had no caller, so the only way
- * to review a run was to query the table directly, which is the thing an audit
- * surface exists to avoid.
- *
- * No table is written here. The columns, their alignment, the absolute
- * timestamp and the mobile card come from `REPORT_RUN_LAYOUT`, and so do the
- * three answers this page gives where there is no name to print — an ad-hoc
- * question, a deleted report, a run the system made on nobody's behalf. Nothing
- * on this page shows an id, and the description is now what guarantees that
- * rather than a cell that remembered to.
- *
- * What is left here is the pair of reads and which run the SQL dialog is about.
- */
 export function ReportActivityPage() {
   const [page, setPage] = useState(1);
   const [openRun, setOpenRun] = useState<ReportRunLogEntry | null>(null);
@@ -72,12 +52,6 @@ export function ReportActivityPage() {
     if (!next) setOpenRun(null);
   }
 
-  /**
-   * The statement, which is the one thing about a run the description does not
-   * carry. `compiledSql` is the run's payload rather than a column — it is
-   * several lines long and belongs in the dialog — so the row hands back the
-   * entry it came from and the dialog reads it there.
-   */
   const rowActions = useCallback(
     (row: RecordValue) => {
       const run = entries.find((candidate) => candidate.reportRunId === row.reportRunId);
@@ -131,11 +105,6 @@ export function ReportActivityPage() {
             mode: "server",
             page,
             pageSize: PAGE_SIZE,
-            /*
-              The endpoint returns a page and no total, so the count offered
-              here is derived from whether this page came back full. Inventing a
-              total would be claiming a number nobody sent.
-            */
             total:
               entries.length < PAGE_SIZE
                 ? (page - 1) * PAGE_SIZE + entries.length

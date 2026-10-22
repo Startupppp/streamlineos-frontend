@@ -22,25 +22,9 @@ import { MATERIAL_FAMILIES } from "@/features/inventory/lib/new-product-schema";
 import type { ProductFormValues } from "@/features/inventory/lib/new-product-schema";
 import { useInventoryPacks } from "@/hooks/api/inventory/admin";
 
-/**
- * B1 — the eight things a materials buyer selects on, plus the two the buyer
- * needs to raise an order.
- *
- * Rendered only while the `materials` pack is on. That is not cosmetic: with the
- * pack off the server strips these keys from every response and refuses them on
- * every write, so a form that showed them would be collecting data the
- * organisation can never see.
- *
- * None of these is a variant axis. Two grades of cement are two products with
- * two reorder points; two finishes of the same tile are two SKUs a picker must
- * not confuse. Variants stay for genuine size/colour splits of one item.
- */
 export function ProductMaterialFields({ control }: { control: Control<ProductFormValues> }) {
   const { data: packs, isLoading } = useInventoryPacks();
 
-  // Nothing while the answer is unknown: flashing the section in and out is
-  // worse than a beat of nothing, and a half-filled section that vanishes on
-  // load loses what somebody typed.
   if (isLoading || !packs?.materials) return null;
 
   return (

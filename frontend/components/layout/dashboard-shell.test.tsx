@@ -258,8 +258,6 @@ describe("DashboardShell shell variant", () => {
         <div>Content</div>
       </DashboardShell>,
     );
-    // Mock AppSidebar renders a "Navigate" button in each location.
-    // Desktop: aside (desktop) + Drawer (mobile menu) = 2 buttons.
     expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(2);
   });
 
@@ -273,7 +271,6 @@ describe("DashboardShell shell variant", () => {
         <div>Content</div>
       </DashboardShell>,
     );
-    // Only the Drawer AppSidebar is mounted; the desktop aside is skipped.
     expect(screen.getAllByRole("button", { name: "Navigate" })).toHaveLength(1);
   });
 

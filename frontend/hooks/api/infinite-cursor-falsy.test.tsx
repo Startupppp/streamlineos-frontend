@@ -46,14 +46,6 @@ function makeWrapper() {
   };
 }
 
-/**
- * A cursor of `0` (a numeric keyset id) and a cursor of `""` (an opaque string
- * cursor) are both falsy. A `if (pageParam)` guard drops them, the request goes
- * out without a cursor, the backend answers page one again, and infinite scroll
- * duplicates every row on it — with no error anywhere. The sentinel that means
- * "no cursor yet" is whatever `initialPageParam` is, so the guard has to compare
- * against that sentinel, never against truthiness.
- */
 type Case = {
   name: string;
   module: string;
@@ -179,10 +171,6 @@ describe("a falsy cursor reaches the request instead of replaying page one", () 
   });
 });
 
-/**
- * The behavioural cases above pin eleven hooks. This pins the class: every
- * infinite query in the app, including the ones nobody has written a case for.
- */
 const ROOTS = ["hooks", "app", "features", "lib", "components"];
 
 function walk(dir: string, out: string[]): string[] {

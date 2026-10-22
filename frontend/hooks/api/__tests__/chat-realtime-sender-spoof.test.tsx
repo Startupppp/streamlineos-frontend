@@ -7,23 +7,6 @@ import type { MessagesPage } from "@/types/chat";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { isForgedServerFrame } from "@/lib/ably-safe-subscribe";
 
-/**
- * A member of a channel can PUBLISH on it, so an inbound frame is not evidence of anything.
- *
- * The chat token grants every channel the caller belongs to
- * `subscribe` + `presence` (typing is presence), and a token that still carried `publish`
- * would let any member publish a `message` frame onto the channel. This hook took
- * `payload.senderId` and `payload.senderName` from that frame and wrote them into the
- * message cache and into a desktop Notification, unverified. One member
- * could therefore make a message appear in every open window of the channel, attributed to a
- * colleague, saying whatever they chose. Nothing is persisted, which is what makes it quiet.
- *
- * `clientId` is the discriminator and cannot be forged: Ably stamps it from the identity in
- * the publisher's token. The backend publishes over REST with the API key and no clientId
- * (AblyService.publishChatMessage), so a genuine server frame has none; a browser frame always
- * has one, because every chat token is minted with `clientId: <userId>`.
- */
-
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
     data: { orgId: "org-1", user: { id: "user-1", name: "Ada" } },
@@ -135,7 +118,6 @@ describe("isForgedServerFrame on chat events", () => {
   });
 
   it("rejects a browser frame even when it names ITS OWN publisher", () => {
-    // The rule is not "do not lie about who you are", it is "you are not the server".
     expect(isForgedServerFrame("message", "user-1")).toBe(true);
   });
 });

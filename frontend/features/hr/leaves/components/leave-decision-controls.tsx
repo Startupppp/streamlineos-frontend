@@ -26,13 +26,6 @@ import {
 } from "@/features/hr/shared/self-approval";
 import type { LeaveRequest } from "./leaves-shared";
 
-/**
- * V-044. The approve/reject controls and their two dialogs used to live inside
- * `leave-approvals-list.tsx`, so `/hr/approvals` — the page that is supposed to
- * be the single HR approvals queue — rendered its leave rows as plain links
- * with nothing to act on. They are lifted here whole, mutations included, so
- * both surfaces drive the same two mutations through the same dialogs.
- */
 export type LeaveDecision = "APPROVED" | "REJECTED";
 
 export interface LeaveDecisionControls {
@@ -236,21 +229,7 @@ export function LeaveDecisionButtons({
 }: LeaveDecisionButtonsProps) {
   const status = request.status ?? "PENDING";
   const isSelfRequest = !!currentUserId && request.user?.id === currentUserId;
-  /**
-   * BUG-HRMS-017. A sole owner decides their own leave, because the router already
-   * routed it to them: no rung and no queue member remains, and refusing here left
-   * the request PENDING for ever with balances frozen and nothing on screen but
-   * "Cannot approve own request" and no alternate approver to reach for.
-   *
-   * Read from the same route `PUT /hr/leaves/:id/approve` consults, so this control
-   * and the endpoint answer the same question from the same source rather than each
-   * deciding for itself — which is how they came to disagree. Only fetched for a
-   * self-request; every other row is refused on the requester's identity alone.
-   */
   const mayDecideOwn = useIsSoleSelfApprover("leave", currentUserId, isSelfRequest) && isSelfRequest;
-  // PUT /hr/leaves/:id/approve|reject require hr:leaves:approve (FE-44). The
-  // approvals surfaces are also open to WFH-only deciders, who must not see
-  // controls that can only fail for them.
   const canDecide = useCan("hr:leaves:approve");
 
   const handleApprove = useCallback(

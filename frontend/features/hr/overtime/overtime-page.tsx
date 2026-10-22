@@ -12,7 +12,6 @@ import { OvertimeRequestSheet } from "./overtime-request-sheet";
 
 export function OvertimePage() {
   const canManage = useCan("hr:attendance:manage");
-  // POST /hr/overtime requires hr:attendance:view; the route itself is unguarded.
   const canRequest = useCan("hr:attendance:view");
   const [open, setOpen] = useState(false);
 

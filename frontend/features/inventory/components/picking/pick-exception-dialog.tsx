@@ -35,27 +35,16 @@ import {
   type PickExceptionFormValues,
 } from "./pick-exception-schema";
 
-/** The two a picker cannot settle alone, mirrored from the server's policy. */
 const REVIEWED_REASONS: readonly string[] = ["DAMAGED", "SUBSTITUTED"];
 
 interface PickExceptionDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pickListId: number;
-  /** The wave's building, so the found-bin picker offers only bins in it. */
   warehouseId: number | null;
   line: PickWaveLine | null;
 }
 
-/**
- * Why a line could not close as asked.
- *
- * A short pick with no reason and a short pick because the shelf was empty carry
- * the same quantity and different meanings — the first is a process problem and
- * the second is a stock problem, and a warehouse that cannot tell them apart
- * fixes neither. It is also what lets a picker holding an incomplete tote close
- * the wave at all.
- */
 export function PickExceptionDialog({
   open,
   onOpenChange,
@@ -64,9 +53,6 @@ export function PickExceptionDialog({
   line,
 }: PickExceptionDialogProps) {
   const report = useReportPickException();
-  // Swapping a SKU rewrites what the customer is owed, so it answers to its own
-  // key and its own endpoint. Hiding the option a picker cannot use beats
-  // offering it and failing at the server, which is where it also fails closed.
   const canSubstitute = useCan(SUBSTITUTE_KEY);
 
   function handleSubmit(values: PickExceptionFormValues): void {
@@ -186,9 +172,7 @@ export function PickExceptionDialog({
                     <FormItem>
                       <FormLabel>Variant taken instead</FormLabel>
                       <FormControl>
-                        {/* A picker rather than an id box: the substitute has to
-                            be a live, sellable variant, and nobody at a shelf
-                            knows a variant's primary key. */}
+                        
                         <ProductVariantCombobox
                           value={field.value ?? ""}
                           onChange={field.onChange}

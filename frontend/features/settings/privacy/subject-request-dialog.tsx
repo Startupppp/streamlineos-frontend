@@ -18,7 +18,6 @@ interface SubjectRequestDialogProps {
   onSubmit: (values: SubjectRequestValues) => void;
 }
 
-/** Files a data-subject request by email. An erasure goes on to the typed-email confirm. */
 export function SubjectRequestDialog({ open, onOpenChange, isSubmitting, onSubmit }: SubjectRequestDialogProps) {
   return (
     <EntityFormDialog<SubjectRequestInput, SubjectRequestValues>

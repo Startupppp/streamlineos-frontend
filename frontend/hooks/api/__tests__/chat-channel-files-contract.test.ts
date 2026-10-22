@@ -1,21 +1,5 @@
 import { chatChannelFilesContract } from "@/hooks/api/chat-schema";
 
-/**
- * `chatChannelFilesContract` must accept what `listChannelFiles` actually emits.
- *
- * The old contract required `uploadedAt`, `uploadedBy` — neither is projected.
- * The backend returns `createdAt` (from `chat_attachments.created_at`), not `uploadedAt`.
- *
- * It also required `fileUrl`, which the projection does not select: the column is
- * written empty on every insert and a chat attachment is fetched through
- * `GET /chat/channels/:id/attachments/:attachmentId/url`. That requirement refused
- * every non-empty page with `files.0.fileUrl: expected string, received undefined`,
- * so the panel showed "Couldn't load shared files" over attachments that had
- * uploaded fine (CHAT-001). A row with no `fileUrl` is now the contract.
- *
- * Each mismatch showed the same symptom: a "server error" overlay on every load,
- * because Zod's parse threw when a required field was absent.
- */
 
 const WIRE_FILE = {
   id: 1,

@@ -179,7 +179,6 @@ export function useTaxSummaryReport(
   });
 }
 
-/** Does the general ledger agree with the stock ledger about inventory over a window? */
 export function useStockGlReconciliation(
   params: { from: string; to: string },
   options?: QueryOpts<StockGlReconciliation>,
@@ -201,7 +200,6 @@ export function useStockGlReconciliation(
   });
 }
 
-/** Stock that moved in the window and never reached the ledger. */
 export function useUnpostedMovements(
   params: { from: string; to: string },
   options?: QueryOpts<UnpostedMovementsReport>,

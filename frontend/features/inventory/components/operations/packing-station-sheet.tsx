@@ -73,14 +73,6 @@ function QuantityList({
   );
 }
 
-/**
- * B6 — the packing bench for one order.
- *
- * A carton, a scanner and the two lists that matter: what is still owed to the
- * box, and what is already in it. Every scan is reconciled against what the
- * picker actually took off the shelf, so the refusal lands here — while the unit
- * is in the packer's hand — rather than at close with the box already taped.
- */
 export function PackingStationSheet({ open, onOpenChange, row }: PackingStationSheetProps) {
   const packingState = useCanState("inventory:packages:manage");
   const [cartonTypeId, setCartonTypeId] = useState<string>("");
@@ -99,13 +91,6 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
   const packedLines = useMemo(() => reconciliation.data?.packed ?? [], [reconciliation.data]);
   const outstandingLines = useMemo(() => reconciliation.data?.outstanding ?? [], [reconciliation.data]);
 
-  /**
-   * B2 — the scan is captured before it goes in the box, and it is refused if
-   * the box does not owe it. `outstanding` is what the picker actually took off
-   * the shelf minus what is already packed, so a unit from another order finds
-   * no candidate and stops here, in the packer's hand, rather than at close with
-   * the carton already taped.
-   */
   const scan = useScanTarget<PackingReconciliationLine>({
     candidates: outstandingLines,
     documentNoun: "carton",
@@ -126,8 +111,6 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
       {
         packageId,
         scannedPayload: resolved.raw,
-        // Sent alongside the payload so the server re-checks the pairing this
-        // client just made; it refuses the two if they name different goods.
         productVariantId: line.productVariantId,
         quantity: "1",
       },
@@ -155,8 +138,6 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
       {
         lines: packedLines.map((line) => ({
           productVariantId: line.productVariantId,
-          // The API takes whole units: half a unit still occupies a whole one
-          // in the box.
           quantity: Math.max(1, Math.ceil(Number(line.quantity))),
         })),
       },
@@ -285,14 +266,6 @@ export function PackingStationSheet({ open, onOpenChange, row }: PackingStationS
   );
 }
 
-/**
- * The carton this session just opened.
- *
- * The queue row is a snapshot taken before the click, so it still says "no open
- * carton" until the list refetches. Reading the mutation's own result closes
- * that window, and it is scoped to the order in hand so a stale result from a
- * previous order cannot leak into this one.
- */
 function createdPackageIdFor(
   created: { id: number; soId?: number | null } | undefined,
   row: PackingQueueRow | null,

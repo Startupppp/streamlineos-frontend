@@ -8,11 +8,6 @@ import { SPRING } from "@/features/landing/relay/lib/motion";
 
 import { CUE, CueFade, useStageReady } from "./stage";
 
-/**
- * 1440 3888:7092 / 7095 / 7098 — x 80, 588, 1040 at y 464; 1024 row 3888:11505
- * — x 48, 306, 659 at y 326; 768 row 3876:133 — x 40, 264, 523 at y 648;
- * 390 row 3893:4416 — a column at x 20, y 685 / 705 / 725.
- */
 const PLACE = [
   "left-20 w1024:left-12 w768:left-10 w390:left-5",
   "left-147 w1024:left-76.5 w768:left-66 w390:top-5 w390:left-5",
@@ -46,11 +41,6 @@ const Dot = ({ lit, delay }: { lit: boolean; delay: number }) => {
   );
 };
 
-/**
- * Status row — "Точки по очереди": after the panels, the three accent dots
- * light up left → right, each label fading in with its dot. They stay lit
- * (no breathing loop, so the footer has a single ambient motion).
- */
 export const StatusRow = ({ statuses }: Pick<FooterContent, "statuses">) => {
   const lit = useStageReady("top");
 

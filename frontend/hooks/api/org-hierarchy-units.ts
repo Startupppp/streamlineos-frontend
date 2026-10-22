@@ -56,8 +56,6 @@ export interface ListQuery extends Record<string, unknown> {
   status?: "ACTIVE" | "DISABLED" | "ARCHIVED" | "CURRENT";
 }
 
-// ─── Business Units ──────────────────────────────────────────────────────────
-
 export function useBusinessUnits(query?: ListQuery) {
   return useGatedQuery("settings:view", {
     queryKey: platformHierarchyQueryKeys.hierarchy.businessUnits(query),
@@ -97,8 +95,6 @@ export function useUpdateBusinessUnit() {
     },
   });
 }
-
-// ─── Org Branches ────────────────────────────────────────────────────────────
 
 export function useOrgBranches(
   query?: ListQuery,
@@ -146,8 +142,6 @@ export function useUpdateOrgBranch() {
   });
 }
 
-// ─── Departments ─────────────────────────────────────────────────────────────
-
 export function useOrgDepartments(
   query?: ListQuery,
   options?: Omit<UseQueryOptions<CursorResponse<OrgDepartment>, Error>, "queryKey" | "queryFn">,
@@ -193,8 +187,6 @@ export function useUpdateOrgDepartment() {
     },
   });
 }
-
-// ─── Teams ───────────────────────────────────────────────────────────────────
 
 export function useOrgTeams(query?: ListQuery) {
   const canView = useCan("settings:view");

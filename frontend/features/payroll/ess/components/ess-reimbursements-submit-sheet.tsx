@@ -106,12 +106,7 @@ export function SubmitSheet({ open, onClose, channel = "self-service" }: SubmitS
           </SheetHeader>
         </div>
         <Form {...form}>
-          {/*
-            `noValidate` hands validation to the schema. With the browser's own
-            constraint validation on, `min="0"` blocked submit before the
-            resolver ever ran, so a pasted `-1` sat in the field with a native
-            bubble and no inline error under it — the state PAY-004 reports.
-          */}
+          
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
             className="flex flex-col flex-1 min-h-0"

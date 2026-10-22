@@ -9,6 +9,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { compCyclesQueryOptions, equityGrantsQueryOptions, workforceCostSummaryQueryOptions } from "@/hooks/api/hr/enterprise-comp-read-options";
 
 export interface TimeDevice {
   id: number;
@@ -61,7 +62,6 @@ export interface CompRecommendation {
   createdAt: string;
 }
 
-
 export interface CompBudgetPool {
   id: number;
   orgId: string;
@@ -96,7 +96,6 @@ export interface CursorPaginatedResponse<T> {
   data: T[];
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
-
 
 const _listDevicesContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-comp-schema").then((m) => m.listDevicesContract),
@@ -219,20 +218,13 @@ export function useFailedSyncs() {
   });
 }
 
-
-export const compCyclesQueryOptions = (params?: Record<string, unknown>) =>
-  queryOptions({
-    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCompCyclesAll, params],
-    queryFn: ({ signal }) =>
-      apiClient.get("/hr/enterprise/comp/planning/cycles", params, signal, _listCompCyclesContract),
-    staleTime: 2 * 60_000,
-  });
-
 export function useCompCycles(params?: Record<string, unknown>) {
   const canManage = useCan("hr:compensation:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     ...compCyclesQueryOptions(params),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/enterprise/comp/planning/cycles", params, signal, _listCompCyclesContract),
     enabled: canManage && hrEnabled,
   });
 }
@@ -291,20 +283,13 @@ export function useBudgetPools(cycleId: number) {
   });
 }
 
-
-export const equityGrantsQueryOptions = (params?: Record<string, unknown>) =>
-  queryOptions({
-    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll, params],
-    queryFn: ({ signal }) =>
-      apiClient.get("/hr/enterprise/comp/equity/grants", params, signal, _listGrantsContract),
-    staleTime: 5 * 60_000,
-  });
-
 export function useEquityGrants(params?: Record<string, unknown>) {
   const canView = useCan("hr:equity:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     ...equityGrantsQueryOptions(params),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/enterprise/comp/equity/grants", params, signal, _listGrantsContract),
     enabled: canView && hrEnabled,
   });
 }
@@ -341,20 +326,13 @@ export function useRecordExercise() {
   });
 }
 
-
-export const workforceCostSummaryQueryOptions = () =>
-  queryOptions({
-    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCostingAll, "summary"] as const,
-    queryFn: ({ signal }) =>
-      apiClient.get("/hr/enterprise/comp/costing/summary", undefined, signal, _costSummaryContract),
-    staleTime: 5 * 60_000,
-  });
-
 export function useWorkforceCostSummary() {
   const canRead = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     ...workforceCostSummaryQueryOptions(),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/enterprise/comp/costing/summary", undefined, signal, _costSummaryContract),
     enabled: canRead && hrEnabled,
     ...INLINE_READ_ERROR,
   });

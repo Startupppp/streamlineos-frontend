@@ -10,26 +10,8 @@ import { DepthLayer, HeroTilt } from "./hero-tilt";
 import { ProductWindow } from "./product-window";
 import { LOAD, TILT } from "./timeline";
 
-/** TypeText's own ms per character — the 1024 note hands it over explicitly so
-    the second line starts exactly where the first stops. */
 const TYPE_PER = 30;
 
-/**
- * 02 Hero — 1440 × 712 (Figma 3488:21055), directly under the nav.
- * Copy column at x80; the product window group (3542:24364) runs from x646
- * to the frame's right edge. Coordinates are section-relative.
- *
- * At 1024 (3603:2145) the section keeps its 712 height but is re-laid-out:
- * the copy column moves to x48 / 393 wide with a 44/52 headline, the bloom
- * shrinks to 645 × 583 at (396, 65), the two 12px field marks are gone and the
- * product window (3699:3) is a 516 × 659 portrait with a vertical flow.
- *
- * 768 (3832:6548, 976 tall): the copy stacks centred at the top and the window
- * (3834:893, 516 × 590, all corners round) sits under it at (126, 354) with
- * the vertical flow and one run row. 390 (3893:2141, 949 tall): the same
- * stack at 350 wide — full-width buttons, the note on two lines — and the
- * 768 flow scaled 310 / 380 inside a 350 × 515 window at (20, 422).
- */
 export const Hero = ({
   chip,
   title,
@@ -45,12 +27,10 @@ export const Hero = ({
     aria-label={`${title.before}${title.accent}${title.after}`}
     className="relative h-[calc(var(--hero-frame)+var(--hero-extra))]"
   >
-    {/* the frame's own layout, centred in the viewport-tall section */}
+    
     <div className="absolute inset-x-0 top-[calc(var(--hero-extra)/2)] h-(--hero-frame)">
       <HeroTilt>
-        {/* Window bloom 3488:21056 — ellipse at x640 y40, SVG padded 200 (1400 × 1020).
-        Not clipped: Figma's render carries the bloom up into the nav.
-        Follows the cursor by up to 60px. */}
+        
         <DepthLayer
           depth={TILT.bloom}
           className="pointer-events-none absolute inset-0"
@@ -69,7 +49,7 @@ export const Hero = ({
           />
         </DepthLayer>
 
-        {/* Release chip 3488:21930 — padding less the 1px border Figma draws inside. */}
+        
         <Reveal
           delay={LOAD.copy.chip}
           className="absolute top-30.5 left-20 w1024:top-40.5 w1024:left-12 w768:top-10 w768:left-[calc(var(--spacing)*57.875)] w390:top-8 w390:left-10.5"
@@ -139,8 +119,7 @@ export const Hero = ({
           delay={LOAD.copy.note}
           className="absolute top-142.5 left-20 w1024:top-127.5 w1024:left-12 w768:top-75.5 w768:left-[calc(var(--spacing)*45.25)] w390:top-88 w390:left-[calc(var(--spacing)*21.625)]"
         >
-          {/* Trailing nowrap space (collapses, no width): 47 × 1ch rounds down a
-            whole ch in TypeText's round(down, …) and shaved the final "s". */}
+          
           <div className="flex w1024:hidden w768:flex w390:hidden">
             <TypeText
               tag="p"
@@ -150,9 +129,7 @@ export const Hero = ({
               {`${note} `}
             </TypeText>
           </div>
-          {/* 1024 (3603:2158) breaks the note over two lines. TypeText clips one
-            line horizontally, so each line types on its own — the second picks
-            up exactly where the first ends, same ms per character. */}
+          
           <div className="hidden w1024:block w768:hidden">
             {noteLines.map((line, i) => (
               <div key={line} className="flex">
@@ -170,7 +147,7 @@ export const Hero = ({
               </div>
             ))}
           </div>
-          {/* 390 (3893:2158): 12 / 1.3, two centred lines in a 217 column. */}
+          
           <div className="hidden w-54.25 w390:block">
             {noteLines390.map((line, i) => (
               <div key={line} className="flex justify-center">
@@ -190,8 +167,7 @@ export const Hero = ({
           </div>
         </Reveal>
 
-        {/* Tick 3488:21953 / 3603:2159 and field marks 3488:21954 / 3488:21956 —
-          the 1024 frame drops both marks. */}
+        
         <div aria-hidden className="pointer-events-none absolute inset-0">
           <span className="absolute top-155 left-295 h-2 w-px bg-hero-tick w1024:top-136.5 w1024:left-243.75 w768:left-181.75 w390:left-92.25" />
           <Image

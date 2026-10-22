@@ -1,17 +1,3 @@
-/**
- * The rest of the billing mutation surface, pinned to the same oracle
- * (`contracts/openapi.json` `x-permission`):
- *
- *   POST /invoices                    -> accounting:create   (NewInvoiceForm)
- *   POST /invoices/{id}/payments      -> accounting:create   (RecordPaymentDialog)
- *   PATCH /invoices/{id}              -> accounting:update   (Edit, Mark Issued, Mark Paid)
- *   POST /invoices/{id}/void          -> accounting:manage   (Void)
- *   POST /billing/checkout            -> billing:subscription:manage (PlanCard upgrade)
- *
- * All five rendered unconditionally before this: no file under
- * `features/billing/` except `ai-credits-settings-page` and `billing-profile-tab`
- * held a `useCan` at all.
- */
 import type { ComponentProps } from "react";
 import { render as rtlRender, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";

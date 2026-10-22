@@ -22,19 +22,6 @@ import type {
   UpdateReportScheduleInput,
 } from "@/types/crm/reporting";
 
-/**
- * `GET /crm/reporting/sources` and `POST /crm/reporting/run`.
- *
- * Both gate on `crm:reporting:run`, which is what the controller declares on
- * each — `sources` sits behind `run` rather than `view` because the list it
- * returns is already filtered to what this caller could execute, and a reader
- * who can run nothing would get an empty list that reads as a bug.
- *
- * Running is a POST because a description does not fit in a query string, and
- * it is still a read: the response is the answer, and re-asking the same
- * question is the thing a cache is for. It is therefore a query, keyed on the
- * description, not a mutation.
- */
 
 export function useReportingSources() {
   return useGatedQuery("crm:reporting:run", {
@@ -55,16 +42,6 @@ export function useReportRun(description: ReportingQueryDescription | null) {
   });
 }
 
-/**
- * The saved half of the module.
- *
- * Three keys, and the split is the controller's, restated here so a hook cannot
- * quietly gate on the wrong one. `view` reads what exists — the saved reports
- * and the log of what has been run — and is the auditor's key: it is grantable
- * on its own precisely because neither read returns tenant data. `manage`
- * authors, and `explain` sits there too because the statement it returns names
- * physical tables. `run` executes, and is the only one with a cost.
- */
 
 const DEFINITIONS_STALE_MS = 60_000;
 
@@ -91,18 +68,6 @@ export function useReportDefinition(reportDefinitionId: string | null) {
   });
 }
 
-/**
- * Running a saved report by its id rather than by its description.
- *
- * The two routes execute the same statement, so this is not a shortcut: the
- * audit row `definitions/:id/run` writes carries the definition id, and the one
- * `run` writes does not. Sending a saved report down the ad-hoc path would
- * leave "how often is this report run, and by whom" permanently unanswerable.
- *
- * `limit` and `offset` travel as overrides because paging a saved report is not
- * a new question — the stored description is unchanged and the server merges
- * them in before compiling, rather than patching finished SQL.
- */
 export function useReportDefinitionRun(
   reportDefinitionId: string | null,
   overrides: RunReportDefinitionOverrides | null,
@@ -120,13 +85,6 @@ export function useReportDefinitionRun(
   });
 }
 
-/**
- * What the description would execute, executing nothing.
- *
- * Behind `manage` rather than `run`, matching the controller: the compiled
- * statement names physical tables and columns, which is more than a report
- * reader needs to know.
- */
 export function useReportExplain(description: ReportingQueryDescription | null) {
   return useGatedQuery("crm:reporting:manage", {
     queryKey: queryKeys.crm.reportingExplain(description),
@@ -141,17 +99,6 @@ export function useReportExplain(description: ReportingQueryDescription | null) 
   });
 }
 
-/**
- * `POST /crm/reporting/nl-propose` — a plain-language question, proposed as
- * a query description, never run.
- *
- * A mutation, not a query: asking spends a model call every time, so
- * re-asking the same words is a new request rather than a cache read — the
- * opposite choice from `useReportRun`, where re-asking the same DESCRIPTION
- * is exactly what a cache is for. Gated on `crm:reporting:manage`, matching
- * `useReportExplain`: the response's `preview` carries the same physical
- * table and column names.
- */
 export function useReportNlPropose() {
   return useAuthorizedMutation<ReportNlProposal, Error, string>("crm:reporting:manage", {
     mutationKey: ["crm", "reporting", "nl-propose"],
@@ -222,14 +169,6 @@ export function useDeleteReportDefinition() {
   });
 }
 
-/**
- * The timetable a saved report runs on.
- *
- * Read behind `view` and authored behind `manage`, matching the controller.
- * `run` is deliberately not required to author one: a schedule does not run
- * anything when it is created, it names whose authority the unattended run will
- * carry, and that person's `run` key is checked every time it fires.
- */
 export function useReportSchedules() {
   return useGatedQuery("crm:reporting:view", {
     queryKey: queryKeys.crm.reportingSchedules(),

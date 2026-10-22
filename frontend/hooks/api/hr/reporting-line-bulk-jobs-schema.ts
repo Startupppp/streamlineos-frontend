@@ -1,7 +1,6 @@
 import { z } from "zod";
 import { managerRefContract } from "@/hooks/api/hr/reporting-lines-schema";
 
-/** Mirrors backend `dto/reporting-lines-bulk.schemas.ts` (CONTRACT §4.17–§4.19). */
 
 export const BULK_REASSIGNMENT_ROW_CAP = 500;
 export const CONFIRMATION_THRESHOLD = 10;

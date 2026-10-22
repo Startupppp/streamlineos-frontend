@@ -4,13 +4,6 @@ import userEvent from "@testing-library/user-event";
 import { OrgCatalogTable } from "./org-catalog-table";
 import { ApiError } from "@/lib/api-envelope";
 
-/**
- * Ticket 05. Job Architecture is now framed like Position Control: a `DataTable`
- * with the same toolbar shape (filter, a count, one primary action on the right),
- * a bounded page of rows, and a failure that names itself. It used to render a
- * bespoke divided card, map every row it had, and report every failure as
- * "Something went wrong".
- */
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
 
 const ROLES = [
@@ -88,7 +81,6 @@ it("bounds what it mounts instead of rendering every row", () => {
 
   renderTable({ items: many });
 
-  // One page of 20, not all 45 (FE-112).
   expect(screen.getAllByRole("row")).toHaveLength(21);
 });
 

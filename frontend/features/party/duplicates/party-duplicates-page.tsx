@@ -26,7 +26,6 @@ import { PartyMergeDialog } from "@/components/party-merge/party-merge-dialog";
 
 const PAGE_SIZE = 10;
 
-/** What the detector agreed on, in words rather than as a column name. */
 const SIGNAL_LABELS: Record<string, string> = {
   email: "Same email",
   phone: "Same phone",
@@ -95,11 +94,7 @@ function CandidateRow({
 
       {canMerge ? (
         <div className="flex items-center justify-end gap-2">
-          {/*
-            Dismiss is the cheap, reversible half and sits as the secondary
-            control; merge is the one that destroys a record. Both are offered
-            because a queue with only one answer trains people to take it.
-          */}
+          
           <Button variant="ghost" size="sm" onClick={handleDismiss}>
             <X className="mr-1.5 h-3.5 w-3.5" />
             Not duplicates
@@ -114,15 +109,6 @@ function CandidateRow({
   );
 }
 
-/**
- * The records the system thinks are the same customer, and what was done about
- * them.
- *
- * At the party grain deliberately: contacts, companies, clients and leads are
- * all aliases for one `business_parties` row, so a duplicate is a duplicate
- * regardless of which CRM screen surfaced it, and one queue is the only way a
- * pair does not get reviewed twice under two names.
- */
 export function PartyDuplicatesPage() {
   const canMerge = useCan("party:merges:manage");
   const canViewState = useCanState("party:duplicates:view");
@@ -157,12 +143,6 @@ export function PartyDuplicatesPage() {
     void duplicates.refetch();
   }, [duplicates]);
 
-  /*
-   * Checked before the loading branch: a query the permission gate never let run
-   * reports `isLoading: false` with no rows, which is indistinguishable from an
-   * empty queue — so without this the screen tells someone there are no
-   * duplicates when the truth is that they may not look.
-   */
   if (canViewState === "denied")
     return <NoPermissionState permission="party:duplicates:view" />;
 

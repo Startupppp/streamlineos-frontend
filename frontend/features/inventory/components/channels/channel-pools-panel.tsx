@@ -39,9 +39,6 @@ const POOL_COLUMNS: DataTableColumn<ChannelPool>[] = [
   {
     key: "warehouse",
     header: "Warehouse",
-    // Null is not "unknown" here — it is an organisation-wide claim, and saying
-    // so is the difference between a reader trusting the number and hunting for
-    // a warehouse that was never chosen.
     cell: (row) =>
       row.warehouseId === null ? (
         <span className="text-xs text-muted-foreground">Org-wide</span>
@@ -65,14 +62,6 @@ const POOL_COLUMNS: DataTableColumn<ChannelPool>[] = [
   },
 ];
 
-/**
- * NEO-1 — the claims one channel holds, and the one control that moves them.
- *
- * Deliberately a signed delta rather than a "set to" field: the server command
- * is a delta so that a retried request cannot claim twice, and a form that
- * pretended otherwise would have to read the current figure, subtract, and race
- * anybody else doing the same.
- */
 export function ChannelPoolsPanel({ open, onOpenChange, channel }: ChannelPoolsPanelProps) {
   const canManage = useCan("inventory:channels:manage");
   const { data, isLoading, isError, refetch } = useChannelPools(channel?.id ?? null);

@@ -17,15 +17,8 @@ export function getCurrentMonth(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 }
 
-/** Mirrors the ESS create DTO: `z.number().positive().max(999999)`. */
 export const MAX_CLAIM_AMOUNT = 999999;
 
-/**
- * Amount arrives as the input's string, so every bound is a refine over the
- * parsed number. The three the API enforces are all spelled here, because a
- * claim that only fails at the server is a claim the person watches disappear
- * with no field to correct.
- */
 export const reimbursementSchema = z.object({
   category: z.string().min(1, "Select a category"),
   amount: reimbursementAmountStringSchema,

@@ -4,12 +4,6 @@ import {
   resolveImportField,
 } from "@/features/hr/expenses/expense-import-headers";
 
-/**
- * V-071. The dialog normalised a header with `trim().toLowerCase()` and then
- * hand-enumerated spellings per field, so `Payment-Method` and `Expense-Date`
- * resolved to nothing here although the backend accepts them. This mirrors
- * `streamlineos-backend/src/modules/expenses/expenses-import-contract.ts`.
- */
 describe("expense import headers", () => {
   it("resolves Payment Method, payment_method and paymentMethod to one field", () => {
     for (const spelling of [
@@ -40,9 +34,6 @@ describe("expense import headers", () => {
   });
 
   it("the generated template headers equal the fields the validator accepts", () => {
-    // The dialog writes `EXPENSE_IMPORT_FIELDS.map(f => f.key)` as the template
-    // header row; every one of those must resolve back to its own field, or a
-    // person importing the file we handed them gets an empty column.
     const templateHeaders = EXPENSE_IMPORT_FIELDS.map((field) => field.key);
 
     expect(templateHeaders).toEqual([

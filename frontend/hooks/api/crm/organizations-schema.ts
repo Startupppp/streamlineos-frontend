@@ -21,14 +21,6 @@ const crmOrgSchema = z.object({
   updatedAt: z.string().nullable(),
 });
 
-/**
- * The list projection, field for field (FE-28).
- *
- * `/crm/organizations` selects `COMPANY_COLUMNS` off the party — it does not
- * carry `orgId`, `healthScore`, `parentId`, `notes`, `mergedIntoId` or
- * `updatedAt`, which only the detail read derives. Requiring them here made
- * every page of companies fail the contract rather than render.
- */
 const crmOrgListRowSchema = z.object({
   id: z.number().int(),
   name: z.string(),

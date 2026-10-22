@@ -11,15 +11,6 @@ function isDensity(value: unknown): value is DensityMode {
   return typeof value === "string" && (DENSITY_MODES as readonly string[]).includes(value);
 }
 
-/**
- * The reader's density, remembered.
- *
- * Per person rather than per screen: someone who wants forty rows wants them
- * everywhere, and asking again on each list is the kind of setting people stop
- * using. Reads are wrapped because a private window, cleared site data or a
- * browser configured to block storage all throw on access rather than returning
- * nothing.
- */
 export function useDensity(): [DensityMode, (mode: DensityMode) => void] {
   const [density, setDensityState] = useState<DensityMode>("comfortable");
 
@@ -28,7 +19,6 @@ export function useDensity(): [DensityMode, (mode: DensityMode) => void] {
       const stored = window.localStorage.getItem(STORAGE_KEY);
       if (isDensity(stored)) setDensityState(stored);
     } catch {
-      // Storage unavailable. Comfortable is the documented default.
     }
   }, []);
 
@@ -37,7 +27,6 @@ export function useDensity(): [DensityMode, (mode: DensityMode) => void] {
     try {
       window.localStorage.setItem(STORAGE_KEY, mode);
     } catch {
-      // The choice still applies to this page; it just will not be remembered.
     }
   }, []);
 
@@ -50,13 +39,6 @@ export interface DensityToggleProps {
   className?: string;
 }
 
-/**
- * One control, used by every generated surface.
- *
- * Density is a property of the engine rather than of a screen — which is the
- * whole point of having an engine. Written once here, it reaches every list
- * without two hundred screens each inventing a toggle.
- */
 export function DensityToggle({ density, onChange, className }: DensityToggleProps) {
   const compact = density === "compact";
 
@@ -67,7 +49,6 @@ export function DensityToggle({ density, onChange, className }: DensityTogglePro
       size="sm"
       className={className}
       aria-pressed={compact}
-      // The button says what pressing it does, not what is currently true.
       aria-label={compact ? "Switch to comfortable rows" : "Switch to compact rows"}
       onClick={() => onChange(compact ? "comfortable" : "compact")}
     >

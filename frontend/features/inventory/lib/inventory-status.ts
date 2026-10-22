@@ -3,18 +3,10 @@ export type SoStatus = "DRAFT" | "CONFIRMED" | "PARTIALLY_RESERVED" | "RESERVED"
 export type TransferStatus = "PENDING" | "RESERVED" | "IN_TRANSIT" | "COMPLETED" | "CANCELLED";
 export type AdjustmentStatus = "DRAFT" | "PENDING_APPROVAL" | "APPROVED" | "POSTED" | "CANCELLED";
 export type GrnQuality = "ACCEPTED" | "REJECTED";
-/** B1. A goods receipt has a life before it posts stock. */
 export type GrnStatus = "DRAFT" | "COUNTING" | "QUALITY_REVIEW" | "POSTED" | "CANCELLED";
 export type GrnDiscrepancyReason = "SHORT" | "OVER" | "DAMAGED" | "WRONG_ITEM";
 export type CycleCountStatus = "PLANNED" | "COUNTING" | "REVIEW" | "POSTED" | "CANCELLED";
 
-/**
- * Narrows a select value to a cycle-count status.
- *
- * The filter states that feed `useCycleCounts` were typed `string`, and that is
- * how the RF queue came to ask the API for `IN_PROGRESS` — an InspectionStatus,
- * not a cycle-count one. It type-checked, and the API answered 400.
- */
 export function isCycleCountStatus(value: string): value is CycleCountStatus {
   return CYCLE_COUNT_STATUSES.some((status) => status === value);
 }
@@ -37,23 +29,15 @@ export type SyncStatus = "IDLE" | "SYNCING" | "SUCCESS" | "ERROR" | "PAUSED";
 export type QualityHoldStatus = "ACTIVE" | "RELEASED" | "EXPIRED";
 export type RecallStatus = "OPEN" | "IN_PROGRESS" | "CLOSED";
 export type PackageStatus = "OPEN" | "CLOSED" | "SHIPPED";
-/** B4. Where a pick wave is in its walk. */
 export type PickWaveStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
-/**
- * B5. `WRONG_LOCATION` is the one reason that does not close its line: the goods
- * exist, the wave sent the picker to the wrong bin, and the walk is not over.
- */
 export type PickExceptionReason =
   | "SHORT"
   | "NOT_FOUND"
   | "DAMAGED"
   | "SUBSTITUTED"
   | "WRONG_LOCATION";
-/** B5. Where an exception is in its own life, separately from the line's. */
 export type PickExceptionStatus = "OPEN" | "RESOLVED";
-/** B5. What the reviewer decided. Present only once the status is RESOLVED. */
 export type PickExceptionResolution = "ACCEPTED" | "REJECTED";
-/** B3. Where a putaway task is between the receiving dock and the shelf. */
 export type PutawayTaskStatus = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED";
 export type PutawayDisposition = "STORAGE" | "QUARANTINE";
 
@@ -151,11 +135,6 @@ export const GRN_QUALITY_LABEL: Record<GrnQuality, string> = {
   REJECTED: "Rejected",
 };
 
-/**
- * Only POSTED has stock behind it, so it is the only tone that reads as done.
- * COUNTING and QUALITY_REVIEW are warnings because a receipt sitting in either
- * is a delivery the warehouse has taken in and not yet accounted for.
- */
 export const GRN_STATUS_BADGE: Record<GrnStatus, string> = {
   DRAFT: INFO,
   COUNTING: WARNING,
@@ -353,16 +332,6 @@ export const RECALL_STATUS_LABEL: Record<RecallStatus, string> = {
   CLOSED: "Closed",
 };
 
-/**
- * INV-33. What the quarantine leg of a recall did to one line.
- *
- * `OPEN` is the column default and means the outcome was never recorded — every
- * line of every recall raised before the backend started writing it. It is shown
- * as pending, not as success: a recall that cannot say what it held is precisely
- * the one an operator must not read as safe.
- *
- * The other three are recorded. Only `QUARANTINED` means stock is actually held.
- */
 export type RecallLineQuarantine =
   | "OPEN"
   | "QUARANTINED"
@@ -390,7 +359,6 @@ export const RECALL_QUARANTINE_EXPLAINER: Record<RecallLineQuarantine, string> =
   NOT_QUARANTINABLE: "This line names no lot, so no stock was blocked and no hold was raised. The goods are still sellable.",
 };
 
-/** Every line whose stock is not actually held. */
 export function isRecallLineUnheld(status: RecallLineQuarantine): boolean {
   return status !== "QUARANTINED";
 }
@@ -435,11 +403,6 @@ export const PICK_EXCEPTION_LABEL: Record<PickExceptionReason, string> = {
   WRONG_LOCATION: "Wrong location",
 };
 
-/**
- * B5. The tone says what the reader has to do about it, not how bad it is.
- * A shortfall is a fact of the day's work; a write-off or a swap is waiting on
- * somebody; a wrong bin is a correction the picker can still act on.
- */
 export const PICK_EXCEPTION_BADGE: Record<PickExceptionReason, string> = {
   SHORT: WARNING,
   NOT_FOUND: WARNING,
@@ -463,7 +426,6 @@ export const PICK_EXCEPTION_RESOLUTION_LABEL: Record<PickExceptionResolution, st
   REJECTED: "Not accepted",
 };
 
-/** B5. The "a picker is standing still for this one" marker on the queue. */
 export const PICK_EXCEPTION_BLOCKING_BADGE = WARNING;
 
 export const PUTAWAY_TASK_STATUS_BADGE: Record<PutawayTaskStatus, string> = {

@@ -79,16 +79,6 @@ export function useApprovals(query: ApprovalsQuery = {}, enabled = true) {
   });
 }
 
-/**
- * An approval decision moves hours between every timesheet surface at once:
- * the queue, the period, the Team week summary, the reports overview, the
- * uninvoiced billing queue and the overdue list. Invalidating only the queue
- * and the period list - which is what this did - left a manager who navigated
- * to Team or Billing looking at pre-approval numbers until staleTime elapsed.
- *
- * The whole `timesheets` subtree is cheaper to invalidate than to enumerate:
- * only mounted queries refetch, and after a decision none of them is current.
- */
 function invalidateAfterApprovalDecision(qc: QueryClient): void {
   void qc.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.all });
 }

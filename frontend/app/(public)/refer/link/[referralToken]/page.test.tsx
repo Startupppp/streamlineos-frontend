@@ -1,4 +1,3 @@
-/** @jest-environment node */
 
 jest.mock("server-only", () => ({}));
 

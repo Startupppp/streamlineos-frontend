@@ -2,14 +2,15 @@ import "server-only";
 
 import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
+import { resolvePrefetchGate } from "@/lib/prefetch/prefetch-gate";
 import { serverGet } from "@/lib/server-fetch";
-import { assignedInterviewsQueryOptions } from "@/hooks/api/employee-self-service/recruitment";
-import { expensePageDataQueryOptions } from "@/hooks/api/hr/expenses";
-import { attendanceStatusQueryOptions } from "@/hooks/api/hr/attendance";
-import { myOnboardingDocsQueryOptions } from "@/hooks/api/hr/documents";
-import { mySupportRequestsQueryOptions } from "@/hooks/api/employee-self-service/support";
-import { myResignationsQueryOptions } from "@/hooks/api/hr/exit";
-import { managerHomeQueryOptions } from "@/hooks/api/hr/manager-home";
+import { assignedInterviewsQueryOptions } from "@/hooks/api/employee-self-service/recruitment-read-options";
+import { expensePageDataQueryOptions } from "@/hooks/api/hr/expenses-read-options";
+import { attendanceStatusQueryOptions } from "@/hooks/api/hr/attendance-read-options";
+import { myOnboardingDocsQueryOptions } from "@/hooks/api/hr/documents-read-options";
+import { mySupportRequestsQueryOptions } from "@/hooks/api/employee-self-service/support-read-options";
+import { myResignationsQueryOptions } from "@/hooks/api/hr/exit-read-options";
+import { managerHomeQueryOptions } from "@/hooks/api/hr/manager-home-read-options";
 import { assignedInterviewsResponseContract } from "@/hooks/api/employee-self-service/recruitment-schema";
 import { expensePageDataContract } from "@/hooks/api/hr/expenses-schema";
 import { attendanceStatusContract } from "@/hooks/api/hr/attendance-schema";
@@ -34,83 +35,131 @@ const PAGE_SIZES = {
 } as const;
 
 export async function prefetchMeCareer() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...assignedInterviewsQueryOptions(1),
-    queryFn: () =>
-      serverGet<AssignedInterviewsResponse>(
-        `/me/recruitment?page=1&pageSize=${PAGE_SIZES.assignedInterviews}`,
-        assignedInterviewsResponseContract,
-      ),
-  });
-  return dehydrate(queryClient);
+  try {
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("self:recruitment")) return dehydrate(queryClient);
+    await queryClient.prefetchQuery({
+      ...assignedInterviewsQueryOptions(1),
+      queryFn: () =>
+        serverGet<AssignedInterviewsResponse>(
+          `/me/recruitment?page=1&pageSize=${PAGE_SIZES.assignedInterviews}`,
+          assignedInterviewsResponseContract,
+        ),
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
 }
 
 export async function prefetchMeMoney() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...expensePageDataQueryOptions({}, true),
-    queryFn: () =>
-      serverGet<ExpensePageDataResponse>("/me/expenses", expensePageDataContract),
-  });
-  return dehydrate(queryClient);
+  try {
+    const queryClient = await createServerQueryClient();
+    await queryClient.prefetchQuery({
+      ...expensePageDataQueryOptions({}, true),
+      queryFn: () =>
+        serverGet<ExpensePageDataResponse>("/me/expenses", expensePageDataContract),
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
 }
 
 export async function prefetchMeWorkday() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...attendanceStatusQueryOptions(),
-    queryFn: () =>
-      serverGet<AttendanceStatusResponse>(
-        "/me/attendance/status",
-        attendanceStatusContract,
-      ),
-  });
-  return dehydrate(queryClient);
+  try {
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("self:attendance")) return dehydrate(queryClient);
+    await queryClient.prefetchQuery({
+      ...attendanceStatusQueryOptions(),
+      queryFn: () =>
+        serverGet<AttendanceStatusResponse>(
+          "/me/attendance/status",
+          attendanceStatusContract,
+        ),
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
 }
 
 export async function prefetchMeRecords() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...myOnboardingDocsQueryOptions({ limit: PAGE_SIZES.onboardingDocs }),
-    queryFn: () =>
-      serverGet<MyOnboardingDocsResponse>(
-        `/hr/onboarding-docs/me?limit=${PAGE_SIZES.onboardingDocs}`,
-        myOnboardingDocsContract,
-      ),
-  });
-  return dehydrate(queryClient);
+  try {
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("self:onboarding-docs")) return dehydrate(queryClient);
+    await queryClient.prefetchQuery({
+      ...myOnboardingDocsQueryOptions({ limit: PAGE_SIZES.onboardingDocs }),
+      queryFn: () =>
+        serverGet<MyOnboardingDocsResponse>(
+          `/hr/onboarding-docs/me?limit=${PAGE_SIZES.onboardingDocs}`,
+          myOnboardingDocsContract,
+        ),
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
 }
 
 export async function prefetchMeSupport() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...mySupportRequestsQueryOptions({ limit: PAGE_SIZES.supportRequests }),
-    queryFn: () =>
-      serverGet<HelpdeskListResult>(
-        `/me/support?limit=${PAGE_SIZES.supportRequests}`,
-        helpdeskTicketListContract,
-      ),
-  });
-  return dehydrate(queryClient);
+  try {
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("self:support")) return dehydrate(queryClient);
+    await queryClient.prefetchQuery({
+      ...mySupportRequestsQueryOptions({ limit: PAGE_SIZES.supportRequests }),
+      queryFn: () =>
+        serverGet<HelpdeskListResult>(
+          `/me/support?limit=${PAGE_SIZES.supportRequests}`,
+          helpdeskTicketListContract,
+        ),
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
 }
 
 export async function prefetchMeResignation() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...myResignationsQueryOptions(),
-    queryFn: () =>
-      serverGet<ResignationListResponse>("/me/resignations", resignationListContract),
-  });
-  return dehydrate(queryClient);
+  try {
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("self:resignation")) return dehydrate(queryClient);
+    await queryClient.prefetchQuery({
+      ...myResignationsQueryOptions(),
+      queryFn: () =>
+        serverGet<ResignationListResponse>("/me/resignations", resignationListContract),
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
 }
 
 export async function prefetchMeTeam() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...managerHomeQueryOptions(),
-    queryFn: () =>
-      serverGet<ManagerHomeResponse>("/me/team", managerHomeContract),
-  });
-  return dehydrate(queryClient);
+  try {
+    const queryClient = await createServerQueryClient();
+    await queryClient.prefetchQuery({
+      ...managerHomeQueryOptions(),
+      queryFn: () =>
+        serverGet<ManagerHomeResponse>("/me/team", managerHomeContract),
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
 }

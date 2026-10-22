@@ -6,24 +6,10 @@ import { RowApproval } from "./row-approval";
 import { RowChart } from "./row-chart";
 import { RowTrace } from "./row-trace";
 
-/** Hairline between blocks, draws from the left — 1280 × 1, white 9% (3488:21998, 22043, 22077). */
 const Hairline = ({ className = "" }: { className?: string }) => (
   <DrawLine className={`h-px shrink-0 bg-product-hairline ${className}`} />
 );
 
-/**
- * 04 Product — 1440 × 1593, content 1280 from x80 y96 (Figma 3888:5813).
- * Head (174) → hairline → rows of 424 / 424 / 376 split by hairlines; 96 below.
- *
- * 1024 (3888:10220) — 1509 tall, content 928 from x48 y40: the head stacks
- * centred (206), then rows of 388 / 384 / 408 and 80 below.
- *
- * 768 (3832:7487) — 2000 tall, content 688 from x40 y40: head 178, every
- * block 16 apart, rows stack copy over card (545 / 545 / 513), 80 below.
- *
- * 390 (3893:3087) — 1680 tall, content 350 from x20 y48: blocks 32 apart,
- * rows 389 / 429 / 403, 48 below.
- */
 export const Product = ({ head, trace, approval, chart }: ProductContent) => (
   <section
     id="product"
@@ -40,7 +26,7 @@ export const Product = ({ head, trace, approval, chart }: ProductContent) => (
     />
     <Hairline />
     <RowTrace trace={trace} />
-    {/* 390 has no hairline between rows (3893:3087) */}
+    
     <Hairline className="w390:hidden" />
     <RowApproval approval={approval} />
     <Hairline className="w390:hidden" />

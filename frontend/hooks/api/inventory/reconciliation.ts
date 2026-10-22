@@ -33,10 +33,6 @@ export interface ReconciliationReport {
     productVariantId: number | null;
   };
   checked: ReconciliationCheck[];
-  /**
-   * Figures the report deliberately does not claim to check, with the reason.
-   * on_order and outgoing_qty come from open documents and are not ledgerised.
-   */
   unreconcilable: string[];
   drift: ReconciliationDriftRow[];
   driftCount: number;
@@ -65,8 +61,6 @@ export function useReconciliationReport(params?: ReconciliationParams) {
         productVariantId: params?.productVariantId,
         limit: params?.limit,
       }, signal),
-    // Drift is a point-in-time comparison against a moving ledger, so a cached
-    // answer is worse than no answer — the operator has to know when it was taken.
     staleTime: 0,
     enabled: canReconcile,
   });

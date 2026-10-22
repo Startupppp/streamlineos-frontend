@@ -1,19 +1,5 @@
 import { z } from "zod";
 
-/**
- * The two payroll setup previews, contracted at the fetch seam.
- *
- * They look alike and are not. `POST /payroll/templates/:id/preview` takes an `annualCtc` from
- * the user and answers a simulated MONTHLY PAYSLIP through `computeTemplatePreview`.
- * `POST /payroll/policies/preview` takes no CTC at all — its request schema is `.strict()` and
- * carries none, and the setup wizard's draft never collects one — so it answers what each
- * component IS, never what it pays.
- *
- * The client declared one type over both. The setup review step read `line.monthlyAmount` off the
- * policy preview, a field that route has never emitted, and `formatMoney` rendered every salary
- * component as an em dash. Both repositories typechecked clean throughout, because
- * `apiClient.post<T>` is a cast and nothing in the type system ever sees the wire.
- */
 
 export const componentTypeContract = z.enum([
   "EARNING",
@@ -34,10 +20,6 @@ export const calcMethodContract = z.enum([
   "MANUAL",
 ]);
 
-/**
- * A component DEFINITION. `amount` is `decimal(15,2)` as a string, `percent` is `decimal(7,4)`,
- * and both are `null` — never absent — when the calculation does not use them.
- */
 export const policyPreviewComponentContract = z.object({
   code: z.string(),
   name: z.string(),
@@ -91,11 +73,6 @@ export const statutoryPackPreviewContract = z.object({
   complianceChecklist: z.array(complianceChecklistItemContract),
 });
 
-/**
- * `toggles` is the template's defaults spread with the caller's `toggleOverrides`, which the
- * request schema types as an open `Record<string, boolean>` — so the key set is not closed and
- * declaring it as the toggle enum would be a claim the route does not make.
- */
 export const policyPreviewContract = z.object({
   toggles: z.record(z.string(), z.boolean()),
   components: z.array(policyPreviewComponentContract),
@@ -111,7 +88,6 @@ export const policyPreviewContract = z.object({
   statutoryPack: statutoryPackPreviewContract,
 });
 
-/** A simulated payslip line. `monthlyAmount` exists HERE, and only here. */
 export const previewLineContract = z.object({
   code: z.string(),
   name: z.string(),
@@ -125,11 +101,6 @@ export const previewLineContract = z.object({
   explain: z.string(),
 });
 
-/**
- * `template` is a three-field stub the service builds by hand, not the full `TemplateRow` the
- * client used to declare; `annualCtc` and `monthlyCtc` are numbers, because
- * `computeTemplatePreview` divides rather than formatting.
- */
 export const templatePreviewContract = z.object({
   template: z.object({
     id: z.number(),

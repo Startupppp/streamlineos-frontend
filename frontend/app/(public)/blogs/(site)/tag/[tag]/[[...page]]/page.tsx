@@ -9,7 +9,6 @@ export const dynamic = "force-dynamic";
 
 type Props = { params: Promise<{ tag: string; page?: string[] }> };
 
-/** Tag archives are for readers, not search engines: noindex by default, links still followed. */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tag, page } = await params;
   const n = page?.length === 2 && /^\d+$/.test(page[1] ?? "") ? Number(page[1]) : 1;

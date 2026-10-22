@@ -7,13 +7,6 @@ import { useCan } from "@/hooks/api/access";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/**
- * NEO-9, NEO-11 and NEO-12 - kits, consignment and the dock.
- *
- * Three small features in one hook file because each is a handful of calls and a
- * file per feature would be three imports for one screen. Quantities are decimal
- * strings throughout, as everywhere else in this module.
- */
 export interface KitComponent {
   id: number;
   componentVariantId: number;
@@ -120,8 +113,6 @@ export function useAssembleKit() {
         data, { headers: { "Idempotency-Key": idempotencyKey } },
       ),
     onSuccess: () => {
-      // Assembling consumes components and creates the kit, so every stock and
-      // valuation figure on screen is stale.
       qc.invalidateQueries({ queryKey: queryKeys.inventory.kitsAll });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevelsList });
     },

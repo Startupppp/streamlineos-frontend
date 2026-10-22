@@ -14,13 +14,6 @@ type PlanBoardProps = {
   tiers: PricingContent["tiers"];
 };
 
-/**
- * Card column in design px: at 1440, four equal columns with a 20 gap; at
- * 1024 a 2 × 2 grid (434 tall cards, 12 gap). 768 and 390 stack the cards full
- * width with a 12 gap — 311 tall each at 768; 417 (423 featured) at 390. The
- * highlight layers are laid out by the same flex box as the cards, so they can
- * never drift from them in any frame.
- */
 const STACKED = "w768:h-77.75 w768:w-full w768:flex-none";
 const TIER_SIZE = {
   plain: `h-full basis-0 grow w1024:h-108.5 w1024:basis-[calc(50%_-_--spacing(1.5))] w1024:grow-0 ${STACKED} w390:h-104.25`,
@@ -29,15 +22,12 @@ const TIER_SIZE = {
 const tierSize = (tier: PricingContent["tiers"][number]) =>
   TIER_SIZE[tier.featured ? "featured" : "plain"];
 
-/** Card row box, shared by the cards and the two highlight layers. */
 const BOX =
   "absolute top-120 left-20 h-99.5 w-320 w1024:top-151.5 w1024:left-12 w1024:h-220 w1024:w-232 w768:top-168.25 w768:left-10 w768:h-320 w768:w-172 w390:top-200.5 w390:left-5 w390:h-427.5 w390:w-87.5";
 const GAP = "flex gap-5 w1024:flex-wrap w1024:gap-3 w768:flex-col w768:flex-nowrap";
 const ROW = `${BOX} ${GAP}`;
-/** A highlight layer stacked on the same columns, inside the box above. */
 const LAYER = `absolute inset-0 ${GAP}`;
 
-/** Pointer devices that can really hover — card rings stay off on touch. */
 const useCanHover = () => {
   const [can, setCan] = useState(false);
   useEffect(() => {
@@ -50,13 +40,6 @@ const useCanHover = () => {
   return can;
 };
 
-/**
- * Run meter + plan cards. One card at a time carries the Team look — accent
- * stroke, glow and accent button: the card under the pointer, otherwise the
- * slider's plan (Team at rest). The look cross-fades softly between cards
- * (each card owns its layers; nothing slides across the row), so leaving a
- * card hands it back to the default one.
- */
 export const PlanBoard = ({ meter, tiers }: PlanBoardProps) => {
   const [pos, setPos] = useState<number>(INITIAL);
   const [hover, setHover] = useState<number | null>(null);
@@ -64,8 +47,6 @@ export const PlanBoard = ({ meter, tiers }: PlanBoardProps) => {
   const selected = planIndex(pos, tiers);
   const lit = canHover && hover !== null ? hover : selected;
 
-  /* one soft, overdamped spring per card: the selected plan's stroke and glow
-     cross-fade in place — nothing slides over the row */
   const [marks] = useSprings(
     tiers.length,
     (n) => ({ o: n === lit ? 1 : 0, config: SPRING_SOFT }),
@@ -74,7 +55,7 @@ export const PlanBoard = ({ meter, tiers }: PlanBoardProps) => {
 
   return (
     <>
-      {/* the cards are simply there — only their contents animate in (client call) */}
+      
       <div
         className="absolute top-39.5 left-20 h-75.5 w-320 overflow-clip rounded-pricing-card border border-pricing-card-border bg-pricing-card backdrop-blur-card w1024:top-71.5 w1024:left-12 w1024:h-77 w1024:w-232 w768:top-59.5 w768:left-10 w768:h-105.75 w768:w-172 w390:top-62 w390:left-5 w390:h-135.5 w390:w-87.5"
       >

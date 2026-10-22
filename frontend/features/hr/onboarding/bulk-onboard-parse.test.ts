@@ -3,7 +3,6 @@ import { missingRequiredHeaders, parseFile, ParseStructuralError } from "./bulk-
 
 function csvFile(text: string): File {
   const file = new File([text], "employees.csv", { type: "text/csv" });
-  // jsdom's File predates Blob.text(); the parser only needs the text.
   Object.defineProperty(file, "text", { value: () => Promise.resolve(text) });
   return file;
 }

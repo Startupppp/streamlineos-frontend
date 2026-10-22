@@ -31,8 +31,6 @@ export function CustomFieldsSettingsPage() {
   const { data: fields, isLoading, isError, error, refetch } = useHrCustomFields(entityType, {
     enabled: canManage,
   });
-  // FE-42: page state from usePageState, not the useCan boolean, so a permitted
-  // user is not shown "Access Restricted" while their access is still loading.
   const pageState = usePageState({
     permission: "hr:custom-fields:manage",
     isLoading,

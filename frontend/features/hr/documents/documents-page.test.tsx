@@ -16,7 +16,6 @@ jest.mock("next-auth/react", () => ({
   useSession: () => ({ data: null }),
 }));
 
-// Page state keeps its real branch order; access is granted as useCan is below.
 jest.mock("@/hooks/api/use-page-state", () => {
   const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
     "@/lib/page-state/resolve-page-state",

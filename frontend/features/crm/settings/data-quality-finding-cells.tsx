@@ -11,13 +11,11 @@ export interface FindingDecision {
   action: "apply" | "dismiss";
 }
 
-/** `duplicate-email` → `Duplicate email`. The kind is a backend slug, never shown raw. */
 export function humanizeFindingKind(kind: string): string {
   const words = kind.replace(/[-_.]+/g, " ").trim();
   return words ? words.charAt(0).toUpperCase() + words.slice(1) : "Finding";
 }
 
-/** The party a finding is about, by name rather than id. */
 export const FindingPartyName = memo(function FindingPartyName({ partyId }: { partyId: string }) {
   const { data, isLoading } = useParty(partyId);
   if (isLoading) return <Skeleton className="h-4 w-32" />;
@@ -31,13 +29,6 @@ interface FindingRowActionsProps {
   onDecide: (decision: FindingDecision) => void;
 }
 
-/**
- * Resolve and dismiss for one open finding.
- *
- * "Mark resolved" is offered only where the finding proposes no automatic
- * remedy: applying a `merge-parties` finding merges two parties, and merging
- * from this queue is held for a product decision.
- */
 export const FindingRowActions = memo(function FindingRowActions({
   finding,
   canResolve,

@@ -23,6 +23,7 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { projectApprovalsListQueryOptions } from "./approvals-read-options";
 
 const approvalInboxPageContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalInboxPageContract));
 const approvalPageContract = lazyContract(() => import("./approvals-schema").then((m) => m.approvalPageContract));
@@ -364,15 +365,3 @@ export function useDeleteApproval(projectId: number) {
   );
 }
 
-export function projectApprovalsListQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.approvals.list(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
-      last.pagination.nextCursor ?? undefined,
-    staleTime: 60_000,
-  };
-}

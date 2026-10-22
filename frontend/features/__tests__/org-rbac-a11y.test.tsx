@@ -141,13 +141,6 @@ const MOCK_ROLES: RoleListRow[] = [
   },
 ];
 
-/*
- * The roles list is a KEYSET page — { limit, hasMore, nextCursor } — and the
- * panel drives CursorPageControls from `page` + `pagination.hasMore`. This
- * fixture was still the pre-cursor { page, totalPages, total, limit } and left
- * out `page`, `onPrevious` and `onNext` entirely, so every axe scan below ran
- * over a footer rendered with an undefined page and dead buttons.
- */
 const BASE_PAGINATION = { limit: 10, hasMore: false, nextCursor: null };
 
 function makeProps(overrides: Partial<RolesListPanelProps> = {}): RolesListPanelProps {

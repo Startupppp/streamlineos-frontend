@@ -4,15 +4,6 @@ import { renderWithProviders, axeViolationIds } from "@/test-utils";
 import { KitBomEditorSheet } from "./kit-bom-editor-sheet";
 import KitsPage from "@/app/(authenticated)/inventory/kits/page";
 
-/**
- * A kit's bill of materials could be read and never written.
- *
- * The page's own empty state said "Set them on the product, then come back" —
- * pointing at a screen that does not exist. `PUT
- * /inventory/kits/:kitVariantId/bom` was mounted, carried
- * `inventory:products:update`, and `useSetKitBom` was referenced by nothing, so
- * every kit in the product was one somebody had inserted by hand.
- */
 
 const mockSetBomMutate = jest.fn();
 let mockSetBomPending = false;

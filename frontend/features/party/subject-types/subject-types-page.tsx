@@ -17,13 +17,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { SubjectType } from "@/types/party/subjects";
 import { SubjectTypeFormSheet } from "./subject-type-form-sheet";
 
-/**
- * What this organisation transacts, as configuration.
- *
- * Module configuration lives under the module's own settings rather than global
- * `/settings/*`, so this sits at `/crm/settings/subject-types` beside custom
- * fields.
- */
 export function SubjectTypesPage() {
   const canManage = useCan("party:subject-types:manage");
 

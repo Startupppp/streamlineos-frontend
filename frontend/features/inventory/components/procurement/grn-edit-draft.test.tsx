@@ -3,14 +3,6 @@ import { renderWithProviders, axeViolationIds } from "@/test-utils";
 import { GrnDetailSheet } from "./grn-detail-sheet";
 import { GrnEditDraftDialog } from "./grn-edit-draft-dialog";
 
-/**
- * A receipt's date could be wrong from the moment it was raised.
- *
- * `receive-goods-sheet.tsx` stamps `receivedDate: getTodayString()` and offers
- * no field for it, so a Friday-evening pallet booked in on Monday carries
- * Monday's date. `PATCH /inventory/goods-receipts/:grnId` accepted the
- * correction the whole time and `useUpdateGrnDraft` was called by nothing.
- */
 
 const mockUpdateMutate = jest.fn();
 let mockUpdatePending = false;

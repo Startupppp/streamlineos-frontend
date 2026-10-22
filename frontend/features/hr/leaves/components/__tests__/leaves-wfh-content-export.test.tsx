@@ -3,12 +3,6 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-/**
- * HRMS-E2E-022. The export button has to end in a file or in a message — never
- * in nothing. These tests assert the two halves jsdom can see: that the blob
- * reached `downloadBlob`, and that a toast named what happened. Whether the
- * browser actually writes the file to disk is a browser check (FE-123).
- */
 
 type MutationStub = {
   mutate: jest.Mock;
@@ -60,7 +54,6 @@ const leaveRequest = (id: number, status: string, firstName: string) => ({
   },
 });
 
-/** Four team requests, as in the QA repro. */
 const TEAM_PAGES = {
   pages: [
     {
@@ -118,12 +111,6 @@ jest.mock("next-auth/react", () => ({
   }),
 }));
 
-// Access is resolved by the mocks above; these specs are about the rows.
-/**
- * The decision controls read the requester's own approval route now, so a sole
- * owner can close a request the router already assigned them (BUG-HRMS-017).
- * These cases are not about that, so the route says nobody else is needed.
- */
 jest.mock("@/hooks/api/hr/approvers", () => ({
   useMyApprover: () => ({ data: undefined }),
 }));
@@ -171,8 +158,6 @@ jest.mock("@/features/hr/leaves/wfh-request-sheet", () => ({
   WfhRequestSheet: () => null,
 }));
 
-// V-048. The catch arm at leaves-wfh-content.tsx was uncovered: nothing proved
-// a failing workbook build ends in an error toast rather than in silence.
 let exceljsFails = false;
 jest.mock("exceljs", () => {
   const actual = jest.requireActual("exceljs");

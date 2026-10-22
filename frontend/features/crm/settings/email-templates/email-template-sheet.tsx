@@ -32,14 +32,6 @@ import {
 } from "@/lib/renderer/crm/settings/email-template-layout";
 import { requiredText, textOrOmit } from "../shared/record-payload";
 
-/**
- * Create and edit an email template, rendered from the description.
- *
- * One form instead of the two the page used to carry — a create dialog and an
- * edit card, three fields written out twice. The body's variable palette is
- * supplied through `controls`, which is what lets a generated form host a
- * bespoke control for one field without the surface forking the whole form.
- */
 
 interface EmailTemplateSheetProps {
   open: boolean;

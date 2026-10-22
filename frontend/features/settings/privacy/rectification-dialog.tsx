@@ -18,7 +18,6 @@ interface RectificationDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** GDPR Art. 16 — the subject corrects their own record; the change is applied and logged. */
 export function RectificationDialog({ open, onOpenChange }: RectificationDialogProps) {
   const rectify = useRectifyMyProfile();
 

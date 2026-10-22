@@ -1,13 +1,5 @@
 import type { RecordLayout } from "./layout";
 
-/**
- * A person at a party, and a role a party holds, as data.
- *
- * `PARTY_CONTACT_LAYOUT` mirrors `createContactSchema`/`updateContactSchema` in
- * the backend's party DTOs; a field the API does not accept would be a control
- * whose value is silently dropped. A role is a single free-form label
- * (CUSTOMER, VENDOR, whatever the tenant uses), so its layout is one field.
- */
 export const PARTY_CONTACT_LAYOUT: RecordLayout = {
   key: "party:contact",
   singular: "Contact",

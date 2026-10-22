@@ -164,9 +164,6 @@ export function WorkLogsPage() {
     ...(filters.dateTo ? { dateTo: filters.dateTo } : {}),
   });
 
-  // The route has no server guard and useGetWorkLogs is gated on
-  // hr:attendance:view: a denied caller got a quarter of editable empty days
-  // whose every Save would 403 (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   const upsertLog = useUpsertWorkLog({

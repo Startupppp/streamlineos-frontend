@@ -5,15 +5,9 @@ import type { UnsavedChangesDialogProps } from "@/components/ui/unsaved-changes-
 
 type UseUnsavedChangesGuardOptions = {
   isDirty: boolean;
-  /** Persist changes; resolve on success so leave can continue (when saveMode is "leave"). */
   onSave?: () => void | Promise<void>;
-  /** Reset local state before leaving (optional). */
   onDiscard?: () => void;
   enabled?: boolean;
-  /**
-   * "leave" — save then run the pending leave action (page Back).
-   * "stay" — save in place and dismiss the dialog (sheets).
-   */
   saveMode?: "leave" | "stay";
   handleBrowserBack?: boolean;
 };
@@ -23,9 +17,6 @@ type UseUnsavedChangesGuardResult = {
   dialogProps: UnsavedChangesDialogProps;
 };
 
-/**
- * Intercepts leave actions when a form is dirty and drives UnsavedChangesDialog.
- */
 export function useUnsavedChangesGuard({
   isDirty,
   onSave,
@@ -123,7 +114,6 @@ export function useUnsavedChangesGuard({
         setOpen(false);
       }
     } catch {
-      // Keep dialog open; callers should toast errors.
     } finally {
       setIsSaving(false);
     }

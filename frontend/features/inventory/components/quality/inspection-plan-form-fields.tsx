@@ -32,7 +32,6 @@ import {
 
 interface InspectionPlanFormFieldsProps {
   form: UseFormReturn<InspectionPlanFormValues>;
-  /** The code is the plan's stable identity, so it is set once and never edited. */
   codeDisabled?: boolean;
 }
 

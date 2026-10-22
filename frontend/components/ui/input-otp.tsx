@@ -5,7 +5,6 @@ import { OTPInput, OTPInputContext, REGEXP_ONLY_DIGITS } from "input-otp";
 import { Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Strip spaces/dashes/thin spaces so paste from email OTP templates works. */
 function digitsOnly(pasted: string): string {
   return pasted.replace(/\D/g, "");
 }

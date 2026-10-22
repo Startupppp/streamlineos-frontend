@@ -10,14 +10,6 @@ if (typeof globalThis.TextEncoder === "undefined")
 
 installAbortSignalPolyfill();
 
-/**
- * The live calendar prep surface. Everything from the panel's click handler down
- * runs for real — `streamMeetingPrep`, `streamAiText`, `authedFetch`, the
- * combined abort signal — with only `global.fetch` mocked, because the two
- * defects this seam keeps reproducing (a buffered POST wearing a Stop button,
- * and a signal that type-checks in a slot nothing reads) are both invisible to a
- * test that stubs the client.
- */
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("./use-calendar-connections", () => ({
@@ -80,7 +72,6 @@ function bodyOf(chunks: string[], signal: AbortSignal | null) {
   };
 }
 
-/** Serves the given deltas, then hangs until the signal aborts. */
 function heldBody(signal: AbortSignal | null, chunks: string[]) {
   const queued = [...chunks];
   return {
@@ -139,8 +130,6 @@ function refuse(status: number, body: Record<string, unknown>) {
     ok: false,
     status,
     statusText: "Payment Required",
-    // The backend's error envelope; a bare body would read as a gateway
-    // outage and trip the api-client outage circuit for the next case.
     headers: new Headers({ "content-type": "application/json" }),
     json: () => Promise.resolve(body),
   });
@@ -151,7 +140,6 @@ afterEach(() => {
   jest.restoreAllMocks();
 });
 
-/** The app mounts one `TooltipProvider` at the root (`components/providers/query-provider.tsx`). */
 function renderPanel() {
   return render(
     <TooltipProvider>

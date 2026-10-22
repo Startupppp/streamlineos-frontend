@@ -141,18 +141,6 @@ function buildColumns(
   ];
 }
 
-/**
- * C7 — the drift watchlist.
- *
- * Worst error first, so a SKU whose forecast has stopped working appears without
- * anyone suspecting it. "Error vs a week" is MAE against mean weekly demand,
- * which is what makes one threshold meaningful across SKUs selling five a week
- * and five thousand.
- *
- * Nothing on this page writes. Opening the evidence reads the stored versions;
- * it does not regenerate a forecast, because a monitor that changes what it
- * monitors destroys the evidence it exists to preserve.
- */
 export function ForecastDriftClient() {
   const canRead = useCan(READ_KEY);
   const [page, setPage] = useState(1);

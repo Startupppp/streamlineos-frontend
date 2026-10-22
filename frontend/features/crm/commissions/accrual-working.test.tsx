@@ -72,10 +72,6 @@ describe("AccrualWorking", () => {
     expect(screen.getByText("Acme renewal")).toBeInTheDocument();
   });
 
-  /**
-   * The point of the screen. A rep disputing a number has to be able to see the
-   * bands it was summed from without asking anybody.
-   */
   it("opens a deal to show the bands that priced it", () => {
     render(<AccrualWorking accrual={accrual()} locale="en-IN" />);
 
@@ -96,11 +92,6 @@ describe("AccrualSummary", () => {
     expect(screen.getByText("Accrued this period")).toBeInTheDocument();
   });
 
-  /**
-   * `reconciles` is the backend asserting the parts sum to the headline. A
-   * screen that showed the total beside a breakdown that does not add up, and
-   * said nothing, would be the one place this module's promise breaks silently.
-   */
   it("warns when the breakdown does not add up to the total", () => {
     render(
       <AccrualSummary
@@ -112,8 +103,6 @@ describe("AccrualSummary", () => {
   });
 
   it("does not cry mismatch when the itemisation was merely truncated", () => {
-    // Truncation makes `reconciles` false by construction -- the roll-ups cover
-    // a page and the total covers the period. That is a different message.
     render(
       <AccrualSummary
         accrual={accrual({ truncated: true, reconciles: { byDeal: false, byRule: false } })}

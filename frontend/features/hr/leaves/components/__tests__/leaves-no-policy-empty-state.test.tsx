@@ -1,10 +1,6 @@
 import * as React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 
-/**
- * V-051. The unconfigured-policy state is a dead end unless it carries a route
- * into setup — and the route must not be offered to someone who cannot take it.
- */
 let canManage = true;
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => canManage,

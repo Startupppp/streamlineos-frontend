@@ -51,7 +51,6 @@ import { formatINRCompact } from "@/lib/format-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 
-/** How this panel frames a lead: who they are, where they are, and how they arrived. */
 const RELATED_LEAD_COLUMNS = ["name", "email", "status", "priority", "source"] as const;
 
 function DetailPageSkeleton() {
@@ -121,13 +120,6 @@ export default function CompanyDetailPage({
   const { data: company360, isLoading: company360Loading } = useCompany360(id);
   const deleteMutation = useDeleteCrmOrganization();
 
-  /*
-    The leads on this company are leads, so they are described by the lead
-    description rather than by a fourth column array written on a company page.
-    `useLeadLayout` carries the tenant's own status and priority vocabulary,
-    which is what the two `CrmOptionBadge` calls here used to fetch for
-    themselves — the same fact, now read once for every lead surface.
-  */
   const leadLayout = useLeadLayout();
   const relatedLeadsLayout = useMemo(
     () => withColumns(leadLayout, RELATED_LEAD_COLUMNS),

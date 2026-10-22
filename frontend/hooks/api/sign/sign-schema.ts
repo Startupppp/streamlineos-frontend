@@ -349,12 +349,6 @@ export const signDocumentUrlContract = z.object({
   expiresInSeconds: z.number().int(),
 });
 
-/**
- * `getSessionResponseSchema` — a discriminated union on `state`. The non-active
- * branch is declared `z.string().refine(s => s !== "active")`; the ten members
- * below are `SessionState` in `sign-public.service.ts`, which `deriveState` is
- * the only producer of. `authMethod` is the `sign_auth_method` pgEnum.
- */
 export const signPublicSessionContract = z.discriminatedUnion("state", [
   z.object({
     state: z.literal("active"),

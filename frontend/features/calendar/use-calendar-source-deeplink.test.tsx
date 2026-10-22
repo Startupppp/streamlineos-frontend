@@ -1,11 +1,5 @@
 import { renderHook } from "@testing-library/react";
 
-/**
- * `/calendar?source=<key>` is the other half of removing the HR interviews
- * calendar: the module page hands its events to the unified calendar, and the
- * link has to survive a viewer who has that source switched off — otherwise
- * "View in calendar" lands on a calendar with none of the events on it.
- */
 
 const replace = jest.fn();
 let currentParams = new URLSearchParams();

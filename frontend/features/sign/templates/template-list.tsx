@@ -117,7 +117,6 @@ function TemplateRow({ template }: { template: SignTemplate }) {
 export function TemplateList() {
   const { data: templates, isLoading, isFetching, isError, error, refetch, access } = useSignTemplates();
 
-  /** Only show skeleton on initial load, not on background refetch */
   const showSkeleton = !templates && (isLoading || isFetching);
 
   async function handleRetry() {

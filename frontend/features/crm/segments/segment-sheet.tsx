@@ -11,26 +11,11 @@ import { EMPTY_CRITERION_ROW, toCriterionRows, toSegmentCriteria } from "./segme
 import { SegmentFormFields } from "./segment-form-fields";
 import { segmentFormSchema, type SegmentFormValues } from "./segment-schema";
 
-/**
- * Creating and editing a segment, in one sheet.
- *
- * Rung 4 of the overlay ladder: six controls plus a repeating group, and the
- * match count beside them is context the person needs while they work — a dialog
- * that covered the list would take away the thing they are sizing.
- *
- * The submit path is where the form's rows become the server's tree. It cannot
- * fail here: the resolver has already refused every row the conversion would
- * reject, so `toSegmentCriteria` returning `null` at this point would mean the
- * schema and the converter disagree. That case is handled rather than asserted,
- * because a thrown error inside a submit handler is a form that silently stops
- * responding.
- */
 
 interface SegmentSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   sources: readonly SegmentSource[];
-  /** The segment being edited, or `null` to create one. */
   segment: Segment | null;
 }
 
@@ -39,13 +24,6 @@ export function SegmentSheet({ open, onOpenChange, sources, segment }: SegmentSh
   const updateSegment = useUpdateSegment();
   const isEditing = segment !== null;
 
-  /**
-   * A stored tree that this control did not draw — nested, or containing an
-   * `or` — comes back as `null`, and the form opens with no rows rather than
-   * with a flattened approximation. Saving then replaces the criteria, which is
-   * what the person can see they are doing; silently rewriting them would not
-   * be.
-   */
   const defaultValues = useMemo<SegmentFormValues>(() => {
     if (!segment)
       return {

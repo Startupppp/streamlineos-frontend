@@ -19,19 +19,6 @@ export interface MyTasksPanelProps {
   className?: string;
 }
 
-/**
- * The tasks assigned to whoever is reading, soonest first.
- *
- * These are the tasks logged against a customer, a deal or a subject — the same
- * rows their timelines show. Without this they existed and were reachable only
- * by opening the record you already had to remember.
- *
- * It renders nothing at all when the reader has none, or may not read
- * activities: this sits above a screen that is already a task queue, and an
- * empty panel there would be a second empty state arguing with the first. That
- * is not the denial-reads-as-emptiness trap — nothing here claims there is no
- * work, because nothing here is drawn. A *failure* is different, and says so.
- */
 export function MyTasksPanel({ className }: MyTasksPanelProps) {
   const tasks = useMyActivityTasks();
   const completeTask = useCompleteActivityTask();

@@ -137,7 +137,7 @@ export function NewProductForm({
 
         <ProductClassificationFields control={form.control} />
 
-        {/* B1. Renders itself only while the `materials` pack is on. */}
+        
         <ProductMaterialFields control={form.control} />
 
         <ProductCostingCardFields

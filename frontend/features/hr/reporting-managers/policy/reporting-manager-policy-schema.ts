@@ -26,7 +26,6 @@ export function policyToFormValues(policy: ReportingManagerPolicy): ReportingMan
   };
 }
 
-/** Sends only what changed, pinned to the version the form was loaded from. */
 export function policyPatch(
   policy: ReportingManagerPolicy,
   values: ReportingManagerPolicyFormValues,

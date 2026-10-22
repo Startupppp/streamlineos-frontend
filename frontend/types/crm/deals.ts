@@ -200,21 +200,11 @@ export interface CreateDealCompetitorInput {
   notes?: string;
 }
 
-/**
- * CRM-P2-12. A rival the system noticed on the deal's timeline, and nothing more.
- *
- * Deliberately a different shape from `DealCompetitor` and read from a different
- * endpoint, because it is a different claim: a competitor is something a person
- * stated, a suggestion is something a person has not looked at yet. Merging the
- * two into one list with a flag is how a machine's guess ends up in a board
- * review, so the types stay apart at the boundary as well as in the database.
- */
 export interface DealCompetitorSuggestion {
   competitorSuggestionId: string;
   competitorKey: string;
   sourceKind: string;
   sourceActivityId: string;
-  /** The line that named them, verbatim. What makes the proposal checkable. */
   evidenceQuote: string;
   status: "pending" | "accepted" | "dismissed";
   decidedByUserId: string | null;
@@ -225,14 +215,6 @@ export interface DealCompetitorSuggestion {
   createdAt: string;
 }
 
-/**
- * What a scan found, and why it found nothing when it found nothing.
- *
- * The counts are the difference between three unlike answers that would
- * otherwise render as the same shrug: the organisation keeps no competitor list
- * (`vocabularySize` 0, and the fix is to curate one), the timeline mentions
- * nobody, or everything mentioned is already recorded.
- */
 export interface DealCompetitorScanResult {
   proposed: number;
   vocabularySize: number;
@@ -242,13 +224,6 @@ export interface DealCompetitorScanResult {
   suggestions: DealCompetitorSuggestion[];
 }
 
-/**
- * Accepting echoes the name back.
- *
- * The id alone would be enough to find the row and is deliberately not enough to
- * act on it — the server compares this against what it stored, so a stale card
- * cannot turn a click into a competitor nobody read.
- */
 export interface AcceptDealCompetitorSuggestionInput {
   suggestionId: string;
   confirmedCompetitorKey: string;

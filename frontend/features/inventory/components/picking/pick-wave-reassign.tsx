@@ -16,11 +16,8 @@ import { useWarehouseRoster } from "@/features/inventory/hooks/use-warehouse-ros
 
 interface PickWaveReassignProps {
   pickListId: number;
-  /** The wave's warehouse, which is also the scope the roster is drawn from. */
   warehouseId: number | null;
-  /** Whoever holds the claim now, excluded from the roster. */
   assignedTo: string | null;
-  /** COMPLETED / CANCELLED. The server answers 400, so the control is not offered. */
   finished: boolean;
 }
 
@@ -36,31 +33,6 @@ function ReassignNote({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Handing a claimed wave to a different picker.
- *
- * ## Why the roster is the warehouse, not the organisation
- *
- * `WarehouseScopeService` denies by default: a picker with no grant on this
- * warehouse cannot read the wave, let alone confirm a line against it. Offering
- * the whole member directory would therefore let a supervisor hand a walk to
- * somebody who opens it to a 403 — the goods stay on the shelf and the wave
- * looks assigned. `GET /inventory/warehouses/:id/users` is exactly the set that
- * can act here, and it returns names, so nothing on this control renders a raw
- * id.
- *
- * It also happens to be the only roster this operator can read. The org
- * directory sits behind `settings:view`, which the `INVENTORY_MANAGER` template
- * does not carry — the person most likely to reassign a wave would have been
- * shown an empty picker and no reason why.
- *
- * ## Two permissions, deliberately
- *
- * `inventory:sales-orders:ship` is the endpoint's own key and decides whether
- * the control exists at all. `inventory:warehouses:manage` only decides whether
- * the roster can be read; holding the first without the second is a real
- * combination, and it says so rather than rendering a picker with nothing in it.
- */
 export function PickWaveReassign({
   pickListId,
   warehouseId,
@@ -94,8 +66,6 @@ export function PickWaveReassign({
     roster.refetch();
   }
 
-  // Denied, and the sheet already says why it is read-only. A control the
-  // handler would refuse is not shown at all (frontend §17).
   if (!canReassign || finished) return null;
 
   if (warehouseId === null) {

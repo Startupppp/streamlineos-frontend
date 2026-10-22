@@ -15,7 +15,6 @@ interface PublicLeadFormProps {
   leadFormToken: string;
 }
 
-/** The page a visitor lands on from a shared or embedded web-form link. */
 export function PublicLeadFormPage({ leadFormToken }: PublicLeadFormProps) {
   const form = usePublicLeadForm(leadFormToken);
 

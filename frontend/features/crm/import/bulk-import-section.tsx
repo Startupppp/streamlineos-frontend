@@ -39,16 +39,6 @@ import {
 const PREVIEW_PAGE_SIZE = 20;
 const PROBLEMS_SHOWN = 8;
 
-/**
- * Bringing leads, contacts or deals in from a file.
- *
- * One flow for all three, described by `bulk-import-entities.ts`, replacing
- * three near-identical `<Dialog>` wizards whose steps a person lost by pressing
- * Escape. The steps are gone rather than moved: every stage is a card on the
- * page at once, and the rows below are derived from the file and the current
- * mapping rather than committed to at a "confirm mapping" step, so correcting a
- * column is a change and not a retreat.
- */
 export function BulkImportSection({ entity }: { entity: BulkEntity }) {
   const [contents, setContents] = useState<ImportFileContents | null>(null);
   const [mappings, setMappings] = useState<Record<number, string>>({});
@@ -77,8 +67,6 @@ export function BulkImportSection({ entity }: { entity: BulkEntity }) {
 
   const openFile = useCallback(
     async (file: File) => {
-      // Cleared up front so a rejected file leaves nothing behind rather than
-      // leaving the previous one staged under the new one's name.
       setContents(null);
       setMappings({});
       setResult(null);
@@ -213,8 +201,7 @@ export function BulkImportSection({ entity }: { entity: BulkEntity }) {
             </Button>
           </div>
 
-          {/* A file being read is not a file that came back empty; saying which
-              is the difference between a slow import and one that looks broken. */}
+          
           {isReading ? (
             <p aria-live="polite" className="text-label text-muted-foreground">
               Reading your file…
@@ -352,8 +339,7 @@ export function BulkImportSection({ entity }: { entity: BulkEntity }) {
               </ul>
             ) : null}
 
-            {/* Said plainly rather than offered as a button: unlike the party
-                import, these endpoints have nothing to undo with. */}
+            
             <p className="text-label text-muted-foreground">
               This one cannot be taken back from here. Remove anything you did not mean to import
               from the {entity.label.toLowerCase()} list.
@@ -369,12 +355,6 @@ export function BulkImportSection({ entity }: { entity: BulkEntity }) {
   );
 }
 
-/**
- * The rows this file would produce, and everything wrong with it.
- *
- * Derived from the file and the current mapping rather than held in state, so
- * the review can never describe a mapping the person has already changed.
- */
 function planRows(
   entity: BulkEntity,
   contents: ImportFileContents | null,
@@ -386,14 +366,12 @@ function planRows(
   for (const [index, field] of Object.entries(mappings))
     if (field !== SKIP_COLUMN) columnOf.set(field, Number(index));
 
-  // Without the required column every row would report the same missing field.
   if (!columnOf.has(requiredFieldOf(entity).key)) return { rows: [], problems: [] };
 
   const rows: BulkRow[] = [];
   const problems: string[] = [];
 
   contents.rows.forEach((cells, index) => {
-    // The line number in the person's own spreadsheet: the header is line 1.
     const line = index + 2;
     const cell = (field: string) => {
       const column = columnOf.get(field);

@@ -9,11 +9,6 @@ const ablyTokenRequestContract = lazyContract(() =>
   import("@/lib/ably-token-schema").then((m) => m.ablyTokenRequestContract),
 );
 
-/**
- * The fetch is a thunk rather than a path so each route stays a literal at its
- * own call site — a path threaded through a parameter is invisible to every
- * route rule in `check:response-contracts` and `check:gated-reads`.
- */
 function tokenAuthCallback(
   fetchTokenRequest: () => Promise<Ably.TokenRequest>,
 ): AblyAuthCallback {

@@ -10,11 +10,6 @@ import { safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { supportChannelName } from "@/lib/ably-channels";
 import { isRecord } from "@/lib/is-record";
 
-/**
- * An Ably message body is `any`, so declaring a payload interface and asserting
- * `msg.data` into it checked nothing — the shape was a comment with syntax. Both
- * handlers only ever read `ticketId`, so read exactly that, and verify it.
- */
 function readTicketId(data: unknown): number | null {
   if (!isRecord(data) || typeof data.ticketId !== "number" || !data.ticketId)
     return null;

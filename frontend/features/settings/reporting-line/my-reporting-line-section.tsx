@@ -31,10 +31,6 @@ function ManagerRow({ entry, heading }: { entry: RelationshipEntry; heading: str
   );
 }
 
-/**
- * The employee's own reporting line on /settings (PRD §7.5). Renders nothing
- * where it has nothing to say: HR off, or a member with no employment.
- */
 export function MyReportingLineSection() {
   const hrEnabled = useModuleEnabled("hr");
   const { data, isLoading, isError, error, refetch } = useMyReportingLine();

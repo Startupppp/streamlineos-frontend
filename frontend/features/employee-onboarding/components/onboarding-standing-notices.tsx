@@ -5,18 +5,6 @@ import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { gateCookieName } from "@/lib/onboarding-gate";
 
-/**
- * V-034. Two things the deferral gate left unsaid.
- *
- * (a) An administrator who pressed "Skip for now" was never reminded again:
- *     their own record stays incomplete and nothing in `/hr` said so.
- * (b) A MEMBER redirected into the wizard was told nothing about why they had
- *     landed there — `AdminDeferBanner` renders nothing for them, by design,
- *     because they may not defer.
- *
- * Both read the session rather than a role string of their own, so they can
- * never disagree with `resolveWizardGate` about who is which (FE-52).
- */
 
 function hasCookie(name: string): boolean {
   if (typeof document === "undefined") return false;
@@ -25,14 +13,6 @@ function hasCookie(name: string): boolean {
     .some((pair) => pair.trim().startsWith(`${name}=`));
 }
 
-/**
- * Shown in the `/hr` shell to an administrator who deferred: their onboarding
- * is still incomplete, and this is the only thing that says so.
- *
- * The cookie is an external store with a server snapshot of `false`: the
- * server has no `document`, and reading it during render would make the
- * banner a hydration mismatch.
- */
 const NO_SUBSCRIBE = () => () => {};
 
 export function DeferredOnboardingReminder() {
@@ -69,11 +49,6 @@ export function DeferredOnboardingReminder() {
   );
 }
 
-/**
- * Shown in the wizard beside `AdminDeferBanner`, to the people that banner
- * deliberately renders nothing for: they were redirected here and, unlike an
- * administrator, they cannot leave until this is done.
- */
 export function MemberOnboardingNote() {
   const { data: session } = useSession();
 

@@ -10,7 +10,6 @@ import type { BulkJobRow } from "@/hooks/api/hr/reporting-line-bulk-jobs-schema"
 import type { CursorPaginationState } from "@/hooks/common/use-cursor-pagination";
 
 export interface RowReasonValues {
-  /** Keyed `r<rowNumber>`: a numeric path segment would make react-hook-form build an array. */
   reasons: Record<string, string>;
 }
 
@@ -94,11 +93,9 @@ interface BulkJobRowsTableProps {
   rows: BulkJobRow[];
   pager: CursorPaginationState;
   nextRowCursor: string | null;
-  /** Render the per-row reason inputs; requires a surrounding `FormProvider<RowReasonValues>`. */
   withReasons?: boolean;
 }
 
-/** One page (≤ 100) of a bulk job's rows, walked by the job's own row cursor. */
 export function BulkJobRowsTable({ rows, pager, nextRowCursor, withReasons = false }: BulkJobRowsTableProps) {
   function handleNext() {
     pager.goNext(nextRowCursor);

@@ -18,21 +18,10 @@ import { TypeLabel } from "./type-label";
 type RunMeterProps = {
   meter: PricingContent["meter"];
   tiers: PricingContent["tiers"];
-  /**
-   * Slider position in stops (0 = first plan's seats, 1 = second, …), owned
-   * by the board so the cards can follow. Stops, not track px, so every track
-   * geometry below shares one value.
-   */
   pos: number;
   onPos: (pos: number) => void;
 };
 
-/**
- * Track geometry in design px, one per frame (`useFrame`, the same lines as the
- * `w*:` variants, so CSS and motion can never disagree). `length` is the knob
- * centre's travel; `stops` are the knob centres for each plan's seat count,
- * evenly spaced and ending on the track's end.
- */
 type Track = { length: number; stops: readonly number[] };
 const TRACKS: Record<Frame, Track> = {
   1440: { length: 860, stops: [0, 287, 573, 860] },
@@ -41,20 +30,16 @@ const TRACKS: Record<Frame, Track> = {
   390: { length: 284, stops: [0, 95, 189, 284] },
 };
 
-/** The knob rests on the featured plan's stop (Starter). */
 export const INITIAL = 1;
 
-/** Segment of the track a stop position falls in (the last one past the end). */
 const segment = (pos: number, last: number) =>
   Math.max(0, Math.min(Math.floor(pos), last - 1));
 
-/** Stops → track px, interpolated inside each segment. */
 const toPx = (pos: number, track: Track) => {
   const i = segment(pos, track.stops.length - 1);
   return track.stops[i] + (pos - i) * (track.stops[i + 1] - track.stops[i]);
 };
 
-/** Track px → stops (the inverse of `toPx`). */
 const toPos = (px: number, track: Track) => {
   const { stops } = track;
   let i = 0;
@@ -62,8 +47,6 @@ const toPos = (px: number, track: Track) => {
   return i + (px - stops[i]) / (stops[i + 1] - stops[i]);
 };
 
-/* Ticks sit on the knob centre at each stop; labels start on the column line
-   for the first stop and centre on their tick for the others. */
 const TICK_X = [
   "left-9.75 w1024:left-5.75 w768:left-9 w390:left-8",
   "left-81.5 w1024:left-57 w768:left-60.25 w390:left-31.75",
@@ -79,10 +62,8 @@ const LABEL_X = [
 
 const format = (n: number) => n.toLocaleString("en-IN");
 
-/** The result column types in after the question column. */
 const REVEAL_TYPE = 240;
 
-/** People at a slider position — geometric between neighbouring stops. */
 const toSeats = (pos: number, tiers: RunMeterProps["tiers"]) => {
   const i = segment(pos, tiers.length - 1);
   const from = tiers[i].seats;
@@ -90,31 +71,15 @@ const toSeats = (pos: number, tiers: RunMeterProps["tiers"]) => {
   return Math.max(1, Math.round(from * (to / from) ** (pos - i)));
 };
 
-/** Index of the plan that covers the people at a slider position. */
 export const planIndex = (pos: number, tiers: RunMeterProps["tiers"]) => {
   const seats = toSeats(pos, tiers);
   const i = tiers.findIndex((tier) => seats <= tier.seats);
   return i === -1 ? tiers.length - 1 : i;
 };
 
-/**
- * Run meter card content (3888:6976, 1024: 3888:11384). A native range input
- * sits invisibly over the drawn track so keyboard, touch and screen readers
- * work, while the resting render — knob at 30,000, Team shown — matches the
- * frame exactly. The drawn knob and fill trail the input on a spring; the plan
- * price rolls. The input is stepped in track px of the current width, so the
- * drag feel is unchanged at 1024; the position it reports is width-independent.
- *
- * At 1024 the result column narrows to 200 and its "a month" drops under the
- * price instead of sitting beside it (3888:11400/01). 768 (3876:11) drops the
- * vertical rule and puts the result under the slider: plan name left, price
- * and period right-aligned, then rule, runs and a full-width CTA. 390
- * (3950:695) stacks it all in one column under a horizontal rule.
- */
 export const RunMeter = ({ meter, tiers, pos, onPos }: RunMeterProps) => {
   const id = useId();
   const track = pick(useFrame(), TRACKS);
-  /* every track ends on its last stop */
   const max = track.stops.length - 1;
   const level = Math.min(pos, max);
   useEffect(() => {
@@ -213,8 +178,7 @@ export const RunMeter = ({ meter, tiers, pos, onPos }: RunMeterProps) => {
           </FocusText>
         </p>
         <span className="absolute top-41.75 left-251.75 h-px w-58 bg-border-subtle w1024:top-43.75 w1024:left-175.75 w1024:w-50 w768:top-71.25 w768:left-5.75 w768:w-160 w390:top-100 w390:left-4.75 w390:w-77.5" />
-        {/* Its length changes with the plan, so it focuses in rather than
-            types (TypeText clips to the first length it typed). */}
+        
         <FocusText
           delay={REVEAL_TYPE + 3 * STEP}
           className="absolute top-45.25 left-251.75 font-mono text-relay-label leading-label whitespace-nowrap text-foreground-muted w1024:top-49.75 w1024:left-175.75 w768:top-77.5 w768:left-5.75 w390:top-106.25 w390:left-4.75"

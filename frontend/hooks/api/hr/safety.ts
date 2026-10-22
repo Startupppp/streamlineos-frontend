@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { safetyIncidentsQueryOptions } from "@/hooks/api/hr/safety-read-options";
 
 const incidentListContract = lazyContract(() =>
   import("@/hooks/api/hr/safety-schema").then((m) => m.safetyIncidentListContract),
@@ -76,13 +77,6 @@ export type ListIncidentsParams = {
   fromDate?: string;
   toDate?: string;
 };
-
-export function safetyIncidentsQueryOptions(params: ListIncidentsParams = {}) {
-  return {
-    queryKey: directoryAndOwnershipQueryKeys.hrSafety.incidents(params),
-    staleTime: 30_000,
-  } as const;
-}
 
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useGatedQuery("hr:safety:view", {

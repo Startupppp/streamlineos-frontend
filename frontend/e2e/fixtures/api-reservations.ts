@@ -11,15 +11,6 @@ export interface Reservation {
   status: "ACTIVE" | "CONSUMED" | "RELEASED" | "EXPIRED";
 }
 
-/**
- * One order's reservation, in a given state.
- *
- * The endpoint filters by variant and status but not by source, and it imposes
- * no ordering, so the row is found by paging rather than by trusting the first
- * page — a tenant that has run this suite fifty times has fifty consumed
- * reservations for the same variant, and "it was on page one last week" is not
- * a contract.
- */
 export async function reservationFor(
   api: ApiOracle,
   match: { variantId: number; soId: number; status: Reservation["status"] },

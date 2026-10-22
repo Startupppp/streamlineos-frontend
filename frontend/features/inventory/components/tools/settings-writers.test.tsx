@@ -5,15 +5,6 @@ import { InventoryMetricsCard } from "./inventory-metrics-card";
 import { ShelfLifeRulesCard } from "./shelf-life-rules-card";
 import type { InventoryMetricsSnapshot, ShelfLifeRule } from "@/hooks/api/inventory/system-health";
 
-/**
- * The two settings surfaces that had no caller at all.
- *
- * `GET /inventory/metrics` is where a dead outbox shows up: an inventory webhook
- * retried to exhaustion and dropped. Nothing read it, so that state existed only
- * in the database. And `GET/PUT /inventory/settings/shelf-life-rules` is a
- * stored setting FEFO allocation reads on every pick with nothing that could
- * write it — a dead switch, permanently whatever the database happened to hold.
- */
 
 const mockUseCan = jest.fn(() => true);
 jest.mock("@/hooks/api/access", () => ({

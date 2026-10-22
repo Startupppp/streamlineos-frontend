@@ -17,27 +17,12 @@ import { patchForUpdate } from "@/lib/renderer/layout-schema";
 import { useCreateCampaign, useUpdateCampaign } from "@/hooks/api/crm/campaigns";
 import type { CrmCampaign } from "@/types/crm/campaigns";
 
-/**
- * Create and edit a campaign, rendered from the description.
- *
- * There is no form here and no schema beside it. The controls, their types and
- * their validation come from `CAMPAIGN_LAYOUT`, which is the same description
- * the list renders — so the two cannot disagree about what a campaign is, and a
- * field added to one appears in the other without this file being touched.
- *
- * `status`, `spend`, `leads` and `roi` never appear, and not because this file
- * omits them: the description marks them read-only because neither create nor
- * update accepts them. A control whose value the API silently drops is a form
- * that appears to work and does not.
- */
-
 interface CampaignSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   campaign?: CrmCampaign;
 }
 
-/** Empty means "not supplied" on create and "clear it" on edit. */
 function orNull(value: string | undefined): string | null {
   const text = value?.trim();
   return text ? text : null;
@@ -56,12 +41,6 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
 
   function handleSubmit(values: RecordFormValues) {
     if (isEditing && campaign) {
-      /*
-        Built from the layout rather than from a list of keys written out here.
-        A field the tenant hid is not rendered, so `values` has no entry for it;
-        naming the keys would read undefined, send null, and clear a column
-        nobody touched. Absent means "leave alone" — which is what hiding meant.
-      */
       const patch = patchForUpdate(layout, values);
       updateMutation.mutate(
         { id: campaign.id, ...patch } as Parameters<typeof updateMutation.mutate>[0],
@@ -76,8 +55,6 @@ export function CampaignSheet({ open, onOpenChange, campaign }: CampaignSheetPro
       return;
     }
 
-    // Nothing exists yet, so a blank field has nothing to clear and the create
-    // DTO wants every key.
     createMutation.mutate(
       {
         name: values.name?.trim() ?? "",

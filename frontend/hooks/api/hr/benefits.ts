@@ -4,6 +4,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { benefitPlansQueryOptions } from "@/hooks/api/hr/benefits-read-options";
 
 const benefitPlansPageC = lazyContract(() =>
   import("@/hooks/api/hr/benefits-schema").then((m) => m.benefitPlansPageContract),
@@ -106,9 +107,11 @@ export type BenefitPlansQuery = {
   limit?: number;
 };
 
-export const benefitPlansQueryOptions = (query: BenefitPlansQuery = {}) =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.benefitPlans(query),
+export function useBenefitPlans(query: BenefitPlansQuery = {}) {
+  const canView = useCan("hr:benefits:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    ...benefitPlansQueryOptions(query),
     queryFn: ({ signal }) =>
       apiClient.get<BenefitsCursorPage<BenefitPlan>>(
         "/hr/benefits/plans",
@@ -116,14 +119,6 @@ export const benefitPlansQueryOptions = (query: BenefitPlansQuery = {}) =>
         signal,
         benefitPlansPageC,
       ),
-    staleTime: 2 * 60_000,
-  });
-
-export function useBenefitPlans(query: BenefitPlansQuery = {}) {
-  const canView = useCan("hr:benefits:view");
-  const hrEnabled = useModuleEnabled("hr");
-  return useQuery({
-    ...benefitPlansQueryOptions(query),
     enabled: canView && hrEnabled,
   });
 }

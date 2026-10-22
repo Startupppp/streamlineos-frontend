@@ -23,26 +23,12 @@ function renderPage() {
   return render(<UnsubscribePage />, { wrapper: Wrapper });
 }
 
-/**
- * The page a recipient reaches from the "Unsubscribe" link in marketing mail.
- *
- * Before it existed the footer link pointed straight at the API route, which
- * answers `{"success":true}` because its other two verbs are for mail clients.
- * The withdrawal was honoured and the person was shown a line of JSON.
- */
 describe("public unsubscribe page", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockedPost.mockResolvedValue({ success: true });
   });
 
-  /**
-   * The load-bearing assertion in the whole file.
-   *
-   * Mail clients, link scanners and corporate URL-rewriters fetch links in
-   * delivered mail. A page that opts the person out on mount opts out people who
-   * never clicked, and there is no way to tell the two apart afterwards.
-   */
   it("records nothing until the person actually presses the button", async () => {
     renderPage();
 
@@ -61,11 +47,6 @@ describe("public unsubscribe page", () => {
     expect(await screen.findByText("Preference saved")).toBeInTheDocument();
   });
 
-  /**
-   * A failed withdrawal that looks like a successful one is worse than an error:
-   * the recipient believes they are opted out, keeps receiving mail, and reaches
-   * for the spam button instead of the link.
-   */
   it("says so when the request fails, and keeps the button usable", async () => {
     mockedPost.mockRejectedValueOnce(new Error("network"));
     renderPage();

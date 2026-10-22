@@ -4,23 +4,6 @@ import { isPermissionKey } from "@/contracts/permission-key.generated";
 import type { ResponseContract } from "@/lib/api-envelope";
 import { moduleDenialReasonContract } from "@/lib/page-state/page-state-schema";
 
-/**
- * Response contracts for the access endpoints. Everything a permission check
- * rests on is validated here, because a silently-dropped `scopes` or a `modules`
- * map that arrives under a new name reads as "this user may do nothing" — a
- * lockout that looks exactly like a correct denial.
- *
- * Not `.strict()`: an added backend field is a compatible deploy. A removed,
- * renamed or retyped one is what these reject.
- *
- * `mfa`, `version` and `membershipId` stay optional against a backend that
- * always sends them. `/me/access` is the endpoint whose failure locks every
- * screen, so a field is pinned only where losing it would be worse than that.
- * Nothing reads `mfa` or `version` for a decision; `membershipId` is read by
- * the timesheets delegate banner, which is built to say nothing at all when the
- * caller has no membership — so its absence degrades to silence rather than to
- * a false claim, and pinning it would trade that for a lockout.
- */
 
 export const dataScopeContract = z.enum(["all", "team", "own", "none"]);
 
@@ -54,11 +37,6 @@ export const rbacDiscoveryMemberContract = z.object({
 
 export const rbacDiscoveryMembersContract = z.array(rbacDiscoveryMemberContract);
 
-/**
- * `Permission` is owned by the RBAC catalog, not by this file — annotating the
- * contract with it makes the compiler, rather than a reviewer, the thing that
- * keeps the two in step.
- */
 const permissionRowContract = z.object({
   name: z.string(),
   resource: z.string(),

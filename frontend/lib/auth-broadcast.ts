@@ -1,8 +1,5 @@
 const AUTH_LOGOUT = "auth:logout";
 const AUTH_CHANNEL_NAME = "streamlineos:auth";
-// BroadcastChannel delivers to every other channel object, including the
-// listener in the tab that posted. Tagging the sender lets that tab ignore its
-// own sign-out instead of treating it as "session expired" (#47).
 const TAB_ID = Math.random().toString(36).slice(2);
 
 type LogoutMessage = { type: typeof AUTH_LOGOUT; from: string };

@@ -11,8 +11,6 @@ describe("invite role defaults", () => {
     );
   });
 
-  // org-setup once kept its own ORG_ADMIN-first copy of this list and defaulted
-  // to element 0, so the first-run flow silently proposed org-admin access.
   it("never lets ORG_ADMIN be the default", () => {
     expect(DEFAULT_INVITE_ROLE).not.toBe("ORG_ADMIN");
   });

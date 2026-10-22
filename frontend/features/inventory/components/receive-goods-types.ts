@@ -16,7 +16,6 @@ export interface GrnLineRowProps {
   meta: DraftLineMeta;
   index: number;
   control: Control<GrnFormValues>;
-  /** Units scanned onto this line so far. Zero means nobody has scanned it. */
   scannedCount: number;
   isActive: boolean;
   onActivate: (poLineId: number) => void;

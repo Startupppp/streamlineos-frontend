@@ -4,7 +4,6 @@ import { SIGN_IN_HREF, TRIAL_LABEL } from "./pricing";
 
 const FREE = `free for up to ${PRICING.freeSeatLimit} people`;
 
-/** 10 Footer — Figma 3888:7053. StreamlineOS copy; every link is a real route. */
 
 export const footerMock = {
   brand: {
@@ -24,10 +23,8 @@ export const footerMock = {
     copy: `Bring the one job you chase by hand every week. Build it on the free plan, or try any paid plan with a ${TRIAL_LABEL} free trial.`,
     emailLabel: "Work email",
     submit: "Start free",
-    /** Where the form sends people: the app's sign-up / sign-in. */
     href: SIGN_IN_HREF,
   },
-  /** `short` is the 768 / 390 copy (3876:139 / 3876:142). */
   statuses: [
     { label: FREE, short: FREE },
     {

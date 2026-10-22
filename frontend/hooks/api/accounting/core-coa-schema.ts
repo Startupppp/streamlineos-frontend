@@ -1,19 +1,6 @@
 import { z } from "zod";
 import type { ResponseContract } from "@/lib/api-envelope";
 
-/**
- * Chart of accounts and the accounting setup checklist. No money crosses these
- * two, which is exactly why they are contracted: the COA tree decides which
- * ledger every posting lands in, and a silently renamed `accountType` would
- * mis-file a journal rather than mis-display a figure.
- *
- * The tree is recursive, so the contract is declared with an explicit type
- * annotation and a lazy child — a `z.infer` on a self-referencing schema cannot
- * be resolved by the compiler on its own. `accountType` is a pg enum
- * (`account_type`), so the contract validates the five members at runtime while
- * the annotation keeps the compile-time field a plain string for the filter and
- * badge lookups that already treat it as one.
- */
 
 export const accountTypeContract = z.enum([
   "ASSET",

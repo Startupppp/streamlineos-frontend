@@ -37,21 +37,6 @@ jest.mock("@/hooks/api/access", () => ({
 
 const mockedPost = apiClient.post as jest.Mock;
 
-/**
- * CRM-P2-04. The forecast page says which forecast it is.
- *
- * The backend has reported a `basis` on every forecast read for a long time and
- * nothing rendered it, so a weighted sum of the tenant's own stage percentages
- * was presented with exactly the confidence a fitted model would be. This is the
- * number people plan a quarter around.
- *
- * Two properties carry the file. The union is rendered as a union — a naive
- * basis shows no accuracy figures at all, because a zero Brier there would read
- * as a measured result rather than an absent one. And a refused fit is reported
- * as the system working: `trained: false` is a successful request, and sending
- * it to `toast.error` would say something broke when what happened is that a
- * model was declined for not being better than the arithmetic it would replace.
- */
 
 const accuracy = (over: Partial<ForecastAccuracy> = {}): ForecastAccuracy => ({
   count: 40,
@@ -134,11 +119,6 @@ describe("ForecastBasisCard", () => {
     });
 
     it("shows no accuracy figure at all, rather than a zero", () => {
-      /**
-       * The union rendered as a union. A shared block showing 0.00 for a
-       * workspace with no model would read as a measured result — the worst
-       * possible one — instead of an absent one.
-       */
       renderCard(naive());
 
       expect(screen.queryByText(/tested on/i)).not.toBeInTheDocument();
@@ -153,11 +133,6 @@ describe("ForecastBasisCard", () => {
     });
 
     it("says the outcome floor is a second bar, not a footnote to the first", () => {
-      /**
-       * A workspace on sixty closed deals of which ten were won still needs
-       * five more, and they have to be wins. The headline count alone would be
-       * a promise the next screen breaks.
-       */
       renderCard(naive());
 
       expect(screen.getByText(/5 more won/)).toBeInTheDocument();
@@ -180,10 +155,6 @@ describe("ForecastBasisCard", () => {
     });
 
     it("never collapses the six reasons into one message", () => {
-      /**
-       * "Not enough data" for all six would tell a workspace with plenty of
-       * history, refused a model on its merits, that the fault is theirs.
-       */
       const seen = REASONS.map((reason) => {
         const { unmount } = renderCard(naive(reason));
         const text = screen.getByText(/^(There|A model)/).textContent ?? "";
@@ -213,11 +184,6 @@ describe("ForecastBasisCard", () => {
     });
 
     it("reports the model's score against the arithmetic it replaced", () => {
-      /**
-       * A Brier of 0.18 on its own is unreadable. The acceptance rule is that
-       * it had to be lower than the naive score on the same deals, so the
-       * comparison is the number, not the raw figure.
-       */
       renderCard(learned());
 
       expect(screen.getByText("by 0.055")).toBeInTheDocument();
@@ -231,7 +197,6 @@ describe("ForecastBasisCard", () => {
     });
 
     it("shows no readiness bar, which would imply the model is provisional", () => {
-      /** The bar counts progress towards a model this workspace already has. */
       renderCard(learned());
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
@@ -273,12 +238,6 @@ describe("ForecastBasisCard", () => {
     });
 
     it("reports a refused fit as the system working, not as a failure", async () => {
-      /**
-       * `trained: false` is a successful request. Routing it to `toast.error`
-       * would report an outage every time the product correctly declined to
-       * replace a number the workspace understands with one that was not
-       * closer to the outcomes.
-       */
       mockedPost.mockResolvedValue({
         trained: false,
         reason: "no-better-than-naive",

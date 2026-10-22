@@ -30,7 +30,6 @@ export function GeofenceList({ canManage, onEdit }: Props) {
     void refetch();
   }, [refetch]);
 
-  // Delete fired from the icon with no confirmation (FE-83).
   const [pendingDelete, setPendingDelete] = useState<Geofence | null>(null);
   function handleDeleteOpenChange(open: boolean) {
     if (!open) setPendingDelete(null);
@@ -46,8 +45,6 @@ export function GeofenceList({ canManage, onEdit }: Props) {
     });
   }
 
-  // hr:attendance:view gates this read and the route has no server guard: a denied
-  // caller read "No geofences configured" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {

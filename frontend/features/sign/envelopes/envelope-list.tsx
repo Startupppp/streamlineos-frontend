@@ -58,7 +58,6 @@ export function EnvelopeList() {
   });
   const envelopes = data?.items ?? [];
   const total = data?.total ?? 0;
-  /** SIGN-002: Track whether this is a post-load error vs initial load */
   const hasData = data !== undefined;
   const deleteMutation = useDeleteSignEnvelope();
 
@@ -104,7 +103,6 @@ export function EnvelopeList() {
   }
 
   async function handleRetry() {
-    /** SIGN-002: Await refetch to ensure it completes before any UI update */
     await refetch();
   }
 

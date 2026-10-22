@@ -44,12 +44,7 @@ function EventCard({ event }: EventCardProps) {
         </Button>
         {showExample && (
           <div className="space-y-2">
-            {/*
-              The secret is printed on purpose. It is a published constant that
-              signs nothing real, and the pair below is only useful to somebody
-              who can reproduce it — the alternative is a developer testing with
-              their own live secret to check our arithmetic.
-            */}
+            
             <p className="text-xs text-muted-foreground">
               Signed with the published example secret{" "}
               <code className="font-mono">{event.exampleSecret}</code>.
@@ -74,14 +69,6 @@ interface EventCatalogueSectionProps {
   catalogue: SandboxCatalogue;
 }
 
-/**
- * The five hiring events and how to verify one.
- *
- * Every event ships a body and a signature a reader can reproduce by hand
- * before a single real delivery arrives. A published example that does not
- * verify would be worse than none: the developer would conclude their own
- * implementation is wrong and debug the right thing for the wrong reason.
- */
 export function EventCatalogueSection({ catalogue }: EventCatalogueSectionProps) {
   return (
     <section className="space-y-3">

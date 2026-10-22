@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * The six structured CTC columns. Every one is nullable and stays nullable all
- * the way to the screen: null means nobody entered it, "0.00" means the offer
- * states there is none of it, and a reader that collapses the two shows a
- * candidate a guaranteed-zero bonus the company never promised either way.
- */
 const ctcBreakdownFields = {
   ctcFixed: z.string().nullable(),
   ctcVariable: z.string().nullable(),
@@ -15,11 +9,6 @@ const ctcBreakdownFields = {
   ctcGratuity: z.string().nullable(),
 };
 
-/**
- * Summed and divided into months by the backend, never here. Adding these
- * decimals up in JavaScript would be a second money implementation in floating
- * point, showing a total the backend never agreed to.
- */
 const ctcPreviewSchema = z.object({
   lines: z.array(
     z.object({
@@ -34,7 +23,6 @@ const ctcPreviewSchema = z.object({
   monthlyTotal: z.string().nullable(),
   lumpSumTotal: z.string().nullable(),
   malformed: z.array(z.string()),
-  /** Recruiter-only: what will block approval, before they find out by clicking it. */
   reconciliation: z.object({
     status: z.enum(["MATCHED", "MISMATCHED", "NOT_COMPARABLE"]),
     difference: z.string().nullable(),
@@ -122,12 +110,6 @@ export const allOffersPageContract = z.object({
   }),
 });
 
-/**
- * Only the LIST route carries a preview — it is computed per row on the way out,
- * where the single-offer routes return the row the write produced. Extending
- * here rather than making `ctcPreview` optional on the row keeps the contract
- * able to say which is which; an optional field on both could never fail.
- */
 export const candidateOffersListContract = z.array(
   candidateOfferRowSchema.extend({ ctcPreview: ctcPreviewSchema }),
 );

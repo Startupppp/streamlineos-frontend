@@ -32,7 +32,6 @@ export interface WarehouseLocation {
   isPickable: boolean;
   isReceivable: boolean;
   isSellable: boolean;
-  /** `numeric(18,4)`, so a decimal string — never a float. */
   capacity: string | null;
   isActive: boolean;
   isSpecial?: boolean;
@@ -100,19 +99,9 @@ interface CreateLocationInput {
   isPickable?: boolean;
   isReceivable?: boolean;
   isSellable?: boolean;
-  /**
-   * A decimal string, because the endpoint validates it as one. Sent as a
-   * number it was rejected by the `.strict()` schema, so a location created
-   * with a capacity 400d while one created without it worked.
-   */
   capacity?: string;
 }
 
-/**
- * `updateLocationSchema` is `createLocationSchema.partial()`, so every field is
- * optional and `isActive` joins them. `parentLocationId` is a positive integer
- * with no null: a parent can be changed, never cleared.
- */
 interface UpdateLocationInput {
   warehouseId: number;
   locationId: number;
@@ -204,13 +193,6 @@ export function useCreateLocation() {
   });
 }
 
-/**
- * Correcting a location, and taking one out of service.
- *
- * Deactivating one the warehouse still holds stock in is refused by the server
- * with a 409 — a location nothing can reach is not the same as an empty one —
- * and that message reaches the operator through `getErrorMessage`.
- */
 export function useUpdateLocation() {
   const qc = useQueryClient();
   return useAuthorizedMutation<WarehouseLocation, Error, UpdateLocationInput>("inventory:warehouses:manage", {
@@ -300,7 +282,6 @@ export interface AssignableWarehouseUser {
   image: string | null;
 }
 
-/** The exact backend key on every warehouse-assignment handler. */
 export const WAREHOUSE_ASSIGNMENT_PERMISSION = "inventory:warehouses:manage" as const;
 
 export interface WarehouseAssigneePage {
@@ -356,10 +337,6 @@ export function useAssignableWarehouseUsers(
   });
 }
 
-/**
- * A grant widens what the grantee may see, so every warehouse-scoped list has to
- * be refetched, not just this warehouse's assignment table.
- */
 function useWarehouseAssignmentInvalidation(warehouseId: number) {
   const qc = useQueryClient();
   return () => {

@@ -1,8 +1,3 @@
-/**
- * V-034. The deferral gate itself is correct and tested. These cover the two
- * things it left unsaid: an administrator who deferred is never reminded, and
- * a member redirected into the wizard is never told why.
- */
 import { render, screen } from "@testing-library/react";
 import {
   DeferredOnboardingReminder,

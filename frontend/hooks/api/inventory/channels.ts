@@ -18,7 +18,6 @@ export interface Channel {
   name: string;
   channelType: ChannelType;
   status: ChannelStatus;
-  /** `decimal` columns, so decimal strings on the wire; the update schema takes strings too. */
   safetyBuffer: string | null;
   publishThreshold: string | null;
   warehouseIds: number[];
@@ -211,19 +210,6 @@ export function useSyncThreePlConnection() {
   });
 }
 
-/**
- * E6 — what the marketplace thinks it holds, against what the ledger says.
- *
- * Three routes, none of them called from this repo, so a channel snapshot
- * difference could be produced by the nightly sweep and never seen. That is the
- * signal that a listing is oversold or that a sync silently stopped.
- *
- * Reading is `inventory:channels:manage`. **Accepting** is `inventory:stock:adjust`
- * — deliberately a different key, because accepting posts a stock movement whose
- * only justification is that a marketplace disagreed with us, and whoever
- * administers a connection is not automatically somebody who may correct the
- * ledger. Dismissing stays on the channel key, because it touches nothing.
- */
 export type SnapshotDiffStatus = "OPEN" | "ACCEPTED" | "DISMISSED";
 
 export interface ChannelSnapshotDiff {
@@ -245,7 +231,6 @@ export interface ChannelSnapshotDiffsResult {
   total: number;
   page: number;
   totalPages: number;
-  /** So a screen renders "accepting is not permitted here" rather than a button that 409s. */
   snapshotPolicy: string;
 }
 
@@ -279,8 +264,6 @@ export function useChannelSnapshotDiffs(
 
 function useResolveSnapshotDiff(action: "accept" | "dismiss") {
   const qc = useQueryClient();
-  // Accepting posts a stock movement, so it is gated on the ledger key rather
-  // than the channel key; see the note above `SnapshotDiffStatus`.
   return useAuthorizedIdempotentMutation<
     ChannelSnapshotDiff,
     Error,

@@ -49,19 +49,6 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 
-/**
- * Deals waiting on somebody's sign-off.
- *
- * No table is written here. The columns, the status badge, the stage badge and
- * the mobile card come from `DEAL_APPROVAL_LAYOUT`; what is left is the one
- * filter this queue has, who may decide, and the decision itself.
- *
- * The rejection reason is a column now. It used to be rendered inside the
- * row-actions slot — the only free space on the row — which meant a rejected
- * request's reason and a pending one's buttons shared a cell and it was cut at
- * thirty characters. A reason is a field of the record, so the description
- * names it and the table gives it a column.
- */
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -80,11 +67,6 @@ interface ApprovalRowActionsProps {
   onDecide: (decision: PendingDecision) => void;
 }
 
-/**
- * A component rather than markup inside the cell callback, so the two handlers
- * are named and belong to the row instead of being rebuilt for every row on
- * every render.
- */
 function ApprovalRowActions({ approval, onDecide }: ApprovalRowActionsProps) {
   const id = Number(approval.id);
   const name = typeof approval.dealName === "string" ? approval.dealName : "this deal";
@@ -126,17 +108,6 @@ export default function DealApprovalsPage() {
 
   const money = useOrgDisplay();
   const [density, setDensity] = useDensity();
-  /*
-    `crm:deals:update`, which is what `POST /deals/approvals` actually declares.
-    This gated on `crm:deals:approve` — a key that exists in the catalog and
-    guards no handler anywhere in the backend, so it got the audience exactly
-    backwards: granting it showed the buttons to somebody whose every click
-    would 403, while the people who can genuinely resolve an approval never saw
-    them at all. The handler additionally requires structural org-admin standing,
-    which no key expresses and the client cannot see, so a non-admin holding
-    update still gets a refusal — a narrower control than this can draw, but the
-    right direction: the guard is the boundary and hiding a control is only UX.
-  */
   const canApprove = useCan("crm:deals:update");
 
   const [decision, setDecision] = useState<PendingDecision | null>(null);

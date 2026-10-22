@@ -68,14 +68,8 @@ function PrimaryPreview({ from, to }: { from: string | null; to: string | null }
   );
 }
 
-/**
- * HR edits one employee's primary and additional managers (PRD §7.6, single
- * employee). Mount it only while open: defaults are read from `line` at mount,
- * so a background refetch never wipes an edit in progress.
- */
 export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, line }: ReportingLineEditorSheetProps) {
   const setLine = useSetReportingLine();
-  // Read once at mount (the sheet mounts per open), like the defaults.
   const [today] = useState(getTodayString);
   const [initial] = useState(() => editorDefaults(line, today));
   const [scheduled] = useState(() => upcomingSecondaries(line, today));
@@ -91,7 +85,6 @@ export function ReportingLineEditorSheet({ open, onOpenChange, employeeUserId, l
   const nextId = topLevel ? null : primaryId;
   const primaryChanges = nextId !== currentId;
   const overLimit = requiresChangeReason(line);
-  // The server asks for a reason only when the primary changes (or on emergency).
   const reasonRequired = overLimit && primaryChanges;
   const canOverride = line.permittedActions.override;
 

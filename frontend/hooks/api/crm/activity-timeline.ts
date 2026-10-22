@@ -32,7 +32,6 @@ const completeTaskLazy = lazyContract(() =>
   import("@/hooks/api/crm/activity-timeline-schema").then((m) => m.completeTaskContract),
 );
 
-/** The anchor as the API takes it — exactly one identifier. */
 function anchorParams(anchor: TimelineAnchor): Record<string, string> {
   switch (anchor.kind) {
     case "party":
@@ -44,12 +43,6 @@ function anchorParams(anchor: TimelineAnchor): Record<string, string> {
   }
 }
 
-/**
- * One timeline hook for every anchor.
- *
- * Cursor-paginated rather than offset: a timeline grows at the top, and an
- * offset page-2 request after three new emails arrive silently repeats rows.
- */
 export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
   const access = usePermissionGate("crm:activities:view");
   const params = anchor ? anchorParams(anchor) : {};
@@ -77,10 +70,6 @@ export function useActivityTimeline(anchor: TimelineAnchor | null, limit = 25) {
   );
 }
 
-/**
- * The same rows the timeline shows, read by assignee — and read soonest-first,
- * because a task list answers a different question from a timeline.
- */
 export function useMyActivityTasks(includeCompleted = false, limit = 25) {
   const access = usePermissionGate("crm:activities:view");
 
@@ -138,7 +127,6 @@ export function useCompleteActivityTask() {
     mutationFn: (activityId: string) =>
       apiClient.post(`/crm/activities/${activityId}/complete`, {}, undefined, completeTaskLazy),
     onSuccess: () => {
-      // The same row appears on a timeline and in the person's own task list.
       void qc.invalidateQueries({ queryKey: queryKeys.crm.all });
       invalidateCalendarProjectionWindows(qc);
     },

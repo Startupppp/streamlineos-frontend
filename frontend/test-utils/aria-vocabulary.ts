@@ -1,9 +1,3 @@
-/**
- * The WAI-ARIA vocabulary and the HTML mapping the semantics scan judges
- * against. Split out of `aria-semantics-analysis.ts` so the analyzer stays
- * under the 300-line limit; it is data, not logic.
- */
-/** WAI-ARIA 1.2 concrete roles. Abstract roles are deliberately absent — using one in markup is itself the defect. */
 export const VALID_ROLES = new Set(
   (
     "alert alertdialog application article associationlist associationlistitemkey " +
@@ -19,7 +13,6 @@ export const VALID_ROLES = new Set(
   ).split(/\s+/),
 );
 
-/** WAI-ARIA 1.2 states and properties. A misspelling is inert: the browser ignores it and reports nothing. */
 export const VALID_ARIA_ATTRIBUTES = new Set(
   (
     "aria-activedescendant aria-atomic aria-autocomplete aria-braillelabel " +
@@ -35,11 +28,6 @@ export const VALID_ARIA_ATTRIBUTES = new Set(
   ).split(/\s+/),
 );
 
-/**
- * The role each element already carries. Restating one is the "make it worse
- * while raising the score" move: it adds a maintenance liability, and a wrong
- * restatement silently overrides a correct native role.
- */
 export const IMPLICIT_ROLE: Record<string, string> = {
   a: "link",
   article: "article",
@@ -91,7 +79,6 @@ export const NATIVE_FOCUSABLE = new Set([
 
 export const NAMED_CONTROLS = new Set(["input", "select", "textarea"]);
 
-/** These take their name from their own value, not from a label. */
 export const UNNAMEABLE_INPUT_TYPES = new Set([
   "button",
   "hidden",

@@ -65,7 +65,6 @@ export function useSubjectTypes(options?: { enabled?: boolean }) {
         signal,
         subjectTypeListContract,
       ),
-    // A declaration changes when an administrator edits it, which is rare.
     staleTime: 30 * 60_000,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -116,7 +115,6 @@ export function useSubject(subjectId: string | null) {
   });
 }
 
-/** The same links a subject carries, read from the party's side. */
 export function usePartySubjects(partyId: string | null) {
   const canView = useCan("party:subjects:view");
 
@@ -162,8 +160,6 @@ export function useUpdateSubjectType() {
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjectTypes });
-      // Every rendered surface for this type is derived from the declaration,
-      // so a change to it invalidates the records drawn from it too.
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.subjects() });
     },
   });
@@ -231,7 +227,6 @@ export function useLinkParty() {
         subjectLinkContract,
       ),
     onSuccess: (_, variables) => {
-      // Both ends of the link are cached separately, so both are invalidated.
       void qc.invalidateQueries({
         queryKey: directoryAndOwnershipQueryKeys.party.subject(variables.subjectId),
       });

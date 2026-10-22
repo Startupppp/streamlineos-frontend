@@ -25,8 +25,6 @@ describe("authScreenPlan", () => {
     expect(email.kind === "otp" && email.prompt).toMatch(/email/i);
   });
 
-  // Pinned over the whole enum: a ninth method added to the backend and forgotten here would
-  // otherwise default into the OTP branch and advertise a channel that refuses the request.
   it("offers a challenge only for methods the backend can complete", () => {
     for (const method of ALL_METHODS) {
       const plan = authScreenPlan(method);

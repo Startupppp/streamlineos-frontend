@@ -14,12 +14,6 @@ jest.mock("./completion-screen", () => ({ CompletionScreen: () => <div>done</div
 
 const useSession = useSignPublicSession as unknown as jest.Mock;
 
-/**
- * A failed session read used to render the loading placeholder forever: the
- * view tested `isLoading || !session` before `isError`, and on an error
- * `session` is undefined, so the error branch was unreachable. Every invalid,
- * expired or revoked link — the states this page exists to explain — spun.
- */
 describe("PublicSessionView", () => {
   it("shows the error, with the backend's message, when the link cannot be resolved", () => {
     useSession.mockReturnValue({

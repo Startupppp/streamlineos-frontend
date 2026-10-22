@@ -7,22 +7,6 @@ import { RegionsWidget } from "./regions-widget";
 import { WaitingWidget } from "./waiting-widget";
 import { WeekWidget } from "./week-widget";
 
-/**
- * 07 Signals — five widgets under the shared head.
- *
- * 1440 (3888:6522, 774): head at (80, 96), Row A (876 + 384) at y254 and
- * Row B (413 + 413 + 414) 20 below it.
- * 1024 (3888:10926, 784): head stacked at (48, 0), widgets at (48, 206) in
- * 12 gaps — Row A two 458 halves, Row B three equal thirds.
- * 768 (3832:8181, 1138): head at (40, 40), widgets at (40, 234) regrouped
- * into a 2-up grid — where it ran | hands off, waiting | failures — with the
- * full-width week widget last.
- * 390 (3893:3826, 1401): head at (20, 0), widgets at (20, 200), one column:
- * where it ran, hands off, waiting, week. Failures is not in that frame.
- *
- * The two row wrappers dissolve (`contents`) at 768 and below so the widgets
- * reflow through one wrap container and `order`.
- */
 export const Signals = ({
   head,
   week,

@@ -10,7 +10,6 @@ const CHUNK_PATTERN =
 const GENERIC_SERVER_PATTERN =
   /^(?:an unexpected error occurred|unexpected error|internal server error)$/i;
 const BARE_STATUS = /^(\d{3})(\s|$)/;
-/** The filter's own headline for a Zod refusal; the issues say more than it does. */
 const VALIDATION_HEADLINE = /^validation failed\.?$/i;
 
 const GENERIC_MESSAGE = "Something went wrong. Please try again.";
@@ -108,8 +107,6 @@ function isValidationIssue(
 
 function describeIssue(issue: { path?: unknown; message: string }): string {
   const path = typeof issue.path === "string" ? issue.path.trim() : "";
-  // "body" is the filter's stand-in for an issue with no path; naming it tells
-  // the reader nothing they can act on.
   if (!path || path === "body") return issue.message.trim();
   return `${path}: ${issue.message.trim()}`;
 }

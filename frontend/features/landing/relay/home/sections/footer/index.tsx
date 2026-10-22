@@ -7,15 +7,6 @@ import { LinkArea } from "./link-area";
 import { CUE, CueFade, CueLine, FooterStage } from "./stage";
 import { StatusRow } from "./status-row";
 
-/**
- * 10 Footer — 1440 × 772 (Figma 3888:7053). 1024 × 710 (3888:11464): the
- * panels sit in a 928-wide row at y 0. 768 × 1084 (3876:92): the panels
- * stack full width, the columns drop under the company block. 390 × 1229
- * (3893:4376): the statuses and the legal lines stack too.
- * Everything sits at the frame's absolute coordinates. The aurora glows
- * overhang upward into Pricing, so the footer itself does not clip; the page
- * `main` clips horizontally.
- */
 export const Footer = ({
   brand,
   cta,
@@ -47,13 +38,7 @@ export const Footer = ({
         className="absolute top-173.75 left-20 h-px w-320 bg-footer-hairline w1024:top-144.25 w1024:left-12 w1024:w-232 w768:top-253.75 w768:left-10 w768:w-172 w390:top-286 w390:left-5 w390:w-87.5"
       />
 
-      {/*
-        Legal band y714–740. Figma has the copyright (3488:22920, y720) 6px
-        below "built in Lisbon and Kraków" (3488:22939, y714); the designer
-        asked for one baseline, so both sit on y714. 1024 (y666) and 768
-        (y1040) draw both on one baseline; 390 stacks them (3949:13037, y1161,
-        8 apart).
-      */}
+      
       <CueFade
         stage="bottom"
         delay={CUE.legal}

@@ -6,26 +6,13 @@ import { useEffect, useState } from "react";
 const INTERACTIVE =
   "a, button, input, textarea, select, label, [role='button'], [role='radio'], [role='slider']";
 
-/** The ring at rest, over something interactive, and its press squeeze. */
 const RING = 28;
 const RING_OVER = 44;
 const PRESS = 0.82;
-/** The follow lag: a soft spring, so the ring glides after the pointer. */
 const FOLLOW = { tension: 210, friction: 24, mass: 1 } as const;
 const SHAPE = { tension: 400, friction: 30 } as const;
 const OFFSCREEN = { x: -200, y: -200 };
 
-/**
- * Accent cursor ring (motion brief, character.cursor). The native cursor stays;
- * this accent ring glides after it on a soft spring, opens up over anything
- * interactive, squeezes on press and steps aside over `[data-cursor="none"]`
- * (elements with their own hover story). Fine pointers only — on touch
- * devices and under reduced motion it never mounts.
- *
- * The pointer position is written straight into the spring from the event
- * (no React state, so a move never re-renders); only the hover / press /
- * hidden flags go through state, and only when they change.
- */
 export const CursorDot = () => {
   const [enabled, setEnabled] = useState(false);
   const [over, setOver] = useState(false);
@@ -46,7 +33,6 @@ export const CursorDot = () => {
     let wasHidden = false;
     const move = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
-      // the first move places the ring on the pointer; every later one glides
       api.start({ x: e.clientX, y: e.clientY, immediate: !seen });
       seen = true;
       const target = e.target as Element | null;

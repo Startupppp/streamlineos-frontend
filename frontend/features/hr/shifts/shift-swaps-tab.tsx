@@ -49,7 +49,6 @@ export function ShiftSwapsTab({ canManage }: Props) {
     void refetch();
   }, [refetch]);
 
-  // One swap in flight must not spin every row's buttons.
   const pendingSwapId = updateStatus.isPending ? updateStatus.variables?.swapId : undefined;
 
   const handleApprove = useCallback((id: number) => {
@@ -135,8 +134,6 @@ export function ShiftSwapsTab({ canManage }: Props) {
     return cols;
   }, [canManage, pendingSwapId, updateStatus.variables?.status, memberById, handleApprove, handleReject]);
 
-  // No route guard; the read is gated on hr:attendance:view, so a denied
-  // caller must be told so, not "No swap requests" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {

@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** `chatInviteLinkTokenSchema` */
 export const chatInviteLinkContract = z.object({
   token: z.string(),
   expiresAt: z.string().nullable(),
@@ -8,13 +7,11 @@ export const chatInviteLinkContract = z.object({
   useCount: z.number(),
 });
 
-/** `chatInviteLinkJoinSchema` */
 export const chatJoinViaInviteContract = z.object({
   ok: z.literal(true),
   channelId: z.number().int(),
 });
 
-/** `channelMuteResponseSchema` */
 export const chatMuteResponseContract = z.object({
   ok: z.literal(true),
   mutedUntil: z.string(),

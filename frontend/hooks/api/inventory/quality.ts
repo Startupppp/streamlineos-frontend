@@ -7,12 +7,6 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { RecallStatus } from "@/features/inventory/lib";
 
-/**
- * Inspections and holds live in their own modules and are re-exported here, so
- * every importer is unchanged. Recalls stay: the backend's response-shape drift
- * spec reads the `RecallImpact*` types, and the simulate call, from this file by
- * name.
- */
 export * from "./quality-inspections";
 export * from "./quality-holds";
 
@@ -21,14 +15,6 @@ interface RecallLine {
   productVariantId?: number | null;
   lotId?: number | null;
   serialId?: number | null;
-  /**
-   * INV-33. What the quarantine leg did to this line — `QUARANTINED`,
-   * `NOTHING_TO_QUARANTINE` or `NOT_QUARANTINABLE`, and `OPEN` on a recall
-   * raised before the outcome was recorded. Widened to `string` because the
-   * column is `text` and a value this build has not heard of must render as
-   * pending rather than crash a safety screen; narrow with
-   * `toRecallLineQuarantine`.
-   */
   status?: string | null;
 }
 
@@ -37,16 +23,6 @@ interface AffectedShipment {
   shipmentNumber: string;
 }
 
-/**
- * D4. Mirrors `inv_recall_events` as `findOne` actually returns it.
- *
- * It used to declare `reason`, `severity`, `notes`, `lotNumber` and
- * `affectedCustomers` — five fields the API has never sent. Nothing failed:
- * the Severity column rendered an em dash on every row for ever, and the
- * "Reason" block rendered `undefined`. A response type that describes columns
- * the server does not have is not documentation, it is a screen that is
- * quietly always empty.
- */
 interface Recall {
   id: number;
   orgId: string;
@@ -54,7 +30,6 @@ interface Recall {
   title: string;
   description?: string | null;
   status: RecallStatus;
-  /** The impact set this recall was executed against, if it was simulated. */
   evidenceVersion?: string | null;
   lines: RecallLine[];
   affectedShipments?: AffectedShipment[];
@@ -70,13 +45,6 @@ type RecallListResponse = {
   totalPages: number;
 };
 
-/**
- * D4 — the question a recall is about.
- *
- * Every supplied criterion narrows: lot ids AND a variant AND a date range is
- * the intersection, which is the reading a filter bar teaches and the only one
- * that cannot silently widen a recall.
- */
 export interface RecallSelection {
   [key: string]: unknown;
   lotIds?: number[];
@@ -154,7 +122,6 @@ export interface RecallImpact {
     shipped: string;
     returned: string;
   };
-  /** Present this back on execute; a moved picture is refused, not acted on. */
   evidenceVersion: string;
 }
 
@@ -198,15 +165,6 @@ export function useRecall(recallId: number) {
   });
 }
 
-/**
- * D4 — what a recall would do, before anybody does it.
- *
- * A mutation rather than a query even though it reads: the endpoint is a POST
- * because a selection does not fit in a query string, and — more to the point
- * — simulating is an act the operator takes, not something a screen should do
- * on mount while they are still typing lot numbers into it. It writes nothing
- * server-side, so it carries no `Idempotency-Key` and invalidates nothing.
- */
 export function useSimulateRecall() {
   return useAuthorizedMutation<RecallImpact, Error, RecallSelection>("inventory:quality:read", {
     mutationKey: ["inventory", "quality", "recall", "simulate"],
@@ -215,17 +173,6 @@ export function useSimulateRecall() {
   });
 }
 
-/**
- * D4 — execute a recall.
- *
- * `selection` + `evidenceVersion` is the simulated form: the server re-runs the
- * simulation and refuses with a 409 if the picture has moved since the operator
- * read it. `lines` is the explicit form, for a caller naming lots outright.
- *
- * The `Idempotency-Key` is minted per attempt and held by the caller across
- * retries — a recall posts stock movements, and a retry that mints a fresh key
- * raises a second recall against the same lots.
- */
 export function useCreateRecall() {
   const qc = useQueryClient();
   return useAuthorizedMutation<Recall, Error, CreateRecallPayload & { idempotencyKey: string }>("inventory:quality:recall", {

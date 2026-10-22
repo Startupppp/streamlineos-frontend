@@ -19,29 +19,6 @@ import { useDealForecast } from "@/hooks/api/crm/deal-forecast";
 import { ForecastBasisCard } from "./forecast-basis-card";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 
-/**
- * CRM-P2-04. The forecast, read from the server that computes it.
- *
- * What this replaced: a `useMemo` over the first hundred deals on the page,
- * weighting each one by a six-entry `STAGE_PROBABILITY` table hardcoded in this
- * file. Three things were wrong with that beyond the obvious. It was not the
- * tenant's table, so an organisation whose pipeline runs LEAD → QUALIFYING →
- * PILOT weighted every deal at zero. It was capped at one page, so the "total"
- * pipeline of a workspace with three hundred open deals was the total of a
- * hundred of them. And it could never reflect anything learned, because the
- * arithmetic lived in the browser and the model lives in the database.
- *
- * `GET /deals/forecast` has computed all of this — over every open deal, using
- * the tenant's own stage configuration, and now weighted by the learned model
- * where one has earned acceptance — and had no caller. `queryKeys.deals.forecast`
- * existed and five mutations invalidated it; nothing read it.
- *
- * The "Commit Forecast" tile is gone rather than ported. It summed deals in
- * `NEGOTIATION` or `WON` — a stage vocabulary this product does not require any
- * tenant to use, and a bucket that counted already-won deals into a forecast of
- * what is still to come. There is no server-side commit category to replace it
- * with, and inventing one here is what got us the last one.
- */
 
 interface SnapshotOverrideRowProps {
   snapshotId: string;
@@ -173,11 +150,7 @@ export function DealForecastSummary() {
         />
       </StatCardGrid>
 
-      {/*
-        Directly under the totals, not in a footnote. Whether the weighted figure
-        is a learned probability or the tenant's own stage percentage changes
-        what it is reasonable to do with it.
-      */}
+      
       <ForecastBasisCard basis={forecast.data.basis} />
 
       {canManage && snapshots.length > 0 && (

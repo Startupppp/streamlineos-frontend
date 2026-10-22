@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-/**
- * Mirrors the backend's `createSubjectTypeSchema` exactly.
- *
- * A declaration the API rejects is a form that fails on submit, and this is the
- * one form in the product whose output IS a schema — so the rules it enforces
- * have to be the same rules, stated once on each side of the boundary.
- */
 
 export const FIELD_KINDS = [
   { value: "text", label: "Text" },
@@ -21,10 +14,8 @@ export const FIELD_KINDS = [
   { value: "badge", label: "Badge" },
 ] as const;
 
-/** The kinds whose values come from a declared list rather than free input. */
 export const OPTION_KINDS: ReadonlySet<string> = new Set(["select", "badge"]);
 
-/** Columns every subject already carries; a field labelled "Status" hits this. */
 const RESERVED_FIELD_NAMES: ReadonlySet<string> = new Set([
   "title",
   "reference",
@@ -100,7 +91,6 @@ export const subjectTypeFormSchema = z
 
 export type SubjectTypeForm = z.infer<typeof subjectTypeFormSchema>;
 
-/** "Asking price" → "asking-price", so a person names a field once. */
 export function labelToName(label: string): string {
   return label
     .trim()

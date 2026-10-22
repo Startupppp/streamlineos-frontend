@@ -4,16 +4,6 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useDirectorySyncState } from "@/hooks/api/hr/recruitment/developer-sandbox";
 
-/**
- * What enterprise sign-on and directory sync actually do here, said on the
- * screen where an administrator would go looking for the switch.
- *
- * Both are blocked and both say so. The specific harm this replaces: an admin
- * who reads "SSO supported" believes that removing a leaver from their IdP
- * removes that person's access to candidate data here. It does not — the only
- * federated sign-in is Google, which authenticates a Google account rather than
- * a directory — and finding that out during an audit is expensive.
- */
 export function DirectorySyncSection() {
   const { data: entries = [], isLoading } = useDirectorySyncState();
 

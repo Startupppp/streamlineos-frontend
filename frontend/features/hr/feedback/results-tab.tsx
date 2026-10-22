@@ -17,14 +17,12 @@ export function ResultsTab() {
   const [searched, setSearched] = useState("");
 
   const { data: results, isLoading, isError, error, refetch } = useFeedbackResults(searched);
-  // Surface gate only; the per-employee read keeps its own branches below.
   const pageState = usePageState({ permission: "hr:performance:view", isLoading: false, isError: false, error: null });
 
   function handleRetry(): void {
     void refetch();
   }
 
-  // Picking an employee loads their results; a separate Search button repeated the pick.
   function handleSubjectChange(id: string) {
     setSearched(id.trim());
   }

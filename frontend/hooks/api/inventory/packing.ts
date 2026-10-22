@@ -8,7 +8,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/** Exactly the shape `GET /inventory/packages/queue` returns. */
 export interface PackingQueueRow {
   soId: number;
   soNumber: string;
@@ -68,12 +67,6 @@ interface PackingQueueParams {
   limit?: number;
 }
 
-/**
- * The bench's own queue: cartons and picked quantities, not sales-order status.
- *
- * Volatile tier — several packers work the same list and an order leaves it the
- * moment its last unit is in a box.
- */
 export function usePackingQueue(params?: PackingQueueParams) {
   const canView = useCan("inventory:packages:manage");
   return useQuery<PackingQueueResponse, Error>({
@@ -115,11 +108,6 @@ interface ScanIntoPackageVariables {
   quantity?: string;
 }
 
-/**
- * The `Idempotency-Key` is generated per attempt rather than per item: a retry
- * of *this* scan must replay, and the packer's next scan of the same SKU must
- * not — it is a second physical unit going in the box.
- */
 export function useScanIntoPackage() {
   const qc = useQueryClient();
   return useIdempotentMutation<PackingReconciliation, Error, ScanIntoPackageVariables>({
@@ -137,11 +125,6 @@ export function useScanIntoPackage() {
   });
 }
 
-/**
- * INV-206, wired at last. Advisory: it reports what plausibly fits and why
- * anything does not, and does not claim to have solved three-dimensional
- * packing.
- */
 export function useSuggestCarton() {
   return useAuthorizedMutation<
     CartonSuggestion,

@@ -4,10 +4,6 @@ import type { SignalsContent } from "@/features/landing/relay/data/signals";
 import { RingGauge } from "./ring-gauge";
 import { TEXT_AFTER, Widget, WidgetTitle, widgetDelay } from "./widget";
 
-/**
- * Widget / hands off — 384 × 256, 82% ring gauge (3888:6607) / 458 × 258
- * (3888:11011) / 338 × 294 (3865:77) / 350 × 290 (3893:4112).
- */
 export const HandsOffWidget = ({
   title,
   value,

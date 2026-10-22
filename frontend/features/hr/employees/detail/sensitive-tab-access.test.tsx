@@ -198,12 +198,6 @@ describe("EmployeeSensitiveTab — access is three-valued, not a boolean", () =>
   });
 });
 
-/**
- * V-134 / V-136. The encryption + audited-access sentence and the statutory
- * guidance are already in the component, but nothing asserted them, so all of
- * it could be deleted with every suite still green. These pin the promises the
- * screen makes to whoever opens someone else's salary and Aadhaar.
- */
 describe("EmployeeSensitiveTab — what the screen promises the viewer", () => {
   const populatedSensitive = {
     data: {

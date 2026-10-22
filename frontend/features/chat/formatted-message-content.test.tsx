@@ -20,7 +20,6 @@ const hit = (projectKey: string, ticketNumber: number, projectId: number) => ({
 beforeEach(() => {
   mockUseTicketSearch.mockReset();
   mockUseTicketSearch.mockImplementation((q: string) => ({
-    // The search is a substring match, so ACP-520 comes back for ACP-52 too.
     data: q === "ACP-52" ? [hit("ACP", 520, 7), hit("ACP", 52, 7)] : [],
   }));
 });

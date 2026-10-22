@@ -3,11 +3,6 @@ import { fireEvent, render, screen, waitFor, within } from "@testing-library/rea
 
 import type { ApprovalRoute } from "@/hooks/api/hr/approval-route-schema";
 
-/**
- * V-049 / V-041. The leave request sheet had no component test at all, so
- * nothing held its two invariants: a successful submit ends in a toast and a
- * closed sheet, and a disabled submit button always says why it is disabled.
- */
 
 const requestLeaveMutateAsync = jest.fn();
 jest.mock("@/hooks/api/hr", () => ({
@@ -33,8 +28,6 @@ jest.mock("@/components/storage/file-upload", () => ({
   FileUpload: () => null,
 }));
 
-// A native date input stands in for the calendar popover: jsdom cannot open a
-// Radix popover, and the value this control produces is the whole contract.
 jest.mock("@/components/ui/date-picker", () => ({
   DatePicker: ({
     value,
@@ -54,8 +47,6 @@ jest.mock("@/components/ui/date-picker", () => ({
   ),
 }));
 
-// Radix Select needs pointer geometry jsdom does not have. This stand-in keeps
-// the same API and exposes each option as a real, clickable option role.
 jest.mock("@/components/ui/select", () => {
   const Ctx = React.createContext<(v: string) => void>(() => {});
   return {
@@ -246,10 +237,6 @@ describe("LeaveRequestSheet", () => {
     expect(onOpenChange).not.toHaveBeenCalledWith(false);
   });
 
-  /**
-   * V-041. A submit button that is disabled and says nothing is a dead end.
-   * Every configuration that disables it must also render the explanation.
-   */
   it.each([
     [
       "no leave type is configured",
@@ -273,13 +260,10 @@ describe("LeaveRequestSheet", () => {
       screen.queryByRole("button", { name: "Submit leave request" }),
     ).not.toBeInTheDocument();
     expect(screen.getByText(explanation)).toBeInTheDocument();
-    // The approver panel is present either way, so the reason is never silent.
     expect(screen.getByText("Approver")).toBeInTheDocument();
   });
 
   it("enables the plain submit label only when the request is actually routable", () => {
-    // The paired positive: without it, a button that could never render would
-    // satisfy the negative above.
     renderSheet();
     const footer = screen.getByRole("button", { name: "Submit leave request" });
 

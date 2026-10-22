@@ -94,11 +94,6 @@ interface ScopeBadgeProps {
   scope: ExplainedPermission["scope"];
 }
 
-/**
- * `team` is labelled for what it does, not for what it is named. It is the one
- * scope the data layer does not implement, so showing it as a wider grant than
- * `own` would mislead the person deciding whether to narrow it.
- */
 export function ScopeBadge({ scope }: ScopeBadgeProps) {
   const tone = statusToneClasses(SCOPE_TONES[scope]);
   const isInert = scope === "team";

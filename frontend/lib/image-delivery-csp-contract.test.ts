@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 jest.mock("next-auth/jwt", () => ({ getToken: jest.fn() }));
 
 import { buildCsp } from "@/proxy";
@@ -37,7 +34,6 @@ function matchesHostSource(source: string, url: URL): boolean {
   return host === url.host || host === url.hostname;
 }
 
-/** The browser's own img-src decision for `<img src={emitted}>` on a page at `pageOrigin`. */
 function imgSrcPermits(csp: string, emitted: string, pageOrigin: string): boolean {
   const sources = directiveSources(csp, "img-src");
   if (sources.length === 0) return false;

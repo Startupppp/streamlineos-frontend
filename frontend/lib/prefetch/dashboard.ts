@@ -13,7 +13,7 @@ import {
   myIssuesQueryOptions,
   personalDashboardQueryOptions,
   publicDocumentsQueryOptions,
-} from "@/hooks/api/dashboard";
+} from "@/hooks/api/dashboard-read-options";
 
 export async function prefetchDashboard() {
   try {

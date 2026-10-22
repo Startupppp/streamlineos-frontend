@@ -45,7 +45,6 @@ export function useSandboxCatalogue() {
         signal,
         catalogueContract,
       ),
-    /* A published constant. It changes when this deployment changes, not sooner. */
     staleTime: 60 * 60_000,
   });
 }
@@ -74,10 +73,6 @@ export function useSandboxDeliveries() {
         signal,
         deliveriesContract,
       ),
-    /*
-      Short, because the point of this list is watching a replay land. A
-      developer staring at a stale "pending" concludes the delivery hung.
-    */
     staleTime: 5_000,
   });
 }

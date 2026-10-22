@@ -26,15 +26,6 @@ export const LOCATION_TYPE_LABELS: Record<LocationType, string> = {
   RETURNS: "Returns",
 };
 
-/**
- * Ten kinds of place in a warehouse, listed together in the location tree, so
- * the chip is how you tell a receiving dock from a scrap bin. On the status
- * scale the ten rendered as four looks — four of them a single blue.
- *
- * SCRAP and RETURNS are red and rose: adjacent on purpose, because both are
- * stock leaving the good pool, but no longer the same chip. AISLE takes indigo
- * rather than the blue it shared with ZONE before the migration.
- */
 export const LOCATION_TYPE_COLORS: Record<LocationType, string> = {
   ZONE: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
   AISLE: "bg-category-indigo-surface text-category-indigo-ink border-category-indigo-rule",

@@ -130,7 +130,6 @@ function useForegroundHeartbeat(enabled: boolean, scope: string) {
       if (existing) sessionId = existing;
       else window.sessionStorage.setItem(sessionKey, sessionId);
     } catch {
-      /* Session storage may be unavailable. */
     }
     const isForeground = () =>
       document.visibilityState === "visible" && document.hasFocus();

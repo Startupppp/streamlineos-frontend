@@ -1,8 +1,3 @@
-/**
- * @jest-environment node
- *
- * Drives the signOut event seam in `lib/auth.ts` — not a reimplementation of it.
- */
 jest.mock("@/lib/backend-url", () => ({ BACKEND_URL: "http://backend.test" }));
 
 jest.mock("axios", () => ({
@@ -92,8 +87,6 @@ describe("signOut event — the production eviction seam", () => {
   it("BITE: with the event removed, the signed-out device's token stays servable", async () => {
     const { a } = await seedTwoDevices();
 
-    // The eviction the event performs, not performed. This is the state the
-    // seam existed to prevent for the whole of its test-only life.
     expect(getBackendJwtFromStore(`${USER}:${SESSION_A}:${ORG}`)).toBe(a);
 
     await signOutEvent({ token: makeToken(SESSION_A) });
@@ -150,13 +143,9 @@ describe("signOut event — the production eviction seam", () => {
   it("revoking ANOTHER device is not observable here — retention is bounded, the backend is the authority", async () => {
     const { a } = await seedTwoDevices();
 
-    // Device B asks the backend to revoke device A. Nothing reaches this
-    // process, so A's entry survives by design.
     endBackendJwtSession(makeToken(SESSION_B));
     expect(getBackendJwtFromStore(`${USER}:${SESSION_A}:${ORG}`)).toBe(a);
 
-    // The retention is bounded by the token's own expiry, and the next mint for
-    // A is refused by the backend rather than served from here.
     const expired = Buffer.from(
       JSON.stringify({ sub: USER, sessionId: SESSION_A, exp: Math.floor(Date.now() / 1000) - 10 }),
     ).toString("base64url");

@@ -1,6 +1,3 @@
-/**
- * A hydrated snapshot must remove the client read, not merely sit beside it.
- */
 jest.mock("next-auth/react", () => ({ useSession: jest.fn() }));
 jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn() } }));
 
@@ -77,7 +74,6 @@ interface HydrationCase {
   readonly key: QueryKey;
   readonly snapshot: unknown;
   readonly useRead: () => { status: string };
-  /** Set where the hook deliberately refetches a fresh snapshot on every mount. */
   readonly refetchesOnMount?: true;
 }
 

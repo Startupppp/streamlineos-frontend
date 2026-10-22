@@ -72,8 +72,6 @@ export function useDismissLeavePolicyTemplates() {
         undefined,
         dismissContract,
       ),
-    // The server's answer already is the new state, so the offer is patched
-    // rather than refetched (FE-35) — the prompt closes and stays closed.
     onSuccess: (result) => {
       qc.setQueryData<LeavePolicyTemplateOffer>(
         humanResourcesQueryKeys.hr.leavePolicyTemplates(),
@@ -101,8 +99,6 @@ export function useImportLeavePolicyTemplates() {
           importContract,
         ),
       onSuccess: () => {
-        // The import writes leave types and policies, and it is what makes the
-        // offer stop applying — all three reads move together.
         qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.leavePolicies() });
         qc.invalidateQueries({ queryKey: LEAVE_TYPES_KEY });
         qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.leavePolicyTemplates() });

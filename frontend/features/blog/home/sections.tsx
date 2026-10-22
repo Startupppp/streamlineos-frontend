@@ -45,7 +45,6 @@ export function Topics({ categories }: { categories: BlogCategorySummary[] }) {
   );
 }
 
-/** One practical guide given more room than a card: image and text side by side. */
 export function EditorialFeature({ post }: { post: BlogCard }) {
   return (
     <section aria-labelledby="feature-title" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">

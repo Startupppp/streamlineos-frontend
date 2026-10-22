@@ -110,7 +110,6 @@ jest.mock("@/components/layout/sidebar/use-product-sidebar-visibility", () => ({
   }),
 }));
 
-// DashboardShell mocks (for skip-to-content test)
 jest.mock("@/components/layout/app-sidebar", () => ({
   AppSidebar: () => null,
 }));
@@ -188,7 +187,6 @@ import { SidebarCollapseToggle } from "@/components/layout/header/sidebar-collap
 import { MobileModuleBottomNav } from "@/components/layout/mobile/mobile-module-bottom-nav";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 
-// ─── SidebarCollapseToggle keyboard ──────────────────────────────────────────
 
 describe("keyboard — SidebarCollapseToggle", () => {
   it("button is reachable: it exists in the DOM with role=button", () => {
@@ -227,7 +225,6 @@ describe("keyboard — SidebarCollapseToggle", () => {
   });
 });
 
-// ─── Skip-to-content link ────────────────────────────────────────────────────
 
 describe("keyboard — skip-to-content link (DashboardShell)", () => {
   it("renders a link that targets #dashboard-content", () => {
@@ -270,7 +267,6 @@ describe("keyboard — skip-to-content link (DashboardShell)", () => {
   });
 });
 
-// ─── MobileModuleBottomNav — MoreTab aria-expanded ───────────────────────────
 
 describe("keyboard — MobileModuleBottomNav MoreTab", () => {
   it("renders the nav landmark so the suite cannot pass vacuously", () => {
@@ -314,10 +310,3 @@ describe("keyboard — MobileModuleBottomNav MoreTab", () => {
   });
 });
 
-/*
- * Colour contrast is NOT asserted. axe in jsdom cannot compute CSS, so contrast
- * ratios are unverifiable here. Test with Lighthouse or Playwright-axe against a
- * running instance with real CSS applied.
- *
- * Layout, viewport and media queries are not tested; jsdom does not evaluate them.
- */

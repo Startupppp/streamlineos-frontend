@@ -25,14 +25,9 @@ export interface MovementsParams {
   dateTo?: string;
   page?: number;
   limit?: number;
-  /**
-   * G1. Keyset position over `(created_at, id)`. Sent, it supersedes `page` and
-   * the response carries no `total` — see `useCursorPagination`.
-   */
   cursor?: string;
 }
 
-/** What a keyset-paginated list answers with instead of a total. */
 export interface CursorResponse<T> {
   items: T[];
   total: number | null;
@@ -112,16 +107,9 @@ export interface ReorderReportRow {
   sku: string;
   variantSku: string;
   categoryName: string | null;
-  /**
-   * B4. Which store is short. The report is one row per stock level, so a SKU
-   * low at two dark stores is two rows — and until the warehouse was projected
-   * they were identical, which made the list's React key collide and silently
-   * drop one of them.
-   */
   warehouseId: number;
   warehouseCode: string | null;
   warehouseName: string | null;
-  /** The bin. A SKU can be low in two bins of the same store, so this is the identity. */
   locationId: number;
   locationCode: string | null;
   onHand: number;
@@ -219,11 +207,6 @@ export interface RawUserRef {
 export interface RawStockLevelRow {
   id: number;
   onHand: string;
-  /**
-   * A1. Server-computed availability: on hand less committed, blocked,
-   * quality-held and outgoing. Recomputing `onHand - committed` here was an
-   * eighth copy of the formula, two terms short.
-   */
   availableQty: string;
   committed: string;
   onOrder: string;
@@ -283,7 +266,6 @@ export interface RawReorderRow {
   onHand: number;
   onOrder: number;
   committed: number;
-  /** A1. Server-computed; the client must not re-derive it. */
   availableQty: number;
   reorderPoint: number;
   minStockLevel: number;
@@ -311,7 +293,6 @@ export interface RawReorderEnvelope {
 
 export interface RawMovementsEnvelope {
   items: RawTransactionRow[];
-  /** Null on a keyset walk: the server is never asked to count the ledger. */
   total: number | null;
   page: number;
   totalPages: number | null;

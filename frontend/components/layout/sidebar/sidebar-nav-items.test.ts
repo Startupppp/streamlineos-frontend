@@ -196,7 +196,6 @@ describe("Administration information architecture", () => {
     ]);
   });
 
-  // OrgHierarchyController carries no @RequireModule, so gating this nav on HRMS hid a working surface.
   it("keeps organization structure available when HR is not enabled", () => {
     const groups = getNavGroupsForModule(
       "administration",
@@ -263,15 +262,11 @@ describe("Administration information architecture", () => {
 });
 
 describe("module-gate completeness", () => {
-  // Modules that have a dedicated sidebar product key and are gated via that product.
-  // They don't need a NavGroup.module because the product itself carries the gating.
   const PRODUCT_KEYED_MODULE_IDS = new Set(
     MANIFEST.modules
       .filter((m) => m.productKey !== null)
       .map((m) => m.id),
   );
-  // Platform-internal manifest modules that are always enabled (no @RequireModule gate).
-  // These share a permission prefix with admin groups but never gate a nav group.
   const ALWAYS_ENABLED_MODULE_IDS = new Set([
     "billing", "calendar", "directory", "mail", "notifications",
     "settings", "tasks",

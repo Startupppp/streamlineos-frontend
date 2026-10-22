@@ -12,10 +12,8 @@ import { useHoverPress } from "./use-hover-press";
 
 export interface BrandCtaProps {
   label: string;
-  /** Link target; omit for a submit/button element. */
   href?: string;
   type?: "button" | "submit";
-  /** Classes for size, padding and type — the base look is built in. */
   className?: string;
 }
 
@@ -41,12 +39,6 @@ const Chevrons = () => (
   </svg>
 );
 
-/**
- * Accent CTA — "handoff" hover (motion brief, shared.cta, reworked on request).
- * An ink layer sweeps in from the left and inverts the pill: the label turns
- * accent, shifts left, and the Relay chevrons slide in behind it. Press squashes.
- * The resting button is the Figma one (instance 2726:25) untouched.
- */
 export const BrandCta = ({
   label,
   href,
@@ -55,7 +47,6 @@ export const BrandCta = ({
 }: BrandCtaProps) => {
   const { hovered, pressed, handlers } = useHoverPress();
   const { p } = useSpring({ p: hovered ? 1 : 0, config: SPRING });
-  /* the accent stroke travels round in 1.1 s — same pace as the glass buttons */
   const { r } = useSpring({
     r: hovered ? 100 : 0,
     config: { duration: hovered ? 1100 : 450, easing: easings.easeInOutCubic },
@@ -67,8 +58,7 @@ export const BrandCta = ({
 
   const inner = (
     <>
-      {/* Accent fill as its own layer: it fades out under the ink sweep, so no
-          accent hairline survives at the anti-aliased rounded edge. */}
+      
       <animated.span
         aria-hidden="true"
         className="absolute inset-0 rounded-full bg-linear-135 from-brand-from to-brand-to"
@@ -82,8 +72,7 @@ export const BrandCta = ({
           clipPath: p.to((v) => `inset(0 ${(1 - v) * 100}% 0 0 round 999px)`),
         }}
       >
-        {/* The chevrons ride right after the label, so every accent CTA — narrow
-            nav pill or full-width card button — reads the same. */}
+        
         <animated.span className="relative" style={{ x: p.to((v) => -5 * v) }}>
           {label}
           <animated.span
@@ -94,7 +83,7 @@ export const BrandCta = ({
           </animated.span>
         </animated.span>
       </animated.span>
-      {/* Even 1px accent stroke that fills clockwise round the pill. */}
+      
       <animated.span
         aria-hidden="true"
         className="stroke-ring pointer-events-none absolute inset-0 rounded-full bg-[conic-gradient(from_0deg,var(--accent)_var(--fill),transparent_var(--fill))]"

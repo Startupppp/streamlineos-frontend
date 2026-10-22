@@ -19,27 +19,6 @@ import {
 } from "@/hooks/api/inventory/ai-review";
 import { AiAnswerFeedback } from "./ai-answer-feedback";
 
-/**
- * F3 — the demand-risk narrative.
- *
- * Every figure on this card was computed by the forecasting engine and stored;
- * the prose is a narration of those numbers and nothing else. That split is why
- * the layout puts the coverage window and the uncertainty *above* the sentence
- * rather than below it: the reader should see what the forecast covers before
- * they read what somebody says about it.
- *
- * Three states, rendered as three things:
- *
- *   * **an answer** — coverage, horizon, uncertainty and prose;
- *   * **facts only** — the provider is unreachable and the stored forecast is
- *     shown alone, because it is still the organisation's best estimate;
- *   * **insufficient evidence** — there is no stored forecast to narrate. That
- *     is a different claim from "no risk found" and must never render as one.
- *
- * There is no button here that computes a forecast. Commissioning one is a
- * decision with a horizon and a service level in it, and it belongs on the
- * forecasting screen, not behind a narration.
- */
 
 function Figure({
   label,
@@ -96,8 +75,6 @@ function CoverageStrip({ result }: { result: InvDemandRiskResult }) {
       </div>
 
       {!uncertainty.applicable ? (
-        // A refusal is a *result*. Rendering it as an absent number would turn
-        // "we decline to model this demand" into "no risk found".
         <p className="text-dense text-status-warning-ink">
           The safety-stock model does not describe this demand:{" "}
           {uncertainty.refusalReason ?? "no reason recorded"}.
@@ -271,9 +248,7 @@ export function DemandRiskPanel() {
                     variant="outline"
                     className="text-micro"
                   >
-                    {/* A measured figure and a written suggestion must not wear the
-                        same styling — collapsing them is how a generated number
-                        gets read as a computed one. */}
+                    
                     {factor.isFactual ? "" : "suggestion · "}
                     {factor.label}: {factor.value}
                   </Badge>

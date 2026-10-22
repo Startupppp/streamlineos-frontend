@@ -1,21 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Payroll runs — the highest-consequence money in the product.
- *
- * EVERY amount on these routes is a `decimal(15,2)` handed back by the driver
- * as a STRING. There is no `mode: "number"` and no `.$type<number>()` anywhere
- * in `src/db/schema/payroll/**`, so a client that treated one as a number would
- * be adding pay with `+` on strings. The columns are also `.notNull()`, so the
- * `| null` the hand-written types carried was never reachable — a totals row
- * defaulting through `?? "0"` was dead code hiding a real absence.
- *
- * `paidDays` on the register is `decimal(5,1)` — ONE decimal place, not two.
- *
- * `status` on a run employee looks like an enum and is not: the column is plain
- * `text` defaulting to "PENDING", and the payout path writes "PAID".
- */
 
 export const payrollRunStatusContract = z.enum([
   "PREPARING",
@@ -57,11 +42,6 @@ export const payrollRunsPageContract = cursorPageContract(
   payrollRunListItemContract,
 );
 
-/**
- * The detail route returns the unprojected row, so `orgId` and the whole audit
- * trail come with it. Declared here are the columns the client reads plus every
- * money and status field, which is what the contract exists to police.
- */
 export const payrollRunContract = z.object({
   id: z.number(),
   orgId: z.string(),
@@ -72,7 +52,6 @@ export const payrollRunContract = z.object({
   periodId: z.number().nullable(),
   payDate: z.string().nullable(),
   statutoryRuleVersion: z.string().nullable(),
-  /** Has a default but no NOT NULL, so it really can arrive null. */
   calculationVersion: z.string().nullable(),
   grossTotal: z.string(),
   deductionTotal: z.string(),
@@ -109,9 +88,7 @@ export const payrollVarianceSummaryContract = z.object({
 export const payrollRunDetailContract = z.object({
   run: payrollRunContract,
   checklist: z.array(payrollChecklistItemContract),
-  /** Null unless there is a prior locked run to compare against. */
   varianceSummary: payrollVarianceSummaryContract.nullable(),
-  /** Null unless the run is paid AND at least one payout item failed or is held. */
   payoutHealth: z
     .object({ failedCount: z.number(), heldCount: z.number() })
     .nullable(),

@@ -1,15 +1,5 @@
 import { permissionGate } from "@/lib/rbac/permission-gate";
 
-/**
- * BUG-HRMS-011 / BUG-HRMS-012 / BUG-HRMS-014. `pending` used to mean "the access
- * snapshot is not here", which is true both before the read lands and for ever
- * after it fails. Every surface that renders a skeleton while pending therefore
- * rendered it until the tab was closed once `/me/access` errored — one degraded
- * org sync walled a whole session.
- *
- * The four answers have to stay mutually exclusive: that is what lets a surface
- * branch on them without ever showing two states or, worse, an empty one.
- */
 
 const KEY = "hr:employees:view";
 
@@ -37,8 +27,6 @@ describe("permissionGate", () => {
   });
 
   it("prefers a landed snapshot over a stale failure flag", () => {
-    // A refetch that fails after a successful read must not retract a grant the
-    // surface is already rendering from.
     expect(states(permissionGate(KEY, true, true, true))).toEqual([true, false, false, false]);
   });
 

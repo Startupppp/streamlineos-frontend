@@ -8,12 +8,6 @@ import { useCardPlay } from "./use-card-play";
 
 const DIGITS = "0123456789".split("");
 
-/**
- * Row number that rolls like a counter up to its value (motion brief,
- * product.index "Перекат цифр"). Each digit is a 0–9 strip plus 0…digit,
- * clipped to one line and slid up a full turn onto the final digit, so the
- * resting glyphs sit exactly where the plain text did.
- */
 export const RollIndex = ({
   value,
   className = "",

@@ -1,16 +1,5 @@
 import { z } from "zod";
 
-/**
- * Every status `email_sequence_enrollments.status` can hold, in the backend's
- * order.
- *
- * This list narrowed to four values while the sender had already started
- * writing a fifth, `HELD_NO_CONSENT`: the enum threw on parse, so a sequence
- * with one held enrollment took the whole screen down with it — and the
- * enrollment that was held for a consent reason is precisely the one a
- * recruiter needed to see. Any value added on the backend belongs here in the
- * same change.
- */
 export const ENROLLMENT_STATUSES = [
   "ACTIVE",
   "COMPLETED",
@@ -25,10 +14,6 @@ export const ENROLLMENT_STATUSES = [
 
 export type EnrollmentStatus = (typeof ENROLLMENT_STATUSES)[number];
 
-/**
- * How a campaign is doing. `byStatus` is keyed by every status above, so a
- * screen can show where enrollments stalled rather than only the totals.
- */
 export const nurtureMetricsContract = z.object({
   sequenceId: z.number().int(),
   enrolled: z.number().int(),

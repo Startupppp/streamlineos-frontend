@@ -32,7 +32,6 @@ interface ImportWizardSheetProps {
   columns: string[];
 }
 
-// Steps 1-3 are upload, preview and validate; 4 is the result of a commit.
 type Step = 1 | 2 | 3 | 4;
 
 export function ImportWizardSheet({

@@ -27,7 +27,6 @@ const NAMES_SHOWN = 3;
 
 export type BlockerGroup = { code: string; label: string; items: RunException[] };
 
-/** Open blockers grouped by code, largest group first. */
 export function groupBlockers(blockers: readonly RunException[]): BlockerGroup[] {
   const byCode = new Map<string, RunException[]>();
   for (const blocker of blockers) byCode.set(blocker.code, [...(byCode.get(blocker.code) ?? []), blocker]);
@@ -55,8 +54,6 @@ function LockAttendanceFix({ runId, month }: { runId: number; month: string }) {
   const recalculate = useRecalculateRun();
   const [isRunning, setIsRunning] = useState(false);
 
-  // Create → build → lock this month's attendance, then recalculate so the
-  // run picks up the locked snapshot. Each step's hook toasts its own result.
   async function handleLock() {
     setIsRunning(true);
     try {
@@ -66,7 +63,6 @@ function LockAttendanceFix({ runId, month }: { runId: number; month: string }) {
       if (period.status !== "locked") await lockPeriod.mutateAsync(period.id);
       await recalculate.mutateAsync(runId);
     } catch {
-      // The failing step already showed its error.
     } finally {
       setIsRunning(false);
     }
@@ -99,7 +95,6 @@ function BlockerFix({ group, runId, month }: { group: BlockerGroup; runId: numbe
   );
 }
 
-/** "N things to fix before you can submit" — one card per blocker type, each with its fix. */
 export function BlockerFixCard({ runId, month, isLocked }: { runId: number; month: string; isLocked: boolean }) {
   const { data } = useRunExceptions(runId, { severity: "BLOCKER", status: "OPEN" });
   if (isLocked || !data || data.data.length === 0) return null;

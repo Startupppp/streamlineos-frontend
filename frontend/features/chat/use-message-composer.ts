@@ -142,9 +142,6 @@ export function useMessageComposer({
     try {
       for (const file of files) {
         if (file.size > CHAT_ATTACHMENT_MAX_BYTES) { toast.error(`${file.name} is too large (max 10MB)`); continue; }
-        // Paste and drag never pass through the picker's `accept`, so the allowlist is
-        // enforced here too — and names what is allowed, which the server's bare
-        // "File type not allowed" did not (CHAT-S06).
         if (!isAllowedChatAttachment(file)) { toast.error(`${file.name} is not a supported file type. Attach ${CHAT_ATTACHMENT_SUMMARY}.`); continue; }
         const formData = new FormData(); formData.append("file", file); formData.append("folder", "chat");
         try {
@@ -224,7 +221,6 @@ export function useMessageComposer({
     else { setRecordQuery(null); setShowMentions(!!at); setMentionQuery(at?.[1] ?? ""); setMentionIndex(0); }
   }, [publishTyping]);
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    // Enter that confirms an IME candidate belongs to the IME, not to send or insert.
     if (e.nativeEvent.isComposing || e.keyCode === 229) return;
     if (recordPicker) {
       const count = recordOptions.length;

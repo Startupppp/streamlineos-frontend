@@ -15,7 +15,6 @@ export function resolveDirectPartner(
     : null;
 }
 
-/** The caller's own row: it carries `isFavorite`, `role`, `lastReadAt` and the mute state. */
 export function findOwnMember(
   members: ChannelMember[] | undefined,
   currentUserId: string,

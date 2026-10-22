@@ -62,9 +62,6 @@ export function useMessagePanelData({
   const { data: channel } = useChatChannel(channelId, canReadChannel);
   const {
     isLoading,
-    // A 500 or a 403 on the history read used to reach the list as `isLoading
-    // false, messages []`, which the timeline rendered as an ordinary empty
-    // channel. The verdict has to travel with the data.
     isError: messagesError,
     error: messagesErrorValue,
     refetch: refetchMessages,

@@ -17,39 +17,6 @@ import {
   VALID_ROLES,
 } from "./aria-vocabulary";
 
-/**
- * Screen-reader semantics across the whole corpus, with a denominator.
- *
- * Reachability is already censused by `keyboard-reachability-analysis`. That
- * scan answers "can a keyboard get there"; it says nothing about what the
- * assistive technology is told once it arrives. This one walks the same tree
- * and judges the naming and role layer instead.
- *
- * WHAT THIS CANNOT SEE — read this before treating a zero as coverage:
- *  · whether a name is CORRECT. `aria-label="Button"` on a delete control is a
- *    pass here and a defect in the product. Only a human or a real AT session
- *    can judge a name's content.
- *  · whether focus is TRAPPED in a dialog or RESTORED to its trigger, and
- *    whether a route change moves focus. Those are runtime behaviours; the
- *    rendered suites in `components/ui/__tests__/overlay-focus.a11y.test.tsx`
- *    and `components/layout/__tests__` own them.
- *  · whether an `aria-live` region actually announces. Presence is not
- *    announcement — the region has to exist before the text changes.
- *  · reading order, or anything that depends on the painted layout.
- *  · any PascalCase component. `<Dialog>`'s semantics are its own contract and
- *    this scan cannot see through the import.
- *  · a name computed at runtime. `aria-label={label}` counts as named without
- *    proving `label` is a non-empty string.
- *  · an id threaded through a prop is honoured by NAME, not by proof:
- *    `titleId="x"` satisfies `aria-labelledby="x"` because the literal appears
- *    as an id-valued attribute in the file. That is a heuristic chosen to avoid
- *    fabricating findings, and it is weaker than following the render.
- *
- * The classes below are the ones a static walk CAN decide, and each one is a
- * defect a browser will not report and an axe pass over a rendered fixture
- * would only find on the pages that fixture happens to mount.
- */
-
 export interface AriaFinding {
   file: string;
   line: number;
@@ -59,7 +26,6 @@ export interface AriaFinding {
 
 export interface AriaSemantics {
   filesScanned: number;
-  /** Every lowercase JSX element walked — the population the checks ran over. */
   elements: number;
   ariaAttributes: number;
   roleAttributes: number;
@@ -100,10 +66,6 @@ const ARIA_HIDDEN_TRUE = /\baria-hidden(?:="true"|=\{true\})?(?![-a-zA-Z])/;
 const ARIA_HIDDEN_FALSE = /\baria-hidden=\{?(?:false|!)/;
 const INPUT_TYPE = /\btype="([^"]*)"/;
 
-/**
- * Any literal that is used as an id in this file — `id="x"`, `htmlFor="x"` and
- * any camelCase `…Id="x"` prop, which is how an id reaches a child component.
- */
 const ID_LITERAL = /\b(?:id|htmlFor|[a-zA-Z]+Id)="([^"{}]+)"/g;
 
 function idLiterals(source: string): Set<string> {
@@ -116,12 +78,6 @@ function lineOf(source: string, index: number): number {
   return source.slice(0, index).split("\n").length;
 }
 
-/**
- * A control inside `<FormControl>` is named by construction: the shadcn wrapper
- * is a Radix Slot that stamps `id={formItemId}` onto its child while `FormLabel`
- * stamps the matching `htmlFor`. Judging the raw `<input>` there reports a
- * defect the runtime does not have.
- */
 const FORM_CONTROL_SLOT = /<FormControl[^>]*>\s*$/;
 
 export function analyzeSource(source: string, file = ""): Omit<AriaSemantics, "filesScanned"> {
@@ -199,12 +155,6 @@ export function analyzeSource(source: string, file = ""): Omit<AriaSemantics, "f
     if (!NAMED_CONTROLS.has(tag)) continue;
     const type = INPUT_TYPE.exec(attributes);
     if (type && UNNAMEABLE_INPUT_TYPES.has(type[1] as string)) continue;
-    /**
-     * Counted BEFORE the exclusions below, deliberately. If a control left the
-     * denominator by becoming display:none or by moving inside `FormControl`,
-     * converting a finding would shrink the population it was counted against
-     * and the ratio would improve because the question was withdrawn.
-     */
     out.formControls += 1;
     if (HIDDEN_CLASS.test(attributes)) continue;
     if (FORM_CONTROL_SLOT.test(source.slice(Math.max(0, site.index - 400), site.index)))

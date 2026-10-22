@@ -20,19 +20,10 @@ interface VendorScorecardPanelProps {
 
 type StatTone = "default" | "blue" | "emerald" | "amber" | "red";
 
-/**
- * C4. Every figure below is rendered exactly as the backend derived it.
- *
- * The one number this file computes is nothing: `percent` arrives already
- * rounded, `sampleSize` already counted. `Number(...)` appears once, to pick a
- * colour — a threshold comparison, never a displayed value — because deciding
- * that 90% is green is a presentation choice and does not belong in a service.
- */
 function displayPercent(rate: ScorecardRate): string {
   return rate.percent === null ? "—" : `${rate.percent}%`;
 }
 
-/** "over 4 lines", or the reason there is nothing to say. */
 function sampleHint(rate: ScorecardRate, unit: string): string {
   if (rate.percent === null) return `No ${unit} to measure`;
   const scale = `over ${rate.sampleSize} ${unit}`;

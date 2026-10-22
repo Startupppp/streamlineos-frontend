@@ -38,18 +38,6 @@ function SignalLink({ signal }: { signal: OpsBriefSignal }) {
   );
 }
 
-/**
- * INV-101 — the Operations Brief.
- *
- * Two halves with different costs, and the card keeps them visibly apart. The
- * signal counts are deterministic and free, so they are here as soon as the
- * dashboard is; the narrative spends credits and happens only when somebody
- * presses the button. The previous version showed nothing at all until you
- * pressed it, which meant the cheap half was gated behind the expensive one.
- *
- * Every route comes from the server alongside the count it belongs to. A second
- * copy of that map on the client is a copy that drifts.
- */
 export function InventoryAiBriefCard() {
   const canView = useCan("inventory:ai:read");
   const brief = useOpsBrief();
@@ -85,8 +73,6 @@ export function InventoryAiBriefCard() {
 
       <CardContent className="space-y-3 pt-3">
         {!canView ? (
-          // Denial, not emptiness. "No signals" and "you may not see the
-          // signals" are different facts and must not render the same.
           <NoPermissionState
             compact
             permission="inventory:ai:read"
@@ -125,8 +111,6 @@ export function InventoryAiBriefCard() {
             ) : null}
 
             {narrate.error ? (
-              // The provider failing must not take the deterministic counts
-              // above down with it -- they are still true.
               <ErrorState
                 compact
                 title="Narrative unavailable"

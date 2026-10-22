@@ -26,7 +26,6 @@ export function AssetTableSection({
   statusFilter?: string;
   onNextPage: () => void;
   onPreviousPage: () => void;
-  /** Absent when the caller cannot create assets (hr:assets:manage). */
   onOpenAdd?: () => void;
 }) {
   return (

@@ -13,6 +13,10 @@ import type {
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { IdCursorPage } from "@/hooks/api/cursor-page-schema";
 import type { RiskStats } from "@/hooks/api/build/governance-schema";
+import {
+  projectRisksListQueryOptions,
+  projectDecisionsListQueryOptions,
+} from "./governance-read-options";
 
 
 const riskPageContract = lazyContract(() =>
@@ -183,22 +187,3 @@ export function useDeleteDecision(projectId: number) {
   });
 }
 
-export function projectRisksListQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.risks.list(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    staleTime: 60_000,
-  };
-}
-
-export function projectDecisionsListQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.decisions.list(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    staleTime: 60_000,
-  };
-}

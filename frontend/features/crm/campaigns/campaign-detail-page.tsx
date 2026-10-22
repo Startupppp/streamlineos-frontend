@@ -32,12 +32,6 @@ import { fieldByName, toneForSignedValue } from "@/lib/renderer/layout";
 import type { StatTone } from "@/components/ui/stat-card";
 import type { FieldTone } from "@/lib/renderer/layout";
 
-/*
-  The renderer speaks in verdicts (success, danger); StatCard speaks in colours.
-  Naming the mapping once keeps the two vocabularies from being re-guessed —
-  and typing it as a total Record means adding a FieldTone breaks here, at the
-  translation, rather than silently falling through to a default colour.
-*/
 const STAT_TONE_BY_FIELD_TONE: Record<FieldTone, StatTone> = {
   success: "emerald",
   danger: "red",
@@ -51,15 +45,6 @@ const AttributionChart = dynamic(
   { ssr: false, loading: () => <Skeleton className="h-[280px] w-full" /> },
 );
 
-/**
- * The columns this panel shows of a lead.
- *
- * A narrowing of the lead description rather than a second one. The endpoint
- * sends a whole lead — `getCampaignLeads` projects sixteen fields — and the old
- * table declared three of them by hand, which is how an embedded panel and its
- * own record type drift apart. `withColumns` keeps one description and frames
- * it; a status the leads list starts toning is toned here on the same day.
- */
 const PANEL_COLUMNS = ["name", "status", "source", "potentialValue"] as const;
 
 interface CampaignDetailPageProps {
@@ -98,17 +83,6 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     setLeadsPage(page);
   }, []);
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Placed after the last hook and before the first branch that can return:
-   * denial outranks loading, error and emptiness alike, and a hook below a
-   * conditional return would run in a different order on different renders.
-   */
   if (useCanState("crm:campaigns:view") === "denied")
     return <NoPermissionState permission="crm:campaigns:view" />;
 
@@ -139,11 +113,6 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
   const roiValue = roi?.roi ?? parseFloat(campaign?.roi ?? "0");
   const roiDisplay = isNaN(roiValue) ? "—" : `${roiValue.toFixed(1)}%`;
 
-  /*
-    The tile's tone comes from the campaign description saying ROI is a gain,
-    not from a comparison written here. The hand-written version of this line
-    was one of two colour rules on this screen that disagreed about zero.
-  */
   const roiField = fieldByName(CAMPAIGN_LAYOUT, "roi");
   const roiTone: StatTone =
     STAT_TONE_BY_FIELD_TONE[

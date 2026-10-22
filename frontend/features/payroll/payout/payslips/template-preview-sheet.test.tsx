@@ -29,8 +29,6 @@ const template: PayslipTemplate = {
 it("renders the backend's payslip HTML in a fully sandboxed frame, with no scripts", () => {
   render(<PayslipPreviewSheet template={template} open onOpenChange={jest.fn()} />);
 
-  // allow-scripts together with allow-same-origin would let the frame lift its
-  // own sandbox and run the backend-interpolated HTML as the app.
   expect(screen.getByTitle("Payslip Preview")).toHaveAttribute("sandbox", "");
 });
 

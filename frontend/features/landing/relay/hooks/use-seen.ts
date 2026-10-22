@@ -6,13 +6,6 @@ import { TEXT_MARGIN } from "@/features/landing/relay/lib/view";
 
 type Mark = () => void;
 
-/**
- * One IntersectionObserver for every `useSeen` element on the page (they all
- * share TEXT_MARGIN), and one scroll listener for the bottom-of-page case —
- * instead of two per element. The page has a few hundred reveals; a few
- * hundred observers each computed their intersection every scrolled frame.
- */
-/** Several callers may watch one element (a card's rows all key off the card). */
 const marks = new Map<Element, Set<Mark>>();
 let observer: IntersectionObserver | null = null;
 let scrolling = false;
@@ -64,14 +57,6 @@ const watch = (el: Element, mark: Mark) => {
   };
 };
 
-/**
- * `true` from the moment `ref` is clearly on screen (see TEXT_MARGIN), and
- * stays true. Anything already on screen when the page opens (the first
- * screen) counts as seen straight away — it would otherwise wait below the
- * TEXT_MARGIN line for a scroll. Elements in the last fifth of the page can
- * never cross that line either, so reaching the bottom of the page also
- * counts as seen for anything already on screen.
- */
 export const useSeen = (ref: RefObject<Element | null>) => {
   const [seen, setSeen] = useState(false);
 

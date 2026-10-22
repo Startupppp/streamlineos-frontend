@@ -21,12 +21,6 @@ import type {
   RoleListItem,
 } from "@/hooks/api/roles-schema";
 
-/**
- * Deferred: `hooks/api/index.ts` re-exports this module, and `roles-schema`
- * (plus the `cursor-page-schema` it builds on) is a value import of Zod. Role
- * administration is a small corner of the app; every barrel consumer was paying
- * for it. The contracts still reach `apiClient.get`, so parsing is unchanged.
- */
 const rolesPageContract = lazyContract(() =>
   import("@/hooks/api/roles-schema").then((m) => m.rolesPageContract),
 );

@@ -1,15 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * A stock movement that never reached the ledger, as data.
- *
- * A row of the stock-to-GL reconciliation report, so it is a projection and
- * the form is empty. `postingDate` and `valueMinor` are declared so the columns
- * exist and can be arranged; the surface draws their values through `cells`,
- * because the date is a calendar day (a `date` field would parse it as UTC
- * midnight and show the day before west of Greenwich) and the value is in
- * minor units of the book's currency, which `money` does not speak.
- */
 export const UNPOSTED_MOVEMENT_LAYOUT: RecordLayout = {
   key: "accounting:unposted-movement",
   singular: "Unposted movement",

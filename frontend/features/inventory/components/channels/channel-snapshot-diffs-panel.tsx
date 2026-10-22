@@ -36,16 +36,6 @@ function isSnapshotDiffStatus(value: string): value is SnapshotDiffStatus {
   return value === "OPEN" || value === "ACCEPTED" || value === "DISMISSED";
 }
 
-/**
- * What the marketplace thinks it holds, against what the ledger says.
- *
- * The nightly sweep writes these rows and nothing in the product read them, so
- * an oversold listing or a sync that had silently stopped produced a difference
- * that sat unseen. Accepting posts a stock movement and is therefore gated on
- * `inventory:stock:adjust`, not on the channel key — and the channel's own
- * policy can forbid it, which the panel says rather than offering a button that
- * answers 409.
- */
 export function ChannelSnapshotDiffsPanel({
   open,
   onOpenChange,

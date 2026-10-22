@@ -34,19 +34,6 @@ interface ValuationEvidenceSheetProps {
 const PAGE_SIZE = 20;
 const ALL_PERIODS = "__all__";
 
-/**
- * The two halves of a valuation figure: what came in, and what each issue took
- * back out of it.
- *
- * Layers alone answer "what is this worth"; only the consumption lines answer
- * "why is cost of goods sold this number", because each names the layer it drew
- * from and the unit cost it drew at. `GET /inventory/valuation/consumptions` and
- * `GET /inventory/valuation/periods` both existed on `inventory:valuation:read`
- * with no caller, so the evidence stopped at the receipt.
- *
- * Every quantity and money figure here is a `numeric(18,4)` string in the
- * organisation's own currency. It is never divided and never parsed.
- */
 export function ValuationEvidenceSheet({ variantId, open, onClose }: ValuationEvidenceSheetProps) {
   const valuationState = useCanState("inventory:valuation:read");
   const display = useOrgDisplay();

@@ -9,6 +9,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { hrWorkforcePlansQueryOptions } from "@/hooks/api/hr/workforce-read-options";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const workforcePlansContract = lazyContract(() =>
@@ -74,18 +75,12 @@ const workforceKeys = {
   attritionForecast: () => [...humanResourcesQueryKeys.hr.all, "workforce", "attritionForecast"] as const,
 };
 
-export const hrWorkforcePlansQueryOptions = () =>
-  queryOptions({
-    queryKey: workforceKeys.plans(),
-    queryFn: ({ signal }) =>
-      apiClient.get("/hr/analytics-plus/workforce/plans", undefined, signal, workforcePlansContract),
-    staleTime: 5 * 60_000,
-  });
-
 export function useHrWorkforcePlans() {
   const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
     ...hrWorkforcePlansQueryOptions(),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/analytics-plus/workforce/plans", undefined, signal, workforcePlansContract),
     enabled: canHeadcount,
   });
 }

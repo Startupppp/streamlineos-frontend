@@ -16,15 +16,6 @@ import { useSeen } from "@/features/landing/relay/hooks/use-seen";
 import { FADE, REVEAL, SPRING, SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 import type { Tags } from "@/features/landing/relay/types/springs";
 
-/**
- * One timeline for the whole footer, so its entrance reads as a calm sequence
- * instead of every block firing on its own observer at once.
- *
- * - `top` (panels + status row) starts when the panel row is properly seen.
- * - `bottom` (links + legal) starts once its own row is on screen, but never
- *   before the top has had BOTTOM_AFTER ms to play.
- * - `loop` (the panel glyph) unlocks only after the entrance has settled.
- */
 export const CUE = {
   panels: 0,
   brandPanel: 50,
@@ -44,12 +35,8 @@ export const CUE = {
   legal: 380,
 } as const;
 
-/** Earliest the bottom stage may start, ms after the top one (was 1900 —
-    the links waited on screen). */
 const BOTTOM_AFTER = 350;
-/** When the ambient loop may begin, ms after the top stage. */
 const LOOP_AFTER = 1200;
-/** The links row counts as on screen as it enters (5% below the fold). */
 const BOTTOM_MARGIN = "0px 0px 5% 0px";
 
 type Stage = "top" | "bottom";
@@ -68,9 +55,7 @@ const useStage = () => {
   return ctx;
 };
 
-/** `true` once the ambient loops may run. */
 export const useLoopReady = () => useStage().loop;
-/** `true` once the given stage has started. */
 export const useStageReady = (stage: Stage) => useStage().ready[stage];
 
 const useLatch = (on: boolean, after: number) => {
@@ -144,7 +129,6 @@ const useCue = (stage: Stage) => {
   };
 };
 
-/** 24px rise + fade on the footer timeline. */
 export const CueRise = ({
   stage,
   delay = 0,
@@ -163,7 +147,6 @@ export const CueRise = ({
   />
 );
 
-/** Plain soft fade on the footer timeline. */
 export const CueFade = ({
   stage,
   delay = 0,
@@ -185,7 +168,6 @@ export const CueFade = ({
 const MASK =
   "linear-gradient(90deg, black calc(var(--reveal) - 40%), transparent var(--reveal))";
 
-/** FocusText on the footer timeline: out of blur with a left → right sweep. */
 export const CueFocus = ({
   stage,
   delay = 0,
@@ -205,7 +187,6 @@ export const CueFocus = ({
   />
 );
 
-/** DrawLine on the footer timeline. */
 export const CueLine = ({
   stage,
   delay = 0,
@@ -230,7 +211,6 @@ export const CueLine = ({
 
 const cut = "round(down, calc(var(--typed) * 1ch), 1ch)";
 
-/** TypeText on the footer timeline (mono label typing in). */
 export const CueType = ({
   stage,
   delay = 0,
@@ -260,10 +240,6 @@ export const CueType = ({
   );
 };
 
-/**
- * The CTA title rising out of its mask (the h2 clips) — 108% of its own
- * height (56px on the one-line 1440 title), so the two-line 390 title hides too.
- */
 export const CueLineRise = ({
   stage,
   delay = 0,

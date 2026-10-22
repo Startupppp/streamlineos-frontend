@@ -15,7 +15,6 @@ import { formatDateOnly } from "@/lib/date-utils";
 import type { TimelineAnchor, TimelineEntry } from "@/types/crm/activities";
 import { TimelineEntryRow } from "./timeline-entry-row";
 
-/** Groups consecutive entries under a day heading, preserving order within a day. */
 function groupByDay(entries: TimelineEntry[]): Array<{ day: string; entries: TimelineEntry[] }> {
   const days: Array<{ day: string; entries: TimelineEntry[] }> = [];
 
@@ -31,19 +30,10 @@ function groupByDay(entries: TimelineEntry[]): Array<{ day: string; entries: Tim
 
 export interface ActivityTimelineProps {
   anchor: TimelineAnchor | null;
-  /** What the empty state should suggest, in the caller's own words. */
   emptyDescription?: string;
   className?: string;
 }
 
-/**
- * One chronological timeline across every activity kind.
- *
- * Deliberately hand-written rather than rendered from a layout description —
- * this is a reading surface, not a record grid, and the ticket says so. It is
- * one component for party, deal and subject because six entity-specific
- * timelines with six event shapes is what this replaces.
- */
 export function ActivityTimeline({ anchor, emptyDescription, className }: ActivityTimelineProps) {
   const timeline = useActivityTimeline(anchor);
   const completeTask = useCompleteActivityTask();

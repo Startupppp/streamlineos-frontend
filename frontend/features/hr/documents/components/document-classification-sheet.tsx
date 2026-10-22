@@ -38,7 +38,6 @@ interface DocumentClassificationSheetProps {
 
 type AudienceFields = Pick<ClassificationFormValues, "audienceMode" | "departmentIds" | "locationIds">;
 
-/** A save that stopped part-way. `classificationSaved` says the first of its two requests went through. */
 interface SubmitFailure {
   error: unknown;
   classificationSaved: boolean;
@@ -60,21 +59,12 @@ function takenDownMessage(count: number): string {
   return count === 1 ? "1 Knowledge Base entry was taken down." : `${count} Knowledge Base entries were taken down.`;
 }
 
-/**
- * Classify a document and say who it is for. Saving does two things at most, in this order: the
- * classification (and effective date), then the audience. The audience is only sent for a class that can be
- * shared and only when it changed, and the server has the last word on both: a personal file cannot be made
- * shareable whatever this form says.
- */
 export function DocumentClassificationSheet({ open, onOpenChange, document }: DocumentClassificationSheetProps) {
   const canPublish = useCan("hr:documents:publish");
   const view = useDocumentClassification(document?.id ?? null, { enabled: open });
   const classify = useClassifyDocument();
   const setAudiences = useSetDocumentAudiences();
   const [submitFailure, setSubmitFailure] = useState<SubmitFailure | null>(null);
-  // The audience the person is saving, kept until it is saved or the sheet closes. The classification request lands
-  // first and refreshes the view the form is reset from, so without this a failed audience request would put the
-  // old audience back and the person would have to choose it all again.
   const unsavedAudience = useRef<{ documentId: number; audience: AudienceFields } | null>(null);
 
   const form = useForm<ClassificationFormValues>({
@@ -92,7 +82,6 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
     form.reset(formValuesFromView(loaded));
     const unsaved = unsavedAudience.current;
     if (unsaved && unsaved.documentId === loaded.documentId) {
-      // Still dirty against the server, so Save stays meaningful and closing still warns; the error stays on screen.
       form.setValue("audienceMode", unsaved.audience.audienceMode, { shouldDirty: true });
       form.setValue("departmentIds", unsaved.audience.departmentIds, { shouldDirty: true });
       form.setValue("locationIds", unsaved.audience.locationIds, { shouldDirty: true });
@@ -150,7 +139,6 @@ export function DocumentClassificationSheet({ open, onOpenChange, document }: Do
           linksTakenDown > 0 ? ` ${takenDownMessage(linksTakenDown)}` : ""
         }`,
       );
-      // A document just made shareable stays open: adding it to the Knowledge Base is the next step, and it is right below.
       if (!shareable) onOpenChange(false);
     },
     [classify, document, loaded, onOpenChange, setAudiences],

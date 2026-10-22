@@ -164,12 +164,7 @@ export default function PipelinesPage() {
         }
       >
         <div className="flex min-h-0 flex-1 flex-col">
-        {/*
-          * Ticket 26. A disabled query reports `isLoading: false` with no data,
-          * which is indistinguishable from a loaded-and-empty one -- so the
-          * ternary this replaced told a caller without the permission that there
-          * was nothing here, rather than that they were not allowed to look.
-          */}
+        
         <PageState
           resolution={state}
           onRetry={handleRetry}

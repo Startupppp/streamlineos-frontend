@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** The typed confirm for an erasure: the subject's email, exactly (case-insensitive), plus an optional reason. */
 export function erasureConfirmSchema(email: string, withReason: boolean) {
   return z.object({
     confirmEmail: z

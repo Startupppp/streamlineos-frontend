@@ -9,27 +9,18 @@ import { FocusText } from "@/features/landing/relay/components/ui/focus-text";
 
 import { useLoopPhase, useSeen } from "./use-signals-motion";
 
-/** SPRING_SOFT ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SOFT_FAST = {
   tension: SPRING_SOFT.tension * 1.5,
   friction: SPRING_SOFT.friction * 1.22,
 } as const;
 
-/** Faces start spread out to the right (px) and slide into the overlap. */
 const FROM = 36;
 const SPREAD = 14;
 const FACE_STEP = 48;
-/** Loop: stack + count (~1.6 s) → hold → faces drift back out, count to 0 → again. */
 const PLAY = 1600;
 const LOOP = { hold: 2800, reset: 960 } as const;
-/** On reset the faces leave last-first, quicker than they came. */
 const LEAVE_STEP = 32;
 
-/**
- * Waiting-on-people stack: avatars slide in from the right and overlap into
- * the stack one by one, then the count ticks up to its figure; holds, eases
- * back out and stacks again while on screen.
- */
 export const FaceStack = ({
   faces,
   count,

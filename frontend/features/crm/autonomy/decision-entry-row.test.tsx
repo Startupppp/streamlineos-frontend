@@ -51,8 +51,6 @@ describe("DecisionEntryRow", () => {
   });
 
   it("says no model was involved rather than inventing a confidence", () => {
-    // A deterministic decision has no score. Rendering "100%" would be a
-    // measurement nobody took.
     renderRow(decision({ confidence: null, kind: "party.created" }));
     expect(screen.getByText("No model involved")).toBeInTheDocument();
   });
@@ -64,10 +62,6 @@ describe("DecisionEntryRow", () => {
       expect(onReverse).toHaveBeenCalledWith("d-1");
     });
 
-    /**
-     * Each of these would be refused by the server. Hiding the control means a
-     * reader is never offered an undo that fails when they press it.
-     */
     it("hides it for a decision that changed nothing", () => {
       renderRow(decision({ outcome: "skipped" }));
       expect(screen.queryByRole("button", { name: /undo/i })).not.toBeInTheDocument();
@@ -97,28 +91,16 @@ describe("DecisionEntryRow", () => {
         reversedReason: "wrong deal",
       }),
     );
-    // Two places say so, and both earn it: the badge is the status at a glance,
-    // the line beneath is when and why.
     expect(screen.getAllByText(/Undone/)).toHaveLength(2);
     expect(screen.getByText(/wrong deal/)).toBeInTheDocument();
   });
 
   it("carries the exact timestamp even though it shows a relative one", () => {
-    /**
-     * The clock is frozen, and it has to be. `formatRelativeTime` returns
-     * "just now", "5 minutes ago", "yesterday" or an absolute date depending on
-     * how far in the past the fixture is — so against a real clock this test
-     * asserted something that stopped being true the next morning, which is what
-     * it did. What is being tested is that the exact instant travels in
-     * `dateTime` whatever words are shown, so the words are found by the element
-     * rather than by matching text.
-     */
     jest.useFakeTimers();
     jest.setSystemTime(new Date("2026-08-24T10:05:00.000Z"));
 
     try {
       renderRow(decision());
-      // An audit trail has to be able to answer "when exactly".
       const time = screen.getByText("5 minutes ago").closest("time");
       expect(time).toHaveAttribute("dateTime", "2026-08-24T10:00:00.000Z");
     } finally {

@@ -1,7 +1,3 @@
-/**
- * Every settings route either removes its post-paint initial read or says, in a
- * tested classification, why there is nothing to remove.
- */
 import { readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { collectAppRoutes } from "@/lib/rbac/route-access/app-routes";
@@ -15,7 +11,6 @@ type Classification =
       readonly kind: "prefetch";
       readonly helper: string;
       readonly module: string;
-      /** An array is an any-of server check: `requirePermission([...])` in that order. */
       readonly gate: PermissionKey | readonly PermissionKey[] | "enforceRouteAccess";
     }
   | { readonly kind: "no-prefetch"; readonly reason: string; readonly evidence: string };

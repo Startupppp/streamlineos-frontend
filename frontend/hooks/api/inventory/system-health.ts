@@ -6,16 +6,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/**
- * The gauges that say whether the module is healthy, and the two switches that
- * act on what they report.
- *
- * `GET /inventory/metrics` sits behind `inventory:settings:manage` rather than a
- * report key on purpose: these are numbers about the *system*, and "orphaned
- * reservations" reads as alarming to somebody who only wanted a stock report.
- * All three routes were mounted and none was called, so a dead outbox, a
- * negative stock level and an expiry sweep that had never run were all invisible.
- */
 
 export interface InventoryMetricsSnapshot {
   invariants: { negativeLevels: number; orphanedReservations: number };
@@ -32,20 +22,11 @@ export function useInventoryMetrics() {
     queryKey: queryKeys.inventorySystemHealth.metrics,
     queryFn: ({ signal }) =>
       apiClient.get<InventoryMetricsSnapshot>("/inventory/metrics", undefined, signal),
-    // Gauges an operator watches while they fix something. Cheap by design —
-    // one round trip for every gauge — so it is safe to keep this short.
     staleTime: 15_000,
     enabled: canView,
   });
 }
 
-/**
- * Sweeps the caller's organisation and nobody else's.
- *
- * The route is not idempotency-fenced and does not need to be: a second sweep
- * over the same lots emits nothing new, because the sweep is keyed on what has
- * not been notified yet rather than on the request.
- */
 export function useRunExpirySweep() {
   const qc = useQueryClient();
   return useAuthorizedMutation<{ events: number }, Error, void>("inventory:settings:manage", {
@@ -73,15 +54,6 @@ export interface PutShelfLifeRuleInput {
   notes?: string | null;
 }
 
-/**
- * The remaining-life floor an allocation has to clear.
- *
- * A stored setting with no writer is a dead switch: FEFO allocation reads these
- * rows on every pick, and until now nothing in the product could create one, so
- * the floor was permanently whatever the database happened to hold. A row with a
- * null customer is the default for the whole organisation; a row with a customer
- * is that customer's negotiated floor.
- */
 export function useShelfLifeRules() {
   const canManage = useCan("inventory:settings:manage");
   return useQuery<ShelfLifeRule[], Error>({

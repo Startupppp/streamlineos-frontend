@@ -3,15 +3,6 @@ import { act, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { Invitation } from "@/hooks/api/users/types";
 
-/**
- * BUG-HRMS-004. Copying a join link REISSUES it, which kills the link already in the
- * recipient's inbox. That fact was a tooltip on an icon button: one click, no
- * confirmation, and the invitee's emailed link silently stopped working.
- *
- * The reissue must not happen until it is confirmed, and dismissing must leave the
- * existing link alone — that second case is the point, because the whole defect is a
- * destructive act with no way to decline it.
- */
 
 const router = { replace: jest.fn(), push: jest.fn() };
 jest.mock("next/navigation", () => ({

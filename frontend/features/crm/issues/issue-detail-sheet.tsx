@@ -31,13 +31,6 @@ export interface IssueDetailSheetProps {
   canEscalate: boolean;
 }
 
-/**
- * A stage's plain-language label, or the raw value.
- *
- * Narrowed rather than asserted: `stage` arrives as a string in a record shaped
- * by the layout, and a stage the client does not yet know about should read as
- * itself rather than as `undefined`.
- */
 function stageLabel(stage: string): string {
   const known = ISSUE_STAGES.find((candidate) => candidate === stage);
   return known ? STAGE_LABELS[known] : stage;
@@ -56,11 +49,7 @@ function TransitionRow({ move }: { move: IssueTransition }) {
         <span className="text-muted-foreground"> · {actor}</span>
       </p>
       {move.reason ? <p className="text-dense text-muted-foreground">{move.reason}</p> : null}
-      {/*
-        Relative for reading, exact on hover. An accountability ledger has to be
-        able to answer "when exactly", and "43 days ago" is arithmetic the reader
-        would have to undo.
-      */}
+      
       <p
         className="text-micro tabular-nums text-muted-foreground"
         title={new Date(move.occurredAt).toISOString()}
@@ -71,16 +60,6 @@ function TransitionRow({ move }: { move: IssueTransition }) {
   );
 }
 
-/**
- * One record, rendered from the layout the server sent with it.
- *
- * The record's own fields are the renderer's job entirely — there is no detail
- * card here, and adding a field to the description puts it on this sheet with no
- * change to this file. What is written by hand is the accountability ledger,
- * which is not a record surface: it is an ordered account of who moved this and
- * why, and it is the reason these three record types exist rather than being
- * three lists of rows.
- */
 export function IssueDetailSheet({
   issueRecordId,
   onOpenChange,
@@ -120,19 +99,7 @@ export function IssueDetailSheet({
         </div>
 
         <div className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-6 py-4">
-          {/*
-            Ticket 26. The read below disables itself without this permission,
-            and a disabled query in TanStack Query v5 reports `isLoading: false`
-            with no rows -- the same flags an empty result has. Without this
-            branch the ones under it tell somebody their data does not exist,
-            when the truth is that they are not allowed to see it.
-
-            Ahead of the loading branch on purpose: a query that was never
-            allowed to run has no loading state worth waiting for. Inside the
-            sheet rather than returned in its place, because the page mounts
-            this component unconditionally -- an early return would paint a
-            second permission panel into the list body behind it.
-          */}
+          
           {viewAccess === "denied" ? (
             <NoPermissionState permission="crm:issues:view" />
           ) : isLoading ? (
@@ -161,11 +128,6 @@ export function IssueDetailSheet({
               <section className="flex flex-col gap-2">
                 <h2 className="text-label font-medium text-muted-foreground">History</h2>
                 {data.transitions.length === 0 ? (
-                  /*
-                    A record always has at least the move that opened it, so an
-                    empty ledger means the history could not be read rather than
-                    that nothing happened — say so instead of showing a blank.
-                  */
                   <p className="text-dense text-muted-foreground">
                     No moves recorded yet.
                   </p>

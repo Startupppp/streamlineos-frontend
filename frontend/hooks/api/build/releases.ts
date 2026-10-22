@@ -7,6 +7,11 @@ import { lazyContract } from "@/lib/api-envelope";
 import type { Release, CreateReleaseInput, UpdateReleaseInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import {
+  releaseBaseKey,
+  releasesListQueryOptions,
+  type ReleaseListQuery,
+} from "./releases-read-options";
 
 type ReleasePage = {
   data: Release[];
@@ -24,24 +29,6 @@ const projectReleaseRowContract = lazyContract(() =>
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-import { queryKeyBase } from "@/lib/query-keys/base";
-
-interface ReleaseListQuery {
-  cursor?: string;
-  limit?: number;
-  status?: "draft" | "released" | "archived";
-  q?: string;
-  from?: string;
-  to?: string;
-}
-
-export function releaseBaseKey(projectId: number) {
-  return [...queryKeyBase, "projects", projectId, "releases"] as const;
-}
-
-function releaseKey(projectId: number, query?: ReleaseListQuery) {
-  return [...releaseBaseKey(projectId), query ?? {}] as const;
-}
 
 interface OrgReleaseFilters {
   status?: "draft" | "released" | "archived";
@@ -117,9 +104,3 @@ export function useDeleteRelease(projectId: number) {
   });
 }
 
-export function releasesListQueryOptions(projectId: number, query?: ReleaseListQuery) {
-  return {
-    queryKey: releaseKey(projectId, query ?? {}),
-    staleTime: 60_000,
-  };
-}

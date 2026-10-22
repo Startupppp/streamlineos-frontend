@@ -1,10 +1,3 @@
-/**
- * The acceptance the effective-access screen has to meet: what it DISPLAYS is
- * what `GET /roles/simulate/:targetUserId` RETURNED, key for key and scope for
- * scope. A provenance view that quietly renders a broader right than the API
- * grants is worse than no view at all, so the scope assertion below walks the
- * response rather than a hand-written expectation.
- */
 import { render, screen, within } from "@testing-library/react";
 import { expectNoAxeViolations } from "@/test-utils/axe";
 import {
@@ -21,7 +14,6 @@ import { SCOPE_LABELS } from "./effective-access-labels";
 
 const FAR_FUTURE_ISO = "2027-03-01T00:00:00.000Z";
 
-/** Shaped exactly as `simulateAccessResponseSchema` serialises it. */
 const WIRE_RESPONSE = {
   userId: "user-1",
   permissions: [

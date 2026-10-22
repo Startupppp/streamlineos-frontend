@@ -32,9 +32,6 @@ export function DocumentPageActions({
   onOpenNewFolder,
   onOpenUpload,
 }: DocumentPageActionsProps) {
-  // Measured at 1024: six labelled controls clipped "Create Document" off-screen
-  // and squeezed the title to one word per line. Secondary labels show from xl;
-  // below that they are icon buttons named by aria-label. The primary keeps text.
   return (
     <div className="flex items-center gap-2">
       <ViewToggle

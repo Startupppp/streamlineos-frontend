@@ -1,12 +1,3 @@
-/**
- * PRD-C144 — Home renders the sections that are ready without waiting for the
- * slowest one, and a failed section replaces only itself.
- *
- * Every section is driven at once through the real DashboardDeferredBody with
- * one hook loading forever, one rejected and the rest answered. Asserting on
- * what is on screen is the only way to see this: the declared prop types are
- * identical in all three states.
- */
 
 import { act, render, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";

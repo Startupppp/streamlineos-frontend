@@ -7,7 +7,6 @@ export function today(): string {
   return new Date().toISOString().slice(0, ISO_DATE_LENGTH);
 }
 
-/** Unique enough per run to keep vendor codes from colliding. */
 function stamp(): string {
   return `${Date.now().toString(36)}${Math.floor(Math.random() * 1e4)}`;
 }
@@ -15,16 +14,9 @@ function stamp(): string {
 export interface SeedTarget {
   warehouseId: number;
   warehouseName: string;
-  /** A receivable bin with room for the quantity under test. */
   bin: WarehouseLocation;
   variantId: number;
   variantSku: string;
-  /**
-   * What a picker's trigger shows once this variant is chosen. The option row
-   * carries the SKU as its sublabel and the PRODUCT name as its label, so the
-   * string used to find an option and the string used to confirm the choice are
-   * necessarily different ones.
-   */
   variantProductName: string;
 }
 
@@ -34,37 +26,8 @@ interface VariantRow {
   productName: string;
 }
 
-/**
- * Where to receive, decided on measured headroom rather than list order.
- *
- * Bins carry a capacity and the backend refuses an over-fill outright. The
- * first bin in this tenant is a capacity probe already holding exactly its cap,
- * so "take the first one" fails on a business rule that has nothing to do with
- * receiving — and the failure names a capacity error, which reads as a product
- * bug rather than as a fixture that chose badly.
- *
- * A CAPPED bin is preferred over the uncapped one deliberately: receiving into
- * the only unlimited bin leaves the putaway suggester with nowhere that fits,
- * and the resulting task has a line with no destination.
- */
-/**
- * The dock these specs receive onto, created once and reused.
- *
- * The tenant's own bins are capped at 100 and deliberately adversarial — one is
- * a capacity probe already holding exactly its cap. Every run of this suite
- * receives more units, so a fixture that hunts for spare room in them works
- * until it does not: measured, two of the three capped bins reached 100/100
- * within a dozen runs and seeding then failed with a capacity error that reads
- * like a product bug.
- *
- * So the suite brings its own bin. Capped rather than unlimited, because the
- * putaway suggester never sends goods back to the bin they are standing in and
- * needs somewhere else that fits — receiving onto the tenant's only uncapped bin
- * leaves a putaway line with no destination.
- */
 const E2E_DOCK_CODE = "E2E-DOCK";
 const E2E_DOCK_NAME = "E2E receiving dock";
-/** Large enough that no realistic number of runs fills it. */
 const E2E_DOCK_CAPACITY = "1000000";
 
 export async function seedTarget(api: ApiOracle, qty: number): Promise<SeedTarget> {
@@ -106,7 +69,6 @@ export async function seedTarget(api: ApiOracle, qty: number): Promise<SeedTarge
   };
 }
 
-/** The suite's own dock, made on first use and found by its code afterwards. */
 async function dock(
   api: ApiOracle,
   warehouseId: number,
@@ -132,19 +94,8 @@ async function dock(
   return refreshed.find((l) => l.code === E2E_DOCK_CODE);
 }
 
-/**
- * What every bin in a warehouse is holding, in one query per page.
- *
- * One call for the building rather than one per bin, and the difference is not
- * cosmetic: this machine runs several backends against one shared cache, a
- * single list read has been measured at ten seconds, and a per-bin loop spent
- * the whole setup budget before a browser was ever opened. Grouping is free
- * here — the projection already names the bin on each row.
- */
 async function heldPerBin(api: ApiOracle, warehouseId: number): Promise<Map<number, number>> {
   const held = new Map<number, number>();
-  // The list endpoint caps `limit` at 100 and refuses more, so pages are walked
-  // rather than asked for in one go.
   for (let page = 1; page <= 20; page += 1) {
     const res = await api.get<{ items: StockGrain[]; totalPages: number }>("/inventory/stock", {
       warehouseId,
@@ -161,14 +112,6 @@ async function heldPerBin(api: ApiOracle, warehouseId: number): Promise<Map<numb
   return held;
 }
 
-/**
- * Every active bin in a warehouse that can take `qty` more units, measured.
- *
- * A capacity is a number on a row; what a bin can accept is that number minus
- * everything already in it, across every variant and lot, which is what the cap
- * counts. Reading only the column is how a spec ends up moving stock into a bin
- * that is already exactly full and failing on `LOCATION_CAPACITY_EXCEEDED`.
- */
 export async function binsWithHeadroom(
   api: ApiOracle,
   warehouseId: number,
@@ -194,16 +137,6 @@ export interface PurchaseOrderRow {
   lines: Array<{ id: number; productVariantId: number; quantity: string }>;
 }
 
-/**
- * A purchase order that can be received against — created, approved where the
- * organisation requires it, and sent.
- *
- * The approval step is attempted and its one specific refusal is swallowed.
- * This organisation has PO approval switched off and the endpoint SAYS so
- * rather than quietly succeeding; ignoring only that message keeps the helper
- * correct on an organisation where approval is required, instead of silently
- * skipping a step that matters there.
- */
 export async function sentPurchaseOrder(
   api: ApiOracle,
   target: SeedTarget,
@@ -254,7 +187,6 @@ export interface PostedReceipt {
   grnNumber: string;
 }
 
-/** A goods receipt that has actually posted, so its stock exists to be moved. */
 export async function postedReceipt(
   api: ApiOracle,
   po: PurchaseOrderRow,

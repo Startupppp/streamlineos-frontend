@@ -1,8 +1,3 @@
-/**
- * `GET /chat/users` returns the whole organisation with no cursor. Both the
- * new-DM picker and the add-members picker rendered every row into a fixed
- * 280–340px box, so an org of 2,000 people mounted 2,000 buttons to show 6.
- */
 import { render, screen } from "@testing-library/react";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
 import type { OrgUser } from "@/types/chat";

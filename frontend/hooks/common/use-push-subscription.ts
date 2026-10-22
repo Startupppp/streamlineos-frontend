@@ -68,16 +68,6 @@ export function usePushSubscription(userId: string | undefined) {
     };
   }, [userId]);
 
-  // Registering the worker and re-subscribing is silent and never prompts, so it can
-  // run on mount — an already-granted user keeps receiving push with no interaction.
-  // Keyed on `permission` as well, so granting from browser settings takes effect
-  // without a reload.
-  //
-  // RT-005. `optedOut` is what makes the disable control durable. Turning push off
-  // removes the browser's PushSubscription, so without a remembered opt-out the very
-  // next mount saw `getSubscription() === null`, minted a fresh one and posted it —
-  // the user's choice survived until they navigated. The flag is per browser, which
-  // is the same grain as the subscription it governs.
   useEffect(() => {
     if (!userId || typeof window === "undefined") return;
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
@@ -87,12 +77,6 @@ export function usePushSubscription(userId: string | undefined) {
       .catch(() => undefined);
   }, [userId, permission, optedOut]);
 
-  /**
-   * RT-005. The other half of `pushsubscriptionchange`. The service worker holds
-   * no backend JWT, so it mints the replacement subscription and posts it to its
-   * clients; persisting it is the page's job. Without this listener the rotation
-   * is still lost — the worker would announce a new endpoint nobody records.
-   */
   useEffect(() => {
     if (!userId || typeof window === "undefined") return;
     if (!("serviceWorker" in navigator)) return;

@@ -19,18 +19,6 @@ interface Props {
   impact: RecallImpact;
 }
 
-/**
- * D4 — the blast radius, before anybody presses the button.
- *
- * Five figures, and the documents behind each. The ones that matter most are
- * the ones a stock screen cannot show: units already on a lorry, units already
- * with a customer, units already back. A recall decision made from on-hand
- * alone is a decision made from the smallest of the five numbers.
- *
- * Drill-through only where a detail route actually exists — a lot and a sales
- * order have one, a shipment and a transfer do not, so those render as text.
- * A link that predictably ends at a 404 is worse than no link.
- */
 export function RecallImpactPanel({ impact }: Props) {
   const lotNumberOf = new Map(impact.lots.map((l) => [l.lotId, l.lotNumber]));
   const lotCell = (lotId: number) => (

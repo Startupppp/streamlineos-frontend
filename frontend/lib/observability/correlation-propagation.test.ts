@@ -6,7 +6,6 @@ jest.mock("@/lib/get-server-auth", () => ({
   getServerAuth: jest.fn(async () => ({ backendJwt: "test-jwt" })),
 }));
 
-// jsdom ships no AbortSignal.timeout; the wrappers under test all use it.
 if (typeof AbortSignal.timeout !== "function") {
   AbortSignal.timeout = ((ms: number) => {
     const controller = new AbortController();
@@ -22,7 +21,6 @@ function stubFetch(): { calls: FetchCall[]; restore: () => void } {
   const original = globalThis.fetch;
   globalThis.fetch = ((input: RequestInfo | URL, init: RequestInit = {}) => {
     calls.push({ url: String(input), init });
-    // jsdom has no global Response; the wrappers read only these members.
     return Promise.resolve({
       ok: true,
       status: 200,
@@ -42,8 +40,6 @@ describe("withCorrelation", () => {
   it("stamps an id the backend will echo onto every log line for the request", () => {
     const value = withCorrelation(new Headers()).get(CORRELATION_HEADER);
     expect(value).toBeTruthy();
-    // The backend strips anything outside [A-Za-z0-9._-] and caps at 64 chars,
-    // so an id that does not survive that filter never joins up.
     expect(value).toMatch(/^[A-Za-z0-9._-]{1,64}$/);
   });
 
@@ -70,13 +66,6 @@ describe("withCorrelation", () => {
   });
 });
 
-/**
- * PRD-C102 — "Correlate one user intent through asynchronous work." Every
- * wrapper that reaches the API is a boundary that has to carry the id; four of
- * the five were sending only an Authorization header, so an intent that started
- * in the portal, in a server component, on a public page or on the notification
- * stream could not be joined to the server-side work it caused.
- */
 describe("every API wrapper propagates correlation context", () => {
   let fetchStub: ReturnType<typeof stubFetch>;
   beforeEach(() => { fetchStub = stubFetch(); });
@@ -111,13 +100,6 @@ describe("every API wrapper propagates correlation context", () => {
     expect(headerOf(fetchStub.calls[0], "Authorization")).toBe("Bearer tok");
   });
 
-  /**
-   * The cached public read is the one wrapper that must NOT carry a freshly
-   * minted correlation id: Next builds its data-cache key from the request
-   * headers, so a per-call id turns every cached read into a miss. It strips
-   * `traceparent` from that key by design, which is why trace context rides
-   * there instead — and the backend joins it rather than starting a new trace.
-   */
   it("public-fetch cached read carries trace context, not a cache-busting id", async () => {
     const { publicGet } = await import("@/lib/public-fetch");
     await publicGet("/public/kb");
@@ -145,12 +127,6 @@ describe("every API wrapper propagates correlation context", () => {
   });
 });
 
-/**
- * A scan, because a wrapper added tomorrow is the failure mode a per-call test
- * cannot see. Every fetch in these files reaches our own API; each one is a
- * boundary a user intent crosses, and each has to carry the id or the intent
- * stops being traceable there.
- */
 describe("no API-bound fetch in these files is left without correlation context", () => {
   const ROOT = join(__dirname, "..", "..");
 
@@ -170,15 +146,8 @@ describe("no API-bound fetch in these files is left without correlation context"
     "app/(authenticated)/build/[projectId]/layout.tsx",
   ];
 
-  /** The one same-origin call in the list: NextAuth's own session route. */
   const SAME_ORIGIN = /fetch\(\s*"\/api\//;
 
-  /**
-   * A call is stamped when its options carry a `withCorrelation(...)` /
-   * `withTraceContext(...)` expression, or a bare `headers` identifier holding a
-   * Headers the same function already stamped (which is how the retry path in
-   * `api-client` reuses one id for both attempts).
-   */
   const STAMPED = /withCorrelation\(|withTraceContext\(|\bheaders,|headers: headers\b/;
 
   function unstampedCalls(source: string): string[] {

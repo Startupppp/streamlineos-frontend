@@ -1,24 +1,3 @@
-// 📖 Docs: obsidian/frontend/components/animation-springs.md
-/**
- * @fileoverview Spring-based trigger component for scroll-driven animations
- *
- * @param {React.ReactNode} children - Child elements to animate
- * @param {boolean} enabled - Whether animations are enabled
- * @param {React.RefObject<HTMLElement>} trigger - Optional external trigger element ref
- * @param {TriggerPos} start - Start position configuration for trigger
- * @param {TriggerPos} end - End position configuration for trigger
- * @param {Function} onChange - Callback fired with animation progress
- * @param {Object} from - Starting animation values
- * @param {Object} to - Ending animation values
- * @param {boolean} disableOnMobile - Whether to disable on mobile devices
- * @param {SpringConfig} config - Spring animation configuration
- * @param {number} frameInterval - Frame rate throttle interval in ms
- * @param {Tags} innerTag - HTML tag for inner animated element
- * @param {string} innerClassName - Class name for inner animated element
- * @param {"toggle"|"scrub"} mode - Animation mode:
- *   - toggle: Snaps between states
- *   - scrub: Smoothly interpolates between states
- */
 
 "use client";
 

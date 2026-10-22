@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
@@ -18,10 +18,10 @@ import { lazyContract } from "@/lib/api-envelope";
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-import { useQuery } from "@tanstack/react-query";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { hrWebhooksListKey } from "@/hooks/api/hr/hr-webhooks-schema";
+import { hrWebhooksQueryOptions } from "@/hooks/api/hr/hr-webhooks-read-options";
 
 const BASE = [...queryKeyBase, "hr", "webhooks"] as const;
 
@@ -42,13 +42,6 @@ type DeliveryListPage = {
   data: HrWebhookDelivery[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
-
-export function hrWebhooksQueryOptions(params?: { limit?: number }) {
-  return {
-    queryKey: hrWebhookKeys.list(params),
-    staleTime: 30_000,
-  } as const;
-}
 
 export function useHrWebhooks(params?: { limit?: number }) {
   const canManage = useCan("hr:integrations:manage");

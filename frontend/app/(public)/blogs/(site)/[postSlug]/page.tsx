@@ -16,7 +16,6 @@ export const dynamic = "force-dynamic";
 
 type Params = { params: Promise<{ postSlug: string }> };
 
-/** Long enough to earn a table of contents. */
 const TOC_MIN_HEADINGS = 3;
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
@@ -44,7 +43,6 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
       images: image ? [{ url: image, width: 1200, height: 630, alt: article.cover?.alt ?? "" }] : undefined,
     },
     twitter: { card: "summary_large_image", title: article.metaTitle ?? article.title, description, images: image ? [image] : undefined },
-    // Lets the blog admin confirm this exact published revision is live.
     other: { "streamline:revision": article.revisionId },
   };
 }
@@ -81,7 +79,7 @@ export default async function ArticlePage({ params }: Params) {
           <h1 className="mt-4 break-words font-journal text-4xl leading-tight text-journal-ink sm:text-5xl">{article.title}</h1>
           {article.standfirst ? <p className="mt-5 font-journal text-xl text-journal-muted">{article.standfirst}</p> : null}
           <p className="mt-6 text-sm text-journal-muted">
-            {/* Underlined, not only a darker ink: inside a line of text, colour alone fails WCAG 1.4.1. */}
+            
             {article.author ? <>By <Link href={`/blogs/author/${article.author.slug}`} className="text-journal-ink underline underline-offset-4">{article.author.name}</Link><span aria-hidden> · </span></> : null}
             {article.publishedAt ? <time dateTime={article.publishedAt}>{formatJournalDate(article.publishedAt)}</time> : null}
             {isMeaningfulUpdate(article.publishedAt, article.modifiedAt) && article.modifiedAt ? (

@@ -14,7 +14,6 @@ function isLocalOrLoopbackAppUrl(): boolean {
       )
         return true;
     } catch {
-      // ignore invalid URL
     }
   }
   return false;
@@ -200,7 +199,6 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
-      // Marketing pages link "Book a demo" here; demos are booked through contact (#6).
       source: "/demo",
       destination: "/contact",
       permanent: false,
@@ -548,8 +546,6 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // RSS is produced by the backend (the site ships no business route handlers, FE-06). The feed
-  // is served at /blogs/rss.xml on this origin so its links and self-reference stay canonical.
   rewrites: async () => {
     const api = (
       process.env.API_INTERNAL_URL?.trim() ||

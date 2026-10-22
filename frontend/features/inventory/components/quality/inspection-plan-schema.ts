@@ -16,12 +16,6 @@ export const PLAN_SCOPE_LABEL: Record<(typeof PLAN_SCOPES)[number], string> = {
   PRODUCT_VARIANT: "One variant",
 };
 
-/**
- * Mirrors the backend's `createInspectionPlanSchema` exactly, including the
- * cross-field rules — a sample size means a different thing under each method
- * and nothing at all under ALL, so a per-field `optional()` would let "inspect
- * everything, twelve of them" reach the API and come back a 400.
- */
 export const inspectionPlanFormSchema = z
   .object({
     code: z
@@ -76,17 +70,6 @@ export const inspectionPlanFormSchema = z
 
 export type InspectionPlanFormValues = z.infer<typeof inspectionPlanFormSchema>;
 
-/**
- * What a live plan may be edited to, mirroring the backend's
- * `updateInspectionPlanSchema` field for field.
- *
- * The sampling rule is deliberately absent: a completed inspection names the
- * version it was judged against, so tightening the rule is a new version rather
- * than an edit. The three scope ids are absent for a different reason — the
- * resolver matches a variant, a product or a category, this form can express
- * only two of the three, and a patch that named a scope it cannot see would
- * null the one it does not offer.
- */
 export const inspectionPlanEditSchema = z
   .object({
     name: z.string().min(1, "A name is required").max(160),

@@ -62,8 +62,6 @@ export function WfhTabContent({
   const t = useT();
   const { staggerContainer, fadeIn } = useMotionVariants();
   const { data: myWfhRequests, isLoading: wfhLoading, isError: wfhError, error: wfhErrorDetail, refetch: wfhRefetch } = useHrWfhRequests();
-  // /me/time-off/wfh needs self:attendance: a caller without it must be told
-  // so, not "No WFH requests yet" (FE-47).
   const pageState = usePageState({
     permission: "self:attendance",
     isLoading: wfhLoading,

@@ -62,9 +62,7 @@ export type PayrollRunType =
 export interface CreateRunInput {
   month: string;
   runType?: PayrollRunType;
-  /** Required for OFF_CYCLE, CORRECTION, and FINAL_SETTLEMENT — links to the source regular run. */
   sourceRunId?: number;
-  /** Legal entity — scopes period ensure + statutory pack. */
   entityId?: number;
 }
 

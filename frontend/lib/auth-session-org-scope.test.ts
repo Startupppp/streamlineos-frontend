@@ -1,9 +1,3 @@
-/**
- * @jest-environment node
- *
- * CHAT-008: a session in org "Alpha" reloaded into the account's most-recently-activated org,
- * because session-data was fetched without saying which org THIS session had selected.
- */
 jest.mock("@/lib/backend-url", () => ({ BACKEND_URL: "http://backend.test" }));
 
 jest.mock("axios", () => ({
@@ -50,7 +44,6 @@ const ORIGINAL_ENV = process.env;
 const LAST_ACTIVATED = ORG;
 const ALPHA = ORG_OTHER;
 
-/** The backend: `?orgId=` wins while the user is a member; otherwise the last-activated org. */
 function installBackend(): { exchangeBodies: unknown[] } {
   const exchangeBodies: unknown[] = [];
   const fetchMock = jest.fn((url: unknown, init?: RequestInit) => {

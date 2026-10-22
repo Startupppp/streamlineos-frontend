@@ -90,9 +90,6 @@ function broadcastRow(category: string) {
   };
 }
 
-/**
- * The reason each assertion exists is in its name, per the repo's no-comments rule.
- */
 describe("notifications response contracts against the notification_category pgEnum", () => {
   it("parses an ACCOUNTING notification instead of throwing and taking the whole notification list down", () => {
     const parsed = notificationListContract.safeParse({

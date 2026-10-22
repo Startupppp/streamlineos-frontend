@@ -92,11 +92,6 @@ export function MfaSettings() {
 
   if (isLoading) return null;
 
-  /*
-   * Without this branch an unread status renders as `enabled: false` — the panel
-   * would tell someone with MFA on that they have none, and offer to set it up
-   * again. The read stays inline (SETTINGS-001), so the failure is said here.
-   */
   if (isError)
     return (
       <ErrorState

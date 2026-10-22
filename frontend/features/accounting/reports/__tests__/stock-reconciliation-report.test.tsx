@@ -56,7 +56,6 @@ function arrange(enabled: boolean) {
       to: "2026-10-31",
       movements: 2,
       valueMinor: 3000,
-      // Three unposted in all, one of them never posts by design; the sample holds two.
       byReason: [
         { reason: "no_posting_path", movements: 2, valueMinor: 2000 },
         { reason: "not_applicable", movements: 1, valueMinor: 1000 },

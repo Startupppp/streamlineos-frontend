@@ -1,9 +1,3 @@
-/**
- * HRMS-E2E-020. The control that makes the deferral reachable. Its gate is
- * asserted in `lib/__tests__/wizard-gate-admin-defer.test.ts`; this is the other
- * half — that an administrator is offered the skip, a member is not, and that
- * pressing it writes the deferral marker and never the completion one.
- */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ONBOARDING_DEFERRED_MAX_AGE } from "@/lib/onboarding-gate";

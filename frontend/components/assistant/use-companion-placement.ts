@@ -62,8 +62,6 @@ export function useCompanionPlacement(scope: string, compact: boolean) {
       const bounded = stored ? clamp(stored) : null;
       positionRef.current = bounded;
       setPosition(bounded);
-      // On a narrow viewport the full pet covers header actions (MP-U-015),
-      // so it starts minimised until the user chooses otherwise.
       try {
         const stored = window.localStorage.getItem(minimizedKey);
         setMinimized(stored === null ? compact : stored === "1");

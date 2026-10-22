@@ -22,14 +22,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { SLA_POLICY_LAYOUT } from "@/lib/renderer/crm/settings/sla-policy-layout";
 import { numberOr, numberOrOmit, requiredText, textOrOmit } from "./shared/record-payload";
 
-/**
- * Create and edit an SLA policy, rendered from the description.
- *
- * The two union fields are narrowed by looking the submitted string up in the
- * list of values the API accepts, rather than asserted into place. A value that
- * is not on the list is dropped instead of being sent, because the alternative
- * is a cast that makes a wrong value compile.
- */
 
 const APPLIES_TO = ["lead", "deal", "both"] as const;
 const PRIORITIES = ["low", "medium", "high", "urgent"] as const;

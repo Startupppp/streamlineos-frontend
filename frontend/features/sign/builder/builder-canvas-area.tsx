@@ -16,9 +16,6 @@ import { useBuilder } from "./builder-context";
 import { recipientColor } from "./recipient-colors";
 import { fieldTypeMeta } from "./field-types";
 
-// pdfjs-dist touches browser-only Canvas APIs (DOMMatrix) at module load time,
-// which crashes Next.js SSR even inside a "use client" component — load it
-// client-side only.
 const PdfCanvas = dynamic(() => import("./pdf-canvas").then((m) => m.PdfCanvas), {
   ssr: false,
   loading: () => (

@@ -12,14 +12,6 @@ import { useCandidate, useEraseCandidate } from "@/hooks/api/hr/recruitment/cand
 import { formatShortDate } from "@/lib/date-utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * The closed list, in the words a recruiter would use.
- *
- * Kept as a lookup with a fallback rather than a union type: the list is
- * enforced by a CHECK constraint in the backend, and a second enum here would
- * mean a purpose the backend legitimately added renders as a crash or a blank.
- * An unrecognised value is labelled as unrecognised, which is information.
- */
 const PURPOSE_LABEL: Record<string, string> = {
   THIS_ROLE_ONLY: "This role only",
   FUTURE_ROLES: "Future openings",
@@ -31,18 +23,6 @@ interface CandidateConsentCardProps {
   candidateId: number;
 }
 
-/**
- * What this candidate agreed to, when it expires, and the erase control.
- *
- * It exists because `consent_at` was a bare timestamp: nothing recorded what
- * the data could be used for and nothing started a retention clock, so a
- * résumé vault grew without anything on screen saying it was doing so. A
- * retention rule nobody can see is a retention rule nobody applies.
- *
- * The erase control sits here, beside the purpose it ends, rather than among
- * the ordinary row actions — deleting a candidate from a list menu reads like
- * tidying up, and this is not that.
- */
 export function CandidateConsentCard({ candidateId }: CandidateConsentCardProps) {
   const router = useRouter();
   const canManage = useCan("hr:requisitions:manage");
@@ -53,13 +33,6 @@ export function CandidateConsentCard({ candidateId }: CandidateConsentCardProps)
   const handleConfirmErase = useCallback(() => {
     erase.mutate(candidateId, {
       onSuccess: (result) => {
-        /*
-          Two outcomes, two different things said. A VAULT_NOT_CONFIRMED result
-          means the records went but a résumé may still exist in the object
-          store, and reporting that as "erased" would be a false statement to
-          the person who asked to be forgotten. The dialog stays open on that
-          path so the sentence is read rather than flashed.
-        */
         if (result.status === "ERASED") {
           toast.success("Candidate erased, résumé vault confirmed clear");
           setConfirmOpen(false);
@@ -81,11 +54,6 @@ export function CandidateConsentCard({ candidateId }: CandidateConsentCardProps)
 
   if (isLoading) return <Skeleton className="h-24 w-full rounded-xl" />;
 
-  /*
-    Silent on failure rather than an error card. This is one optional panel
-    among several on a busy page, and the page itself already reports a failed
-    candidate read.
-  */
   if (isError || !data) return null;
 
   const applications = data.applications ?? [];
@@ -103,12 +71,6 @@ export function CandidateConsentCard({ candidateId }: CandidateConsentCardProps)
       </div>
 
       {withConsent.length === 0 ? (
-        /*
-          Said plainly rather than left blank. Every application created before
-          the consent purpose existed genuinely has none, and a blank field
-          would read as "nothing to see" when the honest reading is "we cannot
-          tell you what this data may be used for or when it expires".
-        */
         <p className="text-xs text-muted-foreground">
           This candidate&apos;s applications predate recorded consent purposes, so no retention
           period can be calculated. They will not be erased automatically.
@@ -143,7 +105,7 @@ export function CandidateConsentCard({ candidateId }: CandidateConsentCardProps)
         </dl>
       )}
 
-      {/* Fails closed: the control does not appear until access is known (FE-44). */}
+      
       {canManage && (
         <div className="pt-1">
           <LoadingButton

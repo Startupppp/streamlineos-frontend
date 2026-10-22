@@ -33,7 +33,6 @@ function flowRow(fileRow: number, overrides: Partial<BulkOnboardFlowRow> = {}): 
   };
 }
 
-/** An unlimited plan: these cases are about row classification, not seats. */
 const UNLIMITED_SEATS = { limit: null, used: 1, available: null, required: 0, blocked: 0 };
 
 function serverRow(row: number, status: BulkOnboardPreviewRow["status"], overrides: Partial<BulkOnboardPreviewRow> = {}): BulkOnboardPreviewRow {
@@ -142,7 +141,6 @@ describe("BulkOnboardPanel — commits only Ready and Warning rows after confirm
     await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
 
     await waitFor(() => expect(previewMutateAsync).toHaveBeenCalledTimes(1));
-    // The client-refused row (bad email) never reaches the server.
     expect(previewMutateAsync.mock.calls[0]?.[0].map((row: { email: string }) => row.email)).toEqual([
       "ann@example.com",
       "bob@example.com",
@@ -163,12 +161,6 @@ describe("BulkOnboardPanel — commits only Ready and Warning rows after confirm
 });
 
 describe("BulkOnboardPanel — the seat ceiling is stated before the confirm", () => {
-  /**
-   * BUG-HRMS-002 / BUG-HRMS-008. This said "15 rows · 15 ready to create" with one
-   * seat free and let the confirm answer 402 with nothing created. An employee
-   * record is admitted as a member, so every row spends a seat — the preview has
-   * to say so, and must not offer to create a row the API will refuse.
-   */
   it("names the free seats, blocks the rows that do not fit, and offers to create only the rest", async () => {
     const user = userEvent.setup();
     const csv = [
@@ -198,7 +190,6 @@ describe("BulkOnboardPanel — the seat ceiling is stated before the confirm", (
     expect(warning).toHaveTextContent(/2 rows will not be created/);
     expect(warning).toHaveTextContent(/takes a seat/);
 
-    // The create control offers the one row that fits, not the three uploaded.
     expect(await screen.findByRole("button", { name: "Create 1 employee" })).toBeEnabled();
     expect(screen.queryByRole("button", { name: "Create 3 employees" })).toBeNull();
   });
@@ -311,7 +302,6 @@ describe("BulkOnboardPanel — rows keep their file number through preview and r
     await user.upload(screen.getByLabelText("Choose employee onboard file"), file);
     const table = await screen.findByRole("region", { name: "Preview rows" });
     expect(within(table).getByText("fay@example.com").closest("tr")).toHaveTextContent(/^3/);
-    // One keyboard stop, and it is the element that scrolls.
     expect(table).toHaveAttribute("tabindex", "0");
     expect(table).toHaveClass("overflow-auto");
     expect(within(table).queryByRole("region")).not.toBeInTheDocument();

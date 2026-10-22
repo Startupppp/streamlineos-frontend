@@ -42,4 +42,3 @@ export function isWorkflowNodeType(value: unknown): value is NodeType {
   return typeof value === "string" && value in NODE_PALETTE_MAP;
 }
 
-

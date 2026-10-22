@@ -7,11 +7,6 @@ interface Link {
   label: string;
 }
 
-/**
- * A <details> disclosure, so the menu opens and every link works without JavaScript. With
- * JavaScript it also closes on Escape (returning focus to the toggle) and keeps Tab inside the open
- * menu, cycling back to the toggle.
- */
 export function MobileNav({ links, cta }: { links: Link[]; cta: Link }) {
   const ref = useRef<HTMLDetailsElement>(null);
 

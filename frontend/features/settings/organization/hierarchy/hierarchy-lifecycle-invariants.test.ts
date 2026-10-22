@@ -15,10 +15,6 @@ const LIFECYCLE_PAGES = [
   "cost-centers-page.tsx",
 ];
 
-/**
- * Follows every sibling component the page imports, so extracting a cell into its
- * own file moves the markup without silencing the gate assertions below.
- */
 function lifecycleSurface(fileName: string): string {
   const source = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
   const siblingSources = [...source.matchAll(/from "\.\/([a-z0-9-]+)"/g)]
@@ -69,7 +65,6 @@ describe("organization hierarchy lifecycle UI", () => {
       const page = readFileSync(join(HIERARCHY_DIR, fileName), "utf8");
       const surface = lifecycleSurface(fileName);
 
-      // The gate is resolved by the page; the row actions it guards may live in a sibling.
       expect(page).toContain(
         'const canManage = useCan("settings:organization:manage");',
       );

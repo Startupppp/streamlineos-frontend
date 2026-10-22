@@ -14,11 +14,6 @@ function wrapperFor(client: QueryClient) {
   return Wrapper;
 }
 
-/**
- * The contract is about which key reaches the server across a sequence of
- * attempts, so every test here asserts the sequence of keys rather than any one
- * of them.
- */
 function renderIdempotent(fn: jest.Mock) {
   const client = createClient();
   return renderHook(
@@ -35,9 +30,6 @@ const keysFrom = (fn: jest.Mock): string[] => fn.mock.calls.map((c) => c[1] as s
 
 describe("useIdempotentMutation", () => {
   it("sends one key for repeated attempts at the same intent", async () => {
-    // The case the fence exists for: submit, it fails, the operator presses
-    // again. Both attempts must reach the server under one key, or the second
-    // is a new command and creates a second document.
     const fn = jest.fn().mockRejectedValue(new Error("timeout"));
     const { result } = renderIdempotent(fn);
 
@@ -55,8 +47,6 @@ describe("useIdempotentMutation", () => {
   });
 
   it("retires the key once the intent succeeds, so the next create is a new document", async () => {
-    // The inverse failure, and the one a naive "mint once per hook" would cause:
-    // a create endpoint that can only ever create one thing per mounted form.
     const fn = jest.fn().mockResolvedValue({ id: 1 });
     const { result } = renderIdempotent(fn);
 
@@ -73,8 +63,6 @@ describe("useIdempotentMutation", () => {
   });
 
   it("mints a new key when the operator corrects the payload after a failure", async () => {
-    // Same key + different body is 422 at the fence. Reusing the key here would
-    // make correcting a form an unrecoverable error.
     const fn = jest.fn().mockRejectedValue(new Error("bad request"));
     const { result } = renderIdempotent(fn);
 
@@ -90,9 +78,6 @@ describe("useIdempotentMutation", () => {
   });
 
   it("treats a payload rebuilt in a different property order as the same payload", async () => {
-    // react-hook-form hands a fresh object to every submit and does not promise
-    // key order. Comparing by identity, or by a plain JSON.stringify, would mint
-    // a new key here and quietly restore the defect.
     const fn = jest.fn().mockRejectedValue(new Error("timeout"));
     const { result } = renderIdempotent(fn);
 
@@ -108,8 +93,6 @@ describe("useIdempotentMutation", () => {
   });
 
   it("still reports the mutation result to the caller", async () => {
-    // The wrapper replaces onSuccess to retire the key; a caller's own onSuccess
-    // must still run, or every cache invalidation in the module stops firing.
     const fn = jest.fn().mockResolvedValue({ id: 7 });
     const onSuccess = jest.fn();
     const client = createClient();

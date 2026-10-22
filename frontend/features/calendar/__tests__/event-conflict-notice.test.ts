@@ -4,30 +4,6 @@ import { format, parseISO } from "date-fns";
 import { backendPath } from "@/test-utils/backend-repo";
 import { describeEventConflicts, eventConflictViewUrl } from "../event-conflict-notice";
 
-/**
- * The conflicts the server computes reach the person who caused them.
- *
- * `createEvent` returns `{ event, oooConflicts, eventConflicts, meetingUrl,
- * syncQueued }` (calendar.service.ts). `eventConflicts` was absent from the
- * client response type entirely and `oooConflicts` was declared and never read:
- * a grep of the whole frontend for either name returned the type declaration and
- * nothing else. So the server ran a paged scan for overlapping occurrences and a
- * leave join on every single create, and the UI answered "Event created".
- * Double-booking yourself and inviting someone on approved leave both looked
- * exactly like success.
- *
- * WHY THIS IS A TOAST AND NOT A CONFIRM-ANYWAY STEP. The conflicts arrive WITH
- * the created event — `checkConflictsInTx` runs inside the same transaction as
- * the insert, and `CalendarConflictService.checkConflicts` has no route on
- * `calendar.controller.ts`. There is no way to ask "would this clash?" before
- * committing, so a step that blocks the dialog until the user confirms would
- * need a new pre-flight endpoint. That is a feature; this is the defect fix, and
- * it uses the warning-toast treatment already established for `syncError`.
- *
- * ANTI-VACUITY. The consumer scan carries a floor, and it deliberately excludes
- * this test file: a gate that counted its own assertions as consumers would go
- * green on a frontend that still discards both lists.
- */
 
 const FE_ROOT = path.join(__dirname, "..", "..", "..");
 const SCANNED_DIRS = ["app", "components", "features", "hooks", "lib"];
@@ -49,7 +25,6 @@ function walk(dir: string, out: string[]): void {
   }
 }
 
-/** Files mentioning a field, excluding the hook that declares it and this test. */
 function consumersOf(field: string): string[] {
   const files: string[] = [];
   for (const dir of SCANNED_DIRS) walk(path.join(FE_ROOT, dir), files);
@@ -66,8 +41,6 @@ function consumersOf(field: string): string[] {
 describe("calendar create conflicts — the server's work is not discarded", () => {
   it("the backend still returns both conflict lists from createEvent", () => {
     const source = fs.readFileSync(BACKEND_SERVICE, "utf8");
-    // Anti-vacuity: if this return statement is reshaped, the whole premise
-    // changes and this suite must be revisited rather than quietly pass.
     expect(source).toMatch(/return\s*\{\s*event,\s*oooConflicts,\s*eventConflicts,\s*meetingUrl:\s*null,\s*syncQueued:/);
   });
 
@@ -165,8 +138,6 @@ describe("describeEventConflicts", () => {
   });
 
   it("counts rather than printing an id when the name is missing", () => {
-    // A visible user id is a defect (frontend CLAUDE.md §5), so an unnamed
-    // attendee is counted, never identified.
     expect(
       describeEventConflicts({
         oooConflicts: [

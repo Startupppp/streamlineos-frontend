@@ -16,13 +16,6 @@ import { UtilizationTab } from "./utilization-tab";
 const mockReplace = jest.fn();
 let mockSearchParams = new URLSearchParams();
 
-/**
- * The report tabs reach `useEntitlements` through `AiActionsMenu`, and that
- * calls `useSession`. Without a session mock every tab throws "useSession must
- * be wrapped in a <SessionProvider />" during render, which this suite reads as
- * "the tab issued no request" - twelve failures that all describe one missing
- * provider.
- */
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { orgId: "org-1", user: { id: "user-1" } },

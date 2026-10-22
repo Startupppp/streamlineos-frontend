@@ -5,16 +5,13 @@ import { Fragment, useEffect, useRef, useState } from "react";
 
 import { SPRING_SOFT, STEP } from "@/features/landing/relay/lib/motion";
 
-/** SPRING_SOFT ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SOFT_FAST = {
   tension: SPRING_SOFT.tension * 1.5,
   friction: SPRING_SOFT.friction * 1.22,
 } as const;
 
-/** Row 10 of each strip is empty — a column that the current price doesn't use. */
 const BLANK = 10;
 const ROWS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", " "];
-/** Zero-width text keeps a line box (and so the baseline) in an empty column. */
 const ZWSP = "​";
 
 const Digit = ({
@@ -27,7 +24,6 @@ const Digit = ({
   widths: readonly number[] | null;
 }) => {
   const target = widths ? (value === BLANK ? 0 : widths[value]) : 0;
-  /* the first measured width is applied as-is; only later changes spring */
   const primed = useRef(false);
   useEffect(() => {
     if (widths) primed.current = true;
@@ -37,7 +33,6 @@ const Digit = ({
     w: target,
     delay: (key: string) => (key === "w" && !primed.current ? 0 : delay),
     config: SOFT_FAST,
-    /* before the glyphs are measured the column sizes itself */
     immediate: (key) => key === "w" && !primed.current,
   });
 
@@ -46,7 +41,7 @@ const Digit = ({
       className="relative inline-block"
       style={{ width: widths ? w.to((v) => `${v}px`) : undefined }}
     >
-      {/* Sizer: the real digit in flow keeps the Figma advance and baseline. */}
+      
       <span className="text-transparent">
         {value === BLANK ? ZWSP : ROWS[value]}
       </span>
@@ -66,16 +61,6 @@ const Digit = ({
   );
 };
 
-/**
- * Price that rolls digit by digit, left to right, when the plan changes
- * (motion brief, pricing slider). Digits are right-aligned into as many
- * columns as the longest price needs; unused leading columns are empty rows.
- * Each column also springs its width to the glyph it lands on (measured once
- * the font is ready), so the price — and the "a month" beside it — glide to
- * the new length instead of jumping, and a column that empties closes
- * without its digits spilling over the next one. The strips move with `top`
- * (layout, not a transform) so the resting glyphs rasterise like plain text.
- */
 export const PriceRoll = ({
   price,
   prices,
@@ -86,10 +71,8 @@ export const PriceRoll = ({
   className?: string;
 }) => {
   const columns = Math.max(...prices.map((p) => p.replace(/\D/g, "").length));
-  /* currency sign before the digits; group commas are drawn between columns */
   const prefix = price.match(/^\D*/)?.[0] ?? "";
   const digits = price.replace(/\D/g, "").padStart(columns, "x");
-  /** A comma before column `n` when a lit digit sits to its left (1,000s). */
   const comma = (n: number) =>
     n > 0 && (columns - n) % 3 === 0 && /\d/.test(digits.slice(0, n));
 

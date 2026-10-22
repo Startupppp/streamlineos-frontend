@@ -7,6 +7,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { hrAnalyticsQueryOptions } from "@/hooks/api/hr/analytics-read-options";
 import { type RawLeaveTrendsResponse, normalizeLeaveTrends } from "./analytics-normalize";
 
 const hrAnalyticsOverviewC = lazyContract(() =>
@@ -62,18 +63,12 @@ export interface HrAnalyticsData {
   joiningExitsTrend: { month: string; joins: number; exits: number }[];
 }
 
-export const hrAnalyticsQueryOptions = () =>
-  queryOptions({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "analytics"] as const,
-    queryFn: ({ signal }) =>
-      apiClient.get<HrAnalyticsData>("/hr/analytics", undefined, signal, hrAnalyticsOverviewC),
-    staleTime: 60_000,
-  });
-
 export function useHrAnalytics() {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     ...hrAnalyticsQueryOptions(),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrAnalyticsData>("/hr/analytics", undefined, signal, hrAnalyticsOverviewC),
     enabled: canAnalytics,
     ...INLINE_READ_ERROR,
   });

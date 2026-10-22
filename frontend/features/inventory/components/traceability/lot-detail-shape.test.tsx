@@ -3,17 +3,6 @@ import { renderWithProviders } from "@/test-utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LotDetailClient } from "./lot-detail-client";
 
-/**
- * `GET /inventory/lots/:lotId` answers `{ lot, stockByLocation, movements }`,
- * the lot nests its variant and product, and every quantity is a
- * `numeric(18,4)` decimal string. The screen used to read a flat lot with a
- * numeric `currentStock` the backend has never sent, so the stat tile called
- * `.toLocaleString()` on `undefined` and the page threw on open.
- *
- * The payload here is the service's own projection, two stock rows deep, so
- * the on-hand figure has to be summed out of strings rather than read off a
- * field.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),

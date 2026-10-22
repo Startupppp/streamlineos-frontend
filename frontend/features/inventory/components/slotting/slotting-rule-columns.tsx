@@ -12,19 +12,10 @@ import {
 } from "@/features/inventory/components/warehouse/location-type-constants";
 import { LocationNameCell, ResolvedName } from "./slotting-name-cells";
 
-/**
- * One list this page resolves display names from, plus the two facts that decide
- * what to say when it cannot.
- *
- * `canRead` is not derivable from the other two: a query disabled by a missing
- * permission reports `isLoading: false` and holds no data, which is exactly what
- * a finished query over an empty catalogue looks like.
- */
 export interface NameSource {
   names: ReadonlyMap<number, string>;
   isLoading: boolean;
   canRead: boolean;
-  /** What to say instead of a name when the reader may not have the list. */
   deniedNote: string;
 }
 
@@ -87,7 +78,6 @@ function MatchCell({
   );
 }
 
-/** The optional narrowing the rule carries, when it carries one the app knows. */
 function TargetTypeNote({ locationType }: { locationType: string | null }) {
   if (locationType === null || !isLocationType(locationType)) return null;
   return (
@@ -100,14 +90,6 @@ function TargetTypeNote({ locationType }: { locationType: string | null }) {
 const ACTIVE_BADGE = statusToneClasses("success");
 const OFF_BADGE = statusToneClasses("neutral");
 
-/**
- * The rules table.
- *
- * Every column that used to print `Category #12`, `Variant #40` and `Zone #7`
- * now resolves a name from a list this page already holds. Frontend §5 forbids
- * the id outright, and the id was also useless: nobody memorises the primary key
- * of a bin, so the table said "a rule exists" and nothing else.
- */
 export function buildSlottingRuleColumns({
   canManage,
   warehouses,

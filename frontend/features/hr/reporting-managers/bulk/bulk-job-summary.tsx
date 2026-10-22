@@ -9,7 +9,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { downloadReportingLineBulkJobFailures } from "@/hooks/api/hr/reporting-line-bulk-jobs";
 import type { BulkJobSummary as BulkJobSummaryData } from "@/hooks/api/hr/reporting-line-bulk-jobs-schema";
 
-/** Rows the job did not (or will not) apply: errors before commit, anything uncommitted after. */
 export function unappliedRowCount(job: BulkJobSummaryData): number {
   return job.status === "COMMITTED" || job.status === "FAILED" ? job.rowCount - job.committedCount : job.errorCount;
 }
@@ -40,7 +39,7 @@ export function BulkJobSummary({ job }: { job: BulkJobSummaryData }) {
   const unapplied = unappliedRowCount(job);
   return (
     <div className="flex flex-col gap-3">
-      {/* 2 columns on a phone, 4 from md: StatCardGrid scrolls sideways, which hid "Not applied" at 375. */}
+      
       <div data-testid="bulk-job-summary" className="grid min-w-0 grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Rows" value={job.rowCount} icon={Rows3} />
         {committed ? (

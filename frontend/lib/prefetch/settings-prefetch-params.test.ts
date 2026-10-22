@@ -1,6 +1,3 @@
-/**
- * The URL decides the key. A snapshot under the wrong key is not a prefetch.
- */
 jest.mock("server-only", () => ({}));
 
 jest.mock("@/lib/get-server-auth", () => ({

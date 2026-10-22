@@ -9,6 +9,7 @@ import type {
 } from "../lib/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { hrFormSubmissionsListKey } from "@/features/hr/forms/hooks/hr-forms-schema";
+import { hrFormSubmissionsQueryOptions } from "@/features/hr/forms/hooks/use-hr-form-submissions-read-options";
 
 const formSubmissionListContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormSubmissionListContract),
@@ -16,16 +17,6 @@ const formSubmissionListContract = lazyContract(() =>
 const formSubmissionRowContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormSubmissionRowContract),
 );
-
-export function hrFormSubmissionsQueryOptions(
-  formId: number,
-  params?: { cursor?: string; limit?: number; status?: HrFormSubmissionStatus },
-) {
-  return {
-    queryKey: hrFormSubmissionsListKey(formId, params),
-    staleTime: 15_000,
-  } as const;
-}
 
 export function useHrFormSubmissions(
   formId: number,

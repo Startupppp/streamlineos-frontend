@@ -1,9 +1,3 @@
-/**
- * Add or remove one value from a selection list. Written out at every checkbox
- * group, the rule reads as `checked ? [...list, v] : list.filter(x => x !== v)`
- * — three copies of it disagreed on nothing, which is exactly why it belongs
- * in one place rather than in three inline closures.
- */
 export function setListMembership<T>(
   list: readonly T[],
   value: T,

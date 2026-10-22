@@ -17,7 +17,6 @@ interface Department {
 interface StepReviewProps {
   form: UseFormReturn<FormValues>;
   departments: Department[];
-  /** BUG-HRMS-006: named here so the review shows the office, not its uuid (FE-85). */
   locations: Array<{ id: string; name: string }>;
 }
 
@@ -28,7 +27,6 @@ export function StepReview({ form, departments, locations }: StepReviewProps) {
   const additional = (getValues("secondaryManagers") ?? [])
     .map((entry) => (entry.managerRef ? `${entry.managerRef.name}${entry.label ? ` (${entry.label})` : ""}` : null))
     .filter((name): name is string => name !== null);
-  // Named from the choice the form kept, not a member lookup HR may not be allowed to read.
   const reportsTo = topLevelRole
     ? `Top-level role — ${getValues("topLevelRoleReason") ?? ""}`
     : manager

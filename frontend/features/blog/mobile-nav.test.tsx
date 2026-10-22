@@ -18,7 +18,6 @@ function open() {
 describe("journal mobile navigation", () => {
   it("is a disclosure, so every link is reachable without JavaScript", () => {
     render(<MobileNav links={LINKS} cta={CTA} />);
-    // The links are in the markup whether or not the menu script ever runs.
     expect(screen.getByRole("link", { name: "All stories" })).toHaveAttribute("href", "/blogs/archive");
     expect(screen.getByRole("navigation", { name: "Journal" })).toBeInTheDocument();
   });

@@ -51,7 +51,6 @@ function RowActions({ row, onPreview, onTest }: RowActionsProps) {
   );
 }
 
-/** The platform's built-in transactional emails: preview each and send yourself a test. */
 export function EmailTemplatesPage() {
   const layout = useTenantLayout(EMAIL_TEMPLATE_PREVIEW_LAYOUT);
   const { data: session } = useSession();
@@ -112,7 +111,6 @@ export function EmailTemplatesPage() {
         className="sm:max-w-2xl"
       >
         {previewing ? (
-          // Server-rendered email HTML. No scripts run: never `allow-scripts` with `allow-same-origin`.
           <iframe srcDoc={previewing.html} sandbox="" title={`${previewing.name} preview`} className="min-h-[60vh] w-full flex-1 rounded-md border border-border bg-background" />
         ) : null}
       </AppSheet>

@@ -1,16 +1,10 @@
 import { renderHook } from "@testing-library/react";
 import { useKeyboardWedge } from "./use-keyboard-wedge";
 
-/**
- * INV-203. The hook's entire job is telling a scanner apart from a person, and
- * the only signal available is speed. These drive real keydown events at
- * scanner and human cadence and check which ones become a scan.
- */
 function press(key: string): void {
   document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }));
 }
 
-/** Advances the clock the hook reads, without waiting in real time. */
 function advance(ms: number): void {
   jest.setSystemTime(Date.now() + ms);
 }
@@ -38,8 +32,6 @@ describe("useKeyboardWedge", () => {
   });
 
   it("ignores the same characters typed by a human", () => {
-    // The whole point. Without the gap rule a person typing into the page
-    // would raise scans, and every stray Enter would submit one.
     const onScan = jest.fn();
     renderHook(() => useKeyboardWedge(onScan));
 
@@ -54,8 +46,6 @@ describe("useKeyboardWedge", () => {
   });
 
   it("does not let a preceding keystroke contaminate a scan", () => {
-    // A person types one character, then hardware fires. The scan must be the
-    // scan, not the scan with somebody's stray letter on the front.
     const onScan = jest.fn();
     renderHook(() => useKeyboardWedge(onScan));
 
@@ -86,8 +76,6 @@ describe("useKeyboardWedge", () => {
   });
 
   it("leaves keys that are not payload out of the buffer", () => {
-    // Arrows and modifiers arrive during a scan on some wedges; they are not
-    // data and must not land in a lot number.
     const onScan = jest.fn();
     renderHook(() => useKeyboardWedge(onScan));
 

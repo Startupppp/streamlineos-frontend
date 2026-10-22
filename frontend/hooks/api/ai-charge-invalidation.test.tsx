@@ -27,12 +27,6 @@ const CHARGED = {
 
 const FREE = { text: "summary", aiUsage: null };
 
-/**
- * The wallet, the transaction ledger and the usage chart all hang off the
- * `billing/ai-credits` prefix, so one prefix invalidation has to reach all
- * three. A spend that leaves the wallet stale for five minutes shows the user a
- * balance that predates their own action.
- */
 describe("an AI mutation that spends credits invalidates the credits keys", () => {
   const WALLET = queryKeys.billing.aiCredits();
   const LEDGER = queryKeys.billing.aiCreditTransactions({ limit: 20 });
@@ -123,11 +117,6 @@ const { apiClient } = jest.requireMock("@/lib/api-client") as {
   apiClient: { get: jest.Mock; patch: jest.Mock };
 };
 
-/**
- * The public board save is a settled self-write: the server confirms it and
- * returns its own `updatedAt`. Nothing else on the page can have changed the
- * scene, so the confirmed value belongs in the cache the read seeded from.
- */
 describe("the public whiteboard save lands in the cache its read seeded from", () => {
   const TOKEN = "tok-1";
   const SCENE_ONE = { elements: [{ id: "a" }], appState: {}, files: {} };

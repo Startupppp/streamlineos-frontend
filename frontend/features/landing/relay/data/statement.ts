@@ -1,4 +1,3 @@
-/** 05 Statement — Figma 3488:22124. Copy is verbatim from the frame. */
 export const statementMock = {
   kicker: "[ one system. every function. ]",
   title: {

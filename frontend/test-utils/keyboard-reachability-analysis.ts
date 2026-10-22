@@ -17,10 +17,6 @@ const SKIP_DIRECTORIES = new Set([
   "feedbucket-widget",
 ]);
 
-/**
- * Elements the platform already makes operable from the keyboard. Everything
- * else that takes a click has to say so itself.
- */
 const NATIVE_INTERACTIVE = new Set([
   "button",
   "a",
@@ -38,12 +34,6 @@ const TAG_START = /<([a-zA-Z][a-zA-Z0-9.]*)(?=[\s/>])/g;
 const CLICK_PROP = /\bonClick\s*=/;
 const KEY_PROP = /\bon(?:KeyDown|KeyUp|KeyPress)\s*=/;
 const SPREAD = /\{\s*\.\.\./;
-/**
- * The shared helpers in `lib/keyboard-activation.ts`. A site that moves onto
- * one of them still counts toward the denominator — otherwise converting a
- * finding would shrink the population it was counted against, and the ratio
- * would improve because the question was withdrawn.
- */
 const SHARED_ACTIVATION = /\bactivationProps\s*\(|\bpropagationShield\b/;
 
 export interface ClickSite {
@@ -54,18 +44,10 @@ export interface ClickSite {
 
 export interface KeyboardReachability {
   filesScanned: number;
-  /** Every lowercase-element click target in the corpus — the denominator. */
   clickSites: number;
-  /** The ones a keyboard user cannot reach. */
   unreachable: ClickSite[];
 }
 
-/**
- * A JSX opening tag cannot be matched with a regex: an attribute value holds
- * arrow functions, nested braces and quoted `>` characters, and a naive match
- * ends the tag inside `(e) => {`, which reported a handled element as bare.
- * This walks the attribute region tracking brace depth and quoting instead.
- */
 function readAttributes(source: string, from: number): { attributes: string; end: number } | null {
   let depth = 0;
   let quote: string | null = null;
@@ -112,12 +94,6 @@ export function openingTags(source: string): RawSite[] {
   return sites;
 }
 
-/**
- * A click target is reachable when it is a native control, when it handles a
- * key itself, or when it takes a spread that could supply either. PascalCase
- * components are excluded: their own definition owns the contract, and this
- * scan cannot see through it.
- */
 export function findUnreachableClickTargets(source: string): ClickSite[] {
   const findings: ClickSite[] = [];
   for (const site of openingTags(source)) {

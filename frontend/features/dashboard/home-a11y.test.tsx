@@ -1,24 +1,3 @@
-/**
- * PRD-C115 — responsive accessibility for Home and self-service.
- *
- * Before this file the whole Home surface had exactly ONE axe assertion, over
- * the 40-line `HomeSectionBoundary` with a `<p>` child. That is a vacuous
- * corpus: it exercises no widget, no state and no breakpoint, so nine of the
- * fifteen error branches on Home could announce nothing to a screen reader and
- * the suite stayed green.
- *
- * The corpus here is the real one. `next/dynamic` is replaced by `React.lazy`
- * over the SAME loader the grid declares, so `HomeWidgetGrid` mounts the actual
- * eleven widgets rather than stubs; only the data hooks are faked, which is what
- * drives the four states. Every state is asserted at 375 / 768 / 1280, because
- * the criterion says *responsive* accessibility and the grid changes column
- * count at `md` and `xl`.
- *
- * The error state carries a second assertion that axe cannot make: axe checks
- * markup validity, not whether a failure is ANNOUNCED. A `<p class="text-sm
- * text-destructive">` is perfectly valid and completely silent. So each failed
- * widget's message must be reachable through `getByRole("alert")`.
- */
 
 import * as React from "react";
 import { render, screen, waitFor, within } from "@testing-library/react";
@@ -54,13 +33,6 @@ function answered(data: unknown): QueryLike {
 
 const q: Record<string, QueryLike> = {};
 
-/**
- * The grid declares its widgets through `next/dynamic`, whose loader already
- * has React.lazy's exact contract — `() => Promise<{ default: Component }>`.
- * Handing the loader straight to `React.lazy` mounts the real widget instead of
- * a placeholder, which is the difference between testing Home and testing a
- * `<div />`.
- */
 jest.mock("next/dynamic", () => ({
   __esModule: true,
   default: (loader: () => Promise<{ default: React.ComponentType<unknown> }>) => {
@@ -222,14 +194,6 @@ const EMPTY = {
 
 const HOOK_NAMES = Object.keys(LOADED);
 
-/**
- * The eleven headings Home mounts — ten from `home-widget-grid.tsx` plus the
- * expenses slot the route fills. Asserted so a future regression that turns a
- * widget back into a placeholder — or drops one from the grid — shrinks the
- * corpus loudly instead of silently. Recruitment is deliberately absent: root
- * §8 keeps the hiring pipeline out of Home, and
- * `home-section-boundary.test.tsx` fails if it comes back.
- */
 const HOME_WIDGET_TITLES = [
   "My Tasks",
   "Timesheet",
@@ -244,10 +208,6 @@ const HOME_WIDGET_TITLES = [
   "My Expenses",
 ] as const;
 
-/**
- * Every widget's own error message, so the alert assertion can name the exact
- * failing section rather than counting anonymous alerts.
- */
 const FAILURE_MESSAGES: Record<string, string> = {
   personal: "personal section is down",
   crmPulse: "business pulse section is down",

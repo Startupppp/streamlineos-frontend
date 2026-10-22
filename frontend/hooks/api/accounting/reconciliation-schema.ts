@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Stock-to-ledger reconciliation (`be/src/modules/accounting/adapters/reconciliation/dto/reconciliation-response.schemas.ts`).
- * Every value is an integer in the book's minor units. An org without
- * accounting gets `enabled: false` and zeros, so there is one shape, not a union.
- */
 
 const unpostedReasonContract = z.enum(["no_posting_path", "post_missing", "not_applicable"]);
 

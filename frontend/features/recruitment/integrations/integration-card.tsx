@@ -10,15 +10,6 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import type { RecruitmentIntegration } from "@/hooks/api/hr/recruitment/integrations";
 
-/**
- * What each blocked code means on screen, and — more importantly — whose
- * problem it is.
- *
- * `not-implemented` is ours. The other three are the organisation's, and are
- * the only ones that get a Connect control, because offering one for a
- * capability that has no adapter behind it sends someone to find a key that
- * would change nothing.
- */
 const BLOCKED_LABEL: Record<NonNullable<RecruitmentIntegration["blockedCode"]>, string> = {
   "not-implemented": "Not available",
   "no-integration": "Not connected",
@@ -80,11 +71,6 @@ export function IntegrationCard({
     [onRotateSecret, integration.platform],
   );
 
-  /**
-   * Held in a local so the `=== null` checks below narrow it. Read off the prop
-   * each time, TypeScript has to assume a mutation between the test and the
-   * lookup and the indexed reads stop compiling.
-   */
   const blockedCode = integration.blockedCode;
   const available = blockedCode === null;
   const connectable = integration.adapterImplemented;
@@ -110,22 +96,14 @@ export function IntegrationCard({
           </Badge>
         </div>
 
-        {/*
-          Why it cannot be used, in terms of the actual dependency. A partner
-          programme and a missing API key are different problems and only one of
-          them is the recruiter's to solve.
-        */}
+        
         {!connectable && integration.blockedBy && (
           <p className="text-xs text-muted-foreground rounded-md border bg-muted/40 px-3 py-2">
             {integration.blockedBy}
           </p>
         )}
 
-        {/*
-          What still works meanwhile. This is what keeps "not available" from
-          being a dead end — a recruiter can still do the job by hand, and
-          saying so is the difference between a limitation and a wall.
-        */}
+        
         {!available && integration.manualFallback && (
           <p className="text-xs text-muted-foreground">
             <span className="font-medium text-foreground">Meanwhile: </span>
@@ -173,7 +151,7 @@ export function IntegrationCard({
                 )}
                 {integration.family === "job-board" && integration.connected && (
                   <Button size="sm" variant="ghost" onClick={handleRotate}>
-                    {/* Inbound applications are signed with this; rotating breaks old deliveries. */}
+                    
                     Callback secret
                   </Button>
                 )}

@@ -2,22 +2,7 @@ import { Globe2, ShieldCheck } from "lucide-react";
 import { SectionHead } from "@/features/landing/relay/components/ui/section-head";
 import type { DataResidency } from "@/lib/pricing-live";
 
-/**
- * Where a customer's data will rest, said before they ask.
- *
- * Phase 3, ticket 12. The marketing site described the product at length and
- * never once said which country the data sits in — which is the first question
- * from any European buyer and the second from any regulated one. Not answering
- * it does not avoid the question; it just moves the answer to a sales call, or
- * loses the deal quietly.
- *
- * Read from `/public/data-residency` rather than written here, for the same
- * reason the prices are: a page with its own copy of the region list eventually
- * describes a region that was renamed or one that never shipped.
- */
 export function DataResidencySection({ residency }: { residency: DataResidency | null }) {
-  // Nothing invented in its place. A hardcoded fallback would be a claim about
-  // where data rests made by a page that could not reach the system that knows.
   if (!residency || residency.options.length === 0) return null;
 
   return (
@@ -42,8 +27,7 @@ export function DataResidencySection({ residency }: { residency: DataResidency |
             </h3>
             {option.examples?.length ? (
               <p className="mt-1 text-body leading-body text-foreground-muted">
-                {/* The countries, because that is what a reader scans for --
-                    "is my country on this list" is the actual question. */}
+                
                 {option.examples.join(" · ")}
               </p>
             ) : null}

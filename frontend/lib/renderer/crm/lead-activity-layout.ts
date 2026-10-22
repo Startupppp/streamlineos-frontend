@@ -1,14 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * A logged interaction with a lead, as data.
- *
- * Separate from `crm:activity` on purpose: this records what happened in a
- * conversation — how long it ran, where it happened, how it went — while a CRM
- * activity is a scheduled piece of work with a due date. Folding them into one
- * description would produce a form asking a salesperson for a due date on a call
- * that already finished.
- */
 export const LEAD_ACTIVITY_LAYOUT: RecordLayout = {
   key: "crm:lead-activity",
   singular: "Interaction",

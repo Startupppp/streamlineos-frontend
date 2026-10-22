@@ -43,7 +43,6 @@ export function MeetingsTab() {
   const createMeeting = useCreateOneOnOne();
   const updateMeeting = useUpdateOneOnOne();
   const deleteMeeting = useDeleteOneOnOne();
-  // Every 1-on-1 write is `hr:performance:view` on the backend (performance.controller.ts:178-202).
   const canWrite = useCan("hr:performance:view");
   const pageState = usePageState({
     permission: "hr:performance:view",

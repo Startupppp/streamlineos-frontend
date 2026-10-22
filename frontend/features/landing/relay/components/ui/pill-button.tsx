@@ -6,9 +6,7 @@ import { BrandCta } from "./brand-cta";
 export interface PillButtonProps {
   href: string;
   children: ReactNode;
-  /** `primary` — accent fill. `glass` — translucent gradient with a hairline. */
   variant?: "primary" | "glass";
-  /** `md` — 40 tall, 14 type (nav). `lg` — 48 tall, 16 type (hero). */
   size?: "md" | "lg";
   className?: string;
 }
@@ -18,7 +16,6 @@ const SIZE = {
   lg: "h-12 px-6 text-body leading-body",
 } as const;
 
-/** Pill CTA — component instance 2726:25 (nav 3488:21054, hero 3488:21935). */
 export const PillButton = ({
   href,
   children,

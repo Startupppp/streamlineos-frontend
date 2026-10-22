@@ -21,7 +21,6 @@ export const employeeStatsContract = z.object({
 
 export const employeeProjectsContract = z.array(
   z.object({
-    // projects.id and tickets.{id,project_id,ticket_number} are integer columns.
     id: z.number(),
     name: z.string(),
     key: z.string(),

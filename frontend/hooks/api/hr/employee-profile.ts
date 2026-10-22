@@ -118,13 +118,6 @@ export function useResendEmployeeInvite() {
   });
 }
 
-/**
- * Mints a single-use join link for an employee.
- *
- * Deliberately not a query: each call issues a credential and retires the last
- * one, so it must happen when an administrator asks for it and never on a
- * render, a refetch or a cache warm.
- */
 export function useCreateEmployeeInviteLink() {
   return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "invite-link"],
@@ -138,12 +131,6 @@ export function useCreateEmployeeInviteLink() {
   });
 }
 
-/**
- * The key belongs to the upload, not the HTTP call: a retry of the same rows
- * (timeout, network drop, double click) replays the first result instead of
- * creating people twice. Only a completed commit releases it, so a failed
- * attempt retried with the same rows keeps its key (PRD §7.3.10).
- */
 export function useBulkOnboardEmployees() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
@@ -164,7 +151,6 @@ export function useBulkOnboardEmployees() {
   });
 }
 
-/** Server-side dry run (CONTRACT §4.20): resolves managers and fallbacks, writes nothing. */
 export function useBulkOnboardPreview() {
   return useAuthorizedMutation("hr:onboarding:manage", {
     mutationKey: ["hr", "employee", "onboard", "bulk", "preview"],
@@ -178,8 +164,6 @@ export function useEmployeeEmployment(userId: string) {
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.employeeEmployment(userId),
-    // A member not yet hired has no employment: 404 is "absent", which every
-    // consumer already draws, not a failure that should take down the profile.
     queryFn: ({ signal }) =>
       optionalSignalRead(
         apiClient.get(
@@ -225,9 +209,6 @@ export function useEmployeeTimeline(
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor,
     enabled: hrEnabled && !!employmentId && canView,
     staleTime: 2 * 60_000,
-    // Ticket 02. The timeline tab draws its own error and retry through
-    // `usePageState`; on the provider default it never gets the chance, because
-    // the failure replaces the whole profile route first.
     ...INLINE_READ_ERROR,
   });
 }

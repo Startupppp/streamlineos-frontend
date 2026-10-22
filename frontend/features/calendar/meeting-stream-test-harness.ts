@@ -1,11 +1,3 @@
-/**
- * The fetch harness the calendar meeting-stream tests drive. It stops at
- * `global.fetch` on purpose: `streamAiText`, `authedFetch` and the combined
- * abort signal must all run for real, because the two defects this seam keeps
- * reproducing — a buffered POST wearing a Stop button, and a signal that
- * type-checks in a slot nothing reads — are both invisible to a test that stubs
- * the client.
- */
 
 export interface StreamChunk {
   done: boolean;
@@ -40,7 +32,6 @@ function completingBody(chunks: string[], signal: AbortSignal | null) {
   };
 }
 
-/** Serves the given deltas, then hangs until the signal aborts. */
 function heldBody(chunks: string[], signal: AbortSignal | null) {
   const queued = [...chunks];
   return {
@@ -88,8 +79,6 @@ export function refuses(status: number, body: Record<string, unknown>): StreamRe
     ok: false,
     status,
     statusText: "Error",
-    // The backend's error envelope; a bare body would read as a gateway
-    // outage and trip the api-client outage circuit for the next case.
     headers: new Headers({ "content-type": "application/json" }),
     json: () => Promise.resolve(body),
   });
@@ -105,11 +94,6 @@ export function jsonOnce(data: unknown): Record<string, unknown> {
   };
 }
 
-/**
- * `routes` answers a non-streaming sibling (the send flow's `propose-send`)
- * without letting it claim the recorded stream signal, so a later assertion on
- * cancellation still reads the paid call's signal and not the last request made.
- */
 export function installFetch(
   respond: StreamResponder,
   routes: Record<string, Record<string, unknown>> = {},

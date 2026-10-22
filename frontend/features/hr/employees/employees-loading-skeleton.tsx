@@ -6,7 +6,6 @@ import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stal
 
 interface EmployeesGridSkeletonProps {
   count?: number;
-  /** Offers "Still loading… Try again" once the directory read has been pending for a while. */
   onStalledRetry?: () => void;
 }
 

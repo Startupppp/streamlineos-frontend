@@ -91,12 +91,6 @@ function renderList() {
   return render(<EnvelopeList />, { wrapper });
 }
 
-/**
- * The list used to read `.items` off the page envelope and render them with
- * no pagination at all, so an organisation with more envelopes than one page
- * saw the first twenty-five and no way to reach the rest, and the status
- * filter lived in component state the URL never carried.
- */
 describe("EnvelopeList", () => {
   beforeEach(() => {
     get.mockReset();

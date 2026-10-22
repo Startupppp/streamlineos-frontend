@@ -6,7 +6,6 @@ import type {
   contactRowContract,
 } from "@/hooks/api/crm/contacts-schema";
 export type OrgSize = "1-10" | "11-50" | "51-200" | "201-1000" | "1000+";
-/** `business_parties.tier` — stated by a person, never derived. */
 export type CrmAccountTier = "free" | "pro" | "enterprise";
 export type OrgTimelineEventType = "contact_created" | "deal_created" | "lead_linked" | "note_added";
 
@@ -143,12 +142,6 @@ export interface CreateCrmOrganizationInput {
   tier?: CrmAccountTier;
 }
 
-/**
- * Mirrors `organizationUpdateSchema` exactly, nullables included: the PATCH
- * endpoint reads `null` as "clear this column" and omission as "leave it alone".
- * Typed as `Partial<CreateCrmOrganizationInput>` the two were indistinguishable,
- * so no field could be emptied once set.
- */
 export interface UpdateCrmOrganizationInput {
   name?: string;
   domain?: string | null;

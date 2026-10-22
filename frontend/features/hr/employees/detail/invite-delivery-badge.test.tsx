@@ -8,10 +8,6 @@ import {
   type InviteDelivery,
 } from "./invite-delivery-badge";
 
-/**
- * HRMS-E2E-018. Nothing on this screen may assert a delivery state the server
- * never observed — that is the whole defect the ticket was raised for.
- */
 const DELIVERY: InviteDelivery = {
   status: "queued",
   queuedAt: "2026-09-20T10:00:00.000Z",

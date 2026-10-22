@@ -2,15 +2,6 @@ import { BULK_ONBOARD_COLUMNS, normalizeHeader, type ParsedRow } from "./bulk-on
 import { validateAndMap } from "./bulk-onboard-template";
 import { buildBulkOnboardInstructionRows } from "./bulk-onboard-download";
 
-/**
- * BUG-HRMS-006 / BUG-HRMS-007. The template had no column for either field, so a
- * bulk upload could not place a hire at one of the org's offices or record them
- * as anything but FULL_TIME.
- *
- * The location is deliberately not resolved here: the server refuses an unknown
- * office rather than creating one, and a name typed in a spreadsheet is exactly
- * the case where inventing an office would be worse than refusing the row.
- */
 
 const DEPARTMENTS = new Set(["engineering"]);
 

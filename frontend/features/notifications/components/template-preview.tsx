@@ -107,4 +107,3 @@ export function PreviewDialog({
   );
 }
 
-/** Only these channels gate sending on a provider-approved template. */

@@ -21,11 +21,6 @@ export interface CreateProjectInput {
   notes?: string | null;
 }
 
-/**
- * Every mutation goes through `useAuthorizedMutation`: the server is
- * authoritative, but a disabled button that still fires on Enter is a request
- * the operator did not know they made.
- */
 export function useCreateProject() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<ProjectDetail, Error, CreateProjectInput>("inventory:projects:manage", {
@@ -60,15 +55,6 @@ export function useAddRequirement() {
   });
 }
 
-/**
- * What a line may be corrected to, mirroring `updateRequirementSchema`.
- *
- * `RESERVED`, `PARTIALLY_FULFILLED` and `FULFILLED` are absent on purpose: those
- * are what reserving and dispatching make true, and a hand-set one would claim
- * stock is held that nothing is holding. Lowering `requiredQty` below what is
- * already reserved plus delivered is refused by the server with
- * `REQUIREMENT_BELOW_COMMITTED`.
- */
 export interface UpdateRequirementInput {
   projectId: number;
   requirementId: number;
@@ -108,10 +94,6 @@ export interface ReserveRequirementInput {
   expiresAt?: string;
 }
 
-/**
- * Holding stock is `inventory:stock:reserve`, not the project key — a claim on
- * the warehouse is a warehouse decision, and the backend gates it the same way.
- */
 export function useReserveRequirement() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<{ id: number }, Error, ReserveRequirementInput>("inventory:stock:reserve", {

@@ -170,7 +170,6 @@ export function ConnectedAppsSection() {
 
       <div className="rounded-lg border">
         {access.denied ? (
-          // FE-47: a disabled read would render every app as "Not Connected".
           <NoPermissionState permission="integrations:connections:view" compact />
         ) : isLoading || access.pending ? (
           <div className="p-4 space-y-3">

@@ -44,23 +44,6 @@ const REPORTING_MANAGE_KEY = "crm:reporting:manage";
 const REPORTING_VIEW_KEY = "crm:reporting:view";
 const REPORT_PARAM = "report";
 
-/**
- * The one human consumer of `crm/reporting`.
- *
- * Two things are deliberately split. The **form** holds what is being asked and
- * changes as somebody types; the **request** is what has actually been sent, and
- * only "Run report" moves one into the other — so an in-progress edit never
- * fires a query, and the results on screen always answer a question somebody
- * finished asking.
- *
- * The offset lives outside both. Paging is not a new question, so it re-runs the
- * submitted request at a new offset rather than rebuilding from a form the
- * reader may have edited since.
- *
- * Which report is open lives in the URL rather than in state, so a saved report
- * is a link somebody can send, and a reload comes back showing the stored
- * question instead of an empty builder.
- */
 export function ReportBuilderPage() {
   const access = useCanState(REPORTING_RUN_KEY);
   const canManage = useCan(REPORTING_MANAGE_KEY);
@@ -82,12 +65,6 @@ export function ReportBuilderPage() {
   const [scheduleOpen, setScheduleOpen] = useState(false);
   const [explainOf, setExplainOf] = useState<ReportingQueryDescription | null>(null);
   const [pendingSave, setPendingSave] = useState<ReportBuilderValues | null>(null);
-  /**
-   * Ticket 15. What the model proposed and the person accepted, plus a
-   * counter so accepting a SECOND proposal while still on "new report"
-   * still re-keys `ReportBuilderPanel` — the id-based key below is stable
-   * across two such acceptances, which a counter is not.
-   */
   const [nlProposal, setNlProposal] = useState<{
     description: ReportingQueryDescription;
     version: number;
@@ -117,7 +94,6 @@ export function ReportBuilderPage() {
     onSaved: handleSaved,
   });
 
-  /** The stored description, read back into the form that could have produced it. */
   const loaded = useMemo(() => {
     if (!definition) return null;
     const source = sources.find((entry) => entry.key === definition.queryDescription.source);
@@ -126,11 +102,6 @@ export function ReportBuilderPage() {
 
   const savedValues = loaded?.kind === "loaded" ? loaded.values : null;
 
-  /**
-   * Ticket 15. The accepted proposal, read through the SAME inverse a saved
-   * report goes through — `toBuilderValues` doesn't know or care whether the
-   * description it is handed came from a person or a model.
-   */
   const nlLoaded = useMemo(() => {
     if (!nlProposal) return null;
     const source = sources.find((entry) => entry.key === nlProposal.description.source);
@@ -153,7 +124,6 @@ export function ReportBuilderPage() {
   );
   const run = plan.kind === "saved" ? savedRun : adHocRun;
 
-  /** Which source the results describe — the one that was run, not the one on screen. */
   const ranSource =
     request?.kind === "form"
       ? request.values.source
@@ -193,11 +163,6 @@ export function ReportBuilderPage() {
     setDefinitionId(null);
   }
 
-  /**
-   * Ticket 15. Accepting behaves like starting a new report pre-filled —
-   * `setDefinitionId(null)` is what makes `savedValues` fall away so the
-   * proposal, not a stale saved report, is what the form actually shows.
-   */
   function handleAcceptProposal(description: ReportingQueryDescription) {
     setRequest(null);
     setOffset(0);

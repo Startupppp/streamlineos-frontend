@@ -1,11 +1,3 @@
-/**
- * @jest-environment node
- *
- * Drives the production NextAuth seams in `lib/auth.ts` — the credentials
- * `authorize`, the `session` callback and the `signOut` event — not a
- * reimplementation of them. `authConfig` is the exact object handed to
- * `NextAuth()`, and each callback body below is reached through it.
- */
 jest.mock("@/lib/backend-url", () => ({ BACKEND_URL: "http://backend.test" }));
 
 jest.mock("axios", () => ({
@@ -113,10 +105,6 @@ describe("credentials authorize — the magic-link identity is narrowed, never a
   });
 
   it("REGRESSION (negative) refuses an identity with no session id at all", async () => {
-    // The unchecked cast admitted this. The jwt callback then stamped `~<uuid>`,
-    // which `resolveAuthSession` treats as unregistered and skips the exchange
-    // for — so the browser held a session that looked signed in and 401ed on
-    // every API call. Refusing here turns it into a visible sign-in failure.
     installTransport();
     replyWith({ success: true, data: { userId: USER, orgId: ORG } });
 
@@ -124,9 +112,6 @@ describe("credentials authorize — the magic-link identity is narrowed, never a
   });
 
   it("REGRESSION (negative) refuses an identity whose session id is not a string", async () => {
-    // A numeric sessionId reached `token.sessionId?.trim()` in the session
-    // callback, threw a TypeError inside its try, and fell into the branch that
-    // never sets `backendJwt` — the same dead session, arrived at by a crash.
     installTransport();
     replyWith({ success: true, data: { userId: USER, sessionId: 12345 } });
 

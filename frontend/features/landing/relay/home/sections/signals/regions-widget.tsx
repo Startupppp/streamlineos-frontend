@@ -4,11 +4,6 @@ import type { SignalsContent } from "@/features/landing/relay/data/signals";
 import { RegionMap } from "./region-map";
 import { TEXT_AFTER, Widget, WidgetTitle, widgetDelay } from "./widget";
 
-/**
- * Widget / where it ran — 414 × 244, dotted map with three regions
- * (3888:6640) / 301 × 268 (3888:11045) / 338 × 268 (3865:108) / 350 × 290
- * (3893:3836).
- */
 export const RegionsWidget = ({
   title,
   mapLabel,

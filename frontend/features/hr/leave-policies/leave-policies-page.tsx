@@ -58,7 +58,6 @@ export function LeavePoliciesPage() {
     setSheetOpen(true);
   }, []);
 
-  // Delete fired straight from the card icon with no confirmation (FE-83).
   const [pendingDeleteId, setPendingDeleteId] = useState<number | null>(null);
   const handleDeleteClick = useCallback((id: number) => setPendingDeleteId(id), []);
   const handleDeleteOpenChange = useCallback((open: boolean) => {
@@ -137,8 +136,7 @@ export function LeavePoliciesPage() {
         </div>
       </PageState>
 
-      {/* Ticket 08: only opens for an authorised admin of an organisation that
-          has configured nothing and has not already refused. */}
+      
       <LeavePolicyTemplatesDialog />
 
       <PolicyFormSheet

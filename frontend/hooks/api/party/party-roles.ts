@@ -25,10 +25,6 @@ export function usePartyRoles(partyId: string | null) {
   });
 }
 
-/**
- * Add or remove one role. Both routes answer with the party's whole role list,
- * which is written straight into the cache.
- */
 export function useChangePartyRole(partyId: string) {
   const qc = useQueryClient();
   return useAuthorizedMutation("party:roles:manage", {
@@ -39,7 +35,6 @@ export function useChangePartyRole(partyId: string) {
         : apiClient.post<PartyRoles>(`/party/parties/${partyId}/roles`, { role }, undefined, rolesLazy),
     onSuccess: (result) => {
       qc.setQueryData(directoryAndOwnershipQueryKeys.party.roles(partyId), result);
-      // The party list filters by role, so its rows may now be wrong; mark it stale only.
       void qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.party.parties(), refetchType: "none" });
     },
   });

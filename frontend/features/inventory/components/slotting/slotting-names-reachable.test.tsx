@@ -8,16 +8,6 @@ import type {
   SlottingRule,
 } from "@/hooks/api/inventory/slotting-labor";
 
-/**
- * Every identifying column on this page printed a primary key — `Category #12`,
- * `Variant #40`, `Zone #7`, `#8` — and the Approve control asked a supervisor to
- * type one into a text box. §5 forbids both, and this is the table where
- * somebody decides whether a move is worth a walk: "move #40 from #8 to zone #7"
- * is not a decision anybody can make.
- *
- * Driven from the page rather than from the cells, because a cell that renders a
- * name while nothing mounts it is the same defect in a nicer font.
- */
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
@@ -89,12 +79,6 @@ const base = {
   updatedAt: "2026-08-01T00:00:00.000Z",
 };
 
-/**
- * Two zones, a bin under each. The second exists purely so the picker can be
- * shown NOT to offer it: `approve()` on the server checks only that a location
- * is visible to the caller, not that it sits under the zone the recommendation
- * is about, so scoping is entirely this control's job.
- */
 const locations = [
   { ...base, id: 7, parentLocationId: null, name: "Gold zone", code: "GOLD", locationType: "ZONE" as const },
   { ...base, id: 8, parentLocationId: 7, name: "Bin G-01", code: "G01", locationType: "BIN" as const },
@@ -172,10 +156,6 @@ it("names the category, the warehouse and the zone a rule points at", () => {
   expect(screen.queryByText(/zone #7/i)).not.toBeInTheDocument();
 });
 
-/**
- * A blank would read as "no category", which is the one claim that is never true
- * here — the rule names a category, the catalogue no longer has it.
- */
 it("says a referenced row is gone rather than falling back to its id", () => {
   rules.push({ ...categoryRule, categoryId: 999 });
   renderPage();
@@ -227,12 +207,6 @@ it("approves with the location the picker chose", async () => {
   );
 });
 
-/**
- * §4: every error string goes through `getErrorMessage`. The hardcoded sentence
- * this replaces described the request rather than the refusal, so a validation
- * failure — which `getErrorMessage` now unpacks field by field — arrived as
- * "An error occurred while fetching rules".
- */
 it("shows the server's own account of the failure", () => {
   rulesError = new Error("targetZoneLocationId: Expected number, received string");
   renderPage();

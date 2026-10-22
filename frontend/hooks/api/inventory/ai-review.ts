@@ -24,11 +24,7 @@ const feedbackSummaryResponse = lazyContract(() =>
   import("./restored-surfaces-schema").then((m) => m.feedbackSummaryContract),
 );
 
-/* ------------------------------------------------------------------ *
- * F3 — the anomaly queue
- * ------------------------------------------------------------------ */
 
-/** The six detectors. Mirrors the backend registry. */
 export type InvAnomalyType =
   | "stockout_risk"
   | "dead_stock"
@@ -40,7 +36,6 @@ export type InvAnomalyType =
 export interface InvAnomalyDetector {
   type: InvAnomalyType;
   label: string;
-  /** The arithmetic, in words, exactly as the query performs it. */
   formula: string;
   windowDays: number | null;
   windowLabel: string;
@@ -58,11 +53,6 @@ export interface InvAnomalyRow {
   title: string;
   body: string;
   warehouseId: number | null;
-  /**
-   * The window this finding was raised under, which may predate a threshold
-   * change. Rendered instead of the registry's current window whenever the two
-   * disagree — what the detector meant *then* is what the row claims.
-   */
   windowDays: number | null;
   evidenceHash: string | null;
   evidence: Array<{ kind: string; id: number }>;
@@ -81,12 +71,6 @@ export interface InvAnomalyPage {
   total: number;
   page: number;
   totalPages: number;
-  /**
-   * The reader's access is limited to specific warehouses, so organisation-wide
-   * findings are excluded. A flag rather than a count — saying how many rows
-   * somebody cannot see is still telling them something about those rows — but
-   * it has to be said, or an honest gate reads as a broken screen.
-   */
   orgWideSignalsHidden: boolean;
 }
 
@@ -99,10 +83,6 @@ export interface InvAnomalyFilters {
   limit?: number;
 }
 
-/**
- * Deterministic and unpaid — the queue is a database read, not a model call, so
- * it may load with the page.
- */
 export function useInventoryAnomalies(filters?: InvAnomalyFilters) {
   const canView = useCan("inventory:ai:read");
   return useQuery<InvAnomalyPage, Error>({
@@ -144,9 +124,6 @@ export function useReviewInventoryAnomaly() {
   });
 }
 
-/* ------------------------------------------------------------------ *
- * F3 — the demand-risk narrative
- * ------------------------------------------------------------------ */
 
 export interface InvDemandRiskCoverage {
   from: string;
@@ -179,13 +156,6 @@ export interface InvDemandRiskUncertainty {
 }
 
 export interface InvDemandRiskResult {
-  /**
-   * Three states and they must render as three things. `ok` has prose over the
-   * engine's figures. `facts_only` is the provider being unreachable — the
-   * forecast is still there and still the organisation's best estimate.
-   * `insufficient_evidence` is "there is no forecast to narrate", which is a
-   * different claim entirely and must never be dressed up as "no risk found".
-   */
   status: "ok" | "insufficient_evidence" | "facts_only";
   productVariantId: number;
   warehouseId: number | null;
@@ -223,11 +193,6 @@ export interface InvDemandRiskResult {
   generatedAt: string;
 }
 
-/**
- * A mutation rather than a query, deliberately: narrating spends credits, so it
- * happens because a human pressed something and never behind a `staleTime` that
- * could refetch it on a window focus.
- */
 export function useInventoryDemandRisk() {
   return useAuthorizedMutation<
     InvDemandRiskResult,
@@ -240,9 +205,6 @@ export function useInventoryDemandRisk() {
   });
 }
 
-/* ------------------------------------------------------------------ *
- * F6 — feedback on an AI answer
- * ------------------------------------------------------------------ */
 
 export type InvAiSurface =
   | "ops_brief"
@@ -257,7 +219,6 @@ export type InvAiSurface =
 
 export type InvAiVerdict = "USEFUL" | "WRONG" | "STALE" | "UNSAFE";
 
-/** The two verdicts that are a complaint, and therefore need a sentence. */
 export const VERDICTS_REQUIRING_NOTE: readonly InvAiVerdict[] = ["WRONG", "UNSAFE"];
 export const FEEDBACK_NOTE_MIN = 10;
 export const FEEDBACK_NOTE_MAX = 1000;
@@ -265,7 +226,6 @@ export const FEEDBACK_NOTE_MAX = 1000;
 export interface SubmitInvAiFeedbackInput {
   surface: InvAiSurface;
   verdict: InvAiVerdict;
-  /** The gateway's id for the call being judged. */
   correlationId: string;
   promptKey: string;
   promptVersion: number;
@@ -274,11 +234,6 @@ export interface SubmitInvAiFeedbackInput {
   note?: string;
 }
 
-/**
- * Filing a verdict costs no credits: it reaches no provider. Only the
- * identifiers travel — the server reads what the call actually cost from the
- * gateway's own usage log rather than believing the browser.
- */
 export function useSubmitInventoryAiFeedback() {
   const qc = useQueryClient();
   return useIdempotentMutation<
@@ -308,20 +263,11 @@ export interface InvAiFeedbackSummary {
     stale: number;
     unsafe: number;
     total: number;
-    /** Excludes `unsafe` — an incident is not a low score. */
     usefulRatio: number | null;
   }>;
   unsafeTotal: number;
 }
 
-/**
- * How every AI surface is scoring, for whoever owns them.
- *
- * `GET /inventory/ai/feedback/summary` is still served. Restored after a
- * mutation-guard sweep deleted it — it is a query, so that sweep could not
- * legitimately have flagged it — and a second sweep then deleted the key it
- * reads as unreferenced, taking the invalidation above with it.
- */
 export function useInventoryAiFeedbackSummary(days = 30) {
   const canManage = useCan("inventory:ai:manage");
   return useQuery<InvAiFeedbackSummary, Error>({

@@ -75,7 +75,6 @@ export function SpaceSheet({
         {
           spaceId: editingSpace.id,
           name: values.name,
-          // An emptied field is sent as null so the edit clears it.
           description: values.description?.trim() || null,
           icon: values.icon?.trim() || null,
           audience: values.audience === editingSpace.audience ? undefined : values.audience,

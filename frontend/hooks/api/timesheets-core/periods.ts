@@ -33,16 +33,6 @@ export function useCurrentPeriod() {
   });
 }
 
-/**
- * Period detail is reached from three surfaces, not one: My Time (own entries),
- * Team and Approvals. Gating the read on `timesheets:entries:view` alone leaves
- * a manager who holds only team or approvals view with a disabled query, and a
- * disabled query reports `isLoading: false` with no data — so the detail sheet
- * renders "no entries" for a timesheet it was never allowed to ask for.
- *
- * The caller still has to say which of the three it is; this only decides
- * whether asking is worth a request at all.
- */
 export function useCanViewPeriodDetail(): boolean {
   const canViewEntries = useCan("timesheets:entries:view");
   const canViewTeam = useCan("timesheets:team:view");
@@ -57,8 +47,6 @@ export function usePeriod(periodId: number | null) {
     queryFn: ({ signal }) => apiClient.get<PeriodDetail>(`/timesheets/periods/${periodId}`, undefined, signal, periodDetailC),
     staleTime: 15_000,
     enabled: periodId !== null && canView,
-    // The detail sheet is a satellite of Team and Approvals: its failure must
-    // show inside the sheet, not replace the whole route with an error page.
     ...INLINE_READ_ERROR,
   });
 }
@@ -98,19 +86,6 @@ function usePeriodAction(
   });
 }
 
-/**
- * Submit carries an intent-scoped `Idempotency-Key`.
- *
- * `POST /timesheets/periods/:id/submit` is fenced server-side
- * (`@Idempotent("timesheets.period.submit")`), but the api-client mints a fresh
- * key per fetch - so every attempt reaches the fence as a different command and
- * the fence protects nothing. The key has to survive the retry to do any work,
- * which is what `useAuthorizedIdempotentMutation` holds it for.
- *
- * Recall is deliberately not keyed: it carries no `@Idempotent` on the backend,
- * and its handler refuses any period that is not SUBMITTED, so a replay is a
- * 409 rather than a second transition.
- */
 export function useSubmitPeriod() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<TimesheetPeriod, Error, number>("timesheets:entries:create", {
@@ -154,12 +129,6 @@ const LIFECYCLE_REQUEST: Record<PeriodLifecycleAction, (periodId: number) => Pro
     apiClient.post<TimesheetPeriod>(`/timesheets/periods/${periodId}/reopen`, undefined, undefined, timesheetPeriodC),
 };
 
-/**
- * Admin lifecycle on an approved or locked period: lock (APPROVED -> LOCKED),
- * unlock (LOCKED -> APPROVED) and reopen (APPROVED|LOCKED -> DRAFT). Like an
- * approval decision, each moves hours between the queue, Team, reports, billing
- * and payroll at once, so the whole timesheets subtree is invalidated.
- */
 export function usePeriodLifecycle(action: PeriodLifecycleAction) {
   const qc = useQueryClient();
   return useAuthorizedMutation<TimesheetPeriod, Error, number>("timesheets:approvals:manage", {

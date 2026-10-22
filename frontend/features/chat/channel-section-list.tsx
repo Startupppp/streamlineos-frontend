@@ -21,13 +21,6 @@ interface ChannelSectionListProps {
   onOpenSettings?: (channelId: number) => void;
 }
 
-/**
- * `useChatChannels` drains every cursor page into one array, so a member of many
- * channels holds all of them client-side, and the sidebar mounts each one twice
- * — once in the compact rail, once in its section. This renders a bounded slice
- * and reveals the rest on request, keeping list semantics and the true set size
- * on every row so a screen reader reports "3 of 214", not "3 of 30".
- */
 export function ChannelSectionList({
   channels,
   label,

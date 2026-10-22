@@ -13,7 +13,6 @@ interface MailDailyBriefProps {
   onDetails: () => void;
 }
 
-/** Compact brief control designed to live inside the page header action row. */
 export function MailDailyBrief({
   state,
   canAi,

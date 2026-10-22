@@ -31,17 +31,6 @@ export function ClientOnboardingTab({ clientId }: { clientId: number }) {
     [toggleMutation, clientId],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Placed after the last hook and before the first branch that can return:
-   * denial outranks loading, error and emptiness alike, and a hook below a
-   * conditional return would run in a different order on different renders.
-   */
   if (useCanState("crm:clients:read") === "denied")
     return <NoPermissionState permission="crm:clients:read" />;
 

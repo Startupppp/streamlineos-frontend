@@ -1,22 +1,7 @@
 import type { FieldSpec, RecordLayout, SectionSpec } from "./layout";
 import type { SubjectType } from "@/types/party/subjects";
 
-/**
- * A tenant's subject type, as a record layout.
- *
- * This is the function ticket 07 exists to test. If one fixed schema can serve
- * any industry, then a declaration a tenant wrote at runtime has to produce the
- * same list, detail view and form that a layout written at compile time does —
- * through the same engine, with no branch anywhere asking "is this a subject?".
- *
- * It can, because the declaration and `FieldSpec` are the same shape on purpose.
- * The work here is not translation; it is supplying the three things a
- * declaration does not carry, because they are presentation rather than domain:
- * which fields become columns, how the detail and form group them, and the two
- * platform-owned fields every subject has regardless of type.
- */
 
-/** Carried by every subject whatever its type, so they are appended, not declared. */
 const PLATFORM_FIELDS: readonly FieldSpec[] = [
   {
     name: "reference",
@@ -28,13 +13,6 @@ const PLATFORM_FIELDS: readonly FieldSpec[] = [
   { name: "createdAt", label: "Added", kind: "date", readOnly: true },
 ];
 
-/**
- * How many declared fields reach the list before it stops being readable.
- *
- * A tenant may declare forty; a table showing forty columns is not a table. The
- * first few are the ones a person put first, which is the best signal available
- * until layouts are stored and can be arranged deliberately.
- */
 const MAX_DECLARED_COLUMNS = 4;
 
 const SECTION_SIZE = 6;
@@ -66,8 +44,6 @@ export function subjectLayout(type: SubjectType): RecordLayout {
 
   const fields: FieldSpec[] = [...declared, ...PLATFORM_FIELDS];
 
-  // The title column comes first whatever position it was declared in: a list
-  // whose first column is not the record's name reads as a spreadsheet.
   const titleFirst = [
     ...declared.filter((field) => field.name === type.titleField),
     ...declared.filter((field) => field.name !== type.titleField),
@@ -104,17 +80,6 @@ export function subjectLayout(type: SubjectType): RecordLayout {
   };
 }
 
-/**
- * Flattens a subject into the row shape the renderer reads.
- *
- * The renderer addresses fields by name at the top level; a subject keeps its
- * declared values nested under `customFields`, because that is what makes the
- * schema fixed. This is the one place the two representations meet.
- */
-/**
- * The parts of a subject the renderer needs, named so a caller can accept either
- * a list row or the single read without one type pretending to be the other.
- */
 export interface RenderableSubject {
   subjectId: string;
   reference: string | null;

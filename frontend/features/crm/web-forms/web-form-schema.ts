@@ -13,14 +13,6 @@ export const FIELD_TYPE_LABEL: Record<(typeof FIELD_TYPES)[number], string> = {
   select: "Choice",
 };
 
-/**
- * The editor for one web form.
- *
- * Field `name`s are the keys the submission arrives under; `name`, `email`,
- * `phone`, `company` and `message` are the ones the backend lifts into the lead
- * itself (everything else lands in its custom data). Choice options are typed
- * as one comma-separated line and split on save.
- */
 const fieldSchema = z.object({
   name: z
     .string()
@@ -102,10 +94,6 @@ export function toWebFormValues(form: WebForm | null): WebFormValues {
   };
 }
 
-/**
- * Create omits blanks (its `redirectUrl` must be a URL or ""); update sends
- * null to clear a description or redirect the form used to have.
- */
 export function toWebFormInput(values: WebFormValues, mode: "create" | "update"): WebFormInput {
   const clears = mode === "update";
   return {

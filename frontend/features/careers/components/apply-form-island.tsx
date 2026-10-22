@@ -35,14 +35,6 @@ interface Props {
   questions: readonly ScreeningQuestion[];
 }
 
-/**
- * The public apply form.
- *
- * Consent is a required checkbox rather than something implied by pressing
- * Submit, the screening questions come from the job itself, and the résumé is a
- * real file posted as `multipart/form-data` — the endpoint reads all three, and
- * refuses the application outright without the first.
- */
 export function ApplyFormIsland({ orgSlug, orgName, jobId, jobTitle, questions }: Props) {
   const [failure, setFailure] = useState<string | null>(null);
   const [knockedOut, setKnockedOut] = useState(false);

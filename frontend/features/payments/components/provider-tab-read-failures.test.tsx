@@ -1,23 +1,3 @@
-/**
- * The rest of the payments control room, pinned to the same rule
- * `payment-read-failure-states.test.tsx` established for the readiness rail
- * and the audit tab: a denied or failed read is never rendered as silence.
- *
- * Every read hook in `hooks/api/payments.ts` carries `enabled: canView`, so a
- * caller without the key — or a caller whose request 403s or 500s — settles to
- * `data === undefined, isLoading === false`. Four surfaces still read that as
- * "nothing to see" after the first pass fixed only the two files its own test
- * covered:
- *
- *   WebhooksTab          -> EmptyState "No webhook events yet"  (a failing
- *                           webhook pipeline reads as a healthy quiet one)
- *   ManualMethodsPanel   -> five blank editors marked "Missing instructions"
- *                           (configured bank details read as never configured,
- *                           and Save would overwrite them with blanks)
- *   LiveActivationPanel  -> `return null` (the panel vanishes; indistinguishable
- *                           from "this provider cannot go live")
- *   TestPaymentTab       -> the recent-test list silently does not render
- */
 import { render, screen } from "@testing-library/react";
 import { WebhooksTab } from "./webhooks-tab";
 import { ManualMethodsPanel } from "./manual-methods-panel";

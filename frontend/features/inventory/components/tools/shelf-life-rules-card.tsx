@@ -43,14 +43,6 @@ const COLUMNS: DataTableColumn<ShelfLifeRule>[] = [
   },
 ];
 
-/**
- * The remaining-life floor FEFO allocation has to clear.
- *
- * A stored setting with no writer is a dead switch. Allocation reads these rows
- * on every pick and nothing in the product could create one, so the floor was
- * permanently whatever the database happened to hold — usually nothing, which
- * silently means "any lot will do" for a customer who negotiated otherwise.
- */
 export function ShelfLifeRulesCard() {
   const settingsState = useCanState("inventory:settings:manage");
   const [editing, setEditing] = useState<ShelfLifeRule | "new" | null>(null);

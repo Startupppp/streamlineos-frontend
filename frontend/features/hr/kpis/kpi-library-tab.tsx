@@ -32,8 +32,6 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 
 const CATEGORY_COLORS: Record<string, string> = {
-  // Five business functions, not five statuses: Finance and HR both read "info"
-  // and were the same chip. HR takes violet rather than the blue it shared.
   Sales: "bg-category-emerald-surface text-category-emerald-ink",
   Finance: "bg-category-blue-surface text-category-blue-ink",
   Operations: "bg-category-amber-surface text-category-amber-ink",

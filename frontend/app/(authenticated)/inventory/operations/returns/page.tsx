@@ -23,12 +23,6 @@ import { CustomerReturnsTable } from "@/features/inventory/components/operations
 
 const PAGE_LIMIT = 20;
 
-/**
- * Status is a Select, not more Tabs triggers: the two Tabs this page has are
- * content categories, and a status filter built from them is AP-2. The first
- * option is an "all" sentinel that *removes* the query param rather than
- * setting it to "all" (§9).
- */
 const RETURN_STATUSES: ReturnStatus[] = ["DRAFT", "APPROVED", "POSTED", "CANCELLED"];
 
 const RETURN_STATUS_FILTER_LABEL: Readonly<Record<ReturnStatus, string>> = {
@@ -61,8 +55,6 @@ function ReturnsPageInner() {
       if (!value) params.delete(key);
       else params.set(key, value);
     }
-    // Any filter or tab change resets the page, or page 3 of one view becomes
-    // an empty page 3 of another.
     params.delete("page");
     router.replace(`?${params.toString()}`, { scroll: false });
   }
@@ -119,11 +111,7 @@ function ReturnsPageInner() {
             <TabsTrigger value="customer">Customer Returns</TabsTrigger>
           </TabsList>
 
-          {/*
-            Only the open tab is mounted, which is also the query gate: two
-            tables both fetching on every visit would double the load for a page
-            where one of them is always hidden.
-          */}
+          
           <TabsContent value="vendor" className={TABS_CONTENT_PAGE_BODY_CLASS}>
             {!canVendor ? (
               <NoPermissionState permission={VENDOR_RETURNS_PERMISSION} />

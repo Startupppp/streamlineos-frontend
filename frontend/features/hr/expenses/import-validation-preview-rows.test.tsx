@@ -1,11 +1,3 @@
-/**
- * The expense import preview is where a person finds out WHICH lines of their
- * file failed validation. It sliced the parsed rows to the first 50 before the
- * table ever saw them, so an invalid row at line 51 was unreachable — the
- * summary counted it and nothing could show it. The rows now all reach the
- * table, which pages them, so the mounted count stays bounded and every row is
- * still reachable.
- */
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ImportValidationPreview } from "./import-validation-preview";

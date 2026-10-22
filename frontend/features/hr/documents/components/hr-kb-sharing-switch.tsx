@@ -16,7 +16,6 @@ interface FlagCopy {
   label: string;
   on: string;
   off: string;
-  /** What has to be on first, and how to say so. */
   needs: { flag: FlagName; hint: string } | null;
   turnOn: { title: string; description: string; success: string };
   turnOff: { title: string; description: string; success: string };
@@ -101,13 +100,6 @@ function FlagRow({ flag, on, locked, pending, onAsk }: FlagRowProps) {
   );
 }
 
-/**
- * The organisation's switches for company documents in the Knowledge Base, for the person who administers the
- * Knowledge Base (`kb:settings:manage`). Everyone else sees nothing here. All three are OFF for every organisation
- * until someone turns them on, each needs the one before it, and turning one on shares nothing by itself: HR
- * still has to classify a document and add it. Turning one off takes effect at once and leaves everything where
- * it is, so turning it back on restores it.
- */
 export function HrKbSharingSwitch() {
   const canManage = useCan("kb:settings:manage");
   const admin = useHrKbLinkFlagsAdmin();

@@ -11,13 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import type { ProjectStatus, RequirementStatus, RiskReason } from "@/hooks/api/inventory/projects";
 
-/**
- * Status is an icon plus a word, never colour alone.
- *
- * Half a warehouse reads these on a phone in daylight and some readers cannot
- * separate red from green at all. The colour is a second signal on top of the
- * label and the glyph, never the only one.
- */
 const REQUIREMENT: Record<RequirementStatus, { label: string; icon: typeof CircleDashed; className: string }> = {
   DRAFT: { label: "Draft", icon: CircleDashed, className: "border-status-neutral-rule text-status-neutral-ink" },
   REQUESTED: { label: "Requested", icon: CircleDashed, className: "border-status-info-rule text-status-info-ink" },
@@ -55,7 +48,6 @@ export function ProjectStatusBadge({ status }: { status: ProjectStatus }) {
   );
 }
 
-/** The two ways a line goes wrong, said in the words an operator would use. */
 export const RISK_COPY: Record<Exclude<RiskReason, null>, string> = {
   SHORT_NO_STOCK: "Short, and there is not enough on the shelf to close it",
   SHORT_AND_DUE: "Short, and the date is inside the supplier lead time",

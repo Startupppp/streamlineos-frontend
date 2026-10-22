@@ -7,11 +7,6 @@ import {
 } from "@/features/hr/leaves/components/leaves-summary-strip";
 import type { LeaveBalance } from "@/features/hr/leaves/components/leaves-shared";
 
-/**
- * V-045. "Available Days 0" reads the same for an org with no leave policy and
- * for an org whose 12-day policy nobody has touched yet. Only the first may
- * carry the no-policy copy.
- */
 function renderStrip(balances: LeaveBalance[], noPolicyConfigured: boolean) {
   const total = balances.reduce((sum, b) => sum + Number(b.balance ?? 0), 0);
   return render(

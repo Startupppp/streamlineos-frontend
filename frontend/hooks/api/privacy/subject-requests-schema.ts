@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** `filedSubjectRequestSchema` — the record, never the exported rows. */
 const filedSubjectRequestContract = z.object({
   subjectRequestId: z.string(),
   kind: z.string(),
@@ -33,10 +32,6 @@ const tableOutcome = z.object({
   truncated: z.boolean().optional(),
 });
 
-/**
- * `executeSubjectRequestResponseSchema`. `data` is the export payload: undeclared upstream
- * because its shape is whatever the plan matched, so it is read here as opaque JSON.
- */
 export const executeSubjectRequestContract = z.object({
   subjectRequestId: z.string(),
   data: z.unknown().optional(),

@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** Mirrors `recordConsentSchema`: SMS and WhatsApp only, destination 3..320. */
 export const consentSchema = z.object({
   channel: z.enum(["SMS", "WHATSAPP"]),
   destination: z.string().trim().min(3, "Enter the number").max(320, "Keep it under 320 characters"),

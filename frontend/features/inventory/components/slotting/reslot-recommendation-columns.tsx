@@ -17,14 +17,6 @@ interface ReslotColumnsOptions {
   onDismiss: (recommendationId: number) => void;
 }
 
-/**
- * The re-slot queue.
- *
- * Every one of its first three columns printed a raw id — `#40`, `#7`,
- * `Zone #12` — which is the §5 violation the rules table had, on a surface where
- * it mattered more: this is the table where somebody decides whether it is worth
- * a walk, and "move #40 from #7" is not a decision anybody can make.
- */
 export function buildReslotRecommendationColumns({
   canMove,
   canDismiss,

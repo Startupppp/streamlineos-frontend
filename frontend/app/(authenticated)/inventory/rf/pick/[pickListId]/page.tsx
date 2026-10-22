@@ -18,16 +18,6 @@ import { randomId } from "@/lib/random-id";
 const PICK_READ = "inventory:sales-orders:read";
 const PICK_WRITE = "inventory:sales-orders:ship";
 
-/**
- * NEO-5 - walking a wave on a handheld.
- *
- * One open line at a time, taken in the order the wave already put them in. The
- * scan is captured **before** the confirm and under its own key, which is the
- * contract `useCaptureScan` documents: the capture is the fact that a person
- * stood in front of a shelf and read a label, and it has to survive even when
- * the command after it fails. Reversing the two would lose the evidence for
- * exactly the confirmations worth investigating.
- */
 function RfPickContent() {
   const params = useParams<{ pickListId: string }>();
   const router = useRouter();
@@ -56,9 +46,6 @@ function RfPickContent() {
       if (!line) return;
       try {
         if (scannedPayload) {
-          // Its own key, minted here at the moment of the scan. A retry of this
-          // confirmation must replay the same capture rather than record a
-          // second physical read.
           await capture.mutateAsync({
             payload: scannedPayload,
             idempotencyKey: randomId(),
@@ -70,8 +57,6 @@ function RfPickContent() {
           quantityPicked: quantity,
           ...(scannedPayload ? { scannedPayload } : {}),
         });
-        // Advanced locally as well as by refetch: the wave refetches at 15s and a
-        // picker must not be shown the line they just closed while it catches up.
         setDoneLineIds((ids) => [...ids, line.id]);
         toast.success(`${line.sku} confirmed`);
       } catch (error) {
@@ -144,7 +129,6 @@ function RfPickContent() {
       backHref="/inventory/rf"
     >
       <RfStep
-        // A new line is a new component: see the note in `rf-step.tsx`.
         key={line.id}
         sku={line.sku}
         productName={line.variant_name}

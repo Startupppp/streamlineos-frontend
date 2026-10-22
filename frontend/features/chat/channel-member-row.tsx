@@ -33,7 +33,6 @@ export function ChannelMemberRow({
 }) {
   const isYou = member.user?.id === currentUserId;
   const canRemove = isMultiMemberChannel && ((isAdmin && !isYou) || isYou);
-  // Self-demotion is left out: it can strand a channel with no admin.
   const canChangeRole = Boolean(isAdmin) && isMultiMemberChannel && !isYou && Boolean(member.user?.id);
   const nextRole: ChannelMember["role"] = member.role === "ADMIN" ? "MEMBER" : "ADMIN";
   const handleChangeRole = () => onChangeRole(member.user?.id ?? "", nextRole, member.user?.name);

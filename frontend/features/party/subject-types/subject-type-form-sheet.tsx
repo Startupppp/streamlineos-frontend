@@ -46,7 +46,6 @@ import {
 export interface SubjectTypeFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Absent when declaring a new type. */
   type?: SubjectType;
 }
 
@@ -74,7 +73,6 @@ function toFormValues(type: SubjectType): SubjectTypeForm {
   };
 }
 
-/** Drops the properties a kind does not carry, so the payload matches the API. */
 function toDeclaration(field: SubjectTypeForm["fields"][number]): SubjectFieldDefinition {
   return {
     name: field.name,
@@ -85,13 +83,6 @@ function toDeclaration(field: SubjectTypeForm["fields"][number]): SubjectFieldDe
   };
 }
 
-/**
- * Declaring what the business transacts.
- *
- * This is the screen that makes "without an engineer" true. Its output is a
- * schema, so it is the one form whose validation has to restate the backend's
- * own rules rather than trusting a submit to explain them.
- */
 export function SubjectTypeFormSheet({ open, onOpenChange, type }: SubjectTypeFormSheetProps) {
   const createType = useCreateSubjectType();
   const updateType = useUpdateSubjectType();

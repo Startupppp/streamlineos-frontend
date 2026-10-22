@@ -29,11 +29,6 @@ export function OrgHubClient() {
   const activeTab =
     VALID_TABS.find((candidate) => candidate === requestedTab) ?? DEFAULT_TAB;
 
-  /**
-   * Ticket 05. Position Control keeps its tab in the URL, so back, forward and
-   * a shared link all land on the tab that was open (FE-86). This used to seed
-   * `useState` from the query string once and then diverge from it.
-   */
   const handleTabChange = useCallback(
     (tab: string) => {
       const params = new URLSearchParams(searchParams.toString());

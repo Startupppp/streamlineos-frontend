@@ -23,12 +23,6 @@ const legalNav = [
   { href: "/legal/security", label: "Security" },
 ];
 
-/**
- * Long-form legal page in the Relay look: display title, a glass "On this
- * page" card (sticky beside the text from 901px, above it below that) and a
- * readable prose column. Typography and the token remaps that restyle the
- * pages' own markup live in relay/styles/pages/legal.css.
- */
 export function LegalShell({ eyebrow, title, intro, effectiveDate, sections, children }: Props) {
   return (
     <PublicShell>

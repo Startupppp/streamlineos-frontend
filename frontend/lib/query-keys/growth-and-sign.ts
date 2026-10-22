@@ -52,7 +52,6 @@ export const growthAndSignQueryKeys = {
       params === undefined
         ? ([...base, "crmCampaigns", "leads", campaignId] as const)
         : ([...base, "crmCampaigns", "leads", campaignId, params] as const),
-    /** Half-life is part of the answer for time_decay, so it is part of the key. */
     attributionByModel: (model: string, halfLifeDays: number) =>
       [...base, "crmCampaigns", "attributionByModel", model, halfLifeDays] as const,
     attribution: (model: string) =>
@@ -89,7 +88,6 @@ export const growthAndSignQueryKeys = {
       params === undefined
         ? ([...base, "crmCommission", "earnings"] as const)
         : ([...base, "crmCommission", "earnings", params] as const),
-    /** The period accrual and its decomposition are one cache entry per period. */
     accrual: (params?: Record<string, unknown>) =>
       params === undefined
         ? ([...base, "crmCommission", "accrual"] as const)
@@ -102,22 +100,10 @@ export const growthAndSignQueryKeys = {
 
   crmCallIntelligence: {
     all: [...base, "crmCallIntelligence"] as const,
-    /** Keyed by activity: one analysis belongs to one call, never to a list. */
     analysis: (activityId: string) =>
       [...base, "crmCallIntelligence", "analysis", activityId] as const,
     coaching: (sinceDays: number) =>
       [...base, "crmCallIntelligence", "coaching", sinceDays] as const,
-    /**
-     * Per-rep metrics and the best-call search, keyed by every parameter that
-     * changes the answer.
-     *
-     * The window is in the key and so is the page, because these are aggregates
-     * over a period: a 7-day summary cached under a 30-day key would show a
-     * manager last week's numbers under this month's heading. The scope is NOT
-     * in the key and does not need to be — `scopedQueryKeyHashFn` already hashes
-     * every key under `authenticated:<orgId>:<userId>`, so one person's own-scope
-     * rows can never be served to another person's team-scope read.
-     */
     reps: (params: Record<string, unknown>) =>
       [...base, "crmCallIntelligence", "reps", params] as const,
     exemplars: (params: Record<string, unknown>) =>

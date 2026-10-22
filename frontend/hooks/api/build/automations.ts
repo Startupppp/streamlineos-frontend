@@ -4,7 +4,7 @@ import { buildWorkQueryKeys as queryKeys } from "@/lib/query-keys/build-work";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
-import type { ProjectAutomation, AutomationActionType } from "@/types/projects";
+import type { ProjectAutomation } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   ProjectsAutomationsDryRunResponse,
@@ -15,6 +15,10 @@ import type {
   DryRunTicketInput,
   AutomationRunRow,
 } from "@/hooks/api/build/automation-analysis-schema";
+import {
+  automationsListQueryOptions,
+  type AutomationsFilters,
+} from "./automations-read-options";
 
 const projectAutomationListContract = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then(
@@ -50,22 +54,6 @@ export const ACTION_TYPES = [
   { value: "add_comment", label: "Add Comment" },
   { value: "request_approval", label: "Request Approval" },
 ] as const;
-
-export interface AutomationsFilters {
-  action?: AutomationActionType;
-  ownerId?: string;
-  search?: string;
-}
-
-export function automationsListQueryOptions(projectId: number, filters?: AutomationsFilters) {
-  return {
-    queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
-      last.pagination.nextCursor ?? undefined,
-    staleTime: 60_000,
-  };
-}
 
 export function useAutomations(
   projectId: number,

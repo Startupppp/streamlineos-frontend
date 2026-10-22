@@ -42,11 +42,6 @@ type StockLevelFilters = {
   limit?: number;
 };
 
-/**
- * Which quantity a movement moved. A quarantine or block movement leaves on-hand
- * untouched and moves goods between buckets, so its balance pair describes the
- * bucket named here rather than on-hand.
- */
 export type QuantityBucket = "ON_HAND" | "BLOCKED" | "QUALITY_HOLD";
 
 export type StockTransactionDirection = "in" | "out";
@@ -62,11 +57,6 @@ export type StockTransactionFilters = {
   toDate?: string;
   page?: number;
   limit?: number;
-  /**
-   * G1. Keyset position. Sent, it supersedes `page`: the ledger is append-only
-   * and a reader scrolling it while the engine posts loses or repeats a row at
-   * every offset boundary. Drive it with `useCursorPagination`.
-   */
   cursor?: string;
 };
 
@@ -110,7 +100,6 @@ export interface StockTransaction {
   quantityChange: number;
   quantityBefore: number;
   quantityAfter: number;
-  /** Which quantity moved. The balance pair describes this bucket, not on-hand. */
   quantityBucket: QuantityBucket;
   createdAt: string;
   notes: string | null;
@@ -123,7 +112,6 @@ export interface StockTransaction {
 
 interface StockTransactionsResult {
   items: StockTransaction[];
-  /** Null on a cursor page: the server was not asked to count. */
   total: number | null;
   page: number;
   totalPages: number | null;
@@ -131,18 +119,6 @@ interface StockTransactionsResult {
   nextCursor: string | null;
 }
 
-/**
- * The wire shape of `GET /inventory/stock`, exactly as the API sends it.
- *
- * Exported so the backend's response-shape drift gate
- * (`src/modules/inventory/__tests__/inventory-response-shape-drift.spec.ts`) can
- * read it. It compares this interface's own members against the service's
- * `select()` projection: `apiClient.get<T>()` is an assertion about a payload,
- * not a fact `tsc` can check, and this endpoint spent its whole life returning
- * the driver's snake_case column names to a hook that reads camelCase --
- * `NaN` in every quantity column and a dash for every name -- with both repos
- * compiling green throughout.
- */
 export interface RawStockLevel {
   id: number;
   onHand: string;

@@ -25,11 +25,6 @@ interface ProjectHoursTabProps {
   enabled: boolean;
 }
 
-/**
- * Hours logged against one Build project. The backend answers only at
- * organisation-wide reports scope (a team-scoped reader gets a 404, which
- * PageState renders as not-found), and the project list needs `build:view`.
- */
 export function ProjectHoursTab({ params, projectId, onProjectChange, enabled }: ProjectHoursTabProps) {
   const canListProjects = useCan("build:view");
   const { data: projectsData } = useProjects(undefined, { enabled });

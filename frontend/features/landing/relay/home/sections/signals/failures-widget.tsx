@@ -12,10 +12,6 @@ import {
   widgetDelay,
 } from "./widget";
 
-/**
- * Widget / failures and recoveries — 413 × 244, crossing curves (3888:6625)
- * / 302 × 268 (3888:11030) / 338 × 248 (3865:95). Not in the 390 frame.
- */
 export const FailuresWidget = ({
   title,
   chartLabel,

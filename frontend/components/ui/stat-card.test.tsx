@@ -92,8 +92,6 @@ describe("StatCardGrid", () => {
 });
 
 describe("StatCard tones", () => {
-  // The surface lands on the icon well and the ink on the icon inside it, so
-  // the whole subtree is the unit under test.
   function toneClasses(node: HTMLElement): string {
     return node.innerHTML;
   }

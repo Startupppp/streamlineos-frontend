@@ -306,7 +306,6 @@ export function usePublishProductRoadmap(managedProductId: number) {
       "roadmap-publication",
       "publish",
     ],
-    // expiresAt: ISO datetime, at most 365 days out; omitted = no expiry.
     mutationFn: (input?: { expiresAt?: string }) =>
       apiClient.post<ProductRoadmapPublicationIssued>(
         `/build/managed-products/${String(managedProductId)}/roadmap-publication`,

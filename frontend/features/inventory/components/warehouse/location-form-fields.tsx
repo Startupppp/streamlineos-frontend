@@ -28,19 +28,9 @@ import type { LocationFormValues } from "./location-form-schema";
 interface LocationFormFieldsProps {
   parentOptions: WarehouseLocation[];
   onLocationTypeChange: (value: string) => void;
-  /**
-   * `updateLocationSchema` takes `parentLocationId` as a positive integer with
-   * no null, so a parent can be changed but never removed. Offering None to a
-   * location that has one would be a control that silently does nothing.
-   */
   allowNoParent: boolean;
 }
 
-/**
- * Reads the form off `FormProvider` rather than taking it as a prop: the edit
- * sheet's values carry one field more than the add sheet's, and a prop typed to
- * either one would have forced a cast at the other call site.
- */
 export function LocationFormFields({
   parentOptions,
   onLocationTypeChange,

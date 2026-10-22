@@ -5,13 +5,6 @@ import type { FooterContent } from "@/features/landing/relay/data/footer";
 import { LogoMark } from "./logo-mark";
 import { CUE, CueRise } from "./stage";
 
-/**
- * 1440 row 3888:7101 (x80 y533): columns at x 630, 803, 973, 1132, y 533.
- * 1024 row 3888:11516 (x48 y443): a 151 pitch from x 396, 7 below the company
- * block (y 450). 768 row 3876:144 (x40 y709): company block full width, then
- * four 160 columns (pitch 176) from x 40 at y 855. 390 row 3893:4427 (x20
- * y786): company block, then four 77 columns (pitch 91) from x 20 at y 976.
- */
 const LEFT = [
   "left-157.5 w1024:left-99 w768:left-10 w390:left-5",
   "left-200.75 w1024:left-136.75 w768:left-54 w390:left-27.75",
@@ -19,11 +12,6 @@ const LEFT = [
   "left-283 w1024:left-212.25 w768:left-142 w390:left-73.25",
 ] as const;
 
-/**
- * Company block and link columns — the bottom of the footer timeline. Each
- * block rises once as a whole, columns a beat apart; nothing inside types.
- * Links turn accent on hover / keyboard focus (colour transition, like the nav).
- */
 export const LinkArea = ({
   company,
   columns,

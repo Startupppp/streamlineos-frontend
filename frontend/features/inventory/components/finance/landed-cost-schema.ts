@@ -1,16 +1,6 @@
 import { z } from "zod";
 import { LANDED_COST_CHARGE_TYPES } from "@/hooks/api/inventory/landed-cost";
 
-/**
- * Mirrors `createLandedCostVoucherSchema`.
- *
- * Amounts are typed as decimal text and converted to integer minor units at the
- * boundary, because the backend takes only integers here and says why: this
- * number becomes both a debit and a credit in the general ledger, so a binary
- * fraction in it is an unbalanced journal entry rather than a rounding
- * curiosity. Keeping the field text lets somebody type "1250.75" and get
- * 125075 exactly, instead of a float that is nearly that.
- */
 export const landedCostChargeSchema = z.object({
   chargeType: z.enum(LANDED_COST_CHARGE_TYPES),
   description: z.string().trim().min(1, "Say what this charge is").max(300),
@@ -22,15 +12,9 @@ export const landedCostChargeSchema = z.object({
   reference: z.string().trim().max(120).optional(),
 });
 
-/** One charge on its own, for adding to a voucher already raised. */
 export type LandedCostChargeFormValues = z.input<typeof landedCostChargeSchema>;
 export type LandedCostChargeFormOutput = z.output<typeof landedCostChargeSchema>;
 
-/**
- * Lives here rather than in either sheet: both the create form and the
- * add-charge dialog label the same five enum members, and a second copy is how
- * "Handling" becomes "handling" on one screen and not the other.
- */
 export const CHARGE_TYPE_LABEL: Record<(typeof LANDED_COST_CHARGE_TYPES)[number], string> = {
   FREIGHT: "Freight",
   DUTY: "Duty",
@@ -50,13 +34,11 @@ export const createLandedCostVoucherFormSchema = z.object({
 export type CreateLandedCostVoucherFormValues = z.input<typeof createLandedCostVoucherFormSchema>;
 export type CreateLandedCostVoucherFormOutput = z.output<typeof createLandedCostVoucherFormSchema>;
 
-/** Decimal text to integer minor units, without ever building a float. */
 export function toMinorUnits(amount: string): number {
   const [whole = "0", fraction = ""] = amount.split(".");
   return Number(whole) * 100 + Number(fraction.padEnd(2, "0").slice(0, 2));
 }
 
-/** Integer minor units back to decimal text, for display. */
 export function fromMinorUnits(cents: string): string {
   const negative = cents.startsWith("-");
   const digits = (negative ? cents.slice(1) : cents).padStart(3, "0");

@@ -3,13 +3,6 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * A saved report whose conditions the builder cannot draw.
- *
- * It is still runnable, and saying so matters more than hiding it: the report
- * exists, somebody depends on it, and refusing to show the controls is not the
- * same as refusing to show the numbers.
- */
 export function UnshowableReport({
   reason,
   isRunning,

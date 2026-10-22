@@ -1,9 +1,5 @@
 import type { SignBulkSendRow } from "@/types/sign";
 
-/**
- * `columnMappingJson` maps a logical field onto the CSV header the operator
- * chose, so the raw row is only readable through it.
- */
 export function rowIdentity(
   row: SignBulkSendRow,
   mapping: Record<string, string>,

@@ -2,19 +2,12 @@ import { z } from "zod";
 
 import { chatMessageContract } from "./message-schema";
 
-/** `chatThreadPageSchema` — parent message + replies keyset page. */
 export const chatThreadPageContract = z.object({
   parentMessage: chatMessageContract,
   replies: z.array(chatMessageContract),
   nextCursor: z.number().nullable(),
 });
 
-/**
- * `chatPinItemSchema` (`ChatPinsService.listPins`). `pinnedBy` is the pinner's user id and the
- * person is `pinnedByUser`; the joined message is loaded without `replyTo`, and its `sender` is
- * null once the sender's membership is gone. Modelled on the timeline message, both rejected
- * every pin list (CHAT-012).
- */
 export const chatPinItemContract = z.object({
   id: z.number().int(),
   channelId: z.number().int(),
@@ -33,13 +26,6 @@ export const chatPinItemContract = z.object({
 
 export const chatPinsContract = z.array(chatPinItemContract);
 
-/**
- * `chatSavedListResponseSchema`. The saved row carries `membershipId`, never a
- * `userId`, and the joined message carries the `channel` the panel jumps to — a
- * `z.object` strips what it does not list, so both are named here. Like the pin
- * list, the joined message is loaded without `replyTo` and its `sender` is null
- * once the sender's membership is gone; requiring either rejected every page.
- */
 export const chatSavedMessagesContract = z.object({
   items: z.array(
     z.object({

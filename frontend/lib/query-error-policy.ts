@@ -13,7 +13,6 @@ export function readErrorReachesBoundary(
   return true;
 }
 
-/** For a read whose page draws its own "not found": a 404 stays inline for the page to show, and every other failure follows the default. */
 export function readErrorExceptNotFoundReachesBoundary(
   error: unknown,
   query: { readonly state: { readonly data: unknown } },

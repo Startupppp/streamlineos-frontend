@@ -1,11 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 
-/**
- * PAY-002: on a 390px screen the third card sat off the right edge behind a
- * hidden scrollbar. The stacked row has to put the column count on a class the
- * `sm:` breakpoint can beat, not on an inline style that always wins.
- */
 describe("StatCardGrid stackOnMobile", () => {
   it("stacks to one column below sm and restores the template above it", () => {
     render(

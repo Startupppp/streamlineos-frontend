@@ -18,13 +18,6 @@ export function formatMonth(yyyyMm: string): string {
   return date.toLocaleDateString("en-IN", { month: "long", year: "numeric" });
 }
 
-/**
- * How a salary component is calculated, from the definition fields the POLICY preview emits.
- *
- * That route has no `annualCtc` — its request schema is `.strict()` and carries none — so it
- * cannot answer a monthly amount and never has. Rendering `monthlyAmount` there printed an em
- * dash on every line; this prints the basis the route does supply.
- */
 export function describeComponentBasis(
   component: Pick<PolicyPreviewComponent, "calcMethod" | "amount" | "percent" | "formula">,
   currency = "INR",

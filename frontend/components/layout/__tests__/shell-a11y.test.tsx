@@ -132,7 +132,6 @@ import { ShellOfflineBanner } from "@/components/layout/shell-offline-banner";
 import { RouteErrorBoundary } from "@/components/ui/route-error-boundary";
 import { GlobalHeader } from "@/components/layout/header/global-header";
 
-// ─── ShellOfflineBanner ───────────────────────────────────────────────────────
 
 describe("a11y — ShellOfflineBanner (offline state)", () => {
   it("renders a live status region so screen-readers announce connectivity loss", () => {
@@ -156,7 +155,6 @@ describe("a11y — ShellOfflineBanner (offline state)", () => {
   });
 });
 
-// ─── RouteErrorBoundary ───────────────────────────────────────────────────────
 
 describe("a11y — RouteErrorBoundary (error state)", () => {
   const err = new Error("Simulated route error");
@@ -196,7 +194,6 @@ describe("a11y — RouteErrorBoundary (error state)", () => {
   });
 });
 
-// ─── GlobalHeader ─────────────────────────────────────────────────────────────
 
 describe("a11y — GlobalHeader", () => {
   beforeEach(() => {
@@ -313,15 +310,3 @@ describe("a11y — GlobalHeader", () => {
   });
 });
 
-/*
- * AppSidebar is not tested here. It requires mocking useSession (next-auth/react),
- * useAccess, useCan, useEnabledModules, usePendingApprovals, useChatUnreadTotal,
- * useUnreadNotificationCount, ScrollArea, TooltipProvider, and SidebarSection.
- * With all hooks returning empty / unauthenticated data the nav renders no items,
- * making any axe pass vacuous. Meaningful coverage needs integration infrastructure
- * or seeded navGroups; deferred to a future integration suite.
- *
- * Colour contrast is NOT tested here. axe in jsdom cannot evaluate computed styles,
- * so contrast ratios remain unverified. Use a real-browser tool (Lighthouse, axe
- * DevTools, or Playwright-axe) against a running instance instead.
- */

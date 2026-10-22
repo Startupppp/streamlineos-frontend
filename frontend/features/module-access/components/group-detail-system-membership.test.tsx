@@ -1,22 +1,3 @@
-/**
- * HRMS-E2E-010. HR Access > Roles offered three groups — Hr Module Admin,
- * Hr Module Member, Hr Module Owner — each reading "0 members", and opening
- * Members showed "No members are assigned to this group yet." with no way to add
- * one. That is the viewer copy, shown to an org owner: assignment was impossible
- * from the only screen that offers it, so nobody could ever be given
- * `hr:leaves:approve`, which is what leaves 011, 012 and 013 stuck behind it.
- *
- * The cause was one expression — `canManage && !group.isSystem` — handed to the
- * member sheet. All three HR groups are system groups, so all three were
- * read-only for everybody.
- *
- * A system group's **permission set** is read-only, and should stay that way:
- * what "Hr Module Admin" grants is the product's decision, and the reconciler
- * rewrites it at boot anyway. Its **membership** is the opposite — deciding who
- * is an HR admin is exactly the thing an org owner is for. Conflating the two is
- * the defect, so these assertions hold them apart, and the backend agrees:
- * `addGroupMember` has no `isSystem` guard at all.
- */
 import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -53,8 +34,6 @@ jest.mock("@/hooks/api/module-access", () => ({
   useRemoveModuleGroupMember: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-// The real ModulePermission shape (hooks/api/module-access/types.ts:9), not an
-// invented one — a fixture that does not match the callee tests nothing.
 const CATALOG = [
   { name: "hr:leaves:approve", resource: "leaves", action: "approve", description: "Approve leave" },
   { name: "hr:employees:view", resource: "employees", action: "view", description: "View employees" },
@@ -76,8 +55,7 @@ function renderPanel(group: Record<string, unknown>, canManage = true) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(
     <QueryClientProvider client={client}>
-      {/* The panel's props are typed against the module-access contracts; the
-          fixtures above are those shapes. */}
+      
       <GroupDetailPanel
         group={group as never}
         catalog={CATALOG as never}
@@ -101,8 +79,6 @@ describe("a system role group's membership is still assignable", () => {
   });
 
   it("lets an org admin manage who is in a custom group too", async () => {
-    // The paired positive from the other direction: custom groups were never
-    // broken, so this is what the system case must match.
     renderPanel(makeGroup({ isSystem: false, name: "Hiring managers" }));
     await userEvent.click(screen.getByRole("button", { name: /Members/ }));
 
@@ -117,8 +93,6 @@ describe("a system role group's membership is still assignable", () => {
   });
 
   it("keeps a system group's permission set read-only", () => {
-    // The distinction this whole change rests on. Membership opens up; what the
-    // group grants does not, because the reconciler owns that at boot.
     renderPanel(makeGroup());
 
     expect(screen.getByTestId("permission-picker")).toHaveAttribute("data-read-only", "true");

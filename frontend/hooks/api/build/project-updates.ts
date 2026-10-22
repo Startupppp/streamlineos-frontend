@@ -7,6 +7,10 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  projectUpdatesListQueryOptions,
+  type ProjectUpdatesFilters,
+} from "./project-updates-read-options";
 
 const updatePageContract = lazyContract(() =>
   import("@/hooks/api/build/project-updates-schema").then(
@@ -51,14 +55,6 @@ interface CreateProjectUpdateInput {
   risks?: string | null;
   next?: string | null;
   citations?: string | null;
-}
-
-interface ProjectUpdatesFilters {
-  authorId?: string;
-  from?: string;
-  to?: string;
-  status?: "draft" | "published";
-  audience?: "internal" | "client";
 }
 
 export function useProjectUpdates(
@@ -117,19 +113,6 @@ export function useCreateProjectUpdate(projectId: number) {
       });
     },
   });
-}
-
-export function projectUpdatesListQueryOptions(projectId: number, filters?: ProjectUpdatesFilters) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.updates.list(
-      projectId,
-      filters && Object.keys(filters).length > 0 ? filters : undefined,
-    ),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
-      last.pagination.nextCursor ?? undefined,
-    staleTime: 30_000,
-  };
 }
 
 export function useDeleteProjectUpdate(projectId: number) {

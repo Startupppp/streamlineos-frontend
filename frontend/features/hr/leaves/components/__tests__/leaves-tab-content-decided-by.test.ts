@@ -1,9 +1,5 @@
 import { decidedByLabel } from "@/features/hr/leaves/components/leaves-tab-content";
 
-/**
- * V-046. The status cell printed only the capitalised status, although `my()`
- * already hydrates the approver relation.
- */
 describe("decidedByLabel", () => {
   it("a rejected row names the approver", () => {
     expect(decidedByLabel("REJECTED", { name: "Ada Lovelace" })).toBe(

@@ -22,7 +22,6 @@ function baseResult<TData>() {
   };
 }
 
-/** A settled query a component can read from — every flag consistent with `status: "success"`. */
 export function successQueryResult<TData>(
   data: TData,
 ): UseQueryResult<TData, Error> {
@@ -45,7 +44,6 @@ export function successQueryResult<TData>(
   };
 }
 
-/** The first load, before any data exists — the state that must not render a denial. */
 export function pendingQueryResult<TData>(): UseQueryResult<TData, Error> {
   return {
     ...baseResult<TData>(),
@@ -86,7 +84,6 @@ export function idleQueryResult<TData>(): UseQueryResult<TData, Error> {
   };
 }
 
-/** A read that failed, so a spec can assert the error branch rather than an empty one. */
 export function errorQueryResult<TData>(
   error: Error,
 ): UseQueryResult<TData, Error> {
@@ -121,7 +118,6 @@ const infinitePaging = {
   isFetchPreviousPageError: false as const,
 };
 
-/** A settled infinite query holding `pages`, with the page params a real cursor walk produces. */
 export function successInfiniteQueryResult<TPage>(
   pages: TPage[],
   pageParams: unknown[] = pages.map((_, index) =>
@@ -150,7 +146,6 @@ export function successInfiniteQueryResult<TPage>(
   };
 }
 
-/** The infinite counterpart of `idleQueryResult` — gated off, never run, no pages. */
 export function idleInfiniteQueryResult<
   TPage,
   TPageParam = unknown,

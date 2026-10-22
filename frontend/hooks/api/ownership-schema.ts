@@ -1,13 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Contracts for `OwnershipController` handlers.
- *
- * Derived from `ownership-response.schemas.ts` in the backend.
- * NOT `.strict()`. Timestamps are ISO strings.
- */
-
 export const initiateTransferContract = z.object({
   transferId: z.string(),
   expiresAt: z.string(),

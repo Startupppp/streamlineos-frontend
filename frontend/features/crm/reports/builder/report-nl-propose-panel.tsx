@@ -11,21 +11,9 @@ import { useReportNlPropose } from "@/hooks/api/crm/reporting";
 import type { ReportNlProposal, ReportingQueryDescription } from "@/types/crm/reporting";
 
 interface ReportNlProposePanelProps {
-  /** Fires only for an accepted proposal — the panel never hands back a refusal to act on. */
   onAccept: (description: ReportingQueryDescription) => void;
 }
 
-/**
- * Phase 5 ticket 15's front end. Ask a question, see what the model proposes,
- * decide whether to use it — the panel itself never runs anything.
- *
- * Accepting hands the description to the SAME builder form a hand-built
- * report fills in (`report-builder-page.tsx` re-keys `ReportBuilderPanel` on
- * it), rather than this panel owning a second way to run a query. That is
- * what makes "shown before it runs" and "never executed unaccepted" true by
- * construction: the only run button on this screen is the builder's own,
- * already gated by `crm:reporting:run`, and this panel cannot reach it.
- */
 export function ReportNlProposePanel({ onAccept }: ReportNlProposePanelProps) {
   const [question, setQuestion] = useState("");
   const [proposal, setProposal] = useState<ReportNlProposal | null>(null);

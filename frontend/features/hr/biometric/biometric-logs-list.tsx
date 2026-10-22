@@ -67,8 +67,6 @@ export function BiometricLogsList() {
     void refetch();
   }, [refetch]);
 
-  // Gated on hr:attendance:view; the route has no guard, so a denied caller
-  // read "No punch logs" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {

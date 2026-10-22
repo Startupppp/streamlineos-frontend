@@ -1,14 +1,5 @@
 import { z } from "zod";
 
-/**
- * A transcript and the facts that make holding it lawful.
- *
- * `consentAt` is an instant rather than a flag, matching the column: a
- * recording belongs to the candidate as well as the panel, and "did they agree"
- * needs the moment it was recorded. `providerBlockedReason` says why an
- * automatic transcription is unavailable, so the manual path reads as the
- * current alternative rather than the only thing ever intended.
- */
 export const interviewTranscriptContract = z.object({
   interviewId: z.number().int(),
   transcript: z.string().nullable(),

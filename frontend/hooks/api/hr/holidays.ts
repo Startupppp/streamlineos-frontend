@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { holidaysQueryOptions } from "@/hooks/api/hr/holidays-read-options";
 import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const noContentC = lazyContract(() =>
@@ -29,13 +30,6 @@ interface CreateHolidayInput {
 interface UpdateHolidayInput extends Partial<CreateHolidayInput> {
   holidayId: string;
   expected?: Pick<Holiday, "name" | "date" | "recurring">;
-}
-
-export function holidaysQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.holidays(),
-    staleTime: 300_000,
-  } as const;
 }
 
 export function useHolidays() {

@@ -1,4 +1,3 @@
-/** @jest-environment node */
 
 jest.mock("server-only", () => ({}));
 
@@ -49,12 +48,6 @@ describe("public application-status first HTML", () => {
     expect(html).toContain("Jane");
   });
 
-  /**
-   * This candidate is SHORTLISTED internally. The page used to say so — the
-   * previous version of this test asserted it — and that is precisely what the
-   * portal must not disclose: telling a candidate they were shortlisted means
-   * the silence of a candidate who was not is information too.
-   */
   it("never shows the internal pipeline vocabulary", async () => {
     mockedGet.mockResolvedValueOnce(SHORTLISTED_CANDIDATE);
 
@@ -76,14 +69,6 @@ describe("public application-status first HTML", () => {
     }
   });
 
-  /**
-   * The contract carries no email or surname, so the page cannot render one —
-   * this pins that the page does not reintroduce them from somewhere else.
-   *
-   * Matched as an address shape rather than a bare "@": Tailwind emits `@`
-   * inside container-query and arbitrary-variant class names, so the obvious
-   * assertion fails on the stylesheet rather than on a leak.
-   */
   it("shows no contact details for the candidate", async () => {
     mockedGet.mockResolvedValueOnce({ ...SHORTLISTED_CANDIDATE });
 

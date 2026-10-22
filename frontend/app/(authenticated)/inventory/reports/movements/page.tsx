@@ -177,9 +177,6 @@ export default function MovementsReportPage() {
   const [movementType, setMovementType] = useState<string>("ALL");
   const [dateFrom, setDateFrom] = useState<string>("");
   const [dateTo, setDateTo] = useState<string>("");
-  // G1. The ledger is written to while this report is read, so it walks a
-  // `(created_at, id)` keyset rather than counting offsets. There is no page
-  // count because there is no count: the server is not asked for one.
   const {
     cursor,
     pageNumber,

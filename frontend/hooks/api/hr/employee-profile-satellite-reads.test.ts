@@ -1,18 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-/**
- * Ticket 02. `/hr/employees/[employeeId]` showed "Failed to load employee
- * details. Try again." while the employee's own record had loaded fine. The
- * page was being replaced by its route error boundary because one of the
- * satellite reads around it — availability, stats, projects, tickets, direct
- * reports, the manager scorecard, the timeline — failed, and a read error
- * reaches the boundary by default.
- *
- * Every one of those consumers already draws the absence or its own inline
- * failure with a retry, so none of them may take the profile down. This pins
- * that: the failure belongs to the card, not to the route.
- */
 const SATELLITE_READS: readonly [file: string, hook: string][] = [
   ["employee-insights.ts", "useHrEmployeeStats"],
   ["employee-insights.ts", "useHrEmployeeProjects"],
@@ -52,8 +40,6 @@ it("still lets the employee's own record fail the route, because that is the rea
     "utf8",
   );
 
-  // The record read is awaited in the route and its failure draws the
-  // recoverable error, rather than being swallowed into an empty profile.
   expect(route).toContain("EmployeeDetailLoadError");
   expect(route).toContain("return notFound()");
 });

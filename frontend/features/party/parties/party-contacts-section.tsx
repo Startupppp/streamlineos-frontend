@@ -22,7 +22,6 @@ interface PartyContactsSectionProps {
   partyId: string;
 }
 
-/** Form strings to the API's shape: blanks clear, the flag becomes a boolean. */
 function toInput(values: RecordFormValues): PartyContactInput {
   const text = (name: string) => (values[name] ?? "").trim() || null;
   return {
@@ -60,7 +59,6 @@ const ContactRowActions = memo(function ContactRowActions({ contact, onEdit, onD
   );
 });
 
-/** The people at a party (`/party/parties/:id/contacts`), listed and edited in place. */
 export function PartyContactsSection({ partyId }: PartyContactsSectionProps) {
   const canManage = useCan("party:contacts:manage");
   const contacts = usePartyContacts(partyId);

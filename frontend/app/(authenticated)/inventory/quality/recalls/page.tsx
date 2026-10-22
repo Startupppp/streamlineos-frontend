@@ -111,13 +111,6 @@ function RecallsPageInner() {
       className: "text-right tabular-nums text-muted-foreground",
       cell: (r) => r.lines.length,
     },
-    /**
-     * INV-33. Whether the quarantine actually held anything.
-     *
-     * A recall commits even when it held nothing, and the Status column says
-     * OPEN in both cases — so without this the list reports a recall that
-     * blocked no stock exactly like one that blocked all of it.
-     */
     {
       key: "quarantine",
       header: "Quarantine",

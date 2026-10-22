@@ -59,10 +59,6 @@ const acceptMutation = {
   isPending: false,
 };
 
-/**
- * Added to the page when the invitation email OTP landed and never stubbed here,
- * so all four claims-fence tests threw on render (BUG-HRMS-010).
- */
 const requestOtpMutation = {
   mutate: jest.fn((_variables: unknown, callbacks?: { onSuccess?: () => void }) => {
     callbacks?.onSuccess?.();
@@ -100,7 +96,6 @@ beforeEach(() => {
 
 const EMAIL_OTP = "424242";
 
-/** The claims fence sits behind the code step now, so the code is entered first. */
 async function submitEmailCode(user: ReturnType<typeof userEvent.setup>) {
   await user.type(
     screen.getByRole("textbox", { name: /verification code/i }),

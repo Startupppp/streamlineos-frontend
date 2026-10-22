@@ -9,33 +9,16 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 
-/**
- * NEO-5 - one task, one screen.
- *
- * The whole of the RF idea is here: a picker is shown a single SKU, a single
- * place and a single number, scans, adjusts the number if it is not what the
- * shelf held, and confirms. There is no table, no horizontal scroll and nothing
- * to choose between - the choosing was done by whatever built the wave.
- *
- * The scan box holds focus and re-takes it after every confirm, because a
- * handheld scanner is a keyboard: if focus is anywhere else the barcode is typed
- * into nothing and the operator finds out two lines later.
- */
 export interface RfStepProps {
-  /** The SKU as the label reads it. */
   sku: string;
   productName: string;
-  /** Where to go, in the words on the rack. */
   locationCode: string | null;
   lotNumber?: string | null;
-  /** What the task asks for. Decimal string - never a float. */
   quantityAsked: string;
   quantityDone: string;
   unitLabel?: string;
-  /** Line n of m, for the only progress a picker needs. */
   position: { index: number; total: number };
   isPending: boolean;
-  /** Called with the quantity actually done and whatever the scanner read. */
   onConfirm: (input: { quantity: string; scannedPayload: string | null }) => void;
   onSkip?: () => void;
   skipLabel?: string;
@@ -57,12 +40,6 @@ export function RfStep({
   onSkip,
   skipLabel,
 }: RfStepProps) {
-  // Re-armed by remount, not by an effect: the caller gives this component a
-  // `key` per line, so a new line is a new component with a fresh default
-  // quantity, an empty scan box and `autoFocus` putting the caret back in it. An
-  // effect that reset three pieces of state would render the previous line's
-  // numbers for a frame first, which on a handheld is a frame long enough for a
-  // thumb to confirm the wrong quantity.
   const remaining = Math.max(0, Number(quantityAsked) - Number(quantityDone));
   const [quantity, setQuantity] = useState(() => String(remaining));
   const [scan, setScan] = useState("");
@@ -77,8 +54,6 @@ export function RfStep({
 
   const handleScanKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
-      // A handheld scanner ends its payload with Enter. Confirming straight off
-      // the scan is the whole one-handed loop.
       if (event.key === "Enter") {
         event.preventDefault();
         handleConfirm();

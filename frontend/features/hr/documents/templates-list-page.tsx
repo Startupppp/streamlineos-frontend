@@ -310,7 +310,6 @@ export function TemplatesListPage() {
   if (pageState.kind === "loading") return <TemplatesPageSkeleton />;
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {
-    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper
         title="Document Templates"

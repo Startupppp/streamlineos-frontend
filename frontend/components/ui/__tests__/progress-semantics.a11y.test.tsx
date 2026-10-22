@@ -2,22 +2,6 @@ import { render, screen } from "@testing-library/react";
 import { Progress } from "@/components/ui/progress";
 import { expectNoAxeViolations } from "@/test-utils";
 
-/**
- * The browser run found `aria-progressbar-name` on 53 nodes across four routes
- * and, reading the markup it captured, something the finding did not name:
- * every bar rendered `data-state="indeterminate"` with no `aria-valuenow`.
- * `value` was destructured out of the wrapper and used only for the visual
- * transform and `aria-valuetext`, so it never reached the Radix root. A screen
- * reader was told "busy" over a figure the page was showing as a percentage.
- *
- * `aria-valuetext` cannot paper over that: an indeterminate progressbar has no
- * value for the text to describe.
- *
- * The NAME stays the caller's. A default of "Progress" here would satisfy axe
- * and tell a screen-reader user nothing — the exact defect class this ticket's
- * own census says no automated check can catch, and adding one deliberately
- * would be worse than the violation it hides.
- */
 describe("Progress reports a value, not an indeterminate bar", () => {
   it("forwards value to the element the assistive technology reads", () => {
     render(<Progress value={42} aria-label="Sprint completion" />);
@@ -50,11 +34,6 @@ describe("Progress reports a value, not an indeterminate bar", () => {
 });
 
 describe("BITE — the assertions fail on the shape that shipped", () => {
-  /**
-   * The pre-fix component, reproduced: `value` withheld from the root. If the
-   * assertions above could pass over this, they would pass over the regression
-   * they exist to stop.
-   */
   it("an unforwarded value leaves the bar indeterminate with no valuenow", () => {
     render(
       <div

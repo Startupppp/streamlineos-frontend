@@ -23,11 +23,6 @@ import type { AiUsageMeta } from "./ai-usage-chip";
 
 export interface AiActionResult {
   text: string;
-  /**
-   * A caveat the reader must see beside the output — "this is an estimate, a
-   * human decides". Kept out of `text` so it renders as its own notice with the
-   * product's warning icon rather than as a glyph inside the draft (ticket 03).
-   */
   advisory?: string;
   citations?: Citation[];
   confidence?: number;
@@ -51,7 +46,6 @@ interface AiActionResultBodyProps {
   onCancel?: () => void;
   compact?: boolean;
   contentOnly?: boolean;
-  /** Declared by the action; gates the streaming citation placeholder. */
   expectsCitations?: boolean;
 }
 

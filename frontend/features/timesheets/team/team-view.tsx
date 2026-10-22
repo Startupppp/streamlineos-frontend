@@ -41,8 +41,6 @@ const PERIOD_STATUSES: PeriodStatus[] = [
 function getWeekBounds(offset: number, weekStartsOn: WeekStartDay) {
   const base = addWeeks(new Date(), offset);
   const weekStart = startOfWeek(base, { weekStartsOn });
-  // Not `endOfWeek`: that answers with the end of the *day*, and the manager's
-  // week has to be the same seven days the employee's period covers.
   const weekEnd = addDays(weekStart, 6);
   return {
     weekStart,
@@ -77,9 +75,6 @@ export function TeamView() {
     refetch: refetchSummary,
   } = useTeamWeekSummary([], startStr, endStr, canView);
 
-  // The billable share lives in the reports overview, behind its own key. Team
-  // used to call it with the team gate and then read `billableHours ?? 0`, so a
-  // manager without reports access saw a confident 0% billable.
   const canViewReports = useCan("timesheets:reports:view");
   const { data: overview, isLoading: overviewLoading } = useReportsOverview(
     { startDate: startStr, endDate: endStr },

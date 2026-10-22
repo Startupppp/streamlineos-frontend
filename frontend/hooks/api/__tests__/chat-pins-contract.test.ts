@@ -1,10 +1,5 @@
 import { chatPinsContract } from "@/hooks/api/chat-schema";
 
-/**
- * CHAT-012: `POST .../pins` answered 200, then the pins refetch was rejected — the contract
- * expected `pinnedBy` as a person object and a `message.replyTo` the list never loads. This is
- * the JSON `ChatPinsService.listPins` emits (`chatPinItemSchema`).
- */
 const WIRE_PIN = {
   id: 3,
   orgId: "org-1",

@@ -80,15 +80,6 @@ export function CountDetailShared({
   const isCounting = status === "COUNTING" && canCount;
   const isReview = status === "REVIEW";
 
-  /**
-   * B2 — counting by scanning, one unit at a time.
-   *
-   * The scan is captured before the counted quantity moves, and it is refused if
-   * the code names goods this count sheet does not list — which is the whole
-   * point of a cycle count: a SKU that should not be in this aisle is a finding,
-   * not a line to quietly add. The same SKU at two bins stops and asks, because
-   * which bin it came off is the only thing the count is measuring.
-   */
   const scan = useScanTarget<CycleCountLine>({
     candidates: lines,
     documentNoun: shortNoun.toLowerCase(),
@@ -122,9 +113,6 @@ export function CountDetailShared({
   }
 
   function buildActions(): React.ReactNode {
-    // G8. Every control here posts to an endpoint carrying the reconcile key, so
-    // a reader who holds only `stock:read` is shown the count and none of the
-    // buttons rather than a row of controls the server will refuse.
     if (!status || !canCount) return null;
     if (status === "PLANNED") {
       return (
@@ -160,16 +148,6 @@ export function CountDetailShared({
     [isCounting, isReview, onSaveLine, scannedTally],
   );
 
-  /*
-   * G8 — denied is not empty, and this branch sits after every hook.
-   *
-   * `useCycleCount` and `usePhysicalAudit` are gated on the read key inside the
-   * hook, so a reader without it gets no rows and no error: without this the
-   * page told them the count has no lines, which is a claim about the warehouse
-   * rather than about them. Placed below the hooks deliberately — returning
-   * early above `useMemo` would make hook order depend on a permission, and that
-   * only breaks for the person who lacks the key.
-   */
   if (!canView) {
     return (
       <PageWrapper title={entityNoun} backHref={backHref}>

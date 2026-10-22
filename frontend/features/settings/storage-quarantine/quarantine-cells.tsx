@@ -23,7 +23,6 @@ export interface RowActionsProps {
   onAction: (action: QuarantineAction, row: QuarantineRecord) => void;
 }
 
-/** Release is offered only while unscanned, reject never for a released file — the backend's 409 rules. */
 export function RowActions({ row, onAction }: RowActionsProps) {
   function handleRelease() {
     onAction("release", row);
@@ -50,7 +49,6 @@ export function RowActions({ row, onAction }: RowActionsProps) {
   );
 }
 
-/** Values the quarantine layout declares and the engine has no vocabulary to draw. */
 export function quarantineCells(uploaderName: (userId: string) => string) {
   return {
     filename: (row: QuarantineRecord) => (

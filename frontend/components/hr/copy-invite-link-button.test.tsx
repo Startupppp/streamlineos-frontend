@@ -1,12 +1,3 @@
-/**
- * HRMS-E2E-001b. An invitation had exactly one delivery route. When the email
- * did not arrive — and in the audited environment it never did — onboarding
- * stopped for the whole organisation, with the UI still saying it had been sent.
- *
- * These assertions pin the fallback: the administrator gets the link, the
- * clipboard is not the only place it can land, and a failure is told rather
- * than swallowed.
- */
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { toast } from "sonner";

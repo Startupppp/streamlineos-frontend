@@ -46,8 +46,7 @@ export function OnboardingTaskCard({
     <Card className={done ? "opacity-70" : undefined}>
       <CardContent className="p-3">
         <div className="flex items-start gap-3">
-          {/* Status icon only: the circle used to be a second toggle for the
-              same mutation as the Mark button below (rubric test 4). */}
+          
           <span
             className="mt-0.5 shrink-0 text-muted-foreground"
             aria-label={done ? "Completed" : `Assigned to ${task.ownerRole.replace("_", " ")}`}

@@ -10,14 +10,6 @@ import {
 } from "@/components/ui/tooltip";
 import { formatDecimal } from "@/lib/format-utils";
 
-/**
- * B2 — the seven buckets, shown separately and never added up for the reader.
- *
- * "Available" is the only number anybody may promise against, and it is a
- * subtraction: on hand, less what is reserved, damaged, quarantined, picked and
- * in a van. Printing the terms beside the answer is what stops an operator doing
- * that subtraction in their head — which is the reliable way to sell stock twice.
- */
 export interface StockBuckets {
   onHand: number;
   available: number;
@@ -48,12 +40,7 @@ const BUCKETS: Bucket[] = [
 export function StockBucketBar({ buckets, dense = false }: { buckets: StockBuckets; dense?: boolean }) {
   return (
     <TooltipProvider delayDuration={200}>
-      {/*
-        `dense` is the in-card variant. Seven columns inside a half-width card is
-        about 70px each, which wraps "In transit" onto two lines and makes the
-        row read as ragged noise; four columns and two rows is the same
-        information, legibly.
-      */}
+      
       <dl
         className={
           dense

@@ -4,12 +4,6 @@ import {
   type ModuleEntry,
 } from "./module-manifest-schema";
 
-/**
- * `parseModuleManifest` replaced a Zod schema, so "it still validates" cannot
- * rest on the fact that the real manifest happens to parse — a function that
- * returned its argument unchecked would pass that test too. Every rule the Zod
- * object enforced gets one case here that BITES, and one that passes.
- */
 
 const VALID_ENTRY: ModuleEntry = {
   administrable: true,

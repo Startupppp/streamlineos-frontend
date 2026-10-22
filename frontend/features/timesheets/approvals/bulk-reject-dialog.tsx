@@ -52,11 +52,6 @@ function BulkRejectDialogBody({
     onOpenChange(false);
   }, [onOpenChange]);
 
-  /**
-   * Guards against ESC/backdrop closing mid-mutation, matching
-   * `ConfirmDialog`'s `handleControlledOpenChange` — the dialog here is a raw
-   * `AlertDialog` because it needs the reason textarea, not that component.
-   */
   const handleOpenChange = useCallback(
     (next: boolean) => {
       if (!next && isPending) return;

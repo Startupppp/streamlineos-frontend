@@ -95,11 +95,6 @@ function SecondaryManagerRow({ form, index, disabled, onRemove }: SecondaryManag
   );
 }
 
-/**
- * The reporting half of the Job Details step (PRD §7.2): an optional primary
- * manager assigned by policy when blank, additional managers up to the org's cap,
- * and a top-level role that disables and clears every manager field.
- */
 export function StepEmploymentReporting({ form }: StepEmploymentReportingProps) {
   const { data: policy } = useReportingManagerPolicy();
   const cap = policy?.maxSecondaryManagersPerEmployee ?? 0;
@@ -113,7 +108,6 @@ export function StepEmploymentReporting({ form }: StepEmploymentReportingProps) 
   const assignedDefaultId = assignedDefault?.userId ?? null;
   const assignedDefaultName = assignedDefault?.name ?? null;
 
-  // The schema refuses an additional manager a blank primary would resolve to.
   useEffect(() => {
     form.setValue(
       "policyDefaultPrimary",

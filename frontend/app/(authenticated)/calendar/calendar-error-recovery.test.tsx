@@ -15,18 +15,6 @@ import CalendarError from "./error";
 
 jest.mock("next/navigation", () => ({ useRouter: () => ({ refresh: jest.fn() }) }));
 
-/**
- * A 500 on `GET /calendar/events` reaches this route's boundary by the
- * `query-error-policy` default, so "Try Again" is the reader's only way back.
- *
- * The trap it has to clear is TanStack's, not React's. `throwOnError` is set
- * for every read on the provider, and `ensurePreventErrorBoundaryRetry` answers
- * that by setting `retryOnMount: false` on each read for as long as the query
- * error-reset boundary reports "not reset". A React `reset()` therefore re-runs
- * the subtree, finds the cached `error` state, declines to refetch and re-throws
- * — the same screen, no request. The second describe below measures exactly
- * that: one arm resets only React, the other also resets the query boundary.
- */
 
 const ORG_ID = "org-1";
 const USER_ID = "user-1";
@@ -69,11 +57,6 @@ function CalendarEventsProbe() {
   return <p>events loaded: {data?.events.length ?? 0}</p>;
 }
 
-/**
- * Mirrors Next's `ErrorBoundaryHandler`: `reset` is a plain
- * `setState({ error: null })` (node_modules/next/dist/client/components/
- * error-boundary.js), with no router refresh and no cache involvement.
- */
 class RouteSegmentBoundary extends Component<
   { children: ReactNode; fallback: (reset: () => void) => ReactNode },
   { failed: boolean }

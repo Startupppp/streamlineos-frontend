@@ -4,7 +4,6 @@ export function countWords(value: string): number {
   return trimmed.split(/\s+/).length;
 }
 
-/** Keeps leading/trailing spaces while clamping to max complete words. */
 export function clampToWordLimit(value: string, maxWords: number): string {
   if (!value.trim()) return value;
   const tokens = value.match(/\S+\s*/g);

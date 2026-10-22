@@ -43,13 +43,6 @@ export function useNotificationInbox({
 }: Params) {
   const router = useRouter();
   const prefersReducedMotion = useReducedMotion();
-  /**
-   * Every mutation below goes through this. All fourteen used to fire regardless
-   * of connectivity, underneath this page's own offline banner: the request
-   * failed, the optimistic patch applied and rolled back, and the row visibly
-   * flickered back to where it started. The sibling /inbox surface has guarded
-   * its eight since it was written.
-   */
   const { isOnline, runWhenOnline } = useRunWhenOnline();
 
   const markRead = useMarkNotificationRead();
@@ -69,8 +62,6 @@ export function useNotificationInbox({
   const handleNotificationClick = useCallback(
     (notification: { id: number; isRead: boolean; link: string | null }) => {
       setDetailId(notification.id);
-      // Opening a row is not a command, so this one stays silent offline rather
-      // than toasting at someone who only wanted to read.
       if (!notification.isRead && isOnline) markRead.mutate(notification.id);
     },
     [isOnline, markRead, setDetailId],
@@ -156,8 +147,6 @@ export function useNotificationInbox({
     (id: number) => {
       runWhenOnline(() => {
         deleteMutation.mutate(id);
-        // The selection is cleared inside the guard: clearing it for a delete that
-        // never dispatched loses the user's selection for nothing.
         setSelectedIds((prev) => {
           const next = new Set(prev);
           next.delete(id);

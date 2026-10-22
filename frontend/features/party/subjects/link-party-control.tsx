@@ -17,14 +17,6 @@ export interface LinkPartyControlProps {
   subjectSingular: string;
 }
 
-/**
- * Attaching a party to a subject.
- *
- * The relationship is free text on purpose — an estate agency's OWNER and BUYER
- * and a recruiter's CANDIDATE and EMPLOYER are the same column, and constraining
- * it to a fixed list would be the exact assumption ticket 07 exists to avoid.
- * It is uppercased on the way out because the API requires snake case.
- */
 export function LinkPartyControl({ subjectId, subjectSingular }: LinkPartyControlProps) {
   const [open, setOpen] = useState(false);
   const [partyId, setPartyId] = useState("");

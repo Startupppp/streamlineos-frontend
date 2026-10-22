@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 
 interface ReportBuilderActionsProps {
-  /** Null when nothing is open, which is what decides two of the three buttons. */
   reportDefinitionId: string | null;
   canViewSaved: boolean;
   onNewReport: () => void;
@@ -11,12 +10,6 @@ interface ReportBuilderActionsProps {
   onOpenSavedReports: () => void;
 }
 
-/**
- * The page's header actions.
- *
- * Only a saved report can be scheduled or replaced: a timetable names a stored
- * question, and "new report" is only meaningful once something is open.
- */
 export function ReportBuilderActions({
   reportDefinitionId,
   canViewSaved,

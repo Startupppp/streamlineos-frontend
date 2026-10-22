@@ -1,22 +1,6 @@
 import { personNameSchema } from "@/lib/person-name-schema";
 import type { BulkEntity } from "./bulk-import-model";
 
-/**
- * The entities this page imports through a plain bulk endpoint.
- *
- * Parties are not here. Their import is planned on the server, committed as a
- * durable job and reversible afterwards, and lives in `import-page.tsx` against
- * `/crm/imports/*`. Leads, contacts and deals have none of that: each has a
- * single `POST` that takes rows and writes them. Pretending otherwise by
- * routing them through the party planner would either lose their fields — a
- * lead's priority and tags, a deal's stage and close date have nowhere to land
- * on a party — or silently write them into the wrong table.
- *
- * So the shape of this file is the honest one: a description of each entity's
- * columns, coercions and endpoint, driven by one flow. It exists because the
- * three CSV dialogs it replaced were three copies of the same four hundred
- * lines differing only in this data.
- */
 
 export type {
   Cell,
@@ -42,21 +26,12 @@ const LEAD_SOURCES = [
 const LEAD_PRIORITIES = ["HOT", "WARM", "COLD"];
 const DEAL_STAGES = ["NEW", "QUALIFIED", "PROPOSAL", "NEGOTIATION", "WON", "LOST"];
 
-/** A value the column accepts, or nothing — never a value it does not. */
 function oneOf(allowed: string[], value: string | undefined): string | undefined {
   return value !== undefined && allowed.includes(value) ? value : undefined;
 }
 
-/**
- * Good enough for an endpoint that validates addresses.
- *
- * Deliberately the loosest useful check rather than a second opinion on RFC
- * 5322: its only job is to keep a row that says `n/a` or `ask Priya` in an
- * email column from taking the other four hundred rows down with it.
- */
 const LOOKS_LIKE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-/** An address, or nothing plus a line saying what was dropped and why. */
 function email(
   value: string | undefined,
   field: string,
@@ -188,9 +163,6 @@ const CONTACTS: BulkEntity = {
 
     const last = cell("last_name");
     const full = last ? `${first} ${last}` : first;
-    // The endpoint validates the same schema and rejects the whole batch on one
-    // bad name, so a row that would fail there is caught and reported here
-    // instead — five hundred good rows should not be lost to one.
     const name = personNameSchema.safeParse(full);
     if (!name.success) return { error: `"${full}" is not a name this accepts` };
 
@@ -250,9 +222,6 @@ const DEALS: BulkEntity = {
     if (!name) return { error: "no deal name" };
 
     const rawValue = cell("value");
-    // Currency symbols, thousands separators and a trailing "/-" are all normal
-    // in an exported sheet; what is left has to be a number or the cell is not
-    // a value at all.
     const parsed = rawValue === undefined ? undefined : Number(rawValue.replace(/[^0-9.-]/g, ""));
     const value = parsed !== undefined && Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 
@@ -263,8 +232,6 @@ const DEALS: BulkEntity = {
       row: {
         name,
         value,
-        // An unreadable stage is not a reason to drop the deal, and NEW is
-        // where an unplaced deal belongs.
         stage: oneOf(DEAL_STAGES, cell("stage")?.toUpperCase()) ?? "NEW",
         ownerEmail: email(cell("ownerEmail"), "Owner email", notes),
         expectedCloseDate: cell("expectedCloseDate"),

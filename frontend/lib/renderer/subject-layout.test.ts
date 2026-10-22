@@ -2,14 +2,6 @@ import { subjectLayout, subjectRecord } from "./subject-layout";
 import { validateLayout } from "./layout-validation";
 import type { SubjectType } from "@/types/party/subjects";
 
-/**
- * The validation exercise ticket 07 asks for.
- *
- * Two industries that model their work in genuinely different ways, both driven
- * end to end through the same engine. The point is not that these two
- * declarations happen to work — it is to find where one fixed schema strains
- * before fifty surfaces are built on the assumption that it does not.
- */
 
 function subjectType(overrides: Partial<SubjectType> & Pick<SubjectType, "key" | "singular" | "plural" | "titleField" | "fields">): SubjectType {
   return {
@@ -22,7 +14,6 @@ function subjectType(overrides: Partial<SubjectType> & Pick<SubjectType, "key" |
   };
 }
 
-/** Estate agency: the subject is an asset, and parties hold sides of a trade. */
 const PROPERTY = subjectType({
   key: "property",
   singular: "Property",
@@ -42,7 +33,6 @@ const PROPERTY = subjectType({
   ],
 });
 
-/** Recruitment: the subject is a person, and parties are the employers around them. */
 const CANDIDATE = subjectType({
   key: "candidate",
   singular: "Candidate",
@@ -115,9 +105,7 @@ describe("subjectLayout — two industries through one engine", () => {
     });
 
     const layout = subjectLayout(wide);
-    // Four declared columns plus the two platform ones.
     expect(layout.list.columns).toHaveLength(6);
-    // Every declared field still reaches the detail view and the form.
     expect(layout.fields).toHaveLength(33);
     expect(validateLayout(layout)).toEqual([]);
   });
@@ -163,8 +151,6 @@ describe("subjectRecord", () => {
       reference: null,
       status: null,
       createdAt: "2026-08-02T00:00:00.000Z",
-      // A tenant may declare a field called subjectId; the real one has to win,
-      // or the list keys and opens the wrong row.
       customFields: { subjectId: "not-the-real-one" },
     });
 

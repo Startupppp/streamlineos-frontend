@@ -8,13 +8,6 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
 import type { AccessResponse } from "@/types/access";
 
-/**
- * The bug this pins: a query disabled by a missing permission reports
- * `isPending: true, isFetching: false`, and `isLoading` is the conjunction of
- * the two — so it is false. Every surface's loading gate therefore falls
- * through to its empty branch, and a user who may not see a list is told the
- * list is empty.
- */
 
 const ORG_ID = "org-1";
 const USER_ID = "user-1";

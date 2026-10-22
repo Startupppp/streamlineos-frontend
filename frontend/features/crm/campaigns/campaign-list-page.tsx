@@ -36,18 +36,6 @@ import { useCan } from "@/hooks/api/access";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { CampaignSheet } from "./campaign-sheet";
 
-/**
- * Campaigns.
- *
- * No table is written here. The columns, their alignment, the ROI tone and the
- * mobile card all come from `CAMPAIGN_LAYOUT`; what is left is the one filter
- * this domain has and who is allowed to add a campaign.
- *
- * ROI is green above zero and red below because the description says the sign is
- * good news — `sign: "gain"` — not because this screen carries a colour helper.
- * The helper it used to carry is the reason campaigns could not move onto the
- * engine until the vocabulary could say it.
- */
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -159,13 +147,7 @@ export function CampaignListPage() {
       }
       actions={
         <div className="flex items-center gap-gap-toolbar">
-          {/*
-            CRM-P1-01. The multi-touch report had no way in at all — the only
-            attribution on screen was first-touch and last-touch, the two models
-            that make the strongest claim about which single touch mattered.
-            Gated on the report key, so somebody who cannot read reports is not
-            offered a link that 403s.
-          */}
+          
           {canViewReports ? (
             <Button asChild size="sm" variant="outline">
               <Link href="/crm/campaigns/attribution">Attribution</Link>

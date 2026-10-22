@@ -5,36 +5,6 @@ import {
   parseCalendarEventId,
 } from "@/hooks/api/calendar";
 
-/**
- * A recurring occurrence's id is parsable, and it carries its nominal start.
- *
- * The native source emits an occurrence as `event-<id>-<ISO instant>`
- * (calendar-native-event-source.ts). `extractEventNumericId` was
- * `id.match(/(\d+)$/)` — an ISO instant ends in `Z`, so every recurring
- * occurrence parsed to `null`. Delete, "Cancel occurrence", RSVP and Unlink all
- * open `if (numericEventId === null) return;`, so opening a weekly stand-up and
- * confirming a destructive dialog issued no request, showed no error and no
- * toast. `useEventAttendees` stayed disabled, `EventSyncStatus` rendered
- * nothing, and the series-scope confirm reported "Cannot edit this event type".
- * No fixture in this repository was ever recurring-shaped: every one is
- * `event-42`.
- *
- * The trailing-digits form was also loose in the other direction — it read a
- * number off `attendance-absence-2026-01-05` and off `ext-3-abc123`, ids from
- * other sources entirely. Every call site happens to guard on
- * `source === "event"` today, so that was latent rather than live; parsing by
- * structure removes it rather than relying on four guards staying correct.
- *
- * `occurrenceStart` is not `event.start`. For a RESCHEDULED occurrence the
- * projection carries the NOMINAL instant in the id and the moved time in
- * `start` (calendar-native-event-source.ts, the `collectRescheduledOccurrences`
- * branch), while `calendar_event_exceptions` is keyed on the nominal one — so
- * keying an exception off `start` would write a second row instead of updating
- * the existing one.
- *
- * The id shapes are read out of the backend source rather than copied, with a
- * floor, so a change to either format fails here instead of silently at runtime.
- */
 
 const MEASURED_ID_TEMPLATE_FLOOR = 2;
 
@@ -52,7 +22,6 @@ function backendIdTemplates(): string[] {
     const template = match[1];
     if (template !== undefined) templates.push(template);
   }
-  // The ternary at the projection carries two templates on one line.
   for (const match of source.matchAll(/`(event-[^`]+)`/g)) {
     const template = match[1];
     if (template !== undefined && !templates.includes(template))
@@ -127,7 +96,6 @@ describe("extractEventNumericId", () => {
   });
 
   it("no longer reads a number off another source's id", () => {
-    // `attendance-absence-2026-01-05` used to yield 5 and `ext-3-abc123` 123.
     expect(extractEventNumericId("attendance-absence-2026-01-05")).toBeNull();
     expect(extractEventNumericId("ext-3-abc123")).toBeNull();
     expect(extractEventNumericId("leave-9")).toBeNull();

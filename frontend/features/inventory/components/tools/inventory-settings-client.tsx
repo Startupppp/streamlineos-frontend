@@ -30,8 +30,6 @@ const settingsSchema = z.object({
   expiryReservationPolicy: z.enum(["BLOCK", "WARN", "ALLOW"]),
   inspectionOnReceipt: z.boolean(),
   inspectionOnReturn: z.boolean(),
-  // Decimal strings, as the endpoint stores and accepts them. The bounds are the
-  // ones the numeric schema enforced, checked on the parsed value.
   overReceiptTolerancePct: z.string().refine(function isPercent(value) {
     const n = Number(value);
     return value.trim() !== "" && Number.isFinite(n) && n >= 0 && n <= 100;
@@ -61,7 +59,6 @@ const settingsSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsSchema>;
 
-/** The loaded settings as form values, field by field rather than by cast. */
 function toFormValues(settings: InventorySettings): SettingsFormValues {
   return {
     allowNegativeStock: settings.allowNegativeStock,
@@ -115,11 +112,6 @@ export function InventorySettingsClient() {
   );
 
   if (!canManage) {
-    // G8. This used to render "Access Denied" through the *empty* component —
-    // the same illustration and layout the screen shows when a list has no rows.
-    // Denied and empty are different answers and must not look alike, which is
-    // what `NoPermissionState` exists to say; it also names the key, so the
-    // reader can ask for the right thing.
     return (
       <PageWrapper title="Settings" subtitle="">
         <NoPermissionState permission="inventory:settings:manage" className="flex-1" />

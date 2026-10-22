@@ -2,16 +2,6 @@ import { screen } from "@testing-library/react";
 import { renderWithProviders } from "@/test-utils";
 import { PickWaveSheet } from "./pick-wave-sheet";
 
-/**
- * The reassign endpoint exists, is permissioned and is fenced. What it did not
- * have was a caller: `useReassignPickWave` was referenced by no component, page
- * or test, so a supervisor could not move a claimed wave off a picker who had
- * gone home. A unit test of the control alone would not have caught that — the
- * control passed its own tests while nothing mounted it.
- *
- * This renders the sheet a supervisor actually opens and asserts the control is
- * in it, which is the claim that was false before.
- */
 
 const mockDetail = {
   id: 44,

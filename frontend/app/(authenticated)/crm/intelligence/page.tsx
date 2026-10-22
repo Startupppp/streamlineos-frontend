@@ -18,15 +18,6 @@ const WINDOWS = [
   { value: "90", label: "90 days" },
 ];
 
-/**
- * Call intelligence for a manager: the team digest over a trailing window.
- *
- * A single call's analysis is not here — it belongs on the call, where the rep
- * who made it reads it first. `CallAnalysisPanel` renders that wherever an
- * activity is shown. This page is the aggregate, and it is gated on the team key
- * for the same reason: reading your own call is a rep's business, and reading
- * everybody's is a manager's.
- */
 export default function CallIntelligencePage() {
   const [sinceDays, setSinceDays] = useState(30);
   const digest = useCoachingDigest(sinceDays);
@@ -54,13 +45,6 @@ export default function CallIntelligencePage() {
       title="Call intelligence"
       subtitle="How the team's calls are going"
       actions={
-        /**
-         * The per-rep view (CRM-P2-05) and the best-call search (CRM-P2-06) live
-         * one level down. They are not on this page because they answer a
-         * different question and carry a different gate: this digest is
-         * deliberately un-attributed and manager-only, while `/reps` is gated on
-         * `crm:call-analysis:view` so a rep can read their own numbers.
-         */
         <Button asChild variant="outline" size="sm">
           <Link href="/crm/intelligence/reps">Per-rep metrics</Link>
         </Button>

@@ -6,15 +6,10 @@ import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 
 export interface SlaTarget {
   label: string;
-  /** `null` when the window produced no observations at all. */
   value: number | null;
-  /** How to read the number: `"rate"` renders 0-1 as a percentage. */
   format: "rate" | "hours";
-  /** At or under this, the target is met. */
   meets: number;
-  /** Over this, it is a breach; between the two it is worth watching. */
   watches: number;
-  /** The counts behind the figure. A rate without its denominator invites the wrong conclusion. */
   basis: string;
 }
 
@@ -29,19 +24,6 @@ function render(target: SlaTarget, value: number): string {
   return target.format === "rate" ? `${(value * 100).toFixed(1)}%` : `${value.toFixed(1)}h`;
 }
 
-/**
- * B10, item 2 — the SLA half of the dashboard.
- *
- * Each figure is shown against a stated target and with the counts it was
- * computed from, because a rate travels badly on its own: "50% discrepancy"
- * means something very different over four lines than over four hundred, and a
- * quiet Tuesday reads as a crisis without its denominator.
- *
- * The thresholds are written down on screen rather than hidden in a lookup, so a
- * supervisor can see what the colour is claiming. They are presentation
- * defaults, not policy — per-organisation targets need somewhere to live, and
- * that is a settings surface, not a colour.
- */
 export function ThroughputSlaRow({ targets }: { targets: readonly SlaTarget[] }) {
   return (
     <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">

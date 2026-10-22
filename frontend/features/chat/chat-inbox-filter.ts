@@ -73,7 +73,6 @@ export interface ChatInboxFilterCounts {
   channels: number;
 }
 
-/** Unread totals for Direct and Channels. All is the loaded conversation count. */
 export function countChatInboxFilters(
   channels: readonly { type: string; unreadCount: number }[],
 ): ChatInboxFilterCounts {

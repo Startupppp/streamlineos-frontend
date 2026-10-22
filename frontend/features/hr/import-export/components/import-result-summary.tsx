@@ -8,34 +8,18 @@ import { getErrorMessage } from "@/lib/get-error-message";
 
 const FAILED_ROWS_SHOWN = 10;
 
-/** `HrImportService.getJob` ends in `.limit(50)` with no ORDER BY: a job detail never lists more error rows than this. */
 export const SERVER_ERROR_ROW_CAP = 50;
 
 const COMMIT_RECORDED: ReadonlySet<HrImportStatus> = new Set(["committed", "failed", "rolled_back"]);
 
 export interface ImportRowTally {
-  /** A commit has run, so `validRows` and `errorRows` have been overwritten with what it did. */
   committed: boolean;
-  /** Rows the commit wrote (new, changed or already there). Zero until a commit has run. */
   written: number;
-  /** Rows that passed validation but failed while being written. */
   failedWhileWriting: number;
-  /** Rows that never passed validation, so the commit never tried them. */
   failedValidation: number;
-  /** Rows sitting in status 'error' on the server: the most a job detail request can list, sample or not. */
   notImported: number;
 }
 
-/**
- * The job's counters mean different things at different stages, which is how a number and a list came to describe
- * different rows. Before a commit (`previewed`), `errorRows` is the rows that failed validation. `commitJob` then
- * OVERWRITES both counters: `validRows` becomes the rows written and `errorRows` only the rows that failed while being
- * written. The rows that failed validation are counted nowhere any more, though their rows stay in status 'error' next
- * to the commit failures; what is left of the file is `totalRows - validRows - errorRows`.
- *
- * `GET /hr/import/jobs/:id` lists both kinds together with nothing to tell them apart, so a list of failed rows can only
- * honestly be counted as `notImported`, never as `errorRows`.
- */
 export function tallyImportRows(job: Pick<HrImportJob, "status" | "totalRows" | "validRows" | "errorRows">): ImportRowTally {
   if (!COMMIT_RECORDED.has(job.status)) {
     return { committed: false, written: 0, failedWhileWriting: 0, failedValidation: job.errorRows, notImported: job.errorRows };
@@ -69,16 +53,6 @@ function Count({ label, value, tone }: { label: string; value: number; tone: "su
   );
 }
 
-/**
- * What a commit actually did, in words a person can act on. A committed job used to close the wizard with "committed
- * successfully" whatever happened; a job that wrote nothing is FAILED, and rows that did not go in (an email that
- * matches no employee, a row that never passed validation) are listed with their reason, not lost. The four counts
- * plus the rows that never passed validation are the number of rows in the file.
- *
- * The list is every row the server holds in error, so it is counted as "not imported" (failed while being written PLUS
- * failed validation) and never as the "Failed" card, which is only the first of the two. The server sends at most
- * `SERVER_ERROR_ROW_CAP` of them, unordered; the heading says how many are shown of how many there are.
- */
 export function ImportResultSummary({ job, entityLabel }: ImportResultSummaryProps) {
   const { written, failedWhileWriting: failed, failedValidation: skipped, notImported } = tallyImportRows(job);
   const detail = useHrImportJob(notImported > 0 ? job.id : null);

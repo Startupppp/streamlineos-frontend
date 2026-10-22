@@ -2,29 +2,6 @@
 
 import { use, type ReactNode } from "react";
 
-/**
- * Hydrate a server-rendered block only once the visitor nears it.
- *
- * Every block below the hero sits in its own `<Suspense>` (ADR-0028). Put this
- * inside one, around the block, and the block's hydration waits: the component
- * suspends while React hydrates, and React keeps the server HTML in place for
- * a boundary that suspends during hydration — then hydrates it, in place (no
- * remount, nothing re-created), once the gate opens. Hydrating every block at
- * once was the page's one long task at load: a few hundred reveals starting
- * their springs in a single commit (mobile TBT ~0.5 s at 4× CPU).
- *
- * The gate opens when the block (`id`) is on screen — or, from the visitor's
- * first gesture toward moving the page, within 1.5 viewports of it. Before
- * that gesture nothing below the hero can come near: the page opens at the
- * top, held off-screen under the preloader until the fold. `scroll` also
- * counts as that gesture, so a restored or hash-anchored position opens the
- * gates around it.
- *
- * On the server, and on a client render that is not hydration (a navigation
- * back to the page), the block renders at once: the element is not in the
- * document yet, so its gate is open. The robot form (D-016) goes through the
- * same gate — its served HTML already holds every block at rest.
- */
 const LOOKAHEAD = "150% 0px 150% 0px";
 const ENGAGE_EVENTS = ["pointerdown", "touchstart", "wheel", "keydown", "scroll"] as const;
 
@@ -50,16 +27,6 @@ const onEngaged = (wake: () => void) => {
   engageWaiters.add(wake);
 };
 
-/**
- * A desktop behind the preloader does not wait for the approach: its blocks
- * hydrate one per idle moment, in page order, from the first screen's
- * hydration on — under the preloader, where the main thread mostly waits on
- * the network. Hydrated on approach, the first wheel opened every gate within
- * 1.5 viewports at once and their 25–60 ms tasks landed on the first scroll
- * (owner review: "on pc the first scroll there are so many freezes"). Phones,
- * the robot form and reduced motion (no preloader) keep the approach gate:
- * on a phone the same work at load is TBT.
- */
 const DESKTOP = "(hover: hover) and (pointer: fine) and (min-width: 901px)";
 const queue: Array<() => void> = [];
 let idle: "off" | "waiting" | "running" = "off";
@@ -133,7 +100,6 @@ export const HydrateNear = ({
   id,
   children,
 }: {
-  /** The block's root element id — what the gate watches. */
   id: string;
   children: ReactNode;
 }) => {

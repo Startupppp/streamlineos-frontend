@@ -1,12 +1,5 @@
 import { roundInvoiceAmount } from "./invoice-money";
 
-/**
- * These are the same cases the backend pins in
- * `src/modules/invoices/lib/invoice-rounding.spec.ts`. They live on both sides
- * on purpose: the invoice screens preview a total before the server has seen
- * it, so the only way the preview can be the stored figure is for the two
- * roundings to be the same rule. Everything is rupees.
- */
 describe("roundInvoiceAmount rounds money half-up at two decimals", () => {
   const gstCases: ReadonlyArray<[number, number, number]> = [
     [10.75, 18, 1.94],
@@ -43,8 +36,6 @@ describe("roundInvoiceAmount rounds money half-up at two decimals", () => {
   });
 
   it("survives a line at the DTO's ceiling without losing paise", () => {
-    // The write DTO caps a line at Rs 999,999,999.99; scale 4 of that is well
-    // inside the exact-integer range, so no precision is lost on the way.
     expect(roundInvoiceAmount(999999999.994)).toBe(999999999.99);
     expect(roundInvoiceAmount(999999999.995)).toBe(1000000000);
   });

@@ -74,8 +74,6 @@ export function DelegationSheet() {
   const { data: session } = useSession();
   const { data: access } = useAccess();
 
-  // Keyset endpoint: the `page` this used to send was ignored, so rows past
-  // the first 20 were unreachable.
   const { data, isLoading, isError, error, refetch } = useOrgDelegations({ cursor: pager.cursor, limit: 20 });
   const { data: membersData } = useOrgMembers(1, 200);
   const grantProxy = useGrantProxy();
@@ -111,8 +109,6 @@ export function DelegationSheet() {
     });
   }
 
-  // The backend lets only the grantor or the org owner revoke; anyone else
-  // with hr:workflows:manage got a 403 from this button.
   function canRevoke(row: ProxyAccess) {
     return (
       canManage &&

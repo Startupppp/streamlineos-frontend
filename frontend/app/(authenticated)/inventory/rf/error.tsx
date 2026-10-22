@@ -5,17 +5,6 @@ import { ErrorState } from "@/components/shared";
 import { RfShell } from "@/features/inventory/components/rf/rf-shell";
 import { isChunkLoadError, reportError } from "@/lib/observability";
 
-/**
- * NEO-5 — the handheld's own boundary.
- *
- * The module boundary one level up is a desktop page shell, and falling back to
- * it puts a `PageWrapper` in front of somebody holding a scanner in one hand.
- * So RF owns its recovery: the same `RfShell` chrome every RF screen renders,
- * one column, and exactly one action — retry — placed where a thumb already
- * expects it. `RfShell` also keeps the online/queued strip visible, which is the
- * fact an operator needs most when a screen has just failed: whatever they
- * already confirmed is still on the device.
- */
 export default function RfError({
   error,
   reset,

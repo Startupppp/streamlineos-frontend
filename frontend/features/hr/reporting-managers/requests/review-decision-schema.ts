@@ -24,7 +24,6 @@ export const reviewDecisionSchema = z
 export type ReviewDecisionInput = z.input<typeof reviewDecisionSchema>;
 export type ReviewDecisionValues = z.output<typeof reviewDecisionSchema>;
 
-/** Only APPROVE carries a manager and date; a blank date is omitted so the server uses the org-local day. */
 export function toReviewPayload(values: ReviewDecisionValues): ReviewReportingManagerRequestInput {
   if (values.decision !== "APPROVE") return { decision: values.decision, reviewReason: values.reviewReason };
   return {

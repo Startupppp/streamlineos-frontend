@@ -2,10 +2,6 @@ import type { RecordLayout } from "@/lib/renderer/layout";
 import type { RecordFormValues } from "@/components/renderer";
 import type { CustomFieldDefinition } from "@/hooks/api/crm/custom-fields";
 
-/**
- * The tenant's custom fields for one entity, described to the record renderer
- * so the edit form is generated rather than hand-written.
- */
 export function customFieldsLayout(
   entityType: CustomFieldDefinition["entityType"],
   fields: readonly CustomFieldDefinition[],
@@ -29,13 +25,6 @@ export function customFieldsLayout(
   };
 }
 
-/**
- * The record's next `customData`.
- *
- * The custom-data routes replace the whole object, so every key the form does
- * not own (a lead's BANT qualification, fields since deactivated) is carried
- * over from `existing`. Form values are strings; they are typed back here.
- */
 export function mergeCustomData(
   fields: readonly CustomFieldDefinition[],
   existing: Record<string, unknown>,

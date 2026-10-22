@@ -17,7 +17,6 @@ import { toWebFormInput, toWebFormValues, webFormSchema, type WebFormValues } fr
 interface WebFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** null creates. */
   webForm: WebForm | null;
 }
 

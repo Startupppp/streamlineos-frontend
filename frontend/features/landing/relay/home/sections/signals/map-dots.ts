@@ -1,4 +1,3 @@
-/** Dot centres of signals-map.svg (249 × rx 1.525 / ry 1.4), in its 366 × 132 viewBox. */
 export const MAP_DOTS: readonly (readonly [number, number])[] = [
   [35.9464, 33],
   [35.9464, 39],

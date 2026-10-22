@@ -1,28 +1,6 @@
-/**
- * @jest-environment node
- */
 import { execFileSync } from "node:child_process";
 import { join } from "node:path";
 
-/**
- * Runtime response validation is opt-in per call site, which means the
- * un-validated path is the default and therefore invisible. This makes it
- * visible and holds the line: no route carrying money, permissions, tenancy or
- * PII may lose its contract, and no new endpoint may arrive without one.
- *
- * The scan itself lives in `scripts/check-response-contracts.mjs` and this
- * suite consumes its `--json`. That is deliberate. This file USED to carry its
- * own copy of the scanner, and the copy had two holes the gate does not: it
- * read `hooks/` only, so it could not see the 161 seam calls in `app/`,
- * `features/`, `components/` and `lib/`; and its leak rule matched
- * `method === "get"`, so a `serverGet` on a contracted route was invisible.
- * Three SSR prefetches of routes on its own risk list — `/payroll/runs`,
- * `/roles`, `/directory/workers` — sat uncontracted underneath a green run.
- *
- * Two implementations of one definition disagree; this release has already paid
- * for that once (a read count reported as 81, 84 and 86 by three scanners of
- * the same thing). There is one scanner now, and this asserts against it.
- */
 
 const FE_ROOT = join(__dirname, "..");
 const GATE = join(FE_ROOT, "scripts", "check-response-contracts.mjs");

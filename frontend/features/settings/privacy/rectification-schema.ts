@@ -21,7 +21,6 @@ const MAX_LENGTH: Record<RectifiableField, number> = {
   "hr_profile.gender": 100,
 };
 
-/** Mirrors the per-field limits of the backend's `gdprRectificationBodySchema`. */
 export const rectificationSchema = z
   .object({ field: z.enum(FIELD_VALUES), value: z.string().trim().min(1, "Enter the corrected value") })
   .superRefine((values, ctx) => {

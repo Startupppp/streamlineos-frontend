@@ -42,10 +42,6 @@ interface FilingExportDialogProps {
   defaultMonth: string;
 }
 
-/**
- * The backend prepares the CSV on the payroll jobs worker, so this dialog holds
- * the job handle and polls it rather than waiting on the request.
- */
 export function FilingExportDialog({
   open,
   onOpenChange,

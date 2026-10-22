@@ -23,11 +23,6 @@ type QueryOptions<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
 const WAVE_READ_KEY = "inventory:sales-orders:read";
 const WAVE_WRITE_KEY = "inventory:sales-orders:ship";
-/**
- * B5. Two keys of their own, and the split is the point: swapping a SKU at the
- * shelf changes what the customer is owed, and signing off a write-off is a
- * supervisor's job — neither is the same authority as walking a wave.
- */
 const SUBSTITUTE_KEY = "inventory:picking:substitute";
 const EXCEPTION_REVIEW_KEY = "inventory:picking:review";
 
@@ -54,9 +49,6 @@ export function usePickWaves(
         ...(params.status ? { status: params.status } : {}),
         ...(params.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
       }, signal),
-    // A queue whose whole value is being current. A picker looking at a wave
-    // somebody else claimed thirty seconds ago is the failure this screen exists
-    // to prevent.
     staleTime: 15_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -95,19 +87,9 @@ export function useCreatePickWave() {
   });
 }
 
-/**
- * NEO-14 — would these orders join a wave that is already open?
- *
- * A question, not a command: it reads and returns a decision, and the caller
- * then either joins or raises a new wave. Both routes were mounted and neither
- * was called, so waveless picking was a setting that changed nothing: every
- * release built a fresh wave and a building ended up with six half-full walks
- * where one full one would have done.
- */
 export interface WaveJoinDecision {
   join: boolean;
   waveId: number | null;
-  /** Why not, for a caller that has to explain itself. Null when it would join. */
   reason: string | null;
 }
 
@@ -122,14 +104,6 @@ export function useProposeWaveJoin() {
   );
 }
 
-/**
- * Append to a wave that is still only a plan.
- *
- * The gate is re-applied server-side against the wave as it stands now, not
- * against the proposal: a picker can claim the wave and confirm a line between
- * the two calls, and appending to a walk somebody has started is exactly what
- * the check refuses.
- */
 export function useJoinPickWave() {
   const qc = useQueryClient();
   return useIdempotentMutation<

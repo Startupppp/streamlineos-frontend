@@ -22,9 +22,6 @@ export function ImportExportGrid({ entities }: ImportExportGridProps) {
     setExportingIds((prev) => new Set([...prev, entity.id]));
     const fallbackName = `${entity.id}-export-${new Date().toISOString().split("T")[0]}.csv`;
     try {
-      // Was: fetch a blob and hand it to an anchor. An empty body and an error
-      // page saved exactly like a real CSV, and both announced success — which
-      // is how a 0-byte assets export read as a finished download twice.
       const { filename, bytes } = entity.exportJob
         ? await downloadExportJob({
             label: entity.label,

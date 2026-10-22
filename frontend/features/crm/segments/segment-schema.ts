@@ -10,27 +10,9 @@ import {
   toScalar,
 } from "./segment-criteria";
 
-/**
- * What the builder lets somebody assemble, and nothing the compiler would then
- * refuse.
- *
- * Every bound here is the server's, restated so the refusal arrives on the
- * control that caused it rather than as a 400 after they pressed Save. The
- * server re-checks all of it — `compileQuery` re-validates a stored tree on
- * every evaluation — so this is an ergonomic gate, not a security one, and it
- * must never be mistaken for the second.
- */
 
-/**
- * `MAX_BRANCHES` in `dto/reporting.schemas.ts`.
- *
- * The children of one `and` are capped at twenty independently of the node
- * budget, and this builder emits exactly one flat `and`, so twenty — not the
- * hundred-node cap — is the number of criteria a segment may carry.
- */
 export const MAX_SEGMENT_CRITERIA = 20;
 
-/** `QUERY_LIMITS.maxInValues` and `maxValueLength` in `query-description.ts`. */
 const MAX_LIST_VALUES = 200;
 const MAX_VALUE_LENGTH = 1000;
 
@@ -125,12 +107,6 @@ export const segmentFormSchema = baseSchema.superRefine((values, ctx) => {
       return;
     }
     if (!SEGMENT_OPERATORS_FOR_TYPE[row.fieldType].includes(row.operator)) {
-      /**
-       * Reachable by changing the field after choosing the operator. The control
-       * resets the operator when the type changes, so this is the belt on top of
-       * that — and it is what stops a description the compiler would refuse from
-       * ever being sent.
-       */
       ctx.addIssue({
         code: "custom",
         message: "That comparison does not apply to this field",

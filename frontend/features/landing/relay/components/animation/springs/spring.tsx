@@ -1,28 +1,3 @@
-// 📖 Docs: obsidian/frontend/components/animation-springs.md
-/**
- * @fileoverview Spring animation component that provides configurable animations
- *
- * This component provides spring-based animations with configurable properties:
- * 1. Supports different animation modes (once, always, forward)
- * 2. Configurable enter/exit delays and animations
- * 3. Mobile device handling
- * 4. Customizable spring configurations
- *
- * @param {React.ReactNode} children - Child elements to animate
- * @param {boolean} enabled - Whether animations are enabled
- * @param {Object} from - Starting animation values
- * @param {Object} to - Ending animation values
- * @param {'always'|'once'|'forward'} mode - Animation mode:
- *   - always: Always animates when enabled
- *   - once: Plays once per mount
- *   - forward: Only plays forward
- * @param {React.CSSProperties} style - Additional CSS styles
- * @param {Object} config - Spring animation configuration
- * @param {number} delayIn - Delay before enter animation in ms
- * @param {number} delayOut - Delay before exit animation in ms
- * @param {boolean} disableOnMobile - Whether to disable on mobile devices
- * @param {boolean} immediateOut - Whether to skip exit animation
- */
 
 "use client";
 
@@ -153,11 +128,6 @@ export const Spring = forwardRef<HTMLElement, SpringProps & { tag?: Tags }>(
       return true;
     }, [mode, enabled, disableOnMobile, width]);
 
-    // Declarative spring: `useSpring` diffs values each render, so animating to
-    // `to` (when active) vs `from` happens automatically, and a parent
-    // re-render with the same target is a no-op — no re-animation, no reset.
-    // The imperative `useSpring(fn).api.start` form did not reliably drive the
-    // values in this project's react-spring build (the start call was a no-op).
     const springs = useSpring({
       from,
       to: active ? to : from,

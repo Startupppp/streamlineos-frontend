@@ -15,13 +15,6 @@ describe("planned import entities", () => {
     ]);
   });
 
-  /**
-   * The control is hidden for the same reason the request would be refused.
-   *
-   * The server checks one of these on top of `crm:imports:manage`, so a key
-   * here that does not match the one it checks either shows a control that
-   * always fails or hides one that would have worked.
-   */
   it("names the key the server checks for each one", () => {
     expect(PLANNED_ENTITIES.map((entity) => entity.permission)).toEqual([
       "party:parties:create",
@@ -42,7 +35,6 @@ describe("planned import entities", () => {
     expect(plannedEntity(id).id).toBe(id);
   });
 
-  /** Only a subject import has to ask which declaration the file is. */
   it("asks for a subject type only where there is one to ask about", () => {
     const asked = PLANNED_ENTITIES.filter((entity) => needsSubjectType(entity.id));
     expect(asked.map((entity) => entity.id)).toEqual(["subject"]);

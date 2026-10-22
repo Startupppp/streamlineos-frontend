@@ -20,7 +20,6 @@ import { InvoiceTotals, type InvoiceTotalsValue } from "./invoice-totals";
 interface NewInvoiceFormProps { onCreated: (invoiceId: number) => void; }
 
 export function NewInvoiceForm({ onCreated }: NewInvoiceFormProps) {
-  // POST /invoices declares accounting:create.
   const canCreate = useCan("accounting:create");
   const createInvoice = useCreateInvoice();
   const form = useForm<InvoiceFormValues>({ resolver: zodResolver(invoiceFormSchema), defaultValues: DEFAULT_INVOICE_VALUES });

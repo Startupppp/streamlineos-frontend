@@ -5,12 +5,6 @@ function lead(id: number, over: Partial<BoardLead> = {}): BoardLead {
   return { id, name: `Lead ${id}`, email: null, phone: null, company: null, ...over };
 }
 
-/**
- * The shape the seeded reference tenant actually returns: five stages, and NOT
- * the pipeline's INTERESTED or LOST. `select distinct lifecycle_stage` on
- * scratch_gates_head gives NEW / CONTACTED / QUALIFIED / CONVERTED / UNQUALIFIED
- * for every one of the four seeded orgs.
- */
 const TENANT_BOARD: ServerBoard = {
   NEW: { leads: [lead(1, { company: "Acme" })], total: 1 },
   CONTACTED: { leads: [lead(2, { email: "b@x.io" })], total: 1 },

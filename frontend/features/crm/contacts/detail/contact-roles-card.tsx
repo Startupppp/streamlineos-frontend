@@ -38,24 +38,6 @@ interface ContactRolesCardProps {
   contactId: number;
 }
 
-/**
- * Who this person is on each deal and account they touch.
- *
- * The add form is generated from `CONTACT_ROLE_LAYOUT`, which replaced a
- * hand-written popover carrying its own Zod schema, its own `formatRoleKey`
- * regex turning `decision_maker` into "Decision Maker", and four `form.watch` /
- * `form.setValue` pairs standing in for the controlled fields react-hook-form
- * already provides. The role names now live in the description, so the chips and
- * the dropdown cannot disagree about what a role is called.
- *
- * It moved out of a `<Popover>` and into `AppDialog`. Principle 4 puts work with
- * its own validation and losable state in a dialog or a sheet rather than a
- * popover, and a 288px popover was not a place a record picker fit.
- *
- * The chips render through `renderFieldValue`, so a champion is the same green
- * here as anywhere else the engine paints one, and the primary flag reads
- * "Primary" instead of an unexplained star.
- */
 export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
   const layout = useTenantLayout(CONTACT_ROLE_LAYOUT);
   const canManage = useCan("crm:contacts:manage");
@@ -67,11 +49,6 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
   const addRole = useAddContactRole();
   const removeRole = useRemoveContactRole();
 
-  /*
-    Both lists are fetched for one picker. Each hook self-gates on its own read
-    permission, so a caller who may see deals but not accounts is offered deals
-    and nothing else, rather than an empty picker or a 403 on submit.
-  */
   const { data: deals = [] } = useDeals({ limit: 100 });
   const { data: orgsData } = useCrmOrganizations({ pageSize: 100 });
 
@@ -113,8 +90,6 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
             entityType: entity.entityType,
             entityId: entity.entityId,
             roleKey: values.roleKey ?? "",
-            // The engine keeps every control's value a string; the flag is
-            // converted here, at the boundary, like a date or a tag list.
             isPrimary: values.isPrimary === "true",
           },
         },
@@ -146,16 +121,6 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
   const roleField = resolveField(layout, "roleKey");
   const primaryField = resolveField(layout, "isPrimary");
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:contacts:view") === "denied")
     return <NoPermissionState permission="crm:contacts:view" />;
 
@@ -231,8 +196,6 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
           description="Say who this person is on a deal or account."
         >
           <RecordForm
-            // Remounted per open so a cancelled attempt does not come back
-            // half-filled the next time the dialog is opened.
             key={String(addOpen)}
             layout={layout}
             mode="create"
@@ -240,13 +203,6 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
             onCancel={handleCloseAdd}
             isSubmitting={addRole.isPending}
             submitLabel="Add role"
-            /*
-              One picker for a pointer with two possible kinds. The description
-              cannot name the domain — there are two — and it should not have to:
-              which records this caller may attach depends on their permissions,
-              which is a screen concern. The value carries its own kind and the
-              submit handler splits it.
-            */
             controls={{
               entityId: (control) => (
                 <Combobox

@@ -160,7 +160,7 @@ export function TemplatesTab({ canManage }: TemplatesTabProps) {
         </div>
       )}
 
-      {/* A failed read is not "no templates found — create one to get started". */}
+      
       {!isLoading && isError && (
         <ErrorState
           className="flex-1"

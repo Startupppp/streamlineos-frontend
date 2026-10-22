@@ -1,15 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * An upload held for malware scanning, as data.
- *
- * The scanner files these and an administrator releases, rejects or deletes
- * one through row actions, so the form is empty. `filename`, `fileSizeBytes`
- * and `uploadedBy` are declared so the columns exist and can be arranged; the
- * surface draws them through `cells`, because the file line carries its MIME
- * type and any threat name beneath it, a size is bytes shown humanised, and
- * the uploader is shown by name.
- */
 export const QUARANTINE_RECORD_LAYOUT: RecordLayout = {
   key: "settings:storage-quarantine",
   singular: "Quarantined upload",

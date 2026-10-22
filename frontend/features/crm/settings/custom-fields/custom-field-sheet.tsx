@@ -29,20 +29,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { CUSTOM_FIELD_LAYOUT } from "@/lib/renderer/crm/settings/custom-field-layout";
 import { flagOr, flagOrOmit, requiredText, textOrOmit } from "../shared/record-payload";
 
-/**
- * Define a custom field, rendered from the description.
- *
- * The branch this form used to carry — show the choice editor only for a select
- * — is now `visibleWhen` on the description, so the engine decides. What is left
- * is the pair editor itself, supplied through `controls` because a choice is two
- * strings and no field kind holds two.
- *
- * The pairs travel as JSON in one form value. That is transport, not interface:
- * nobody sees it, the control parses on the way in and serialises on the way
- * out, and keeping the engine's value a string is what lets the generated
- * schema, the defaults and the condition all go on working unchanged.
- */
-
 type FieldType = CustomFieldDefinition["fieldType"];
 type EntityType = CustomFieldDefinition["entityType"];
 type ChoicePair = { value: string; label: string };
@@ -53,7 +39,6 @@ function toFieldType(value: string | undefined): FieldType | undefined {
   return FIELD_TYPES.find((candidate) => candidate === value);
 }
 
-/** The stored key a label becomes, so nobody is asked to type `lead_source`. */
 function labelToName(label: string): string {
   return label
     .toLowerCase()
@@ -62,10 +47,6 @@ function labelToName(label: string): string {
     .replace(/[^a-z0-9_]/g, "");
 }
 
-/**
- * Defensive on the way in: the value is a form string, and a form string that
- * is not the JSON we wrote is a list of no choices rather than a crash.
- */
 function parseChoices(raw: string | undefined): ChoicePair[] {
   if (!raw?.trim()) return [];
   try {
@@ -189,8 +170,6 @@ export function CustomFieldSheet({
   }
 
   function handleSubmit(values: RecordFormValues) {
-    // Absent means the field is not on the choice arm, which is not the same as
-    // an empty list — so it is left out rather than sent as one.
     const choices = values.options === undefined ? undefined : parseChoices(values.options);
 
     if (field) {

@@ -5,13 +5,6 @@ import { exportJobStorageKey } from "./employee-export-job-storage";
 import { ApiError } from "@/lib/api-envelope";
 import type { HrEmployeeExportJob } from "@/hooks/api/hr/import-export";
 
-/**
- * Ticket 04. The export job id lived only in this component's state, so leaving
- * `/hr/employees` abandoned a running server-side job and its finished file was
- * unreachable. These cases pin the three properties that matter: the id is
- * recovered per user and organisation, recovery polls instead of creating a
- * second export, and a job from another scope is never picked up.
- */
 const SCOPE = "org-1::user-1";
 let currentScope = SCOPE;
 
@@ -34,8 +27,6 @@ jest.mock("@/hooks/api/hr/import-export", () => ({
   useDownloadHrEmployeeExportJob: () => ({ mutate: downloadMutate, isPending: false }),
   useHrEmployeeExportJob: (exportJobId: string | null) => {
     polled.push(exportJobId);
-    // The real hook is disabled without an id, so a cleared store means no read
-    // and no error — the button goes back to offering a fresh export.
     return exportJobId === null ? { isError: false } : jobResult;
   },
 }));

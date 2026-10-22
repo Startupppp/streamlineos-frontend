@@ -127,7 +127,6 @@ describe("Job Details — top-level toggle (HRM-15 D3)", () => {
     fireEvent.click(screen.getByLabelText("Top-level role — no reporting manager"));
 
     expect(screen.getByRole("combobox", { name: "Primary reporting manager" })).toBeDisabled();
-    // The disabled picker no longer promises a policy assignment.
     expect(screen.getByText("Not used for a top-level role: this person reports to nobody.")).toBeInTheDocument();
     expect(screen.queryByText("Assigned automatically by policy if left blank.")).not.toBeInTheDocument();
     expect(screen.getByPlaceholderText("e.g. Founder and chief executive")).toHaveAttribute("aria-required", "true");

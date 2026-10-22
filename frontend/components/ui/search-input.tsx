@@ -5,11 +5,6 @@ import { Loader2, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 
-/**
- * Shared width contract: fills the row on mobile, capped on tablet and up so a
- * lone search never stretches across a wide page. Opt out with `fill` when the
- * search sits inside a panel it is meant to span (wide dialog, sheet, drawer).
- */
 export const SEARCH_INPUT_WIDTH = "w-full min-w-[12rem]";
 export const SEARCH_INPUT_MAX_WIDTH = "sm:max-w-xs lg:max-w-sm";
 
@@ -18,18 +13,10 @@ export interface SearchInputProps
   value: string;
   onValueChange: (value: string) => void;
   onClear?: () => void;
-  /**
-   * Enter pressed in the field. Debounced searches use it to publish the typed
-   * value at once instead of waiting out the timer; the default is still a
-   * trailing debounce, so this never turns into a request per keystroke.
-   */
   onSubmitSearch?: () => void;
   inputClassName?: string;
-  /** Span the container instead of capping at the shared filter max-width. */
   fill?: boolean;
-  /** Render a square icon-only control until the caller expands it. */
   compact?: boolean;
-  /** A search for the typed value is still pending: the icon becomes a spinner. */
   searching?: boolean;
 }
 
@@ -59,7 +46,6 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
     function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
       props.onKeyDown?.(e);
       if (e.key !== "Enter" || e.defaultPrevented) return;
-      // A search row often sits inside a form; Enter must search, not submit.
       e.preventDefault();
       onSubmitSearch?.();
     }
@@ -109,8 +95,6 @@ export const SearchInput = React.forwardRef<HTMLInputElement, SearchInputProps>(
               "absolute inset-0 !size-9 !min-w-9 !max-w-9 !p-0 text-transparent placeholder:text-transparent",
           )}
           {...props}
-          // After the spread: a caller's own onKeyDown is chained inside
-          // handleKeyDown, never allowed to replace it.
           onKeyDown={handleKeyDown}
         />
         {value ? (

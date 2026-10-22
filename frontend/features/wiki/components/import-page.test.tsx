@@ -180,7 +180,6 @@ describe("ImportPage — Import / Export tabs", () => {
     });
 
     expect(await screen.findByText("1/100 files loaded")).toBeInTheDocument();
-    // KB-B-019: the opening H1 is the page title, not the file name.
     expect(screen.getByText("Guide")).toBeInTheDocument();
     expect(screen.queryByText("diagram")).not.toBeInTheDocument();
     expect(toast.error).toHaveBeenCalledWith(

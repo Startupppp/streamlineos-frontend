@@ -17,14 +17,6 @@ export interface ClaimedPutawayTask {
   line: PutawayTaskLine;
 }
 
-/**
- * A putaway task standing in THIS operator's queue.
- *
- * Claimed, not merely raised: the RF queue asks for `assignment=MINE`, and an
- * unclaimed task is somebody else's work as far as that screen is concerned —
- * so a spec that raised one without claiming it would find an empty queue and
- * conclude the screen was broken.
- */
 export async function claimedPutawayTask(
   api: ApiOracle,
   grnId: number,
@@ -42,8 +34,6 @@ export async function claimedPutawayTask(
 
   const line = detail.lines?.[0];
   if (!line) throw new Error(`Putaway task ${raised.taskNumber} has no lines.`);
-  // The RF runner refuses to confirm a line with no destination, and says so in
-  // a toast rather than posting. Failing here instead names the fixture.
   const destination = line.to_location_id ?? line.suggestions?.[0]?.locationId ?? null;
   if (destination === null) {
     throw new Error(
@@ -77,17 +67,6 @@ export interface ClaimedPickWave {
   line: PickWaveLine;
 }
 
-/**
- * A pick wave standing in THIS operator's queue, with its lines allocated.
- *
- * The sales order is confirmed rather than merely created: `createWave` refuses
- * anything outside `CONFIRMED` / `RESERVED` / `PARTIALLY_RESERVED` and names
- * the offending order, so a draft would fail the seed rather than the walk.
- *
- * A line the allocator could not resolve is refused here too. `confirmPick`
- * will not close a line against a null location — correctly — and a wave seeded
- * with one produces a walk that cannot be finished, which reads as a UI defect.
- */
 export async function claimedPickWave(
   api: ApiOracle,
   target: SeedTarget,

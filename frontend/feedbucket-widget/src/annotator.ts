@@ -29,7 +29,6 @@ interface Pin {
   index: number;
 }
 
-
 export class Annotator {
   private readonly overlay: HTMLDivElement;
   private readonly shadow: ShadowRoot;

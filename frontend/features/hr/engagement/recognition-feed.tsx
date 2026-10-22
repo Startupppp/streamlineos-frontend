@@ -48,7 +48,6 @@ interface RecognitionFeedProps {
   isError?: boolean;
   error?: unknown;
   onRetry?: () => void;
-  /** Omitted when the viewer cannot POST /hr/recognition. */
   onGiveKudos?: () => void;
 }
 
@@ -212,7 +211,6 @@ export function RecognitionFeed({ recognitions, isLoading, isError, error, onRet
 
 export function BadgesGrid() {
   const { data: badges, isLoading, isError, error, refetch } = useEngagementBadges();
-  // Denial first (FE-47); load/error keep their widget-specific copy below.
   const badgesAccess = usePageState({ permission: "hr:engagement:view", isLoading: false, isError: false, error: null });
   const canManage = useCan("hr:engagement:manage");
   const award = useAwardBadge();

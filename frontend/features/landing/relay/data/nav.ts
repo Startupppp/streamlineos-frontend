@@ -2,14 +2,8 @@ import { PRICING } from "@/lib/pricing";
 
 import { SIGN_IN_HREF, TRIAL_LABEL } from "./pricing";
 
-/**
- * 01 Navigation — Figma 3488:21037. Copy is verbatim from the frame; `code`
- * and `note` only feed the 390 menu card (not in Figma, user-picked variant).
- */
 export const navMock = {
   brand: { name: "StreamlineOS", href: "/" },
-  /* Absolute so the nav works from every public page: homepage sections
-     are `/#id`, the rest are their own routes. */
   links: [
     {
       label: "Product",

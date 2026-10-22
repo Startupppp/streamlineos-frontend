@@ -1,18 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * A pricebook, and the prices in it.
- *
- * Two descriptions rather than one, because they are two record types: a
- * pricebook has a name and a currency, and a pricebook *entry* is a product at a
- * price above a quantity. The old sheet drew the entries as a hand-written list
- * with a three-input form under it; described as its own record type, the same
- * screen is a list and a form the engine already knows how to render.
- *
- * `isDefault` and `isActive` appear on the create form rather than being
- * `editOnly`: `CreatePricebookInput` demands both, so a create that omitted them
- * would fail on submit.
- */
 export const PRICEBOOK_LAYOUT: RecordLayout = {
   key: "crm:settings:pricebook",
   singular: "Pricebook",
@@ -72,16 +59,6 @@ export const PRICEBOOK_LAYOUT: RecordLayout = {
   },
 };
 
-/**
- * One product's price inside one pricebook.
- *
- * `unitPrice` is money, not the integer of minor units the API stores. The old
- * form asked for "Price (cents)" and printed `unitPriceCents / 100` back in the
- * list, which is two different units on one screen and a decimal point of
- * distance between them. The surface converts on the way in and out; the
- * description says what the figure *is*, which is an amount of money in the
- * product's own currency.
- */
 export const PRICEBOOK_ENTRY_LAYOUT: RecordLayout = {
   key: "crm:settings:pricebook-entry",
   singular: "Price",

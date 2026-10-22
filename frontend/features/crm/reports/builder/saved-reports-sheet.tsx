@@ -23,17 +23,9 @@ interface SavedReportsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onOpenReport: (reportDefinitionId: string) => void;
-  /** The report currently loaded into the builder, so the list can say so. */
   currentReportDefinitionId: string | null;
 }
 
-/**
- * The saved reports, and the way back into one.
- *
- * Read behind `crm:reporting:view` and deleted behind `crm:reporting:manage`,
- * which is the controller's split: seeing which questions the organisation asks
- * is a different authority from changing them.
- */
 export function SavedReportsSheet({
   open,
   onOpenChange,
@@ -113,11 +105,7 @@ export function SavedReportsSheet({
             />
           ))}
 
-          {/*
-            The list endpoint returns a page, not a total, so paging is offered
-            by whether this page came back full rather than by a count nobody
-            sent. Claiming a total here would mean inventing one.
-          */}
+          
           <TablePagination
             page={page}
             pageSize={PAGE_SIZE}

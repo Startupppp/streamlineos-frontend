@@ -26,10 +26,6 @@ const globalSearchC = lazyContract(() =>
   import("@/components/command-palette/hooks/global-search-schema").then((m) => m.globalSearchContract),
 );
 
-/**
- * `GET /search` is `x-exposure: universal` — every authenticated member may call
- * it and the subject comes from the token, so there is no permission to gate on.
- */
 export function useGlobalSearch<T extends GlobalSearchType = LegacySearchType>(
   query: string,
   types?: readonly T[],

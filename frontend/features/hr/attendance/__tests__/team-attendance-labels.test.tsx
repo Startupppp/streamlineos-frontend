@@ -3,15 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 
 import type { TeamAttendanceEntry } from "@/types/hr";
 
-/**
- * V-061. Two things this card promises and nothing proved: a person with no
- * clock data reads "Not checked in", never "Offline"; and an org with no
- * attendance data at all is offered a route into setup rather than a dead end.
- */
 let canManage = true;
-// The page now resolves its state through usePageState, which reads session,
-// access and entitlements; resolve it as granted so the test exercises the
-// page, not the provider tree.
 jest.mock("@/hooks/api/use-page-state", () => {
   const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
     "@/lib/page-state/resolve-page-state",
@@ -102,7 +94,6 @@ describe("TeamAttendanceCard", () => {
   });
 
   it("does not offer the setup link to someone who cannot manage attendance", () => {
-    // The paired negative for FE-55: a link that would end at Access Denied.
     canManage = false;
     withEntries([]);
     render(<TeamAttendanceCard />);
@@ -120,7 +111,6 @@ describe("TeamAttendanceCard", () => {
       target: { value: "nobody" },
     });
 
-    // A filtered emptiness offers Clear filters, not the setup route.
     await waitFor(() =>
       expect(screen.getByRole("button", { name: /Clear filters/i })).toBeInTheDocument(),
     );

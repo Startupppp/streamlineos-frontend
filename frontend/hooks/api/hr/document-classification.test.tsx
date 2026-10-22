@@ -64,7 +64,6 @@ const shared: SetDocumentAudiencesResult = {
   linkAudiencesNarrowed: 2,
 };
 
-/** Every cache the document can be read from, filled so that "was it invalidated" is a fact about the cache and not about a spy. */
 function seedCaches() {
   client.setQueryData(classificationKey, before);
   client.setQueryData(kbLinkKey, { documentId: 7 });

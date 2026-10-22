@@ -44,22 +44,12 @@ function AddSubjectButton({ label, onClick }: { label: string; onClick: () => vo
 
 const PAGE_SIZE = 20;
 
-/**
- * The things this organisation transacts.
- *
- * There is no property screen and no candidate screen. A tenant declares a
- * type, and this page renders it — columns, labels, empty state and mobile card
- * all derived from their declaration through the same engine that renders
- * parties. Which is the claim ticket 07 was written to test.
- */
 export function SubjectsPage() {
   const canManage = useCan("party:subjects:manage");
 
   const [typeId, setTypeId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebouncedValue(search, 300);
-  // The open record lives in the URL so a task assigned on a subject's timeline
-  // lands on the subject itself, not merely on the list.
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();

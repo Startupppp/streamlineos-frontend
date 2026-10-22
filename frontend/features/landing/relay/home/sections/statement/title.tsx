@@ -12,11 +12,6 @@ export interface StatementTitleProps {
   tail: string;
 }
 
-/**
- * Dark-ink title: sans words rise one by one, the serif accent lands last
- * with a -16° slant that straightens. Words are inline-blocks separated by
- * the original spaces, so the resting layout is the plain heading.
- */
 export const StatementTitle = ({ lead, accent, tail }: StatementTitleProps) => {
   const { seen, reduced } = useStatementSeen();
   const leadWords = lead.split(" ");

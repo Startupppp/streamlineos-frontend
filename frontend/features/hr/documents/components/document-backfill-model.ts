@@ -1,6 +1,5 @@
 import type { DocumentBackfillPage } from "@/hooks/api/hr/document-backfill";
 
-/** The most the panel lists by name; the server sends this many per page, the panel keeps the first ones. */
 export const BACKFILL_SAMPLE_LIMIT = 20;
 
 export interface BackfillTotals {
@@ -25,7 +24,6 @@ export const EMPTY_TOTALS: BackfillTotals = {
   sample: [],
 };
 
-/** Folds one page into the running totals; the sample keeps the first documents seen. */
 export function addPage(totals: BackfillTotals, page: DocumentBackfillPage): BackfillTotals {
   return {
     pages: totals.pages + 1,
@@ -53,7 +51,6 @@ const SKIP_REASONS: ReadonlyArray<{ key: keyof BackfillTotals["skipped"]; one: s
   { key: "inactive", one: "was removed", many: "were removed" },
 ];
 
-/** The reasons documents were left alone, worded for a count, and only the ones that happened. */
 export function skippedLines(skipped: BackfillTotals["skipped"]): string[] {
   return SKIP_REASONS.filter((reason) => skipped[reason.key] > 0).map(
     (reason) => `${skipped[reason.key]} ${skipped[reason.key] === 1 ? reason.one : reason.many}`,

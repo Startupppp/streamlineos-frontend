@@ -9,18 +9,6 @@ import { QUOTE_SETTINGS_LAYOUT } from "@/lib/renderer/crm/settings/quote-templat
 import type { QuoteSettings } from "@/types/crm/pricebooks";
 import { flagOrOmit, numberOrNull, numberOrOmit } from "../shared/record-payload";
 
-/**
- * How quoting behaves across the organisation.
- *
- * Generated from a singleton description — there is one of these per tenant and
- * no list of them, which is a shape the vocabulary now admits rather than one it
- * had to be lied to about. The form owns its own mutation because there is
- * nothing else on the page that could: a settings form is the whole surface.
- *
- * A blank maximum discount is `null` — no ceiling — rather than an omission, so
- * clearing the field clears the limit instead of quietly leaving the old one.
- */
-
 interface QuoteSettingsFormProps {
   settings: QuoteSettings | undefined;
 }

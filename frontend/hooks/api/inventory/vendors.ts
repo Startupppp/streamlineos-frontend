@@ -90,18 +90,12 @@ export function useUpdateVendor(vendorId?: number) {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendors() });
       if (targetId) {
         void qc.invalidateQueries({ queryKey: queryKeys.inventory.vendor(targetId) });
-        // The scorecard reports spend in the vendor's own currency, so editing
-        // that field moves a number the card renders.
         void qc.invalidateQueries({ queryKey: queryKeys.vendorScorecard.card(targetId) });
       }
     },
   });
 }
 
-/**
- * C4. Every supplier number the page renders comes from here — the backend
- * derives them once and the component does no arithmetic of its own.
- */
 export function useVendorPerformance(
   vendorId: number,
   options?: Omit<UseQueryOptions<VendorScorecard, Error>, "queryKey" | "queryFn">,
@@ -116,7 +110,6 @@ export function useVendorPerformance(
   });
 }
 
-/** The purchase orders and receipts a rate was computed from. */
 export function useVendorDeliveries(
   vendorId: number,
   params: { page: number; limit: number },

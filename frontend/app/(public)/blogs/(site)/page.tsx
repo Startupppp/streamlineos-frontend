@@ -21,7 +21,6 @@ export default async function JournalHomePage() {
     listPosts({ limit: 7 }),
     getCategories(),
   ]);
-  // Featured is chosen in the CMS; with none, the newest story leads. It never repeats below.
   const hero = featured.posts[0] ?? latest.posts[0] ?? null;
   const feature = featured.posts.find((p) => p.id !== hero?.id) ?? null;
   const grid = latest.posts.filter((p) => p.id !== hero?.id && p.id !== feature?.id).slice(0, 6);

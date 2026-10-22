@@ -35,10 +35,6 @@ function makeWrapper() {
   };
 }
 
-/**
- * Bite-prove: if useCan gate is removed from any of these hooks (enabled becomes
- * unconditionally true), the hook will call apiClient.get and the test fails.
- */
 describe("notification admin query hook permission gates", () => {
   beforeEach(() => {
     mockGet.mockClear();

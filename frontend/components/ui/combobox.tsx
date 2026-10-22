@@ -22,12 +22,6 @@ export interface ComboboxOption {
   value: string;
   label: string;
   sublabel?: string;
-  /**
-   * A small visual that belongs to the option itself — a person's avatar, an
-   * entity's type mark. It renders in the list row and, once the option is
-   * chosen, in the trigger, so picking someone does not drop what identified
-   * them. Sized by its caller; the box here only keeps it from shrinking.
-   */
   icon?: React.ReactNode;
 }
 
@@ -41,30 +35,6 @@ interface ComboboxProps {
   disabled?: boolean;
   className?: string;
   onSearchChange?: (search: string) => void;
-  /**
-   * The trigger's accessible name.
-   *
-   * Without it the trigger has NO name at all, which is stronger than it first
-   * reads. `role="combobox"` prohibits name-from-content, so the placeholder the
-   * trigger shows is content and not a name: axe reports `button-name` on it
-   * (measured under axe-core 4.12.1 — an unnamed `<button role="combobox">`
-   * carrying text violates the rule, and the same button with `aria-label` is
-   * clean), and `getByRole("combobox", { name })` matches nothing.
-   *
-   * A `FormLabel` above it does not close the gap either. `FormControl` is a
-   * `Slot`, and its child here is a React *component*, so the `id` it hands down
-   * arrives as a prop that nothing forwards to the DOM — the label's `htmlFor`
-   * points at no element. Which is why this is passed explicitly rather than
-   * wired once in `components/ui/form.tsx`: doing it there would also have to
-   * name the ~40 non-inventory `Combobox` callers' forms, and roughly a quarter
-   * of the inventory call sites have a bare `<Label>` or a table column header
-   * rather than a `FormLabel` to point at.
-   *
-   * The inventory entity pickers (`WarehouseSelect`, `LocationSelect`,
-   * `ProductVariantCombobox`) therefore require it. Name it after the field's
-   * visible label; where a form repeats the picker per row, name the row too —
-   * two triggers reading "Location" are two a screen reader cannot tell apart.
-   */
   ariaLabel?: string;
   footer?: React.ReactNode;
   "aria-label"?: string;

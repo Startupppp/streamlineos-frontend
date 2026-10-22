@@ -107,13 +107,6 @@ export function useCreatePayoutBatch() {
   });
 }
 
-/**
- * The bank file lists every payee's unmasked account number. It used to arrive
- * as a one-hour presigned URL that the table opened in a new tab, so the bytes
- * outlived the session that was allowed to see them. The route streams the file
- * under the caller's own credential now, so this hook returns the blob itself
- * and the caller saves it — nothing shareable is ever minted.
- */
 export function useDownloadBatchFile() {
   return useAuthorizedMutation<Blob, Error, number>("payroll:bank:manage", {
     mutationKey: ["payroll", "batch-file"],
@@ -122,14 +115,6 @@ export function useDownloadBatchFile() {
   });
 }
 
-/**
- * Every payout mutation changes what the run list and the payroll command
- * centre show, not just the batch it names. `payrollQueryKeys.payroll.run(id)` is
- * `[...,"payroll","runs",id]` while `payrollQueryKeys.payroll.runs(params)` is
- * `[...,"payroll","runs",params]`, so the two diverge at index 3 and the
- * narrow key never reaches the list — which carries `staleTime: 60_000`.
- * The `payroll/runs` prefix is what covers both.
- */
 function useInvalidatePayoutSurfaces() {
   const qc = useQueryClient();
   return (batchId: number, runId?: number) => {
@@ -140,12 +125,6 @@ function useInvalidatePayoutSurfaces() {
   };
 }
 
-/**
- * Every payout command below is `@Idempotent` on the server. The key identifies
- * the OPERATION, so a retry after a timeout replays the first result instead of
- * settling the same batch twice; `api-client` would otherwise mint a fresh key
- * per HTTP attempt, which satisfies the header and defeats the fence.
- */
 export function useMarkBatchSent() {
   const invalidatePayoutSurfaces = useInvalidatePayoutSurfaces();
   const operation = useIdempotentOperation();

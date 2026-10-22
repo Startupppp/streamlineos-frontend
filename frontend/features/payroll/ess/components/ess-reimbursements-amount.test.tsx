@@ -29,11 +29,6 @@ async function fillAndSubmit(amount: string) {
   await user.click(screen.getByRole("button", { name: /Submit Claim/ }));
 }
 
-/**
- * PAY-004. `min="0"` made the browser's own validation reject `-1` before the
- * resolver ran, so the field kept the value and said nothing. The claim must
- * fail in the form, under the field, and never reach the API.
- */
 describe("the reimbursement Amount field", () => {
   beforeEach(() => mutateAsync.mockReset());
 

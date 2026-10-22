@@ -30,9 +30,7 @@ export default async function HrLayout({ children }: { children: ReactNode }) {
           />
         </div>
         <HrPathTracker />
-        {/* V-034. An administrator who deferred their own wizard was never
-            reminded again; this is the only thing in /hr that says their
-            record is still incomplete. Renders nothing for everyone else. */}
+        
         <div className="px-4 pt-3 empty:hidden sm:px-6">
           <DeferredOnboardingReminder />
         </div>

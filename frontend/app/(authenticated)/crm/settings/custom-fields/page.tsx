@@ -41,19 +41,6 @@ function isEntityType(value: string): value is EntityType {
   return ENTITY_TABS.some((tab) => tab.value === value);
 }
 
-/**
- * Custom fields.
- *
- * A table rather than the stack of cards this replaces. Every card carried one
- * line of content — a label, a key, a type chip — laid out horizontally inside a
- * card that then took a whole row of the page; a table shows the same facts as
- * columns, four times as many at once, and gains a real empty and loading state
- * on the way.
- *
- * The create and edit form stays hand-written, in a sheet rather than the dialog
- * it was: a choice field's options are pairs, added one at a time, and that is
- * work with a length rather than one decision.
- */
 export default function CustomFieldsPage() {
   const layout = useTenantLayout(CUSTOM_FIELD_LAYOUT);
   const [density, setDensity] = useDensity();

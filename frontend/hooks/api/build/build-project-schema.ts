@@ -52,7 +52,6 @@ export const projectRowContract = projectsCreateProjectResponseSchema;
 export const projectDetailContract =
   projectsByIdGetProjectResponseSchema.extend({
     members: z.array(projectDetailMemberContract),
-    // Defaulted so a backend without the field reads as a writable project.
     readOnly: z.boolean().default(false),
   });
 export const projectMemberPageContract =

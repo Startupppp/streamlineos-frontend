@@ -1,22 +1,3 @@
-/**
- * PRD-C115 — responsive accessibility for the four self-service routes.
- *
- * Home's own grid is covered by `features/dashboard/home-a11y.test.tsx`. This
- * file is the other half of the criterion's surface: `/me/attendance`,
- * `/me/expenses`, `/me/time-off` and `/me/documents`, none of which carried an
- * axe assertion of any kind before it.
- *
- * Each route's page file is a two-line server component that awaits
- * `requireSession()` and renders one client root, so the client root IS the
- * page — rendering it here exercises the real component tree, its real states
- * and its real breakpoints.
- *
- * Every state is asserted at 375 / 768 / 1280 because the criterion says
- * *responsive* accessibility, and each error state carries a second assertion
- * axe cannot make: axe checks markup validity, not whether a failure is
- * ANNOUNCED. A silent red paragraph is valid markup and tells a screen-reader
- * user nothing, so the failed read must be reachable through `role="alert"`.
- */
 
 import * as React from "react";
 import { render, screen } from "@testing-library/react";
@@ -30,12 +11,6 @@ const ERROR_MESSAGE = "this self-service read is down";
 
 let state: PageState = "loaded";
 
-/**
- * One stub satisfying every consumer shape on these pages — plain query,
- * infinite query and mutation — so a page's incidental hooks do not each need a
- * hand-written double and a newly added hook cannot silently render `undefined`
- * into the tree under test.
- */
 function stub(data: unknown): Record<string, unknown> {
   const isLoading = state === "loading";
   const isError = state === "error";
@@ -113,8 +88,6 @@ jest.mock("@/hooks/api/access", () => ({
   useModuleEnabled: () => true,
 }));
 
-// MyDocumentsPage resolves through usePageState; keep its real branch order
-// (loading -> error -> empty -> ready) with access granted, as useCan above is.
 jest.mock("@/hooks/api/use-page-state", () => {
   const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
     "@/lib/page-state/resolve-page-state",
@@ -130,7 +103,6 @@ jest.mock("@/hooks/api/payroll/payroll-cutoff", () => ({
   currentPayrollMonth: () => "2026-10",
 }));
 
-// A pending own-leave row asks who approves it (BUG-HRMS-017/018).
 jest.mock("@/hooks/api/hr/approvers", () => ({
   useMyApprover: () => ({ data: undefined }),
 }));
@@ -159,13 +131,6 @@ jest.mock("@/hooks/api/hr/expenses", () => ({
   useWithdrawExpense: () => stub(undefined),
 }));
 
-/**
- * The leaves surface pulls a long tail of incidental hooks out of this barrel
- * and the list grows. Enumerating the REAL module's exports and stubbing every
- * one it does not name explicitly keeps the corpus rendering when a new hook
- * lands, instead of failing as `(0, _hr.useX) is not a function` — which reads
- * like a broken page rather than a missing double.
- */
 jest.mock("@/hooks/api/hr", () => {
   const named: Record<string, unknown> = {
   useHrAttendanceStatus: () => stub(ATTENDANCE_STATUS),
@@ -271,7 +236,6 @@ import { LeavesWfhContent } from "@/features/hr/leaves/components/leaves-wfh-con
 interface SelfServiceRoute {
   route: string;
   render: () => React.ReactElement;
-  /** A string only this route renders, so the corpus cannot silently go blank. */
   marker: RegExp;
 }
 

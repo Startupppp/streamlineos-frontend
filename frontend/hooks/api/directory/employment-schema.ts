@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for `GET /directory/employment` — a batch lookup that returns
- * employment facts for up to 100 users in one request.
- *
- * Derived from the backend `DirectoryController.listEmploymentFacts` service
- * projection. The handler returns `{ data: EmploymentFacts[] }`.
- *
- * NOT `.strict()`. Timestamps are ISO strings.
- */
-
 const employmentFactsItemContract = z.object({
   userId: z.string(),
   employmentId: z.number().nullable(),

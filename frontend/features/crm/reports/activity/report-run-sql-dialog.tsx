@@ -8,14 +8,6 @@ interface ReportRunSqlDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * The statement a run executed.
- *
- * This is readable by somebody holding only `crm:reporting:view` because the
- * stored SQL carries placeholders and no literals — that property is what makes
- * the audit read grantable apart from a view of the data, so it is stated on
- * screen rather than assumed.
- */
 export function ReportRunSqlDialog({ run, onOpenChange }: ReportRunSqlDialogProps) {
   return (
     <AppDialog

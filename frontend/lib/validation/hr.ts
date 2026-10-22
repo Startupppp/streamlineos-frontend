@@ -4,7 +4,6 @@ import { USER_INVITE_ROLE_VALUES } from "@/lib/constants/user-invite-roles";
 import { HR_WORKER_TYPE_VALUES } from "@/lib/constants/hr-worker-types";
 import { hrPersonNameField } from "@/lib/person-name-schema";
 
-/** Display-only copy of a chosen manager, so a step can name them after remounting. Never sent. */
 const managerRefDisplaySchema = z
   .object({
     userId: z.string(),
@@ -123,12 +122,6 @@ export const onboardEmployeeInputSchema = z
     departmentId: z
       .string({ error: "Select a department" })
       .min(1, "Select a department"),
-    /**
-     * BUG-HRMS-006 / BUG-HRMS-007. Both columns have always existed on
-     * `hr_employments`; onboarding simply never offered them, so every hire landed
-     * at no location and as FULL_TIME whatever they actually were. Optional here
-     * because an org that configured no location still has to be able to hire.
-     */
     locationId: z.string().optional(),
     workerType: z.enum(HR_WORKER_TYPE_VALUES).optional(),
     reportingManagerUserId: z.string().optional(),
@@ -143,7 +136,6 @@ export const onboardEmployeeInputSchema = z
       .trim()
       .max(500, "Keep the reason under 500 characters")
       .optional(),
-    /** Who a blank primary resolves to under the loaded policy; set by the step, never sent. */
     policyDefaultPrimary: z
       .object({ userId: z.string(), name: z.string() })
       .nullable()

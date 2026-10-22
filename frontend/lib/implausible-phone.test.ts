@@ -1,16 +1,5 @@
 import { isImplausiblePhone, nationalDigitsOf } from "@/lib/implausible-phone";
 
-/**
- * HRMS-E2E-019. QA typed 9999999999 into org setup and was let through. Every
- * shape rule an Indian mobile has says yes to it — ten digits, leading 9,
- * correct length for the +91 plan — and the product sends no OTP here, so
- * nothing downstream would ever have found out. The organisation simply carries
- * a contact nobody answers.
- *
- * This file mirrors the backend's `implausible-phone.spec.ts` case for case.
- * The two copies of the rule have no shared package between them, so the tests
- * are what keeps them saying the same thing.
- */
 describe("implausible phone numbers", () => {
   describe("nationalDigitsOf", () => {
     it.each([
@@ -38,10 +27,6 @@ describe("implausible phone numbers", () => {
     it.each(["1234567890", "9876543210", "+911234567890"])(
       "accepts %s, a run the numbering plan can still allocate",
       (value) => {
-        // Just as obviously a placeholder to a human, and rejected here for a
-        // while — but turning a real customer away at signup costs more than
-        // carrying one unreachable number, and this check cannot tell them
-        // apart. It is also the fixture the org-setup suite has always used.
         expect(isImplausiblePhone(value)).toBe(false);
       },
     );
@@ -71,8 +56,6 @@ describe("implausible phone numbers", () => {
     });
 
     it("has no opinion about something too short to judge", () => {
-      // An extension or a partial entry is somebody else's validation problem;
-      // calling it a placeholder here would refuse a number this check cannot read.
       expect(isImplausiblePhone("1111")).toBe(false);
     });
   });

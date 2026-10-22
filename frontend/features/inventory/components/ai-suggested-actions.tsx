@@ -4,18 +4,6 @@ import Link from "next/link";
 import { useCan } from "@/hooks/api/access";
 import type { ResolvedAiAction } from "@/hooks/api/inv-ai-explain";
 
-/**
- * INV-102 — renders the actions the *server* resolved.
- *
- * Each row is its own component because the permission gate is a hook and the
- * list is dynamic. A viewer who cannot perform an action is not shown it: the
- * permission travels with the action precisely so this decision does not have
- * to be guessed at the call site.
- *
- * An action that mutates never renders as a link. It carries `href: null` from
- * the server and appears as text, so nothing here can be performed by a click
- * that was only meant to read.
- */
 function ActionRow({ action, index }: { action: ResolvedAiAction; index: number }) {
   const allowed = useCan(action.permission);
   if (!allowed) return null;

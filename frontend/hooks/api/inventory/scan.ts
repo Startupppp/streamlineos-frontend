@@ -3,18 +3,6 @@
 import { apiClient } from "@/lib/api-client";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/**
- * B2 — `POST /inventory/barcode/scan/capture`, as the API actually shapes it.
- *
- * The read-only sibling `/scan` resolves and reports; capture records the scan
- * as a fact and emits `inventory.scan.captured` before anything acts on it.
- * They exist separately because they fail separately: a warehouse whose putaway
- * was rejected still needs to know the pallet was scanned at the door. Every
- * operator surface therefore captures, and nothing on the client calls the
- * read-only pair — capture returns the same resolution and the fact besides.
- *
- * The endpoint carries `inventory:stock:read`, so one key gates the whole shell.
- */
 export const SCAN_PERMISSION = "inventory:stock:read";
 
 export interface Gs1Parsed {
@@ -28,15 +16,6 @@ export interface Gs1Parsed {
   unparsed?: string;
 }
 
-/**
- * The plain-code fallback, for a payload that is not a GS1 element string.
- *
- * Field names mirror `BarcodeLookupResult` in
- * `backend/src/modules/inventory/barcode/dto/inv-barcode.schemas.ts` exactly.
- * The previous declaration invented `productName` / `variantSku` /
- * `locationName`, none of which any response has ever carried, so the lookup
- * card rendered `undefined` for every row.
- */
 export type BarcodeLookupResult =
   | {
       type: "product";
@@ -99,34 +78,18 @@ export interface ScanResult {
     currentLocationId: number | null;
   } | null;
   lookup?: BarcodeLookupResult;
-  /** Things that resolved but disagree. Never silently dropped. */
   warnings: string[];
 }
 
-/** `captured` is false when the key replayed — the fact was written by an earlier attempt. */
 export interface ScanCaptureResult extends ScanResult {
   captured: boolean;
 }
 
 export interface CaptureScanInput {
   payload: string;
-  /**
-   * Supplied by the caller, never minted here.
-   *
-   * A device that retries has to replay, and a second physical scan of the same
-   * SKU has to record a second fact. Only the surface holding the scanner knows
-   * which of the two just happened, so it owns the key.
-   */
   idempotencyKey: string;
 }
 
-/**
- * B2, item 2 — the capture that has to happen before the stock command.
- *
- * Deliberately not wired to `onSuccess` invalidations: capturing a scan changes
- * no list. The command that follows it does, and that command already
- * invalidates.
- */
 export function useCaptureScan() {
   return useAuthorizedMutation<ScanCaptureResult, Error, CaptureScanInput>(
     "inventory:stock:read",

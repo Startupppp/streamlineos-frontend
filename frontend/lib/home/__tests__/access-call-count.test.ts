@@ -1,16 +1,3 @@
-/**
- * Proves exactly ONE backend /me/access call per navigation (criterion 9).
- *
- * The layout resolves access for MFA/route decisions; prefetchAccess seeds the
- * client cache. Both go through the cache()-wrapped getServerAccessResult, so
- * React deduplicates them within one request context and only one HTTP call to
- * /me/access is made per navigation.
- *
- * getServerAccessResult returns a discriminated result rather than a bare
- * AccessResponse, because a swallowed failure and a genuine denial are not the
- * same thing: route gating must fail CLOSED (deny), while prefetch must NOT
- * seed the client cache with a denied snapshot that a transient 503 produced.
- */
 
 jest.mock("@/lib/rbac/get-server-access", () => ({
   getServerAccess: jest.fn(),

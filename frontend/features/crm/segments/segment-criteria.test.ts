@@ -8,15 +8,6 @@ import {
   type SegmentCriterionDraft,
 } from "./segment-criteria";
 
-/**
- * The conversion between what a person draws and what the server stores.
- *
- * Two things are worth pinning. The **round trip**: a segment saved from this
- * control must reopen as the same rows, or editing one silently rewrites it. And
- * the **refusals**: this control draws a flat conjunction, so anything else has
- * to come back as `null` rather than as a flattened approximation that means
- * something different from what the author saved.
- */
 
 const TYPES: Record<string, ReportingFieldType> = {
   industry: "text",
@@ -35,11 +26,6 @@ const row = (over: Partial<SegmentCriterionDraft>): SegmentCriterionDraft => ({
 
 describe("rows to criteria", () => {
   it("emits a bare comparison for a single row, not a one-child conjunction", () => {
-    /**
-     * Both compile identically. The stored artefact is what somebody reads in a
-     * support ticket, and `{"kind":"and","nodes":[…one…]}` invites the question
-     * of what the missing sibling was.
-     */
     expect(
       toSegmentCriteria([
         row({ field: "industry", fieldType: "text", operator: "eq", value: "Textiles" }),
@@ -63,12 +49,6 @@ describe("rows to criteria", () => {
   });
 
   it("types the value rather than sending everything as text", () => {
-    /**
-     * A number field sent as `"70"` compiles — the compiler casts — but the
-     * stored tree would then disagree with the same criterion entered through
-     * any other client, and `"7"` would sort before `"70"` in a future reader
-     * that trusted the JSON.
-     */
     const criteria = toSegmentCriteria([
       row({ field: "health_score", fieldType: "number", operator: "lt", value: "40" }),
     ]);
@@ -81,10 +61,6 @@ describe("rows to criteria", () => {
   });
 
   it("carries a unary comparison with no value at all", () => {
-    /**
-     * How `= NULL` — the classic silently-empty result — stays unrepresentable
-     * rather than special-cased. The leaf has no `value` slot to fill.
-     */
     expect(
       toSegmentCriteria([
         row({ field: "industry", fieldType: "text", operator: "is_null", value: "ignored" }),
@@ -111,10 +87,6 @@ describe("rows to criteria", () => {
   });
 
   it("refuses an incomplete row rather than dropping it", () => {
-    /**
-     * Dropping it would send criteria the person did not write — a narrower
-     * segment than the one on their screen, saved under the name they chose.
-     */
     expect(toSegmentCriteria([])).toBeNull();
     expect(toSegmentCriteria([row({ field: "", fieldType: "" })])).toBeNull();
     expect(
@@ -144,11 +116,6 @@ describe("criteria back to rows", () => {
   });
 
   it("declines a tree it cannot draw, instead of flattening it", () => {
-    /**
-     * The honest half. An `or` flattened into a conjunction is a different
-     * segment, and rewriting somebody's saved criteria while showing them a
-     * form that looks fine is worse than declining to edit them.
-     */
     const disjunction: ReportingFilterNode = {
       kind: "or",
       nodes: [
@@ -169,11 +136,6 @@ describe("criteria back to rows", () => {
   });
 
   it("declines a criterion naming a field this caller's catalogue lacks", () => {
-    /**
-     * Happens when a field is withdrawn from the registry, or when the reader
-     * holds a narrower grant than the author. Rendering it as a blank control
-     * would silently drop the criterion on the next save.
-     */
     const withdrawn: ReportingFilterNode = {
       kind: "compare",
       field: "tax_number",
@@ -184,10 +146,6 @@ describe("criteria back to rows", () => {
   });
 
   it("declines an operator this control does not offer for that type", () => {
-    /**
-     * `between` is in the server's vocabulary and absent from this builder. A
-     * segment carrying one opens read-only rather than losing its range.
-     */
     const ranged: ReportingFilterNode = {
       kind: "compare",
       field: "health_score",
@@ -229,13 +187,6 @@ describe("criteria as a sentence", () => {
 
 describe("the operators this control offers", () => {
   it("never offers one the compiler refuses for that type", () => {
-    /**
-     * The direction of drift that matters. Offering fewer operators than the
-     * server accepts costs an affordance; offering more produces a 400 the
-     * person cannot act on. Enum in particular must not carry substring
-     * matching — Postgres has no `ILIKE` between an enum and text, so it is a
-     * refusal rather than a slow query.
-     */
     expect(SEGMENT_OPERATORS_FOR_TYPE.enum).not.toContain("contains");
     expect(SEGMENT_OPERATORS_FOR_TYPE.enum).not.toContain("gt");
     expect(SEGMENT_OPERATORS_FOR_TYPE.number).not.toContain("contains");

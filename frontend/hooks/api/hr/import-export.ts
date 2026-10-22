@@ -44,7 +44,6 @@ export interface HrImportJob {
   totalRows: number;
   validRows: number;
   errorRows: number;
-  /** What a commit did with its valid rows: `validRows` split into new, changed and already-there. Zero before a commit. */
   createdRows: number;
   updatedRows: number;
   unchangedRows: number;
@@ -66,12 +65,6 @@ export interface HrImportRow {
   createdRecordRef: { table: string; id: string | number; outcome?: "created" | "updated" | "unchanged" } | null;
 }
 
-/**
- * `errorRows` is a SAMPLE of the rows that ended in error: the server returns every status='error' row — failed
- * validation and failed at commit alike, with nothing to tell the two apart — capped at 50 and unordered. How many
- * rows a job has in error comes from the counters on `job` (see `tallyImportRows`); `errorRows.length` is only how many
- * the server sent.
- */
 export interface HrImportJobDetail {
   job: HrImportJob;
   errorRows: HrImportRow[];
@@ -152,10 +145,6 @@ export function useHrImportJobs(
         ...(entity ? { entity } : {}),
       }, signal, lazyContract(() => import("@/hooks/api/hr/import-export-schema").then(m => m.hrImportJobListContract))),
     staleTime: 30_000,
-    // Import history is one section of Import / Export. JobHistoryTable renders
-    // its own inline error and retry; left to the provider default, one failed
-    // read replaced the whole page — export and import cards included — with
-    // the /hr route boundary's "Failed to load".
     ...INLINE_READ_ERROR,
     enabled: hrEnabled && canImport,
   });
@@ -185,10 +174,6 @@ export function useCreateImportJob() {
   });
 }
 
-/**
- * The commit is `@Idempotent("hr.import.jobs.commit")` (HRM-15 Addendum 2): one
- * key per job commit, reused by a retry, released once it completes.
- */
 export function useCommitImportJob() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
@@ -200,7 +185,6 @@ export function useCommitImportJob() {
       operation.settle();
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJobs() });
       qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.importJob(jobId) });
-      // An employees import writes reporting lines (HRM-15 §7.4).
       if (job.entity === "employees")
         void invalidateHrWorkforceQueries(qc, undefined, [humanResourcesQueryKeys.hr.reportingLinesAll()]);
     },
@@ -278,7 +262,6 @@ export function useDownloadHrEmployeeExportJob() {
     mutationFn: (exportJobId) => {
       if (!hrEnabled || !canExport)
         return Promise.reject(new Error("Employee export access is required"));
-      // Saves the file itself, and refuses an empty or non-file body (HRMS-E2E-009).
       return downloadExport(`/hr/export/jobs/${exportJobId}/download`, {
         label: "employee directory",
         fallbackName: "employee-directory.csv",

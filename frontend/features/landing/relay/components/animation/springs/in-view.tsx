@@ -1,31 +1,3 @@
-// 📖 Docs: obsidian/frontend/components/animation-springs.md
-/**
- * @fileoverview Inview animation component for scroll-based reveal animations
- *
- * This component provides spring animations triggered by scroll position:
- * 1. Configurable enter/exit animations
- * 2. Multiple animation modes (always, once, forward)
- * 3. Optional mobile device handling
- * 4. Support for external trigger elements
- *
- * @param {React.ReactNode} children - Child elements to animate
- * @param {boolean} enabled - Whether animations are enabled
- * @param {Object} from - Starting animation values
- * @param {Object} to - Ending animation values
- * @param {'always'|'once'|'forward'} mode - Animation mode:
- *   - always: Always animates when in view
- *   - once: Plays once when first in view
- *   - forward: Only plays forward
- * @param {React.CSSProperties} style - Additional CSS styles
- * @param {Object} config - Spring animation configuration
- * @param {number} delayIn - Delay before enter animation in ms
- * @param {number} delayOut - Delay before exit animation in ms
- * @param {string} innerClassName - Class name for inner animated element
- * @param {Tags} innerTag - HTML tag for inner animated element
- * @param {React.RefObject<HTMLElement>} trigger - Optional external trigger element ref
- * @param {boolean} disableOnMobile - Whether to disable on mobile devices
- * @param {boolean} immediateOut - Whether to skip exit animation
- */
 
 "use client";
 
@@ -146,9 +118,6 @@ export const Inview = forwardRef<HTMLElement, SpringProps & { tag?: Tags }>(
       return inView;
     }, [inView, mode, enabled, disableOnMobile, width]);
 
-    // Declarative spring — `useSpring` diffs values each render. The imperative
-    // `useSpring(fn).api.start` form did not move the values in this project's
-    // react-spring build.
     const springs = useSpring({
       from,
       to: active ? to : from,

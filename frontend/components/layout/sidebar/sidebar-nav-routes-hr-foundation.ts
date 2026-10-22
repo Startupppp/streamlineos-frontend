@@ -35,11 +35,6 @@ export const HR_OVERVIEW_ROUTES: NavRoute[] = [
     icon: ClipboardCheck,
     href: "/hr/approvals",
     searchTerms: ["approvals", "queue", "exceptions"],
-    // V-044 / V-042. /hr/approvals is the single HR approvals queue and now
-    // lists leave requests too, which are routed to a holder of
-    // hr:leaves:approve — a BRANCH_HR or HR_ADMIN who is nobody's manager.
-    // Gated on hr:workflows:approve alone, that approver was bounced to
-    // /access-denied and never reached their own queue.
     requiredPermission: ["hr:workflows:approve", "hr:leaves:approve"],
   },
 ];

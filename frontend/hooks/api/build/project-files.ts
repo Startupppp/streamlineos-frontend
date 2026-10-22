@@ -9,6 +9,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { readFileAsBase64 } from "@/lib/read-file-as-base64";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { projectFilesListQueryOptions } from "./project-files-read-options";
 
 const filePageContract = lazyContract(() =>
   import("@/hooks/api/build/project-files-schema").then((m) => m.filePageContract),
@@ -153,15 +154,3 @@ export function useDeleteProjectFile(projectId: number) {
   });
 }
 
-export function projectFilesListQueryOptions(projectId: number, filters?: { q?: string }) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.files.list(
-      projectId,
-      filters?.q ? filters : undefined,
-    ),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
-      last.pagination.nextCursor ?? undefined,
-    staleTime: 30_000,
-  };
-}

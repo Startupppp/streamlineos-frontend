@@ -18,15 +18,6 @@ export interface IssueExtensionTokenInput {
   expiresInHours?: number;
 }
 
-/**
- * Gated on `settings:api-tokens:write`, matching the route — and that key is
- * the point rather than an accident of naming.
- *
- * `settings:` is non-delegable, so no personal token can reach this endpoint
- * whatever scopes it carries. Issuing a sourcing token therefore always
- * requires a signed-in recruiter, and a leaked extension token cannot mint its
- * own replacement.
- */
 export function useIssueExtensionToken() {
   return useAuthorizedMutation("settings:api-tokens:write", {
     mutationKey: ["hr", "recruitment", "sourcing", "extension-token"],

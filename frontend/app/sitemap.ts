@@ -2,12 +2,8 @@ import type { MetadataRoute } from "next";
 import { BRAND_URL } from "@/lib/branding";
 import { sitemapPosts, sitemapTaxonomy } from "@/lib/blog/api";
 
-// Blog URLs come from the backend at request time, so a publish or withdrawal is reflected without
-// a rebuild. A backend failure fails the sitemap (a crawler retries) rather than silently dropping
-// every article from it.
 export const dynamic = "force-dynamic";
 
-/** The sitemap protocol's per-file limit. */
 const MAX_URLS = 50_000;
 
 async function blogEntries(base: string): Promise<MetadataRoute.Sitemap> {

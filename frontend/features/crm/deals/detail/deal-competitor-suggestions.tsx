@@ -17,19 +17,6 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { DealCompetitorSuggestion } from "@/types/crm";
 
-/**
- * CRM-P2-12. Competitors the system noticed, and the person who decides.
- *
- * Rendered under the tracked list rather than mixed into it, which is the same
- * separation the API and the database make: the list above is what somebody
- * stated, this is what nobody has ruled on. A reader glancing at the card must
- * never have to work out which of the two a row belongs to.
- *
- * The scan is a button and never an effect. A `useEffect` firing it on mount
- * would make the product propose things nobody asked for every time a deal is
- * opened, which is precisely the autonomy this ticket refuses — and it would
- * write rows on a read.
- */
 
 interface DealCompetitorSuggestionsProps {
   dealId: number;
@@ -43,14 +30,6 @@ interface SuggestionRowProps {
   onDismiss: (suggestion: DealCompetitorSuggestion) => void;
 }
 
-/**
- * One proposal, with the line that produced it.
- *
- * The quote is not decoration and is not truncated away: it is the only thing
- * that lets a reviewer tell a real competitor from a name that happened to
- * appear in a sentence, and a card that hid it would be asking for a rubber
- * stamp.
- */
 const SuggestionRow = memo(function SuggestionRow({
   suggestion,
   canDecide,
@@ -125,11 +104,6 @@ export function DealCompetitorSuggestions({ dealId }: DealCompetitorSuggestionsP
     });
   }, [scan]);
 
-  /**
-   * The name is sent back with the decision, so the server can refuse a click
-   * made against a card that has moved on. Accepting by id alone is what turns a
-   * suggestion into something a person did not actually agree to.
-   */
   const handleAccept = useCallback(
     (suggestion: DealCompetitorSuggestion) => {
       accept.mutate(
@@ -159,7 +133,6 @@ export function DealCompetitorSuggestions({ dealId }: DealCompetitorSuggestionsP
     [dismiss],
   );
 
-  /** Nothing to review and nothing to offer: the card stays as short as the facts. */
   if (access.denied) return null;
   if (suggestions.length === 0 && !canDecide) return null;
 

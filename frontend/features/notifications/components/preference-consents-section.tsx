@@ -56,7 +56,6 @@ function ConsentRow({ row, pendingKey, onToggle }: ConsentRowProps) {
   );
 }
 
-/** Messaging consent (COMP-003). A channel toggle is a setting; this is the record of agreement. */
 export function PreferenceConsentsSection() {
   const consents = useNotificationConsents();
   const record = useRecordNotificationConsent();

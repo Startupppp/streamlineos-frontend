@@ -41,30 +41,7 @@ import { cn } from "@/lib/utils";
 import { useQueryClient } from "@tanstack/react-query";
 import type { PipelineStatus } from "@/types/leads";
 
-/**
- * Handing unassigned leads out to the people who will work them.
- *
- * No columns are written here. The table this replaced carried its own
- * `DataTableColumn<Lead>[]` and its own `STATUS_BADGE` map painting the six
- * pipeline statuses — the third copy of a colour table `LEAD_LAYOUT` already
- * held, and one that had already drifted: it painted CONTACTED amber where the
- * lead list painted it blue, so the same lead wore two different colours on two
- * screens of the same product.
- *
- * The columns come from the shared description, narrowed to the six this job
- * needs. Distribution is an identification task — you are deciding who should
- * own this person — so it asks for the name, how to reach them, where they came
- * from and who has them, and none of the pipeline's value or score columns.
- */
 
-/**
- * The two endings, which are not worth distributing.
- *
- * A converted or lost lead is finished, and handing one to a rep is work nobody
- * will do. Every other status — including one this tenant invented — is offered,
- * because the filter reads the description's options rather than a list retyped
- * here.
- */
 const TERMINAL_STATUSES = new Set(["CONVERTED", "LOST"]);
 
 const COLUMNS = ["name", "email", "phone", "source", "status", "assignedToName"] as const;
@@ -124,10 +101,6 @@ export default function LeadDistributionPage() {
     [leads],
   );
 
-  /**
-   * The table addresses rows by the string key `getRowKey` produced; the
-   * distribute endpoint addresses them by their numeric id.
-   */
   const selection = useMemo(
     () => ({
       selected: new Set<string | number>([...selectedIds].map(String)),
@@ -193,7 +166,7 @@ export default function LeadDistributionPage() {
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent>
-              {/* The sentinel removes the filter rather than sending "all". */}
+              
               <SelectItem value="all">All statuses</SelectItem>
               {statusOptions.map((option) => (
                 <SelectItem key={option.value} value={option.value}>

@@ -32,12 +32,7 @@ export interface MarkAssetReturnedInput {
   condition: string;
 }
 
-export function assetReturnsQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.assetReturnsList(),
-    staleTime: 60_000,
-  } as const;
-}
+import { assetReturnsQueryOptions } from "@/hooks/api/hr/asset-returns-read-options";
 
 export function useAssetReturns(
   options?: Omit<UseQueryOptions<AssetReturn[], Error>, "queryKey" | "queryFn">,

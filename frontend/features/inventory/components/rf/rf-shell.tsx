@@ -7,20 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useInventoryOutbox } from "@/hooks/api/inventory/offline-outbox";
 
-/**
- * NEO-5 - the chrome an RF task lives in.
- *
- * Everything here is sized for one thumb on a 375px screen: a single column, a
- * back affordance in the top-left where a thumb reaches, and a status strip that
- * answers the only two questions a picker has about the device - is it online,
- * and is anything of mine still waiting to be sent.
- *
- * Connection and queue are shown **separately**, deliberately. "Offline" and
- * "three of your confirmations have not reached the server" are different facts
- * with different consequences: a device can be online with a backlog it is
- * draining, and it can be offline with nothing outstanding. Collapsing them into
- * one indicator is how an operator ends a shift believing work landed.
- */
 export function RfShell({
   title,
   subtitle,

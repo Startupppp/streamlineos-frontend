@@ -30,9 +30,6 @@ const MEMBER_DEFAULT_PERMISSIONS = new Set(
   permissionCatalog.memberDefaultPermissions,
 );
 
-// A module with no manifest module of its own (its routes were carved out of
-// another module's, e.g. recruitment out of "hr") resolves through that
-// module's backend id instead.
 function manifestModuleFor(module: ModuleKey) {
   const direct = moduleByProductKey(module);
   if (direct) return direct;

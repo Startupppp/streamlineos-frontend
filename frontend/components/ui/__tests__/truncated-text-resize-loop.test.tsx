@@ -2,11 +2,6 @@ import { render, act } from "@testing-library/react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-/**
- * ResizeObserver spy that captures the callback so tests can fire it directly.
- * The global stub in jest.setup.js is a no-op; this replaces it per-suite so
- * we can trigger resize notifications in a controlled way.
- */
 class SpyResizeObserver {
   static instances: SpyResizeObserver[] = [];
   readonly callback: ResizeObserverCallback;
@@ -60,23 +55,6 @@ afterEach(() => {
   jest.useRealTimers();
 });
 
-/**
- * Regression guard for the "ResizeObserver loop completed with undelivered
- * notifications" error that appeared in the chat panel on /chat/channels.
- *
- * Root cause: TruncatedText attached a ResizeObserver whose callback called
- * setTruncated() synchronously. With many TruncatedText instances mounting
- * simultaneously (chat sidebar + message bubbles), the browser queued all
- * their initial observations in one frame. Synchronous state-setter calls
- * within those callbacks produced layout changes during the notification
- * frame, which caused the browser to log the loop notice as a window error
- * event — caught by global-handlers.ts and shipped to the backend log.
- *
- * Fix: the ResizeObserver callback now defers measurement to
- * requestAnimationFrame. The state update therefore happens in the *next*
- * frame, after the browser has finished delivering the current batch of
- * notifications — breaking the loop condition.
- */
 describe("TruncatedText ResizeObserver does not set state synchronously in its callback", () => {
   it("does not apply truncation on the attaching ref until requestAnimationFrame", () => {
     renderText("a very long channel name that overflows its container");
@@ -104,17 +82,12 @@ describe("TruncatedText ResizeObserver does not set state synchronously in its c
 
     expect(span?.hasAttribute("title")).toBe(false);
 
-    // Simulate a layout change where the element now overflows its container.
     if (span) setSpanWidths(span, 400, 100);
 
-    // Fire the ResizeObserver callback — this is the call that would previously
-    // call setTruncated synchronously and cause the browser loop notice.
     const observer = SpyResizeObserver.instances.at(-1);
     expect(observer).toBeDefined();
     observer!.fire();
 
-    // State MUST NOT have changed yet — the update is deferred via
-    // requestAnimationFrame, so no React re-render has run yet.
     expect(span?.hasAttribute("title")).toBe(false);
 
     act(() => {
@@ -135,19 +108,15 @@ describe("TruncatedText ResizeObserver does not set state synchronously in its c
     const observer = SpyResizeObserver.instances.at(-1)!;
     const cancelSpy = jest.spyOn(globalThis, "cancelAnimationFrame");
 
-    // Fire the observer twice in quick succession before the RAF executes.
     observer.fire();
     observer.fire();
 
-    // cancelAnimationFrame must have been called at least once — the second
-    // fire cancels the first pending RAF before scheduling a new one.
     expect(cancelSpy).toHaveBeenCalled();
 
     act(() => {
       jest.runAllTimers();
     });
 
-    // Still settles correctly: truncated=true after the RAF that was NOT cancelled.
     expect(span?.getAttribute("title")).toBe("overflow text that will keep resizing");
 
     cancelSpy.mockRestore();
@@ -164,7 +133,6 @@ describe("TruncatedText ResizeObserver does not set state synchronously in its c
 
     const cancelSpy = jest.spyOn(globalThis, "cancelAnimationFrame");
 
-    // Unmount before the RAF runs — setNode(null) is called, which cancels the RAF.
     unmount();
 
     expect(cancelSpy).toHaveBeenCalled();

@@ -39,7 +39,6 @@ function asText(value: unknown): string {
   return String(value);
 }
 
-/** Dates render in the viewer's locale but sort on the raw value the API sent. */
 function formatDate(value: unknown): string {
   const text = asText(value);
   if (!text) return "";
@@ -61,7 +60,6 @@ function formatPercentField(value: unknown, display: MoneyDisplay): string {
   return formatPercent(amount, display.locale);
 }
 
-/** A moment, not a day — a task due at 4pm is not a task due on Tuesday. */
 function formatDateTime(value: unknown): string {
   const text = asText(value);
   if (!text) return "";
@@ -82,18 +80,6 @@ function booleanOption(
   return options.find((option) => option.value === String(truthy));
 }
 
-/**
- * A repeating group, read at a glance.
- *
- * A list cell has room for a fact about the rows, not the rows: the screen this
- * replaced printed "2 conditions" and it was the right amount. The count is
- * derived rather than stored, so it cannot drift from the rows the form edits —
- * the hand-written rule row read `rule.conditions.length` and the layout reads
- * the same array.
- *
- * Zero is said out loud rather than left as an em dash. A rule with no
- * conditions matches everything, which is a fact worth seeing in a table.
- */
 function formatLines(field: FieldSpec, value: unknown): string {
   if (!Array.isArray(value)) return "";
   const noun = (field.lineLabel ?? field.label).toLowerCase();
@@ -106,13 +92,6 @@ export function formatFieldText(
   value: unknown,
   display: MoneyDisplay = DEFAULT_MONEY_DISPLAY,
 ): string {
-  /*
-    A series has no text reading. Printing the figures would be a cell of
-    fourteen numbers, and summarising them would be the engine inventing a
-    verdict it has no units for. It is drawn, through `RecordList`'s `cells`, or
-    it renders as nothing — which is what a column nobody supplied a drawing for
-    honestly is.
-  */
   if (field.kind === "series") return "";
   if (field.kind === "lines") return formatLines(field, value);
   if (field.kind === "date") return formatDate(value);

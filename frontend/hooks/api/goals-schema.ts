@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Response contracts for the goals module.
- * Derived from backend `goals-response.schemas.ts`.
- * wireDate() → z.string() on the wire.
- * NOT `.strict()`.
- */
 
 const goalOwnerContract = z.object({
   id: z.string(),
@@ -23,7 +17,6 @@ const goalStatusContract = z.enum([
   "completed",
 ]);
 
-/** `okr_goals` row. `POST /goals`, `PATCH /goals/:id` and check-in all answer this. */
 export const goalRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -45,7 +38,6 @@ export const goalRowContract = z.object({
   deletedAt: z.string().nullable(),
 });
 
-/** `goalListItemSchema` — row + owner + keyResultCount + link counts + product linkage. */
 export const goalListItemContract = goalRowContract.extend({
   target: z.string().nullable(),
   current: z.string().nullable(),
@@ -73,7 +65,6 @@ export const goalListItemContract = goalRowContract.extend({
   allowedActions: z.array(z.string()).default([]),
 });
 
-/** `goalsListResponseSchema` — offset page (no totalPages on this backend schema). */
 export const goalsListContract = z.object({
   items: z.array(goalListItemContract),
   page: z.number().int(),
@@ -83,7 +74,6 @@ export const goalsListContract = z.object({
   hasMore: z.boolean(),
 });
 
-/** `goalStatsSchema` */
 export const goalStatsContract = z.object({
   total: z.number().int(),
   byStatus: z.record(z.string(), z.number().int()),
@@ -93,10 +83,6 @@ export const goalStatsContract = z.object({
   staleCheckIns: z.number().int().default(0),
 });
 
-/**
- * `goalDetailSchema` — full goal with keyResults, updates, links. GET, PATCH,
- * and check-in for `/goals/:goalId` answer this shape.
- */
 export const goalDetailContract = goalRowContract.extend({
   owner: goalOwnerContract.nullable(),
   project: z
@@ -171,14 +157,12 @@ export const goalDetailContract = goalRowContract.extend({
     .default([]),
 });
 
-/** `goalProductLinkSchema` — POST /goals/:goalId/products/:managedProductId 201 body. */
 export const goalProductLinkContract = z.object({
   id: z.number().int(),
   managedProductId: z.number().int(),
   linkedAt: z.string(),
 });
 
-/** `goalLinkCreatedSchema` */
 export const goalLinkCreatedContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -188,5 +172,4 @@ export const goalLinkCreatedContract = z.object({
   createdAt: z.string(),
 });
 
-/** `goalSuccessSchema` */
 export const goalSuccessContract = z.object({ success: z.literal(true) });

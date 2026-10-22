@@ -7,7 +7,6 @@ interface DashboardPageSkeletonProps {
   title?: string;
 }
 
-/** Shared by the route boundary and the access-loading branch. */
 export function DashboardPageSkeleton({ title = "Dashboard" }: DashboardPageSkeletonProps) {
   return (
     <PageWrapper

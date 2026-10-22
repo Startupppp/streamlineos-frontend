@@ -238,7 +238,6 @@ export function useDealHealth(dealId: number) {
   });
 }
 
-/** Replaces the deal's whole `customData`; the caller merges before sending. */
 export function useUpdateDealCustomData(dealId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:deals:update", {
@@ -265,13 +264,6 @@ export function usePatchNextStep(dealId: number) {
   });
 }
 
-/**
- * The pipeline history ticket 08 records, read where a person can see it.
- *
- * Separate from the activity timeline on purpose: a transition is a change of
- * state with an accountable actor, not something someone did, and the two are
- * modelled apart so neither can be mistaken for the other.
- */
 export function useDealStageTransitions(dealId: number | null) {
   return useGatedQuery("crm:deals:read", {
     queryKey: accessAndCrmQueryKeys.crm.dealStageTransitions(dealId ?? 0),

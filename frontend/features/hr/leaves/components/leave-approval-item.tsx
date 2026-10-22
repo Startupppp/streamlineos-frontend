@@ -96,7 +96,7 @@ export function LeaveApprovalItem({
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 ml-3">
-          {/* V-044. The same controls /hr/approvals mounts. */}
+          
           <LeaveDecisionButtons
             request={req}
             currentUserId={currentUserId}

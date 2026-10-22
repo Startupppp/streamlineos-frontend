@@ -17,14 +17,6 @@ describe("nurtureStepsSchema", () => {
     ).toBe(true);
   });
 
-  /**
-   * The floor is NOT enforced here, and that is the point.
-   *
-   * `replaceSteps` clamps a too-tight wait upward rather than refusing it, so a
-   * client that rejected 24 would give the same input two different answers
-   * depending on which door it came through — and would refuse a cadence the
-   * server is perfectly willing to store.
-   */
   it("accepts a wait under the floor, because the server clamps rather than refuses", () => {
     expect(nurtureStepsSchema.safeParse({ steps: [step("1")] }).success).toBe(true);
     expect(
@@ -63,7 +55,6 @@ describe("nurtureStepsSchema", () => {
     expect(nurtureStepsSchema.safeParse({ steps: atLimit }).success).toBe(true);
   });
 
-  /** An empty cadence is a legal body: it is how a sequence's steps are cleared. */
   it("accepts an empty cadence", () => {
     expect(nurtureStepsSchema.safeParse({ steps: [] }).success).toBe(true);
   });
@@ -76,11 +67,6 @@ describe("toReplaceStepsInput", () => {
     });
   });
 
-  /**
-   * Step numbers come from the array's order, so the payload carries none. A
-   * `stepNumber` field here would be a second source of truth for density, and a
-   * gap makes the sender fire two messages back to back.
-   */
   it("carries no step number", () => {
     const [first] = toReplaceStepsInput({ steps: [step("240")] }).steps;
     expect(Object.keys(first ?? {})).toEqual(["waitHours"]);

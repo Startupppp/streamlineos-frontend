@@ -11,45 +11,14 @@ import {
   type SyncOperationResult,
 } from "./outbox-types";
 
-/**
- * B8 — the device's outbox.
- *
- * One rule holds the whole thing up, and everything else here exists to serve
- * it: **an entry is marked synced only when the server has said so about that
- * entry.** Not when the request left, not when the batch came back 200, not
- * when the drain finished without throwing — when the per-operation result for
- * that exact `clientOperationId` says `applied` or `duplicate`.
- *
- * The second rule is the first one's mirror: the id is minted once, in
- * `enqueue`, and is never regenerated. A retry that mints a fresh id is a
- * second stock movement that nobody asked for and nobody can see happened,
- * because both movements look perfectly legitimate in the ledger. Everything
- * about how this file is written — storing the whole request body rather than
- * rebuilding it, keying the object store on the id, refusing a duplicate insert
- * — is a way of making that mistake hard to make later.
- */
 
-/** How many operations one batch carries. The server caps at 100. */
 export const OUTBOX_BATCH_SIZE = 50;
 
-/**
- * How many times a *transport* failure is retried before the entry is put in
- * front of a human. A queue that retries forever is a queue whose badge never
- * clears and whose operator stops looking at it.
- */
 export const OUTBOX_MAX_ATTEMPTS = 8;
 
 const BACKOFF_BASE_MS = 2_000;
 const BACKOFF_CEILING_MS = 5 * 60_000;
 
-/**
- * Exponential with full jitter.
- *
- * The jitter is not decoration. Every device in a warehouse loses the same
- * access point and reconnects on the same second; a fixed backoff has them all
- * retry together, which is how a recovering network is knocked over again by
- * the devices waiting for it.
- */
 export function backoffDelayMs(attempts: number, random: () => number): number {
   const ceiling = Math.min(
     BACKOFF_CEILING_MS,
@@ -58,12 +27,6 @@ export function backoffDelayMs(attempts: number, random: () => number): number {
   return Math.round(ceiling * random());
 }
 
-/**
- * Which of the operator's three answers this conflict deserves.
- *
- * Keyed on the server's structured code rather than its prose, so rewording a
- * message cannot silently change what the operator is offered.
- */
 const STALE_CODES: ReadonlySet<string> = new Set([
   "INVALID_DOCUMENT_STATE",
   "LOT_EXPIRED",
@@ -82,11 +45,6 @@ const INSUFFICIENT_CODES: ReadonlySet<string> = new Set([
   "LOCATION_CAPACITY_EXCEEDED",
 ]);
 
-/**
- * Another copy of this operation is mid-flight somewhere. Not a conflict a
- * human can do anything about — the right answer is to wait and send again,
- * which is exactly what a backoff is for.
- */
 const IN_FLIGHT_CODE = "DUPLICATE_IDEMPOTENCY_KEY";
 
 export function classifyConflict(code: string | undefined): OutboxConflictKind {
@@ -97,11 +55,8 @@ export function classifyConflict(code: string | undefined): OutboxConflictKind {
 
 export interface OutboxQueueOptions {
   storage?: OutboxStorage;
-  /** Injected so a test can pin the clock. */
   now?: () => number;
-  /** Injected so a test can pin the jitter. */
   random?: () => number;
-  /** Injected so a test can pin the ids it asserts on. */
   newOperationId?: () => string;
   maxAttempts?: number;
 }
@@ -109,9 +64,6 @@ export interface OutboxQueueOptions {
 function defaultOperationId(): string {
   const c = globalThis.crypto;
   if (c && typeof c.randomUUID === "function") return c.randomUUID();
-  // Only reached on a browser with no `randomUUID`. Still 128 bits of entropy;
-  // a counter or a timestamp would collide across two tabs on one device, and
-  // a collision here means two different operations sharing one movement.
   const bytes = new Uint8Array(16);
   if (c && typeof c.getRandomValues === "function") c.getRandomValues(bytes);
   const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
@@ -131,7 +83,6 @@ function attachIdentity(
   }
 }
 
-/** The order the server replays in, reproduced here so a batch arrives sorted. */
 function byOperatorOrder(a: OutboxEntry, b: OutboxEntry): number {
   const at = Date.parse(a.operation.occurredAt);
   const bt = Date.parse(b.operation.occurredAt);
@@ -160,15 +111,6 @@ export class OutboxQueue {
     this.maxAttempts = options.maxAttempts ?? OUTBOX_MAX_ATTEMPTS;
   }
 
-  /**
-   * Read what is on disk, once.
-   *
-   * Anything left `in-flight` belongs to a tab that was closed or crashed
-   * mid-send, and it is returned to `queued` rather than left stuck: the id is
-   * stable, so re-sending it is free — the server either applies it or reports
-   * it as a duplicate. Leaving it `in-flight` forever would be the one failure
-   * mode this queue exists to prevent, dressed as caution.
-   */
   hydrate(): Promise<void> {
     return (this.hydrated ??= this.loadOnce());
   }
@@ -178,9 +120,6 @@ export class OutboxQueue {
     try {
       stored = await this.storage.all();
     } catch {
-      // A browser that refuses to open a database still has to let the operator
-      // work. The queue runs in memory for this session and says so through
-      // `storageAvailable`.
       this.storageFailed = true;
     }
 
@@ -197,7 +136,6 @@ export class OutboxQueue {
     if (reclaimed.length > 0) await this.persist(reclaimed);
   }
 
-  /** False when this session's queue lives only in memory. */
   get storageAvailable(): boolean {
     return !this.storageFailed;
   }
@@ -209,22 +147,12 @@ export class OutboxQueue {
     };
   };
 
-  /** Stable between changes, so `useSyncExternalStore` does not loop. */
   getSnapshot = (): readonly OutboxEntry[] => this.cached;
 
   counts(): OutboxCounts {
     return countEntries(this.cached);
   }
 
-  /**
-   * Record an operation, and mint its idempotency key.
-   *
-   * This is the only place an id is created. `occurredAt` is stamped here too
-   * — when the operator did it, not when it is eventually sent — because the
-   * server replays a batch in that order, and two corrections to one bin have
-   * to land in the order the human made them or the final position is a coin
-   * toss.
-   */
   async enqueue(
     draft: OutboxOperationDraft,
     options: { label?: string } = {},
@@ -250,22 +178,12 @@ export class OutboxQueue {
     try {
       await this.storage.insert(entry);
     } catch (error) {
-      // Held in memory anyway. Dropping the entry because the disk refused it
-      // would lose an operation the operator has already been shown as queued,
-      // which is the one thing worse than losing it on reload.
       this.storageFailed = true;
       void error;
     }
     return entry;
   }
 
-  /**
-   * The entries a drain may send right now, in the order the operator worked.
-   *
-   * `nextAttemptAt` is the backoff, and a conflicted entry is never included —
-   * it is waiting on a human, and re-sending it would produce the same conflict
-   * and reset the count they are looking at.
-   */
   dueEntries(limit = OUTBOX_BATCH_SIZE): readonly OutboxEntry[] {
     const at = this.now();
     return this.cached
@@ -274,7 +192,6 @@ export class OutboxQueue {
       .slice(0, limit);
   }
 
-  /** Move entries to `in-flight`. They are not synced, and must not read as it. */
   async markInFlight(ids: readonly string[]): Promise<void> {
     await this.patch(ids, (entry) => ({
       ...entry,
@@ -283,14 +200,6 @@ export class OutboxQueue {
     }));
   }
 
-  /**
-   * Apply the server's per-operation verdicts.
-   *
-   * `applied` and `duplicate` are both success: a duplicate means an earlier
-   * attempt landed and the stable key stopped this one from landing again,
-   * which is the entire point of the key. Marking a duplicate as anything else
-   * would have the operator re-enter work that is already done.
-   */
   async applyResults(results: readonly SyncOperationResult[]): Promise<void> {
     const at = this.now();
     const byId = new Map(results.map((r) => [r.clientOperationId, r]));
@@ -305,7 +214,6 @@ export class OutboxQueue {
         continue;
       }
 
-      // Another copy is mid-flight. Nobody needs to be told; wait and resend.
       if (result.code === IN_FLIGHT_CODE) {
         next.push(this.requeued(entry, at));
         continue;
@@ -324,9 +232,6 @@ export class OutboxQueue {
         continue;
       }
 
-      // `failed` — an unexpected error inside the operation. Worth another go,
-      // but not forever: past the attempt ceiling it goes in front of a human
-      // rather than cycling invisibly.
       next.push(
         entry.attempts >= this.maxAttempts
           ? {
@@ -347,13 +252,6 @@ export class OutboxQueue {
     await this.commit(next);
   }
 
-  /**
-   * The batch never reached the server, or its answer never reached us.
-   *
-   * Back to `queued` with a longer wait — never `synced`, and never dropped.
-   * We do not know whether the operations landed, and the stable key is what
-   * makes it safe not to know: sending them again costs at most a `duplicate`.
-   */
   async releaseUnsent(ids: readonly string[]): Promise<void> {
     const at = this.now();
     await this.patch(ids, (entry) =>
@@ -371,14 +269,6 @@ export class OutboxQueue {
     );
   }
 
-  /**
-   * The session expired mid-drain.
-   *
-   * Parked as a conflict the operator can see, not dropped and not retried on a
-   * timer: retrying a 401 in a loop signs the device out repeatedly and the
-   * queue never clears. The entry keeps its id, so replaying after a fresh sign
-   * in is free.
-   */
   async markUnauthorized(
     ids: readonly string[],
     error: unknown,
@@ -391,11 +281,6 @@ export class OutboxQueue {
     }));
   }
 
-  /**
-   * A human decided to send it again — after signing back in, or after looking
-   * at the shelf. The id does not change, so if the original did land after
-   * all, this replay is a duplicate and moves nothing.
-   */
   async retry(clientOperationIds: readonly string[]): Promise<void> {
     await this.patch(clientOperationIds, (entry) => ({
       ...entry,
@@ -406,21 +291,12 @@ export class OutboxQueue {
     }));
   }
 
-  /** A human decided the operation should not happen. The only way an entry leaves unsent. */
   async discard(clientOperationIds: readonly string[]): Promise<void> {
     for (const id of clientOperationIds) this.rows.delete(id);
     this.publish();
     await this.storage.remove(clientOperationIds).catch(() => undefined);
   }
 
-  /**
-   * Clear the acknowledged tail.
-   *
-   * Synced entries are kept for a while on purpose — "12 synced" is the
-   * evidence an operator needs that their shift went through, and a queue that
-   * empties itself the instant it succeeds looks identical to one that dropped
-   * the work.
-   */
   async clearSynced(olderThanMs = 0): Promise<void> {
     const cutoff = this.now() - olderThanMs;
     const stale = this.cached
@@ -461,8 +337,6 @@ export class OutboxQueue {
     try {
       await this.storage.save(entries);
     } catch {
-      // In memory the state is already correct. A device whose disk stopped
-      // answering must not have its queue reverted on screen as a result.
       this.storageFailed = true;
     }
   }

@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
+import { serviceDeliveryKeys, serviceDeliveryOpsInboxQueryOptions, serviceDeliveryMyItemsQueryOptions } from "@/hooks/api/hr/service-delivery-read-options";
 
 const opsInboxContract = lazyContract(() =>
   import("@/hooks/api/hr/service-delivery-schema").then((m) => m.opsInboxContract),
@@ -60,24 +61,6 @@ export interface ServiceDeliveryMyItems {
   totals: { open: number };
 }
 
-export const serviceDeliveryKeys = {
-  opsInbox: ["hr", "service-delivery", "ops-inbox"] as const,
-  myItems: ["hr", "service-delivery", "my-items"] as const,
-};
-
-export function serviceDeliveryOpsInboxQueryOptions() {
-  return {
-    queryKey: serviceDeliveryKeys.opsInbox,
-    staleTime: 30_000,
-  } as const;
-}
-
-export function serviceDeliveryMyItemsQueryOptions() {
-  return {
-    queryKey: serviceDeliveryKeys.myItems,
-    staleTime: 30_000,
-  } as const;
-}
 
 export function useServiceDeliveryOpsInbox(enabled = true) {
   const canCases = useCan("hr:cases:view");

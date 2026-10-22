@@ -38,11 +38,6 @@ function audienceSummary(audiences: DocumentKbLinkState["documentAudiences"]): s
   return audiences.map((audience) => audience.label ?? "a unit").join(", ");
 }
 
-/**
- * Where a document stands in the knowledge base, and the two actions that follow from it. Adding is offered only
- * when the document can be shared right now, and only to someone who may publish; the reasons it cannot are the
- * server's own list, the same one the server refuses on. Withdrawing takes effect on the readers' next request.
- */
 export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLinkPanelProps) {
   const canPublish = useCan("hr:documents:publish");
   const state = useDocumentKbLink(documentId);
@@ -54,7 +49,6 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
 
   const handleAskAdd = useCallback(() => setConfirming("add"), []);
   const handleAskRemove = useCallback(() => setConfirming("remove"), []);
-  // Cancelling drops what was typed. A removal that FAILED closes the dialog without going through here, so the reason survives and is there when it is opened again.
   const handleConfirmChange = useCallback(
     (open: boolean) => {
       if (open) return;
@@ -109,7 +103,6 @@ export function DocumentKbLinkPanel({ documentId, documentName }: DocumentKbLink
 
   const { link, publishable, blockers, documentAudiences } = state.data;
   const live = link?.status === "active";
-  // Free text a publisher wrote: shown to publishers only, like the same note on the entry itself.
   const withdrawnReason = canPublish && link ? humanWithdrawalReason(link.unpublishReason) : null;
 
   return (

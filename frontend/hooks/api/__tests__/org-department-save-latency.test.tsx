@@ -5,10 +5,6 @@ import { apiClient } from "@/lib/api-client";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { useCreateOrgDepartment, useUpdateOrgDepartment } from "@/hooks/api/org-hierarchy-units";
 
-/**
- * Round-2 UX #6: a department save sat on "Saving…" for ~5 s because the save
- * resolved only after every hierarchy read it invalidated had refetched.
- */
 
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: (_permission: string, options: object) => useMutation(options),
@@ -25,7 +21,6 @@ function setup() {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   );
-  // An active hierarchy read whose refetch never settles until we say so.
   const reader = renderHook(
     () =>
       useQuery({

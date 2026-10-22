@@ -31,7 +31,6 @@ const vendorReturnResponse = lazyContract(() =>
 export interface VendorReturnLine {
   id: number;
   productVariantId: number;
-  /** Decimal string at scale 4 — quantities are exact, never JS floats. */
   quantity: string;
   reason: VendorReturnReason;
   lotId: number | null;
@@ -97,22 +96,10 @@ export function useVendorReturns(
       ),
     staleTime: 30_000,
     ...options,
-    // After the spread, always: re-declaring `enabled` inside it would clobber
-    // the permission gate, and declaring it before would let a caller's `false`
-    // be overwritten.
     enabled: canView && (options?.enabled ?? true),
   });
 }
 
-/**
- * The detail read, mirroring `useCustomerReturn`.
- *
- * `GET /inventory/vendor-returns/:returnId` is still served, and
- * `invalidateVendorReturn` above still invalidates this exact key after every
- * approve, post and cancel — an invalidation with nothing to invalidate is what
- * deleting this hook left behind. It was removed by an AbortSignal sweep that
- * could only ever have asked for the signal to be threaded, as it now is.
- */
 export function useVendorReturn(returnId: number | null) {
   const canView = useCan("inventory:vendor-returns:manage");
   return useQuery<VendorReturnSummary, Error>({

@@ -7,25 +7,6 @@ import { TransitClient } from "./stock/transit-client";
 import { GlReconciliationClient } from "./finance/gl-reconciliation-client";
 import { LandedCostClient } from "./finance/landed-cost-client";
 
-/**
- * The three new full-page surfaces at 375, 768 and 1280.
- *
- * ## What this claims, and what it does not
- *
- * jsdom has no layout, so "fits at 375px" is not something this file can say,
- * and asserting it would be a lie a green tick makes convincing. What it can say
- * is that each page mounts at every breakpoint without throwing, that nothing in
- * the rendered tree pins a width the device does not have, and that axe finds no
- * violation in the tree that results — the same three claims
- * `rf-surface-render.test.tsx` makes about the handheld screens, for the same
- * reason.
- *
- * The width rule has one deliberate exemption: `DataTable`'s `minWidth` is how a
- * wide table is made to scroll horizontally inside its own container rather than
- * crushing its columns, which §10 requires. It is applied to the table's inner
- * div via an inline style, not a class, so the class scan below does not see it
- * and does not need an exception written for it.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -83,14 +64,11 @@ jest.mock("@/hooks/api/inventory/landed-cost", () => ({
   useAddLandedCostCharge: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-/** A class that pins content wider than the device is a horizontal scroll by another name. */
 const FIXED_WIDTH = /\b(?:min-)?w-\[(\d+)px\]/g;
 
 function expectNothingWiderThan(container: HTMLElement, width: number): void {
   const tooWide: string[] = [];
   for (const element of Array.from(container.querySelectorAll("[class]"))) {
-    // `getAttribute`, not `className`: on an SVG that property is an
-    // `SVGAnimatedString`, and every icon on these pages is an SVG.
     const classes = element.getAttribute("class") ?? "";
     for (const match of classes.matchAll(FIXED_WIDTH))
       if (Number(match[1]) > width) tooWide.push(match[0]);
@@ -123,8 +101,6 @@ describe("the surfaces the audit added, at every breakpoint", () => {
           const { container } = renderWithProviders(
             <TooltipProvider>{surface.render()}</TooltipProvider>,
           );
-          // Level 1: the page's own `<h1>`, not an empty state's heading, which on
-          // the landed-cost page happens to start with the same words.
           expect(
             screen.getByRole("heading", { level: 1, name: surface.heading }),
           ).toBeInTheDocument();
@@ -136,16 +112,6 @@ describe("the surfaces the audit added, at every breakpoint", () => {
     );
   });
 
-  /**
-   * The `heading-order` debt these pages carried is gone.
-   *
-   * `EmptyState` rendered its title as an `<h3>` under `PageWrapper`'s `<h1>`,
-   * which skips a level, so axe reported `heading-order` on every list page in
-   * the product that rendered an empty state — not only these three. It now
-   * opens with an `<h2>`, so the expectation is the empty list it always said it
-   * would come back down to, and the exact-list assertion still fails on any new
-   * violation and on any extra violating node.
-   */
   it.each(SURFACES.map((surface) => [surface.name, surface] as const))(
     "%s carries no accessibility violation at 375",
     async (_name, surface) => {

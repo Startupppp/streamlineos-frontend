@@ -1,13 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for `OrganizationController` handlers that do NOT already have
- * contracts (org members page lives in `organization-schema.ts`).
- *
- * Derived from `organization-core-response.schemas.ts` in the backend.
- * NOT `.strict()`: extra response fields are backward-compatible.
- */
-
 export const orgSettingsContract = z.object({
   id: z.string(),
   name: z.string(),

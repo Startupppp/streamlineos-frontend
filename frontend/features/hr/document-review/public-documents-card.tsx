@@ -271,7 +271,7 @@ export const PublicDocumentsCard = memo(function PublicDocumentsCard() {
           <FileText className="h-4 w-4 text-primary" aria-hidden="true" />
           Public Documents
         </CardTitle>
-        {/* asChild: a <button> inside <a> is a nested interactive control. */}
+        
         <Button
           asChild
           variant="ghost"

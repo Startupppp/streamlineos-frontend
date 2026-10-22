@@ -123,12 +123,7 @@ function PoolButton({ pool, isSelected, onSelect }: PoolButtonProps) {
       {pool.description && (
         <TruncatedText text={pool.description} lines={2} className="text-xs text-muted-foreground mt-1" />
       )}
-      {/*
-        Capped at four with a remainder count. A pool may carry twenty tags and
-        this button sits in a narrow column — wrapping all of them would push
-        the pool names apart and make the list harder to scan than the tags
-        make it easier.
-      */}
+      
       {pool.tags && pool.tags.length > 0 && (
         <div className="flex flex-wrap gap-1 mt-2">
           {pool.tags.slice(0, 4).map((tag) => (

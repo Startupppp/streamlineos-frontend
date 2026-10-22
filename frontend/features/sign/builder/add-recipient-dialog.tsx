@@ -19,12 +19,6 @@ const recipientSchema = z.object({
     .min(2, "Name must be at least 2 characters")
     .max(80, "Name must be at most 80 characters")
     .regex(PERSON_NAME_REGEX, "Enter a valid name (letters, spaces, and ' . - only)"),
-  /**
-   * Required for every recipient type, in-person hosts included (SIGN-P2-01).
-   * An emailless recipient is never invited and blocks the envelope forever,
-   * so the server refuses one — this catches it in the form rather than as a
-   * 400 after the sheet closes.
-   */
   email: z
     .string()
     .trim()
@@ -157,14 +151,6 @@ export function AddRecipientDialog({ envelopeId, open, onOpenChange, nextRouting
                   </SelectContent>
                 </Select>
                 {field.value === "in_person_host" && (
-                  /**
-                   * SIGN-P2-01. The dropdown used to offer an in-person
-                   * ceremony the product does not have — there is no host-led
-                   * session anywhere, and the recipient was exempt from
-                   * needing an email, so they were never invited and the
-                   * envelope waited on them forever. The type is a label; say
-                   * so where the choice is made, not in a support ticket.
-                   */
                   <FormDescription>
                     A label for your records. They sign through an emailed link like any
                     other signer — there is no separate in-person session.

@@ -22,12 +22,10 @@ import { SPRING } from "@/features/landing/relay/lib/motion";
 
 import { BreathingDot } from "./breathing-dot";
 
-/** The exit is the entrance reversed, quicker — a menu leaves faster than it arrives. */
 const SPRING_OUT = { tension: 420, friction: 40 } as const;
 const REDUCE = "(prefers-reduced-motion: reduce)";
 const noop = () => () => {};
 
-/** The burger's three bars fold into a cross as `t` runs 0 → 1. */
 const Bars = ({ t }: { t: SpringValue<number> }) => (
   <>
     <animated.span
@@ -57,24 +55,6 @@ const Bars = ({ t }: { t: SpringValue<number> }) => (
 
 type Origin = { x: number; y: number; r: number };
 
-/**
- * Menu button of the 390 frame (Menu 3900:3 — 40 round glass button with
- * three bars, the last one shorter) and the full-screen menu it opens (owner
- * review 2026-10-06 — it used to be a card grown out of the bar; not in Figma).
- *
- * The menu is a page-black sheet over everything (the particle stream, the
- * cookie banner), portalled to <body>: it opens as a circle growing out of the
- * button, its own bar (brand + the same button, now a cross) sitting exactly
- * where the nav's is; the links rise out of a mask one after another in large
- * type, with the status and the CTA at the bottom. The exit is the same
- * motion reversed, on a quicker spring. Reduced motion: a plain fade.
- *
- * While open the page does not scroll (the scroll store stops Lenis and the
- * native scroll), Escape closes, focus moves to the menu's button and is kept
- * inside, and comes back to the nav's button on close. A link closes the menu
- * and glides the page to its section. Closing, the sheet is `inert`; closed, unmounted.
- * Only reachable at 390 (`w390:`); it closes itself if the layout leaves it.
- */
 export const NavMenu = ({
   brand,
   links,
@@ -82,12 +62,10 @@ export const NavMenu = ({
   cta,
 }: Pick<NavContent, "brand" | "links" | "status" | "cta">) => {
   const [open, setOpen] = useState(false);
-  // mounted from the open until the exit has come to rest
   const [shown, setShown] = useState(false);
   const [origin, setOrigin] = useState<Origin | null>(null);
   const frame = useFrame();
   const panelId = useId();
-  // the portal needs <body>: client only, after hydration
   const mounted = useSyncExternalStore(
     noop,
     () => true,
@@ -99,7 +77,6 @@ export const NavMenu = ({
   const toggle = useRef<HTMLButtonElement>(null);
   const sheet = useRef<HTMLDivElement>(null);
   const close = useRef<HTMLButtonElement>(null);
-  /** Where focus goes after closing: back to the toggle unless a link took the visitor elsewhere. */
   const refocus = useRef(true);
 
   const reduce = useSyncExternalStore(
@@ -128,7 +105,6 @@ export const NavMenu = ({
 
   const shut = useCallback(() => setOpen(false), []);
 
-  // scroll lock, Escape, focus in and back out, focus kept inside
   useEffect(() => {
     if (!open) return;
     const { stop, start } = useScroll.getState();
@@ -174,19 +150,16 @@ export const NavMenu = ({
     config: open ? SPRING : SPRING_OUT,
   });
 
-  // A link (or the CTA) closes the menu and glides the page to its section.
   const onLink = (e: MouseEvent<HTMLElement>) => {
     const a = (e.target as HTMLElement).closest("a");
     const href = a?.getAttribute("href");
     if (!href) return;
-    // `/#section` is a homepage anchor; on the homepage it glides like `#section`.
     const hash = href.startsWith("#")
       ? href
       : href.startsWith("/#") && location.pathname === "/"
         ? href.slice(1)
         : null;
     if (!hash) {
-      // another page: let the link navigate, and take the menu down with it
       refocus.current = false;
       shut();
       return;
@@ -197,8 +170,6 @@ export const NavMenu = ({
     history.replaceState(null, "", hash);
     const target = document.getElementById(hash.slice(1));
     if (!target) return;
-    // glide once the scroll lock has let go — Lenis restarting resets any
-    // scroll begun while it was stopped
     const go = () => {
       const lenis = useScroll.getState().lenis;
       if (lenis?.isStopped) {
@@ -247,7 +218,7 @@ export const NavMenu = ({
               opacity: reduce ? s.t : 1,
             }}
           >
-            {/* the nav bar again, in the same place: brand + the button as a cross */}
+            
             <div className="flex h-14 shrink-0 items-center justify-between px-page-edge">
               <Link href={brand.href} className="flex items-center gap-3">
                 <Image
@@ -330,7 +301,6 @@ export const NavMenu = ({
               </PillButton>
             </animated.div>
           </animated.div>,
-          // inside the wrapper that carries Relay's tokens
           document.querySelector(".relay-root") ?? document.body,
         )}
     </>

@@ -116,12 +116,7 @@ export function OfferCard({
           </div>
         </div>
 
-        {/*
-          The reconciliation warning is shown here and only here. It is what
-          tells a recruiter the breakdown will refuse approval — before they
-          find out by clicking Approve and reading a 400. The candidate's copy
-          of this panel is passed no warning.
-        */}
+        
         {offer.ctcPreview && offer.ctcPreview.lines.length > 0 && (
           <div className="mb-3">
             <CtcBreakdownPanel

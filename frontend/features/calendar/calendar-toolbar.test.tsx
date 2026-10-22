@@ -160,12 +160,6 @@ describe("CalendarToolbar — below-lg overflow menu", () => {
   });
 });
 
-/**
- * A partially failed aggregate still renders the sources that succeeded, so a
- * calendar missing its leave events looks like a calendar with no leave. The
- * only notice used to live inside the Sources popover, which a reader has no
- * reason to open. `getByText` here runs with no popover opened on purpose.
- */
 describe("CalendarToolbar — partial source failure", () => {
   it("names the failed source on the surface without opening the Sources popover", () => {
     renderToolbar([{ key: "hr-leaves", label: "Leaves" }]);

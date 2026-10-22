@@ -16,8 +16,6 @@ function Harness() {
   );
 }
 
-// BUG-HRMS-015: QA saw only "Asset name is required" on a blank first submit.
-// Not reproducible on this code; this pins that all four starred fields report at once.
 it("reports every blank required field on the first submit", async () => {
   render(<Harness />);
   await userEvent.click(screen.getByRole("button", { name: "Register Asset" }));

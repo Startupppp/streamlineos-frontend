@@ -19,12 +19,7 @@ type FiltersSlot = ReactNode | (() => ReactNode);
 interface PageTabsToolbarProps {
   tabs: ReactNode;
   search?: ReactNode;
-  /** Always shown inline (e.g. at most two primary selects). */
   primaryFilters?: FiltersSlot;
-  /**
-   * Extra filters. With `primaryFilters`, these stay in the Filters dropdown
-   * at every breakpoint. Without `primaryFilters`, they follow `collapseBelow`.
-   */
   filters?: FiltersSlot;
   actions?: ReactNode;
   tabsDensity?: PageTabsDensity;

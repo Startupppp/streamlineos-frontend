@@ -1,12 +1,3 @@
-/**
- * HRMS-E2E-013b. QA downloaded the assets export twice from an org holding eight
- * assets and got a 0-byte file both times, with a success toast both times.
- * Nothing between the fetch and the disk looked at what had arrived, so an empty
- * body, an HTML error page and a real CSV were saved the same way and announced
- * the same way.
- *
- * These assertions fail if the size and content-type checks are removed.
- */
 import {
   EmptyExportError,
   NotAnExportError,
@@ -24,7 +15,6 @@ jest.mock("@/lib/download-blob", () => ({
   downloadBlob: (blob: Blob, filename: string) => void saved.push({ blob, filename }),
 }));
 
-/** Stands in for a fetch that resolved with these headers and this body. */
 function respondWith(body: string, type: string, headers: Record<string, string> = {}) {
   download.mockImplementation(
     async (_url: string, _params: unknown, config: { onResponseHeaders?: (h: Headers) => void }) => {
@@ -113,8 +103,6 @@ describe("downloadExport", () => {
   });
 
   it("saves a header-only export, which is a legitimate empty result", async () => {
-    // The server now always writes a header row, so header-only means "no rows",
-    // which is information — unlike zero bytes, which means "something broke".
     respondWith("name,serial,assigned_to\n", "text/csv");
 
     await expect(downloadExport("/hr/export/assets", options)).resolves.toBeDefined();

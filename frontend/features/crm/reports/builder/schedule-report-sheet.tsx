@@ -50,15 +50,6 @@ interface ScheduleReportSheetProps {
   reportName: string;
 }
 
-/**
- * When this report should arrive, and to whom.
- *
- * A schedule runs under the authority of whoever created it — the server
- * records it and refuses when that person's access to the source is withdrawn.
- * That is said on screen rather than left implicit, because the failure it
- * produces (a report that quietly stops arriving) is otherwise indistinguishable
- * from nobody having set one up.
- */
 export function ScheduleReportSheet({
   open,
   onOpenChange,
@@ -224,7 +215,7 @@ export function ScheduleReportSheet({
                 </div>
               </div>
 
-              {/* Only the field the chosen cadence reads, so nothing implies a choice with no effect. */}
+              
               {cadence === "weekly" ? (
                 <div className="flex flex-col gap-1.5">
                   <Label htmlFor="report-weekday">On</Label>
@@ -259,12 +250,7 @@ export function ScheduleReportSheet({
                     value={dayOfMonth}
                     onChange={(event) => setDayOfMonth(event.target.valueAsNumber)}
                   />
-                  {/*
-                    Stated rather than silently clamped. "The 31st" either skips
-                    February or becomes the 28th for one month a year, and both
-                    are a report that did not arrive when somebody was told it
-                    would.
-                  */}
+                  
                   <p className="text-micro text-muted-foreground">
                     The 29th to the 31st are not offered: they do not exist in every month.
                   </p>
@@ -327,10 +313,7 @@ function ScheduleRow({
             : "Paused"}
           {schedule.runCount > 0 ? ` · sent ${schedule.runCount} times` : ""}
         </p>
-        {/*
-          The failure that would otherwise be invisible: a schedule that has
-          stopped delivering looks exactly like one nobody set up.
-        */}
+        
         {schedule.lastError ? (
           <p role="alert" className="text-label text-status-danger-ink">
             Last run failed: {schedule.lastError}

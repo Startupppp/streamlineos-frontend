@@ -44,9 +44,6 @@ describe("getPresetRange – BIWEEKLY", () => {
     at("2027-01-01T12:00:00");
     const nextDayPeriod = getPresetRange("this-period", "BIWEEKLY");
 
-    // Dec 31 and the following Jan 1 must fall in the same continuous block —
-    // previously each was computed relative to its own year's January 1st,
-    // so consecutive calendar days landed in disjoint, non-adjacent blocks.
     expect(nextDayPeriod).toEqual(thisPeriod);
   });
 

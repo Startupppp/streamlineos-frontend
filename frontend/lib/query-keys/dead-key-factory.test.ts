@@ -1,25 +1,7 @@
-/**
- * @jest-environment node
- */
 import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import ts from "typescript";
 
-/**
- * PRD-C026 names "query keys" in its own list of symbols that must not be left unused, and closes
- * with "An exported symbol is not considered used merely because a barrel exports it." The registry
- * in `lib/query-keys/` is one object literal reached through a single `queryKeys` export, so every
- * leaf factory inside it is exported by that one symbol whatever its reachability — knip sees the
- * export, never the 900-odd leaves behind it. Nothing in the repo could report a leaf nobody calls,
- * and 49 of them had accumulated.
- *
- * This spec is that report. It reads the WHOLE registry (every non-test file in lib/query-keys) and
- * scans the WHOLE frontend for a reference to each leaf, so it can see an instance in a file no one
- * has touched. It is deliberately conservative in the retaining direction: a leaf counts as
- * referenced if either its full `queryKeys.<path>` chain OR its bare `.<leaf>` property name appears
- * anywhere outside the registry, which keeps an aliased or destructured call site (`const k =
- * queryKeys.hr; k.leaves()`) from being reported dead.
- */
 
 const FE_ROOT = join(__dirname, "..", "..");
 const KEY_DIR = __dirname;
@@ -35,12 +17,6 @@ const SKIP_DIRS = new Set([
   "feedbucket-widget",
 ]);
 
-/**
- * PRD-C023: "CRM/Inventory ... must be reported separately, not silently included or deleted."
- * These namespaces are out of the release's scope, so their unreachable leaves are enumerated
- * below rather than deleted — and the enumeration is asserted exactly, so one appearing or
- * disappearing is a conscious edit rather than a silent drift.
- */
 const CRM_INVENTORY_NAMESPACES = new Set([
   "crm",
   "aiCrm",

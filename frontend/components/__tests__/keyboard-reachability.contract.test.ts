@@ -4,14 +4,6 @@ import {
   findUnreachableClickTargets,
 } from "@/test-utils/keyboard-reachability-analysis";
 
-/**
- * "Every interactive surface is keyboard-navigable" is a claim about the whole
- * corpus, and no number of rendered component suites can make it. This walks
- * every click target in the tree instead, so the claim carries a denominator.
- *
- * A ratchet, not a target. Lowering a number is a deliberate edit; raising one
- * fails review.
- */
 const BASELINE = {
   minimumFiles: 3500,
   minimumClickSites: 600,

@@ -1,14 +1,5 @@
 import type { SessionUser } from "./session";
 
-/**
- * Which tenant the authenticated specs run against.
- *
- * Not hardcoded, because these ids are rows in somebody's database and this
- * repo cannot create them — the org, the user, their ACTIVE membership, the
- * `org_modules` row enabling `inventory` and the stock itself all live on the
- * backend side. Supplying them is the environment's job; naming exactly what is
- * missing is this file's.
- */
 export interface TenantEnv {
   user: SessionUser;
   apiUrl: string;
@@ -22,7 +13,6 @@ const REQUIRED = [
   "BACKEND_JWT_SECRET",
 ] as const;
 
-/** What is missing, for a skip message that says what to do about it. */
 export function missingTenantEnv(): string[] {
   return REQUIRED.filter((key) => !process.env[key]);
 }

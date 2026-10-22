@@ -40,19 +40,6 @@ function isSequenceStatus(value: string | null): value is NurtureSequenceStatus 
   return value !== null && NURTURE_SEQUENCE_STATUSES.some((status) => status === value);
 }
 
-/**
- * Every cadence the organisation authors, and the way into one.
- *
- * Lifecycle lives on the record rather than here on purpose: pausing a sequence
- * stops the enrolments already inside it, not just new ones, so it is a decision
- * to take while looking at who is in it. `NURTURE_SEQUENCE_LAYOUT` says the same
- * thing by declaring `status` read-only.
- *
- * No table is written here. The columns, the status badge's tone, the
- * description under the name and the mobile card all come from the description;
- * what is left is the status filter, which is a query rather than a column, and
- * the cursor the "show older" control advances.
- */
 export function NurtureSequencesPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -146,11 +133,6 @@ export function NurtureSequencesPage() {
           onRetry={() => void sequences.refetch()}
         />
       ) : sequences.isLoading || viewState === "loading" ? (
-        /*
-          The gate's own pending state belongs here too: the read is disabled
-          until rights arrive, and a disabled query reports `isLoading: false`,
-          so without this the first paint says there are no sequences.
-        */
         <DataTableSkeleton
           rows={10}
           columns={layout.list.columns.length}

@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Wire contracts for the renewal-book writes and the trigger sweep, field for
- * field with `lifecycle/dto/lifecycle-response.schemas.ts` and
- * `lifecycle/dto/triggers-response.schemas.ts`.
- */
 
 const bandSchema = z.enum(["at-risk", "watch", "healthy"]);
 const statusSchema = z.enum(["active", "churned", "cancelled"]);

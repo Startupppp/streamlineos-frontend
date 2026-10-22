@@ -241,12 +241,7 @@ export function SubmissionSheet({ vendor, onClose }: SubmissionSheetProps) {
                         >
                           Margin: {formatCurrencyFull(sub.marginAmount)}/hr
                           {sub.marginPercent !== null && ` (${sub.marginPercent}%)`}
-                          {/*
-                            Called out rather than left to a minus sign. A
-                            contractor placed above the bill rate loses money on
-                            every hour worked, and it arrives through an
-                            ordinary data-entry slip.
-                          */}
+                          
                           {sub.negative && " — below cost"}
                         </span>
                       )}

@@ -7,32 +7,22 @@ import { SPRING } from "@/features/landing/relay/lib/motion";
 
 import { useReducedMotionPref, useSeen } from "./use-signals-motion";
 
-/** SPRING ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SPRING_FAST = {
   tension: SPRING.tension * 1.5,
   friction: SPRING.friction * 1.22,
 } as const;
 
-/** Full turn — slow enough to follow. */
 const TURN_SPRING = { tension: 105, friction: 24.4 } as const;
-/** Loop beat, ms: beat 0 turns, beats 4–6 tick 6° each, beat 7 rests. */
 const BEAT = 640;
 const BEATS = 8;
 const TICK_FROM = 4;
 const TICKS = 3;
 
-/**
- * Next-run chip clock (signals-clock.svg, inlined): the hand makes a full
- * turn, then ticks forward a few times, and the next turn carries it round
- * to the next whole turn — a ~5.1 s loop while on screen. The hand is at its
- * Figma angle at every turn's end.
- */
 export const ClockIcon = ({ delay = 0 }: { delay?: number }) => {
   const [ref, seen, inView] = useSeen();
   const reduced = useReducedMotionPref();
   const [beat, setBeat] = useState(0);
   const [started, setStarted] = useState(false);
-  /* Fully off screen: back to the first turn for the next visit. */
   if (!seen && (started || beat !== 0)) {
     setStarted(false);
     setBeat(0);

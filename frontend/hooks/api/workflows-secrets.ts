@@ -30,11 +30,6 @@ function assertPermission(allowed: boolean): void {
   if (!allowed) throw new Error("You do not have permission for this workflow action.");
 }
 
-/**
- * `GET /workflows/secrets` is a keyset page, not a list. See `useAllSchedules` — the
- * same silent truncation, on the surface where a missing row is a secret the operator
- * believes they deleted.
- */
 export function useGlobalSecrets() {
   const canManage = useCan("workflows:secrets:manage");
   return useInfiniteQuery({

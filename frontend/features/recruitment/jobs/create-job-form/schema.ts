@@ -8,14 +8,6 @@ import {
 
 export const NO_HIRING_FLOW = "none";
 
-/**
- * The picker's "start from scratch" option.
- *
- * Radix refuses `value=""` on a `SelectItem` — an empty value is how it spells
- * "cleared" — so an explicit sentinel stands in for "no template", exactly as
- * `NO_HIRING_FLOW` does one field over. It never leaves the form: the picker
- * reads it as "apply nothing" and the submit payload has no template field at all.
- */
 export const NO_JOB_TEMPLATE = "none";
 
 export const SCREENING_QUESTION_TYPES = ["TEXT", "YES_NO", "SINGLE_SELECT", "NUMBER"] as const;

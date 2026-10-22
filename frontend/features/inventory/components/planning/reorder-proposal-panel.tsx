@@ -21,13 +21,6 @@ interface DraftProposalCardProps {
   productName: string;
   onConfirm: (proposalId: number, token: string) => void;
   isPending: boolean;
-  /**
-   * F1. Confirming this proposal raises a draft purchase order, so the control
-   * carries the purchase order's own permission -- not the AI one that produced
-   * the proposal. Seeing a proposal and being allowed to act on it are two
-   * different rights, and the backend now asserts both at confirm; this hides
-   * the button that would otherwise render for people the server will refuse.
-   */
   canCreatePurchaseOrder: boolean;
 }
 
@@ -147,9 +140,6 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
   const hasResult = !!result;
   const showToggle = hasResult || isLoading;
 
-  // The panel exists only to call an endpoint gated on `inventory:ai:propose`.
-  // Rendering it to someone without that key offers a button whose only outcome
-  // is a 403, so the whole card stays away rather than becoming an empty state.
   if (!canPropose) return null;
 
   return (
@@ -216,9 +206,7 @@ export const ReorderProposalPanel = memo(function ReorderProposalPanel({
                   explanation={result.explanation}
                 />
                 <Separator />
-                {/* F4. `blocked` is the server declining to propose, with its own
-                    reason and no credits spent. It renders as that reason rather
-                    than as a confirm button that would only ever 409. */}
+                
                 {result.status === "blocked" || result.proposal === null ? (
                   <p className="text-dense text-muted-foreground">
                     {result.blockedReason ??

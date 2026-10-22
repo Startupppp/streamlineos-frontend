@@ -1,12 +1,6 @@
 import type { ReportSchedule } from "@/types/crm/reporting";
 import { describeSchedule } from "./report-schedule-copy";
 
-/**
- * CRM-P2-08. Every schedule stores a weekday and a day-of-month whatever its
- * cadence, because the columns are NOT NULL — so the sentence has to be built
- * from the fields the cadence actually reads. Showing the others would tell an
- * operator they chose something that has no effect.
- */
 
 const schedule = (over: Partial<ReportSchedule> = {}): ReportSchedule =>
   ({

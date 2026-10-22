@@ -27,24 +27,6 @@ interface ContactConsentCardProps {
   contactId: number;
 }
 
-/**
- * What this person has agreed to be contacted about, and who says so.
- *
- * `/crm/consent/**` shipped with no caller in any branch of the frontend, so
- * there was no way to record consent, read it back, or answer an erasure
- * request from the product at all.
- *
- * What this shows is the CURRENT answer per channel, at most one row each:
- * `uniq_crm_consent_org_contact_channel` permits one row per contact per channel
- * and `record()` upserts onto it.
- *
- * It is deliberately not called a history, because the history is a different
- * thing and lives behind the History button: `record()` also appends to
- * `crm_contact_consent_events`, an immutable trail of every change. That trail
- * had no service method and no route when this card was written, so the product
- * recorded the evidence a DPDP audit asks for and could not produce it; the read
- * endpoint exists now and `ContactConsentHistory` shows it.
- */
 export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
   const layout = useTenantLayout(CONTACT_CONSENT_LAYOUT);
   const canManage = useCan("crm:contacts:manage");
@@ -60,13 +42,6 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
   const statusField = resolveField(layout, "status");
   const sourceField = resolveField(layout, "source");
 
-  /*
-   * Newest first. Not to build a history — there is at most one row per channel
-   * — but because the route does a bare select with no `orderBy`, so the order
-   * it returns is whatever the planner chose, which is stable enough to look
-   * deliberate and is not. Five rows in a fixed order beats five in a drifting
-   * one.
-   */
   const ordered = useMemo(
     () =>
       [...(rows ?? [])].sort(
@@ -97,10 +72,8 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
           input: {
             channel,
             status,
-            /* Optional on the API; an empty control means "not stated", not an empty string. */
             legalBasis,
             sourceDetail: values.sourceDetail || undefined,
-            /* Empty means "does not lapse", which is a value and not a gap. */
             expiresAt: values.expiresAt || null,
           },
         },
@@ -116,7 +89,6 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
     [contactId, record],
   );
 
-  /* Checked before loading: a query never allowed to run has no loading state. */
   if (useCanState("crm:contacts:view") === "denied")
     return <NoPermissionState permission="crm:contacts:view" />;
 
@@ -125,12 +97,7 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
       <CardHeader className="flex flex-row items-center justify-between border-b px-4 py-3">
         <CardTitle className="text-sm font-medium">Contact consent</CardTitle>
         <div className="flex items-center gap-gap-inline">
-          {/*
-            Not gated on `manage`. Reading the trail is a read, and the route
-            carries the same `crm:contacts:view` key this whole card is already
-            behind — a viewer who can see the current position can see how it
-            got there.
-          */}
+          
           <Button
             variant="ghost"
             size="sm"
@@ -174,12 +141,6 @@ export function ContactConsentCard({ contactId }: ContactConsentCardProps) {
             compact
             className="border-0 bg-transparent py-4"
             title="No consent recorded"
-            /*
-             * Says what the absence means rather than that a list is empty. No
-             * row is not "they said no" — it is that nobody has established a
-             * basis for contacting them here, which is the thing a reviewer is
-             * actually asking about.
-             */
             description="Nothing here records a basis for contacting this person on any channel."
             action={canManage ? { label: "Record consent", onClick: handleOpenAdd } : undefined}
             actionVariant="outline"

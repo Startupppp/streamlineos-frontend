@@ -1,28 +1,12 @@
-/**
- * Public / marketing pricing.
- *
- * Chargeable amounts, seat limits, and trial length MUST match backend
- * `plan-entitlements.constants.ts`. The billing UI loads live plans from
- * GET /billing/plans; this file is only for landing pages that cannot call auth APIs.
- *
- * Keep in sync via `lib/__tests__/pricing-consistency.test.ts`.
- */
 
 export const PRICING = {
   currency: "₹",
-  /** Free plan seat limit — mirrors PLAN_LIMITS.members.FREE */
   freeSeatLimit: 5,
-  /** Alias used by older marketing copy */
   starterSeatLimit: 5,
-  /** STARTER monthly price in INR — mirrors PLAN_PRICES_PAISE.STARTER / 100 */
   starterMonthlyInr: 999,
-  /** PROFESSIONAL monthly price in INR */
   professionalMonthlyInr: 2499,
-  /** ENTERPRISE monthly price in INR (from) */
   enterpriseMonthlyInr: 4999,
-  /** Annual discount fraction — mirrors ANNUAL_DISCOUNT_PCT */
   annualDiscountPct: 20,
-  /** Trial length in days — mirrors DEFAULT_TRIAL_DAYS (6 months). */
   trialDays: 182,
   freeStorageGb: 5,
   starterStorageGb: 100,
@@ -33,7 +17,6 @@ export type BillingPeriod = "monthly" | "annual";
 
 export type PricingTier = {
   id: "free" | "starter" | "professional" | "enterprise";
-  /** Backend plan id when chargeable */
   planId: "FREE" | "STARTER" | "PROFESSIONAL" | "ENTERPRISE";
   name: string;
   tagline: string;
@@ -44,7 +27,6 @@ export type PricingTier = {
   price: string;
   period: string;
   bestFor: string;
-  /** Seats included — mirrors PLAN_LIMITS.members (Enterprise: the negotiated starting point). */
   seatLimit: number;
   features: string[];
   cta: string;
@@ -175,13 +157,6 @@ export const PRICING_TIERS: PricingTier[] = [
   },
 ];
 
-/**
- * `PRICING_TIERS.find(…)!` appeared three times, and the `!` is the only reason
- * a renamed or removed tier id compiled: `find` returns `undefined`, every
- * `STARTER_TIER.annual` read below becomes a crash at the call site, and nothing
- * names the tier that went missing. Resolving it once, loudly, keeps the failure
- * at the file that owns the list.
- */
 function requireTier(id: PricingTier["id"]): PricingTier {
   const tier = PRICING_TIERS.find((candidate) => candidate.id === id);
   if (!tier) throw new Error(`pricing: PRICING_TIERS has no "${id}" tier`);
@@ -208,7 +183,6 @@ type SavingsBreakdown = {
   savingsPct: number;
 };
 
-/** Round to a whole percent. Never print 100% while a rupee is still due. */
 function savingsPercent(savings: number, baseline: number): number {
   if (baseline <= 0) return 0;
   const pct = Math.round((savings / baseline) * 100);
@@ -225,7 +199,6 @@ export function calculateSavingsVsAllInOne(
     billingPeriod === "annual"
       ? (STARTER_TIER.annual ?? 0)
       : (STARTER_TIER.monthly ?? 0);
-  // Org-priced plans: compare total org cost vs competitor per-seat stack for the seat count.
   const streamlineAnnual = streamlinePerSeat * 12;
   return {
     competitorAnnual,

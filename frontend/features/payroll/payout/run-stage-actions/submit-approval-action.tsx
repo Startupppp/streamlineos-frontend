@@ -33,7 +33,6 @@ export function SubmitApprovalAction({ runId, status, openBlockers: openBlockers
   const { mutate, isPending } = useSubmitApproval();
   const { data: blockerPage, isPending: blockersPending } = useRunExceptions(runId, { severity: "BLOCKER", status: "OPEN" });
   const blockersUnknown = openBlockersProp === undefined && blockersPending;
-  // total, not data.length: the first page alone undercounts a long blocker list.
   const openBlockers = openBlockersProp ?? blockerPage?.pagination.total ?? blockerPage?.data.length ?? 0;
 
   if (!SUBMIT_STATUSES.has(status)) return null;

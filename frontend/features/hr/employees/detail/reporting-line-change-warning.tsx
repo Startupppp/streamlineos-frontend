@@ -8,15 +8,9 @@ import { CHANGE_REASON_MIN_CHARS } from "./reporting-line-editor-schema";
 interface ReportingLineChangeWarningProps {
   changesLast24h: number;
   threshold: number;
-  /** The viewer holds elevated authority (override / HR or org admin). */
   canOverride: boolean;
 }
 
-/**
- * PRD D4, as the server reports it: past the org's 24-hour threshold a primary
- * change needs a reason and an HR or org admin. A soft guard — the server
- * decides; this only explains what it will ask for.
- */
 export function ReportingLineChangeWarning({ changesLast24h, threshold, canOverride }: ReportingLineChangeWarningProps) {
   const tone = statusToneClasses("warning");
   return (

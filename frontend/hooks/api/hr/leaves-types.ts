@@ -27,7 +27,6 @@ export interface LeaveContextResult {
     name: string;
     daysPerYear: number;
     orgId: string;
-    /** V-049. Optional until the backend half lands. */
     policyName?: string | null;
   }>;
   joiningDate: string | null;
@@ -40,7 +39,6 @@ export interface LeaveContextResult {
     image?: string | null;
   }>;
   approvalRoute: ApprovalRoute;
-  /** V-045. Optional until the backend half lands. */
   noPolicyConfigured?: boolean;
 }
 
@@ -49,7 +47,6 @@ export interface HrLeaveType {
   name: string;
   daysPerYear: number;
   carryForward: boolean;
-  /** V-049. Optional until the backend half lands. */
   policyName?: string | null;
 }
 

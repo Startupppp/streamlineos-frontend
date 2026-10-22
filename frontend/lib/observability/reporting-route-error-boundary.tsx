@@ -35,9 +35,6 @@ export function ReportingRouteErrorBoundary({
     void queryClient.resetQueries({
       predicate: (query) => query.state.status === "error",
     });
-    // reset() alone re-renders the client segment from the payload it already
-    // has, so an error thrown on the server (an RSC access check during an
-    // outage) came straight back on every retry until a full reload.
     startTransition(() => router.refresh());
   }, [queryClient, router]);
 

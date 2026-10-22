@@ -126,12 +126,7 @@ export function MessagesTab({
         </div>
       </ScrollArea>
       <div className="border-t p-3 space-y-2">
-        {/*
-          Above the channel selector, because the selector has offered WHATSAPP
-          since before anything could deliver one — picking it wrote a message
-          row and nothing else, so a recruiter read "sent" while the candidate's
-          phone never rang.
-        */}
+        
         {channel === "WHATSAPP" && <WhatsappConsentPanel candidateId={candidateId} />}
         <div className="flex items-center gap-2">
           <div className="flex-1 space-y-1">

@@ -135,7 +135,6 @@ function CertificateViewer({ contractId }: { contractId: number }) {
 }
 
 export function ContingentPageContent() {
-  // The page is gated on hr:contracts:view; every mutation needs :manage.
   const canManage = useCan("hr:contracts:manage");
   const [sheetOpen, setSheetOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<HrContract | undefined>(undefined);

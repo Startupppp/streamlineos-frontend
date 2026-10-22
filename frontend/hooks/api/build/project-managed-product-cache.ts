@@ -75,8 +75,6 @@ function patchPage(
     return { ...page, data: rows };
   }
 
-  // First pages are ID-descending. If the new ID falls after an unseen cursor,
-  // leave this page alone; it will be loaded from the server when reached.
   const lastRow = rows.at(-1);
   if (page.hasMore && lastRow && project.id < lastRow.id) {
     return { ...page, data: rows };

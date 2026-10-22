@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -14,6 +14,11 @@ import type {
   UpdatePortfolioInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  portfoliosListQueryOptions,
+  buildPortfoliosParams,
+  type ListFilters,
+} from "./portfolios-read-options";
 
 const portfolioPageContract = lazyContract(() =>
   import("@/hooks/api/build/portfolios-schema").then(
@@ -39,20 +44,13 @@ const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-interface ListFilters {
-  cursor?: string;
-  limit?: number;
-  search?: string;
-  status?: string;
-  ownerId?: string;
-  health?: string;
-  sort?: string;
-}
-
 export function usePortfolios(filters?: ListFilters) {
   const canView = useCan("build:portfolios:view");
+  const params = buildPortfoliosParams(filters);
   return useQuery<PortfoliosPage>({
     ...portfoliosListQueryOptions(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
     enabled: canView,
   });
 }
@@ -210,21 +208,3 @@ export function useUnlinkPortfolioProject(portfolioId: number) {
   });
 }
 
-export function portfoliosListQueryOptions(filters?: ListFilters) {
-  const params: Record<string, string> = {};
-  if (filters?.cursor) params["cursor"] = filters.cursor;
-  if (filters?.limit) params["limit"] = String(filters.limit);
-  if (filters?.search) params["q"] = filters.search;
-  if (filters?.status) params["status"] = filters.status;
-  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
-  if (filters?.health) params["health"] = filters.health;
-  if (filters?.sort) params["sort"] = filters.sort;
-  return queryOptions<PortfoliosPage>({
-    queryKey: buildWorkQueryKeys.projects.portfolios.list(
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
-    staleTime: 30_000,
-  });
-}

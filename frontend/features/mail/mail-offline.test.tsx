@@ -3,17 +3,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { MailListPane } from "./mail-list-pane";
 import type { MailAccount } from "@/types/mail";
 
-/**
- * `/inbox` has told the reader when the network is gone since it shipped;
- * `/mail` did not, so a disconnected mailbox rendered the transport's own error
- * text — "Failed to fetch" — in the place a reader looks for their messages.
- * That reads as a broken mailbox rather than a broken connection, and the
- * infinite list kept asking for a page that could not arrive.
- */
 
 const fetchNextPage = jest.fn();
 
-/** What `getErrorMessage` renders for a transport failure. */
 const NETWORK_ERROR_TEXT = "Network error. Check your connection and try again.";
 
 let listState = {

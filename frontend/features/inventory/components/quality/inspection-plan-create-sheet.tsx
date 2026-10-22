@@ -31,11 +31,6 @@ const DEFAULTS: InspectionPlanFormValues = {
   instructions: "",
 };
 
-/**
- * The plan and its first version are created together: a plan with no published
- * version answers no receipt, so leaving the rule as a second step would make an
- * inert plan the easiest thing to produce.
- */
 export function InspectionPlanCreateSheet({ open, onOpenChange }: InspectionPlanCreateSheetProps) {
   const createPlan = useCreateInspectionPlan();
 

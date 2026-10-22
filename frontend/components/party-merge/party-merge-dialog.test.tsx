@@ -15,13 +15,6 @@ jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
 
-/**
- * The confirm shell is rendered flat.
- *
- * `ConfirmDialog` is a Radix `AlertDialog`, which portals and traps focus; what
- * this file is about is which party id the dialog decides to keep, and that
- * decision is made before anything is portalled.
- */
 jest.mock("@/components/ui/confirm-dialog", () => ({
   ConfirmDialog: ({
     title,
@@ -93,13 +86,6 @@ describe("PartyMergeDialog", () => {
 
   it("is a destructive confirmation, not a plain dialog with a red button", () => {
     renderDialog();
-    /**
-     * §13: a merge is irreversible-shaped and lifecycle-shaped, so it takes
-     * `ConfirmDialog destructive` whatever its field count. Asserted here
-     * because the surface it replaced escalated a `Dialog` into a second
-     * `AlertDialog` to get the same effect, and the two disagreed about which
-     * one owned the pending state.
-     */
     expect(screen.getByTestId("confirm-dialog")).toHaveAttribute(
       "data-destructive",
       "true",
@@ -111,14 +97,6 @@ describe("PartyMergeDialog", () => {
 
     fireEvent.click(screen.getByText("Merge records"));
 
-    /**
-     * The whole point of `preferSurvivorPartyId`.
-     *
-     * `chooseSurvivor` on the server keeps the OLDER party when nothing says
-     * otherwise, and `OLDER` here is exactly that — so a payload without this
-     * field would silently keep the record the reviewer did not choose, and
-     * every field conflict would resolve in its favour.
-     */
     expect(mergeMutate).toHaveBeenCalledWith(
       {
         leftPartyId: OLDER.partyId,
@@ -132,7 +110,6 @@ describe("PartyMergeDialog", () => {
   it("follows the reviewer when they change their mind", () => {
     renderDialog(NEWER.partyId);
 
-    /** The cards are the control; picking one is what sets the survivor. */
     fireEvent.click(screen.getByText(OLDER.name).closest("button")!);
     fireEvent.click(screen.getByText("Merge records"));
 
@@ -145,28 +122,18 @@ describe("PartyMergeDialog", () => {
   it("names both records and never renders a party id", () => {
     const { container } = renderDialog(NEWER.partyId);
 
-    /** The description says which way round it goes, in names. */
     expect(
       screen.getByText(
         `${OLDER.name} will be merged into ${NEWER.name}. Their history, contacts and matched email and phone all move across. This can be undone from Merge history.`,
       ),
     ).toBeInTheDocument();
 
-    /**
-     * §5: a visible UUID is a bug. The ids travel in the payload and in
-     * `aria-pressed` state, never as text — a reader deciding whether to destroy
-     * a customer record learns nothing from one.
-     */
     expect(container.textContent).not.toContain(OLDER.partyId);
     expect(container.textContent).not.toContain(NEWER.partyId);
   });
 
   it("tells the reviewer the merge can be undone", () => {
     renderDialog();
-    /**
-     * The offer has to be in the dialog, not only in the toast that follows it:
-     * somebody about to fuse two customers decides on what this screen says.
-     */
     expect(
       screen.getByText(/This can be undone from Merge history/),
     ).toBeInTheDocument();

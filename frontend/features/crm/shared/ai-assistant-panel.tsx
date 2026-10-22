@@ -381,7 +381,6 @@ function ObjectionHelpTab({ aiEnabled }: { aiEnabled: boolean }) {
   );
 }
 
-
 export function AiAssistantPanel({ entityType, entityId, entityName, onOpenEmailCompose }: AiAssistantPanelProps) {
   const [expanded, setExpanded] = useState(false);
   const { data: flags } = useOrgFeatureFlags();

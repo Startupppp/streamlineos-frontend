@@ -10,16 +10,10 @@ import { cn } from "@/lib/utils";
 export const REPORTING_POLICY_SETTINGS_HREF = "/hr/settings/reporting-managers";
 
 interface PolicyMissingBannerProps {
-  /** "form" for single onboarding, "file" for bulk onboarding and staged import. */
   context: "form" | "file";
   className?: string;
 }
 
-/**
- * PRD §7.1.6: with no valid default reporting manager, every onboarding and
- * import entry point says what a blank manager will do before anyone submits.
- * Renders nothing while loading, on error, or when a valid default exists.
- */
 export function PolicyMissingBanner({ context, className }: PolicyMissingBannerProps) {
   const { data: policy } = useReportingManagerPolicy();
   const canConfigure = useCan("hr:reporting-lines:override");

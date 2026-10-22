@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 import { GET } from "./route";
 
 describe("GET /api/version", () => {

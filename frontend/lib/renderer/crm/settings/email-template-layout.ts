@@ -1,20 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * An email template, as data.
- *
- * The screen this replaces held two hand-rolled `useForm` calls — one in a
- * dialog for creating, one in a card below the grid for editing — with the same
- * three fields written out twice and the same Zod schema declared inline in the
- * page. Two copies of one form is two places for the character limits to drift,
- * and they already had: the create dialog capped the name at 100 and the edit
- * card capped it at 100 in a different `maxLength` attribute.
- *
- * The variable palette that inserts `{{lead.name}}` into the body is not
- * described here. It is a control, supplied by the surface, for the same reason
- * a person picker is: which variables exist depends on what the tenant's records
- * carry, not on what an email template *is*.
- */
 export const EMAIL_TEMPLATE_LAYOUT: RecordLayout = {
   key: "crm:settings:email-template",
   singular: "Email template",
@@ -54,15 +39,6 @@ export const EMAIL_TEMPLATE_LAYOUT: RecordLayout = {
   },
 };
 
-/**
- * The variables a template may interpolate, and what they look like filled in.
- *
- * Beside the description rather than inside it: a layout says what a field *is*,
- * and this is a palette of values for one particular control. Kept in one place
- * because the preview and the insert buttons have to agree about the list, and
- * they previously did not — the palette offered twelve and the preview knew
- * twelve, with no structure holding them together.
- */
 export const EMAIL_TEMPLATE_VARIABLES: ReadonlyArray<{ token: string; sample: string }> = [
   { token: "lead.name", sample: "Rahul Sharma" },
   { token: "lead.email", sample: "rahul@example.com" },

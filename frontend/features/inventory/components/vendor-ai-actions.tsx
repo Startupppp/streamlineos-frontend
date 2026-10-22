@@ -31,9 +31,6 @@ function briefingToText(briefing: SupplierDelayBriefing): string {
 
   for (const v of briefing.vendors) {
     const p = v.performance;
-    // C4. Copied out verbatim, sample size included. A rate with no sample
-    // beside it is the shape that lets somebody quote "50% rejected" from two
-    // receipts, and this text is what a buyer pastes into an email.
     const metrics = [
       `• On-Time Rate: ${rateLine(p.onTime, "orders")}`,
       `• Line Fill Rate: ${rateLine(p.lineFill, "lines")}`,

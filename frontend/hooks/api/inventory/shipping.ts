@@ -9,21 +9,10 @@ import type { ShipmentStatus } from "@/features/inventory/lib";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import type { Package } from "./shipping-packages";
 
-/**
- * Packages, loads and carriers live in their own modules and are re-exported
- * here, so every importer is unchanged. Shipments stay: the backend's
- * response-shape drift spec reads `ShipmentStatusEvent`, and the timeline call,
- * from this file by name.
- */
 export * from "./shipping-packages";
 export * from "./shipping-loads";
 export * from "./shipping-carriers";
 
-/**
- * A shipment line as `GET /inventory/shipments/:id` returns it: the stored row,
- * quantity a decimal string, the variant by id alone. `productVariant` is only
- * present where a caller loads the relation; the detail route does not.
- */
 interface ShipmentLine {
   id: number;
   shipmentId: number;
@@ -144,18 +133,9 @@ export function useShipShipment() {
   });
 }
 
-/**
- * B7 — the carrier contract, as the API actually exposes it.
- *
- * A shipment's journey is a list of events the carrier claimed, newest first.
- * Each is stored under the carrier's own event id, so a replayed scan is a
- * no-op, and an event that would move the shipment backwards is recorded and
- * ignored rather than applied — `advanced: false` is the API saying so.
- */
 export interface ShipmentStatusEvent {
   id: number;
   status: ShipmentStatus;
-  /** When the carrier says it happened, which is not when we heard. */
   occurredAt: string;
   receivedAt: string;
   description?: string | null;
@@ -172,11 +152,6 @@ export interface CarrierStatusRecorded {
   status: ShipmentStatus;
 }
 
-/**
- * What a refresh did. `polled: false` is the normal answer while no real carrier
- * adapter is registered: there is nobody to ask, and tracking on this shipment
- * is whatever the operator entered.
- */
 export interface CarrierRefreshResult {
   shipmentId: number;
   carrier: string;

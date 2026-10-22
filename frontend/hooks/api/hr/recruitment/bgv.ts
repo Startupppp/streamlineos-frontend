@@ -30,12 +30,6 @@ export function useCandidateBgv(candidateId: number) {
   });
 }
 
-/**
- * Opens a case with the connected agency.
- *
- * Opening a case costs money and a double-submit would buy the same check twice;
- * the route is @Idempotent, so the key is held per intent, not minted per attempt.
- */
 export function useInitiateBgv(candidateId: number) {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation("hr:requisitions:manage", {

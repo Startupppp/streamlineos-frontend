@@ -1,14 +1,5 @@
 import { BOT_UA } from "@/features/landing/relay/utils/bot-ua";
 
-/**
- * The preloader's pre-paint switch (it was Relay's root-layout head script).
- * Rendered first in the homepage body, so it runs before `<main>` is parsed:
- * it sets `html[data-preload]` (home only, motion allowed, not a crawler),
- * which shows the overlay from the server HTML and holds the page, then marks
- * `data-preload-away` once the first screen's backdrop image has painted —
- * see home/preloader.tsx and styles/sections/preloader.css. The preloader
- * always opens on the hero, so scroll restoration is turned off.
- */
 const SCRIPT = `if(location.pathname==="/"&&!matchMedia("(prefers-reduced-motion: reduce)").matches&&!/${BOT_UA.source}/i.test(navigator.userAgent)){try{history.scrollRestoration="manual"}catch(e){}var d=document.documentElement;d.dataset.preload="";try{var o=new PerformanceObserver(function(l){if(!l.getEntries().some(function(e){return e.element&&e.element.tagName==="IMG"&&e.element.closest("main")}))return;o.disconnect();requestAnimationFrame(function(){d.dataset.preloadAway=""})});o.observe({type:"largest-contentful-paint",buffered:true})}catch(e){d.dataset.preloadAway=""}}`;
 
 export const PreloadScript = ({ nonce }: { nonce?: string }) => (

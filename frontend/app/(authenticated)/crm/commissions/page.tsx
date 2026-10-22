@@ -31,15 +31,6 @@ const TABS: { value: CommissionTab; label: string }[] = [
   { value: "plans", label: "Plans" },
 ];
 
-/**
- * What a rep is owed, and why.
- *
- * The period is stepped through by the server's own boundaries rather than by a
- * date picker: how long a period is belongs to the plan version in force, so
- * "the month" is not a question the client can answer. Stepping back means
- * asking for the day before this period started, which is a date the payload
- * already told us.
- */
 export default function CommissionsPage() {
   const [tab, setTab] = useState<CommissionTab>("period");
   const [on, setOn] = useState<string | undefined>(undefined);
@@ -68,8 +59,6 @@ export default function CommissionsPage() {
     const next = new Date(`${end}T00:00:00Z`);
     next.setUTCDate(next.getUTCDate() + 1);
     const iso = next.toISOString().slice(0, 10);
-    // Never step past today: a future period has nothing in it and the server
-    // would answer with an empty accrual that reads like a data problem.
     setOn(iso > new Date().toISOString().slice(0, 10) ? undefined : iso);
   }, [accrual.data?.periodEnd]);
 
@@ -175,16 +164,6 @@ export default function CommissionsPage() {
         ) : null}
 
         {tab === "plans" ? (
-          /*
-           * A second key, and therefore a second denial. Somebody who may read
-           * their own earnings need not be able to read the plan catalogue, and
-           * collapsing that into an empty list would be the same mistake this
-           * page guards against at the top.
-           *
-           * `denied`, not `!allowed`: until the access snapshot lands the gate
-           * is `pending`, and reading that as a refusal shows "no permission" to
-           * somebody who has it.
-           */
           plans.access.denied ? (
             <NoPermissionState permission="crm:commission-plans:view" compact />
           ) : plans.isLoading ? (

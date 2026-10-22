@@ -14,11 +14,6 @@ import { useFrame } from "@/features/landing/relay/hooks/use-frame";
 import { StatementType } from "./plate";
 import { POP, TIMELINE, useStatementSeen, WAVE } from "./use-statement-seen";
 
-/**
- * Label boxes: 1440 3888:6437–6442 (80 wide), 1024 3888:10834–10839 (80),
- * 768 3832:8101–8106 (44), 390 3893:3735–3740 (44; 13:00 and 19:00 hidden).
- * First left-, last right-aligned, rest centred.
- */
 const HOUR_POSITIONS = [
   "left-20 w-20 text-left w1024:left-12 w768:left-10 w768:w-11 w390:left-5",
   "left-74 w-20 text-center w1024:left-47.25 w768:left-36.75 w768:w-11 w390:left-21",
@@ -28,10 +23,8 @@ const HOUR_POSITIONS = [
   "left-320 w-20 text-right w1024:left-224 w768:left-171 w768:w-11 w390:hidden",
 ] as const;
 
-/** Ruler length per frame (design px): 3888:6313, 3888:10710, 3855:2, 3893:3611. */
 const RULER_WIDTH = { 1440: 1280, 1024: 928, 768: 688, 390: 350 } as const;
 
-/** Tick slots every width/120; slot 60 is the gap under "now". */
 const SLOTS = 121;
 const NOW_SLOT = 60;
 const ticksFor = (width: number) =>
@@ -49,22 +42,17 @@ const TICKS = {
   390: ticksFor(RULER_WIDTH[390]),
 } as const;
 
-/** Hour labels sit on every 24th slot. */
 const HOUR_SLOT = 24;
 const NOW_P = NOW_SLOT / (SLOTS - 1);
 
-/** Ticks are ink at 35% (3488:22136); the passing wave lifts them to 75%. */
 const TICK_REST = 0.35;
 const TICK_PEAK = 0.75;
-/** Wave head runs from just before the first tick to just past the last. */
 const WAVE_FROM = -0.12;
 const WAVE_TO = 1.12;
-/** Half-width of the wave crest and of the reveal edge, in ruler fractions. */
 const CREST = 0.06;
 const EDGE = 0.03;
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
-/** Smooth crest: 1 at the wave head, 0 at ±CREST. */
 const crest = (wave: number, p: number) => {
   const d = Math.abs(wave - p) / CREST;
   return d >= 1 ? 0 : 0.5 + 0.5 * Math.cos(Math.PI * d);
@@ -76,21 +64,11 @@ export interface RulerProps {
   hours: readonly string[];
 }
 
-/**
- * Run ruler 3488:22136. One spring (`wave`, 0 → 1 along the ruler) drives
- * every tick, label and the "now" flash. First pass = entrance: ticks appear
- * left → right behind the crest, hour labels with them, "now" flashes as the
- * crest crosses it. Then, while the plate is on screen, the same crest runs
- * again every few seconds: ticks rise and darken as it passes, "now" pulses.
- * Between passes the ruler rests exactly at Figma.
- */
 export const Ruler = ({ caption, now, hours }: RulerProps) => {
   const { seen, inView, reduced } = useStatementSeen();
   const frame = useFrame();
   const span = RULER_WIDTH[frame] + 2;
-  /** false until the entrance pass has finished. */
   const [shown, setShown] = useState(false);
-  /* Fully off screen: the next visit replays the entrance pass. */
   if (!seen && shown) setShown(false);
 
   const [{ wave }, api] = useSpring(() => ({ wave: WAVE_FROM }));
@@ -157,7 +135,6 @@ export const Ruler = ({ caption, now, hours }: RulerProps) => {
     ),
   });
 
-  /** Ring leaves "now" as the crest crosses it; the dot bumps under the crest. */
   const ringT = (w: SpringValue<number>) => w.to((v) => (v - NOW_P) / 0.22);
   const ring = {
     scale: ringT(wave).to((t) => 1 + 2.2 * clamp01(t)),
@@ -192,7 +169,7 @@ export const Ruler = ({ caption, now, hours }: RulerProps) => {
           />
         ))}
       </svg>
-      {/* "now" appears with its dot, once the stem has landed — not before */}
+      
       <animated.p
         style={{
           opacity: pop.scale.to((s) => Math.min(1, Math.max(0, s))),

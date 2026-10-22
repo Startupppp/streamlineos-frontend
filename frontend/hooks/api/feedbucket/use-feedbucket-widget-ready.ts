@@ -4,7 +4,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getFeedbucketApiBase, getFeedbucketProjectId } from "@/lib/feedbucket";
 
 const FB_CONFIG_MISS_PREFIX = "fb-cfg-miss:";
-/** A key with no widget stays missing until someone fixes the env; re-probe daily, not per tab. */
 const FB_CONFIG_MISS_TTL_MS = 24 * 60 * 60_000;
 
 function knownMissing(projectId: string): boolean {

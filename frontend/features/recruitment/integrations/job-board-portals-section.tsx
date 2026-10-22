@@ -154,7 +154,6 @@ function PortalCard({
   );
 }
 
-/** Job boards the ATS pulls applications from. Rendered on the Recruitment OS integrations page. */
 export function JobBoardPortalsSection() {
   const { data: portals, isLoading, isError, error, refetch, access } = useSourcePortals();
 
@@ -170,7 +169,6 @@ export function JobBoardPortalsSection() {
   return (
     <RequireModule module="hr">
       {access.denied ? (
-        // FE-47: a disabled read would render every board as "Inactive".
         <NoPermissionState permission="hr:requisitions:manage" compact />
       ) : isError || access.unavailable ? (
         <ErrorState

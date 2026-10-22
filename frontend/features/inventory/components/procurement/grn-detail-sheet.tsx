@@ -69,7 +69,7 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
     cell: (line) => (
       <>
         <div>{Number(line.quantityReceived).toFixed(2)}</div>
-        {/* The entered figure only earns a line when it differs from the base. */}
+        
         {line.quantityEntered !== null && line.uomId !== null ? (
           <div className="text-micro text-muted-foreground">
             {Number(line.quantityEntered).toFixed(2)} ×{" "}
@@ -148,14 +148,6 @@ const grnLineColumns: DataTableColumn<GrnLine>[] = [
   },
 ];
 
-/**
- * B1 — one delivery, at whatever stage of its life it is in.
- *
- * This used to be a read-only view of something that had already posted,
- * because that was the only kind of receipt that could exist. It is now the
- * workbench: the counted quantities beside what the order owed, the discrepancy
- * the receiver noted, and the controls that move the document forward.
- */
 export function GrnDetailSheet({
   grnId,
   open,
@@ -163,9 +155,6 @@ export function GrnDetailSheet({
 }: GrnDetailSheetProps) {
   const canView = useCan(READ_PERMISSION);
   const canReceive = useCan(RECEIVE_PERMISSION);
-  // Printing is its own authority. A clerk who may not post a receipt may still
-  // need the sheet, and somebody who posts all day may not be allowed to put the
-  // vendor's prices on paper that leaves the building.
   const canPrint = useCan(LABELS_PRINT_KEY);
   const grnQuery = useGoodsReceipt(open ? grnId : 0);
   const [editing, setEditing] = useState(false);
@@ -203,11 +192,7 @@ export function GrnDetailSheet({
                 canReceive={canReceive}
                 onReversed={handleReversed}
               />
-              {/*
-              DRAFT and COUNTING are what `GrnService.EDITABLE` lists. Later
-              statuses have moved stock, and the correction for those is a
-              reversal rather than an edit.
-            */}
+              
               {canReceive &&
               (grn.status === "DRAFT" || grn.status === "COUNTING") ? (
                 <Button variant="outline" size="sm" onClick={handleEditOpen}>
@@ -289,7 +274,7 @@ export function GrnDetailSheet({
         ) : null}
       </AppSheet>
 
-      {/* Sibling, not child: two Radix focus traps in one subtree fight. */}
+      
       {grn ? (
         <GrnEditDraftDialog
           open={editing}

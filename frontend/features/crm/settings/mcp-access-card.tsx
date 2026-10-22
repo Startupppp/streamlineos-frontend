@@ -9,19 +9,6 @@ import { useCan } from "@/hooks/api/access";
 import { useCrmMcpAccess, useSetCrmMcpAccess } from "@/hooks/api/crm/mcp-agent-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * The one control on this page that is not about a credential.
- *
- * Every other switch and key here answers "may this caller run this tool". This
- * answers whether the organisation wants a machine touching its customer
- * records at all — and no permission can express that, because an admin holds
- * `crm:deals:read` because they read deals, not because they consented to an
- * agent reading them.
- *
- * It sits above the tokens rather than beside them because it vetoes all of
- * them: a token minted while this is off is a credential that works nowhere,
- * and finding that out after issuing one is a bad first five minutes.
- */
 export function CrmMcpAccessCard() {
   const canWriteTokens = useCan("settings:api-tokens:write");
   const access = useCrmMcpAccess();
@@ -70,11 +57,7 @@ export function CrmMcpAccessCard() {
           </div>
         )}
 
-        {/*
-          Said explicitly, because the alternative is an operator turning this
-          off and assuming the tokens are gone. They are not — they are refused,
-          and revoking them is a separate act with a separate consequence.
-        */}
+        
         <p className="mt-2 text-label text-muted-foreground">
           This does not revoke anything. Turning it back on restores every token
           below exactly as it was.

@@ -1,15 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for `AuditLogController` handlers.
- *
- * The audit log uses `pageInfo` with `nextCursor` (cursor-based) under the
- * `pagination` key — matched here against the backend's `auditLogListSchema`.
- *
- * Timestamps are ISO strings over JSON.
- * NOT `.strict()`: extra response fields are backward-compatible.
- */
-
 const auditLogItemContract = z.object({
   id: z.number(),
   action: z.string(),

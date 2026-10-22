@@ -11,12 +11,6 @@ interface CommissionHeaderActionsProps {
   tab: "period" | "earnings" | "plans";
 }
 
-/**
- * The page's writes, each behind its own key: defining a plan
- * (`crm:commission-plans:manage`), computing an earning — which seals a
- * version — (`crm:commission-earnings:calculate`), and rebuilding the accrual
- * breakdown (`crm:commission-accruals:rebuild`).
- */
 export function CommissionHeaderActions({ tab }: CommissionHeaderActionsProps) {
   const canManagePlans = useCan("crm:commission-plans:manage");
   const canCalculate = useCan("crm:commission-earnings:calculate");

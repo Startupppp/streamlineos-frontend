@@ -2,19 +2,6 @@ import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import { invitationsResponseContract } from "@/hooks/api/users/extended-users-schema";
 
-/**
- * Proves that the old offset-pagination shape that the frontend used to expect
- * is rejected by the current contract, while the real backend cursor-page shape
- * is accepted. The old shape is defined inline so the test remains valid as a
- * historical record even after the production schema is corrected.
- *
- * Customer impact before repair: the backend returns a cursor page but the old
- * contract expected `pagination.page/total/totalPages`. Zod parses the response
- * against the contract and on mismatch the apiClient logs a warning and returns
- * `undefined` data, which the hook coerces to `data: []`. The panel renders an
- * empty state indistinguishable from "no invitations yet" — no error, no retry,
- * silent data loss.
- */
 
 const oldOffsetPaginationContract = z.object({
   data: z.array(z.object({

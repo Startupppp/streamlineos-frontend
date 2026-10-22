@@ -129,15 +129,7 @@ export default function RecruitmentAnalyticsPage() {
               sourceData={sourceData}
               isLoading={isLoading}
             />
-            {/*
-              A second funnel, deliberately labelled rather than merged with the
-              one above. That chart counts candidates by their current status —
-              the pipeline right now, with everybody who already passed through
-              missing from it. This section counts applications and keeps their
-              terminal status, which is what a conversion rate measures. They
-              are different numbers and a reader has to be able to tell which
-              question they are looking at the answer to.
-            */}
+            
             <ConversionSection />
           </>
         )}

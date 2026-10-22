@@ -42,7 +42,6 @@ export function OrgChartPage() {
     if (debouncedSearch) next.set("q", debouncedSearch);
     else next.delete("q");
     const query = next.toString();
-    // Publishing and preserving a newer local draft are one external navigation transaction.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPublishedQuery(debouncedSearch);
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });

@@ -23,8 +23,6 @@ const workflowExecutionCancelContract = lazyContract(() =>
   import("@/hooks/api/workflows-schema").then((m) => m.workflowExecutionCancelContract),
 );
 
-
-// The runner picks up pending as well as waiting, so a queued run is still moving.
 const ACTIVE_EXECUTION_STATUSES: ReadonlySet<ExecutionStatus> = new Set<ExecutionStatus>([
   "pending",
   "running",

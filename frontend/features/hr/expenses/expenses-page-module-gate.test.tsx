@@ -3,10 +3,6 @@ import { useAccess } from "@/hooks/api/access";
 import { useExpensePageData } from "@/hooks/api/hr";
 import { ExpensesPage } from "./expenses-page";
 
-/**
- * Expenses are an HRMS surface. Turning Accounting off must not hide the list
- * or mention Accounting.
- */
 
 jest.mock("next-auth/react", () => ({ useSession: () => ({ data: { user: { id: "u1" } } }) }));
 jest.mock("@/hooks/common/use-expense-filters", () => ({

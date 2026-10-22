@@ -6,26 +6,12 @@ import { useIdempotentMutation } from "./use-idempotent-mutation";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
-/**
- * The two routes that make transit a place goods can leave.
- *
- * `dispatchTransfer` parks goods at the source warehouse's TRANSIT location and
- * a short receipt takes only what arrived off it. Everything else stays there —
- * on hand, unsellable, and until these routes existed with no command anywhere
- * that could move it. Both were mounted on the backend and neither was called
- * from this repo, so the queue was invisible and the decision unreachable.
- */
 
 export const TRANSIT_EXIT_DISPOSITIONS = ["RETURN_TO_SOURCE", "WRITE_OFF"] as const;
 export type TransitExitDisposition = (typeof TRANSIT_EXIT_DISPOSITIONS)[number];
 
-/** `view` names the two questions a warehouse asks, so the client never derives "stranded". */
 export type StrandedTransitView = "ANY" | "STRANDED";
 
-/**
- * The row shape as the service returns it — snake_case, straight off the query.
- * Mapped once here so no component reads a database column name.
- */
 interface RawStrandedTransitRow {
   transfer_id: number;
   reference_number: string | null;
@@ -144,18 +130,11 @@ export function useStrandedTransit(filters?: StrandedTransitFilters) {
         totalPages: raw.totalPages,
       };
     },
-    // A queue whose whole value is being current, read by somebody about to act
-    // on it. Long enough not to refetch on every keystroke in the filter row.
     staleTime: 15_000,
     enabled: canView,
   });
 }
 
-/**
- * Both dispositions post movements, so the key has to survive a retry: an exit
- * that ran twice would take the quantity off transit twice, and the second pass
- * would eat another transfer's goods standing on the same warehouse bin.
- */
 export function useExitTransit() {
   const qc = useQueryClient();
   return useIdempotentMutation<TransitExitResult, Error, TransitExitInput>({

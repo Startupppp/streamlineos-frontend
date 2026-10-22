@@ -1,13 +1,5 @@
 import type { RecordLayout } from "./layout";
 
-/**
- * The party surface, as data.
- *
- * Ships in code today because there is nowhere to store it yet; the shape is
- * the point. When descriptions move into the database this becomes the seed row
- * for a tenant that has not customised anything, and nothing that reads it
- * changes.
- */
 export const PARTY_LAYOUT: RecordLayout = {
   key: "party",
   singular: "Party",
@@ -21,8 +13,6 @@ export const PARTY_LAYOUT: RecordLayout = {
       name: "partyType",
       label: "Type",
       kind: "select",
-      // Mirrors the party_type enum exactly; an option the API does not accept
-      // is a form that fails on submit.
       options: [
         { value: "CUSTOMER", label: "Customer", tone: "info" },
         { value: "VENDOR", label: "Vendor", tone: "success" },
@@ -34,8 +24,6 @@ export const PARTY_LAYOUT: RecordLayout = {
       name: "status",
       label: "Status",
       kind: "badge",
-      // Create does not accept a status — `createPartySchema` has no such key,
-      // so offering one would be a control whose value is silently dropped.
       editOnly: true,
       options: [
         { value: "active", label: "Active", tone: "success" },

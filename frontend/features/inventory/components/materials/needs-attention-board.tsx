@@ -19,14 +19,6 @@ import { useMotionVariants } from "@/lib/motion-variants";
 import { useCan } from "@/hooks/api/access";
 import { useAttentionBoard, type AttentionItem, type AttentionSeverity } from "@/hooks/api/inventory/ops-board";
 
-/**
- * B2 — the exceptions board.
- *
- * Severity is carried by an **icon and a word**, never by colour alone: an
- * operator with a red-green deficiency has to be able to tell a stockout from a
- * quarantine, and half of a warehouse floor is looking at a screen in daylight.
- * The colour is a second signal on top of those, not the signal.
- */
 const SEVERITY: Record<
   AttentionSeverity,
   { label: string; icon: typeof AlertTriangle; surface: string; rule: string; ink: string; dot: string }
@@ -67,7 +59,6 @@ function AttentionCard({ item, index }: { item: AttentionItem; index: number }) 
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      // Capped so a board of eleven cards does not take a second to appear.
       transition={{ delay: Math.min(index, 6) * 0.03 }}
       className="list-none"
     >

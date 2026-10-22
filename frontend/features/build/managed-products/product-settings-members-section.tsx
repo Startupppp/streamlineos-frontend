@@ -130,8 +130,6 @@ export function ProductSettingsMembersSection({
   const updateRole = useUpdateManagedProductMemberRole(managedProductId);
   const { mutate: mutateRole } = updateRole;
 
-  // Optimistic: the select shows the new role at once and rolls back on a
-  // refusal; the 409 text names why (last admin, product owner).
   const handleRoleChange = useCallback(
     (m: ManagedProductMember, role: ManagedProductMember["role"]) => {
       mutateRole(

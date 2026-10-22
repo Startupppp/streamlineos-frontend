@@ -125,8 +125,6 @@ const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
     header: "Sample",
     className: "text-right tabular-nums text-xs text-muted-foreground",
     headerClassName: "text-right",
-    // What the governing plan requires be opened. Absent on an inspection raised
-    // by hand, where nobody has said how much to check.
     cell: (line) =>
       line.sampleQuantity ? trimQuantity(line.sampleQuantity) : "—",
   },
@@ -135,8 +133,6 @@ const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
     header: "Held",
     className: "text-right tabular-nums text-xs",
     headerClassName: "text-right",
-    // The figure a verdict releases — not the line quantity, and not whatever the
-    // stock level happens to show.
     cell: (line) => (line.heldQuantity ? trimQuantity(line.heldQuantity) : "—"),
   },
   {
@@ -147,7 +143,6 @@ const INSPECTION_LINE_COLUMNS: DataTableColumn<InspectionLine>[] = [
   },
 ];
 
-/** `numeric(18,4)` reads back with four decimals; a whole count should not. */
 function trimQuantity(value: string): string {
   return value.includes(".") ? value.replace(/\.?0+$/, "") : value;
 }
@@ -263,12 +258,6 @@ export function InspectionDetailSheet({
   const status = inspection?.status;
   const isTerminal =
     status === "PASSED" || status === "COMPLETED" || status === "CANCELLED";
-  /*
-   * Narrower than `isTerminal` on purpose. The service's own TERMINAL_STATUSES
-   * is `["COMPLETED", "CANCELLED"]` — a PASSED inspection is refused with "an
-   * open one is still editable" — so offering the control on PASSED would be a
-   * button that only ever produces a 409.
-   */
   const isCorrectable = status === "COMPLETED" || status === "CANCELLED";
 
   function handleCorrectOpen(): void {
@@ -440,11 +429,7 @@ export function InspectionDetailSheet({
               </span>
             </div>
 
-            {/*
-            Raising a correction is only half of it: the original result stays
-            evidence, so the replacement has to say what it replaces or the two
-            read as unrelated inspections of the same goods.
-          */}
+            
             {inspection.correctsInspectionId ? (
               <p className="text-xs text-muted-foreground">
                 Corrects inspection #{String(inspection.correctsInspectionId)}

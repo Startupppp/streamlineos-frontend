@@ -6,17 +6,6 @@ import {
   traceabilityChainContract,
 } from "@/hooks/api/inventory/traceability-schema";
 
-/**
- * The payloads below are what `InvTraceabilityService` and
- * `TraceabilityChainService` build — every quantity a `numeric(18,4)` decimal
- * string, every date column a bare `YYYY-MM-DD`, every relation nested exactly
- * as the Drizzle `with:` clause nests it.
- *
- * The screens read these through the contracts, and before this change they
- * read a flat lot with a numeric `currentStock` that the backend has never
- * sent. A flat lot is therefore asserted to be REJECTED: that drift rendered
- * `undefined.toLocaleString()` on the lot page rather than an error state.
- */
 
 const LOT_DETAIL = {
   lot: {

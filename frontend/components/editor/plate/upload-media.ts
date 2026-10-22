@@ -30,8 +30,6 @@ function isNodeLike(node: unknown): node is { type?: unknown; children?: unknown
   return typeof node === "object" && node !== null;
 }
 
-// Editor-only nodes: an upload in flight, or an open slash/mention/emoji
-// combobox (KB-B-033 saved and published a stray "/" slash_input).
 const TRANSIENT_NODE_TYPES: ReadonlySet<unknown> = new Set([
   PLACEHOLDER_NODE_TYPE,
   "slash_input",

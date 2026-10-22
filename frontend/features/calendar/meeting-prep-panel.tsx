@@ -42,14 +42,6 @@ function PrepSkeleton() {
   );
 }
 
-/**
- * The agenda streams. The panel still renders the four structured affordances
- * the user had before — agenda prose, key topics, suggested duration and
- * preparation notes — but reconstructs them from the text received so far
- * (`parseMeetingAgendaStream`) instead of waiting for a whole buffered record.
- * Stopping keeps everything that arrived, and the citations come off
- * `x-ai-sources` before the first token so a stopped agenda still cites.
- */
 export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps) {
   const canUse = useCan("calendar:ai:use");
   const { data: connections = [] } = useCalendarConnections();
@@ -112,12 +104,6 @@ export function MeetingPrepPanel({ eventId, eventTitle }: MeetingPrepPanelProps)
 
   if (!canUse) return <AiPermissionDenied />;
 
-  /**
-   * Exhausted credits and a revoked permission do not get a dispatch control.
-   * `AiFailureBody` already renders the affordance that can help — the top-up
-   * link, or the denial reason — and a "Try again" beside it would spend another
-   * click on a call that cannot succeed.
-   */
   const canDispatch =
     state.status !== "failed" || isRetryableAiFailure(classifyAiError(state.error).status);
   const showForm = (state.status === "idle" || state.status === "failed") && canDispatch;

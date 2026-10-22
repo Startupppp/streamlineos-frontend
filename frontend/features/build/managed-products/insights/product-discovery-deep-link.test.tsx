@@ -33,7 +33,6 @@ jest.mock("./opportunity-pane", () => ({
     opportunityId === null ? null : <div data-testid="pane">{opportunityId}</div>,
 }));
 
-// MP-B-007: the pane follows ?opportunity= whenever it changes, not only at mount.
 it("opens the opportunity pane when ?opportunity= arrives after the section mounted", () => {
   mockParams = new URLSearchParams("tab=discovery");
   const { rerender } = render(<ProductDiscoverySection managedProductId={7} />);

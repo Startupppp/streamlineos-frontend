@@ -1,16 +1,3 @@
-/**
- * `POST /ai/meetings/prep/stream` answers in raw UTF-8 text deltas, and the
- * prompt behind it (`agendaStreamPrompt`) asks for markdown with four `##`
- * sections in a fixed order: Agenda, Key topics, Suggested duration,
- * Preparation notes. The panel renders those four as separate affordances, so
- * the stream has to be folded back into that shape on every token rather than
- * once at the end.
- *
- * Everything here is a pure function of the text received so far. Called with a
- * prefix it returns the prefix's sections; called with the whole answer it
- * returns the whole answer's. That is what lets the panel render structure
- * while the answer is still arriving, and keep it when the user stops halfway.
- */
 
 export interface MeetingAgendaSections {
   agenda: string;
@@ -23,20 +10,8 @@ type SectionKey = keyof MeetingAgendaSections;
 
 const HEADING = /^\s{0,3}#{1,6}\s*(.+?)\s*$/;
 const BOLD_HEADING = /^\s{0,3}\*\*(.+?)\*\*\s*:?\s*$/;
-/**
- * The trailing `(?:\s+|$)` is load-bearing. A bullet arrives before its text, so
- * `- ` exists for a frame; without it the marker survives stripping and renders
- * as a topic chip reading "-" that then vanishes.
- */
 const BULLET = /^\s*(?:[-*+•]|\d+[.)])(?:\s+|$)/;
 
-/**
- * A heading arrives one token at a time, so `## Key top` exists for a frame.
- * Rendered as body text it would flash the next section's title into the
- * previous section's prose. An incomplete trailing line that could still become
- * a heading is therefore withheld until its newline arrives; withholding costs
- * one token of latency and buys a body that never shows a half-typed title.
- */
 function couldBecomeHeading(line: string): boolean {
   const trimmed = line.trimStart();
   return trimmed.startsWith("#") || trimmed.startsWith("*");
@@ -59,11 +34,6 @@ function headingTitle(line: string): string | null {
   return null;
 }
 
-/**
- * The last line is only complete once its newline has arrived. A trailing
- * partial line that is ordinary prose is kept — watching a sentence appear is
- * the point of streaming — but one that might be a heading is dropped.
- */
 function usableLines(text: string): string[] {
   const lines = text.split("\n");
   if (text.endsWith("\n")) return lines;

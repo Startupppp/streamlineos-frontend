@@ -108,14 +108,6 @@ describe("getErrorMessage", () => {
   });
 });
 
-/**
- * Validation refusals, which used to arrive as three words.
- *
- * `AllExceptionsFilter` answers a `ZodError` with `"Validation failed."` and
- * the issues in `details`. Reading only `message` meant a form could be refused
- * for a named field and say nothing about which one -- the CRM assignment-rule
- * sheet lost three of its five options behind that sentence.
- */
 describe("getErrorMessage on a validation refusal", () => {
   function refusal(details: unknown, message = "Validation failed.") {
     return Object.assign(new Error(message), { status: 400, code: "VALIDATION_FAILED", details });

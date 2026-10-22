@@ -18,14 +18,6 @@ interface SlottingRuleCreateSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Rung 4 of the overlay ladder, and the count is what decides it: seven fields
- * — warehouse, name, match type, the match payload, target, narrowing, priority
- * — in three sections a planner reads as three questions (which building, what
- * this catches, where it sends it). §13 puts 6+/multi-section on the Sheet, and
- * the target select is only meaningful next to the warehouse select that scopes
- * it, so keeping both on screen together is the point rather than an accident.
- */
 export function SlottingRuleCreateSheet({ open, onOpenChange }: SlottingRuleCreateSheetProps) {
   const createRule = useCreateSlottingRule();
 

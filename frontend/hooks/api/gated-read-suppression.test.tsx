@@ -53,17 +53,6 @@ function wrapper(): ({ children }: { children: ReactNode }) => ReactNode {
   };
 }
 
-/**
- * A read whose backend route carries `@RequirePermission` used to be sent
- * regardless: the caller had no `enabled`, so every page mount fired a request
- * that could only come back 403, and a v5 disabled-vs-empty read is
- * indistinguishable downstream — the screen rendered "none yet" over a
- * permission failure.
- *
- * These four hooks stand for the 105 converted this pass, one per shape:
- * a bare list, a list with query params, one whose route lives under `/me`,
- * and one carrying cursor params.
- */
 describe("a permissioned read is not sent when the permission is absent", () => {
   beforeEach(() => {
     jest.clearAllMocks();

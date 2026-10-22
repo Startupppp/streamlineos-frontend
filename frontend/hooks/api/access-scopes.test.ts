@@ -5,7 +5,6 @@ import type { AccessResponse } from "@/types/access";
 jest.mock("react", () => ({
   ...jest.requireActual("react"),
   useEffect: jest.fn(),
-  // These hooks are called outside a render; no project read-only context.
   useContext: jest.fn(() => false),
 }));
 

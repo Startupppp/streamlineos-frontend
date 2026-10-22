@@ -24,7 +24,6 @@ interface KanbanColumnProps {
   col: ColumnConfig;
   items: AtsPipelineCandidate[];
   total: number;
-  /** How many of `total` the endpoint actually sent for this stage. */
   shown: number;
   truncated: boolean;
   roundLabel: string | null;
@@ -70,11 +69,7 @@ const KanbanColumn = memo(function KanbanColumn({
               : `${total} candidate${total === 1 ? "" : "s"} in this stage`
           }
         >
-          {/*
-            The endpoint caps each stage, so printing `total` over a shorter
-            list claimed candidates this board never received. When the column
-            is cut, say both numbers.
-          */}
+          
           {truncated ? `${shown}/${total}` : total}
         </span>
       </div>
@@ -122,11 +117,6 @@ const KanbanColumn = memo(function KanbanColumn({
 
 interface PipelineKanbanProps {
   stages: AtsPipelineStage[];
-  /**
-   * `rejection` is present exactly when `newStage` is `REJECTED`. The endpoint
-   * refuses a reject with no reason, so the board collects one before it calls
-   * back rather than letting a drag produce a 422 the recruiter cannot act on.
-   */
   onStageChange: (
     candidateId: number,
     newStage: CandidateStatus,

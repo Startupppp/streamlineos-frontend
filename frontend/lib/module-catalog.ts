@@ -17,7 +17,6 @@ export interface ModuleCatalogEntry {
 
 const NEUTRAL_ACCENT = MODULE_ACCENTS.home;
 
-// The manifest is JSON, so it cannot carry an icon component for a module with no product.
 const ICON_WITHOUT_PRODUCT: Record<string, ProductDefinition["icon"]> = {
   chat: MessageSquareText,
 };

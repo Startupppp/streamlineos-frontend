@@ -14,5 +14,4 @@ const appMono = IBM_Plex_Mono({
   display: "swap",
 });
 
-/** Class names that define the authenticated font variables on <html>. */
 export const APP_FONT_CLASS = `${appSans.variable} ${appMono.variable}`;

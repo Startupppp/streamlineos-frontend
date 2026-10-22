@@ -71,10 +71,8 @@ interface ErrorStateProps {
   className?: string;
   compact?: boolean;
   fullPage?: boolean;
-  /** The failed call's error. When it carries a request id, a copyable reference line is shown under the message. */
   error?: unknown;
   autoMapStatus?: boolean;
-  /** Extra actions rendered beside "Try again" (e.g. a sign-out escape hatch). */
   children?: ReactNode;
 }
 

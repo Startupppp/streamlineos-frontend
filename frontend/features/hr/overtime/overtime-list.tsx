@@ -35,7 +35,6 @@ export function OvertimeList({ canManage }: Props) {
   const requests = data?.items;
   const approve = useApproveOvertime();
   const reject = useRejectOvertime();
-  // One decision in flight disables that row only, not every row.
   const busyId = approve.isPending ? approve.variables : reject.isPending ? reject.variables : undefined;
 
   const userIds = useMemo(
@@ -163,8 +162,6 @@ export function OvertimeList({ canManage }: Props) {
     return cols;
   }, [canManage, busyId, approve.isPending, approve.variables, reject.isPending, reject.variables, memberById, handleApprove, handleReject]);
 
-  // useOvertimeRequests is gated on hr:attendance:view and the route has no
-  // guard: a denied caller read "No overtime requests" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {

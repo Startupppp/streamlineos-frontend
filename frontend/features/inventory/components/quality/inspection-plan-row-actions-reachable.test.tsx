@@ -4,16 +4,6 @@ import { renderWithProviders } from "@/test-utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import InspectionPlansPage from "@/app/(authenticated)/inventory/quality/plans/page";
 
-/**
- * `PATCH /inventory/quality/inspection-plans/:planId` and its `DELETE` twin were
- * permissioned, versioned and wrapped in hooks nobody called. A plan created
- * with the wrong name, the wrong trigger, or by mistake could be opened and its
- * versions published — but the plan itself could never be corrected or retired.
- *
- * Testing the menu on its own would have passed while nothing mounted it, which
- * is the defect rather than the proof. This renders the page a quality manager
- * actually opens and walks to the two controls from there.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -69,7 +59,6 @@ jest.mock("@/hooks/api/inventory/inspection-plans", () => ({
   useActivatePlanVersion: () => idleMutation,
 }));
 
-/** The shell mounts `TooltipProvider` once, in `components/providers/query-provider.tsx`. */
 async function openRowMenu(): Promise<void> {
   renderWithProviders(
     <TooltipProvider>

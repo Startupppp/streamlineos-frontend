@@ -64,7 +64,6 @@ export function ExpensesPage() {
   const [isExportOpen, setIsExportOpen] = useState(false);
 
   const isAdmin = useCan("hr:expenses:approve");
-  // Exact keys of the endpoints each control reaches (FE-45).
   const canCreate = useCan("self:expenses");
   const canImport = useCan("hr:expenses:manage");
   const canExport = useCan("hr:expenses:read");
@@ -227,7 +226,6 @@ export function ExpensesPage() {
     setIsCreateOpen(false);
   }, [refetch]);
 
-  // Expenses are HRMS-owned. Accounting is not a prerequisite.
   const pageState = usePageState({
     isLoading: isLoading && !pageData,
     isError: isError && !pageData,

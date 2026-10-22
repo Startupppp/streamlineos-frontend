@@ -34,7 +34,6 @@ function mutation(over: Partial<MutationStub> = {}): MutationStub {
   return { mutate: jest.fn(), isPending: false, isError: false, error: null, ...over };
 }
 
-/** The server nulls `verificationRecord` the moment a domain verifies. */
 function domain(over: Partial<SendingDomain> = {}): SendingDomain {
   const sendingDomainId = over.sendingDomainId ?? COLD_DOMAIN_ID;
   const name = over.domain ?? COLD_DOMAIN;
@@ -91,11 +90,6 @@ describe("ColdOutboundPanel", () => {
     readsAs(overview());
   });
 
-  /**
-   * The overview carries the DNS token that proves domain ownership and the
-   * reason the send path halted itself. Neither belongs to the `:view` key that
-   * exists so a salesperson can watch the decision feed.
-   */
   describe("without crm:autonomy:manage", () => {
     beforeEach(() => {
       mockCan.mockReturnValue(false);
@@ -121,7 +115,6 @@ describe("ColdOutboundPanel", () => {
     });
   });
 
-  /** "Off" is a claim about the tenant's configuration, not a default to show while unsure. */
   it("does not call the track off while the overview is still loading", () => {
     mockOverview.mockReturnValue({
       data: undefined,
@@ -180,10 +173,6 @@ describe("ColdOutboundPanel", () => {
       expect(mockSetTrack().mutate).toHaveBeenCalledWith(true);
     });
 
-    /**
-     * `evaluateColdGate` refuses a cold send from the transactional domain, so a
-     * warmed transactional domain must not read as the cold track's own.
-     */
     it("does not accept the transactional domain as the cold one", () => {
       readsAs(
         overview({
@@ -205,11 +194,6 @@ describe("ColdOutboundPanel", () => {
     });
   });
 
-  /**
-   * The one control in this file that must never be gated on configuration. A
-   * tenant whose domain fell out of shape still has mail going out, and the only
-   * thing that stops it is this button.
-   */
   describe("turning the track off", () => {
     it("stays available when the cold domain has gone missing entirely", () => {
       readsAs(overview({ enabled: true, domains: [] }));
@@ -289,7 +273,6 @@ describe("ColdOutboundPanel", () => {
       ).toBeInTheDocument();
     });
 
-    /** A halt is not the same state as somebody choosing not to run the track. */
     it("is reported beside an enabled track, not instead of it", () => {
       readsAs(halted());
       render(<ColdOutboundPanel />);
@@ -339,10 +322,6 @@ describe("ColdOutboundPanel", () => {
       expect(screen.queryByText(`streamline-verify=${COLD_DOMAIN_ID}`)).not.toBeInTheDocument();
     });
 
-    /**
-     * Verify and warm-up as two always-present buttons would offer an action the
-     * server refuses with a 409; each state names only the step available now.
-     */
     it("offers only the DNS check while unverified", () => {
       readsAs(overview({ domains: [domain()] }));
       render(<ColdOutboundPanel />);
@@ -411,10 +390,6 @@ describe("ColdOutboundPanel", () => {
     });
   });
 
-  /**
-   * An empty panel would read as "nothing is configured", which is the wrong
-   * thing to believe about a track that may be sending right now.
-   */
   it("says the track's state could not be loaded rather than showing a blank panel", () => {
     mockOverview.mockReturnValue({
       data: undefined,
@@ -430,13 +405,6 @@ describe("ColdOutboundPanel", () => {
     expect(screen.getByText("Cold outreach")).toBeInTheDocument();
   });
 
-  /**
-   * A failed read used to fall through to the registration form, because `data`
-   * is undefined and so `cold` is null — inviting a tenant to add a second
-   * sending domain beside one that may already exist. That is the "nothing is
-   * configured" reading the alert is there to prevent, arriving anyway one line
-   * below the alert saying otherwise.
-   */
   it("offers no configuration controls when it could not read the state", () => {
     mockOverview.mockReturnValue({
       data: undefined,

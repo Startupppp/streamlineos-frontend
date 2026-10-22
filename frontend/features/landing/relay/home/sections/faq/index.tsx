@@ -5,12 +5,6 @@ interface FaqProps {
   faqs: readonly FAQ[];
 }
 
-/**
- * FAQ — not in the Relay frames; the StreamlineOS questions (the same list
- * the page's FAQPage JSON-LD carries) in Relay's language: the shared section
- * head, then glass rows the particle stream reads through. Native
- * `<details>`, so it opens without JavaScript and is keyboard-reachable.
- */
 export const Faq = ({ faqs }: FaqProps) => (
   <section
     id="faq"

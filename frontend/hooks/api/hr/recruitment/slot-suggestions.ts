@@ -14,7 +14,6 @@ const suggestedSlotsC = lazyContract(() =>
 );
 
 export interface SuggestSlotsInput {
-  /** Interviewer user ids, as every picker on this side lists them. */
   panelUserIds: string[];
   from: string;
   to: string;
@@ -24,14 +23,6 @@ export interface SuggestSlotsInput {
   ignoreInterviewId?: number;
 }
 
-/**
- * A mutation rather than a query, matching the route.
- *
- * The endpoint is a POST because the panel is a list, and a list in a query
- * string is a convention nobody agrees on. It writes nothing, so there is no
- * cache to invalidate — the answer is a computation over a window the recruiter
- * just chose, and re-running it is the point.
- */
 export function useSuggestSlots() {
   return useAuthorizedMutation("hr:interviews:manage", {
     mutationKey: ["hr", "recruitment", "interviews", "suggest-slots"],

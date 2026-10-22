@@ -5,21 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LocationRow } from "./location-row";
 import type { WarehouseLocation } from "@/hooks/api/inventory/warehouses";
 
-/**
- * `PATCH /inventory/warehouses/:warehouseId/locations/:locationId` had no
- * caller. A bin created with the wrong code, the wrong flags or in the wrong
- * aisle stayed that way, and a location taken out of use could not be closed —
- * it kept being offered as a putaway destination for the life of the warehouse.
- *
- * The control is asserted from the row the warehouse screen renders, which is
- * the mount point a component test of the sheet would have skipped.
- *
- * Two contract details are pinned here because both were wrong on the create
- * path they are shared with: `capacity` is a decimal STRING (the column is
- * `numeric(18,4)` and the `.strict()` schema rejects a number), and
- * `parentLocationId` has no null, so a location that has a parent is never
- * offered None.
- */
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
@@ -67,11 +52,6 @@ function renderRow(location: WarehouseLocation): void {
   );
 }
 
-/**
- * jsdom implements no pointer capture, and Radix's Select trigger calls it on
- * pointer-down — so opening one throws rather than opening. Stubbed here rather
- * than in the shared setup so this test owns its own gap.
- */
 beforeAll(() => {
   Element.prototype.hasPointerCapture = () => false;
   Element.prototype.releasePointerCapture = () => undefined;
@@ -113,11 +93,6 @@ it("sends capacity as the decimal string the endpoint validates", async () => {
   );
 });
 
-/**
- * `updateLocationSchema` takes `parentLocationId` as a positive integer with no
- * null, so detaching is not expressible. Offering None to a location that has a
- * parent would be a control that silently does nothing.
- */
 it("does not offer None to a location that already has a parent", async () => {
   renderRow(bin);
   await userEvent.click(screen.getByRole("button", { name: /^edit$/i }));

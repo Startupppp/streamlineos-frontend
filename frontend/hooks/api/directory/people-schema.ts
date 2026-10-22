@@ -1,17 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for the people directory — the PII surface every member can read.
- *
- * `accountAccess` is required here against a backend that attaches it to every
- * row unconditionally. It decides whether a person shows as a member, as an
- * open invitation or as having no account at all, so a version that stopped
- * sending it would render everyone as "no account" and nothing would say so.
- *
- * Not `.strict()`: the restricted onboarding columns (date of birth, gender,
- * nationality, address, emergency contact) are deliberately absent from this
- * projection, and a future additive field must not fail the directory.
- */
 
 export const personAccountAccessContract = z.discriminatedUnion("state", [
   z.object({ state: z.literal("MEMBER") }),

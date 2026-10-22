@@ -4,16 +4,6 @@ import { Info } from "lucide-react";
 import { formatShortDate } from "@/lib/date-utils";
 import type { GlReconReport } from "@/hooks/api/inventory/gl-reconciliation";
 
-/**
- * The three things a row cannot say for itself.
- *
- * The backend says out loud when accounting is not installed rather than
- * implying it with a page of zeroes, and it names the source types that are
- * deliberately never posted. Dropping either would leave a tenant with no
- * accounting module reading an alarming report about a gap they do not have.
- * Orphan journals are the mirror image — a journal entry naming an inventory
- * source that produced no movement.
- */
 export function GlReconciliationNotes({ report }: { report: GlReconReport | undefined }) {
   if (report === undefined) return null;
 

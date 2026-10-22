@@ -4,12 +4,6 @@ import {
   useStalledAfter,
 } from "@/hooks/common/use-stalled-after";
 
-/**
- * The 2026-10-01 chat E2E filed three MEDIUM "infinite skeleton" tickets against
- * surfaces whose error branches were correct. They were out of reach: a read
- * against an unreachable API holds `isPending` for up to ~61s (a 30s request
- * deadline, one retry, 1s backoff). This hook is what says so before then.
- */
 
 beforeEach(() => {
   jest.useFakeTimers();

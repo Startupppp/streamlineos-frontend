@@ -72,7 +72,6 @@ describe("HRMS static route smoke list", () => {
         ),
     );
     expect(unaccounted).toEqual([]);
-    // Recruitment OS is its own product under /recruitment, never an HRMS route.
     expect(hrHrefs.some((href) => href.startsWith("/hr/recruitment"))).toBe(false);
   });
 

@@ -107,16 +107,6 @@ interface TaskBucketSectionProps {
   onDelete: (taskId: number) => void;
 }
 
-/**
- * One bucket of the queue.
- *
- * The rows are not drawn here. The columns, the status and urgency badges, the
- * link to whatever the task is attached to, the assignee's name and the mobile
- * card all come from `TASK_LAYOUT`; what is left is the collapsible header, the
- * tick that closes a task, and the menu that edits or deletes one — the two
- * controls the description deliberately does not carry, because what a row can
- * do depends on the caller rather than on what a task is.
- */
 export function TaskBucketSection({
   bucket,
   layout,

@@ -38,7 +38,6 @@ export interface ForecastCompare {
   delta: { totalWeighted: number; totalBestCase: number; totalDeals: number };
 }
 
-/** The live forecast against the latest snapshot captured for `period`. */
 export function useForecastCompare(period: string | null) {
   return useGatedQuery("crm:deals:forecast", {
     queryKey: customerWorkQueryKeys.deals.forecastCompare(period ?? ""),
@@ -73,17 +72,6 @@ export function useOverrideForecast() {
   });
 }
 
-/**
- * The forecast, read from the server that computes it.
- *
- * `queryKeys.deals.forecast()` has existed for a while and five mutations
- * invalidate it, but nothing ever read it: the forecast page computed its own
- * weighted total in the browser from a hardcoded six-stage probability table.
- * That table is not the tenant's — an organisation with a stage called
- * `QUALIFYING` at 40% got a flat 0, and a tenant who changed `PROPOSAL` from 50
- * to 65 saw no difference — and it also cannot know anything a model learned.
- * This hook is the caller that key was written for.
- */
 export function useDealForecast() {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.forecast(),
@@ -93,10 +81,6 @@ export function useDealForecast() {
   });
 }
 
-/**
- * The basis on its own, for surfaces that explain the forecast without needing
- * the pipeline behind it.
- */
 export function useForecastModel() {
   return useGatedQuery("crm:deals:forecast", {
     queryKey: queryKeys.deals.forecastModel(),
@@ -106,14 +90,6 @@ export function useForecastModel() {
   });
 }
 
-/**
- * One deal's learned score, or null.
- *
- * Null is the ordinary answer, not an error: a tenant on the weighted arithmetic
- * has no scores at all, and a deal created since the last nightly pass has none
- * yet. The caller renders the weighted figure in both cases, which is what it
- * was already rendering.
- */
 export function useDealForecastScore(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.deals.forecastScore(dealId),
@@ -129,15 +105,6 @@ export function useDealForecastScore(dealId: number) {
   });
 }
 
-/**
- * Fit a model now.
- *
- * A run that fits a model and then refuses to store it resolves rather than
- * rejects — `trained: false` with a reason is the answer, not a failure — so the
- * caller must branch on the payload and not on `isError`. Treating a refusal as
- * an error would tell somebody the system broke when what happened is that it
- * declined to replace a number they understand with one that was not better.
- */
 export function useTrainForecast() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:deals:manage", {

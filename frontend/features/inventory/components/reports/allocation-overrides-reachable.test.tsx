@@ -4,18 +4,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { INVENTORY_NAV_GROUPS } from "@/components/layout/sidebar/sidebar-nav-groups-inventory";
 import InventoryAllocationOverridesPage from "@/app/(authenticated)/inventory/reports/allocation-overrides/page";
 
-/**
- * `GET /inventory/traceability/allocation-overrides` had no caller. It is the
- * only record that a near-expiry or minimum-shelf-life policy was overruled on a
- * specific lot, for a named client, by a named person, with a stated reason —
- * and nothing in the product could read it, so the control was running for
- * nobody.
- *
- * Two claims, and the second is the one a component test would have missed: the
- * screen renders the register, and the screen is reachable. Route access in this
- * app derives from the navigation model, so a page with no nav entry redirects
- * to /access-denied however good its own tests are.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -82,10 +70,6 @@ it("names who set the rule aside, on which lot, and why", () => {
   ).toBeInTheDocument();
 });
 
-/**
- * "An override happened" and "an override of eleven days against a thirty-day
- * window happened" are different findings, and only the second one can be judged.
- */
 it("shows how far outside the rule the lot actually was", () => {
   renderPage();
 
@@ -93,11 +77,6 @@ it("shows how far outside the rule the lot actually was", () => {
   expect(screen.getByText(/window 30 days/)).toBeInTheDocument();
 });
 
-/**
- * Route access derives from the navigation model — an unregistered route
- * redirects to /access-denied — so the nav entry is part of the surface, not
- * decoration around it.
- */
 it("is registered in inventory navigation under the key the endpoint requires", () => {
   const routes = INVENTORY_NAV_GROUPS.flatMap((group) => group.routes).flatMap(
     (route) => route.children ?? [route],

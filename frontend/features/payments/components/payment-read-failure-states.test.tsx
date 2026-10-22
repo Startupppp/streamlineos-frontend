@@ -1,15 +1,3 @@
-/**
- * A denied or failed provider read must not read as "nothing to see".
- *
- * `usePaymentReadiness` / `usePaymentAudit` gate themselves on a permission and
- * hand the query `enabled: false` when it is missing, so a denied read settles
- * to `data === undefined, isLoading === false` — indistinguishable from a read
- * that finished and found nothing. The rail used to branch on
- * `isLoading || !readiness` and spin a skeleton forever; the audit tab used to
- * render `EmptyState "No audit events yet"`, so a 403 or a 500 read as a clean
- * audit trail. Both are pinned here: an error is an error, a denial is a
- * denial, and neither is silence.
- */
 import { render, screen } from "@testing-library/react";
 import { AuditTab } from "./audit-tab";
 import { ReadinessRail } from "./readiness-rail";

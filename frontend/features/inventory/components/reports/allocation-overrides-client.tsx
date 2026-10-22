@@ -43,19 +43,6 @@ function isVerdict(value: string): value is AllocationOverrideVerdict {
   return value === "NEAR_EXPIRY" || value === "SHELF_LIFE";
 }
 
-/**
- * The register of expiry rules somebody set aside, and why.
- *
- * `GET /inventory/traceability/allocation-overrides` is the only record that a
- * near-expiry or minimum-shelf-life policy was overruled on a specific lot, for
- * a named client, by a named person, with a stated reason. It had no caller, so
- * the overrides were being written and read by nobody — a control that runs and
- * is never reviewed is a control in name only.
- *
- * Cursor-paginated because the register only grows: there is no page count
- * because the server is never asked to count a table that is being appended to
- * while it is read.
- */
 export function AllocationOverridesClient() {
   const canView = useCan(ALLOCATION_OVERRIDE_READ);
   const [verdict, setVerdict] = useState<AllocationOverrideVerdict | typeof ALL_VERDICTS>(
@@ -245,11 +232,6 @@ function VerdictBadge({ verdict }: { verdict: AllocationOverrideVerdict }) {
   );
 }
 
-/**
- * How far outside the rule the lot actually was, in the rule's own terms — the
- * difference between "an override happened" and "an override of eleven days
- * against a thirty-day window happened".
- */
 function describeMargin(row: AllocationOverride): string {
   const expiry = row.lotExpiryDate ? `expires ${formatCalendarDate(row.lotExpiryDate)}` : null;
   const remaining =
@@ -266,7 +248,6 @@ function describeMargin(row: AllocationOverride): string {
   return parts.length === 0 ? "—" : parts.join(" · ");
 }
 
-/** With no client on the row, the document the allocation belonged to. */
 function describeSource(row: AllocationOverride): string {
   if (!row.sourceType) return "—";
   return `${row.sourceType} ${row.sourceId ?? ""}`.trim();

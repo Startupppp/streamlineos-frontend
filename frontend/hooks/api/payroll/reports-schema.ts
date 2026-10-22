@@ -1,9 +1,5 @@
 import { z } from "zod";
 
-// NOTE: Backend sends all money amounts as strings (decimal columns).
-// The frontend TypeScript types in types/payroll/reports.ts incorrectly type
-// grossTotal, deductionTotal, netTotal etc. as `number`. Backend is source of truth.
-
 const paginationContract = z.object({
   limit: z.number(),
   hasMore: z.boolean(),

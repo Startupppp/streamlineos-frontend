@@ -108,17 +108,6 @@ export function useCampaignLeads(campaignId: number, params?: CampaignLeadsParam
   });
 }
 
-/**
- * CRM-P1-01. The same revenue read under any of the five models.
- *
- * Gated on `crm:reports:view` like the two single-touch reports beside it, and
- * for the backend's stated reason: multi-touch is different arithmetic over
- * touches that key already discloses, not a wider disclosure.
- *
- * `halfLifeDays` is sent always and read only by `time_decay`. It is in the
- * query key regardless, because a cached answer under one half-life is the
- * wrong answer for another and the mistake is invisible on screen.
- */
 export function useAttributionByModel(model: AttributionModel, halfLifeDays: number) {
   return useGatedQuery("crm:reports:view", {
     queryKey: queryKeys.crmCampaigns.attributionByModel(model, halfLifeDays),

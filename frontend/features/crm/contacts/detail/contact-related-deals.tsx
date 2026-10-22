@@ -22,44 +22,14 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useMotionVariants } from "@/lib/motion-variants";
 import type { Contact } from "@/types/crm";
 
-/**
- * The four columns a deal is worth inside somebody else's record.
- *
- * The deals list shows eight, which is right on a page that is about deals. In a
- * panel on a contact the question is narrower — which deal, where is it, how big
- * and when does it land — and the rest is width spent on a question nobody asked
- * here. Narrowing rather than describing a second, smaller deal is the point:
- * these are `DEAL_LAYOUT`'s own columns, so a stage renamed by an administrator
- * is renamed here too.
- */
 const RELATED_DEAL_COLUMNS = ["name", "stage", "value", "expectedCloseDate"] as const;
 
 interface ContactRelatedDealsProps {
   contact: Contact;
 }
 
-/**
- * The deals this contact is attached to.
- *
- * This was a raw `<table>` with its own `<thead>`, its own row hover and its own
- * stage map — a second table beside the one the platform has, four columns wide,
- * showing a deal's stage in labels and colours the deals list did not share. It
- * now renders from `DEAL_LAYOUT` through `useDealLayout`, narrowed to four
- * columns, so a deal here reads as the same record it is on `/crm/deals` — the
- * same labels, the same alignment, and stage names that come from the tenant's
- * own pipeline rather than from a hardcoded map that went stale the moment an
- * administrator renamed a stage. The value renders in the organisation's own
- * currency instead of the INR-hardcoded `formatCurrency`.
- *
- * The panel self-gates on the deals read permission and renders nothing without
- * it. Falling through to "no related deals" would have told someone who cannot
- * see deals that this contact has none, which is a different statement and a
- * false one.
- */
 export function ContactRelatedDeals({ contact }: ContactRelatedDealsProps) {
   const router = useRouter();
-  // Narrowed after the tenant's arrangement, never before: a column somebody
-  // hid on the deals list must not reappear through a panel.
   const layout = withColumns(useDealLayout(), RELATED_DEAL_COLUMNS);
   const money = useOrgDisplay();
   const [density] = useDensity();
@@ -77,16 +47,6 @@ export function ContactRelatedDeals({ contact }: ContactRelatedDealsProps) {
     [router],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:deals:read") === "denied")
     return <NoPermissionState permission="crm:deals:read" />;
 

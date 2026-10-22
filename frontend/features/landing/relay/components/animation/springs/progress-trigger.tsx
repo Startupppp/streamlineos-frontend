@@ -1,24 +1,3 @@
-// 📖 Docs: obsidian/frontend/components/animation-springs.md
-/**
- * @fileoverview Progress trigger component for scroll-based progress tracking
- *
- * This component tracks scroll position relative to trigger points and fires progress updates:
- * 1. Configurable start and end trigger positions
- * 2. Provides normalized progress values (0-1)
- * 3. Supports external trigger elements
- * 4. Optional mobile device handling
- *
- * @param {React.ReactNode} children - Child elements
- * @param {boolean} enabled - Whether progress tracking is enabled
- * @param {React.RefObject<HTMLElement>} trigger - Optional external trigger element ref
- * @param {TriggerPos} start - Start position for trigger (e.g. "top bottom")
- * @param {TriggerPos} end - End    position for trigger (e.g. "bottom top")
- * @param {Function} onChange - Callback fired with progress updates
- * @param {boolean} disableOnMobile - Whether to disable on mobile devices
- * @param {SpringConfig} config - Spring animation configuration
- * @param {number} frameInterval - Frame rate throttle interval in ms
- * @param {Tags} tag - HTML tag to use for container
- */
 
 "use client";
 

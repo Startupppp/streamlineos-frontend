@@ -1,29 +1,6 @@
 import type { RecordLayout, SelectOption } from "../../layout";
 
-/**
- * An audit entry, as data.
- *
- * An audit log is a record list and not a timeline, whatever it looked like. A
- * timeline is a narrative about one thing — this deal, then this, then this —
- * and it is read downward. An audit log is a filterable, paginated table of who
- * did what to which record, read across: the questions asked of it are "what did
- * this person change", "what happened to quotes last Tuesday", "who deleted
- * that", and every one of them is a column and a filter. The surface it replaces
- * drew avatar bubbles joined by a vertical rule, which is a timeline's chrome
- * spent on a table's job — and it cost the reader the ability to scan a column.
- *
- * The sentence that card wrote under each entry — "created Lead", "changed
- * status of Deal" — is gone rather than translated, because it restated the
- * action badge and the entity badge beside it in prose. Three renderings of one
- * fact is not emphasis.
- *
- * Time is absolute here where the card showed "2 hours ago" with the real
- * instant hidden in a tooltip. An audit log is read to establish when something
- * happened, and a relative time cannot answer that; it is also the one column
- * whose values must line up to be scanned, which a phrase does not.
- */
 
-/** What a change to a record was. Tones are the status tokens, never a colour. */
 const ACTION_OPTIONS: readonly SelectOption[] = [
   { value: "created", label: "Created", tone: "success" },
   { value: "updated", label: "Updated", tone: "info" },
@@ -40,11 +17,6 @@ const ACTION_OPTIONS: readonly SelectOption[] = [
   { value: "imported", label: "Imported", tone: "info" },
 ];
 
-/*
-  What was changed, with no tone at all. An entity type is not a status, and
-  colouring it would spend the status palette on decoration — after which a
-  genuine warning has nothing left to say.
-*/
 const TARGET_TYPE_OPTIONS: readonly SelectOption[] = [
   { value: "lead", label: "Lead" },
   { value: "contact", label: "Contact" },
@@ -56,7 +28,6 @@ const TARGET_TYPE_OPTIONS: readonly SelectOption[] = [
   { value: "settings", label: "Settings" },
 ];
 
-/** The audit row, as much of it as the description names. */
 export interface AuditEntryRecord {
   readonly id: number;
   readonly action: string;
@@ -72,19 +43,8 @@ function isChange(value: unknown): value is { from: unknown; to: unknown } {
   return typeof value === "object" && value !== null && "from" in value;
 }
 
-/** How many changes fit in a cell before the rest become a count. */
 const CHANGES_SHOWN = 3;
 
-/**
- * What actually changed, as one line.
- *
- * The card this replaces rendered each field as a struck-through old value in
- * red and a new one in green, stacked. The engine has no diff kind and this is
- * not the place to invent one: what a description can say is that the field is
- * text, and the arrow carries the direction without needing a colour to be
- * seen — which is also how it reads for someone who cannot distinguish the two
- * greens.
- */
 export function auditChangeSummary(metadata: Record<string, unknown> | null): string {
   if (!metadata) return "";
   const keys = Object.keys(metadata);
@@ -100,12 +60,9 @@ export function auditChangeSummary(metadata: Record<string, unknown> | null): st
   return overflow > 0 ? `${shown.join("; ")} (+${overflow} more)` : shown.join("; ");
 }
 
-/** One audit row in the shape the description names. */
 export function auditEntryFields(entry: AuditEntryRecord): Record<string, unknown> {
   return {
     id: entry.id,
-    // A person, never an id: the email stands in when the name is missing, and
-    // "Unknown" stands in when the actor has been removed from the workspace.
     actor: entry.userName ?? entry.userEmail ?? "Unknown",
     action: entry.action,
     targetType: entry.targetType,
@@ -158,9 +115,5 @@ export const AUDIT_ENTRY_LAYOUT: RecordLayout = {
       { title: "Origin", fields: ["ipAddress", "createdAt"] },
     ],
   },
-  /*
-    An audit entry is the record of an edit, not something anyone edits. A log
-    with a form on it is a log nobody can trust.
-  */
   form: { sections: [] },
 };

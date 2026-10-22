@@ -99,9 +99,6 @@ export function ProductAiActions({ product }: ProductAiActionsProps) {
           label: "Reorder proposal",
           description: "Draft PO based on deterministic reorder evidence",
           run: async (signal?: AbortSignal) => {
-            // F4. The response is the persisted C2 proposal: the quantity is
-            // the one the server would order, as an exact decimal string, and
-            // `blocked` means it declined to propose at all.
             const response = await apiClient.post<ReorderProposalResponse>(
               "/inventory/ai/reorder-proposal",
               { variantId: firstVariant.id },

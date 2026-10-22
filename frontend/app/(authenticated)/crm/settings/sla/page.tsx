@@ -33,15 +33,6 @@ import {
   SLA_POLICY_LAYOUT,
 } from "@/lib/renderer/crm/settings/sla-policy-layout";
 
-/**
- * SLA policies, and what they are costing.
- *
- * Two generated lists: the policies themselves, and the leads that missed one.
- * The breach list used to be a second hand-written `DataTableColumn[]` with its
- * own date formatting and its own red; described as a record type it is the same
- * renderer as everything else, and clicking a row goes to the lead rather than
- * relying on one cell happening to be a link.
- */
 export default function SlaPage() {
   const router = useRouter();
   const policyLayout = useTenantLayout(SLA_POLICY_LAYOUT);

@@ -10,7 +10,6 @@ import type { PermissionKey } from "@/lib/rbac/permissions";
 import type { NurtureSequenceSummary } from "@/types/crm/nurture";
 import { NurtureSequencesPage } from "./nurture-sequences-page";
 
-/** Radix Select needs pointer capture and scrollIntoView; jsdom has neither. */
 beforeAll(() => {
   Element.prototype.hasPointerCapture = () => false;
   Element.prototype.setPointerCapture = () => undefined;
@@ -33,12 +32,6 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),
 }));
 
-/**
- * The tenant arrangement is read from the signed-in session, which this test has
- * no business standing up; `useTenantLayout` throws without one. Stubbed to the
- * stock description, as `rep-metrics-table.test.tsx` does — that the arrangement
- * path leaves a description valid is `lib/renderer/registry.test.ts`'s job.
- */
 jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
@@ -59,8 +52,6 @@ jest.mock("@/hooks/api/access", () => {
       "@/lib/rbac/permission-gate",
     );
   return {
-    /* Unresolved means allowed is false as well as pending, matching the real
-       hook: rights that have not arrived grant nothing. */
     usePermissionGate: (permission: PermissionKey) =>
       permissionGate(permission, mockResolved && mockGranted.has(permission), mockResolved),
     useCan: (permission: PermissionKey) => mockResolved && mockGranted.has(permission),
@@ -71,18 +62,6 @@ jest.mock("@/hooks/api/access", () => {
 
 const mockedGet = apiClient.get as jest.Mock;
 
-/**
- * CRM-P1-13. The nurture screen, and the fact that it is not the task-sequence
- * screen.
- *
- * The existing nurture suites are all about a cadence's steps — the clamp, the
- * schema, the editor. None of them touch the list, and none of them touch the
- * thing the ticket is actually about: `/crm/settings/sequences` already exists,
- * is also called "sequences", also has steps and enrolments, and talks to a
- * completely different controller under a different permission. The two are one
- * careless import away from being wired to each other, and the resulting screen
- * would look entirely plausible.
- */
 
 const sequence = (over: Partial<NurtureSequenceSummary> = {}): NurtureSequenceSummary => ({
   nurtureSequenceId: "seq-1",
@@ -113,7 +92,6 @@ function renderPage() {
   return render(<NurtureSequencesPage />, { wrapper: Wrapper });
 }
 
-/** Paths asked of the API during this test. */
 function paths(): string[] {
   return mockedGet.mock.calls.map(([path]) => path as string);
 }
@@ -130,11 +108,6 @@ describe("NurtureSequencesPage", () => {
   });
 
   it("reads the nurture controller, not the outreach-sequence one", async () => {
-    /**
-     * The literal separation. `/crm/sequences` answers a similar-looking list
-     * of things with steps and enrolments, so a hook pointed there would render
-     * a believable screen of the wrong feature.
-     */
     renderPage();
 
     await waitFor(() => expect(mockedGet).toHaveBeenCalled());
@@ -143,7 +116,6 @@ describe("NurtureSequencesPage", () => {
   });
 
   it("opens a cadence on the nurture route", async () => {
-    /** `/crm/settings/sequences/:id` is a different record behind a different key. */
     const user = userEvent.setup();
     renderPage();
 
@@ -165,7 +137,6 @@ describe("NurtureSequencesPage", () => {
       scroll: false,
     });
 
-    /* The router is stubbed, so drive the re-read the way the URL would. */
     mockSearch = new URLSearchParams("status=paused");
     renderPage();
     await waitFor(() =>
@@ -190,11 +161,6 @@ describe("NurtureSequencesPage", () => {
   });
 
   it("shows the skeleton while rights are still arriving, not an empty list", async () => {
-    /**
-     * The disabled-query trap: a query held shut by a pending gate reports
-     * `isLoading: false`, so without the gate's own state the first paint of a
-     * permitted user's screen says there are no sequences.
-     */
     mockResolved = false;
     renderPage();
 
@@ -213,13 +179,11 @@ describe("NurtureSequencesPage", () => {
   });
 
   it("offers to author one from the empty screen only when there is no filter on", async () => {
-    /** With a filter on, "New sequence" would read as a fix for the empty list. */
     mockedGet.mockResolvedValue(page([]));
     mockSearch = new URLSearchParams("status=paused");
     renderPage();
 
     await screen.findByText(/nothing with that status/i);
-    /* The header action stays; the empty state's own call to action does not. */
     expect(screen.getAllByRole("button", { name: /new sequence/i })).toHaveLength(1);
   });
 
@@ -250,10 +214,6 @@ describe("NurtureSequencesPage", () => {
   });
 });
 
-/**
- * The separation stated once more, structurally, because the wire assertion
- * above only watches the one component this file renders.
- */
 describe("nurture and outreach sequences stay two features", () => {
   const NURTURE = join(__dirname);
   const APP = join(__dirname, "..", "..", "..", "app", "(authenticated)", "crm");

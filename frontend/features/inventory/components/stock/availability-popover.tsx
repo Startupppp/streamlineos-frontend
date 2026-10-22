@@ -60,8 +60,6 @@ const WAREHOUSE_COLUMNS: DataTableColumn<StockAvailabilityByWarehouse>[] = [
 
 export function AvailabilityPopover({ open, onOpenChange, variantId, variantName }: AvailabilityPopoverProps) {
   const { data, isLoading } = useStockAvailability(variantId ?? 0);
-  // NEO-1. On-hand and ATP already differed by a number nobody on this screen
-  // could explain once a channel held stock back; these two answer "who has it".
   const { data: pools } = useVariantChannelPools(variantId);
   const { data: channelAtp } = useChannelPoolAvailability(variantId);
   const reservedToChannels = channelAtp?.reservedByOthers ?? "0";

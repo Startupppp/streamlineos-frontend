@@ -6,12 +6,6 @@ import {
 } from "@/features/hr/leaves/leave-export";
 import type { LeaveRequest } from "@/features/hr/leaves/components/leaves-types";
 
-/**
- * V-048. The export behaviour is right — it exports the tab in front of you,
- * always writes a header row, toasts the count and never fails silently — but
- * only its wiring was covered. These read the workbook back, so a column that
- * silently stopped being written would be caught.
- */
 function request(
   id: number,
   status: string,
@@ -62,7 +56,7 @@ describe("buildLeaveExportBlob", () => {
     const { sheet, rows } = await readBack(await buildLeaveExportBlob(view));
 
     expect(sheet.name).toBe("Leave Requests");
-    expect(rows).toHaveLength(4); // header + three rows
+    expect(rows).toHaveLength(4);
     expect(rows[0]).toEqual([
       "Type",
       "From",
@@ -94,7 +88,6 @@ describe("buildLeaveExportBlob", () => {
     expect(rows[0]).toHaveLength(8);
     expect(rows[1][0]).toBe("QA Person7");
     expect(rows[2][0]).toBe("QA Person8");
-    // The personal export must NOT carry it, or the two column sets have drifted.
     const mine = await readBack(
       await buildLeaveExportBlob(leaveExportViewFor("my-leaves", [request(1, "PENDING")], [])),
     );

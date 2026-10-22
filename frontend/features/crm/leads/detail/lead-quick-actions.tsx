@@ -20,14 +20,6 @@ interface LeadQuickActionsProps {
   onDraftEmail?: (subject: string, body: string) => void;
 }
 
-/**
- * The lead's quick actions.
- *
- * Note, task and call compose through `RecordForm` over their own record type.
- * Email opens `EmailComposeDialog`, which is the product's email composer
- * everywhere else — a fifth form here would be a second way to send the same
- * message, which is the thing the shared composer exists to prevent.
- */
 export function LeadQuickActions({
   leadId,
   activeAction,

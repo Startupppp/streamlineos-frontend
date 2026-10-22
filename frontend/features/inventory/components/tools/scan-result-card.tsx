@@ -14,14 +14,6 @@ interface LookupSummary {
   href: string | null;
 }
 
-/**
- * The lookup branch, rendered from the fields the endpoint actually sends.
- *
- * This page previously declared `productName` / `variantSku` / `locationName`,
- * none of which any response has ever carried, so every result row rendered
- * `undefined`. The names below match
- * `backend/.../barcode/dto/inv-barcode.schemas.ts` exactly.
- */
 function summariseLookup(lookup: BarcodeLookupResult): LookupSummary | null {
   switch (lookup.type) {
     case "product":
@@ -64,7 +56,6 @@ function summariseLookup(lookup: BarcodeLookupResult): LookupSummary | null {
   }
 }
 
-/** The GS1 branch, where the label names several things at once. */
 function summariseScan(result: ScanCaptureResult): LookupSummary | null {
   if (result.variant)
     return {

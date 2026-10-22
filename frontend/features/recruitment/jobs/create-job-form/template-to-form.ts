@@ -4,15 +4,10 @@ import { JOB_TYPES, type CreateJobFormValues } from "./schema";
 
 const KNOWN_JOB_TYPES = new Set<string>(JOB_TYPES);
 
-/** A stored `type` the form's enum does not know is dropped rather than injected — an unknown option would make the select unopenable. */
 function isKnownJobType(value: string): value is NonNullable<CreateJobFormValues["jobType"]> {
   return KNOWN_JOB_TYPES.has(value);
 }
 
-/**
- * Splits `"5–8 years | Bachelor's"` — the shape `index.tsx` composes on submit —
- * back into the three form fields it was built from.
- */
 function readExperience(experience: string, values: Partial<CreateJobFormValues>): void {
   const pipeIdx = experience.indexOf(" | ");
   const range = pipeIdx > -1 ? experience.slice(0, pipeIdx) : experience;
@@ -24,15 +19,6 @@ function readExperience(experience: string, values: Partial<CreateJobFormValues>
   if (pipeIdx > -1) values.educationLevel = experience.slice(pipeIdx + 3).trim();
 }
 
-/**
- * Reads the marker-delimited description a posting stores, and falls back to
- * treating the whole thing as the overview.
- *
- * The fallback is the case that matters. A template authored anywhere other
- * than this wizard holds plain prose with no `=== OVERVIEW ===` marker, and a
- * parser that only understood markers would silently drop the single most
- * valuable thing the template carries.
- */
 function readDescription(description: string, values: Partial<CreateJobFormValues>): void {
   const overview = extractSection(description, "OVERVIEW");
   if (!overview) {
@@ -70,10 +56,6 @@ function splitList(text: string): string[] {
     .filter(Boolean);
 }
 
-/**
- * Splits the requirements blob back into the free text and the two trailing
- * lines `index.tsx` appends to it on submit.
- */
 function readRequirements(requirements: string, values: Partial<CreateJobFormValues>): void {
   const parts = requirements.split("\n\n");
 
@@ -92,19 +74,6 @@ function readRequirements(requirements: string, values: Partial<CreateJobFormVal
   if (tags) values.tags = splitList(tags.replace("Tags:", "").trim());
 }
 
-/**
- * Maps the merged draft the server returned onto the wizard's own field names.
- *
- * A template owns exactly seven posting columns — title, type, experience,
- * description, requirements, benefits and screening questions — and this reads
- * only those. The posting lifecycle it deliberately has no column for (status,
- * openings, deadline, location, salary) is therefore untouchable from here, and
- * stays that way as long as nothing is added to the list below.
- *
- * The server merges the flat posting shape; the wizard stores that shape
- * decomposed — one `description` blob against eight separate inputs — so the
- * two halves cannot be the same function and this is the second one.
- */
 export function templateDraftToFormValues(
   draft: JobTemplateDraft,
 ): Partial<CreateJobFormValues> {

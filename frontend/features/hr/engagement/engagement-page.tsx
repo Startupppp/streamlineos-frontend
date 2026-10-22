@@ -37,7 +37,8 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate, recognitionQueryOptions } from "@/hooks/api/hr/engagement";
+import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
+import { recognitionQueryOptions } from "@/hooks/api/hr/engagement-read-options";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
   getUserDisplayName,
@@ -79,11 +80,17 @@ interface Recognition {
   toUser?: { name: string | null; email: string | null };
 }
 
+const recognitionListC = lazyContract(() =>
+  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionListContract),
+);
+
 function useRecognitions() {
   const canView = useCan("hr:engagement:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     ...recognitionQueryOptions(),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/recognition", undefined, signal, recognitionListC),
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,
   });
@@ -286,7 +293,6 @@ function RecognitionTab() {
     void refetchRec();
   }
 
-  // POST /hr/recognition is `hr:engagement:view` (engagement.controller.ts:127).
   const canGiveKudos = useCan("hr:engagement:view");
   const [kudosOpen, setKudosOpen] = useState(false);
 

@@ -39,13 +39,11 @@ interface TablePaginationCursorBase extends TablePaginationChrome {
   mode: "cursor";
   rowCount: number;
 
-  /** Required by canonical callers; optional here only for legacy non-Build consumers. */
   pageNumber?: number;
   hasMore: boolean;
   onNext: () => void;
   pageSize?: number;
   hideOnSinglePage?: boolean;
-  /** Hide the result summary when pagination is embedded in a compact list footer. */
   showSummary?: boolean;
   showLabels?: boolean;
   compact?: boolean;
@@ -94,7 +92,6 @@ export function getVisiblePageItems(
 
 export interface CursorPager {
   cursor: string | undefined;
-  /** One-based position in the cursor walk. This is display-only, not jumpable. */
   pageNumber: number;
   hasPrevious: boolean;
   goNext: (nextCursor: string | null | undefined) => void;

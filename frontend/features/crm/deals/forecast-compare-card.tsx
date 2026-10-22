@@ -13,7 +13,6 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
 interface ForecastCompareCardProps {
-  /** Periods with at least one captured snapshot, newest first. */
   periods: string[];
 }
 
@@ -25,7 +24,6 @@ function figure(source: Record<string, unknown>, key: string): number {
 const UP = statusToneClasses("success").ink;
 const DOWN = statusToneClasses("danger").ink;
 
-/** The live forecast against the latest snapshot of a period (`GET /deals/forecast/compare`). */
 export function ForecastCompareCard({ periods }: ForecastCompareCardProps) {
   const [chosen, setChosen] = useState<string | null>(null);
   const period = chosen ?? periods[0] ?? null;

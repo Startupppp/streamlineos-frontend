@@ -3,14 +3,7 @@ import { z } from "zod";
 const isoTimestamp = z.iso.datetime({ offset: true });
 const isoDate = z.iso.date();
 
-/**
- * Response contracts for the calendar module.
- * Derived from backend `calendar-response.schemas.ts`.
- * wireDate() → z.string() (ISO strings on the wire).
- * NOT `.strict()`.
- */
 
-/** `calendarEventsResponseSchema` */
 export const calendarEventsResponseContract = z.object({
   events: z.array(
     z.object({
@@ -98,7 +91,6 @@ export const calendarSearchResponseContract =
     nextCursor: z.string().nullable(),
   });
 
-/** `calendarSourcesResponseSchema` */
 export const calendarSourcesContract = z.array(
   z.object({
     key: z.string(),
@@ -108,13 +100,11 @@ export const calendarSourcesContract = z.array(
   }),
 );
 
-/** `calendarSourcePreferenceResponseSchema` */
 export const calendarSourcePreferenceContract = z.object({
   sourceKey: z.string(),
   enabled: z.boolean(),
 });
 
-/** `externalCalendarEventsResponseSchema` */
 export const calendarExternalEventsContract = z.object({
   events: z.array(
     z.object({
@@ -170,7 +160,6 @@ export const calendarExternalEventsContract = z.object({
   ),
 });
 
-/** `calendarEventDetailSchema` */
 export const calendarEventDetailContract = z.object({
   id: z.number().int(),
   title: z.string(),
@@ -204,7 +193,6 @@ export const calendarEventDetailContract = z.object({
   reminderOffsetsMinutes: z.array(z.number().int()).nullable().default(null),
 });
 
-/** `calendarAttendeeListResponseSchema` */
 export const calendarAttendeesContract = z.array(
   z.object({
     id: z.number().int(),
@@ -218,7 +206,6 @@ export const calendarAttendeesContract = z.array(
   }),
 );
 
-/** `calendarRsvpResponseSchema` */
 export const calendarRsvpContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -229,7 +216,6 @@ export const calendarRsvpContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `calendarDeleteEventResponseSchema` */
 export const calendarDeleteEventContract = z.object({
   deleted: z.boolean(),
   externalEventId: z.string().nullable().optional(),
@@ -258,7 +244,6 @@ const calendarMutatedEventContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `calendarCreateEventResponseSchema` */
 export const calendarCreateEventContract = z.object({
   event: calendarMutatedEventContract,
   oooConflicts: z.array(
@@ -285,10 +270,8 @@ export const calendarCreateEventContract = z.object({
   syncQueued: z.boolean(),
 });
 
-/** `calendarUpdateEventResponseSchema` */
 export const calendarUpdateEventContract = calendarMutatedEventContract;
 
-/** `calendarOccurrenceExceptionResponseSchema` */
 export const calendarOccurrenceExceptionContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -303,7 +286,6 @@ export const calendarOccurrenceExceptionContract = z.object({
   updatedAt: z.string(),
 });
 
-/** Org member lightweight contract for calendar member lookup (`GET /org/members`). */
 export const calendarMemberListContract = z.array(
   z.object({
     userId: z.string().optional(),
@@ -315,7 +297,6 @@ export const calendarMemberListContract = z.array(
   }),
 );
 
-/** `syncStatusResponseSchema` from `sync-status.schemas.ts` */
 export const calendarSyncStatusContract = z.object({
   status: z.enum(["synced", "pending", "in_flight", "failed", "not_synced"]),
   attemptCount: z.number(),
@@ -336,7 +317,6 @@ export const calendarSyncStatusContract = z.object({
   ]),
 });
 
-/** `attendanceRowSchema` from `time-attendance-response.schemas.ts` */
 export const attendanceLogContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -360,7 +340,6 @@ export const attendanceLogContract = z.object({
   createdAt: z.string(),
 });
 
-/** `hrCalendarEventSchema` from `helpdesk-response.schemas.ts` — array form */
 export const hrCalendarEventListContract = z.array(
   z.object({
     id: z.string(),
@@ -380,10 +359,8 @@ export const hrCalendarEventListContract = z.array(
   }),
 );
 
-/** Array of attendance log rows for monthly attendance calls */
 export const attendanceLogListContract = z.array(attendanceLogContract);
 
-/** sync-retry response */
 export const calendarSyncRetryContract = z.object({
   requeued: z.number().int(),
 });
@@ -392,12 +369,6 @@ export const calendarSyncUseProviderContract = z.object({
   applied: z.boolean(),
 });
 
-/**
- * `GET /org/members`. NOT `orgMemberListResponseSchema`, which declares
- * `{ userId?, membershipId?, status? }` — `OrgMembersService.listMembers`
- * selects the seven columns below, so the declared shape would strip every one
- * the member picker renders.
- */
 export const calendarOrgMembersContract = z.array(
   z.object({
     id: z.string(),
@@ -410,7 +381,6 @@ export const calendarOrgMembersContract = z.array(
   }),
 );
 
-/** `calendarAttendeeListResponseSchema` — `listAttendees` projects id/status/user. */
 export const calendarEventAttendeesContract = z.array(
   z.object({
     id: z.number().int(),

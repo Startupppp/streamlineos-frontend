@@ -1,9 +1,5 @@
 import { z } from "zod";
 
-/**
- * Wire contracts for `crm/web-forms` (crm-web-forms-response.schemas.ts) and the
- * public `public/lead-form/:token` pair (public-response.schemas.ts).
- */
 
 const webFormFieldSchema = z.object({
   name: z.string(),

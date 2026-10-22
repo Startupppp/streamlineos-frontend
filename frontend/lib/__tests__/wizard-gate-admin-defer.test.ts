@@ -1,23 +1,3 @@
-/**
- * HRMS-E2E-020. Every new user, ORG_ADMIN included, was redirected to
- * `/employee-onboarding`, and every `/hr` URL kept redirecting there until the
- * wizard was finished. There was no skip. An administrator brought in to set up
- * HR had to hand over their own date of birth, bank account and PAN before they
- * could open the module they were hired to configure.
- *
- * Decision #7's recommended default is that an ORG_ADMIN may skip or defer,
- * while a MEMBER stays guided. This is that, shipped PROVISIONAL.
- *
- * `resolveWizardGate` is the only authority for these two routes (FE-11) —
- * putting the exception anywhere else gives two decision points over two sources
- * and `ERR_TOO_MANY_REDIRECTS`, which is why the deferral is expressed here and
- * nowhere else.
- *
- * The deferral is its own cookie, not the existing "done" one. Marking the
- * wizard complete when somebody pressed "later" would tell the rest of the
- * product a falsehood — `userOnboardingCompletedAt` stays null, the wizard stays
- * reachable, and nothing downstream is led to believe the bank details exist.
- */
 import { resolveWizardGate } from "@/lib/wizard-gate";
 import { gateCookieName } from "@/lib/onboarding-gate";
 

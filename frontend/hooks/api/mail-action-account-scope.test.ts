@@ -5,16 +5,6 @@ import { queryKeys } from "@/lib/query-keys";
 import type { MailListResponse, MailMessageSummary } from "@/types/mail";
 import type { UnifiedInboxResponse } from "@/types/inbox";
 
-/**
- * A message id belongs to the provider, not to us. Two connected mailboxes can
- * hand back the same id, which is why every mail list keys its rows
- * `accountId-id`. The optimistic patches must match on the same pair.
- *
- * markRead and star always did. archive/trash did not: it filtered on the id
- * alone, in both the folder listing and the unified inbox, so archiving in one
- * mailbox deleted the other mailbox's row from the cache — and no request was in
- * flight for that row, so nothing would ever put it back.
- */
 
 const ACCOUNT_A = 1;
 const ACCOUNT_B = 2;

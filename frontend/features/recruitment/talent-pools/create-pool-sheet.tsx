@@ -37,15 +37,6 @@ import {
   type CreatePoolValues,
 } from "./create-pool-schema";
 
-/**
- * Lifted out of `talent-pools-page.tsx`, where it was three `useState` fields
- * and a hand-rolled required check.
- *
- * The move is not cosmetic: adding tags to that shape would have meant a fourth
- * piece of local state and a second hand-written validation message, in a file
- * already over the 300-line ratchet. Here the schema is the validation and the
- * page gets shorter.
- */
 export function CreatePoolSheet() {
   const [open, setOpen] = useState(false);
   const createPool = useCreateTalentPool();
@@ -137,12 +128,7 @@ export function CreatePoolSheet() {
                     <FormControl>
                       <Input placeholder="java, bengaluru, 2026 grads" {...field} />
                     </FormControl>
-                    {/*
-                      Says what happens to the input rather than only how to
-                      separate it: tags are lowercased and deduped on save, and
-                      a recruiter who types "Java, java" should not think two
-                      were lost.
-                    */}
+                    
                     <p className="text-xs text-muted-foreground">
                       Comma separated. Lowercased and deduplicated when saved.
                     </p>

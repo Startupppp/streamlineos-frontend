@@ -12,15 +12,10 @@ import type {
   ProjectsWebhooksRotateSecretResponse,
   ProjectsWebhooksGetImpactResponse,
 } from "@/contracts/build-contracts.generated";
-
-interface WebhookListFilters extends Record<string, unknown> {
-  state?: "active" | "inactive";
-  event?: string;
-  q?: string;
-  cursor?: number;
-  from?: string;
-  to?: string;
-}
+import {
+  webhooksListQueryOptions,
+  type WebhookListFilters,
+} from "./webhooks-read-options";
 
 type WebhookPage = {
   data: ProjectWebhook[];
@@ -70,15 +65,6 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 export type { ProjectWebhook } from "@/types/projects";
-
-export function webhooksListQueryOptions(projectId: number, filters?: WebhookListFilters) {
-  const hasFilters = filters !== undefined && Object.values(filters).some((v) => v !== undefined);
-  const activeFilters = hasFilters ? filters : undefined;
-  return {
-    queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters),
-    staleTime: 30_000,
-  };
-}
 
 export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   const canManage = useCan("build:manage");

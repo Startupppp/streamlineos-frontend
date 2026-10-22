@@ -48,7 +48,6 @@ export function StepWorkspace({ data, patch, onNext, restoreSlot }: StepWorkspac
     try {
       browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
     } catch {
-      // The owner can select the time zone explicitly below.
     }
     patch({
       country,

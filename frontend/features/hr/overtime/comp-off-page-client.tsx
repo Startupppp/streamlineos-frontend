@@ -15,12 +15,9 @@ import { useCompOff } from "@/hooks/api/hr/comp-off";
 
 export function CompOffPageClient() {
   const { data: records, isLoading, isError, error, refetch } = useCompOff();
-  // "Available" is what is left: earned minus used. It showed earned alone.
   const earnedDays = records?.[0]
     ? parseFloat(records[0].earnedDays) - parseFloat(records[0].usedDays)
     : 0;
-  // The route admits hr:leaves:view, but useCompOff is gated on
-  // hr:attendance:view: a caller with only the first read "No comp-off balance".
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   const handleRetry = useCallback(() => {

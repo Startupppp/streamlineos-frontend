@@ -44,7 +44,6 @@ export function hasCompletionMarker(userId: string, orgId: string): boolean {
   }
 }
 
-/** Destination stored with the completion marker; legacy `"1"` maps to `/dashboard`. */
 export function getCompletionDestination(userId: string, orgId: string): string {
   try {
     if (!userId || !orgId) return "/dashboard";

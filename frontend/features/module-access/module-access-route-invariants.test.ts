@@ -5,16 +5,6 @@ import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
 
 const ACCESS_MANAGED_MODULES = delegableModuleIds();
 
-/**
- * Modules whose access ladder the backend delegates but which have no
- * `/<module>/access` page, each with the reason it does not.
- *
- * This list is the whole of the exemption. Before it existed the covered set
- * was ten hand-written names against the backend's fourteen delegable modules,
- * so `blog`, `directory` and `workflows` had conforming pages that nothing
- * checked and `feedbucket` had no page at all — and neither fact was visible
- * from this file.
- */
 const NO_ACCESS_PAGE: Readonly<Record<string, string>> = {};
 
 interface RelocatedAccessPage {

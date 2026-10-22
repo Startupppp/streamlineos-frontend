@@ -6,14 +6,6 @@ import { countEntries } from "@/lib/offline/outbox-types";
 import type { DrainReport } from "@/lib/offline/outbox-drain";
 import type { OutboxCounts, OutboxEntry } from "@/lib/offline/outbox-types";
 
-/**
- * B8 — the outbox, as the UI reads it.
- *
- * Deliberately not `useQuery`. The queue is not server state: it is the record
- * of work the server has *not* seen yet, it lives in IndexedDB, and a cache
- * TanStack is free to garbage-collect is the wrong home for the only copy of an
- * operator's count.
- */
 
 const EMPTY_ENTRIES: readonly OutboxEntry[] = [];
 const EMPTY_COUNTS: OutboxCounts = {
@@ -27,10 +19,8 @@ export interface InventoryOutbox {
   entries: readonly OutboxEntry[];
   counts: OutboxCounts;
   isOnline: boolean;
-  /** True when nothing is waiting and nothing is in conflict. */
   isSettled: boolean;
   lastReport: DrainReport | null;
-  /** False outside an `InventoryOutboxProvider` — nothing can be queued. */
   isAvailable: boolean;
 }
 

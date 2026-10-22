@@ -21,14 +21,12 @@ import {
 export interface CustomerReturnLine {
   id: number;
   productVariantId: number;
-  /** Decimal string at scale 4 — quantities are exact, never JS floats. */
   quantity: string;
   disposition: CustomerReturnDisposition | null;
   targetLocationId: number | null;
   lotId: number | null;
   serialId: number | null;
   notes: string | null;
-  /** INV-209. Null until somebody has actually opened the box. */
   inspectedAt: string | null;
   inspectedBy: string | null;
   inspectionNotes: string | null;
@@ -40,7 +38,6 @@ export interface CustomerReturnSummary {
   soId: number | null;
   shipmentId: number | null;
   clientId: number | null;
-  /** Nested, for the same reason `vendor` is. `customerName` never existed. */
   client: { id: number; name: string } | null;
   status: ReturnStatus;
   createdAt: string;
@@ -126,10 +123,6 @@ export function useCreateCustomerReturn() {
   });
 }
 
-/**
- * INV-209. The verdict recorded after opening the box, one line at a time —
- * which is how the warehouse works, and why this is not a bulk call.
- */
 export function useInspectCustomerReturnLine() {
   const qc = useQueryClient();
   return useAuthorizedMutation<

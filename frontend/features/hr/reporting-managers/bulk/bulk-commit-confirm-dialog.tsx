@@ -14,18 +14,12 @@ import {
 interface BulkCommitConfirmDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The server-issued phrase (`BulkJob.confirmationPhrase`), e.g. "CONFIRM 12". */
   phrase: string;
   affected: number;
   isPending: boolean;
   onConfirm: () => void;
 }
 
-/**
- * PRD §7.6.3: a change to 10+ employees needs the phrase typed back. The dialog's
- * own confirm button cannot be disabled, so it is hidden and the commit button
- * lives in the phrase form, enabled only once the phrase matches.
- */
 export function BulkCommitConfirmDialog({ open, onOpenChange, phrase, affected, isPending, onConfirm }: BulkCommitConfirmDialogProps) {
   const form = useForm<ConfirmationPhraseValues>({
     resolver: zodResolver(createConfirmationPhraseSchema(phrase)),

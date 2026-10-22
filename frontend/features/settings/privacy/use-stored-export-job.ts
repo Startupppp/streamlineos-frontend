@@ -18,11 +18,6 @@ function getServerSnapshot(): string | null {
   return null;
 }
 
-/**
- * The id of the caller's last async export. The backend has no "my jobs" list, so
- * the id is remembered per organisation in this browser; without it a reload would
- * lose the archive the worker is still building.
- */
 export function useStoredExportJobId(): [string | null, (jobId: string | null) => void] {
   const key = orgScopedStorageKey("gdpr-export-job", useOrgStorageScope());
   const read = useCallback(() => {
@@ -40,7 +35,6 @@ export function useStoredExportJobId(): [string | null, (jobId: string | null) =
         if (next) window.localStorage.setItem(key, next);
         else window.localStorage.removeItem(key);
       } catch {
-        // Storage refused (private mode): the archive is not remembered across reloads.
       }
       window.dispatchEvent(new Event(CHANGE_EVENT));
     },

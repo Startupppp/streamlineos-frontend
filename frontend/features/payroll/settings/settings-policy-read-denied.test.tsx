@@ -27,14 +27,6 @@ jest.mock("./entities-section", () => ({ EntitiesSection: () => null }));
 
 import { SettingsPageContent } from "./settings-page";
 
-/**
- * The page's own gate is `payroll:settings:manage`; the policy read underneath
- * it is gated on `payroll:policies:view`. A role holding only the first leaves
- * the read disabled, so `data` is undefined and `isLoading` is false — the same
- * state as "this organisation has no policy". The page used to read that as
- * "Payroll not set up yet", which is BUG-001's state-integrity lie reached
- * through a withdrawn grant instead of a missing row.
- */
 describe("payroll settings distinguishes a policy it cannot read from a policy that does not exist", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -70,8 +62,6 @@ describe("payroll settings distinguishes a policy it cannot read from a policy t
   });
 
   it("offers no Set up Payroll action to a reader who cannot tell whether it is already set up", () => {
-    // The old empty state carried that link, which would have walked a
-    // manage-only role into re-running setup over a live payroll policy.
     mockUseCan.mockImplementation((key: string) => key !== "payroll:policies:view");
     render(<SettingsPageContent />);
     expect(screen.queryByRole("link", { name: /set up payroll/i })).not.toBeInTheDocument();

@@ -26,7 +26,6 @@ export type { EmployeeData } from "@/features/hr/employees/detail/employee-data"
 interface EditEmployeeFormProps {
   employee: EmployeeData;
   onDirtyChange?: (dirty: boolean) => void;
-  /** Parent can register leave interception (Back / tab change). */
   registerLeaveGuard?: (api: {
     isDirty: boolean;
     requestLeave: (action: () => void) => void;

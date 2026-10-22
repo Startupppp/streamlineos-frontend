@@ -93,12 +93,6 @@ export default function ReceiptsPage() {
 
   const resolvedVendorId = vendorParam !== "all" ? Number(vendorParam) : undefined;
   const resolvedStatus = isGrnStatus(statusParam) ? statusParam : undefined;
-  /*
-   * B10. The SLA dashboard drills through to here carrying its window, and a
-   * link whose parameters the destination ignores is worse than no link: the
-   * supervisor reads the whole history as though it were the period they were
-   * looking at.
-   */
   const dateFromParam = searchParams.get("dateFrom");
   const dateToParam = searchParams.get("dateTo");
   const resolvedDateFrom = isDateString(dateFromParam) ? dateFromParam : undefined;

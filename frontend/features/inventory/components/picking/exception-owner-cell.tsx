@@ -34,27 +34,6 @@ interface ExceptionOwnerCellProps {
   exception: PickExceptionSummary;
 }
 
-/**
- * Moving an exception off the person it landed on.
- *
- * `reportException` stamps the owner as the wave's creator, so every exception
- * already belongs to somebody the moment it is raised — and until now that was
- * final. A shortfall that needs a buyer, a damaged unit that needs quality, or
- * an exception raised on a wave whose creator is off shift all sat in one
- * person's queue with no way to move them. `POST
- * /inventory/picking/exceptions/:pickLineId/assign` existed the whole time and
- * `useAssignPickException` was referenced by nothing.
- *
- * Inline on the row rather than inside the review dialog: triage is scanning a
- * queue and saying "that one's Priya's", which is a per-row act, and §5 puts
- * every editable assignee in a compact popover on the row it belongs to.
- * `ResponsivePopover` rather than a plain one, so it is a Drawer below `md`
- * where the whole queue is a stack of cards.
- *
- * When the roster cannot be read the cell renders as text with no affordance,
- * which is the quiet way to say "not editable" twenty-five rows at a time — an
- * editable-looking control that opens onto nothing is the worse failure.
- */
 export const ExceptionOwnerCell = memo(function ExceptionOwnerCell({
   exception,
 }: ExceptionOwnerCellProps) {
@@ -69,8 +48,6 @@ export const ExceptionOwnerCell = memo(function ExceptionOwnerCell({
   function makeAssignHandler(ownerUserId: string) {
     return function assignOwner(): void {
       setOpen(false);
-      // Re-picking the person who already holds it is not a change, and the
-      // route would happily write the same row and audit it as a hand-over.
       if (ownerUserId === exception.ownerUserId) return;
       const picked = roster.members.find((member) => member.id === ownerUserId);
       assign.mutate(

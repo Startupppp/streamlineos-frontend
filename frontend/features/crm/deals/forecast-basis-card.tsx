@@ -18,27 +18,7 @@ import type {
   NaiveForecastBasis,
 } from "@/types/crm/forecast";
 
-/**
- * CRM-P2-04. What the forecast on this page actually is.
- *
- * The backend has reported a `basis` on every forecast read for a while and
- * nothing rendered it, so the page presented a weighted sum of the tenant's own
- * stage percentages with the same confidence it would present a model — and,
- * until this ticket, presented a weighted sum of a hardcoded six-stage table
- * that was not even the tenant's.
- *
- * The union is rendered as a union. There is no shared "accuracy" block that
- * quietly shows zeros on the naive arm, because a zero there would read as a
- * measured result rather than an absent one.
- */
 
-/**
- * Why the tenant is on the weighted arithmetic, in their words rather than ours.
- *
- * The six reasons are genuinely six different situations and the copy says so.
- * Collapsing them into "not enough data" would tell a tenant who has plenty of
- * history and was refused a model that the fault is theirs.
- */
 const NAIVE_EXPLANATION: Record<ForecastNaiveReason, string> = {
   "insufficient-history":
     "There are not yet enough closed deals to learn from. Until there are, this is arithmetic rather than a prediction.",
@@ -60,11 +40,6 @@ function RefitButton() {
   const handleTrain = useCallback(() => {
     train.mutate(undefined, {
       onSuccess: (attempt) => {
-        /**
-         * A refusal is a successful request. Reporting it through `toast.error`
-         * would say the system broke, when what happened is that it declined to
-         * replace a number the tenant understands with one that was not better.
-         */
         if (attempt.trained)
           toast.success(
             `Fitted on ${attempt.trainingDeals} closed deals and scored ${attempt.scored} open ones.`,
@@ -83,11 +58,6 @@ function RefitButton() {
 }
 
 function LearnedBasis({ basis }: { basis: LearnedForecastBasis }) {
-  /**
-   * Both numbers, always. The model's Brier alone is unreadable — 0.18 is
-   * meaningless without knowing what the arithmetic it replaced scored on the
-   * same deals — and the whole acceptance rule is that it had to be lower.
-   */
   const beatBy = basis.naiveHoldout.brier - basis.holdout.brier;
 
   return (
@@ -104,7 +74,7 @@ function LearnedBasis({ basis }: { basis: LearnedForecastBasis }) {
           </dd>
         </div>
         <div>
-          {/* Ranking ability. 0.5 is a coin, and the acceptance floor is 0.6. */}
+          
           <dt className="text-micro text-muted-foreground">Tells deals apart</dt>
           <dd className="text-sm font-medium tabular-nums">
             {basis.holdout.auc.toFixed(2)}{" "}
@@ -147,11 +117,7 @@ function NaiveBasis({ basis }: { basis: NaiveForecastBasis }) {
           </span>
         </div>
         <Progress value={progress} />
-        {/*
-          The headline count is not the whole bar. A workspace on sixty closed
-          deals of which ten were won still needs five more, and they have to be
-          wins — saying "none" would be a promise the next screen breaks.
-        */}
+        
         {readiness.wonDealsNeeded > 0 || readiness.lostDealsNeeded > 0 ? (
           <p className="text-label text-muted-foreground">
             At least {readiness.minimumPerOutcome} of each outcome are needed:{" "}

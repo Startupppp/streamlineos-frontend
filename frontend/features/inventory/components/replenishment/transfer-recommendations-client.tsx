@@ -121,15 +121,6 @@ function recommendationKey(row: TransferRecommendation): string {
   return `${row.fromWarehouseId}-${row.toWarehouseId}`;
 }
 
-/**
- * C5 — the transfer plan for one SKU, and approving a move from it.
- *
- * Approving sends the move, never the amount: the server re-derives the
- * quantity from the plan at approval time, so a screen that has been open all
- * afternoon cannot commit to a number the shelves no longer support. The
- * resulting transfer is PENDING and holds nothing — reserving is a separate
- * decision with its own permission.
- */
 export function TransferRecommendationsClient() {
   const canRead = useCan(READ_KEY);
   const canApprove = useCan(APPROVE_KEY);
@@ -291,11 +282,6 @@ export function TransferRecommendationsClient() {
   );
 }
 
-/**
- * The plan is a whole-network answer for one SKU, not a page of a list — the
- * service returns every recommendation it will make. `DataTable` still wants a
- * real pagination object, so it is given the honest one.
- */
 function noop(): void {
   return undefined;
 }

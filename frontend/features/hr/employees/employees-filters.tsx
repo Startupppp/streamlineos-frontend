@@ -26,14 +26,11 @@ interface EmployeesFiltersProps {
   departments: Department[] | undefined;
   hasFilters: boolean;
   onSearchChange: (v: string) => void;
-  /** Enter in the search field: publish the typed query without waiting out the debounce. */
   onSearchSubmit?: () => void;
-  /** The typed search has not come back yet (debouncing or fetching). */
   searching?: boolean;
   onDepartmentIdChange: (id: string | undefined) => void;
   onStatusChange: (s: EmployeeStatusFilter) => void;
   onClear: () => void;
-  /** Optional role (server-backed). Omit to hide. */
   role?: string;
   onRoleChange?: (role: string) => void;
   showRole?: boolean;

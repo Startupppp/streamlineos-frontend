@@ -22,21 +22,11 @@ const CLAMPED_TONE = statusToneClasses("warning");
 interface NurtureStepRowProps {
   form: UseFormReturn<NurtureStepsFormValues>;
   index: number;
-  /** Hours from enrolment to this step, over the waits the sender will keep. */
   offsetHours: number;
   canManage: boolean;
   onRemove: (index: number) => void;
 }
 
-/**
- * One wait, and what it will actually become.
- *
- * The typed value and the run value are shown together rather than the field
- * silently correcting itself, because the correction is upward: somebody
- * authoring a two-day cadence is describing something the guardrails will
- * refuse at send time, and a field that quietly rewrote 48 to 240 would leave
- * them believing the sequence they configured is the sequence that runs.
- */
 export function NurtureStepRow({
   form,
   index,

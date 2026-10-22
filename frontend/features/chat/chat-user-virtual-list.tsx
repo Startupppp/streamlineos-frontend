@@ -39,11 +39,6 @@ interface ChatUserVirtualListProps {
   ariaLabel: string;
 }
 
-/**
- * `/chat/users` returns every member of the organisation with no cursor, so an
- * org of any size renders its whole headcount into a 280–340px box. Windowing
- * keeps the mounted row count proportional to the box, not to the tenant.
- */
 export function ChatUserVirtualList({
   users,
   rowHeight,

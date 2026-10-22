@@ -7,13 +7,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { HrHubSection, HrHubSnapshot } from "./hub-types";
-
-export function localDateKey(date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
-}
+import { localDateKey, hrHubQueryOptions } from "@/hooks/api/hr/hub-read-options";
 
 export function hubSectionData<T>(
   section: HrHubSection<T> | null | undefined,
@@ -27,9 +21,14 @@ export function hubSectionError<T>(
   return section?.status === "error" ? new Error(section.message) : null;
 }
 
-export const hrHubQueryOptions = (today: string) =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.hub(today),
+export function useHrHubSnapshot() {
+  const { data: session } = useSession();
+  const orgId = session?.orgId;
+  const userId = session?.user?.id;
+  const today = localDateKey();
+
+  return useQuery({
+    ...hrHubQueryOptions(today),
     queryFn: ({ signal }) =>
       apiClient.get<HrHubSnapshot>(
         "/hr/hub",
@@ -39,17 +38,6 @@ export const hrHubQueryOptions = (today: string) =>
           import("@/hooks/api/hr/hub-schema").then((m) => m.hrHubSnapshotContract),
         ),
       ),
-    staleTime: 30_000,
-  });
-
-export function useHrHubSnapshot() {
-  const { data: session } = useSession();
-  const orgId = session?.orgId;
-  const userId = session?.user?.id;
-  const today = localDateKey();
-
-  return useQuery({
-    ...hrHubQueryOptions(today),
     enabled: Boolean(orgId && userId),
     refetchInterval: 60_000,
     refetchOnWindowFocus: "always",

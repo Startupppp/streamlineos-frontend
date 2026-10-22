@@ -37,11 +37,6 @@ function today(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-/**
- * New plan, new version, or an edit to a version nothing has been earned
- * against yet. A plan's money only ever changes through a dated version, so
- * there is no "edit rules" on the plan itself.
- */
 export function CommissionPlanSheet({ target, onOpenChange }: CommissionPlanSheetProps) {
   const createPlan = useCreateCommissionPlan();
   const createVersion = useCreateCommissionVersion();

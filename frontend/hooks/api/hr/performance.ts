@@ -10,6 +10,7 @@ const noContentC = lazyContract(() =>
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { reviewCyclesQueryOptions } from "@/hooks/api/hr/performance-read-options";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
@@ -52,19 +53,13 @@ import type {
   UpdateOneOnOneInput,
 } from "@/types/hr";
 
-export const reviewCyclesQueryOptions = () =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.reviewCycles(),
-    queryFn: ({ signal }) =>
-      apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal, listCyclesC),
-    staleTime: 2 * 60_000,
-  });
-
 export function useReviewCycles() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     ...reviewCyclesQueryOptions(),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal, listCyclesC),
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,
   });

@@ -1,11 +1,3 @@
-/**
- * The wire contract of `@Controller("crm/reporting")`.
- *
- * Mirrors `src/modules/reporting/compiler/query-description.ts` and
- * `dto/reporting.schemas.ts` field for field. The request body is `.strict()`
- * on every object, so an extra key is a 400 rather than a silently dropped
- * field — which is the one drift this file exists to prevent.
- */
 
 export const REPORTING_FIELD_TYPES = [
   "text",
@@ -107,7 +99,6 @@ export interface ReportingQueryDescription {
   readonly offset?: number;
 }
 
-/** One entry of `GET /crm/reporting/sources`. */
 export interface ReportingSourceField {
   readonly name: string;
   readonly label: string;
@@ -116,7 +107,6 @@ export interface ReportingSourceField {
 
 export interface ReportingSourceRelation {
   readonly name: string;
-  /** Already dotted — `party.industry` — so it is usable as a field name verbatim. */
   readonly fields: readonly ReportingSourceField[];
 }
 
@@ -127,10 +117,6 @@ export interface ReportingSource {
   readonly relations: readonly ReportingSourceRelation[];
 }
 
-/**
- * A returned column. `alias` is the generated `c0`, `c1`, … key the row objects
- * carry; the caller joins its own labels to the rows through it.
- */
 export interface ReportingCompiledColumn {
   readonly alias: string;
   readonly projection: ReportingProjection;
@@ -141,36 +127,20 @@ export interface ReportingRunResult {
   readonly columns: readonly ReportingCompiledColumn[];
   readonly rows: readonly Record<string, unknown>[];
   readonly rowCount: number;
-  /** The page came back full, so there may be more behind it. */
   readonly truncated: boolean;
 }
 
-/**
- * One row of `GET /crm/reporting/definitions` — the saved-report list.
- *
- * The stored description is deliberately absent: the list screen never needs
- * it, and it is the largest field on the row.
- */
 export interface ReportDefinitionSummary {
   readonly reportDefinitionId: string;
   readonly name: string;
   readonly description: string | null;
   readonly sourceKey: string;
   readonly createdByUserId: string | null;
-  /** Projected from `users.name` by a LEFT JOIN; null for a deleted author. */
   readonly createdByName: string | null;
   readonly createdAt: string;
   readonly updatedAt: string;
 }
 
-/**
- * `GET /crm/reporting/definitions/:reportDefinitionId`, which returns the whole
- * stored row.
- *
- * Deliberately not an extension of the summary: the list projects an author
- * name through a join and the row read does not, so inheriting would claim a
- * field the detail response has never carried.
- */
 export interface ReportDefinition {
   readonly reportDefinitionId: string;
   readonly organizationId: string;
@@ -189,30 +159,17 @@ export interface CreateReportDefinitionInput {
   readonly query: ReportingQueryDescription;
 }
 
-/**
- * `description: null` clears it, `undefined` leaves it alone — the update
- * schema is `.nullable().optional()` and the two mean different things.
- */
 export interface UpdateReportDefinitionInput {
   readonly name?: string;
   readonly description?: string | null;
   readonly query?: ReportingQueryDescription;
 }
 
-/** Overrides accepted by `POST definitions/:reportDefinitionId/run`. */
 export interface RunReportDefinitionOverrides {
   readonly limit?: number;
   readonly offset?: number;
 }
 
-/**
- * One row of `GET /crm/reporting/runs`.
- *
- * `compiledSql` carries placeholders and no literals, which is what makes this
- * readable by somebody holding only `crm:reporting:view` — the audit read is
- * separable from a view of the data precisely because the statement is
- * content-free.
- */
 export interface ReportRunLogEntry {
   readonly reportRunId: string;
   readonly reportDefinitionId: string | null;
@@ -222,16 +179,13 @@ export interface ReportRunLogEntry {
   readonly rowCount: number | null;
   readonly durationMs: number | null;
   readonly ranByUserId: string | null;
-  /** Projected from `users.name`, so the log names a person and not an id. */
   readonly ranByName: string | null;
   readonly createdAt: string;
 }
 
-/** `POST /crm/reporting/explain` — what would run, without running it. */
 export interface ReportingExplainResult {
   readonly source: string;
   readonly sql: string;
-  /** The count, never the values. The server refuses to echo the parameters. */
   readonly parameterCount: number;
   readonly columns: readonly ReportingCompiledColumn[];
 }
@@ -239,17 +193,8 @@ export interface ReportingExplainResult {
 export const REPORT_CADENCES = ["daily", "weekly", "monthly"] as const;
 export type ReportCadence = (typeof REPORT_CADENCES)[number];
 
-/** 29-31 are refused, never clamped — see `report-schedule-cadence.ts`. */
 export const MAX_REPORT_DAY_OF_MONTH = 28;
 
-/**
- * One row of `GET /crm/reporting/schedules`.
- *
- * `runAsUserId` is not decoration. A schedule has no requester when it fires,
- * so it names one, and the unattended run carries that person's permissions and
- * DataScope — which is why a schedule stops delivering when its owner's access
- * to the source is withdrawn, and why `lastError` exists to say so.
- */
 export interface ReportSchedule {
   readonly reportScheduleId: string;
   readonly organizationId: string;
@@ -288,13 +233,6 @@ export interface UpdateReportScheduleInput {
   readonly recipients?: readonly string[];
 }
 
-/**
- * `POST /crm/reporting/nl-propose` — a plain-language question, proposed as
- * a query description, never run. Mirrors the backend's discriminated union
- * exactly: `accepted` carries the same shape `ReportingExplainResult` does
- * (a compile preview, never rows) alongside the description that produced
- * it, so the builder form can be pre-filled from one response.
- */
 export type ReportNlProposal =
   | {
       readonly accepted: true;

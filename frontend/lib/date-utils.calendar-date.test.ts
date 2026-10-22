@@ -6,14 +6,6 @@ const SHORT_PARTS: Intl.DateTimeFormatOptions = {
   year: "numeric",
 };
 
-/**
- * The reader's zone as an EXPLICIT parameter rather than the runner's ambient one:
- * `process.env.TZ` cannot be changed inside a jest worker (jest replaces
- * `process.env` with a copy, so Node never gets the reassignment hook that resets
- * the cached zone — measured under both the jsdom and node environments). So the
- * defect is modelled here instead, and the ambient half is supplied by the non-UTC
- * CI leg.
- */
 function dayInZone(zone: string, value: string): string {
   return new Intl.DateTimeFormat("en-IN", { ...SHORT_PARTS, timeZone: zone }).format(
     new Date(value),

@@ -12,11 +12,6 @@ import { useSeen } from "@/features/landing/relay/hooks/use-seen";
 
 type InviewProps = ComponentProps<typeof Inview>;
 
-/**
- * The engine's `Inview`, held back until the element is properly on screen
- * (`useSeen`). Same props; `trigger`, when given, is what has to be seen.
- * Lets the engine stay untouched while every reveal starts where the reader is.
- */
 export const InviewSeen = forwardRef<HTMLElement, InviewProps>(
   ({ enabled = true, trigger, ...props }, ref) => {
     const local = useRef<HTMLElement>(null);

@@ -4,18 +4,6 @@ import type { CreateCommissionPlanInput } from "@/hooks/api/crm/commission";
 import type { CommissionRuleSet } from "@/hooks/api/crm/commission-schema";
 import { BPS_SCALE } from "./commission-format";
 
-/**
- * A plan version's rules, as a person types them.
- *
- * People think in percentages, multipliers and amounts of money; the backend
- * stores basis points and minor units. The conversion happens once, in
- * `toRuleSet`, and is rounded to integers there — never a float on the wire.
- * A tier's lower bound is an attainment percentage when the version has a
- * quota and an amount of money when it does not, exactly as the evaluator
- * reads it. The invariants the backend rejects (first tier at 0, strictly
- * ascending, one accelerator per threshold, no threshold without a quota) are
- * checked here too so the error lands on the field.
- */
 
 const decimal = (message: string) =>
   z.string().trim().refine((value) => value !== "" && Number.isFinite(Number(value)) && Number(value) >= 0, message);
@@ -113,11 +101,6 @@ export function fromRuleSet(rules: CommissionRuleSet, currency: string): RuleSet
   };
 }
 
-/**
- * One form for "new plan" and "new/edit version": a version is a plan's dated
- * rules, and a plan is born with its first version. `kind` decides whether the
- * plan's own identity fields are asked for and validated.
- */
 export const commissionPlanFormSchema = z
   .object({
     kind: z.enum(["plan", "version"]),

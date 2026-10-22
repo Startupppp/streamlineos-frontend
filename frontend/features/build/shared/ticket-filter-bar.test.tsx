@@ -211,7 +211,6 @@ describe("ticket filter bar", () => {
     expect(actionsRow).toHaveClass("flex-wrap", "lg:contents");
     expect(actionsRow?.className).not.toContain("overflow-x-auto");
     expect(actionsRow?.className).not.toContain("flex-nowrap");
-    // B-029: the filter group inside the row wraps too, not just the row.
     const filterGroup = container.querySelector("[class*=order-3]");
     expect(filterGroup).toHaveClass("flex-wrap", "min-w-0");
     expect(filterGroup).not.toHaveClass("shrink-0");

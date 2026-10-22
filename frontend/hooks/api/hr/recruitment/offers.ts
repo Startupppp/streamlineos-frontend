@@ -43,10 +43,6 @@ const rejectOfferApprovalC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/offers-schema").then((m) => m.rejectOfferApprovalContract),
 );
 
-/**
- * Summed and divided into months by the backend, never here — the money
- * arithmetic has one implementation and it is not in a browser.
- */
 export interface CandidateOfferCtcPreview {
   lines: {
     key: string;
@@ -75,17 +71,12 @@ export interface CandidateOffer {
   offerStatus: string;
   offeredSalary: string | null;
   offeredDesignation: string | null;
-  /**
-   * Null per component means nobody entered it; "0.00" means the offer states
-   * there is none of it. The two must not render the same.
-   */
   ctcFixed: string | null;
   ctcVariable: string | null;
   ctcJoiningBonus: string | null;
   ctcEquityValue: string | null;
   ctcEmployerPf: string | null;
   ctcGratuity: string | null;
-  /** Present on the list route, which computes it; absent on a write's response. */
   ctcPreview?: CandidateOfferCtcPreview;
   joiningDate: string | null;
   offerLetterUrl: string | null;
@@ -245,12 +236,6 @@ export function useCreateCandidateOffer(candidateId: number) {
       jobPostingId?: number;
       offeredSalary?: number;
       offeredDesignation?: string;
-      /**
-       * Omit a component nobody entered; send 0 only to state that the offer
-       * carries none of it. The backend keeps the two apart all the way to the
-       * candidate's screen, and it refuses a breakdown that does not add up to
-       * `offeredSalary` in the same payload.
-       */
       ctcFixed?: number;
       ctcVariable?: number;
       ctcJoiningBonus?: number;

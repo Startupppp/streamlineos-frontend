@@ -5,15 +5,6 @@ interface AiDraftTextProps {
   className?: string;
 }
 
-/**
- * Emphasis markers a model puts around a section label — `**Key Points:**`.
- *
- * Rendered rather than printed, because every model this app talks to writes its
- * section labels this way and this component is the display for all of them. The
- * alternative was `MarkdownContent` (react-markdown, already in the repo): correct,
- * but it would pull a markdown pipeline into every route that has an AI control, and
- * an AI draft is a handful of lines of emphasis and bullets, not a document.
- */
 const EMPHASIS_PATTERN = /(\*\*[\s\S]+?\*\*|\*[\s\S]+?\*)/g;
 
 function draftLines(text: string): string[] {
@@ -27,14 +18,6 @@ function isBulletLine(line: string): boolean {
   return /^[-•](\s+|$)/.test(line) || /^[-•][A-Za-z]/.test(line);
 }
 
-/**
- * A `*` opens a bullet only when it is not the first of a `**` pair.
- *
- * `stripBullet` used to run over every line of a list, and its `^[-*•]\s*` took the
- * first marker off `**Key Points Discussed:**` — which is how a section label reached
- * the screen as the broken `*Key Points Discussed:**` (CHAT-S05). A bullet is now
- * recognised before anything is removed, and `**` is never a bullet.
- */
 function isStarBullet(line: string): boolean {
   if (!line.startsWith("*") || line.startsWith("**")) return false;
   return /^\*(\s+|[A-Za-z])/.test(line);
@@ -79,7 +62,6 @@ export function AiDraftText({ text, className }: AiDraftTextProps) {
             key={`${lineIndex}:${line}`}
             className={cn(
               "pl-0.5",
-              // A section label is not one of the items under it.
               !isBulletLine(line) && !isStarBullet(line) && "list-none -ml-4 mt-3 first:mt-0",
             )}
           >

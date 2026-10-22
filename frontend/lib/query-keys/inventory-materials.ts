@@ -1,18 +1,5 @@
 import { queryKeyBase as base, trimKey as k } from "./base";
 
-/**
- * B2/B1 — the operations board and construction projects.
- *
- * Its own namespace rather than another entry on `inventoryQueryKeys`, for the
- * reason `inventory-ops-metrics.ts` gives: the registry merges these objects
- * with a **shallow** spread, so a second file declaring an `inventory` key
- * replaces the first wholesale instead of merging with it.
- *
- * Every list has a params-less prefix beside it. `projects()` with no argument
- * would yield a key ending in `undefined`, which TanStack compares against a
- * stored params object and never matches — making every no-argument invalidate
- * a silent no-op, which reads as "the list did not refresh after I saved".
- */
 export const inventoryMaterialsQueryKeys = {
   inventoryOpsBoard: {
     all: [...base, "inventoryOpsBoard"] as const,

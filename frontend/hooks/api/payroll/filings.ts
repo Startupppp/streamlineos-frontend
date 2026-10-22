@@ -83,10 +83,8 @@ export const FILING_EXPORT_TERMINAL: FilingExportJobStatus[] = [
   "DEAD_LETTER",
 ];
 
-/** Durable handle for an asynchronously prepared statutory export. */
 export type FilingExportJob = z.infer<typeof filingExportJobContract>;
 
-/** Backend honesty contract — filings are export-only until a provider is connected. */
 export type FilingCapability = z.infer<
   typeof filingCapabilitiesResponseContract
 >;
@@ -119,10 +117,6 @@ export function useFilingCapabilities() {
   });
 }
 
-/**
- * The CSV spans every run employee, so the backend prepares it on the payroll
- * jobs worker. This returns a job handle; poll it with `useFilingExportJob`.
- */
 export function usePrepareFilingExport() {
   return useAuthorizedMutation("payroll:tax:manage", {
     mutationKey: ["payroll", "filings", "export"],

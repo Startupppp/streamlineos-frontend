@@ -26,8 +26,6 @@ export function BiometricDevicesList({ canManage, onEdit }: Props) {
     void refetch();
   }, [refetch]);
 
-  // hr:attendance:manage gates this read and the route has no server guard: a denied
-  // caller read "No biometric devices" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:manage", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {

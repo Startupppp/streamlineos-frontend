@@ -16,7 +16,6 @@ export interface PublicPlanPrice {
 
 export interface PublicPricing {
   readonly currency: string;
-  /** False when we do not price in the currency asked for. The page must say so. */
   readonly isRequestedCurrency: boolean;
   readonly annualDiscountPct: number;
   readonly trialDays: number;
@@ -25,9 +24,7 @@ export interface PublicPricing {
 
 export interface ResidencyOption {
   readonly region: string;
-  /** Human-readable placement, e.g. "European Union (Ireland)". */
   readonly description: string;
-  /** Countries that land here, which is what a reader actually scans for. */
   readonly examples?: readonly string[];
 }
 
@@ -36,7 +33,6 @@ export interface DataResidency {
   readonly likely?: {
     readonly region: string;
     readonly description: string;
-    /** Whether the country is actually mapped, or fell to the default. */
     readonly isMapped: boolean;
   };
 }
@@ -55,14 +51,10 @@ async function publicGet<T>(
   try {
     const response = await fetch(url.toString(), {
       signal: abort.signal,
-      // Prices change rarely and a marketing page is read constantly; a minute
-      // is short enough that a price change is live before anyone notices and
-      // long enough that the pricing page is not a load test.
       next: { revalidate: 60 },
     });
     if (!response.ok) return null;
     const body: unknown = await response.json();
-    // The platform envelopes public responses as `{ success, data }`.
     const payload =
       body && typeof body === "object" && "data" in body ? body.data : body;
     const parsed = contract.safeParse(payload);
@@ -108,7 +100,6 @@ export function applyLivePrices(
   return tiers.map((tier) => {
     const live = byPlan.get(tier.planId);
     if (!live) {
-      // The API never prices Free; keep it in the same currency as the rest (#3).
       if (tier.monthly !== 0) return tier;
       const zero = formatMinor(0, pricing.currency, locale);
       return { ...tier, priceLabel: { monthly: zero, annual: zero }, price: zero };
@@ -129,13 +120,6 @@ export function applyLivePrices(
   });
 }
 
-/**
- * What to tell somebody when we could not price in their currency.
- *
- * Returning a sentence rather than a boolean because the honest thing to say
- * depends on which currency they got, and a caller handed a boolean has to
- * reconstruct that.
- */
 export function currencyNotice(pricing: PublicPricing | null): string | null {
   if (!pricing || pricing.isRequestedCurrency) return null;
   return `Shown in ${pricing.currency}. We do not price in your local currency yet, and you will be charged in ${pricing.currency}.`;

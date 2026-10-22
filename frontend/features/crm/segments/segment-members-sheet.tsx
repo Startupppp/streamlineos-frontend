@@ -22,22 +22,6 @@ import {
   type SegmentSummary,
 } from "@/types/crm/segments";
 
-/**
- * Who is in a segment, read at the moment the sheet opens.
- *
- * Two numbers, and the difference between them is the whole point. `total` is
- * every matching record, counted by its own statement; the table below is a
- * bounded sample. A screen that showed only the sample would report a hundred
- * for a segment of forty thousand, and a size that saturates is worse than no
- * size — nobody would know which they were looking at.
- *
- * There is no pagination, and that is a consequence rather than an omission. The
- * server's field registry publishes no row identifier for any source, so there
- * is no unique column to order by and therefore no stable cursor; an offset over
- * a non-unique ordering repeats and skips rows between pages the moment anything
- * is written, which on this screen would read as the segment changing under the
- * reader. The exact count is the number that is always right.
- */
 
 interface SegmentMembersSheetProps {
   open: boolean;
@@ -46,7 +30,6 @@ interface SegmentMembersSheetProps {
   sources: readonly SegmentSource[];
 }
 
-/** The alias a projected column carries into every row object (`c0`, `c1`, …). */
 function labelFor(
   column: ReportingCompiledColumn,
   labelOf: (field: string) => string,

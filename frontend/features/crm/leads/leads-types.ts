@@ -1,5 +1,3 @@
-/** The board's columns, in pipeline order. `LeadStatus` is derived from it so
- * the two cannot drift. */
 export const LEAD_STATUSES = [
   "NEW",
   "CONTACTED",

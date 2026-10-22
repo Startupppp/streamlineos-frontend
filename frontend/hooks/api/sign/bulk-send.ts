@@ -20,12 +20,6 @@ export interface BulkSendJobResult {
   job: SignBulkSendJob;
   preview?: unknown;
   dryRun: boolean;
-  /**
-   * True since the backend stopped sending inside the request (SIGN-P0-05).
-   * The response now describes a job that has been accepted, not one that has
-   * finished, so the UI must go and watch it rather than treat this as the
-   * final word.
-   */
   queued?: boolean;
 }
 
@@ -41,35 +35,14 @@ const signBulkJobCancelContract = lazyContract(() =>
   import("@/hooks/api/sign/sign-schema").then((m) => m.signBulkJobCancelContract),
 );
 
-/**
- * The statuses that mean work is still outstanding.
- *
- * Kept beside the polling that reads it: a job left out of this set stops
- * updating on screen and sits at whatever count it had when the page loaded,
- * which looks exactly like a job that stalled.
- */
 export const ACTIVE_BULK_SEND_STATUSES: ReadonlySet<SignBulkSendJob["status"]> = new Set([
   "pending",
   "validating",
   "running",
 ]);
 
-/**
- * 3s. The work is a queue of template instantiations and emails, so progress
- * arrives in seconds, not milliseconds; polling faster would spend requests to
- * re-read the same row.
- */
 const BULK_SEND_POLL_MS = 3_000;
 
-/**
- * How long until the next poll, or `false` to stop.
- *
- * Extracted rather than inlined in the hook so it can be held by a test. The
- * two ways this goes wrong are both silent: polling forever on a page whose
- * jobs all finished (a request every three seconds, indefinitely), or never
- * polling at all, which shows a queued job frozen at its starting count and
- * reads exactly like a stalled worker.
- */
 export function bulkSendPollInterval(
   jobs: Pick<SignBulkSendJob, "status">[] | undefined,
 ): number | false {
@@ -97,21 +70,10 @@ export function useBulkSendJobs() {
     queryKey: growthAndSignQueryKeys.signBulkSend.all,
     queryFn: ({ signal }) => apiClient.get<SignBulkSendJob[]>("/sign/bulk-send/jobs", undefined, signal, signBulkJobListContract),
     staleTime: 15_000,
-    /**
-     * Polls only while something is actually running, and stops on its own
-     * once every job is terminal — a permanent interval would keep asking
-     * forever on a page whose jobs all finished days ago.
-     *
-     * This is not decoration. Bulk send used to complete inside the POST, so
-     * the response was the whole story; now the request returns with the job
-     * queued and a worker finishes it, and without this the list shows
-     * "pending 0/N" until someone reloads the page.
-     */
     refetchInterval: (query) => bulkSendPollInterval(query.state.data),
   });
 }
 
-/** One job with its first page of rows, polled on the same terms as the list. */
 export function useBulkSendJob(
   jobId: number | undefined,
   options?: Omit<UseQueryOptions<SignBulkSendJobDetail, Error>, "queryKey" | "queryFn">,

@@ -6,7 +6,6 @@ describe("contentGaps factory — no-arg partial match", () => {
     const qc = new QueryClient();
     qc.setQueryData(qk.kb.contentGaps({ type: "outdated" }), { items: [] });
 
-    // Manually construct the pre-fix key: [..., "content-gaps", undefined]
     const oldNoArgKey = [...qk.kb.contentGaps(), undefined];
     const matches = qc.getQueriesData({ queryKey: oldNoArgKey });
     expect(matches).toHaveLength(0);

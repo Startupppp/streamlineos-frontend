@@ -45,16 +45,7 @@ function exportButtonLabel(
 }
 
 export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
-  // `<orgId>::<userId>`, so the recovered job belongs to this person in this
-  // organisation and to nobody else.
   const scope = useOrgStorageScope();
-  /**
-   * Ticket 04. Recovery is a read of the stored id and nothing else — it never
-   * POSTs, so returning to the page cannot create a second export. The id is the
-   * only state this button has, and it lives in the store rather than in
-   * `useState`, so a reload, a return to the page and an organisation switch all
-   * resolve to whatever that scope holds.
-   */
   const exportJobId = useStoredExportJobId(scope);
   const lastNotice = useRef<string | null>(null);
   const createExport = useCreateHrEmployeeExportJob();
@@ -67,9 +58,6 @@ export function EmployeeExportAction({ filters }: EmployeeExportActionProps) {
 
   useEffect(() => {
     if (!exportJob.error) return;
-    // A stored id the server will not serve any more must not nag on every
-    // visit. Only "gone" counts: dropping the id on a transient 5xx would
-    // abandon an export that is still running.
     const status = isApiError(exportJob.error) ? exportJob.error.status : undefined;
     if (status === 404 || status === 410) {
       clearExportJobId(scope);

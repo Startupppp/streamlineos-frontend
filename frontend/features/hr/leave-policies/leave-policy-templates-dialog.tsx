@@ -29,14 +29,6 @@ import {
   type DraftRow,
 } from "./leave-policy-template-row";
 
-/**
- * Ticket 08. The first thing an administrator of a new organisation sees on
- * Leave Policies, and only then: the server decides whether to offer, from
- * whether any policy exists and whether anyone has already refused.
- *
- * Nothing is written until "Import"; "Not now" records the refusal and the
- * prompt never returns for this organisation.
- */
 export function LeavePolicyTemplatesDialog() {
   const canManage = useCan("hr:leaves:manage");
   const { data: offer } = useLeavePolicyTemplateOffer();
@@ -116,8 +108,6 @@ export function LeavePolicyTemplatesDialog() {
           );
         }
       },
-      // The draft stays on screen and keeps every edit, so a failure is a retry
-      // rather than a re-type.
       onError: (error) => toast.error(getErrorMessage(error)),
     });
   }, [importTemplates, rows, selected]);
@@ -130,9 +120,6 @@ export function LeavePolicyTemplatesDialog() {
 
   const handleOpenChange = useCallback(
     (next: boolean) => {
-      // Escape and the overlay mean "not now" in this session only; the refusal
-      // that lasts is the explicit one, so the prompt returns on the next visit
-      // until somebody answers it.
       if (!next) setClosedInSession(true);
     },
     [],

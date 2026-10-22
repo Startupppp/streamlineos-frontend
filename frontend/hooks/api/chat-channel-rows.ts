@@ -175,7 +175,6 @@ export function adjustMembers(
   ];
 }
 
-
 export function removeMembership(queryClient: QueryClient, channelId: number): ChatCacheRollback {
   const fromInbox = removeChannelRow(queryClient, collaborationQueryKeys.chat.myChannels(), channelId);
   const fromArchive = removeChannelRow(queryClient, collaborationQueryKeys.chat.archivedChannels(), channelId);

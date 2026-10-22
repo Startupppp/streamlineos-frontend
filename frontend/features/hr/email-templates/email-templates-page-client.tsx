@@ -225,7 +225,6 @@ export function EmailTemplatesPageClient() {
   }, [generateAi, name, subject, category]);
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {
-    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper title="Email Templates" subtitle="Manage reusable email templates for HR communications">
         <PageState

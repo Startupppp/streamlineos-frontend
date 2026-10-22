@@ -1,10 +1,5 @@
 import { chatSavedMessagesContract } from "@/hooks/api/chat-schema";
 
-/**
- * Found in a local browser pass after CHAT-012: every saved-messages page answered 200 and was
- * rejected, because the contract required `message.replyTo`, which `ChatSavedService.list`
- * never loads. This is the JSON that service emits (`chatSavedListResponseSchema`).
- */
 const WIRE_SAVED = {
   id: 201,
   orgId: "org-1",

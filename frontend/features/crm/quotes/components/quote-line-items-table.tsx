@@ -12,21 +12,6 @@ import {
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import type { QuoteLineItem } from "@/types/crm/quotes";
 
-/**
- * What is on the quote, rendered from the description.
- *
- * The quote's own currency reaches the money columns through the description
- * rather than through a `formatCurrency(amount, currency)` call per cell:
- * `currencyField` names a sibling field and `quoteLineItemRecordFields` puts the
- * quote's currency on every row. A quote written in dollars therefore prices in
- * dollars everywhere it is read, including the tenant's own list, without any
- * screen remembering to pass the currency down.
- *
- * There is no density toggle here — a detail page should not grow a second one —
- * but the reader's stored choice is honoured, so this table is as dense as every
- * other table they look at rather than being the one that is not.
- */
-
 interface QuoteLineItemsTableProps {
   lineItems: QuoteLineItem[];
   currency: string;

@@ -34,14 +34,6 @@ const schema = z.object({
 type Values = z.input<typeof schema>;
 type Output = z.output<typeof schema>;
 
-/**
- * "Add Material" on a site.
- *
- * The store list is ordered so the ones serving this site's own zone come first:
- * a site is nearly always served from a facility in its own zone, and making
- * somebody scan the whole list to find it is the small friction that gets a
- * line raised against the wrong store.
- */
 export function RequirementAddSheet({
   projectId,
   projectZone,

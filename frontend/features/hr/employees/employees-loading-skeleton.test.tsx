@@ -1,7 +1,6 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { EmployeesGridSkeleton } from "./employees-loading-skeleton";
 
-/** UX-16: the directory skeleton never said it was late and offered no way out. */
 describe("EmployeesGridSkeleton", () => {
   afterEach(() => jest.useRealTimers());
 

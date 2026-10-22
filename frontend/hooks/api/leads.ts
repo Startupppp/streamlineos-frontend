@@ -72,12 +72,6 @@ export function useLeadDetail(id: number) {
   });
 }
 
-/**
- * CRM-P4-AUDIT. Fetches every lead on the board with no limit. `GET
- * /leads/board` takes no query parameters in the current API contract (see
- * `contracts/openapi.json`), so a limit cannot be added here without the
- * backend accepting one first -- see the note in `features/crm/leads/leads-kanban.tsx`.
- */
 export function useLeadBoard() {
   const canView = useCan("crm:leads:view");
   return useQuery({
@@ -341,11 +335,6 @@ export function useLeadScoreExplanation(leadId: number, enabled: boolean) {
   });
 }
 
-/**
- * A lead's review outcome. Both answer with the full lead detail, so the detail
- * cache takes the response; the list and board hold a status the client could
- * guess but not a server-computed row, so they are only marked stale.
- */
 function useLeadReviewMutation(kind: "verify" | "reject") {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:leads:update", {
@@ -373,7 +362,6 @@ export function useRejectLead() {
   return useLeadReviewMutation("reject");
 }
 
-/** Replaces the lead's whole `customData`; the caller merges before sending. */
 export function useUpdateLeadCustomData() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:leads:update", {

@@ -23,19 +23,6 @@ import {
   textOrOmit,
 } from "../shared/record-payload";
 
-/**
- * Create and edit a product, rendered from the description.
- *
- * No schema sits beside this file and no field is written out twice. What the
- * form validates, what the catalogue table shows and what the detail view lists
- * are one description, so a field added to the product cannot appear in one and
- * not the others.
- *
- * The payload is assembled key by key rather than spread wholesale, because the
- * API wants numbers and a form hands back strings — and because a key the form
- * did not render must stay absent. `record-payload` holds that rule.
- */
-
 interface ProductSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

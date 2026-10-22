@@ -21,7 +21,6 @@ export function DocumentLibrarySkeleton() {
   );
 }
 
-/** Non-loading, non-ready states (denied / 402 / error) inside the page shell (FE-40/41). */
 export function DocumentLibraryState({ children }: { children: React.ReactNode }) {
   return (
     <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE}>

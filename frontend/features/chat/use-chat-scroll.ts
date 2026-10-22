@@ -50,7 +50,6 @@ export function useChatScroll({
     setShowScrollBtn(!atBottom);
   }, []);
 
-  // Open channel at the latest message.
   useEffect(() => {
     if (!followLatest) return;
     isAtBottomRef.current = true;
@@ -61,7 +60,6 @@ export function useChatScroll({
     return () => cancelAnimationFrame(raf);
   }, [channelId, isLoading, followLatest, scrollToBottom]);
 
-  // Stick to bottom for new messages only when already near bottom.
   useEffect(() => {
     if (isLoading || !followLatest) return;
     if (!isAtBottomRef.current) return;

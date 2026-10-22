@@ -28,14 +28,6 @@ interface InspectionPlanEditDialogProps {
   plan: InspectionPlan;
 }
 
-/**
- * The four things about a live plan that may change, and the switch that takes
- * it out of service without destroying the evidence it produced.
- *
- * Pausing rather than retiring is the ordinary correction: a paused plan stops
- * quarantining arrivals while the inspections it already governed keep naming a
- * plan that still exists.
- */
 export function InspectionPlanEditDialog({
   open,
   onOpenChange,

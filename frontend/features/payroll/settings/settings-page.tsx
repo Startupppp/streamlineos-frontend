@@ -16,15 +16,6 @@ import { EntitiesSection } from "./entities-section";
 
 export function SettingsPageContent() {
   const { data, isLoading, isError, error, refetch } = usePayrollPolicyCurrent();
-  /**
-   * The page gate is `payroll:settings:manage` but the policy read is gated on
-   * `payroll:policies:view`, so a role holding only the first disables the read
-   * — leaving `data` undefined and `isLoading` false, which is exactly the
-   * shape of "no policy". Saying "Payroll not set up yet" over a configured
-   * payroll is the state-integrity lie BUG-001 was about, reachable through a
-   * withdrawn grant rather than a missing row. The two stock templates grant
-   * both keys, so this is latent, not live.
-   */
   const policyGate = usePermissionGate("payroll:policies:view");
   const { refetch: refetchAccess } = useAccess();
 

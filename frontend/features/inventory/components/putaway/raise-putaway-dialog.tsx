@@ -26,15 +26,6 @@ interface RaisePutawayDialogProps {
   onCreated: (taskId: number) => void;
 }
 
-/**
- * Raise the walk for a delivery that has already landed.
- *
- * The receipt is the only input. What is being put away, how much of it, and
- * from where all come from what the receipt actually posted to the ledger — a
- * dialog that let somebody type a quantity would be raising a putaway for stock
- * that never arrived. Only POSTED receipts are offered, because an unposted one
- * has moved nothing yet.
- */
 export function RaisePutawayDialog({ open, onOpenChange, onCreated }: RaisePutawayDialogProps) {
   const [grnId, setGrnId] = useState("");
   const receipts = useGoodsReceipts({ status: "POSTED", limit: 50 });

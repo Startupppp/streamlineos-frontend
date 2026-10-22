@@ -1,14 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * An outreach sequence, its steps, and who is enrolled in it.
- *
- * Three descriptions, because they are three record types with three endpoints.
- * The sheet this replaces drew all three by hand — a step list with its own
- * inline add form held in `useState`, and an enrolment list with its own badge
- * variant map — and none of the three could be rearranged by a tenant because
- * none of them existed as data.
- */
 export const SEQUENCE_LAYOUT: RecordLayout = {
   key: "crm:settings:sequence",
   singular: "Sequence",
@@ -63,13 +54,6 @@ export const SEQUENCE_LAYOUT: RecordLayout = {
   },
 };
 
-/**
- * One step of a sequence.
- *
- * `sortOrder` is read-only: the server appends a step at the end and there is no
- * endpoint that moves one, so a control for it would offer an order the API
- * cannot honour.
- */
 export const SEQUENCE_STEP_LAYOUT: RecordLayout = {
   key: "crm:settings:sequence-step",
   singular: "Step",
@@ -112,12 +96,6 @@ export const SEQUENCE_STEP_LAYOUT: RecordLayout = {
   },
 };
 
-/**
- * A record currently moving through a sequence.
- *
- * Read-only throughout: the only thing a person does to an enrolment is stop it,
- * and stopping is an action on a row rather than a field on a form.
- */
 export const SEQUENCE_ENROLLMENT_LAYOUT: RecordLayout = {
   key: "crm:settings:sequence-enrollment",
   singular: "Enrolment",

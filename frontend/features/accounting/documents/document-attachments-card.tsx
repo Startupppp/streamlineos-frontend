@@ -32,7 +32,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 const PAGE_SIZE = 10;
 const ACCEPT = ATTACHMENT_MIME_TYPES.join(",");
 
-/** Why a picked file cannot be attached, or null when it can. Mirrors the backend DTO. */
 function attachmentRejection(file: File): string | null {
   if (file.size === 0) return `${file.name} is empty`;
   if (!ATTACHMENT_MIME_TYPES.includes(file.type))
@@ -108,7 +107,6 @@ interface DocumentAttachmentsCardProps {
   documentId: string;
 }
 
-/** Receipts, contracts and other evidence filed against an accounting document. */
 export function DocumentAttachmentsCard({ documentType, documentId }: DocumentAttachmentsCardProps) {
   const readState = useCanState(ATTACHMENTS_READ);
   const canManage = useCan(ATTACHMENTS_MANAGE);

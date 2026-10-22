@@ -18,26 +18,10 @@ jest.mock("@/hooks/api/access", () => ({
   useModuleEnabled: jest.fn(() => true),
 }));
 
-/** The list mounts EntityActionsProvider, which observes a query of its own. */
 function renderList(element: ReactElement) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(<QueryClientProvider client={client}>{element}</QueryClientProvider>);
 }
-
-/**
- * A failed history load used to render as a normal, empty channel.
- *
- * `GET /chat/channels/:id/messages` can 500 (schema drift, a timeline query
- * timing out) or 403. `useChatMessages` then settles with `isLoading` false and
- * `data` undefined, so `messages` is `[]` — and the list had only an `isLoading`
- * arm, so it fell straight through to the `messages.length > 0 ? justify-end :
- * justify-center` empty layout. The user saw an empty conversation, had no
- * indication anything had failed and no way to retry.
- *
- * Four sibling chat surfaces already branch on `isError` with a refetch —
- * channel-sidebar, channels-discovery-page, saved-messages-panel and
- * shared-files-panel — so the timeline was the one surface that swallowed it.
- */
 
 function props(over: Partial<Parameters<typeof MessageList>[0]> = {}) {
   const noop = () => undefined;

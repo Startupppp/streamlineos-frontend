@@ -5,18 +5,6 @@ import { calendarProjectionFields } from "./calendar-projection-fixtures";
 import { useEventSeriesScope } from "./use-event-series-scope";
 import type { CalendarEventPayload } from "./event-create-validators";
 
-/**
- * Series-versus-instance edits (PRD-C128), on the branch that decides which of the two a
- * confirmed edit becomes.
- *
- * `useEventSeriesScope` is the only place the choice is made, and nothing covered it: it
- * routes "this occurrence" to `PATCH /calendar/events/:id/occurrences/:occurrenceStart`
- * and "the whole series" to `PUT /calendar/events/:id`, and it has to key the occurrence
- * on the NOMINAL instant carried in the projected id — never on `event.start`, which is
- * the MOVED time once an occurrence has been rescheduled. Keying on `event.start` writes a
- * second exception row for the same occurrence, so the original stays on the calendar and
- * the move appears to have been ignored.
- */
 interface RecordedCall {
   key: readonly unknown[] | undefined;
   vars: unknown;

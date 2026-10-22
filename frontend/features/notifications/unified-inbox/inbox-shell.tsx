@@ -285,7 +285,6 @@ export function InboxShell() {
             {clientFilteredItems.length === 0 ? (
               <EmptyState
                 className="flex-1 min-h-0"
-                // Fill the md illustration box; a 32px icon left a blank gap above the title.
                 illustration={<EmptyInboxIllustration />}
                 title="All caught up"
                 description={emptyStateDescription}

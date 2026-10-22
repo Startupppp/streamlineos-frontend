@@ -9,7 +9,6 @@ import {
   type AiUiMessageStreamEvent,
 } from "@/hooks/api/ai-ui-message-stream";
 
-
 const CHAT_STREAM_SERVER_DEADLINE_MS = 120_000;
 export const AI_STREAM_TIMEOUT_MS = CHAT_STREAM_SERVER_DEADLINE_MS + 5_000;
 
@@ -41,12 +40,6 @@ export function isAiStreamAbort(error: unknown): boolean {
   );
 }
 
-/**
- * The signal belongs in `authedFetch`'s fourth argument, never in `init`. `authedFetch`
- * builds its own combined signal and spreads `init` underneath it, so an `init.signal`
- * is overwritten and every cancel becomes a silent no-op — the defect this seam already
- * shipped once.
- */
 export async function streamAiText({
   path,
   body,

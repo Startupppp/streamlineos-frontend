@@ -98,15 +98,6 @@ export function DataTable<T>({
   const clientPag = tagged === undefined ? pagination : null;
   const isServerPagination = serverPag !== null || cursorPag !== null;
   const clientPageSize = clientPag?.pageSize ?? 50;
-  /**
-   * Two sorts, never both on one table. With `sortState` the server orders the
-   * whole set, and only the keys its endpoint accepts (`sortState.fields`) earn
-   * a header control — a header can never ask for an order the API would drop.
-   * Without it, a column's own `sortable` reorders the rows, but only while the
-   * table holds every row it will show: a server- or cursor-paginated table
-   * holds one page, and sorting that page would present a slice as the sorted
-   * set.
-   */
   const clientSortEnabled = sortState === undefined && !isServerPagination;
 
   const isRowSelectable = selection?.isRowSelectable;
@@ -195,10 +186,6 @@ export function DataTable<T>({
       defs.push({
         id: col.key,
         header: col.header,
-        // `getCanSort()` ends in `!!column.accessorFn`, so a display column can
-        // never be sortable however its flags read. A server-sorted column's
-        // value is never used: the rows arrive in the server's order and are
-        // rendered in it.
         accessorFn: serverSortable
           ? () => null
           : clientSortable
@@ -240,8 +227,6 @@ export function DataTable<T>({
             : { pageIndex: clientPage, pageSize: clientPageSize },
     },
     manualSorting: !clientSortEnabled,
-    // Table-core drops the sort on the third click by default, which leaves no
-    // field to send and makes the header look broken.
     enableSortingRemoval: false,
     manualPagination: isServerPagination,
     pageCount:

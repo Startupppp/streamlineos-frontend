@@ -1,13 +1,5 @@
 import type { PurchaseOrderStatus } from "@/types/inventory";
 
-/**
- * C4. A supplier rate never travels without the sample it rests on.
- *
- * `percent` is a decimal string the backend already rounded, and null when the
- * denominator was zero — "nothing to measure" and "zero percent" are opposite
- * claims about a vendor, and rendering both as 0.0% says the worst supplier on
- * the list is flawless.
- */
 export interface ScorecardRate {
   percent: string | null;
   numerator: string;
@@ -42,7 +34,6 @@ export interface VendorScorecard {
   notes: string[];
 }
 
-/** One purchase order behind the rates, with the receipts that settled it. */
 export interface VendorDelivery {
   poId: number;
   poNumber: string;

@@ -23,7 +23,6 @@ const TYPE_BADGE: Record<string, string> = {
   RETURN_OUT: "bg-muted text-muted-foreground border-border",
 };
 
-/** The key `GET /inventory/stock/transactions` carries. */
 const ISSUES_READ_KEY = "inventory:stock:read";
 
 function formatDate(value: string | null | undefined): string {
@@ -141,12 +140,6 @@ export default function IssuesPage() {
     void query.refetch();
   }
 
-  /*
-   * G8 — the ledger read is gated inside its hook, so without this branch a
-   * reader who lacks the key was told there are no outbound issues rather than
-   * that they may not see them. Declared below the other hooks so hook order
-   * never depends on a permission.
-   */
   const canView = useCan(ISSUES_READ_KEY);
 
   const query = useStockTransactions({

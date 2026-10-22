@@ -81,12 +81,6 @@ export function ReportResultsPanel({
       />
     );
 
-  /**
-   * The server reports `truncated` rather than a total — it never counts the
-   * rows behind the page, because counting them is a second scan of the same
-   * table. So the total offered here is "at least this many", which is what
-   * makes a next page reachable without claiming a number nobody measured.
-   */
   const seen = offset + rows.length;
   const total = result?.truncated || rows.length === 0 ? seen + 1 : seen;
 

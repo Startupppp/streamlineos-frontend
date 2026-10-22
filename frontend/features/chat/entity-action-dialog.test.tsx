@@ -11,9 +11,6 @@ jest.mock("@/hooks/api/chat-entities", () => ({
   useEntityActionOptions: () => optionsResult,
 }));
 
-// MemberPicker's own directory sources. With an explicit candidate list they are
-// all disabled, but the hooks still run, and they need a session and a query
-// client this test has no business providing.
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
@@ -104,8 +101,6 @@ describe("the action dialog renders from the declaration", () => {
       inputs: [{ name: "note", kind: "text", required: false }],
     });
 
-    // The dialog renders through a portal, so the query has to search the
-    // document rather than the render container.
     expect(document.querySelector("#entity-action-note")).toBeInTheDocument();
   });
 

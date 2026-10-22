@@ -148,29 +148,18 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "crm:leads:view",
       },
       {
-        // Issues, tasks and complaints — three record types on one surface, so
-        // one destination rather than three. Gated on its own key: seeing how
-        // many complaints are open is a distinct authority from working the
-        // pipeline, and a customer complaint is not a lead.
         label: "Issues & complaints",
         icon: AlertTriangle,
         href: "/crm/issues",
         requiredPermission: "crm:issues:view",
       },
       {
-        // The oversight surface for everything the system does without asking.
-        // Gated on its own key rather than a CRM-wide one: reading what was
-        // decided is a distinct authority from working the pipeline.
         label: "What the system did",
         icon: Bot,
         href: "/crm/autonomy",
         requiredPermission: "crm:autonomy:view",
         children: [
           {
-            // The nurture engine's authoring surface. Same key as its parent
-            // because the controller declares the same one on every read —
-            // enrolling somebody schedules autonomous messages, which is what
-            // `crm:autonomy:manage` already governs, so no key of its own.
             label: "Nurture sequences",
             icon: RefreshCw,
             href: "/crm/autonomy/nurture",
@@ -179,8 +168,6 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        // Gated on reading parties, not on importing: export is ungated by
-        // design, so anyone who may read the data can take it with them.
         label: "Import & export",
         icon: ArrowLeftRight,
         href: "/crm/import",
@@ -205,16 +192,6 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             requiredPermission: "crm:reports:view",
           },
           {
-            /*
-              `crm:reporting:*` and `crm:reports:*` are two different features
-              that read alike: the parent is the fixed dashboard, this is the
-              query engine, and the endpoints behind it declare
-              `crm:reporting:run`. Listed in its own right so somebody who may
-              run a query but not read the dashboard can still reach it — an
-              inaccessible parent may promote an accessible child, and gating
-              this on the parent's key would hide the builder from the people
-              the backend grants it to.
-            */
             label: "Query builder",
             icon: BarChart2,
             href: "/crm/reports/builder",
@@ -223,9 +200,6 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        // Every CRM member holds the earnings key for their own rows, so this is
-        // a rep's destination as much as a manager's — the server narrows to the
-        // caller's scope rather than the nav hiding it.
         label: "Commissions",
         icon: Coins,
         href: "/crm/commissions",
@@ -244,8 +218,6 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
         requiredPermission: "crm:customer-health:view",
       },
       {
-        // The team digest, so `view-team` and not `:view`. A rep reads their own
-        // calls' analyses on the calls themselves.
         label: "Call intelligence",
         icon: PhoneCall,
         href: "/crm/intelligence",
@@ -303,11 +275,6 @@ export const CRM_NAV_GROUPS: NavGroup[] = [
             label: "Record Layouts",
             icon: Rows3,
             href: "/crm/settings/layouts",
-            // Matches the page's own `requirePermission("crm:settings:view")`.
-            // It read `settings:manage` -- a platform-wide key on a CRM page,
-            // which every sibling here avoids -- so the nav hid the entry from
-            // people the page would have let in, and showed it to people it
-            // would not.
             requiredPermission: "crm:settings:view",
           },
           {

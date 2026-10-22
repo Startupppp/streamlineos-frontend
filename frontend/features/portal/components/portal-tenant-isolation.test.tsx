@@ -28,11 +28,6 @@ beforeEach(() => {
   window.localStorage.clear();
 });
 
-/**
- * Two portal customers, one browser. The second invitation must not be able to
- * read the first's cached rows — the portal key factory carries no subject, so
- * the only thing separating them is the scoped hash plus the remount.
- */
 describe("the portal cache is separated by bearer subject", () => {
   it("does not serve customer A's cached projects to customer B", async () => {
     setPortalToken("token-customer-a");
@@ -65,9 +60,6 @@ describe("the portal cache is separated by bearer subject", () => {
       expect(seen.at(-1)).toEqual([{ id: 2, name: "Customer B project" }]),
     );
 
-    // Everything the second customer's session ever rendered. Not one frame of
-    // it may be the first customer's rows — an undefined loading frame is the
-    // correct thing to see while their own request is in flight.
     const afterSwitch = seen.slice(switchedAt);
     expect(afterSwitch.length).toBeGreaterThan(0);
     for (const observed of afterSwitch)
@@ -89,9 +81,6 @@ describe("the portal cache is separated by bearer subject", () => {
   });
 });
 
-/**
- * The portal answered 403s and 404s with a retry the staff client refuses.
- */
 describe("the portal retry policy treats a 4xx as a verdict", () => {
   it("does not retry a 403", async () => {
     setPortalToken("token-customer-a");

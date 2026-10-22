@@ -98,7 +98,6 @@ describe("Manager coverage — HRM-15 states", () => {
 
     can.mockImplementation((key: string) => key === "hr:reporting-lines:review");
     render(<ManagerCoveragePage />);
-    // Both the table row and the small-screen card link to the drawer.
     for (const link of screen.getAllByRole("link", { name: "Review" }))
       expect(link).toHaveAttribute("href", "/hr/employees/reporting-requests?request=r-1");
   });

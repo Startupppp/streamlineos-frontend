@@ -9,7 +9,6 @@ export interface LeaveBalance {
 export interface LeaveType {
   id: number;
   name: string;
-  /** V-049. The configured policy's name. Optional until the backend half lands. */
   policyName?: string | null;
   daysPerYear?: number | null;
 }
@@ -30,14 +29,6 @@ export interface LeaveRequest {
   createdAt?: string | Date | null;
   leaveType: { name: string } | null;
   approver?: { name: string | null } | null;
-  /**
-   * HRMS-E2E-012. Matches `leavesTeamItemSchema` field for field (FE-28).
-   * It used to declare a non-optional `email` the API has never sent, and no
-   * `name` — so the row's fallback read a field that is always undefined while
-   * ignoring the one most people have. `email` stays available for surfaces
-   * whose own endpoint does return it, but it is optional, because this one
-   * does not.
-   */
   user?: {
     id?: string | null;
     name?: string | null;

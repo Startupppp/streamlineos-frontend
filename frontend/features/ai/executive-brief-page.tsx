@@ -50,7 +50,6 @@ export default function ExecutiveBriefPage() {
       }
       if (result.status === "cancelled") setCancelled(true);
     } catch {
-      // The mutation retains the error for the shared AI failure view.
     }
   }
 

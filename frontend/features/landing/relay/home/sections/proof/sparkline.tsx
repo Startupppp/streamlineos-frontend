@@ -7,7 +7,6 @@ import { pick, useFrame } from "@/features/landing/relay/hooks/use-frame";
 
 import { loopFade, phase, useProofLoop } from "./use-proof-loop";
 
-/** The 15 sample heights; only the x step changes between the frames. */
 const SAMPLES = [
   52, 46, 48, 40, 42, 34, 28, 30, 22, 24, 16, 18, 10, 12, 4,
 ] as const;
@@ -18,14 +17,10 @@ const line = (end: number) =>
   ).join("");
 
 interface Geometry {
-  /** Box width = viewBox width. */
   box: number;
-  /** The line runs from 0 to `end`. */
   end: number;
-  /** Centre of the "now" dot and x of the "now" line. */
   dot: number;
   path: string;
-  /** End of the stroke gradient's vector, userSpaceOnUse. */
   gradient: readonly [number, number];
 }
 
@@ -36,16 +31,11 @@ const geometry = (
   gradient: readonly [number, number],
 ): Geometry => ({ box, end, dot, path: line(end), gradient });
 
-/** 3888:6962 — 384 box, the line stops 6 short so the "now" dot fits. */
 const G1440 = geometry(384, 378, 378, [22.961, 94.2887]);
-/** 3888:11370 — 278 box, the line runs to the edge, the dot centres 1 in and
-    overhangs the box by 2 (so does 768 3874:2 and 390 3893:4279). */
 const G1024 = geometry(278, 278, 277, [29.6896, 89.8616]);
 const G768 = geometry(218, 218, 217, [35.4876, 84.4794]);
-/** 390 — the designer's box is 310 in a 308 card column. */
 const G390 = geometry(310, 310, 309, [27.1935, 91.6954]);
 
-/** Cycle clock, ms: line draws, area fades in under it, the dot lands and pulses. */
 const DRAW = 720;
 const AREA_AT = DRAW / 3;
 const AREA = 480;
@@ -53,12 +43,6 @@ const DOT = 96;
 const PULSE = 560;
 const PLAY = DRAW + PULSE;
 
-/**
- * Volume sparkline 3585:29599 (was proof-volume.svg, inlined to animate):
- * the line draws left → right, the area fades in under it, then the "now"
- * dot lands and its halo pulses (motion brief, proof "Рисуются"). Loops
- * while on screen: play, hold the Figma frame, fade out, play again.
- */
 export const Sparkline = ({ delay = 0 }: { delay?: number }) => {
   const { ref, t } = useProofLoop<SVGSVGElement>(PLAY, delay);
   const id = useId().replace(/:/g, "");

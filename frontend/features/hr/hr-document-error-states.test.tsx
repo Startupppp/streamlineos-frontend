@@ -2,21 +2,6 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
-/**
- * PRD-C009's error clause on the two HR document surfaces that conflated a
- * FAILED read with an EMPTY one.
- *
- * Both screens branched straight from "the array is empty" to a reassuring
- * empty state, and neither read `isError` at all. So a 500 on the checklist
- * told a new joiner "No documents required" — the most dangerous possible lie,
- * because it is indistinguishable from the truth and the user acts on it. The
- * reviewer's side said "No documents submitted" about an employee whose
- * submissions simply had not loaded.
- *
- * The assertions below are therefore two-sided: the failure must be REACHABLE
- * (an alert with a retry), and the reassuring text must be ABSENT. Asserting
- * only the first would pass with both rendered at once.
- */
 
 type Mode = "error" | "empty";
 
@@ -24,9 +9,6 @@ let mode: Mode = "error";
 
 const refetchSpy = jest.fn();
 
-// The page now resolves its state through usePageState, which reads session,
-// access and entitlements; resolve it as granted so the test exercises the
-// page, not the provider tree.
 jest.mock("@/hooks/api/use-page-state", () => {
   const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
     "@/lib/page-state/resolve-page-state",

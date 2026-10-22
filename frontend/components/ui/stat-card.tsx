@@ -124,7 +124,6 @@ export interface StatCardProps {
   color?: StatColor;
   delta?: { value: string; direction: "up" | "down" };
   hint?: string;
-  /** Wrap the hint instead of truncating it (a hint that carries data, not decoration). */
   wrapHint?: boolean;
   isLoading?: boolean;
   featured?: boolean;
@@ -192,8 +191,6 @@ export function StatCardGrid({
         "[&>*]:min-w-0 [&>*]:h-full [&>*]:snap-start",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
         OVERFLOW_EDGE_FADE_CLASS,
-        // The template has to reach the element as a class, not as an inline
-        // style, or the `sm:` breakpoint below could never win against it.
         stackOnMobile === true &&
           "grid-cols-1 sm:[grid-template-columns:var(--stat-card-grid-template)]",
         stackOnMobile === 2 &&
@@ -211,12 +208,6 @@ export function StatCardGrid({
   );
 }
 
-/**
- * Mirrors `StatCard`'s box exactly — same padding, radius, gap, icon well and
- * two 20px text lines — so the swap from skeleton to card moves nothing. The
- * previous shape was 8px shorter, which pushed every row below the stat grid
- * down the moment the data landed.
- */
 export function StatCardSkeleton({
   className,
   index = 0,

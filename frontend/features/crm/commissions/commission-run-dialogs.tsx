@@ -33,13 +33,8 @@ interface RunDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Compute the commission one won deal earned. Seals the plan version it used,
- * which is why it is its own permission and not a side effect of reading.
- */
 export function CalculateCommissionDialog({ onOpenChange }: RunDialogProps) {
   const calculate = useCalculateCommission();
-  // ponytail: first 100 deals; a server-side deal search belongs here if books grow.
   const deals = useDeals({ limit: 100 });
   const options = useMemo<ComboboxOption[]>(
     () => (deals.data ?? []).map((deal) => ({ value: String(deal.id), label: deal.name, sublabel: deal.stage })),
@@ -95,7 +90,6 @@ export function CalculateCommissionDialog({ onOpenChange }: RunDialogProps) {
 
 const ALL_PLANS = "all";
 
-/** Re-derive the accrual decomposition over a range. Amounts never change. */
 export function RebuildAccrualDialog({ onOpenChange }: RunDialogProps) {
   const rebuild = useRebuildCommissionAccrual();
   const plans = useCommissionPlans();

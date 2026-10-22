@@ -9,14 +9,6 @@ export const ALLOCATION_OVERRIDE_READ = "inventory:audit:read";
 
 export type AllocationOverrideVerdict = "NEAR_EXPIRY" | "SHELF_LIFE";
 
-/**
- * One occasion somebody allocated a lot the expiry policy would have refused,
- * and the reason they gave for it.
- *
- * The policy fields are the policy *as it stood at the time*, copied onto the
- * row rather than joined — so the record still explains itself after the setting
- * behind it has been edited.
- */
 export interface AllocationOverride {
   id: number;
   actorUserId: string;
@@ -39,11 +31,6 @@ export interface AllocationOverride {
   createdAt: string;
 }
 
-/**
- * Cursor-only, like the audit trail beside it: a register that is appended to
- * while it is read has no stable offsets, so the server offers no `page` and
- * counts nothing. Drive it with `useCursorPagination`.
- */
 export interface AllocationOverridesPage {
   items: AllocationOverride[];
   limit: number;

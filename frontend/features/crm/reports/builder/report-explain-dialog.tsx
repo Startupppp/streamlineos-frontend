@@ -11,23 +11,9 @@ import type { ReportingQueryDescription } from "@/types/crm/reporting";
 interface ReportExplainDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Null until the builder has a description worth compiling. */
   description: ReportingQueryDescription | null;
 }
 
-/**
- * What the database would be asked, without asking it.
- *
- * The module's own docblock says this endpoint "exists to be used by people who
- * do not believe the docblocks" — send the most hostile description you can
- * express and read back the statement. Until now nothing called it, so the
- * claim was unfalsifiable from the product: the one screen that could have
- * shown a reviewer their values are absent from the SQL did not offer to.
- *
- * The parameter count is shown and the parameters are not, because the server
- * refuses to return them. That refusal is the point and is stated rather than
- * left to look like an omission.
- */
 export function ReportExplainDialog({
   open,
   onOpenChange,

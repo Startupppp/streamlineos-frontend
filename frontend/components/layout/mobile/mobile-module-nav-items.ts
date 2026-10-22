@@ -95,8 +95,6 @@ export function getMobileModuleContentPaddingClassName(
   return MOBILE_MODULE_CONTENT_PADDING_CLASS;
 }
 
-// Products whose sidebar is a handful of groups: the bar shows one tab per
-// group (People, Time Off & Attendance, …) rather than the first few links.
 const GROUP_TAB_PRODUCTS: ReadonlySet<ModuleKey> = new Set<ModuleKey>(["hrms", "payroll"]);
 
 export function usesMobileGroupTabs(product: ModuleKey, navGroups: NavGroup[]): boolean {
@@ -105,7 +103,6 @@ export function usesMobileGroupTabs(product: ModuleKey, navGroups: NavGroup[]): 
 
 export type MobileGroupTab = { route: NavRoute; isActive: boolean };
 
-/** One tab per group, linking to its first route; the active tab owns the longest matching route. */
 export function getMobileGroupTabs(navGroups: NavGroup[], pathname: string): MobileGroupTab[] {
   let activeIndex = -1;
   let longest = -1;

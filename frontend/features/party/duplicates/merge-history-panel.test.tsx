@@ -90,12 +90,6 @@ describe("MergeHistoryPanel", () => {
   });
 
   it("offers to undo a merge long after the toast that announced it", () => {
-    /**
-     * The reason `GET /party/merges` exists. `party_merges` always held the
-     * snapshot a revert needs and nothing read it, so a merge could only be
-     * undone in the moment — which for the merges the system performs
-     * unattended meant never.
-     */
     render(<MergeHistoryPanel />);
 
     const undo = screen.getAllByText("Undo");
@@ -118,12 +112,6 @@ describe("MergeHistoryPanel", () => {
   });
 
   it("shows an already-undone merge without offering to undo it again", () => {
-    /**
-     * `revert` selects on `reverted_at IS NULL`, so a second attempt 404s.
-     * Listing the row anyway is deliberate: "this was already undone" is the
-     * answer to the question that brings somebody here, and hiding it would send
-     * them looking for a merge that is no longer in the list.
-     */
     render(<MergeHistoryPanel />);
 
     expect(screen.getByText("Undone")).toBeInTheDocument();
@@ -132,11 +120,6 @@ describe("MergeHistoryPanel", () => {
   });
 
   it("marks a merge nobody was asked about", () => {
-    /**
-     * `decidedBy: SYSTEM` is the case the snapshot exists for — an automatic
-     * destructive operation with no toast and no confirmation, so the ledger is
-     * the only place it is ever visible.
-     */
     render(<MergeHistoryPanel />);
     expect(screen.getByText("Automatic")).toBeInTheDocument();
   });

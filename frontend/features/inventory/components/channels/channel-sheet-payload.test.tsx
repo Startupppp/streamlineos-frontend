@@ -3,16 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/test-utils";
 import { ChannelSheet } from "./channel-sheet";
 
-/**
- * `POST /inventory/channels` and `PATCH /inventory/channels/:id` are both
- * `.strict()`, `safetyBuffer` and `publishThreshold` are `decimal(18,4)`
- * strings, and the create body has no `status` at all — a channel is raised
- * ACTIVE and paused by an update.
- *
- * The sheet sent `Number(...)` for both figures and a `status` on create, so
- * every New Channel submit was a 400 that read like a validation failure on the
- * name.
- */
 
 jest.mock("@/hooks/api/inventory/warehouses", () => ({
   useWarehouses: () => ({ data: { items: [], total: 0, page: 1, totalPages: 0 } }),

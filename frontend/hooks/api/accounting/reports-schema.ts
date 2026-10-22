@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-/**
- * Accounting statement reports. Every amount is a server-side `.toFixed(2)`
- * string, never a number — the aggregate is a `decimal` the driver hands back
- * as a string and the service formats rather than parses.
- *
- * `netPayable` can be negative, so it is not a non-negative decimal.
- */
 
 export const expenseByCategoryRowContract = z.object({
   categoryId: z.number().nullable(),

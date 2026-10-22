@@ -52,7 +52,6 @@ function ComplianceCard({ row }: ComplianceCardProps) {
   );
 }
 
-/** Candidate background-verification completion per job posting. Moved here from the HR BGV page. */
 export function BgvCompliancePage() {
   const { data: rows, isLoading, isError, error, refetch } = useBgvComplianceDashboard();
   const pageState = usePageState({

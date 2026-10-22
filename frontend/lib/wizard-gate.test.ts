@@ -618,7 +618,6 @@ describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onbo
     ).toBe(false);
   });
 
-  // RBAC-B-003: "HR = No access" still holds the member-default self:leaves, which /hr/leaves accepts.
   it("yields on /hr/leaves for a member whose only HR keys are member defaults", () => {
     expect(
       onboardingGateYieldsToDenial("/hr/leaves", {

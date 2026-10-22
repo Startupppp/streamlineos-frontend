@@ -1,15 +1,5 @@
 import { formatCurrencyFull } from "@/lib/format-utils";
 
-/**
- * The structured CTC behind an offer, on the candidate's public page and on the
- * recruiter's card.
- *
- * Every figure here arrives already summed and already divided into months by
- * the backend (`modules/hr/recruitment/compensation/ctc-breakdown.ts`). Nothing
- * in this file does arithmetic on money, deliberately: adding these decimals up
- * in JavaScript would be a second money implementation, in floating point, and a
- * total on screen that the backend never agreed to.
- */
 
 export interface CtcPreviewLine {
   key: string;
@@ -29,11 +19,6 @@ export interface CtcPreview {
 interface CtcBreakdownPanelProps {
   preview: CtcPreview | null | undefined;
   currency?: string;
-  /**
-   * Recruiter-only. The candidate's page passes nothing: a reconciliation
-   * warning is an instruction to go and fix a number, which is not something to
-   * put in front of the person being hired.
-   */
   warning?: string | null;
 }
 
@@ -42,25 +27,11 @@ interface CtcBreakdownRowProps {
   currency: string;
 }
 
-/**
- * Paise are shown when there are paise and hidden when there are none.
- *
- * An Indian CTC is almost always whole rupees, and a column of `.00` is noise on
- * a phone screen — but rounding a figure that genuinely carries paise would
- * print a number that does not match the offer. So the decision follows the
- * value rather than the screen.
- */
 function money(amount: string, currency: string): string {
   const hasPaise = !amount.endsWith(".00");
   return formatCurrencyFull(amount, currency, undefined, hasPaise ? 2 : 0);
 }
 
-/**
- * Label left, amounts stacked right — never three money columns. At 390px, a
- * phone opening this from an email link, a third column is what forces the page
- * to scroll sideways. `min-w-0` lets a long label wrap instead of pushing the
- * amount off-screen.
- */
 function CtcBreakdownRow({ line, currency }: CtcBreakdownRowProps) {
   return (
     <li className="flex items-start justify-between gap-3 px-3 py-2">
@@ -102,11 +73,7 @@ export function CtcBreakdownPanel({ preview, currency = "INR", warning }: CtcBre
             <span className="block text-sm font-semibold tabular-nums">
               {money(preview.annualTotal, currency)}
             </span>
-            {/*
-              The monthly total covers only the recurring lines. A joining bonus
-              folded into a "per month" figure would state a recurring payment
-              nobody offered, so it is named separately rather than averaged in.
-            */}
+            
             {preview.monthlyTotal && (
               <span className="block text-micro text-muted-foreground tabular-nums">
                 {money(preview.monthlyTotal, currency)} / month recurring

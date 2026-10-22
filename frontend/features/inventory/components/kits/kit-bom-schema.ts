@@ -1,14 +1,5 @@
 import { z } from "zod";
 
-/**
- * Mirrors `setKitBomSchema`, including the parts that are easy to miss.
- *
- * The quantity stays decimal text: the backend's `qtyString` takes up to four
- * places and refuses zero, and a number field would round 0.3333 on the way
- * through. The duplicate check is here as well as on the server because the
- * server answers a duplicate with one 400 for the whole request, and a person
- * looking at eight rows needs to be told which two collide.
- */
 export const kitBomFormSchema = z
   .object({
     components: z

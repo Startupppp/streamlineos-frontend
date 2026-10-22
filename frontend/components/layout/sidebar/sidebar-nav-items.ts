@@ -50,7 +50,6 @@ export interface ProductPathException {
   reason: string;
 }
 
-/** Paths with no navigation entry to derive from. Longest prefix wins over these too. */
 export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
   { prefix: "/build", module: "build", reason: "Build entry resolves to the authorized landing page." },
   { prefix: "/knowledge", module: "documents", reason: "Knowledge index; nav lists /knowledge/chat and /knowledge/wiki." },
@@ -62,7 +61,6 @@ export const PRODUCT_PATH_EXCEPTIONS: ProductPathException[] = [
   { prefix: "/accept-invitation", module: "home", reason: "Portal surfaces a client sees outside a product." },
 ];
 
-/** The root and any path the navigation does not own answer Home. */
 const MODULE_FALLBACK: ModuleKey = "home";
 
 let modulePrefixIndex: { prefix: string; module: ModuleKey }[] | null = null;
@@ -289,8 +287,6 @@ export function shouldHideProductSidebar(navGroups: NavGroup[]): boolean {
 
 export function isPortalChromelessPath(pathname: string): boolean {
   if (pathname === "/portal") return true;
-  // `(portal)` is a route group, so the invitation page answers `/accept-invitation` — not
-  // `/portal/accept-invitation`, which only ever matched `(authenticated)/portal/[projectId]`.
   if (
     pathname.startsWith("/client-portal") ||
     pathname.startsWith("/accept-invitation")

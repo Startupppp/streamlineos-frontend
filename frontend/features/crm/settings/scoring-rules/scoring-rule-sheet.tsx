@@ -21,14 +21,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { SCORING_RULE_LAYOUT } from "@/lib/renderer/crm/settings/scoring-rule-layout";
 import { numberOr, numberOrOmit, requiredText, textOrOmit } from "../shared/record-payload";
 
-/**
- * Create and edit a scoring rule, rendered from the description.
- *
- * One form where the page carried two: a create dialog and a second, narrower
- * one spliced into a table row for editing. The inline row was the reason the
- * list could not be a `DataTable` at all — a cell that becomes a form is a
- * table that has to know about forms.
- */
 
 interface ScoringRuleSheetProps {
   open: boolean;

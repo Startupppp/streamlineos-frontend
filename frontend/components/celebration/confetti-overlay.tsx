@@ -15,7 +15,6 @@ const CONFETTI_COLORS = [
 
 interface ConfettiOverlayProps {
   onDone: () => void;
-  /** Defaults to 3000ms */
   durationMs?: number;
 }
 

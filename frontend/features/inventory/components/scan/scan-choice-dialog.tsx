@@ -14,16 +14,6 @@ interface ScanChoiceDialogProps<T> {
   onCancel: () => void;
 }
 
-/**
- * B2, item 3 — the scan the client is not allowed to settle on its own.
- *
- * Two things arrive here. A label that names goods appearing twice on the
- * document — the same SKU at two bins, or two lines of one order — where
- * picking the first would post against a row nobody chose. And a label whose
- * parts disagree: a lot that belongs to a different variant than the GTIN
- * printed beside it, or a printed expiry that is not the recorded one. Both are
- * shown as they are, and neither proceeds without a tap.
- */
 export function ScanChoiceDialog<T>({
   choice,
   describe,
@@ -89,10 +79,6 @@ export function ScanChoiceDialog<T>({
   );
 }
 
-/**
- * Extracted so the click handler is named rather than an arrow closed over the
- * map's candidate, which frontend §3 bans at the call site.
- */
 function ScanChoiceRow<T>({
   label,
   candidate,

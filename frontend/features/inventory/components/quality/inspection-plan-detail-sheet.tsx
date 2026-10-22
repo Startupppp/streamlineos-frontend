@@ -39,12 +39,6 @@ const VERSION_LABEL: Record<PlanVersionStatus, string> = {
   SUPERSEDED: "Superseded",
 };
 
-/**
- * The version history, and the only two things that may be done to it: publish a
- * new rule, or make a draft live. A published version is never edited — an
- * inspection records the version it was judged against, so editing one rewrites
- * the standard a completed result was measured by.
- */
 export function InspectionPlanDetailSheet({
   open,
   onOpenChange,

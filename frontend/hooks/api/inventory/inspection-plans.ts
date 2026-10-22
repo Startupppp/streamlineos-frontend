@@ -37,12 +37,10 @@ export interface InspectionPlan {
   isActive: boolean;
   createdAt: string;
   updatedAt: string;
-  /** The live rule, projected by the list endpoint. */
   activeVersion?: Pick<
     InspectionPlanVersion,
     "id" | "version" | "samplingMethod" | "sampleValue"
   > | null;
-  /** "All products", a category name or a SKU — resolved server-side. */
   scopeLabel?: string;
   versions?: InspectionPlanVersion[];
 }
@@ -127,7 +125,6 @@ export function useInspectionPlan(planId: number) {
   });
 }
 
-/** Every list invalidation goes through the params-less prefix — see the key file. */
 function useInvalidatePlans() {
   const qc = useQueryClient();
   return (planId?: number) => {
@@ -183,10 +180,6 @@ export function useDeleteInspectionPlan() {
   );
 }
 
-/**
- * Publishing a new rule. A published version is never edited — an inspection
- * records the version it was judged against — so a change is always a new one.
- */
 export function useCreatePlanVersion() {
   const invalidate = useInvalidatePlans();
   return useAuthorizedIdempotentMutation<
@@ -220,7 +213,6 @@ export function useActivatePlanVersion() {
   );
 }
 
-/** How a rule reads on a card or a row. */
 export function describeSampling(
   method: SamplingMethod,
   sampleValue: string | null | undefined,

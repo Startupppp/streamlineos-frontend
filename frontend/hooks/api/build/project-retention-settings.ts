@@ -7,6 +7,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { ProjectsRetentionSettingsGetSettingsResponse } from "@/contracts/build-contracts.generated";
+import { retentionSettingsQueryOptions } from "./project-retention-settings-read-options";
 import type {
   UpdateRetentionPolicyInput,
   SetLegalHoldInput,
@@ -21,13 +22,6 @@ const retentionSettingsContract = lazyContract(() =>
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-
-export function retentionSettingsQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.retentionSettings(projectId),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useProjectRetentionSettings(projectId: number) {
   const canView = useCan("build:view");

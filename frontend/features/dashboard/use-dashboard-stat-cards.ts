@@ -93,8 +93,6 @@ export function useDashboardStatCards(
       });
     }
     if (access.projectsEnabled) {
-      // Sourced from /dashboard/my-issues, not from the stats fanout — it has no
-      // degraded reading, so it stays a plain number.
       cards.push({
         id: "my-tasks",
         label: "My Open Tasks",

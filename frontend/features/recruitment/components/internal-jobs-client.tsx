@@ -76,12 +76,7 @@ function ApplySheet({ job, onClose }: ApplySheetProps) {
               placeholder="Why are you interested in this role?"
             />
           </div>
-          {/*
-            Said before they apply, not in a policy document afterwards.
-            Somebody deciding whether to put their name forward is entitled to
-            know when their current manager finds out, and a surprise here is
-            what stops the next person applying at all.
-          */}
+          
           <p className="rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             {CONFIDENTIALITY_NOTICE}
           </p>
@@ -185,11 +180,7 @@ export function InternalJobsClient() {
       title="Internal Openings"
       subtitle="Open positions available exclusively for existing employees. Apply directly without going through external recruitment."
     >
-      {/*
-        Both render nothing unless the viewer has something in them, so the
-        page stays a list of openings for everybody who is neither applying nor
-        approving — which is most people, most of the time.
-      */}
+      
       <div className="flex flex-col gap-4 mb-4 empty:hidden">
         <ManagerApprovalsSection />
         <MyInternalApplicationsSection />

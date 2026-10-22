@@ -10,17 +10,6 @@ import type { AccessResponse } from "@/types/access";
 import { CompOffPageClient } from "@/features/hr/overtime/comp-off-page-client";
 import { UserStatsCards } from "@/features/directory/users/user-stats-cards";
 
-/**
- * The shape this pins: a read that fails reaches a surface as `data === undefined`,
- * and a screen that spells that `?? 0` renders a confident zero. Without the
- * provider's `throwOnError`, `UserStatsCards` tells the user the organization has
- * 0 users, 0 active and 0 suspended — five numbers, none of them measured.
- *
- * `CompOffPageClient` is the control: it branches on `isError` first, so the same
- * failed read renders its own inline `ErrorState` rather than a fabricated 0.0.
- * Both still reach the route boundary once the policy is installed, which is the
- * point — the policy does not depend on the screen remembering to check.
- */
 
 const ORG_ID = "org-1";
 const USER_ID = "user-1";
@@ -79,7 +68,6 @@ function clientWithPolicy(): QueryClient {
   return client;
 }
 
-/** The provider exactly as it stood before this ticket: no `throwOnError` at all. */
 function clientWithoutPolicy(): QueryClient {
   const client = clientWithPolicy();
   const defaults = client.getDefaultOptions();
@@ -116,7 +104,6 @@ describe("a 500 on /hr/overtime/comp-off", () => {
   it("renders the screen's own inline error, not a fabricated 0.0", async () => {
     renderUnderBoundary(<CompOffPageClient />, clientWithoutPolicy());
 
-    // The screen now resolves its error through the shared PageState/ErrorState.
     expect(await screen.findByText("Something went wrong")).toBeInTheDocument();
     expect(screen.queryByText("0.0")).not.toBeInTheDocument();
     expect(screen.queryByText("days earned")).not.toBeInTheDocument();
@@ -135,10 +122,6 @@ describe("a 500 on /users/stats", () => {
   it("was rendered as five confident zeroes", async () => {
     renderUnderBoundary(<UserStatsCards />, clientWithoutPolicy());
 
-    /**
-     * The label renders while the read is still in flight, so waiting on it
-     * asserts against a skeleton. Wait for the settled zeroes themselves.
-     */
     await waitFor(() =>
       expect(screen.getAllByText("0").length).toBeGreaterThanOrEqual(5),
     );

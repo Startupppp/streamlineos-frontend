@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * The stored jsonb, not the backend's `@ResponseSchema`, which names only four
- * of the seven keys `screeningQuestionSchema` (`dto/jobs.schemas.ts`) writes.
- * A `z.object` STRIPS what it does not list, so omitting `id` here would erase
- * the key the edit form maps its question rows by.
- */
 const screeningQuestionSchema = z.object({
   id: z.string(),
   question: z.string(),
@@ -59,11 +53,6 @@ export const createJobPostingContract = jobPostingRowContract;
 
 export const updateJobPostingContract = z.object({ success: z.literal(true) });
 
-/**
- * One outcome per board. There is no `PUBLISHED` member, because no adapter
- * exists that could produce one — the API answers `BLOCKED` with a code the UI
- * turns into the specific thing the recruiter has to do next.
- */
 export const jobBoardOutcomeContract = z.discriminatedUnion("status", [
   z.object({
     platform: z.string(),

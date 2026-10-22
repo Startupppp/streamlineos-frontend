@@ -8,12 +8,6 @@ import { VIEW_MARGIN } from "@/features/landing/relay/lib/view";
 
 import type { ScaleContent } from "@/features/landing/relay/data/scale";
 
-/**
- * Node / label positions inside the hub group, in mock order SL, ST, PG, HS.
- * Base = 1440 (3888:6466 …); 1024 draws the same group scaled (see HUB), so it
- * has no classes of its own. 768 (3862:9 …) is its own layout, placed 125 in
- * from the art edge by HUB; 390 (3918:1359 …) is its own layout again.
- */
 const APP_LAYOUT = [
   {
     node: "top-37.25 left-17 w768:top-39.75 w768:left-6 w390:top-[calc(var(--spacing)*27.3125)] w390:left-2.25",
@@ -37,7 +31,6 @@ const APP_LAYOUT = [
   },
 ] as const;
 
-/** Packets 3888:6483 … / 3862:26 … / 3918:1376 …, in mock order SL, ST, PG, HS. */
 const PACKETS = [
   {
     position:
@@ -57,15 +50,6 @@ const PACKETS = [
   },
 ] as const;
 
-/**
- * Each packet rides its wire from the satellite centre (`dx`, `dy` = vector to
- * the runtime centre, design px of the active frame); `rest` is the Figma
- * position as a fraction of that trip. 1024 reuses the 1440 set — the group is
- * scaled there, and the packets with it. 768 and 390 draw the satellites
- * elsewhere, so they carry their own. At 390 the spokes do not point at the
- * tile centre, so ST / PG ride the spoke line itself. Timing is shared — only
- * the geometry changes.
- */
 const WIRES = {
   1440: [
     { dx: 195, dy: 0, rest: 75 / 195 },
@@ -89,22 +73,14 @@ const WIRES = {
 
 type Wires = (typeof WIRES)[keyof typeof WIRES];
 
-/** Design px → rem (1 rem = 16 design px in every frame). */
 const REM = 16;
 
-/**
- * The hub group: the 1440 art box (566 × 336). At 1024 (3949:13234) Figma
- * draws the same group at 0.888 from (-47.31, -6.91); at 768 it is shifted
- * 125 right; at 390 it sits at the art origin.
- */
 const HUB =
   "absolute top-0 left-0 h-84 w-141.5 origin-top-left w1024:translate-x-[calc(var(--spacing)*-11.8282)] w1024:translate-y-[calc(var(--spacing)*-1.7273)] w1024:scale-[0.888031] w768:translate-x-31.25 w768:translate-y-0 w768:scale-100 w390:translate-x-0";
 
-/** Loop timing (motion brief, scale.hub "Орбиты и пакеты"). */
 const ORBIT_MS = 32_000;
 const PACKET_MS = 1_920;
 const BREATH_MS = 3_840;
-/** Per-wire phase offset, fraction of a packet cycle. */
 const WIRE_OFFSET = [0, 0.25, 0.5, 0.75] as const;
 
 const MONO_DIM =
@@ -120,15 +96,6 @@ export interface RuntimeHubProps {
   apps: ScaleContent["runtime"]["apps"];
 }
 
-/**
- * Art 3888:6457 (3949:13234 at 1024, 3862:2 at 768, 3909:12622 at 390) — the runtime hub. Once the art is properly seen
- * (VIEW_MARGIN) one rAF loop, from t = 0,
- * turns the orbit rings in opposite directions, sends accent packets down each
- * wire into the runtime tile (the sender's border flashes), and breathes the
- * core glow. Fully off screen the loop stops and rewinds to t = 0, so the
- * next visit starts from the beginning; with reduced motion it never starts,
- * so the art stays on the Figma frame.
- */
 export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
   const root = useRef<HTMLDivElement>(null);
   const glow = useRef<HTMLImageElement>(null);
@@ -137,8 +104,6 @@ export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
   const packets = useRef<(HTMLImageElement | null)[]>([]);
   const flashes = useRef<(HTMLSpanElement | null)[]>([]);
 
-  /* Crossing a frame line swaps the wire set; `redraw` re-renders the current
-     loop time so the packets land on the other frame's wires without a restart. */
   const frame = useFrame();
   const wires = useRef<Wires>(WIRES[1440]);
   const redraw = useRef<(() => void) | null>(null);
@@ -197,7 +162,6 @@ export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
       elapsed = 0;
       render(0);
     };
-    /* Park on the loop's first frame so the start is not a jump. */
     rewind();
 
     redraw.current = () => render(elapsed);
@@ -213,7 +177,6 @@ export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
     const gone = new IntersectionObserver(([entry]) => {
       if (!entry.isIntersecting) rewind();
     });
-    /* Start with the card (its reveal), not the art further down it. */
     seen.observe(node.closest("article") ?? node);
     gone.observe(node);
 
@@ -227,10 +190,7 @@ export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
 
   return (
     <div ref={root} className={HUB}>
-      {/* Wires at 768 (3862:3 … 5) and 390 (3918:1353 … 55) — flat grey rails
-          under the glow, so they are drawn before it (the 1440 gradient wires,
-          also used scaled at 1024, stay on top, below). Boxes = the wire span
-          + 1 of stroke bleed. */}
+      
       <Image
         src="/landing/relay/scale/scale-wires-768.svg"
         alt=""
@@ -245,8 +205,7 @@ export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
         height={57}
         className="absolute top-17.5 left-10.25 hidden h-14.25 w-57 w390:block"
       />
-      {/* Core glow 3888:6458 / 3862:6 / 3918:1356 — 280 / 240 / 200 circle,
-          exported with its blur padding (120, scaled) on every side. */}
+      
       <Image
         ref={glow}
         src="/landing/relay/scale/scale-core-glow.png"
@@ -280,7 +239,7 @@ export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
         className="absolute top-7.25 left-6 h-60 w-129.5 w768:hidden"
       />
 
-      {/* Packets sit under the nodes and the tile, so they leave and land out of sight. */}
+      
       {PACKETS.map((packet, i) => (
         <Image
           key={packet.position}
@@ -320,8 +279,7 @@ export const RuntimeHub = ({ label, apps }: RuntimeHubProps) => {
         ))}
       </ul>
 
-      {/* Runtime 3888:6474 / 3862:17 / 3918:1367 — the lead's logo transition
-          flies into this tile (data-logo-target) in every frame. */}
+      
       <Image
         src="/landing/relay/scale/scale-runtime.svg"
         alt=""

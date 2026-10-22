@@ -3,17 +3,6 @@ import {
   templatePreviewContract,
 } from "@/hooks/api/payroll/setup-preview-schema";
 
-/**
- * The two payroll setup previews, asserted on what the READ PATH returns.
- *
- * `POLICY_PREVIEW` below is the payload `PolicyQueryService.preview` actually emits for the
- * INDIAN_STANDARD template — dumped from the real service, not written from the client type.
- * `PRE_FIX_POLICY_COMPONENTS` is what it emitted before: the raw `TemplateComponentDef` seed
- * literals, where an unset optional is an ABSENT KEY rather than a null, and where there has
- * never been a `monthlyAmount`. The client declared `PreviewLine[]` over that and rendered
- * `formatMoney(line.monthlyAmount)`, so every salary component on the setup review step showed
- * an em dash while both repositories typechecked clean.
- */
 
 const POLICY_PREVIEW = {
   toggles: { pf: true, professionalTax: true, approvalWorkflow: true },
@@ -90,7 +79,6 @@ const POLICY_PREVIEW = {
   },
 };
 
-/** The seed literals, exactly as they used to leave the endpoint. */
 const PRE_FIX_POLICY_COMPONENTS = [
   {
     code: "BASIC",

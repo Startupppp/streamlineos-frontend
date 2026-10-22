@@ -10,16 +10,6 @@ const signedUrlC = lazyContract(() =>
   import("@/hooks/common/file-url-schema").then((m) => m.signedUrlContract),
 );
 
-/**
- * The `/uploads/` test used to live here and it read a TENANT OBJECT KEY as a
- * local asset: every key minted for the default folder is
- * `<orgId>/uploads/<file>`, so any such reference that `isStorageObjectKey` did
- * not recognise — a legacy `uploads/…` row, a region-prefixed key — was handed
- * straight back to the caller as a relative URL instead of being exchanged for a
- * signed one. The result is a broken image rather than a re-authorized read, and
- * the substring can never distinguish the two cases because the folder name is
- * the same on both sides.
- */
 export function isLocalUrl(url: string): boolean {
   if (!url) return false;
   if (isStorageObjectKey(url)) return false;
@@ -28,10 +18,6 @@ export function isLocalUrl(url: string): boolean {
   return false;
 }
 
-/**
- * `/storage/download` validates `url` as a URL, so an object key has to travel
- * in `key`. Sending a key as `url` is a 400, not a lookup miss.
- */
 export function storageReferenceParams(reference: string): { url: string } | { key: string } {
   return /^https?:\/\//i.test(reference) ? { url: reference } : { key: reference };
 }

@@ -121,7 +121,6 @@ export function DelegationsPage() {
       requestedReceivedSearchRef.current = null;
       return;
     }
-    // Browser history can change URL state without an input event.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setReceivedSearchInput(receivedState.search);
   }, [receivedState.search]);
@@ -131,7 +130,6 @@ export function DelegationsPage() {
       requestedGrantedSearchRef.current = null;
       return;
     }
-    // Browser history can change URL state without an input event.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setGrantedSearchInput(grantedState.search);
   }, [grantedState.search]);

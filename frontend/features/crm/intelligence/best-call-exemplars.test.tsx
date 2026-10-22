@@ -2,20 +2,6 @@ import { render, screen } from "@testing-library/react";
 import type { CallExemplar, CallExemplarsResponse } from "@/types/crm/call-intelligence";
 import { BestCallExemplars } from "./best-call-exemplars";
 
-/**
- * CRM-P2-06's list, tested on the things that make a short list trustworthy.
- *
- * The server decides what may appear — consent and the rep's private window are
- * enforced there and asserted in `call-exemplars.service.spec.ts` and the seeded
- * e2e. What this component owes the reader is an honest account of what is
- * missing and why, because a rep who ran forty calls and sees three exemplars
- * will otherwise conclude either that they are bad at their job or that the
- * feature is broken, and both conclusions are wrong.
- *
- * It also owes them no verbatim customer speech: the row is a pointer, and the
- * absence of quotes is a property of the payload that the markup must not
- * quietly reintroduce.
- */
 
 const exemplar = (over: Partial<CallExemplar> = {}): CallExemplar => ({
   activityId: "act-1",
@@ -118,8 +104,6 @@ describe("BestCallExemplars", () => {
       />,
     );
 
-    // Not "0%", and not a fabricated score: the metric is a boolean the row
-    // already carries, so the cell shows a fact about the call instead.
     expect(screen.getByText("14 turns")).toBeInTheDocument();
     expect(screen.queryByText("0%")).not.toBeInTheDocument();
   });

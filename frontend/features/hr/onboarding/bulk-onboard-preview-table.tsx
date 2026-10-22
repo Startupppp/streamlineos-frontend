@@ -26,7 +26,6 @@ function EmployeeCell(row: BulkOnboardFlowRow) {
 }
 
 function PrimaryManagerCell(row: BulkOnboardFlowRow) {
-  // A declared top-level row has no manager by design, not "No manager".
   if (row.payload?.topLevelRole) return <ReportingRelationshipBadge kind="topLevel" />;
   if (!row.server) return <span className="text-xs text-muted-foreground">—</span>;
   return <ManagerResolutionCell primaryManager={row.server.primaryManager} dependsOnRow={row.dependsOnFileRow} />;
@@ -70,7 +69,6 @@ function rowKey(row: BulkOnboardFlowRow) {
 
 export function BulkOnboardPreviewTable({ rows }: BulkOnboardPreviewTableProps) {
   return (
-    // The table scrolls inside its own labelled region, never the page (375/768/1280).
     <DataTable
       data={rows}
       columns={COLUMNS}

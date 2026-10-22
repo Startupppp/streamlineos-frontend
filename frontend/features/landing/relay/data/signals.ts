@@ -1,9 +1,4 @@
-/** 07 Signals — Figma 3488:22342. StreamlineOS daily view; widget figures are mock UI from the brief's illustrative data. */
 
-/**
- * One heatmap bar (Load 3488:22353…22414): the RGB channels and the start/end
- * alpha of its left → right gradient, as read from the frame.
- */
 export type SignalsLoad = readonly [
   r: number,
   g: number,
@@ -22,14 +17,10 @@ export const signalsMock = {
   week: {
     title: "this week, workflow by workflow",
     nextRun: "next run in 12 min",
-    /** Shorter chip copy in the 1024 frame (3603:3832). */
     nextRunNarrow: "next in 12 min",
     hours: ["09", "11", "13", "15"],
-    /** Hour label drawn in the muted colour (the row holding today's peak). */
     activeHour: "13",
-    /** Day whose bars carry the accent bar and the today rule. */
     today: "tue",
-    /** Index (top → bottom) of the accent bar in today's column. */
     todayPeak: 4,
     days: [
       {

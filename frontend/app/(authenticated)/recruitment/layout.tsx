@@ -3,7 +3,6 @@ import { requirePermission } from "@/lib/rbac/require-permission";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 
 export default async function RecruitmentLayout({ children }: { children: ReactNode }) {
-  // Under /hr this ran in the HR layout; Recruitment OS now owns its own gate.
   await enforceRouteAccess("/recruitment");
   await requirePermission(
     [

@@ -25,12 +25,6 @@ const fragmentMono = Fragment_Mono({
   display: "swap",
 });
 
-/**
- * The public site's wrapper: Relay's fonts, its dark theme (every Relay
- * token is declared on `.relay-root`, styles/relay.css), Lenis smooth
- * scrolling and the reduced-motion switch. Only public pages mount it, so
- * none of it reaches the authenticated app.
- */
 export const RelayRoot = ({ children }: { children: ReactNode }) => (
   <div
     className={`relay-root dark ${inter.variable} ${instrumentSerif.variable} ${fragmentMono.variable}`}

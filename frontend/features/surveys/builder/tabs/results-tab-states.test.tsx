@@ -95,7 +95,6 @@ function populatedOverview() {
   };
 }
 
-/** A client whose reads surface their error to the component instead of the route boundary. */
 function testClient(access?: AccessResponse): QueryClient {
   const client = createAppQueryClient(authenticatedScope(ORG_ID, USER_ID));
   const defaults = client.getDefaultOptions();

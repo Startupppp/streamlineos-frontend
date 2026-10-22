@@ -202,12 +202,7 @@ export function RolesPage() {
           <GroupsPanel />
         </TabsContent>
 
-        {/*
-          Below `lg` the stat block, the role list and the permission panel do
-          not fit one viewport, and the tab was height-locked — so the list's
-          pager sat under the fold with nothing to scroll. It scrolls there and
-          stays locked from `lg` up, where the two-column layout does fit.
-        */}
+        
         <TabsContent
           value="roles"
           className="gap-3 max-lg:overflow-y-auto lg:overflow-hidden"

@@ -1,22 +1,7 @@
 import { apiClient, isApiError } from "@/lib/api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * `apiClient.download` was the one call in the client that did not use the
- * client's own error parser.
- *
- * It hardcoded `method: "GET"` — so an endpoint answering a file to a POST body
- * had no way through it, and the pressure was on the next hook to grow a bespoke
- * `fetch` beside the client rather than through it. And it read `body.error`
- * alone, which is the *reason phrase* on a NestJS refusal ("Forbidden"); the
- * sentence the server actually wrote lives in `message`, and the field-level
- * issues live in `details`. Both were dropped, and the plain `Error` it threw
- * carried no status either, so `getErrorMessage` had nothing left to work with.
- */
 
-// jsdom ships `AbortSignal` without the static `timeout` every request in this
-// client builds its signal from. Without it the fetch never happens and every
-// assertion below reads as a client bug.
 if (typeof AbortSignal.timeout !== "function") {
   AbortSignal.timeout = () => new AbortController().signal;
 }
@@ -127,11 +112,6 @@ describe("apiClient.download — the refusal", () => {
     expect(error).toMatchObject({ status: 402, code: "CREDITS_EXHAUSTED" });
   });
 
-  /**
-   * The `details` support added for validation refusals never reached a failed
-   * download, because the download threw its own error shape. This is the case
-   * that proves the two paths now build the same object.
-   */
   it("carries the field-level issues through to getErrorMessage", async () => {
     stubFetch(() =>
       refusal(400, {

@@ -17,14 +17,7 @@ export interface ImportEntity {
   icon: React.ComponentType<{ className?: string }>;
   description: string;
   templateUrl?: string;
-  /** A CSV served straight from a GET. */
   exportEndpoint?: string;
-  /**
-   * An export that runs as a job: create, poll, download. Larger entities use
-   * this shape, and a card that names it goes through the same contract the
-   * module's own page does — the Expenses card used to name a GET route that has
-   * never existed.
-   */
   exportJob?: {
     create: string;
     status: (jobId: string) => string;

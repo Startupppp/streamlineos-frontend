@@ -33,7 +33,6 @@ interface ReportIssueDialogProps {
 
 export function ReportIssueDialog({ open, onOpenChange, currentManagerName, onDuplicate }: ReportIssueDialogProps) {
   const create = useCreateReportingManagerRequest();
-  // Display only: keeps the suggested person's name once the picker's search moves on.
   const [suggested, setSuggested] = useState<ManagerRef | null>(null);
 
   function handleSubmit(values: ReportingIssueValues) {

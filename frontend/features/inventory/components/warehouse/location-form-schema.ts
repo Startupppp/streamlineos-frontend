@@ -1,14 +1,5 @@
 import { z } from "zod";
 
-/**
- * The shape both location sheets share, mirroring the backend's
- * `createLocationSchema` — of which `updateLocationSchema` is the `.partial()`.
- *
- * `capacity` is a string all the way to the wire because the column is
- * `numeric(18,4)` and the endpoint validates it as a decimal string. It used to
- * be `Number()`-ed before sending, which the `.strict()` schema rejected, so a
- * location created with a capacity 400d and one created without worked.
- */
 export const locationFormSchema = z.object({
   name: z.string().trim().min(1, "Location name is required").max(100),
   code: z.string().trim().min(1, "Location code is required").max(20),
@@ -26,7 +17,6 @@ export const locationFormSchema = z.object({
 
 export type LocationFormValues = z.infer<typeof locationFormSchema>;
 
-/** The edit sheet adds the one field a live location has and a new one cannot. */
 export const locationEditSchema = locationFormSchema.extend({
   isActive: z.boolean(),
 });

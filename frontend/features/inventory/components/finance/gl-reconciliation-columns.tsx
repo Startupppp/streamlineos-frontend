@@ -14,12 +14,6 @@ export const GL_RECON_STATUS_LABEL: Record<GlReconStatus, string> = {
   ACCOUNTING_NOT_INSTALLED: "Accounting not installed",
 };
 
-/**
- * `UNMATCHED` is the serious one: stock moved and money did not follow it.
- * `MISSING_COA` is a configuration gap the accounting module can close, and
- * `ACCOUNTING_NOT_INSTALLED` is not a fault at all — a tenant that has not
- * bought accounting has no gap.
- */
 const GL_RECON_STATUS_TONE: Record<GlReconStatus, StatusTone> = {
   MATCHED: "success",
   VALUE_MISMATCH: "warning",

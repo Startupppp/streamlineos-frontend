@@ -49,11 +49,6 @@ export interface PaginatedEmployees {
   pagination: Pagination;
 }
 
-/**
- * `GET /hr/employees` projects thirteen columns. It does not select `email` as
- * non-null, nor `departmentId`, `bio`, `phone` or any of the four social URLs,
- * so a list row cannot be typed as a whole `Employee`.
- */
 export type EmployeeListItem = Pick<
   Employee,
   | "id"
@@ -70,14 +65,6 @@ export type EmployeeListItem = Pick<
 > & {
   email: string;
   department: { id: string; name: string } | null;
-  /**
-   * PROVISIONAL (product default E-4): derived at read time by the server
-   * (`users.is_active AND users.email_verified IS NOT NULL`), never stored.
-   * `isActive` alone is set the moment an administrator creates the account,
-   * so without this an invitee who never opened the invitation badges "Active"
-   * beside a summary that counts them under "Pending invite".
-   * Optional so an older payload degrades to the previous behaviour.
-   */
   hasAccepted?: boolean;
   reportingToName?: string | null;
 };
@@ -226,7 +213,6 @@ export interface UpdateProfileInput {
   gender?: "MALE" | "FEMALE" | "OTHER";
   joiningDate?: string;
   expectedVersion?: number;
-  /* Managers change only through PUT /hr/reporting-lines/:id (HRM-15). */
 }
 
 export interface CreateAssetInput {
@@ -278,7 +264,6 @@ export interface CreateDocumentInput {
 }
 
 export interface UpsertWorkLogInput {
-  /** Target employee; only a holder of hr:attendance:manage may widen past self. */
   userId?: string;
   date: Date | string;
   hours?: number;
@@ -305,11 +290,8 @@ export interface OnboardEmployeeInput {
   gender?: string;
   designation: string;
   departmentId?: string;
-  /** BUG-HRMS-006: an org unit of kind LOCATION; the server checks the kind. */
   locationId?: string;
-  /** BUG-HRMS-007: omitted means FULL_TIME, the column default. */
   workerType?: string;
-  /** Optional since HRM-15: omitted means the backend resolves it by policy. */
   reportingManagerUserId?: string;
   secondaryManagers?: Array<{ managerUserId: string; label?: string }>;
   topLevelRole?: boolean;
@@ -332,7 +314,6 @@ export interface OnboardEmployeeInput {
   };
 }
 
-/** Spreadsheet row for bulk onboard — department name or org department id. */
 export interface BulkOnboardEmployeeRow {
   firstName: string;
   lastName: string;
@@ -344,17 +325,10 @@ export interface BulkOnboardEmployeeRow {
   designation: string;
   departmentId?: string;
   department?: string;
-  /** BUG-HRMS-006: an office name, code or id; the server refuses an unknown one. */
   location?: string;
-  /** BUG-HRMS-007: omitted means FULL_TIME, the column default. */
   workerType?: string;
   reportingManagerUserId?: string;
   primaryManagerEmail?: string;
-  /**
-   * Read-only legacy alias of `primaryManagerEmail` (CONTRACT §4.20). Sent only
-   * when the uploaded file used a legacy manager header, so the backend records
-   * `legacyManagerHeader`; never alongside `primaryManagerEmail`.
-   */
   reportingManagerEmail?: string;
   secondaryManagerEmail1?: string;
   secondaryManagerEmail2?: string;
@@ -420,10 +394,6 @@ export interface BulkOnboardPreviewRow {
   dependsOnRow: number | null;
 }
 
-/**
- * BUG-HRMS-002. Seat arithmetic for the upload, so the preview can refuse a row
- * before the confirm does. `limit` and `available` are null on an unlimited plan.
- */
 export interface BulkOnboardSeats {
   limit: number | null;
   used: number;

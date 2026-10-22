@@ -36,16 +36,6 @@ import {
   textOrOmit,
 } from "./shared/record-payload";
 
-/**
- * Create and edit a territory, rendered from the description.
- *
- * Eight chip editors are supplied through `controls`; nothing else about this
- * form is written here. What the sheet still owns is the one thing a description
- * cannot express — that `criteria` is a single stored object, so an update has
- * to overlay the fields the form rendered onto the ones it did not. Sending a
- * criteria object built only from what was on screen would silently drop the
- * postal codes of anyone who had hidden that field.
- */
 
 const CRITERIA_PLACEHOLDERS: Record<string, string> = {
   countries: "India, Singapore… press Enter",
@@ -84,7 +74,6 @@ function initialValues(territory: Territory): Record<string, unknown> {
   };
 }
 
-/** Only the criteria the form actually rendered, overlaid on what is stored. */
 function criteriaFrom(values: RecordFormValues, stored?: TerritoryCriteria): TerritoryCriteria {
   const next: TerritoryCriteria = { ...stored };
   for (const name of CRITERIA_FIELDS) {

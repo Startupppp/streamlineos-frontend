@@ -16,19 +16,6 @@ export interface FieldArrangementProps {
   disabled?: boolean;
 }
 
-/**
- * One line per field: where it sits, whether it is shown, what it sits under.
- *
- * Field-level and nothing more. A visual builder is out of scope, and the reason
- * is not effort — a canvas invites a tenant to design a screen, which is a job
- * they did not ask for and cannot finish, whereas moving a column up is a job
- * they already know they want done.
- *
- * The switch reads "Shown" rather than "Hidden" because a control that is on
- * when nothing happens is the one people can read at a glance. A field that
- * cannot be hidden shows no switch at all and says why — a disabled control with
- * no explanation is a dead end.
- */
 export function FieldArrangement({
   rows,
   onMove,

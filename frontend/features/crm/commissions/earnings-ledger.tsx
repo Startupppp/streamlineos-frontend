@@ -23,15 +23,6 @@ import type {
 import { formatMinor } from "@/lib/pricing-format";
 import { formatBps, formatEarnedOn } from "./commission-format";
 
-/**
- * The earnings ledger, and the one write a manager makes against it.
- *
- * Approval is a separate authority from defining a plan, so that the person who
- * wrote the rate cannot also sign off their own number. The button is absent
- * without `crm:commission-earnings:approve` rather than present-and-failing —
- * and an earning that is not `CALCULATED` has no button at all, because the
- * server refuses those with a 409 and offering the action would be a lie.
- */
 
 const STATUS_TONE: Record<CommissionEarningStatus, string> = {
   CALCULATED: "bg-status-warning-surface text-status-warning-ink",
@@ -76,19 +67,6 @@ export function EarningsLedger({ earnings, locale }: EarningsLedgerProps) {
 
   if (earnings.length === 0)
     return (
-      /**
-       * CRM-P1-12. This said "No earnings match this filter", and there is no
-       * filter — the page asks for every earning. So the message explained an
-       * empty ledger as a narrowed view, when the real reason is almost always
-       * that nothing has calculated one.
-       *
-       * Earnings are created per deal by POST crm/commission/earnings/calculate
-       * and by nothing else: there is no scheduled run anywhere in the
-       * repository, no outbox consumer, and no caller on deal-won. A rep
-       * reading an empty ledger would otherwise conclude they had earned
-       * nothing, which is a different and much worse statement than "nobody has
-       * worked this out yet".
-       */
       <EmptyState
         compact
         title="No earnings recorded yet"

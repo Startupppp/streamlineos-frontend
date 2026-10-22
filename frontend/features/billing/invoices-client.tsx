@@ -132,8 +132,6 @@ export function InvoicesClient() {
   const [, startTransition] = useTransition();
   const [createOpen, setCreateOpen] = useState(false);
   const [voidTarget, setVoidTarget] = useState<Invoice | null>(null);
-  // Each key is the one its own route declares: POST /invoices -> accounting:create,
-  // PATCH /invoices/:id -> accounting:update, POST /invoices/:id/void -> accounting:manage.
   const canCreate = useCan("accounting:create");
   const canUpdate = useCan("accounting:update");
   const canVoid = useCan("accounting:manage");

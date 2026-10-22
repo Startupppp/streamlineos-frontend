@@ -1,9 +1,5 @@
 import { hrImportJobDetailContract } from "@/hooks/api/hr/import-export-schema";
 
-/**
- * The body of `GET /hr/import/jobs/:jobId` as it crosses the wire (`hrImportJobDetailSchema`): dates are ISO strings,
- * `errorRows` are `hr_import_rows` rows with status 'error', and a row that never committed has no record ref.
- */
 const LIVE_JOB = {
   id: "0b6c1f0e-6f0a-4d0e-8f4e-2f6f8f6f0a01",
   orgId: "org-1",
@@ -36,7 +32,6 @@ const LIVE_ROW = {
 
 const LIVE_DETAIL = { job: LIVE_JOB, errorRows: [LIVE_ROW, { ...LIVE_ROW, id: "row-2", rowNumber: 21, error: "No employee has the work email a@b.com." }] };
 
-/** `source` minus one key: the body a backend that dropped or renamed that field would send. */
 function without(source: object, key: string): Record<string, unknown> {
   return Object.fromEntries(Object.entries(source).filter(([name]) => name !== key));
 }

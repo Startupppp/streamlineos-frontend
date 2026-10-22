@@ -26,7 +26,6 @@ describe("route-access registry keys", () => {
   const routes = collectAppRoutes("(authenticated)");
 
   it("each backendRoute entry carries the same permission the backend operation declares (x-permission in contracts/openapi.json)", () => {
-    // x-permission is an internal stamp, read from the vendored artifact, not a published contract.
     const OPENAPI_PATH = path.resolve(__dirname, "../../../../contracts/openapi.json");
     type OpenApiDoc = {
       paths: Record<string, Record<string, { "x-permission"?: string } | undefined> | undefined>;

@@ -3,20 +3,6 @@ import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 import type { ResponseContract } from "@/lib/api-envelope";
 import type { InvitationsResponse } from "./types";
 
-/**
- * Response contracts for `UsersController`, `UserProfileService` and
- * `UserOpsService` handlers.
- *
- * Derived from `users-response.schemas.ts` in the backend.
- *
- * DISAGREEMENTS FOUND:
- * - `inviteUserResponseSchema` returns `organizationName: z.string()` that the
- *   frontend type does not include. The contract accepts it (no .strict()).
- * - Backend `userPreferencesResponseSchema` has `updatedAt: wireDate().optional()`
- *   matching the DB-or-defaults path; contract reflects this.
- *
- * NOT `.strict()`. Timestamps are ISO strings.
- */
 
 const emergencyContactContract = z.object({
   name: z.string(),
@@ -113,7 +99,6 @@ export const userPreferencesContract = z.object({
   timezone: z.string(),
   dateFormat: z.string(),
   timeFormat: z.string(),
-  // Defaults path omits these; a stored row may send null. Accept both.
   numberFormat: z.string().nullish(),
   weekStartDay: z.string().nullish(),
   notificationPreferences: z.record(z.string(), z.boolean()),
@@ -121,7 +106,6 @@ export const userPreferencesContract = z.object({
   updatedAt: z.string().optional(),
 });
 
-/** Mirrors backend `userMembershipResponseSchema` / `UserProfileService.getMembership`. */
 export const userMembershipContract = z.object({
   userId: z.string(),
   orgId: z.string(),
@@ -262,5 +246,4 @@ export const importUsersContract = z.object({
   total: z.number(),
 });
 
-/** `GET /users/export` answers a CSV body, so the parsed payload is a bare string. */
 export const usersCsvExportContract = z.string();

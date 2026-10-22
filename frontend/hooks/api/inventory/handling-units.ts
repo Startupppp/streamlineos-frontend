@@ -7,14 +7,6 @@ import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/**
- * NEO-4 - handling units.
- *
- * `contents` is what this unit holds directly and is always empty on a unit that
- * contains other units: stock lives on leaves. `rolledUpContents` is what the
- * label means - this unit and every unit nested inside it - and is the figure to
- * show a person looking at a pallet.
- */
 export type HandlingUnitKind = "PALLET" | "CARTON" | "CAGE" | "TOTE";
 export type HandlingUnitStatus = "OPEN" | "CLOSED" | "SHIPPED" | "EMPTY";
 
@@ -71,7 +63,6 @@ export interface HandlingUnitsPagination {
   totalPages: number;
 }
 
-/** Mirrors what `HandlingUnitService.list` actually sends — `{ data, pagination }`, not a bare array. */
 export interface HandlingUnitsPage {
   data: HandlingUnitSummary[];
   pagination: HandlingUnitsPagination;
@@ -131,7 +122,6 @@ export function useMoveHandlingUnit() {
     onSuccess: (_, vars) => {
       qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnitsList });
       qc.invalidateQueries({ queryKey: queryKeys.inventory.handlingUnit(vars.handlingUnitId) });
-      // Moving a unit posts stock movements, so every level figure is now stale.
       qc.invalidateQueries({ queryKey: queryKeys.inventory.stockLevelsList });
     },
   });

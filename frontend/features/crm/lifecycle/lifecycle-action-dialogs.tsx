@@ -48,7 +48,6 @@ interface LifecycleActionDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Whichever of the three writes is open; one mounted at a time. */
 export function LifecycleActionDialog({
   action,
   customerLifecycleId,

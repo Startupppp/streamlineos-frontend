@@ -76,13 +76,6 @@ export interface InventoryProduct {
   salesUomId?: number | null;
   defaultVendorId?: number | null;
   reorderEnabled?: boolean;
-  /**
-   * B1 — the materials pack's catalogue attributes.
-   *
-   * Every one is optional because the server **strips them from the response**
-   * when the pack is off — not nulls, absent. A client that treated a missing
-   * `brand` as "no brand" would be reading a pack gate as data.
-   */
   brand?: string | null;
   materialGrade?: string | null;
   finish?: string | null;
@@ -115,16 +108,6 @@ export interface CreateProductInput {
   salesUomId?: number;
   defaultVendorId?: number;
   reorderEnabled?: boolean;
-  /**
-   * B1 — the construction and interior-materials fields, behind the `materials`
-   * pack. The server refuses every one of them while the pack is off, so a
-   * caller that sends them without the pack gets a named 400 rather than a
-   * silent write.
-   *
-   * `null` clears a value; `undefined` leaves it alone. Quantities are strings
-   * for the same reason they are strings everywhere else in this module: a
-   * decimal that goes through a JSON float has already lost precision.
-   */
   brand?: string | null;
   materialGrade?: string | null;
   finish?: string | null;
@@ -137,7 +120,6 @@ export interface CreateProductInput {
   reorderQuantity?: string | null;
 }
 
-/** B1 — the closed set of material families the catalogue splits on. */
 export type MaterialFamily =
   | "CEMENT_AGGREGATE" | "STEEL_REBAR" | "BRICK_BLOCK" | "TILE_STONE" | "PAINT_COATING"
   | "PLUMBING" | "ELECTRICAL" | "SANITARYWARE" | "WOOD_PANEL" | "GLASS_MIRROR"
@@ -222,7 +204,6 @@ export interface GoodsReceiptLine {
   productVariant?: { id: number; name: string; sku: string };
 }
 
-/** B1. Nothing but POSTED has stock behind it. */
 export type GoodsReceiptStatus = "DRAFT" | "COUNTING" | "QUALITY_REVIEW" | "POSTED" | "CANCELLED";
 
 export interface GoodsReceiptNote {
@@ -316,9 +297,7 @@ export interface CreatePurchaseOrderInput {
 
 export interface ReceiveGoodsLineInput {
   poLineId: number;
-  /** Decimal string at scale 4 — this becomes a stock ledger row. */
   quantityReceived: string;
-  /** Why the line did not match what the order still owed. */
   discrepancyReason?: "SHORT" | "OVER" | "DAMAGED" | "WRONG_ITEM";
   qualityStatus?: "ACCEPTED" | "REJECTED";
   rejectionReason?: string;
@@ -372,12 +351,6 @@ export interface AdjustmentDetail {
   createdByName?: string | null;
   scrapLocationId?: number | null;
   scrapLocation?: { id: number; name: string; code: string } | null;
-  /**
-   * D8. What the write-off cost, from the layers the issue consumed. Absent —
-   * not null — for a caller without `inventory:valuation:read`: the backend
-   * omits the field rather than blanking it, so `undefined` means "not allowed
-   * to know" and `null` means "not posted yet".
-   */
   writtenOffValue?: string | null;
   lines: AdjustmentDetailLine[];
 }

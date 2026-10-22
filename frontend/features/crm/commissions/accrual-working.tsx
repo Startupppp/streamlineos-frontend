@@ -30,14 +30,6 @@ interface AccrualWorkingProps {
   locale: string;
 }
 
-/**
- * The working: every deal that contributed, and the bands that priced it.
- *
- * This is the answer to "why is my number this?", which is the question every
- * commission dispute opens with. Each row is a figure the server sent, never one
- * computed here — expanding a deal shows the same band rows the total was summed
- * from, so a rep can check the arithmetic by reading rather than by trusting.
- */
 export function AccrualWorking({ accrual, locale }: AccrualWorkingProps) {
   const [openDeal, setOpenDeal] = useState<string | null>(null);
   const quotaBased = accrual.attainmentBps !== null;

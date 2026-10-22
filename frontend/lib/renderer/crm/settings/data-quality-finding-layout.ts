@@ -1,14 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * A data-quality finding, as data.
- *
- * A projection the scans file, never something a person fills in, so the form
- * is empty: a finding is closed by resolving or dismissing it, not by editing.
- * `partyId` and `findingKind` are declared so the columns exist and can be
- * arranged; the surface supplies their values through `cells`, because the
- * party is shown by name and the kind is a backend slug.
- */
 export const DATA_QUALITY_FINDING_LAYOUT: RecordLayout = {
   key: "crm:data-quality-finding",
   singular: "Finding",

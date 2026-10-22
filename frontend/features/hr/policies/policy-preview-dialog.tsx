@@ -93,7 +93,6 @@ export function PolicyPreviewDialog({ policyId, open, onOpenChange }: Props) {
           {queryParams && !isFetching && (
             <div className="rounded-lg border border-border p-3 space-y-3 bg-muted/30">
               {isError ? (
-                // An error is not "no policy matched".
                 <p className="text-xs text-destructive text-center py-2">{getErrorMessage(error)}</p>
               ) : data ? (
                 <>

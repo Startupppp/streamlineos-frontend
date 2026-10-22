@@ -14,13 +14,6 @@ export interface CycleSummaryInput {
   readonly isStale: boolean;
   readonly blockers: number;
   readonly blockedPeople: number;
-  /**
-   * Whether `blockedPeople` counted every blocker or only the page that was read.
-   *
-   * A truncated blocker list makes it a floor rather than a count, and `ready` is
-   * derived by subtracting it, so a floor there becomes an over-statement of how
-   * many people are clear to pay.
-   */
   readonly blockedPeopleIsComplete: boolean;
   readonly waived: number;
   readonly population: CyclePopulation;

@@ -3,7 +3,6 @@ export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
 export type ActivityActorKind = "human" | "system";
 
-/** One entry on a timeline, whatever the timeline is anchored to. */
 export interface TimelineEntry {
   activityId: string;
   kind: ActivityKind;
@@ -28,15 +27,12 @@ export interface TimelinePage {
   };
 }
 
-/** What a task is about, resolved to something a reader can act on. */
 export interface TaskAnchorRef {
   kind: "party" | "deal" | "subject";
   id: string;
-  /** Null where the anchor has since been deleted; the task still has to render. */
   name: string | null;
 }
 
-/** A timeline entry read by assignee rather than by anchor, so it carries one. */
 export interface TaskEntry extends TimelineEntry {
   anchor: TaskAnchorRef | null;
 }
@@ -50,7 +46,6 @@ export interface TaskPage {
   };
 }
 
-/** Exactly one anchor — never a type-plus-id pair. */
 export type TimelineAnchor =
   | { kind: "party"; partyId: string }
   | { kind: "deal"; dealId: string }

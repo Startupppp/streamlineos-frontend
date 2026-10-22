@@ -1,9 +1,5 @@
 import { formatRelativeTime } from "./date-utils";
 
-// The fallback beyond a week renders an INSTANT in the reader's own zone, which is
-// what a timestamp means to them. Anchoring NOW at midday LOCAL rather than at
-// midday UTC keeps the assertion honest about that: a UTC anchor asserts the UTC
-// reading and only passes on a UTC runner, which is the blind spot d01b3c41 found.
 const NOW = new Date(2026, 7, 24, 12, 0, 0, 0);
 const ago = (ms: number) => new Date(NOW.getTime() - ms);
 
@@ -25,7 +21,6 @@ describe("formatRelativeTime", () => {
   });
 
   it("falls back to a date beyond a week", () => {
-    // "43 days ago" is arithmetic the reader has to undo.
     expect(formatRelativeTime(ago(43 * 86_400_000), NOW)).toBe("12 Jul 2026");
   });
 

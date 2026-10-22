@@ -21,16 +21,6 @@ function LoadingSkeleton() {
   );
 }
 
-/**
- * The developer's view of Recruitment OS: the five hiring events, how to verify
- * one, a way to fire one on demand, and the honest state of sign-on and
- * directory sync.
- *
- * It exists because the webhook was previously undocumented and untestable from
- * inside the product — a tenant integrating it had to trigger a real hire to
- * find out whether their receiver worked, and the test button fired a different
- * event from the one they had subscribed to.
- */
 export function AtsDeveloperSandboxPage() {
   const { data, isLoading, isError, error, refetch } = useSandboxCatalogue();
   const pageState = usePageState({

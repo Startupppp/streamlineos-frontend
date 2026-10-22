@@ -107,7 +107,6 @@ function renderPage() {
   return userEvent.setup({ pointerEventsCheck: 0 });
 }
 
-/** The object ask.mutate was handed as its first argument (the scoped input). */
 async function sentBody(): Promise<Record<string, unknown>> {
   await waitFor(() => expect(mockAskMutate).toHaveBeenCalled());
   return mockAskMutate.mock.calls[0][0] as Record<string, unknown>;
@@ -308,8 +307,6 @@ describe("KnowledgeBasePage — Suggestion placeholder double-send prevention", 
       name: "Summarize the key points across my documents",
     });
 
-    // Fire two clicks synchronously before any React re-render flushes;
-    // the second click happens while sendingRef.current is already true.
     fireEvent.click(suggestion);
     fireEvent.click(suggestion);
 

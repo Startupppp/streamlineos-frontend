@@ -30,16 +30,6 @@ export interface CompanyMergeDialogProps {
   onMergeComplete?: () => void;
 }
 
-/**
- * A merge that discarded something is not a plain success.
- *
- * The backend returns the fields where the two records disagreed and says which
- * value it kept. Reporting "merged successfully" over that dresses one outcome
- * as another: the person chose a primary, not which of eleven differing fields
- * survived, and they cannot see afterwards that a phone number went. So the
- * dialog stays open on a conflicting merge and says what happened. A clean merge
- * closes and gets a toast, because there is nothing to read.
- */
 function describeValue(value: unknown): string {
   if (value === null || value === undefined || value === "") return "empty";
   return String(value);

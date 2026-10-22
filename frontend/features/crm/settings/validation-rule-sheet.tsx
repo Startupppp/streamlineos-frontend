@@ -41,25 +41,7 @@ import type {
 import { flagOr, requiredText, textOrOmit } from "./shared/record-payload";
 import { configFor, initialValues, toEntityType, toRuleType } from "./validation-rule-form-values";
 
-/**
- * Create and edit a validation rule, rendered from the description.
- *
- * The five-branch form this replaces is gone: which config fields a rule has is
- * declared by `visibleWhen` on `ruleType`, so the engine renders the arm the
- * rule is on, validates only that arm, and submits only that arm. Nothing here
- * decides what to show.
- *
- * What is left is what a description cannot supply — three pickers whose
- * contents belong to the tenant rather than to the record's shape. Two of them
- * are ordinary. The stage picker is not: which stages exist depends on which
- * pipeline the form currently holds, and `visibleWhen` compares against a small
- * set of known values rather than asking whether a sibling is filled in. So the
- * control reads its sibling from react-hook-form's own context, which the engine
- * already establishes — a control being clever about the tenant, not a
- * conditional smuggled into the description.
- */
 
-/** The fields each entity is known to carry, offered as suggestions only. */
 const ENTITY_FIELDS: Record<CrmValidationEntityType, readonly string[]> = {
   lead: ["name", "email", "phone", "company", "source", "status", "priority", "potentialValue"],
   deal: ["name", "value", "closeDate", "probability", "source", "status"],
@@ -97,10 +79,6 @@ function RuleFieldControl({
   );
 }
 
-/**
- * Which stages exist depends on the pipeline the form currently holds, which is
- * why this reads its sibling rather than taking it as a prop.
- */
 function RuleStageControl({ control }: { control: RecordFieldControl }) {
   const watched = useWatch({ name: "pipelineId" });
   const pipelineId = typeof watched === "string" ? watched : "";

@@ -1,21 +1,11 @@
 import type { RecordLayout, SectionSpec } from "@/lib/renderer/layout";
 import { isHidable, type LayoutAdjustment } from "@/lib/renderer/layout-adjustment";
 
-/**
- * The arrangement an administrator is editing, before they save it.
- *
- * A flat row per field rather than the stored shape, because that is what the
- * screen manipulates: one line you can move up, switch off, or drop into a
- * section. The stored shape is derived on save, so the editor never has to keep
- * three lists in step with each other.
- */
 export interface FieldRowDraft {
   readonly name: string;
   readonly label: string;
   readonly hidden: boolean;
-  /** Empty means the field keeps whichever section the description gave it. */
   readonly group: string;
-  /** False for the title field and for required fields. */
   readonly hidable: boolean;
 }
 
@@ -28,19 +18,10 @@ function declaredGroupOf(layout: RecordLayout, name: string): string {
   return section?.title ?? NO_GROUP;
 }
 
-/** The declared group titles, in declared order, with no duplicates. */
 export function declaredGroups(layout: RecordLayout): string[] {
   return [...new Set(layout.detail.sections.map((section) => section.title))];
 }
 
-/**
- * Opens the editor on what the tenant currently sees.
- *
- * Built from the *unadjusted* description plus the stored arrangement, never
- * from an already-adjusted layout: an adjusted layout has the hidden fields
- * taken out of it, and an editor that could not see them would give a tenant no
- * way to unhide anything.
- */
 export function draftFrom(
   layout: RecordLayout,
   adjustment: LayoutAdjustment | null | undefined,
@@ -95,12 +76,6 @@ export function setGroup(
   return rows.map((row) => (row.name === name ? { ...row, group } : row));
 }
 
-/**
- * The stored shape, derived from the rows.
- *
- * Groups are emitted in the order the fields appear, so a section a tenant
- * dragged to the top of the list becomes the first section on the record.
- */
 export function adjustmentFrom(
   layout: RecordLayout,
   rows: readonly FieldRowDraft[],

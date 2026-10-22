@@ -1,29 +1,32 @@
 import "server-only";
 
-import { dehydrate, QueryClient } from "@tanstack/react-query";
+import type { z } from "zod";
+
+import { dehydrate } from "@tanstack/react-query";
+import { resolvePrefetchGate } from "@/lib/prefetch/prefetch-gate";
 import { createServerQueryClient } from "./server-query-client";
 import { serverGet } from "@/lib/server-fetch";
-import { hrDocumentTypesPageQueryOptions } from "@/hooks/api/hr/document-types";
-import { orgDelegationsQueryOptions } from "@/features/hr/governance/hooks/use-delegations";
-import { positionsQueryOptions } from "@/features/hr/governance/hooks/use-positions";
-import { employeeListQueryOptions } from "@/hooks/api/hr/employee-list";
-import { onboardingStatusPageQueryOptions, onboardingUserQueryOptions } from "@/hooks/api/hr/onboarding";
-import { emailTemplatesListQueryOptions } from "@/hooks/api/hr/email-templates";
-import { handbookListQueryOptions } from "@/hooks/api/hr/handbook";
-import { bgvListQueryOptions } from "@/hooks/api/hr/background-verification";
-import { exitListQueryOptions, exitDetailQueryOptions } from "@/hooks/api/hr/exit";
-import { managerCoverageQueryOptions } from "@/hooks/api/hr/reporting-lines";
-import { skillsMatrixQueryOptions } from "@/hooks/api/hr/employee-insights";
-import { hrOnboardingDocAdminListQueryOptions } from "@/hooks/api/hr/document-review";
-import { documentTemplatesQueryOptions, documentTemplateDetailQueryOptions } from "@/hooks/api/hr/document-templates";
-import { richDocumentDetailQueryOptions } from "@/hooks/api/hr/rich-documents";
-import { fnfListQueryOptions } from "@/hooks/api/hr/fnf";
-import { probationListQueryOptions } from "@/hooks/api/hr/probation";
-import { reportingManagerRequestsQueryOptions } from "@/hooks/api/hr/reporting-manager-requests";
-import { reportingLineBulkJobsQueryOptions, reportingLineBulkJobQueryOptions } from "@/hooks/api/hr/reporting-line-bulk-jobs";
-import { terminationListQueryOptions } from "@/hooks/api/hr/termination";
-import { orgRolesQueryOptions } from "@/hooks/api/hr/hr-org";
-import { moduleMyPermissionsQueryOptions } from "@/hooks/api/module-access/catalog";
+import { hrDocumentTypesPageQueryOptions } from "@/hooks/api/hr/document-types-read-options";
+import { orgDelegationsQueryOptions } from "@/features/hr/governance/hooks/use-delegations-read-options";
+import { positionsQueryOptions } from "@/features/hr/governance/hooks/use-positions-read-options";
+import { employeeListQueryOptions } from "@/hooks/api/hr/employee-list-read-options";
+import { onboardingStatusPageQueryOptions, onboardingUserQueryOptions } from "@/hooks/api/hr/onboarding-read-options";
+import { emailTemplatesListQueryOptions } from "@/hooks/api/hr/email-templates-read-options";
+import { handbookListQueryOptions } from "@/hooks/api/hr/handbook-read-options";
+import { bgvListQueryOptions } from "@/hooks/api/hr/background-verification-read-options";
+import { exitListQueryOptions, exitDetailQueryOptions } from "@/hooks/api/hr/exit-read-options";
+import { managerCoverageQueryOptions } from "@/hooks/api/hr/reporting-lines-read-options";
+import { skillsMatrixQueryOptions } from "@/hooks/api/hr/employee-insights-read-options";
+import { onboardingDocsSummaryQueryOptions } from "@/hooks/api/hr/document-review-read-options";
+import { documentTemplatesQueryOptions, documentTemplateDetailQueryOptions } from "@/hooks/api/hr/document-templates-read-options";
+import { richDocumentDetailQueryOptions } from "@/hooks/api/hr/rich-documents-read-options";
+import { fnfListQueryOptions } from "@/hooks/api/hr/fnf-read-options";
+import { probationListQueryOptions } from "@/hooks/api/hr/probation-read-options";
+import { reportingManagerRequestsQueryOptions } from "@/hooks/api/hr/reporting-manager-requests-read-options";
+import { reportingLineBulkJobsQueryOptions, reportingLineBulkJobQueryOptions } from "@/hooks/api/hr/reporting-line-bulk-jobs-read-options";
+import { terminationListQueryOptions } from "@/hooks/api/hr/termination-read-options";
+import { orgRolesQueryOptions } from "@/hooks/api/hr/hr-org-read-options";
+import { moduleMyPermissionsQueryOptions } from "@/hooks/api/module-access/catalog-read-options";
 import { delegationsListContract as hrGovernanceDelegationsListContract } from "@/features/hr/governance/hooks/delegations-schema";
 import { employeeListPageContract } from "@/hooks/api/hr/employee-list-schema";
 import {
@@ -42,7 +45,7 @@ import { managerCoverageReportContract } from "@/hooks/api/hr/reporting-lines-sc
 import { skillsMatrixContract } from "@/hooks/api/hr/employee-insights-schema";
 import { fnfListContract } from "@/hooks/api/hr/fnf-schema";
 import { probationListContract } from "@/hooks/api/hr/probation-schema";
-import { onboardingDocListContract } from "@/hooks/api/hr/document-review-schema";
+import { onboardingDocsSummaryContract } from "@/hooks/api/hr/document-review-schema";
 import { documentTemplateListContract } from "@/hooks/api/hr/document-templates-schema";
 import { richDocumentDetailContract } from "@/hooks/api/hr/rich-documents-schema";
 import { hrReportingManagerRequestPageContract } from "@/hooks/api/hr/reporting-manager-requests-schema";
@@ -65,7 +68,11 @@ const DOC_TEMPLATES_LIMIT = 20;
 
 export async function prefetchHrEmployees() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:employees:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...employeeListQueryOptions({ limit: EMPLOYEES_LIMIT }),
       queryFn: () =>
@@ -76,13 +83,17 @@ export async function prefetchHrEmployees() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrOnboarding() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:onboarding:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...onboardingStatusPageQueryOptions(undefined, ONBOARDING_LIMIT),
       queryFn: () =>
@@ -93,13 +104,17 @@ export async function prefetchHrOnboarding() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrDocumentTypes() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:documents:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...hrDocumentTypesPageQueryOptions(undefined, DOC_TYPES_LIMIT),
       queryFn: () =>
@@ -110,13 +125,17 @@ export async function prefetchHrDocumentTypes() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrEmailTemplates() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:email-templates:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...emailTemplatesListQueryOptions(),
       queryFn: () =>
@@ -124,39 +143,51 @@ export async function prefetchHrEmailTemplates() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrHandbook() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:employees:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...handbookListQueryOptions(),
       queryFn: () => serverGet("/hr/handbook", handbookListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrBackgroundVerifications() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:sensitive:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...bgvListQueryOptions(),
       queryFn: () => serverGet("/hr/background-verification", bgvListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrExitList() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:exit:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...exitListQueryOptions({ limit: EXIT_LIST_LIMIT }),
       queryFn: () =>
@@ -164,13 +195,17 @@ export async function prefetchHrExitList() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrExitDetail(resignationId: number) {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:exit:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...exitDetailQueryOptions(resignationId),
       queryFn: () =>
@@ -178,13 +213,17 @@ export async function prefetchHrExitDetail(resignationId: number) {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrManagerCoverage() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:employees:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...managerCoverageQueryOptions(),
       queryFn: () =>
@@ -195,13 +234,17 @@ export async function prefetchHrManagerCoverage() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrSkillsMatrix() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:employees:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...skillsMatrixQueryOptions({ cursor: undefined, limit: 20 }),
       queryFn: () =>
@@ -209,13 +252,17 @@ export async function prefetchHrSkillsMatrix() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrProbationList() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:probation:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...probationListQueryOptions({ limit: PROBATION_LIMIT }),
       queryFn: () =>
@@ -226,64 +273,77 @@ export async function prefetchHrProbationList() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrDocumentReview() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([createServerQueryClient(), resolvePrefetchGate()]);
+    if (!gate.can("hr:onboarding:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...hrOnboardingDocAdminListQueryOptions({ limit: DOC_REVIEW_LIMIT }),
+      ...onboardingDocsSummaryQueryOptions({ cursor: undefined, limit: DOC_REVIEW_LIMIT }),
       queryFn: () =>
         serverGet(
-          `/hr/onboarding-docs?limit=${DOC_REVIEW_LIMIT}`,
-          onboardingDocListContract,
+          `/hr/onboarding-docs/summary?limit=${DOC_REVIEW_LIMIT}`,
+          onboardingDocsSummaryContract,
         ),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrDocumentTemplates() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:documents:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...documentTemplatesQueryOptions(undefined),
       queryFn: () =>
         serverGet(
-          `/hr/document-templates?limit=${DOC_TEMPLATES_LIMIT}`,
+          "/hr/documents/templates",
           documentTemplateListContract,
         ),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrDocumentTemplateDetail(templateId: number) {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:documents:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...documentTemplateDetailQueryOptions(templateId),
       queryFn: () =>
         serverGet(
-          `/hr/document-templates/${templateId}`,
+          `/hr/documents/templates/${templateId}`,
           documentTemplateListContract,
         ),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrRichDocument(documentId: number) {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:documents:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...richDocumentDetailQueryOptions(documentId),
       queryFn: () =>
@@ -294,13 +354,17 @@ export async function prefetchHrRichDocument(documentId: number) {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrDelegations() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:workflows:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...orgDelegationsQueryOptions({}),
       queryFn: () =>
@@ -311,26 +375,34 @@ export async function prefetchHrDelegations() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrFnf() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:payroll:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...fnfListQueryOptions(),
       queryFn: () => serverGet("/hr/fnf", fnfListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrOnboardingUser(userId: string) {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:onboarding:tasks:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...onboardingUserQueryOptions(userId),
       queryFn: () =>
@@ -338,13 +410,17 @@ export async function prefetchHrOnboardingUser(userId: string) {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrReportingRequests() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:reporting-lines:review")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...reportingManagerRequestsQueryOptions({ status: null, cursor: null, limit: null }),
       queryFn: () =>
@@ -355,13 +431,17 @@ export async function prefetchHrReportingRequests() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrReportingChanges() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:reporting-lines:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...reportingLineBulkJobsQueryOptions({ cursor: null }),
       queryFn: () =>
@@ -369,13 +449,17 @@ export async function prefetchHrReportingChanges() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrReportingChangesJob(jobId: string) {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:reporting-lines:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...reportingLineBulkJobQueryOptions(jobId, undefined),
       queryFn: () =>
@@ -383,13 +467,17 @@ export async function prefetchHrReportingChangesJob(jobId: string) {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrTerminationList() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:exit:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...terminationListQueryOptions({ cursor: "", limit: 20, status: "ALL" }),
       queryFn: () =>
@@ -397,26 +485,34 @@ export async function prefetchHrTerminationList() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrOrgRoles() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:employees:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...orgRolesQueryOptions(),
       queryFn: () => serverGet("/hr/org/roles", jobRoleListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrPositions() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:positions:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...positionsQueryOptions(undefined),
       queryFn: () =>
@@ -424,13 +520,17 @@ export async function prefetchHrPositions() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrModuleAccess() {
   try {
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:access:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
       ...moduleMyPermissionsQueryOptions("hr"),
       queryFn: () =>
@@ -441,6 +541,6 @@ export async function prefetchHrModuleAccess() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }

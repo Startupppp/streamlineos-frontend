@@ -1,15 +1,6 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
-/**
- * Every write in the accounting hook surface must go through an authorized
- * mutation wrapper, gated on an `accounting:*` permission key.
- *
- * This sweeps the directory rather than listing hook names, so it survives the
- * renames the ledger rewrite brought with it (the old `useBill*` lifecycle
- * hooks became AP-document hooks) instead of rotting into a list of symbols
- * that no longer exist.
- */
 
 const ACCOUNTING_HOOKS_DIR = join(process.cwd(), "hooks", "api", "accounting");
 

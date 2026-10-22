@@ -5,11 +5,6 @@ import { resolve } from "node:path";
 import { AiAdvisoryNotice } from "./ai-advisory-notice";
 import { AiActionResultBody } from "./ai-action-result-body";
 
-/**
- * Ticket 03. The advisory beside an AI result used to be a bare "⚠" prepended
- * to the result text: an emoji rendered from the text stream, with no accessible
- * name, no warning tone, and a glyph that depends on the viewer's emoji font.
- */
 it("renders the product's warning icon as an SVG, hidden from assistive technology", () => {
   const { container } = render(<AiAdvisoryNotice advisory="Advisory only." />);
 

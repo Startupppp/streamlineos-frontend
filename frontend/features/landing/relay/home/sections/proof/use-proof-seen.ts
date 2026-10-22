@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from "react";
 
 import { VIEW_MARGIN } from "@/features/landing/relay/lib/view";
 
-/** One scroll listener for every visual's bottom-of-page check, not one each. */
 const checks = new Set<() => void>();
 const atBottom = () => {
   const doc = document.documentElement;
@@ -21,13 +20,6 @@ const watchBottom = (check: () => void) => {
   };
 };
 
-/**
- * Re-arming "properly seen" for the stat visuals and counts. `seen` turns
- * true once the element crosses the VIEW_MARGIN line (or the page bottom is
- * reached with it on screen, like the shared `useSeen`) and turns false again
- * only when the element has left the screen entirely (plain observer, no
- * margin) — so each return plays from the first frame, where the reader is.
- */
 export const useProofSeen = <T extends Element>() => {
   const ref = useRef<T>(null);
   const [seen, setSeen] = useState(false);

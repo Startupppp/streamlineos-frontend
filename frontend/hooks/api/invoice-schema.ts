@@ -1,27 +1,5 @@
 import { z } from "zod";
 
-/**
- * Customer invoicing — the org's own receivables, not platform billing.
- *
- * Money here is `decimal(18,4)` selected raw, so **every amount is a STRING**.
- * `/invoices/stats` is the one exception: its aggregates carry an explicit
- * `::float` cast server-side, so those two totals really are numbers.
- *
- * Three things the hand-written types got wrong, all verified against
- * `invoiceStatusEnum` and the `invoices` table:
- *   · the status enum has EIGHT values. `SENT`, `PARTIALLY_PAID` and `OVERDUE`
- *     were missing from the client union, so three reachable states fell
- *     through every exhaustive branch on status.
- *   · `sentAt` / `paidAt` / `viewedAt` / `createdAt` / `updatedAt` were typed
- *     `Date`. JSON has no Date — a timestamp arrives as an ISO string, and
- *     `someDate.getTime()` on one of these throws.
- *   · `lineItems` was contracted as unreachable because no read route joined
- *     `invoice_items`. The detail route now does, so it is contracted as the
- *     persisted row — string decimals — with a default for the list route.
- *
- * Not `.strict()`: the detail route returns the full `clients` row where the
- * list returns `{ id, name }`, and both must pass one contract.
- */
 
 export const invoiceStatusContract = z.enum([
   "DRAFT",
@@ -34,12 +12,6 @@ export const invoiceStatusContract = z.enum([
   "VOIDED",
 ]);
 
-/**
- * The persisted `invoice_items` row as the detail route returns it. Every numeric column is
- * `decimal` in Postgres and arrives as a string, so it is contracted as one — the same treatment
- * `subtotal` and `total` already get on this record. The write shape is different and lives with
- * the create/update input, which sends numbers.
- */
 export const invoiceItemContract = z.object({
   id: z.number(),
   description: z.string(),
@@ -78,11 +50,6 @@ export const invoiceContract = z.object({
   clientId: z.number().nullable(),
   projectId: z.number().nullable(),
   createdBy: z.string(),
-  /**
-   * The invoice's persisted `invoice_items`, in line order. The detail route joins them; the
-   * list route does not, so the default keeps the array non-optional for readers rather than
-   * letting an undefined stand in for "this route did not ask".
-   */
   lineItems: z.array(invoiceItemContract).default([]),
   subtotal: z.string(),
   taxRate: z.string().nullable(),

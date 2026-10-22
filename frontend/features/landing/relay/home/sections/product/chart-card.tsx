@@ -11,19 +11,7 @@ import { CARD } from "./feature-row";
 import { CARD_START } from "./use-card-play";
 import { useLoopCycle } from "./use-loop-cycle";
 
-/* Figma's contact shadows under the cubes (3888:5916 → 5921) are left out on
-   the designer's request — they read as smudges on the card. */
 
-/**
- * Cube groups (3888:5925, 5932, 5939, 5946, 5953, 5960): 76 wide, bottom on
- * y254, 123 apart. `box` places the body (faces, 76 × h); the 60 × 32 cap
- * sits 8 in at the group top.
- *
- * At 1024 (3888:10324 → 10354, card 528 × 320) they are 57 wide on an 85
- * pitch from x24, caps 45 × 24 at +6 — evenly spaced, nothing overlaps.
- * At 768 (3849:80 → 110) they are 0.789 wide × 0.778 tall, 84 apart from x24;
- * at 390 (3893:3219 → 3259) 0.566 × 0.557, 53 apart from x20.
- */
 const CUBES = [
   {
     box: "top-36.25 left-8.25 h-27 w1024:top-40.25 w1024:left-5.75 w1024:h-23 w768:top-40.75 w768:left-5.75 w768:h-21 w390:top-35.75 w390:left-4.75 w390:h-15",
@@ -57,7 +45,6 @@ const CUBES = [
   },
 ] as const;
 
-/** Day label centres (3888:5930 → 5965; 1024 3888:10360 → 10365; 768 3849:116 → 121; 390 3893:3225 → 3265). */
 const DAYS = [
   "left-17.75 w1024:left-12.75 w768:left-13.25 w390:left-[calc(var(--spacing)*10.125)]",
   "left-48.5 w1024:left-34 w768:left-34.25 w390:left-[calc(var(--spacing)*23.375)]",
@@ -70,23 +57,14 @@ const DAYS = [
 const MONO =
   "font-mono text-product-small leading-product-small w390:leading-4";
 
-/** Cubes: 120 ms apart, a looser spring for a slight (~5%) overshoot. */
 const CUBE_STEP = 120;
 const CUBE_SPRING = { tension: 390, friction: 20.8 } as const;
 const CAP_AFTER = 208;
-/** How far a cap falls, px — scaled with the cubes' height in each frame. */
 const CAP_DROP = { 1440: -26, 1024: -23, 768: -20, 390: -14.5 } as const;
 const GLOW_AFTER = 304;
 const cubeAt = (i: number) => CARD_START + i * CUBE_STEP;
-/** Last cap landed + glow swell. */
 const PLAY_MS = cubeAt(CUBES.length - 1) + CAP_AFTER + GLOW_AFTER + 720;
 
-/**
- * Row 03 bar chart — "Столбцы растут" (motion brief, product.chart): cubes grow
- * from the baseline one by one with a slight overshoot, diamond caps drop onto
- * them, Saturday's accent cap glows. Loops while on screen; at rest every layer
- * is identity — the Figma group exports.
- */
 export const ChartCard = ({ chart }: Pick<ProductContent, "chart">) => {
   const { ref, on, reduced, snap } = useLoopCycle(PLAY_MS);
   const capDrop = pick(useFrame(), CAP_DROP);
@@ -114,7 +92,6 @@ export const ChartCard = ({ chart }: Pick<ProductContent, "chart">) => {
     }),
     [on, snap, capDrop],
   );
-  // Saturday's cap flashes a glow once it has landed, then back to the Figma rest.
   const [glow] = useSpring(
     () => ({
       from: { g: 0 },

@@ -18,6 +18,7 @@ import type {
 import type {
   AddProjectMemberInput,
 } from "@/types/projects";
+import { projectMembersQueryOptions } from "./project-members-read-options";
 
 type ProjectMemberRow = z.infer<typeof projectMemberRowContract>;
 type ProjectMemberPage = z.infer<typeof projectMemberPageContract>;
@@ -155,12 +156,3 @@ export function useUpdateProjectMemberRole(
   });
 }
 
-export function projectMembersQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.members(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    staleTime: 30_000,
-  };
-}

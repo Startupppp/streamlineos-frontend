@@ -7,6 +7,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { reimbursementKeys, reimbursementsListQueryOptions } from "@/hooks/api/hr/reimbursements-read-options";
 
 const reimbursementsListC = lazyContract(() =>
   import("@/hooks/api/hr/reimbursements-schema").then((m) => m.reimbursementsListContract),
@@ -30,18 +31,6 @@ export interface Reimbursement {
   rejectionReason: string | null;
   createdAt: Date | string | null;
   user?: { id: string; name: string | null; email: string } | null;
-}
-
-const reimbursementKeys = {
-  all: [...humanResourcesQueryKeys.hr.all, "reimbursements"] as const,
-  list: () => [...reimbursementKeys.all, "list"] as const,
-};
-
-export function reimbursementsListQueryOptions() {
-  return {
-    queryKey: reimbursementKeys.list(),
-    staleTime: 2 * 60_000,
-  };
 }
 
 export function useReimbursements() {

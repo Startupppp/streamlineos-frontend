@@ -19,7 +19,6 @@ export const RBAC_AUDIT_ACTIONS = [
 
 export const RBAC_AUDIT_PAGE_SIZE = 25;
 
-// The route has no filter URL, so its first-mount filters are a constant both halves share.
 export const RBAC_AUDIT_INITIAL_FILTERS: AuditLogFilters = {
   cursor: undefined,
   limit: RBAC_AUDIT_PAGE_SIZE,

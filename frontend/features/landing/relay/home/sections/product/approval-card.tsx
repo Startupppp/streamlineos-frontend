@@ -11,14 +11,6 @@ import { CARD } from "./feature-row";
 import { CARD_START } from "./use-card-play";
 import { useLoopCycle } from "./use-loop-cycle";
 
-/**
- * Field rows beside the accent bar, positions inside the padding box.
- * 1440 (3888:5885): rows 28 apart from y148, key and value share a top
- * (the last value is 24 tall, 2 above its key).
- * 1024 (3888:10288 → 10293): rows 30 apart from key y148, values 2 above.
- * 768 (3840:1019): rows 28 apart from y153, the last value 2 above.
- * 390 (3893:3180): rows 26 apart from y151, one 18 line each.
- */
 const FIELD_LAYOUT = [
   {
     key: "top-38.75 w1024:top-36.75 w768:top-38 w390:top-37.5",
@@ -41,7 +33,6 @@ const MONO = "font-mono text-product-small leading-product-small";
 const MINI_BUTTON =
   "absolute top-62.75 flex items-center gap-2 overflow-clip rounded-product-button text-product-mini leading-product-mini font-medium whitespace-nowrap shadow-float w768:top-63 w390:top-60 w390:gap-1.5";
 
-/** Timeline, ms after the card enters view. */
 const AT = {
   typing: CARD_START,
   typingOut: CARD_START + 880,
@@ -49,10 +40,8 @@ const AT = {
   fields: CARD_START + 1120,
   fieldStep: 1.6 * STEP,
   bar: CARD_START + 1120 + 3.2 * STEP,
-  /** Approve, Hold, then the waiting time — one STEP apart. */
   buttons: CARD_START + 1560,
 } as const;
-/** Typing dots: two hops each, the three dots a quarter-hop apart, over this long. */
 const HOPS_MS = 640;
 const HOP_LAG = 0.25;
 const HOP_PX = 3;
@@ -60,28 +49,19 @@ const hopY = (t: number, i: number) => {
   const p = Math.min(2, Math.max(0, t * (2 + 2 * HOP_LAG) - i * HOP_LAG));
   return -HOP_PX * Math.abs(Math.sin(Math.PI * p));
 };
-/** "waiting 26 min" gains a minute this often once the buttons are up. */
 const TICK_MS = 720;
-/** Ticks stop here so the hold keeps a steady value. */
 const MAX_TICKS = 4;
 const TICK_AT = AT.buttons + 1.6 * STEP + 400;
-/** Play length: typing → buttons, then a few visible ticks. */
 const PLAY_MS = TICK_AT + 3 * TICK_MS;
 
 const RISE_FROM = { opacity: 0, y: 8 };
 const RISE_TO = { opacity: 1, y: 0 };
 
-/**
- * Row 02 Slack card — "Сообщение приходит" (motion brief, product.approval):
- * typing dots → Relay's message → fields line by line → accent bar grows down →
- * Approve / Hold rise → the waiting time ticks while in view.
- */
 export const ApprovalCard = ({
   approval,
 }: Pick<ProductContent, "approval">) => {
   const { ref, on, reduced, snap } = useLoopCycle(PLAY_MS);
   const [extraMinutes, setExtraMinutes] = useState(0);
-  /** Reverse order on reset: later elements leave first. */
   const out = (rank: number) => rank * 32;
 
   const [typingIn] = useSpring(
@@ -104,7 +84,6 @@ export const ApprovalCard = ({
     }),
     [on, snap],
   );
-  // One linear clock drives every dot: each hops, a quarter-hop behind the last.
   const [hops] = useSpring(
     () => ({
       from: { t: 0 },
@@ -158,8 +137,6 @@ export const ApprovalCard = ({
     [on, snap],
   );
 
-  // Waiting clock: +1 min every TICK_MS once the buttons are up; back to the
-  // Figma value while the card resets.
   useEffect(() => {
     if (reduced) return;
     if (!on) {
@@ -281,7 +258,7 @@ export const ApprovalCard = ({
         />
         {approval.approve}
       </animated.span>
-      {/* Figma strokes inside the 86 × 44 frame; trim padding by the 1px border. */}
+      
       <animated.span
         className={`left-48.5 border border-product-tick bg-relay-surface-raised px-3.75 py-2.75 text-foreground w1024:left-46.5 w390:left-31 w390:px-2.75 w390:py-1.25 ${MINI_BUTTON}`}
         style={buttons[1]}

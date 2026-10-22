@@ -7,22 +7,6 @@ import type { CreateDealInput, Deal, UpdateDealInput } from "@/types/crm";
 import { DealLinkFields, type DealLinks } from "./deal-link-fields";
 import { useDealLayout } from "./use-deal-layout";
 
-/**
- * Create and edit a deal, rendered from the description.
- *
- * No schema sits beside this file. The controls, their types and their
- * validation come from `DEAL_LAYOUT`, the same description the list and the
- * detail view render, so the three cannot disagree about what a deal is.
- *
- * `actualCloseDate` and `lostReason` appear only when editing, and not because
- * this file omits them on create: the description marks them `editOnly` because
- * `CreateDealInput` has no such keys. A control whose value the API silently
- * drops is a form that appears to work and does not.
- *
- * The owner, party and subject pickers sit outside the generated form because a
- * reference to another record is the one thing `FieldKind` cannot state.
- */
-
 export interface DealSubmission {
   readonly fields: RecordFormValues;
   readonly links: DealLinks;
@@ -30,9 +14,7 @@ export interface DealSubmission {
 
 interface DealFormProps {
   mode: "create" | "edit";
-  /** The record being edited; absent when creating. */
   deal?: Deal;
-  /** Offered as owners. Omitted where the surface has no people list. */
   employees?: Array<{ id: string; name: string | null }>;
   isSubmitting: boolean;
   submitLabel: string;
@@ -69,14 +51,6 @@ export function toCreateInput({ fields, links }: DealSubmission): CreateDealInpu
   };
 }
 
-/**
- * Cleared means cleared, wherever the API can say so.
- *
- * The four keys the update DTO types as nullable send `null` when emptied;
- * everything else it types as an optional string, where `undefined` means
- * "leave it alone" and there is no way to express a clear. That asymmetry is the
- * API's, and it is written down here rather than rediscovered per screen.
- */
 export function toUpdateInput({ fields, links }: DealSubmission, id: number): UpdateDealInput {
   return {
     id,

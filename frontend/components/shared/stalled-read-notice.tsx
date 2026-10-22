@@ -6,20 +6,10 @@ import { cn } from "@/lib/utils";
 
 interface StalledReadNoticeProps {
   className?: string;
-  /** What is not arriving, in the reader's words: "conversations", "invitations". */
   subject: string;
   onRetry: () => void;
 }
 
-/**
- * The panel-sized counterpart to `AppLoadingStalled`.
- *
- * That component answers the same question for the whole shell and reloads the
- * page to do it; a list panel owns a `refetch`, so it asks for one rather than
- * discarding everything else on screen. The notice sits WITH the skeleton rather
- * than replacing it: the read has not failed, it is late, and swapping in an error
- * would claim more than is known.
- */
 export function StalledReadNotice({
   className,
   subject,

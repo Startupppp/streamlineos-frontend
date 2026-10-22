@@ -1,12 +1,6 @@
 import "server-only";
 import sanitizeHtml from "sanitize-html";
 
-/**
- * Allowlist for article HTML. The blog admin already renders HTML from a validated document and
- * escapes every value (renderer v1); this second pass, on the server that serves the page, is what
- * makes legacy rows written by the retired editor safe too. Keep it in step with the admin's
- * `lib/content/render.ts`: anything that renderer emits must survive here, and nothing more.
- */
 const OPTIONS: sanitizeHtml.IOptions = {
   allowedTags: [
     "h2", "h3", "h4", "p", "br", "hr", "strong", "em", "b", "i", "s", "code", "pre", "blockquote",
@@ -29,7 +23,6 @@ const OPTIONS: sanitizeHtml.IOptions = {
   allowedSchemesByTag: { img: ["https"] },
   allowProtocolRelative: false,
   transformTags: {
-    // External links never get the opener; the admin already sets this, legacy rows may not.
     a: (tagName, attribs) => ({
       tagName,
       attribs: /^(https?:|mailto:)/i.test(attribs.href ?? "") ? { ...attribs, rel: "noopener noreferrer" } : attribs,

@@ -1,16 +1,3 @@
-/**
- * FE-TS-010 and FE-TS-011 — what a timesheet decision leaves behind.
- *
- * FE-TS-010: approve/reject invalidated only the approvals queue and the period
- * list, so a manager who approved and then opened Team, Reports, Billing or
- * Overdue read pre-approval numbers until staleTime elapsed.
- *
- * FE-TS-011: submit is fenced server-side with
- * `@Idempotent("timesheets.period.submit")`, but the api-client mints a fresh
- * `Idempotency-Key` per fetch — so a retry of the same intent reached the fence
- * as a different command and the fence protected nothing. The key has to be the
- * same across attempts of one intent.
- */
 import type { ReactNode } from "react";
 import { renderHook, waitFor } from "@testing-library/react";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";

@@ -1,11 +1,3 @@
-/**
- * The properties of the materials-pack surfaces that a screenshot cannot pin.
- *
- * These are deliberately narrow: they check the rules that reading the rendered
- * page cannot confirm — that status is never carried by colour alone, that the
- * seven quantity buckets are all shown separately, and that the client does not
- * recompute a number the server owns.
- */
 import { readFileSync, readdirSync, statSync } from "fs";
 import { join } from "path";
 
@@ -76,10 +68,6 @@ describe("status is never carried by colour alone", () => {
 describe("the client never recomputes what the server owns", () => {
   it("does not subtract one stock bucket from another anywhere in these files", () => {
     const offenders: string[] = [];
-    // Availability is `on_hand − committed − blocked − quality_hold − outgoing`,
-    // and is zero at a location that may not be sold from. A client that
-    // subtracts two of those terms is silently over-stating every SKU with
-    // damage, a quality hold, or stock riding in a van.
     const subtraction = /\b(onHand|available|reserved|damaged|quarantined|picked|inTransit)\s*-\s*\w*(Qty|Stock|onHand|reserved|committed)\b/;
     for (const { path, source } of sources()) {
       const flattened = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");

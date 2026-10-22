@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { InfiniteData } from "@tanstack/react-query";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -15,7 +15,6 @@ import type {
   UpdateHrAutomationInput,
 } from "@/types/hr/automations";
 import { lazyContract } from "@/lib/api-envelope";
-import { useQuery } from "@tanstack/react-query";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -23,6 +22,7 @@ const noContentC = lazyContract(() =>
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { hrAutomationsListKey } from "@/hooks/api/hr/hr-automations-schema";
+import { hrAutomationsQueryOptions } from "@/hooks/api/hr/hr-automations-read-options";
 
 const BASE = [...queryKeyBase, "hr", "automations"] as const;
 
@@ -34,12 +34,7 @@ export const hrAutomationKeys = {
   events: () => [...BASE, "events"] as const,
 };
 
-type AutomationListParams = { search?: string; triggerEvent?: string; isEnabled?: boolean; limit?: number };
-
-export const hrAutomationsQueryOptions = (params?: AutomationListParams) => ({
-  queryKey: hrAutomationKeys.list(params),
-  staleTime: 30_000,
-}) as const;
+type AutomationListParams = Parameters<typeof hrAutomationsQueryOptions>[0];
 
 type AutomationRulePage = {
   data: HrAutomationRule[];

@@ -14,7 +14,6 @@ export const templateSchema = z.object({
 
 export type TemplateFormValues = z.infer<typeof templateSchema>;
 
-/** Test send: one member, plus a value per declared variable (aligned by index). */
 export const templateTestSendSchema = z.object({
   recipientId: z.string().nullable().refine((id) => !!id, "Choose who receives the test"),
   values: z.array(z.string()),

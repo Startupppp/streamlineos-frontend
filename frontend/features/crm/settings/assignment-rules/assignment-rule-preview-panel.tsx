@@ -11,14 +11,6 @@ import { CrmOptionSelect } from "@/features/crm/shared/metadata/crm-option-selec
 import { usePreviewAssignmentRule } from "@/hooks/api/crm/settings/assignment-rules";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * What the rules would do with a lead that looked like this.
- *
- * Deliberately not a record surface and deliberately not generated: it edits
- * nothing and lists nothing, it composes a hypothetical and shows the trace the
- * server returns. The panel is named in the crafted-surface allowlist for
- * exactly that reason — a rule tester is an explanation, not a record.
- */
 export function AssignmentRulePreviewPanel() {
   const [source, setSource] = useState("");
   const [priority, setPriority] = useState("");

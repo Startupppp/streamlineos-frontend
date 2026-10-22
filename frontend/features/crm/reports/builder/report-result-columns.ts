@@ -10,13 +10,6 @@ import { fieldLabel, type ReportFieldOption } from "./report-source-fields";
 
 export type ReportResultRow = Record<string, unknown>;
 
-/**
- * A returned column is joined to its meaning by `alias`, never by position.
- *
- * The compiler generates `c0`, `c1`, … precisely so that no caller-supplied
- * string becomes an identifier, and it hands the projections back separately so
- * the caller can put its own labels on them.
- */
 export function resultColumnHeader(
   projection: ReportingProjection,
   options: readonly ReportFieldOption[],

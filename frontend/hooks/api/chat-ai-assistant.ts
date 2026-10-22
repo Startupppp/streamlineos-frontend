@@ -149,12 +149,6 @@ type AskAiStreamOutcome =
   | { status: "cancelled"; text: string }
   | { status: "busy" };
 
-/**
- * Chat is one caller of the shared AI text-stream client. The transport, the single-flight
- * guard, the partial-output-on-cancel behaviour and the unmount teardown all live in
- * `useAiTextStream`, so the other nine `/stream` routes get the same client rather than a
- * second copy of this loop.
- */
 export function useAskAI() {
   const { stream, stop, isStreaming } = useAiTextStream();
 

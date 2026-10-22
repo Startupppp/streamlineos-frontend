@@ -1,16 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-/**
- * The WCAG contrast arithmetic and the `globals.css` token reader, shared by the
- * default-palette contrast suites.
- *
- * It lives in `test-utils/` rather than beside the suites because jest's default
- * `testMatch` treats every file under `__tests__/` as a suite, and because three
- * suites now read the same tokens: judging light/dark base pairs, judging the
- * semantic status ramp, and judging the seventeen selectable themes (which uses
- * the richer resolver in `theme-contrast.ts`).
- */
 
 export function hexToRgb(hex: string): [number, number, number] {
   const cleaned = hex.replace("#", "");

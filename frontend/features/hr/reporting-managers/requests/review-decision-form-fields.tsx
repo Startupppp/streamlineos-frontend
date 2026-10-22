@@ -33,7 +33,6 @@ function isDecision(value: string): value is ReviewDecision {
 
 export function ReviewDecisionFormFields({ form, request }: ReviewDecisionFormFieldsProps) {
   const decision = form.watch("decision");
-  // Display only: the picker needs the chosen person's name after its search moves on.
   const [chosen, setChosen] = useState<ManagerRef | null>(request.suggestedManager);
 
   function handleDecisionChange(value: string) {

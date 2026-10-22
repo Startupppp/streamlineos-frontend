@@ -7,13 +7,6 @@ import type {
   RenewLifecycleInput,
 } from "@/hooks/api/crm/lifecycle";
 
-/**
- * The three writes a renewals manager makes against one contract.
- *
- * Every form carries strings and converts once in its `to*Input`, because the
- * backend bodies are `.strict()` and a blank optional must be omitted rather
- * than sent. Bounds mirror `lifecycle/dto/lifecycle.schemas.ts`.
- */
 
 export const SIGNAL_KIND_LABEL: Record<LifecycleSignalKind, string> = {
   "support-escalation": "Support escalation",

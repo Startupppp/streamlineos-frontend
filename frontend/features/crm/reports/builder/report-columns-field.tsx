@@ -37,11 +37,6 @@ export function ReportColumnsField({ form, options }: ReportColumnsFieldProps) {
     append({ ...EMPTY_PROJECTION_ROW });
   }
 
-  /**
-   * Removing a column renumbers the sort keys, because a sort names an index
-   * into `select` rather than a field. Left alone, deleting column one silently
-   * re-points every sort below it at a different column.
-   */
   function handleRemoveColumn(index: number) {
     remove(index);
     const kept = form

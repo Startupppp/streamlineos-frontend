@@ -1,7 +1,6 @@
 import type { BlogArticle } from "@/lib/blog/contracts";
 import { JOURNAL_NAME, ORGANIZATION_ID, SITE_ORIGIN, blogUrl, jsonLd } from "@/lib/blog/seo";
 
-/** BlogPosting + BreadcrumbList describing exactly what the page shows. */
 export function ArticleJsonLd({ article }: { article: BlogArticle }) {
   const url = blogUrl(`/${article.slug}`);
   const image = article.socialImage ?? article.cover?.src ?? null;

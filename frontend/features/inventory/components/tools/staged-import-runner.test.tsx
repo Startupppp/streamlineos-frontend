@@ -5,17 +5,6 @@ import { renderWithProviders } from "@/test-utils";
 import { StagedImportRunner } from "./staged-import-runner";
 import type { StagedImportProgress } from "@/hooks/api/inventory/staged-import";
 
-/**
- * The defect this replaces: the import screen sent `preview.sample` to the
- * single-shot job endpoint, and the backend defines that sample as
- * `rows.slice(0, 20)`. A person importing five thousand products got twenty,
- * under a job that reported COMPLETED.
- *
- * So the load-bearing assertion is a count: every data row in the file is
- * staged, not a sample of them. The rest is the honest-states rule — a rejected
- * row is shown with the line number a person sees in their spreadsheet, and a
- * failure says the job is resumable rather than pretending it finished.
- */
 
 const stage = jest.fn();
 const open = jest.fn();
@@ -64,7 +53,6 @@ function progress(overrides: Partial<StagedImportProgress> = {}): StagedImportPr
   };
 }
 
-/** A CSV with `rows` data lines, well past the 20 the old path would have sent. */
 function csvOf(rows: number): File {
   const body = Array.from({ length: rows }, (_, index) => `SKU-${index + 1},Widget ${index + 1}`);
   return new File([`sku,name\n${body.join("\n")}`], "products.csv", { type: "text/csv" });
@@ -99,8 +87,6 @@ describe("staged import", () => {
       (call: [{ rows: Array<{ rowNumber: number }> }]) => call[0].rows,
     );
     expect(staged).toHaveLength(120);
-    // 1-based and counting the header, so a rejection cites the line the person
-    // sees in their spreadsheet.
     expect(staged[0]?.rowNumber).toBe(2);
     expect(staged[119]?.rowNumber).toBe(121);
   });
@@ -122,9 +108,6 @@ describe("staged import", () => {
 
     await user.click(screen.getByRole("button", { name: /Import all rows/i }));
 
-    // Three turns of the loop, ending only because the server said `finished`.
-    // A loop that stopped after the first call would leave the job half applied
-    // and the screen would still say it was done.
     await waitFor(() => expect(process).toHaveBeenCalledTimes(3));
     expect(await screen.findByRole("button", { name: /Import another file/i })).toBeInTheDocument();
   });
@@ -154,9 +137,6 @@ describe("staged import", () => {
     process.mockResolvedValue(
       progress({ totalRows: 2, stagedRows: 2, appliedRows: 1, failedRows: 1, finished: true }),
     );
-    // The list of reasons fails to load. Reading that as "no detail was
-    // recorded" tells the operator the job stored nothing, which is a different
-    // and far more comfortable fact than "we could not ask".
     mockErrors = {
       isLoading: false,
       isError: true,
@@ -183,8 +163,6 @@ describe("staged import", () => {
     process.mockResolvedValue(
       progress({ totalRows: 500, stagedRows: 500, appliedRows: 0, failedRows: 500, finished: true }),
     );
-    // The endpoint pages at 50. Rendering that page under a heading counting 500
-    // lets an operator fix what they can see and re-run believing it is clean.
     mockErrors = {
       isLoading: false,
       data: {

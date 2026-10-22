@@ -3,13 +3,6 @@ import { toBuilderValues } from "./report-builder-values";
 import { buildQueryDescription } from "./report-query-description";
 import type { ReportFieldOption } from "./report-source-fields";
 
-/**
- * Reading a saved report back into the form.
- *
- * The round trip is the property worth pinning: a description that goes into
- * the form and comes back changed would silently rewrite a shared report the
- * first time somebody opened it and pressed save.
- */
 
 const options: ReportFieldOption[] = [
   { name: "name", label: "Name", type: "text", group: "Deals" },
@@ -58,7 +51,6 @@ describe("toBuilderValues", () => {
       field: "stage",
       fieldType: "enum",
     });
-    /** `count` with no field is the one projection that legitimately has none. */
     expect(loaded.values.select[2]).toEqual({
       aggregate: "count",
       field: "",
@@ -69,12 +61,6 @@ describe("toBuilderValues", () => {
   });
 
   it("names the fields it could not resolve rather than loading them silently", () => {
-    /**
-     * A source withdrawn, or a report saved by somebody whose scope is wider
-     * than this reader's. The row still loads so the rest of the report is
-     * visible; the caller is told which names are unresolved so the screen can
-     * explain the blank instead of looking broken.
-     */
     const loaded = toBuilderValues(description, [options[0]!]);
     if (loaded.kind !== "loaded") throw new Error("expected the description to load");
 
@@ -82,11 +68,6 @@ describe("toBuilderValues", () => {
   });
 
   it("refuses a filter tree it cannot draw instead of showing fewer conditions", () => {
-    /**
-     * The failure this exists to prevent: loading only the conditions the
-     * builder understands would show a narrower report than the one saved, and
-     * saving that back would quietly widen what everyone else reads.
-     */
     const nested: ReportingQueryDescription = {
       ...description,
       filter: {

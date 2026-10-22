@@ -2,12 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-/**
- * After "Add additional manager", focus moves to the new row's manager picker
- * (react-hook-form would focus the first registered input, the Relationship
- * field, because the picker registers no ref). Put `listRef` on the element
- * that holds the rows; each row's picker trigger is a `combobox`.
- */
 export function useFocusAddedPicker<T extends HTMLElement>() {
   const listRef = useRef<T>(null);
   const pendingIndex = useRef<number | null>(null);

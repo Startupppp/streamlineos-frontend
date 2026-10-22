@@ -9,19 +9,6 @@ import { usePartyDuplicates } from "@/hooks/api/party/merges";
 import { PartyMergeDialog } from "@/components/party-merge/party-merge-dialog";
 import type { PartyDuplicateCandidate } from "@/types/party/merges";
 
-/**
- * "This record may be a duplicate", on the record itself.
- *
- * Reads the persisted queue rather than a list recomputed per request, which is
- * the difference that makes the banner honest: a pair dismissed as "not
- * duplicates" stays dismissed, so this stops appearing instead of coming back on
- * every visit for the rest of the record's life.
- *
- * Filtered client-side against the page of pending candidates. The queue is
- * capped at 100 per tenant and this is a hint rather than a report — the full
- * list, and the merge history, live at `/parties/duplicates`, which the banner
- * links to rather than duplicating.
- */
 export function ContactDuplicateBanner({ partyId }: { partyId: string | null }) {
   const canMerge = useCan("party:merges:manage");
   const [mergeTarget, setMergeTarget] = useState<PartyDuplicateCandidate | null>(null);
@@ -84,12 +71,6 @@ export function ContactDuplicateBanner({ partyId }: { partyId: string | null }) 
             right: mergeTarget.right,
             signals: mergeTarget.signals,
           }}
-          /*
-           * The record the reader is standing on is preselected as the survivor.
-           * They opened this from its detail page, so it is the one they mean to
-           * keep — and every field conflict resolves in the survivor's favour,
-           * so defaulting to the other side would overwrite what is on screen.
-           */
           defaultSurvivorPartyId={partyId ?? undefined}
         />
       ) : null}

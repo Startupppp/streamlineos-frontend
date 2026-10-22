@@ -5,20 +5,12 @@ import type { ReactNode } from "react";
 
 import { SpringTrigger } from "@/features/landing/relay/components/animation/springs/spring-trigger";
 
-/** Scroll drift, px either side of the resting position. */
 const DRIFT = 40;
 
-/**
- * Bloom layer that drifts with scroll (motion brief, proof "Дрейф за
- * скроллом"). The box covers the whole section, so progress runs 0 → 1 from
- * the section's top touching the viewport bottom to its bottom leaving the
- * top — 0.5 (no offset, the Figma position) when the section is centred.
- */
 export const BloomDrift = ({
   direction,
   children,
 }: {
-  /** 1 drifts down as the page scrolls, -1 drifts up. */
   direction: 1 | -1;
   children: ReactNode;
 }) => {

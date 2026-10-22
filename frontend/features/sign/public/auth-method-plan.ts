@@ -19,8 +19,6 @@ const UNIMPLEMENTED_LABELS: Record<string, string> = {
   id_verification: "identity document verification",
 };
 
-// sso/passkey/kba/id_verification are in the enum and implemented nowhere; rows still carry them,
-// so the signing screen must name them rather than fall through to a code form the backend refuses.
 export function authScreenPlan(method: SignAuthMethod): AuthScreenPlan {
   if (method === "access_code") return { kind: "access_code" };
 

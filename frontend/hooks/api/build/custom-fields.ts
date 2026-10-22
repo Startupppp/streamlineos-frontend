@@ -11,6 +11,7 @@ import type {
   CustomFieldType,
 } from "@/types/projects/tasks";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { projectCustomFieldsQueryOptions } from "./custom-fields-read-options";
 
 const cfListLazy = lazyContract(() =>
   import("@/hooks/api/build/build-project-schema").then((m) => m.buildCustomFieldListContract),
@@ -57,13 +58,6 @@ function applyFieldValues(
     next.push({ id: -change.fieldId, ticketId, fieldId: change.fieldId, field, value: change.value, createdAt: now, updatedAt: now });
   }
   return next;
-}
-
-export function projectCustomFieldsQueryOptions(projectId: number) {
-  return {
-    queryKey: queryKeys.projects.customFields(projectId),
-    staleTime: 60_000,
-  } as const;
 }
 
 export function useProjectCustomFields(projectId: number) {

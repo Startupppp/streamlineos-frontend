@@ -1,23 +1,6 @@
 import type { FieldSpec, RecordLayout } from "../../layout";
 
-/**
- * An assignment rule, as data.
- *
- * This is the description that needed the vocabulary to grow. A rule is one
- * shape with five arms — who a lead goes to depends on how the rule assigns —
- * and `visibleWhen` already said that. What it could not say was the rule's
- * conditions: a list of `field operator value` triples with an add button and a
- * remove button, which the hand-written sheet drew itself with `useFieldArray`
- * and its own idea of what an empty row looks like. Three other surfaces had
- * drawn the same thing, differently. `lines` is the answer to all four.
- *
- * The conditions carry `minLines: 1` because a rule with none matches every
- * lead — the API rejects it, and finding that out on submit is a form that
- * wasted somebody's time. The engine keeps the last row rather than offering a
- * remove control that produces a record the server will not take.
- */
 
-/** What a condition may test. Mirrors the fields the backend matcher reads. */
 const CONDITION_FIELD_OPTIONS = [
   { value: "source", label: "Source" },
   { value: "priority", label: "Priority" },
@@ -60,13 +43,6 @@ const CONDITION_LINE: readonly FieldSpec[] = [
   { name: "value", label: "Value", kind: "text", required: true },
 ];
 
-/**
- * A weighted member is a person and a share, so it is two columns rather than a
- * slider and a number that have to be kept in step. The share is a `percent`,
- * which is what it is — the hand-written sheet stored 0–100 and rendered a
- * slider beside a right-aligned readout, and the readout was the part carrying
- * the meaning.
- */
 const WEIGHTED_MEMBER_LINE: readonly FieldSpec[] = [
   { name: "userId", label: "Member", kind: "reference", required: true, referenceTo: "user" },
   { name: "weight", label: "Weight", kind: "percent", required: true },
@@ -120,12 +96,6 @@ export const ASSIGNMENT_RULE_LAYOUT: RecordLayout = {
       visibleWhen: { field: "assignmentType", equals: ["assign_user"] },
     },
     {
-      /*
-       * Shown for three arms, because the server reads candidates out of this
-       * one column for all three. A least-loaded rule with nobody in it does
-       * not fall back to the org -- `resolveAssignment` returns null and the
-       * lead is assigned to no one.
-       */
       name: "roundRobinUserIds",
       label: "Members",
       kind: "text",
@@ -145,13 +115,6 @@ export const ASSIGNMENT_RULE_LAYOUT: RecordLayout = {
       hint: "A member with twice the weight receives roughly twice the leads.",
     },
     {
-      /*
-       * A territory rule takes its territory from the org's territory table,
-       * matched on the lead's city -- there is no territory to choose here, and
-       * the picker that used to stand in this place sent a `territoryId` no
-       * column accepts. What the rule does own is who gets the lead when no
-       * territory matches, which is otherwise nobody.
-       */
       name: "fallbackUserId",
       label: "Fallback owner",
       kind: "reference",

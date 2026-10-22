@@ -29,7 +29,6 @@ export function useQuarantine(params: QuarantineListParams) {
   });
 }
 
-/** Every loaded page of every filter holds the row; patch them all from the response. */
 function patchRecord(qc: QueryClient, id: string, patch: (row: QuarantineRecord) => QuarantineRecord | null) {
   qc.setQueriesData<QuarantineList>({ queryKey: keys.quarantine() }, (page) => {
     if (!page) return page;

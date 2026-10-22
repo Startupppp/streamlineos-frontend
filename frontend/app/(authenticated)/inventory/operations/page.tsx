@@ -35,13 +35,6 @@ interface HubCard {
   Icon: React.ComponentType<{ className?: string }>;
 }
 
-/**
- * Every tile carries the exact key of the screen behind it.
- *
- * Frontend §17: a hub never renders a link that predictably ends at Access
- * Denied. These were unconditional, so a receiver with only
- * `purchase-orders:read` was offered six destinations and could open one.
- */
 const STATIC_CARDS: HubCard[] = [
   {
     href: "/inventory/operations/issues",
@@ -148,15 +141,6 @@ export default function OperationsHubPage() {
     for (const query of queries) void query.refetch();
   }
 
-  /*
-   * G8 — the hub owes the same four answers as any other route.
-   *
-   * Denied comes first and is not the same as empty: someone whose only
-   * inventory access is, say, valuation holds none of these keys, and the old
-   * page showed them four zeroes and seven links that all end at Access Denied.
-   * Every branch sits below the hooks, so hook order never depends on a
-   * permission.
-   */
   const canSeeAnything = canReadPo || canReadSo || canReadStock || showReturnsTile;
 
   return (
@@ -176,15 +160,7 @@ export default function OperationsHubPage() {
         />
       ) : (
         <div className="flex flex-1 min-h-0 flex-col gap-4">
-          {/*
-            NEO-5. On a handheld this hub is the wrong screen: it is six tiles
-            leading to six desktop tables. The RF queue is offered first, and only
-            below `md`, because a supervisor on a laptop wants the cockpit and a
-            picker on a scanner wants the next task. Offered rather than
-            redirected - a tablet in a supervisor's hands is under `md` too, and
-            taking the cockpit away from them would be deciding who they are from
-            their screen width.
-          */}
+          
           {canReadStock && (
             <Link
               href="/inventory/rf"

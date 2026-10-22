@@ -26,13 +26,6 @@ export interface InventoryAuditEventFilters {
   cursor?: string;
 }
 
-/**
- * The audit trail is cursor-only.
- *
- * There is no `page` here because the backend does not offer one: a trail that
- * is appended to while it is read has no stable offsets, and there were no
- * page-based callers to keep working. Drive it with `useCursorPagination`.
- */
 export interface InventoryAuditEventsPage {
   items: InventoryAuditEvent[];
   limit: number;

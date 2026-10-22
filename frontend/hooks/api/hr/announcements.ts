@@ -6,6 +6,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { hrAnnouncementsQueryOptions } from "@/hooks/api/hr/announcements-read-options";
 import type {
   AnnouncementStatus,
   AnnouncementTargetType,
@@ -41,16 +42,12 @@ export interface HrAnnouncement {
 export type CreateHrAnnouncementData = Omit<HrAnnouncement, "id" | "orgId" | "authorId" | "readCount" | "createdAt">;
 export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { announcementId: number };
 
-export const hrAnnouncementsQueryOptions = () =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.announcements(),
+export function useHrAnnouncements() {
+  return useQuery({
+    ...hrAnnouncementsQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get<HrAnnouncement[]>("/org/announcements", undefined, signal, announcementListC),
-    staleTime: 60_000,
   });
-
-export function useHrAnnouncements() {
-  return useQuery(hrAnnouncementsQueryOptions());
 }
 
 export function useAllHrAnnouncements(options?: { enabled?: boolean }) {

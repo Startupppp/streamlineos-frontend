@@ -186,15 +186,6 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
   const orgTz = useOrgTimeZone();
   const columns = useMemo(() => buildColumns(t, orgTz), [t, orgTz]);
   const [pageSize, setPageSize] = useState(20);
-  /**
-   * The page-overshoot correction this component used to run — snapping
-   * `page` back to `totalPages` whenever a page-size change or a deleted row
-   * left the reader past the end — is gone because the state it corrected can
-   * no longer exist. A keyset pager holds cursors, not a page index, so there
-   * is no number to overshoot; changing the page size rewinds to the head via
-   * `resetKey`, which is the same outcome the correction produced, one render
-   * earlier and without a query for a page that isn't there.
-   */
   const pager = useCursorPager(String(pageSize));
   const { data, error, isLoading, refetch } = useHrAttendanceHistory(
     pager.cursor,
@@ -223,8 +214,6 @@ export const DailyHistoryTable = memo(function DailyHistoryTable({
     pageSizeOptions: [10, 20, 50] as const,
   } as const;
 
-  // Reads /me/attendance/history (self:attendance): a caller without it must
-  // be told so, not "No attendance records" (FE-47).
   const pageState = usePageState({
     permission: "self:attendance",
     isLoading,

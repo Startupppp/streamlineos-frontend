@@ -40,12 +40,6 @@ const measure = (over: Partial<RepairMeasure> = {}): RepairMeasure => ({
   ...over,
 });
 
-/**
- * CRM-P1-05. The policies panel has always let an organisation grant the loop
- * permission to edit customer records. Nothing let it read what was then
- * changed, measure whether that was any good, or put one back — the API for all
- * three existed and no screen called it.
- */
 describe("RepairActivityPanel", () => {
   beforeEach(() => {
     mockCan.mockReturnValue(true);
@@ -60,19 +54,11 @@ describe("RepairActivityPanel", () => {
   });
 
   it("shows both values, so a change is reviewable", () => {
-    /**
-     * "It repaired the phone number" is not reviewable. "It changed 07700
-     * 900461 to +44 7700 900461" is.
-     */
     render(<RepairActivityPanel />);
     expect(screen.getByText(/07700 900461 → \+44 7700 900461/)).toBeInTheDocument();
   });
 
   it("reads an empty window as no evidence, not as no automation", () => {
-    /**
-     * The backend returns automatedShare: null when nothing was decided. 0%
-     * would state the opposite of what is known.
-     */
     mockMeasure.mockReturnValue({
       data: measure({ resolution: { automated: 0, manual: 0, automatedShare: null } }),
       isLoading: false,
@@ -84,10 +70,6 @@ describe("RepairActivityPanel", () => {
   });
 
   it("shows what is still open beside the share it cleared", () => {
-    /**
-     * The ratio alone is gameable: a loop repairing every trivial finding and
-     * leaving every hard one shows a rising share while the queue gets harder.
-     */
     render(<RepairActivityPanel />);
     expect(screen.getByText("80%")).toBeInTheDocument();
     expect(screen.getByText("Still open")).toBeInTheDocument();
@@ -120,7 +102,6 @@ describe("RepairActivityPanel", () => {
   });
 
   it("does not offer undo to somebody without the reverse key", () => {
-    /** Undoing what the system did is deliberately its own authority. */
     mockCan.mockReturnValue(false);
     render(<RepairActivityPanel />);
     expect(screen.queryByRole("button", { name: /put back/i })).not.toBeInTheDocument();

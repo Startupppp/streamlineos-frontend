@@ -47,11 +47,6 @@ export interface WebhookEndpoint {
   updatedAt: string;
 }
 
-/**
- * Returned by create and rotate only. The plaintext secret exists in exactly
- * one response and is never readable again — the column holds ciphertext and
- * every other endpoint strips the field.
- */
 export interface WebhookSecretReveal {
   secret: string;
   secretHint: string;

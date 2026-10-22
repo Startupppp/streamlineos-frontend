@@ -12,7 +12,6 @@ export type OpsBriefSeverity = "high" | "medium" | "low" | "none";
 export interface OpsBriefSignal {
   key: string;
   label: string;
-  /** Supplied by the server, so the route and the count cannot drift apart. */
   href: string;
   count: number;
   severity: OpsBriefSeverity;
@@ -29,10 +28,6 @@ export interface OpsBriefNarration {
   narration: InsightNarration;
 }
 
-/**
- * INV-101. Deterministic and unpaid, so it may load with the page — the counts
- * are the same ones the reports compute. Nothing here reaches a model.
- */
 export function useOpsBrief() {
   const canView = useCan("inventory:ai:read");
   return useQuery<InventoryOpsBrief, Error>({
@@ -44,10 +39,6 @@ export function useOpsBrief() {
   });
 }
 
-/**
- * The narrative, which spends credits. A mutation rather than a query because
- * it must only ever happen because somebody pressed the button.
- */
 export function useNarrateOpsBrief() {
   return useAuthorizedMutation<OpsBriefNarration, Error, void>("inventory:ai:read", {
     mutationKey: ["inventory", "ai", "ops-brief", "narrate"],

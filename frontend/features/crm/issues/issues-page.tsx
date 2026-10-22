@@ -197,7 +197,7 @@ export function IssuesPage() {
           <SelectValue />
         </SelectTrigger>
         <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-          {/* The sentinel removes the filter rather than sending "all". */}
+          
           <SelectItem value="all">All stages</SelectItem>
           {ISSUE_STAGES.map((candidate) => (
             <SelectItem key={candidate} value={candidate}>

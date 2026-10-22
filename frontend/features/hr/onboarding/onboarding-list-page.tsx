@@ -37,8 +37,6 @@ function NewEmployeeSection() {
     if (isNewEmployeeMode(value)) setMode(value);
   }
 
-  // The shared Tabs primitive replaces a hand-rolled role="tab" pair that had
-  // no focus ring and no arrow-key navigation.
   return (
     <Tabs value={mode} onValueChange={handleModeChange} className="space-y-4">
       <TabsList aria-label="Onboard mode">
@@ -145,8 +143,6 @@ function HrDocumentsTab({
 const VALID_TABS = ["workflow", "plans", "wizard", "documents", "probation"] as const;
 
 export function OnboardingListPage() {
-  // FE-42/43: useCan is false while access loads, which flashed the employee
-  // "My Documents" view at HR admins. Branch on the tri-state instead.
   const manageState = useCanState("hr:onboarding:manage");
   const canManageOnboarding = manageState === "granted";
   const canManageDocumentTypes = useCan("hr:documents:manage");

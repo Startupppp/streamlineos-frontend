@@ -5,16 +5,6 @@ import { LandedCostClient } from "./landed-cost-client";
 import { fromMinorUnits, toMinorUnits } from "./landed-cost-schema";
 import type { LandedCostVoucherListItem } from "@/hooks/api/inventory/landed-cost";
 
-/**
- * Landed cost, which existed only on the backend.
- *
- * Two things have to hold. The screen keeps a refused read, a failed request and
- * an empty list apart — a landed-cost list that reads "nothing recorded" when
- * the reader simply lacks `inventory:valuation:read` tells them margin is being
- * computed correctly when nobody knows. And money never passes through a float:
- * the backend takes integer minor units precisely because this number becomes
- * both a debit and a credit, so the conversion has to be exact.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -114,8 +104,6 @@ describe("landed cost", () => {
 
     expect(screen.getByText("LC-0005")).toBeInTheDocument();
     expect(screen.getByText("INR 1250.75")).toBeInTheDocument();
-    // The receipt id and the voucher id are both on the row and neither is a
-    // thing to show an operator.
     expect(screen.queryByText("88")).not.toBeInTheDocument();
   });
 
@@ -137,8 +125,6 @@ describe("money never becomes a float", () => {
     ["1250.75", 125075],
     ["8.1", 810],
     ["1000000.99", 100000099],
-    // The classic: 0.1 + 0.2 in binary is not 0.3, and `Math.round(x * 100)` on
-    // some of these is off by one. Parsing the digits sidesteps it entirely.
     ["19.99", 1999],
     ["0.29", 29],
     ["1.005", 100],

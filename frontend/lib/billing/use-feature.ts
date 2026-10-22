@@ -13,7 +13,6 @@ interface UseFeatureResult {
   enabled: boolean;
   plan: Plan | null;
   requiredPlan: Plan | null;
-  /** Clear copy for upgrade CTAs when the feature is locked. */
   upgradeMessage: string;
 }
 

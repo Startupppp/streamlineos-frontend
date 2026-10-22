@@ -8,8 +8,6 @@ export default async function ProjectDetailPage({
 }) {
   const { projectId } = await params;
   const id = Number(projectId);
-  // A non-numeric segment is a bad link, not an empty project: 404 rather than
-  // firing a request for `NaN` and rendering "not found" after a spinner.
   if (!Number.isInteger(id) || id <= 0) notFound();
   return <ProjectDetailClient projectId={id} />;
 }

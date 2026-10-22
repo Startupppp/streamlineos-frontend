@@ -1,13 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * A call, as data.
- *
- * The record it becomes is a task of type `CALL` — the platform has no call
- * table — so the layout describes what a person is asked, and the surface is
- * what knows the shape the API stores it in. That split is the point: the
- * question "what did this call involve" is stable, and where it is filed is not.
- */
 export const CALL_LOG_LAYOUT: RecordLayout = {
   key: "crm:call-log",
   singular: "Call",

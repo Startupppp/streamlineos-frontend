@@ -36,7 +36,6 @@ describe("ClassStopsPanel", () => {
     mockStops.mockReturnValue({ data: [stop()] });
   });
 
-  /** Same rule as the panel above it: a permanently empty box stops being read. */
   it("renders nothing when nothing is stopped", () => {
     mockStops.mockReturnValue({ data: [] });
     const { container } = render(<ClassStopsPanel />);
@@ -44,21 +43,11 @@ describe("ClassStopsPanel", () => {
   });
 
   it("names the class in words, because releasing is per class", () => {
-    /**
-     * Somebody who does not want chasing may still want the renewal
-     * conversation. "nudge" is a database token; the operator is choosing what
-     * this person will start hearing again.
-     */
     render(<ClassStopsPanel />);
     expect(screen.getByText("Chasers")).toBeInTheDocument();
   });
 
   it("shows an unknown class as itself rather than as Unknown", () => {
-    /**
-     * The backend owns this vocabulary. A class added there must show up here
-     * as itself — labelling it "Unknown" would hide a live stop from the only
-     * screen that can lift it.
-     */
     mockStops.mockReturnValue({ data: [stop({ outboundClass: "win_back" })] });
     render(<ClassStopsPanel />);
     expect(screen.getByText("win back")).toBeInTheDocument();
@@ -70,11 +59,6 @@ describe("ClassStopsPanel", () => {
   });
 
   it("hides the release control from somebody who may only look", () => {
-    /**
-     * Releasing puts a customer back on a list they were taken off, so it is
-     * the stronger key. The server refuses it too — this stops the button from
-     * being offered and then failing.
-     */
     mockCan.mockReturnValue(false);
     render(<ClassStopsPanel />);
     expect(screen.queryByRole("button", { name: /allow again/i })).not.toBeInTheDocument();

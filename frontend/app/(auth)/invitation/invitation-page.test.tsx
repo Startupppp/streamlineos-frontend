@@ -53,12 +53,6 @@ const acceptMutate =
   jest.fn<void, [AcceptInvitationVariables, AcceptCallbacks]>();
 const claimMutate = jest.fn<void, [string, ClaimCallbacks]>();
 const declineMutate = jest.fn<void, [{ token: string }, DeclineCallbacks]>();
-/**
- * Added when the invitation email OTP landed and never stubbed, so every test in
- * this file threw on render — the whole invitation flow went uncovered through the
- * release QA found broken (BUG-HRMS-010). Succeeding by default is the OTP being
- * sent; the code step is then driven explicitly.
- */
 const requestOtpMutate =
   jest.fn<void, [{ token: string }, RequestOtpCallbacks]>((_variables, callbacks) => {
     callbacks.onSuccess();
@@ -169,11 +163,6 @@ function declineResolves() {
 
 const EMAIL_OTP = "424242";
 
-/**
- * Acceptance is two steps now: the invitee identifies themselves, the API sends a
- * code to the invited mailbox, and the code is what actually accepts. The link
- * alone is a bearer token, so it is no longer accepted as proof of who holds it.
- */
 async function enterEmailCode() {
   const user = userEvent.setup();
   await user.type(
@@ -320,14 +309,6 @@ describe("InvitationPage — accepting as a new joiner", () => {
 });
 
 describe("InvitationPage — accepting as an existing account", () => {
-  /**
-   * BUG-HRMS-010. This used to accept on the token alone. `accept` is a public
-   * route, so it cannot see that the caller is signed in — a signed-in invitee is
-   * indistinguishable from anyone else holding the link — and it therefore
-   * requires a code on every path. The one-click version could only ever be
-   * refused with a 400, so an invitee who already had an account could never
-   * join, whatever the state of the OTP route.
-   */
   it("verifies the invited mailbox before joining, then resolves its authorized landing once", async () => {
     validation.data = { ...VALID_INVITATION, userExists: true };
     currentSession = { user: { email: "existing@acme.test" } };

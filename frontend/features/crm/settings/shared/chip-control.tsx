@@ -5,18 +5,6 @@ import { X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-/**
- * A list of short values, typed one at a time.
- *
- * The `FieldSpec` vocabulary has no array kind and should not grow one for this:
- * a description says what a field *is*, and "a comma-separated list of states"
- * is a text field with a better control than a text box. So the field stays
- * `text` in the description and the surface supplies this through `RecordForm`'s
- * `controls` — the same escape hatch a person picker uses, for the same reason.
- * The value the engine carries is still one string, which is what lets the
- * generated schema, the generated defaults and the patch builder go on working
- * without knowing this control exists.
- */
 
 interface ChipControlProps {
   value: string;

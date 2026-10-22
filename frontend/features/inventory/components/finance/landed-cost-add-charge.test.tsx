@@ -3,17 +3,6 @@ import { renderWithProviders, axeViolationIds } from "@/test-utils";
 import { LandedCostDetailSheet } from "./landed-cost-detail-sheet";
 import { LandedCostAddChargeDialog } from "./landed-cost-add-charge-dialog";
 
-/**
- * A charge could be typed into a voucher only while raising it.
- *
- * `POST /inventory/landed-cost/:voucherId/charges` was mounted, permissioned and
- * fenced, and `useAddLandedCostCharge` was referenced by nothing but two tests.
- * Freight and duty are invoiced by different parties days apart, so the second
- * one arriving meant deleting the draft and retyping the first.
- *
- * The reachability assertion is the one that matters: the dialog passing its own
- * tests while no sheet mounted it is the exact shape of the original defect.
- */
 
 const mockAddMutate = jest.fn();
 let mockAddPending = false;
@@ -93,7 +82,6 @@ describe("adding a charge to a raised voucher", () => {
       <LandedCostDetailSheet voucherId={12} canManage={false} onOpenChange={jest.fn()} />,
     );
     expect(screen.queryByRole("button", { name: /add charge/i })).not.toBeInTheDocument();
-    // The voucher itself still reads — the read key is a different permission.
     expect(screen.getByText("Road freight")).toBeInTheDocument();
   });
 

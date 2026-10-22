@@ -21,7 +21,6 @@ const exportJobC = lazyContract(() => import("@/hooks/api/privacy/gdpr-schema").
 const rectifyC = lazyContract(() => import("@/hooks/api/privacy/gdpr-schema").then((m) => m.gdprRectificationContract));
 const erasureC = lazyContract(() => import("@/hooks/api/privacy/gdpr-schema").then((m) => m.gdprErasureContract));
 
-/** A job still being worked by `GDPR_EXPORT_WORKER_ENABLED` workers; anything else is terminal. */
 export function isExportJobActive(job: Pick<GdprExportJob, "status"> | undefined): boolean {
   return job?.status === "pending" || job?.status === "running";
 }
@@ -32,7 +31,6 @@ function saveExportJson(result: GdprExportResult): GdprExportResult {
   return result;
 }
 
-/** Self-service, universal: the JWT subject is the data subject. Saves the JSON as a file. */
 export function useExportMyData() {
   return useMutation<GdprExportResult, Error, void>({
     mutationKey: ["privacy", "gdpr", "export-me"],
@@ -41,10 +39,6 @@ export function useExportMyData() {
   });
 }
 
-/**
- * Starts (or, under the same key, re-reads) an async archive. The key is per intent, so a
- * second click after success starts a new archive, never a duplicate of a pending one.
- */
 export function useCreateMyExportJob() {
   const qc = useQueryClient();
   return useMutation<GdprExportJob, Error, void>({
@@ -55,7 +49,6 @@ export function useCreateMyExportJob() {
   });
 }
 
-/** Polls every 5s while the worker has the job; stops on a terminal status. */
 export function useGdprExportJob(jobId: string | null) {
   return useQuery<GdprExportJob, Error>({
     queryKey: keys.gdprExportJob(jobId ?? ""),
@@ -78,7 +71,6 @@ export function useDownloadGdprExport() {
   });
 }
 
-/** The string-valued fields of `gdprRectificationBodySchema`; address and emergency contact are objects. */
 export type RectifiableField =
   | "profile.name"
   | "hr_profile.personal_email"

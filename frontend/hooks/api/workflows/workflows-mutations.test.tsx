@@ -68,8 +68,6 @@ function makeWrapper(client: QueryClient) {
 
 beforeEach(() => jest.clearAllMocks());
 
-// ─── 1. Version conflict ──────────────────────────────────────────────────────
-
 describe("usePublishWorkflow — version conflict", () => {
   it("surfaces a 409 error to the caller rather than swallowing it", async () => {
     const conflictErr = Object.assign(new Error("Version conflict"), { status: 409 });
@@ -170,8 +168,6 @@ describe("usePublishWorkflow — version conflict", () => {
     );
   });
 });
-
-// ─── 2. Permission gates — definition mutations ───────────────────────────────
 
 describe("mutation permission gates — workflow definitions", () => {
   it("useCreateWorkflow refuses when workflows:workflows:create is absent", async () => {
@@ -321,8 +317,6 @@ describe("mutation permission gates — workflow definitions", () => {
   });
 });
 
-// ─── 3. Permission gates — execution mutations ────────────────────────────────
-
 describe("mutation permission gates — executions", () => {
   it("useTriggerWorkflow refuses when workflows:executions:manage is absent", async () => {
     const client = makeClient([]);
@@ -424,8 +418,6 @@ describe("mutation permission gates — executions", () => {
     );
   });
 });
-
-// ─── 4. Query-key discipline ──────────────────────────────────────────────────
 
 describe("query-key discipline", () => {
   it("queryKeys.workflows.all is a prefix of queryKeys.workflows.list so invalidation covers list reads", () => {

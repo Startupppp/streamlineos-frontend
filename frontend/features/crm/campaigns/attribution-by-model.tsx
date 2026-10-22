@@ -20,18 +20,6 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMinorMoney } from "@/lib/accounting/money";
 import { ATTRIBUTION_MODELS, type AttributionModel } from "@/types/crm/campaigns";
 
-/**
- * CRM-P1-01. Won revenue read under whichever attribution model you choose.
- *
- * The backend has implemented five models for a while and the only reports on
- * screen were first-touch and last-touch — which is to say, the two that make
- * the strongest claim about which single touch mattered, and the ones the
- * multi-touch work existed to stop being the only answer.
- *
- * The label under each model comes from the response, not from a copy here.
- * The backend owns what a model claims, and a second wording would drift from
- * the arithmetic it describes.
- */
 
 const MODEL_LABEL: Record<AttributionModel, string> = {
   first_touch: "First touch",
@@ -44,7 +32,6 @@ const MODEL_LABEL: Record<AttributionModel, string> = {
 const HALF_LIFE_CHOICES = [7, 14, 30, 90] as const;
 
 export function AttributionByModel() {
-  /** Linear by default, matching the server: the model with no parameter to get wrong. */
   const [model, setModel] = useState<AttributionModel>("linear");
   const [halfLifeDays, setHalfLifeDays] = useState<number>(30);
 
@@ -84,7 +71,7 @@ export function AttributionByModel() {
             </SelectContent>
           </Select>
 
-          {/* Only time_decay reads it, so offering it elsewhere would imply it matters. */}
+          
           {model === "time_decay" ? (
             <Select value={String(halfLifeDays)} onValueChange={handleHalfLifeChange}>
               <SelectTrigger className="w-44">
@@ -116,12 +103,7 @@ export function AttributionByModel() {
           />
         ) : !report.data ? null : (
           <div className="space-y-gap-section">
-            {/*
-              The honest totals, first and unavoidable. The backend goes to some
-              trouble to say how much revenue it could NOT attribute and how many
-              won deals had no touches at all; a page showing only the campaign
-              rows would quietly present a partial picture as the whole one.
-            */}
+            
             <dl className="grid grid-cols-2 gap-gap-field sm:grid-cols-4">
               <div>
                 <dt className="text-micro text-muted-foreground">Won revenue</dt>
@@ -183,12 +165,7 @@ export function AttributionByModel() {
                       <TableRow key={campaign.campaignId ?? "none"}>
                         <TableCell>
                           <span className="mr-2">{campaign.campaignName}</span>
-                          {/*
-                            An archived campaign still holding credit is shown
-                            rather than dropped: removing the row would move its
-                            revenue into "could not attribute" and understate a
-                            campaign that really did the work.
-                          */}
+                          
                           {campaign.campaignArchived ? (
                             <Badge variant="outline">archived</Badge>
                           ) : null}

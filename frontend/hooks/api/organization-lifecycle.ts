@@ -118,7 +118,6 @@ export const useCreateOrganization = () => {
       name: string
       slug: string
       billingEmail?: string
-      /** BUG-HRMS-009: both optional on the endpoint; absent keeps the column default. */
       country?: string
       timezone?: string
     }

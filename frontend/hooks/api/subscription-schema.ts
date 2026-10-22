@@ -1,22 +1,5 @@
 import { z } from "zod";
 
-/**
- * Platform billing: the plan an organization is on, what it may spend, what it
- * has already paid and how many seats it has left. Every screen that decides
- * "you cannot do this, upgrade" reads from one of these bodies.
- *
- * Three shapes are not what the hand-written types said:
- *   · `subscription_status` is a Postgres enum with SIX values — `SUSPENDED`
- *     was missing from the client union, so a suspended tenant fell through
- *     every `switch` on status.
- *   · `payments[].amount` is a `numeric(15,2)` selected raw, so it is a STRING
- *     and it is nullable. The paise twin `amountPaise` is the integer.
- *   · `billing_profiles.country` has a DB default but is not NOT NULL, and the
- *     update DTO accepts an explicit null, so it can arrive as `null`.
- *
- * Not `.strict()`: an added plan feature or profile column is a backward
- * compatible deploy. A dropped or retyped one is the drift this catches.
- */
 
 export const subscriptionPlanContract = z.enum([
   "STARTER",

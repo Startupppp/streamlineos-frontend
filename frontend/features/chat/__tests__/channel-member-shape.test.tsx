@@ -7,18 +7,6 @@ import type { Channel, ChannelMember } from "@/types/chat";
 
 jest.mock("@/hooks/api", () => ({ useChatOnlineUsers: () => ({ data: [] }) }));
 
-/**
- * The payload the backend actually sends, asserted here as data rather than as a cast.
- *
- * `hooks/api/chat-core-read.ts` reads the detail route with `apiClient.get<Channel>(...)`, so
- * nothing at runtime checks the response against `ChannelMember`. The API shipped
- * `members[].membership.user`; this interface declared `user` flat. Both repos typechecked green
- * and every DIRECT header rendered "Unknown".
- *
- * `DETAIL_MEMBER` and `PREVIEW_MEMBER` are the exact key sets the backend's
- * `chat-channel-member-wire-shape.spec.ts` asserts the routes emit. If the API's shape moves, that
- * spec goes red; if this interface moves away from it, these do.
- */
 const ME = "user-me";
 const OTHER = "user-other";
 
@@ -45,7 +33,6 @@ const MY_MEMBER: ChannelMember = {
   user: { id: ME, name: "Me", image: null, email: "me@test.com" },
 };
 
-/** The list preview: same keys, `user.email` withheld to keep the 50-channel page small. */
 const PREVIEW_MEMBER: ChannelMember = {
   ...DETAIL_MEMBER,
   user: { id: OTHER, name: "Ada Lovelace", image: null },
@@ -58,7 +45,6 @@ const DIRECT_CHANNEL = {
   members: [MY_MEMBER, DETAIL_MEMBER],
 } as unknown as Channel;
 
-/** The shape as it shipped: identity two levels down, under the join table's name. */
 const NESTED_MEMBER = {
   id: 2,
   channelId: 7,

@@ -30,11 +30,6 @@ function makeWrapper(client: QueryClient) {
   };
 }
 
-/**
- * The wire shape `/notifications` actually returns. The service builds it with
- * `buildIdCursorPage` and answers `{ data, hasMore, nextCursor }`; the hook retains
- * that envelope and follows the server cursor only while `hasMore` is true.
- */
 function page(items: Notification[]): {
   data: Notification[];
   hasMore: boolean;
@@ -92,10 +87,6 @@ describe("id-derived cursors survive a page whose ids disagree with its order", 
   const LIMIT = 3;
 
   it("continues from the lowest id on the page, not the last element", async () => {
-    // A page ordered by (priority DESC, id DESC) puts id 41 last while 12 is the
-    // true minimum. Continuing from 41 would re-serve 12..40 and skip nothing on
-    // this page but duplicate on the next — continuing from 12 is the only
-    // keyset-safe move under `id < cursor`.
     const firstPage = [makeNotification(90), makeNotification(12), makeNotification(41)];
     apiClient.get.mockImplementation((url: string, params?: Record<string, string>) => {
       if (url !== "/notifications") return Promise.resolve(page([]));

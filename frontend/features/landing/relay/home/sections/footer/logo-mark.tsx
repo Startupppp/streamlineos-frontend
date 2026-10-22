@@ -1,14 +1,12 @@
 import Image from "next/image";
 
 const SIZE = {
-  /** Brand panel mark 3888:7076 — 28, radius 8. */
   md: {
     box: "size-7 rounded-footer-mark",
     glyph: "size-7",
     src: "/landing/relay/footer/footer-logo-glyph.svg",
     px: 28,
   },
-  /** Relay Labs mark 3888:7105 — 26, radius 8. */
   sm: {
     box: "size-6.5 rounded-footer-mark",
     glyph: "size-6.5",
@@ -17,7 +15,6 @@ const SIZE = {
   },
 } as const;
 
-/** Accent logo tile: gradient fill + hairline, chevron glyph from the export. */
 export const LogoMark = ({
   size,
   className = "",

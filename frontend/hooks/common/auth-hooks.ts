@@ -149,8 +149,6 @@ export async function signInWithMagicToken(
 ): Promise<MagicLinkSignInOutcome> {
   if (!magicToken) return { status: "failed" };
   clearBackendTokenCache();
-  // Do not retry credentials sign-in with the same token: magic-link verify
-  // consumes it on first success, so a second attempt always fails.
   return attemptCredentialsSignIn(magicToken);
 }
 
@@ -188,8 +186,6 @@ export function useValidateInvitation(token: string) {
     staleTime: 60_000,
     enabled: !!token,
     retry: false,
-    // The page draws its own "Invitation expired" card for a revoked link's 404;
-    // the provider default would throw it to the route boundary instead.
     ...INLINE_READ_ERROR,
   });
 }
@@ -256,8 +252,6 @@ export interface SignOutOutcome {
   serverRevocationCompleted: boolean;
 }
 
-// The UI waits on this call before leaving, so a slow API must not hold the
-// click for the full request timeout.
 const SIGN_OUT_REVOKE_TIMEOUT_MS = 4000;
 
 const SERVER_REVOCATION_FAILED_MESSAGE =
@@ -269,8 +263,6 @@ export function useSignOut() {
   return useMutation({
     mutationKey: ["auth", "sign-out"],
     mutationFn: async (): Promise<SignOutOutcome> => {
-      // A 401 from the logout call (or a query still in flight) would run
-      // endSession() and land on "session expired" instead of /signin (#47).
       setAutoSignOutSuppressed(true);
       let serverRevocationCompleted = false;
       try {

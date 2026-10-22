@@ -25,16 +25,6 @@ import {
   WALLET,
 } from "@/test-utils/response-contract-fixtures";
 
-/**
- * Two halves, and both are load-bearing.
- *
- * A contract that rejects real traffic is worse than no contract — it turns a
- * working screen into an error page on deploy, which is why the fixtures are
- * the shapes the backend services actually build.
- *
- * The second half feeds each contract the specific drift it exists to catch:
- * the renamed field, the removed one, the number that is really a string.
- */
 
 describe("the shipped contracts accept the response the backend actually builds", () => {
   it("accepts an access snapshot", () => {

@@ -21,12 +21,6 @@ const settings = (over: Partial<AutonomySettings> = {}): AutonomySettings => ({
   ...over,
 });
 
-/**
- * CRM-P1-17. auto_quote_enabled has been on the settings row and in the PATCH
- * schema since the feature shipped, and both hooks existed with no consumer —
- * so it could only be turned on with a raw PATCH, and an organisation that
- * already had it on had nowhere to see that.
- */
 describe("AutoQuotePanel", () => {
   beforeEach(() => {
     mockCan.mockReturnValue(true);
@@ -51,11 +45,6 @@ describe("AutoQuotePanel", () => {
   });
 
   it("answers the question turning it on immediately raises", () => {
-    /**
-     * A drafted quote is not a sent quote. Showing the hold window beside the
-     * toggle is what makes "the system will write quotes" readable as something
-     * a person can still stop.
-     */
     mockSettings.mockReturnValue({
       data: settings({ autoQuoteEnabled: true, holdWindowSeconds: 90 }),
       isLoading: false,

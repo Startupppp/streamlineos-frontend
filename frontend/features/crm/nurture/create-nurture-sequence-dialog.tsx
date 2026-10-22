@@ -29,14 +29,6 @@ interface CreateNurtureSequenceDialogProps {
 
 const DEFAULTS: NurtureSequenceFormValues = { name: "", description: "" };
 
-/**
- * Two fields, so a Dialog rather than a Sheet.
- *
- * A sequence is born `draft` with no steps and no way to enrol anybody, which
- * is why naming it is all this asks for: the cadence is the next screen's work,
- * and a create form that also collected steps would let somebody author a
- * twelve-touch sequence in one go without ever seeing what it will actually run.
- */
 export function CreateNurtureSequenceDialog({
   open,
   onOpenChange,

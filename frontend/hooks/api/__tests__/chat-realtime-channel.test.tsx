@@ -3,20 +3,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 
-/**
- * The chat window subscribes on the channel the token actually grants.
- *
- * Backend 5ac74c398 put every Ably channel behind `cell:<cellId>:`. This hook
- * kept asking for the pre-5ac74c398 name, which the minted token does not
- * authorise, so Ably refused the attach with a 403, `safeSubscribe` swallowed
- * it, and the hook still reported `isConnected: true` because the *connection*
- * (as opposed to the channel) was fine. The poll fallback in
- * use-message-panel-data.ts is gated on that flag, so it never engaged and the
- * window went permanently silent with no error anywhere.
- *
- * Both halves are asserted here: the name asked for, and the verdict reported
- * when the attach is refused.
- */
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -120,7 +106,6 @@ describe("useChatRealtime — channel name", () => {
       expect(ably.requested.length).toBeGreaterThan(0);
     });
 
-    // ably.service.ts grants `cell:legacy-1:chat:${orgId}:${channelId}`.
     expect(ably.requested).toContain("cell:legacy-1:chat:org-1:7");
     expect(ably.requested).not.toContain("chat:org-1:7");
 
@@ -137,7 +122,6 @@ describe("useChatRealtime — attach verdict drives the poll fallback", () => {
       wrapper: makeWrapper(freshClient()),
     });
 
-    // The socket is up — only the channel was refused.
     expect(ably.connection.state).toBe("connected");
 
     await waitFor(() => {

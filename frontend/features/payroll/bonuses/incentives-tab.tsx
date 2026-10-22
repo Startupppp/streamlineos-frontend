@@ -54,7 +54,6 @@ const INCENTIVE_STATUS_STYLES: Record<string, string> = {
   ADDED_TO_PAYROLL: "bg-primary/10 text-foreground border-primary/20",
 };
 
-
 export function IncentivesTab() {
   const router = useRouter();
   const searchParams = useSearchParams();

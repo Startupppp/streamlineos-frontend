@@ -1,4 +1,3 @@
-/** @jest-environment node */
 import { assertPageExists, listingPageNumber, pagedPath } from "./listing-route";
 import { sanitizeArticleHtml } from "./sanitize";
 import { blogUrl, jsonLd, SITE_ORIGIN } from "./seo";

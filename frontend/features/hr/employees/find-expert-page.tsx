@@ -57,8 +57,6 @@ export function FindExpertPage() {
     role: activeParams.role || undefined,
   });
 
-  // No server-side requirePermission guards this route, so a caller without
-  // hr:employees:view must be told so here — not "No experts found" (FE-47).
   const pageState = usePageState({
     permission: "hr:employees:view",
     isLoading: false,

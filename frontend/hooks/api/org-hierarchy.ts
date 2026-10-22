@@ -124,8 +124,6 @@ export function getOrgUnitDependencyPreview(
   );
 }
 
-// ─── Overview & Tree ─────────────────────────────────────────────────────────
-
 export function useOrgTree() {
   const canView = useCan("settings:view");
   return useQuery({
@@ -147,8 +145,6 @@ export function useOrgHierarchyOverview(
     ...options,
   });
 }
-
-// ─── Locations ───────────────────────────────────────────────────────────────
 
 export function useOrgLocations(query?: ListQuery) {
   return useGatedQuery("settings:view", {
@@ -188,8 +184,6 @@ export function useUpdateOrgLocation() {
     },
   });
 }
-
-// ─── Cost Centers ─────────────────────────────────────────────────────────────
 
 export function useOrgCostCenters(query?: ListQuery) {
   return useGatedQuery("settings:view", {

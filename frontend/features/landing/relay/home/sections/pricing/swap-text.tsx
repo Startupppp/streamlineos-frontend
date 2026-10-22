@@ -4,11 +4,6 @@ import { animated, useTransition } from "@react-spring/web";
 
 import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 
-/**
- * Text that changes with the slider: the old value softens out while the new
- * one focuses in on the same spot (one overlapped grid cell, so nothing
- * reflows). The first value renders plain — its entrance is the parent's.
- */
 export const SwapText = ({ children }: { children: string }) => {
   const swap = useTransition(children, {
     initial: null,

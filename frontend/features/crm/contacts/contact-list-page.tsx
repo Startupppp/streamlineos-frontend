@@ -49,12 +49,6 @@ function stopRowClick(event: React.MouseEvent) {
 
 export function ContactListPage() {
   const canManageContacts = useCan("crm:contacts:manage");
-  /*
-   * The party key, because merging is `POST /party/merges` — a contact is an
-   * alias for a party, and the contact-grain endpoint that took the numbers is
-   * gone. CRM administers the `party` namespace, so anyone who could merge a
-   * contact already holds this.
-   */
   const canMergeContacts = useCan("party:merges:manage");
   const canViewContacts = useCan("crm:contacts:view");
 

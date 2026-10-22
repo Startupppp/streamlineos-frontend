@@ -60,9 +60,6 @@ export function useCreateCrmSequence() {
   });
 }
 
-/** Writable fields only — mirrors the backend `updateSequenceSchema`, which is
- * `.strict()`. Deriving this from `Partial<CrmSequence>` would let `id`,
- * `createdAt` and any future read-only field reach the API and be rejected. */
 type UpdateSequenceInput = Pick<
   CrmSequence,
   "name" | "description" | "entityType" | "isActive" | "stopOn"

@@ -124,7 +124,6 @@ describe("FE-TS-006 — copying last week waits for the creates it started", () 
     renderGrid();
     await user.click(screen.getByRole("button", { name: /copy last week/i }));
 
-    // One create in flight; the button must not have gone idle already.
     await waitFor(() => expect(post).toHaveBeenCalledTimes(1));
     expect(screen.getByRole("button", { name: /copying/i })).toBeInTheDocument();
     expect(toast.success).not.toHaveBeenCalled();

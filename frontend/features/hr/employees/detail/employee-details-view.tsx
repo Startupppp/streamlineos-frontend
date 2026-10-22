@@ -60,9 +60,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const router = useRouter();
   const { data: session } = useSession();
   const canManageEmployees = useCan("hr:employees:manage");
-  // Terminate lands on /hr/termination, which requires hr:exit:manage, and the
-  // review draft posts to /ai/generate-review, which requires hr:performance:manage.
-  // Gating either on an HR-employees key sends a permitted-looking user to a 403.
   const canManageExits = useCan("hr:exit:manage");
   const canDraftReview = useCan("hr:performance:manage");
   const sensitiveScope = useScope("hr:sensitive:view");
@@ -101,9 +98,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     (hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own"));
   const showEditTab =
     serverActions?.has("update") ?? (hydrated && canUpdateEmployee && (isSelf || manageScope === "all"));
-  // V-023/V-025: the same helper the header card uses. Composing first+last
-  // here ignored `employee.name`, so a display-name-only person exported a PDF
-  // called "Employee".
   const employeeName = getUserDisplayName(employee);
 
   const scrollActiveTabIntoView = useCallback(() => {
@@ -275,9 +269,6 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
           Back
         </Button>
       }
-      // V-023: the header card below already carries the name as its <h2>, so
-      // the page title only names the page for assistive tech — it is not a
-      // second visible copy of the same words.
       title={<span className="sr-only">{employeeName}</span>}
       actionsInline
       actions={

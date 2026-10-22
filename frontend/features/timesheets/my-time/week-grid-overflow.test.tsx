@@ -6,12 +6,6 @@ import { apiClient } from "@/lib/api-client";
 import type { TimesheetEntry } from "@/features/timesheets/types";
 import { WeekGrid } from "./week-grid";
 
-/**
- * jsdom paints nothing, so this cannot prove what a phone shows (FE-123). What
- * it does pin is the half that was wrong: the scroll affordance was hidden at
- * `sm` and up while the grid still overflowed there — exactly the 768px case —
- * and every day plus the total has to be in the scrollable region.
- */
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
@@ -83,7 +77,6 @@ function entry(over: Partial<TimesheetEntry>): TimesheetEntry {
   };
 }
 
-/** Stands in for layout: the table is 800px wide inside a viewport-width box. */
 function withViewportWidth(width: number) {
   Object.defineProperty(HTMLElement.prototype, "clientWidth", {
     configurable: true,
@@ -141,7 +134,6 @@ describe("TS-001 / TS-002 — every day of the week stays reachable when the gri
     renderGrid();
 
     const hint = await screen.findByText(/scroll sideways/i);
-    // The 768 case is the regression: this line used to carry `sm:hidden`.
     expect(hint.className).not.toMatch(/(^|[\s:])sm:hidden/);
     expect(hint).toBeVisible();
   });

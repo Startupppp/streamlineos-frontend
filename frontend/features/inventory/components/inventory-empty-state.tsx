@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 
 export type InventoryEmptyStateProps = ComponentProps<typeof EmptyState>;
 
-/** Inventory empty states use a uniform small illustration size across all screens. */
 export function InventoryEmptyState({
   illustrationSize = "sm",
   className,

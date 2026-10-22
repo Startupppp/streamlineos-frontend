@@ -1,17 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for the AI credit wallet, its ledger and its usage rollups — the
- * one place in the app where a mis-parsed field is money.
- *
- * Two shapes here are not what they look like and both were wrong in the
- * hand-written types these replace:
- *   · `costUsd` on a ledger row is a Postgres `numeric(12,6)` projected raw, so
- *     it arrives as a STRING. The same field on the usage rollup is cast
- *     `::text` and back through `Number()` server-side, so there it is a number.
- *   · wallet and transaction credit amounts are milli-credits divided by 1000,
- *     so they are fractional; `packs[].credits` is already whole credits.
- */
 
 export const aiCreditTransactionTypeContract = z.enum([
   "PURCHASE",

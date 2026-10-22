@@ -1,28 +1,3 @@
-/**
- * @jest-environment node
- */
-/**
- * The SSR half of a contracted route must reject drift the same way the client
- * half does.
- *
- * Why this file exists rather than another assertion in
- * `hydration-contract.test.ts`: that suite mocks `@/lib/server-fetch` wholesale,
- * so `parseApiResponse` never runs there and a contract on the prefetch seam is
- * invisible to it. This one mocks `fetch` instead, so the real envelope parser
- * executes and the contract is actually exercised.
- *
- * The drift each case feeds is not invented. It is the shape the frontend's own
- * hand-written type declared as legal, verified against the backend column that
- * decides the truth:
- *   payroll_runs.gross_total  decimal(15,2).default("0").notNull()  (runs.ts:30)
- *   payroll_runs.employee_count integer.default(0).notNull()        (runs.ts:34)
- * `types/payroll/runs.ts:122` declares `grossTotal: string | null`, and the
- * backend service annotates the same field `string | null` too — both are
- * over-permissive against a `notNull()` column. A prefetch typed from that
- * declaration accepts a null the column cannot produce, hydrates it into the
- * client cache, and the page renders it before the contracted client `queryFn`
- * ever runs.
- */
 jest.mock("server-only", () => ({}));
 
 jest.mock("@/lib/get-server-auth", () => ({
@@ -35,7 +10,6 @@ import { getServerAuth } from "@/lib/get-server-auth";
 const ORG = "org-a";
 const USER = "user-1";
 
-/** One page of `GET /payroll/runs` exactly as `buildCursorPage` emits it. */
 const PAYROLL_RUNS_PAGE = {
   data: [
     {
@@ -55,7 +29,6 @@ const PAYROLL_RUNS_PAGE = {
   pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
 
-/** One page of `GET /roles`. `memberCount` is a raw count(distinct …). */
 const ROLES_PAGE = {
   data: [
     {
@@ -78,7 +51,6 @@ const ROLES_PAGE = {
   pagination: { limit: 20, hasMore: false, nextCursor: null },
 };
 
-/** One page of `GET /directory/workers`. Hand-rolled page: `pageInfo`. */
 const WORKERS_PAGE = {
   data: [
     {
@@ -118,15 +90,6 @@ function respondWith(body: unknown): void {
   ) as unknown as typeof fetch;
 }
 
-/**
- * Fresh module registry per call: `serverGet` is wrapped in React's `cache`, so
- * two prefetches of the same path in one registry could answer from the first
- * one's memo and never reach the second body.
- *
- * The reporter is installed INSIDE the isolated registry. `error-reporter` holds
- * its active reporter in module state, so a registration made outside is held by
- * a different copy of the module and the isolated seam reports into a noop.
- */
 async function prefetch(
   factory: "payroll" | "roles" | "directory",
 ): Promise<DehydratedState> {

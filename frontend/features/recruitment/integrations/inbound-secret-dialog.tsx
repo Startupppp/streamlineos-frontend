@@ -23,18 +23,6 @@ interface Props {
   onClose: () => void;
 }
 
-/**
- * The one moment the inbound callback secret is visible.
- *
- * The server returns it from the rotate call and never again — the list
- * endpoint has no field for it. So this dialog is not a convenience: if it is
- * dismissed without the value being copied, the only way forward is to rotate
- * again, which is exactly the property a shared secret should have.
- *
- * Rotating also breaks deliveries signed with the previous secret, and the
- * copy says so. A recruiter who rotates to "check what it is" and then wonders
- * why applications stopped arriving is a support ticket this sentence prevents.
- */
 export function InboundSecretDialog({ issued, onClose }: Props) {
   const [copied, setCopied] = useState(false);
 

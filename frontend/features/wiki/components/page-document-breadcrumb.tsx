@@ -61,8 +61,6 @@ export function PageDocumentBreadcrumb({
 }: PageDocumentBreadcrumbProps) {
   const ancestors = page.ancestors ?? [];
   const isProjectScoped = projectId !== undefined && projectId > 0;
-  // A space crumb only when the space read succeeds; a viewer without
-  // kb:spaces:view still gets Docs › ancestors.
   const { data: space } = useKbSpace(isProjectScoped ? 0 : page.spaceId ?? 0);
   const wikiHref = isProjectScoped ? `/build/${projectId}/wiki` : KNOWLEDGE_BASE;
 

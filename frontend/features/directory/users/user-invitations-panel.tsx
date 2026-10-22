@@ -82,12 +82,6 @@ export function UserInvitationsPanel() {
   const [cancellationInvitationId, setCancellationInvitationId] = useState<
     string | null
   >(null);
-  /**
-   * BUG-HRMS-004. Copying a join link REISSUES it, which kills the link already in
-   * the recipient's inbox. That was a tooltip on an icon button: one click, no
-   * confirmation, and the invitee's emailed link stopped working with nobody told.
-   * Asked before the reissue, not reported after it.
-   */
   const [joinLinkInvitationId, setJoinLinkInvitationId] = useState<
     string | null
   >(null);

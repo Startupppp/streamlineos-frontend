@@ -17,26 +17,12 @@ import { cn } from "@/lib/utils";
 import { KIND_LABELS, type ScoreboardKindRow } from "@/types/crm/autonomy";
 import { DatasetHealthPanel } from "./dataset-health-panel";
 
-/**
- * A correction rate is only readable next to how much it is based on.
- *
- * "0%" over three actions and "0%" over four hundred are different claims, and
- * showing them identically is how a scoreboard becomes reassuring rather than
- * informative.
- */
 function rateText(rate: number | null, denominator: number): string {
   if (rate === null) return "—";
   if (denominator < 10) return `${Math.round(rate * 100)}% of ${denominator}`;
   return `${Math.round(rate * 100)}%`;
 }
 
-/**
- * Tone by how much correction the action type needed.
- *
- * Thresholds rather than a gradient: a manager is deciding whether to leave
- * something switched on, which is a yes/no, and a continuous colour ramp invites
- * reading precision that is not there.
- */
 function rateTone(rate: number | null): StatusTone {
   if (rate === null) return "neutral";
   if (rate >= 0.2) return "danger";
@@ -79,19 +65,6 @@ function KindRow({ row }: { row: ScoreboardKindRow }) {
   );
 }
 
-/**
- * How often the system is right, as numbers that move.
- *
- * With no approval gate anywhere, this is the evidence a tenant has for
- * enabling an action type — and the strongest argument anyone will make for
- * trusting the product.
- *
- * The dataset's own health lives here too, under the same window control. It is
- * not a second scoreboard beside this one: a tenant has one place it comes to
- * ask whether any of this is working, and splitting "how often was it right"
- * from "how good is the data it was right about" into two habits means nobody
- * ever holds the two side by side.
- */
 export function AutonomyScoreboard() {
   const [days, setDays] = useState(30);
   const { data, isLoading, isError, access } = useAutonomyScoreboard(days);
@@ -128,12 +101,6 @@ export function AutonomyScoreboard() {
             ))}
           </div>
         ) : isError || !data ? (
-          /*
-            A card with a heading and nothing under it reads as "there is no
-            data", which is the opposite of what a failed request means — and on
-            a scoreboard, "nothing to correct" is exactly the reassuring lie
-            worth avoiding. Say the numbers could not be loaded.
-          */
           <p role="alert" className="text-label text-muted-foreground">
             These numbers could not be loaded. They are still being recorded —
             this is a problem reading them, not a gap in what was measured.
@@ -146,14 +113,10 @@ export function AutonomyScoreboard() {
               ))}
             </div>
 
-            {/*
-              Guarded rather than assumed. A client deployed against an older API
-              gets the rest of the card instead of a blank one — and the guard is
-              cheap next to a scoreboard that renders nothing.
-            */}
+            
             {data.dataset ? <DatasetHealthPanel trend={data.dataset} /> : null}
 
-            {/* Spend, so an unprofitable tenant is visible before the invoice. */}
+            
             {data ? (
               <p className="mt-4 text-micro text-muted-foreground">
                 {data.spend.calls} model {data.spend.calls === 1 ? "call" : "calls"} ·{" "}

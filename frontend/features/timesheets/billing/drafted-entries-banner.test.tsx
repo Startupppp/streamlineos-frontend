@@ -1,16 +1,3 @@
-/**
- * The stranded-record regression, on the frontend side: before this banner
- * existed, an entry `createInvoiceDraft` flipped to `INVOICE_DRAFTED` was
- * invisible on the billing queue — nothing rendered it, and nothing offered
- * a way back to billable. `voidEntry` (`entries.service.ts`) refuses to void
- * anything already drafted, so a stranded entry stayed stuck until a later
- * invoicing pass happened to claim it.
- *
- * Gated on `timesheets:billing:invoice` — the same permission
- * `useCreateInvoiceDraft` already requires — per FE-44/FE-122: a control this
- * consequential fails closed, and the negative case is asserted alongside
- * the positive one so it cannot pass by simply never rendering.
- */
 import { render as rtlRender, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { TooltipProvider } from "@/components/ui/tooltip";

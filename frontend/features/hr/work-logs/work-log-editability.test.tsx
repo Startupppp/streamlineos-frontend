@@ -1,19 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { subDays } from "date-fns";
 
-/**
- * HRMS-E2E-016 (work-logs half).
- *
- * The row used to compute `readOnly || !isOwnLog || !isToday(date) || isLeaveDay`,
- * so a work log was writable only for your own record and only on today's date.
- * Two consequences the acceptance criteria name directly: an HR admin holding
- * hr:attendance:manage could never produce a work-log event for an employee,
- * and nobody could enter yesterday's log.
- *
- * Each assertion below is two-sided — the writable case must expose the write
- * affordance AND the blocked case must still say "No entry", because asserting
- * only one side passes on a row that renders both or neither.
- */
 
 jest.mock("@/components/ui/truncated-text", () => ({
   TruncatedText: ({ text }: { text: string }) => <span>{text}</span>,

@@ -1,7 +1,6 @@
 import { z } from "zod";
 import type { ScreeningQuestion } from "./apply-screening-fields";
 
-/** What the public apply endpoint accepts — kept in step with `RESUME_ALLOWED_TYPES`. */
 export const RESUME_ACCEPT = ".pdf,.doc,.docx";
 export const RESUME_MAX_BYTES = 10 * 1024 * 1024;
 
@@ -12,27 +11,12 @@ interface FileLike {
   readonly name: string;
 }
 
-/**
- * Structural rather than `instanceof File`, because the same schema is parsed
- * under jsdom, where the `File` the test constructs is not the `File` this
- * module would close over.
- *
- * Narrowed with `in`, which walks the prototype chain — `size` and `name` are
- * accessors on `Blob.prototype`, so an own-property check would reject a real
- * file.
- */
 function isFileLike(value: unknown): value is FileLike {
   if (typeof value !== "object" || value === null) return false;
   if (!("size" in value) || !("name" in value)) return false;
   return typeof value.size === "number" && typeof value.name === "string";
 }
 
-/**
- * The résumé is optional — an application without one is still an application,
- * and the endpoint says so by returning `resumeStored: false` with a reason
- * rather than refusing. What is checked here is only what the server checks
- * first, so the candidate hears it without a round trip.
- */
 const resumeField = z
   .custom<File | null>((value) => value === null || isFileLike(value), {
     message: "Attach a PDF, DOC or DOCX file.",
@@ -81,12 +65,6 @@ const baseApplySchema = z.object({
   linkedinUrl: linkedinField,
   coverLetter: z.string().trim().max(5000),
   resume: resumeField,
-  /**
-   * DPDP consent is the lawful basis for holding the file at all. The field
-   * stays a `boolean` so the form can start unchecked, and the refinement is
-   * what makes an unchecked box a validation failure rather than a silent
-   * default.
-   */
   consent: z.boolean().refine((given) => given, {
     message: "You must consent to your data being processed before applying.",
   }),
@@ -95,14 +73,6 @@ const baseApplySchema = z.object({
 
 export type ApplyFormValues = z.infer<typeof baseApplySchema>;
 
-/**
- * The schema for one job's form.
- *
- * Required screening answers are enforced with a `superRefine` keyed on the
- * question id rather than a generated object shape, so the inferred value type
- * stays the same whatever questions the job carries — and every message lands
- * on `answers.<id>`, which is where the field renders it.
- */
 export function buildApplySchema(questions: readonly ScreeningQuestion[]) {
   return baseApplySchema.superRefine((values, ctx) => {
     for (const question of questions) {
@@ -130,7 +100,6 @@ export function emptyApplyValues(): ApplyFormValues {
   };
 }
 
-/** The multipart body the apply endpoint reads. */
 export function toFormData(
   values: ApplyFormValues,
   questions: readonly ScreeningQuestion[],

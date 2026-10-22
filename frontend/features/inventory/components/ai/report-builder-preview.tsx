@@ -23,26 +23,10 @@ import type {
 } from "@/hooks/api/inventory/report-builder";
 import { AiAnswerFeedback } from "./ai-answer-feedback";
 
-/**
- * F5 — what the report builder actually said, rather than only its rows.
- *
- * The response was designed to be honest about four things a table cannot show,
- * and a screen that renders `rows` alone throws all four away: whether the model
- * answered at all, which filters were removed because they named something the
- * asker cannot see, how much of the report this is, and whether the chosen
- * report was one the asker may read. Each of those is a way for a correct table
- * to tell a lie.
- */
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 const ISO_DATETIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/;
 
-/**
- * Columns are server-authored and carry only `numeric`, so a date arrives as an
- * indistinguishable string. Shape is the only signal there is — and a bare
- * `YYYY-MM-DD` must go through `parseISO`, never `new Date`, which reads it as
- * UTC midnight and prints the day before for anybody west of Greenwich.
- */
 function renderCell(value: string | number | null): string {
   if (value === null) return "—";
   if (typeof value === "number") return String(value);
@@ -57,14 +41,6 @@ function describeFilters(spec: InvReportSpec): string | null {
   return entries.map(([field, value]) => `${field}: ${String(value)}`).join(" · ");
 }
 
-/**
- * What the preview is a sample of.
- *
- * "47 rows" under a table showing 47 of 3,000 is a lie, and the server reports
- * enough to avoid telling it three different ways: a report that counts gives a
- * `total`, one that cannot still sets `truncated` when it filled the cap, and
- * only the remaining case is a complete answer.
- */
 function describeCoverage(preview: InvReportPreview): string {
   const rows = `${preview.rowCount} row${preview.rowCount === 1 ? "" : "s"}`;
   if (preview.total !== null && preview.total > preview.rowCount)
@@ -243,8 +219,6 @@ export function ReportBuilderPreview({
                 Export CSV
               </LoadingButton>
             ) : (
-              // Not a disabled button: a control the asker will never be allowed
-              // to press is chrome that teaches them nothing (§17).
               <span className="ml-auto inline-flex items-center gap-1.5 text-dense text-muted-foreground">
                 <CircleSlash className="h-3.5 w-3.5 shrink-0" aria-hidden />
                 Export needs a permission you do not hold
@@ -253,9 +227,6 @@ export function ReportBuilderPreview({
           </div>
 
           {preview.truncated && preview.canExport ? (
-            // The file is not this table. The export re-runs the report at the
-            // server's own export cap, which is larger than the preview cap and
-            // still a cap — so neither "this is everything" reading is safe.
             <p className="text-dense text-muted-foreground">
               The file re-runs this report on the server. It can hold more rows
               than the preview above, and it is bounded too.

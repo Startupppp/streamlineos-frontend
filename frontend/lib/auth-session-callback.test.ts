@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 import { fetchSessionData, exchangeSessionForBackendJwt, resolveGoogleUser } from "@/lib/auth-session";
 
 const ORIGINAL_ENV = process.env;

@@ -8,12 +8,6 @@ import type { Tags } from "@/features/landing/relay/types/springs";
 
 const MASK = "linear-gradient(90deg, black calc(var(--reveal) - 40%), transparent var(--reveal))";
 
-/**
- * Any heading or paragraph that should appear the way the section titles do:
- * out of a blur, with a soft mask sweeping left → right so the text resolves
- * in reading order (motion brief shared.title "Фокусировка"). Plays once when
- * the element is properly on screen.
- */
 export const FocusText = ({
   tag = "p",
   className = "",

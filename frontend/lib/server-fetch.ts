@@ -52,7 +52,6 @@ async function requestWithToken<T>(
 }
 
 const ACCESS_SNAPSHOT_PATH = "/me/access";
-/** Repeat navigations reuse a successful snapshot. The session token is the key, so an org switch or impersonation misses. Failures are not stored. */
 const ACCESS_SNAPSHOT_FRESH_MS = 15_000;
 
 type FreshAccess = { expiresAt: number; value: unknown };

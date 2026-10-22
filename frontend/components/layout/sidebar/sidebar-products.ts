@@ -34,7 +34,6 @@ export const PRODUCT_HREF_EXCEPTIONS: Readonly<
   recruitment: "/recruitment",
 };
 
-// Products with no manifest module counterpart (not in any module's productKey set).
 export const PRODUCT_KEY_EXCEPTIONS = new Set<ModuleKey>([
   "administration",
   "recruitment",

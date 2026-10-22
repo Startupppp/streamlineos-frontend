@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * The stored jsonb, mirrored from `jobs-schema.ts` because a template's
- * questions are copied onto a posting verbatim. A `z.object` STRIPS what it
- * does not list, so a narrower copy here would silently drop `id` — the key the
- * wizard maps its question rows by — on the way through the picker.
- */
 const screeningQuestionContract = z.object({
   id: z.string(),
   question: z.string(),
@@ -17,15 +11,6 @@ const screeningQuestionContract = z.object({
   options: z.array(z.string()).optional(),
 });
 
-/**
- * Timestamps are strings, not dates.
- *
- * The backend contract coerces them to `Date` because it validates the object
- * it is about to serialise; by the time the browser sees them they have been
- * through JSON and are ISO strings again. `z.coerce.date()` here would hand
- * components a `Date` the server never promised and break the moment a value is
- * rendered or compared against another timestamp in the same list.
- */
 export const jobTemplateContract = z.object({
   id: z.number().int(),
   name: z.string(),
@@ -46,14 +31,6 @@ export const jobTemplatePageContract = z.object({
   pagination: cursorPaginationContract,
 });
 
-/**
- * What `POST /apply` hands back: the posting draft with the template's values
- * filled into the gaps the recruiter left.
- *
- * Every field is optional because the merge output is only as complete as the
- * template plus what the recruiter had typed — a half-written template applied
- * to an empty form legitimately returns almost nothing.
- */
 export const appliedJobTemplateContract = z.object({
   jobTemplateId: z.number().int(),
   jobTemplateName: z.string(),

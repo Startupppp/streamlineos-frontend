@@ -105,7 +105,6 @@ interface Props {
 
 export function AutomationRunsSheet({ ruleId, ruleName, onClose }: Props) {
   const pager = useCursorPager();
-  // FE-47: the runs read is disabled without hr:automations:view; say so.
   const viewAccess = useCanState("hr:automations:view");
   const { data: runsData, isLoading, isError, error, refetch } = useHrAutomationRuns(ruleId, {
     cursor: pager.cursor,

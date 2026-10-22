@@ -83,7 +83,6 @@ describe("CalendarEventsPanel", () => {
     render(<CalendarEventsPanel mode="list" events={events} onSelectEvent={noop} />);
     const list = screen.getByTestId("virtual-list");
     expect(list).not.toBeNull();
-    // 2 day-header rows + 3 event rows = 5
     expect(list.getAttribute("data-row-count")).toBe("5");
   });
 
@@ -95,7 +94,6 @@ describe("CalendarEventsPanel", () => {
     ];
     render(<CalendarEventsPanel mode="list" events={events} onSelectEvent={noop} />);
     const list = screen.getByTestId("virtual-list");
-    // 1 day-header row + 3 event rows = 4
     expect(list.getAttribute("data-row-count")).toBe("4");
   });
 

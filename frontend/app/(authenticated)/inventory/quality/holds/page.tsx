@@ -34,19 +34,6 @@ const PAGE_LIMIT = 20;
 
 const HOLD_STATUSES: QualityHoldStatus[] = ["ACTIVE", "RELEASED", "EXPIRED"];
 
-/**
- * What exactly is held, beyond which product it is.
- *
- * A hold is against a grain, not against a variant: `inv_stock_levels` is keyed
- * by variant, location, lot, serial, handling unit and ownership, and the hold
- * table carries the same columns. Two holds in the same bin — one on a
- * consigned pallet, one on loose owned stock — are different holds on different
- * rows, and without this they render as two identical lines.
- *
- * Only the parts that are actually set are named. A loose, owned, unlotted hold
- * has nothing to say here and says nothing, rather than printing "OWNED" beside
- * every row until it stops being read.
- */
 function resolveGrainLabel(hold: QualityHold): string | null {
   const parts: string[] = [];
   if (hold.lotId) parts.push(`Lot #${hold.lotId}`);
@@ -208,8 +195,6 @@ function HoldsPageInner() {
       cell: (r) => {
         const grain = resolveGrainLabel(r);
         return grain === null ? (
-          // Not "—" as a placeholder for missing data: loose owned stock is the
-          // ordinary case, and it genuinely has nothing more to say.
           <span className="text-muted-foreground">Loose, owned</span>
         ) : (
           <span>{grain}</span>

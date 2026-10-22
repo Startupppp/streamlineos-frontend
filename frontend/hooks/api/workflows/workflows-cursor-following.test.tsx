@@ -4,21 +4,6 @@ import { type ReactNode } from "react";
 import type { AccessResponse } from "@/types/access";
 import { queryKeys } from "@/lib/query-keys";
 
-/**
- * PRD-C124 (frontend states) — the workflows list hooks follow the cursor the server
- * sends instead of rendering page one and stopping.
- *
- * `GET /workflows/schedules` and `GET /workflows/secrets` have always returned
- * `{ data, pagination: { limit, nextCursor, hasMore } }`. Both hooks were plain
- * `useQuery` calls with no `getNextPageParam`, and both pages rendered `data.data`,
- * so an organisation past one page saw a truncated list with nothing on screen
- * saying so — the failure mode is a schedule that appears not to exist and a secret
- * an operator believes was deleted.
- *
- * The assertion is on the SECOND request carrying the first response's `nextCursor`,
- * not on the hook's shape: a hook that returned `{ pages: [...] }` while still never
- * asking for page two would satisfy a shape check and fail this.
- */
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
     data: { orgId: "org-1", user: { id: "user-1" } },
@@ -55,7 +40,6 @@ function makeWrapper() {
   };
 }
 
-/** Serves page one with a cursor, then page two, for whichever route is asked. */
 function serveTwoPages(route: string) {
   apiClient.get.mockImplementation((url: string, params?: Record<string, unknown>) => {
     if (url !== route) return Promise.resolve(ACCESS);

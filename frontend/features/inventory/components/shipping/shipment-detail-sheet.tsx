@@ -229,11 +229,7 @@ export function ShipmentDetailSheet({ open, onOpenChange, shipmentId }: Shipment
                   />
                 </div>
               </div>
-              {/* B7. Not "coming soon": the carrier contract is live and this
-                  organisation's carrier is tracked manually, which is a way of
-                  running a warehouse rather than a missing feature. Saying so
-                  tells the operator what to do; the old copy told them to wait
-                  for something nobody was building. */}
+              
               <p className="text-micro text-muted-foreground">
                 Tracked manually — record carrier updates below as the courier
                 reports them.

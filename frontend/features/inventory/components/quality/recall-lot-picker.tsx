@@ -28,17 +28,6 @@ interface PickedLot {
   label: string;
 }
 
-/**
- * D4 — picking the lots a recall is about.
- *
- * This replaces a text field that read "Lot IDs (comma-separated)". That field
- * asked an operator holding a defect report to supply database primary keys,
- * from memory, with no confirmation of what they had named — and a typo in it
- * recalled somebody else's batch or, more often, nothing at all. Search here is
- * over the lot number the label actually carries, and every row shows the
- * product and what is on the shelf, so the person choosing can see what they
- * are about to quarantine before the simulator confirms it.
- */
 export function RecallLotPicker({ value, onChange }: Props) {
   const canReadLotsState = useCanState("inventory:stock:read");
   const [search, setSearch] = useState("");
@@ -55,9 +44,6 @@ export function RecallLotPicker({ value, onChange }: Props) {
       return;
     }
     onChange([...value, lotId]);
-    // Remembered here rather than looked up again: a lot chosen under one
-    // search term has to keep its name when the term changes and the row that
-    // named it drops out of the list.
     setPicked((prev) => [...prev, { id: lotId, label }]);
   }
 

@@ -123,7 +123,6 @@ function chatPollPositionKey(position: ChatPollPosition): string {
 
 const CHAT_POLL_FALLBACK_INTERVAL_MS = 30_000;
 
-/** `enabled` is the caller's realtime verdict: it polls only while the socket is down. */
 export function useChatPoll(
   channelId: number,
   position: ChatPollPosition,

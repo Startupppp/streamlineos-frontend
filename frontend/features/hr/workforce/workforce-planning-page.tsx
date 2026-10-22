@@ -87,9 +87,6 @@ const overviewColumns: DataTableColumn<BudgetVsActualRow>[] = [
   },
 ];
 
-// The route guard is hr:analytics:read, but the headcount reads are gated on
-// hr:headcount:read — a caller with only the first must be told "denied", not
-// "No headcount plans yet" (FE-47).
 function OverviewTab() {
   const { data: bva, isLoading, isError, error, refetch } = useHrBudgetVsActual();
   const pageState = usePageState({ permission: "hr:headcount:read", isLoading, isError, error });
@@ -213,7 +210,6 @@ function EditPlanButton({ plan, onEdit }: { plan: HeadcountPlan; onEdit: (p: Hea
 function HiringPlansTab() {
   const { data: plans, isLoading, isError, error, refetch } = useHrWorkforcePlans();
   const pageState = usePageState({ permission: "hr:headcount:read", isLoading, isError, error });
-  // POST/PATCH /hr/analytics-plus/workforce/plans require hr:workforce:manage.
   const canManage = useCan("hr:workforce:manage");
 
   function handleRetry() { void refetch(); }

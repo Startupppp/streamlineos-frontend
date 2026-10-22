@@ -34,18 +34,9 @@ export interface LeadMutations {
   setPriority: (leadId: number, priority: LeadPriority) => void;
   assign: (leadId: number, userId: string) => void;
   bulkUpdate: (leadIds: number[], update: BulkLeadUpdate) => void;
-  /** `onDeleted` fires once the rows are gone, so a now-empty page can rewind. */
   bulkDelete: (leadIds: number[], onDeleted?: () => void) => void;
 }
 
-/**
- * Everything the lead list can do to a row.
- *
- * Gathered out of the page because a route composes and does not implement, and
- * out of the list because the list renders a description — what a status change
- * costs (a client record on conversion, an optional deal beside it) is domain
- * knowledge that belongs to neither.
- */
 export function useLeadMutations(): LeadMutations {
   const updateStatus = useUpdateLeadStatus();
   const updateLead = useUpdateLead();

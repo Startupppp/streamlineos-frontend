@@ -11,28 +11,6 @@ import {
   resolveTriggerModule,
 } from "@/components/automations/automation-trigger-data";
 
-/**
- * One trigger vocabulary, mirrored — and a screen for every trigger.
- *
- * The backend engine dispatches AUTOMATION_TRIGGERS and owns the trigger ->
- * module map; this repository mirrors both. Before this gate the vocabulary
- * existed three times and disagreed (engine 55, write schema 48, frontend map
- * 33) and `getModuleForTrigger` ended `?? "hr"`, so 19 of the 48 the API
- * accepted resolved to HR — 15 by silent default and 4 by an explicit entry.
- * The visible effect was that /support/settings/automations offered 3 of
- * Support's triggers and /accounting/settings/automations 1.
- *
- * Three things have to hold and each is asserted from the backend source, not
- * from a copy of it:
- *   VOCABULARY  the mirrored list is exactly the engine's list.
- *   OWNERSHIP   every trigger's owning module is exactly the backend's.
- *   REACHABLE   every trigger has UI metadata, so none is invisible in the UI
- *               and none is offered that the engine cannot dispatch.
- *
- * ANTI-VACUITY. Both readers of the backend source carry a floor. A regex that
- * stops matching reports "no drift", and this repository has six confirmed
- * instances of a gate passing over code it never read.
- */
 
 const MEASURED_TRIGGER_FLOOR = 55;
 const MEASURED_MODULE_FLOOR = 5;

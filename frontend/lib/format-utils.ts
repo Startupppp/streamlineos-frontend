@@ -19,14 +19,6 @@ export function formatCurrencyFull(
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,
-    /**
-     * The floor follows the ceiling. `minimumFractionDigits` was pinned at 2
-     * while the caller chose the maximum, so every caller asking for whole
-     * units — `formatCurrencyFull(salary, "INR", undefined, 0)` — hit
-     * `RangeError: maximumFractionDigits value is out of range` and took its
-     * whole React tree down. That crashed the public offer page for any offer
-     * carrying a salary, which is the screen a candidate accepts a job on.
-     */
     minimumFractionDigits: Math.min(2, maximumFractionDigits),
     maximumFractionDigits,
   }).format(num);
@@ -106,10 +98,6 @@ export function formatINR(amount: string | number): string {
 
 const ISO_CURRENCY_CODE = /^[A-Za-z]{3}$/;
 
-/**
- * For a row that carries its own currency. `formatINR` hardcodes ₹, so using it
- * on a stored amount renders a USD claim as rupees.
- */
 export function formatAmountInCurrency(
   amount: string | number,
   currency: string | null | undefined,

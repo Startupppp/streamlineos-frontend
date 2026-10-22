@@ -11,6 +11,7 @@ import type {
 } from "@/features/hr/forms/lib/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { hrCustomFieldsListKey } from "@/features/hr/custom-fields/hooks/hr-custom-fields-schema";
+import { hrCustomFieldsQueryOptions } from "@/features/hr/custom-fields/hooks/use-hr-custom-fields-read-options";
 
 const fieldDefListContract = lazyContract(() =>
   import("@/features/hr/custom-fields/hooks/hr-custom-fields-schema").then((m) => m.hrFieldDefListContract),
@@ -21,13 +22,6 @@ const fieldDefRowContract = lazyContract(() =>
 const fieldDefDeleteContract = lazyContract(() =>
   import("@/features/hr/custom-fields/hooks/hr-custom-fields-schema").then((m) => m.hrFieldDefDeleteContract),
 );
-
-export function hrCustomFieldsQueryOptions(entityType: string = "employee") {
-  return {
-    queryKey: hrCustomFieldsListKey(entityType),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useHrCustomFields(
   entityType: string = "employee",

@@ -16,7 +16,6 @@ const ALL_SENTINEL = "all";
 
 interface CrmOptionSelectProps {
   type: CrmOptionType;
-  /** Points a sibling <Label htmlFor> at the trigger, so the control is named. */
   id?: string;
   value: string;
   onChange: (value: string) => void;

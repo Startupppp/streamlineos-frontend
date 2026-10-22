@@ -122,10 +122,6 @@ export type NotificationApiClientMock = {
   delete: jest.Mock;
 };
 
-/**
- * Narrowed rather than asserted, so a spec that forgets its `jest.mock` fails
- * with a named cause instead of reading `undefined.mockRejectedValueOnce`.
- */
 export function apiClientMock(): NotificationApiClientMock {
   const mocked = jest.requireMock("@/lib/api-client");
   const client = isRecord(mocked) ? mocked.apiClient : undefined;
@@ -145,10 +141,6 @@ export function apiClientMock(): NotificationApiClientMock {
   return { get, post, patch, delete: remove };
 }
 
-/**
- * Every mutation hook reads its QueryClient from `useNotificationInboxInvalidation`,
- * so the spec's client only reaches the hook by being pushed through that mock.
- */
 export function withInjectedClient(client: QueryClient): void {
   const mocked = jest.requireMock("./notifications-shared");
   const hook = isRecord(mocked)

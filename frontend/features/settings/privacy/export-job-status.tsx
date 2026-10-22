@@ -21,7 +21,6 @@ interface ExportJobStatusProps {
   jobId: string;
 }
 
-/** One async archive: its status, polled while the worker has it, and the download once ready. */
 export function ExportJobStatus({ jobId }: ExportJobStatusProps) {
   const job = useGdprExportJob(jobId);
   const download = useDownloadGdprExport();

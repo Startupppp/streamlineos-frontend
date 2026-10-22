@@ -15,6 +15,7 @@ import type {
   UpdateIntakeRequestInput,
 } from "@/types/projects";
 import { patchIntakeListCaches, type IntakePage } from "@/hooks/api/build/intake-cache";
+import { intakeRequestsQueryOptions } from "./intake-read-options";
 
 const intakeListContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.intakeListContract),
@@ -49,15 +50,6 @@ export function useIntakeRequests(
   });
 }
 
-export function intakeRequestsQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.intake(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    staleTime: 30_000,
-  };
-}
 
 export function useCreateIntakeRequest() {
   const queryClient = useQueryClient();

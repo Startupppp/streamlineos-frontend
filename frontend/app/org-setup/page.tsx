@@ -113,7 +113,6 @@ function prepareDraftForSimplifiedSetup(draft: WizardData): WizardData {
     installedApps: [],
     region: undefined,
     modules: [...ORG_MODULE_KEYS],
-    // The invitation step remains available, so keep saved invitees for review.
     moduleAnswers: {},
   };
 }

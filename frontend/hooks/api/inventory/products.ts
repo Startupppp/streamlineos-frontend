@@ -154,14 +154,6 @@ export function useUpdateProduct(id?: number) {
   });
 }
 
-/**
- * The lifecycle writes invalidate `inventory.all`, not `inventory.products()`.
- * The list factory takes a filters argument, so calling it with none yields a
- * key ending in an explicit `undefined`, which `partialMatchKey` compares
- * against the stored filters object and rejects — the list never refetched. The
- * wider prefix is also the honest one: archiving a SKU changes what every order
- * form, variant picker and stock view is allowed to show.
- */
 export function useDeleteProduct() {
   const qc = useQueryClient();
   return useAuthorizedMutation<void, Error, number>("inventory:products:delete", {
@@ -183,8 +175,6 @@ export function useArchiveProduct() {
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/archive`, {}),
     onSuccess: (_data, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
-      // The detail key is not under the list prefix, so the page this was
-      // triggered from keeps its old status badge until staleTime lapses.
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
@@ -198,8 +188,6 @@ export function useRestoreProduct() {
       apiClient.post<InventoryProduct>(`/inventory/products/${productId}/restore`, {}),
     onSuccess: (_data, productId) => {
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.productsList });
-      // The detail key is not under the list prefix, so the page this was
-      // triggered from keeps its old status badge until staleTime lapses.
       void qc.invalidateQueries({ queryKey: queryKeys.inventory.product(productId) });
     },
   });
@@ -209,8 +197,6 @@ export function useProductVariants(filters?: ProductVariantFilters) {
   const canView = useCan("inventory:products:read");
   return useQuery<ProductVariantFlat[], Error>({
     queryKey: queryKeys.inventory.productVariants(filters),
-    // The endpoint pages ({ items, total, page, totalPages }); every picker that
-    // calls this wants the rows, so unwrap here and ask for the largest page.
     queryFn: async ({ signal }) =>
       (
         await apiClient.get<{ items: ProductVariantFlat[] }>("/inventory/products/variants", {

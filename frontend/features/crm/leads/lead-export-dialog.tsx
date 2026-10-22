@@ -46,12 +46,6 @@ interface LeadExportDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/*
-  Controlled, and with no trigger of its own. A visible `DialogTrigger` forces
-  this module to mount while the dialog is closed, which puts its date pickers
-  in the pipeline's first load; the pipeline renders the Export button instead
-  and mounts this only once it is asked for.
-*/
 export function LeadExportDialog({ open, onOpenChange }: LeadExportDialogProps) {
   const [isExporting, setIsExporting] = useState(false);
   const [filters, setFilters] = useState({

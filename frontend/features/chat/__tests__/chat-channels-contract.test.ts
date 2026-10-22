@@ -3,12 +3,6 @@ import type { Channel, ChannelPage, PublicChannel } from "@/types/chat";
 type ChannelsPage = ChannelPage<Channel>;
 type PublicChannelsPage = ChannelPage<PublicChannel>;
 
-/**
- * `GET /chat/channels` is keyset-paginated and answers `{ channels, nextCursor }`.
- * The hooks used to declare `Channel[]` and a cast in the sidebar hid the mismatch,
- * so `channels.filter(...)` ran against an object: no channel rendered, and typing
- * in the search box threw. These assert the projection the hooks now perform.
- */
 const selectChannels = (page: ChannelsPage) => page.channels;
 const selectPublicChannels = (page: PublicChannelsPage) => page.channels;
 
@@ -26,7 +20,6 @@ describe("channel list response contract", () => {
 
     expect(Array.isArray(selected)).toBe(true);
     expect(selected).toHaveLength(2);
-    // The failure that shipped: filter called on the envelope, not the array.
     expect(() => selected.filter((c) => c.name.includes("gen"))).not.toThrow();
     expect(selected.filter((c) => c.name.includes("gen"))).toHaveLength(1);
   });

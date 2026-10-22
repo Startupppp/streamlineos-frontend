@@ -6,16 +6,6 @@ import { downloadBlob } from "@/lib/download-blob";
 import { useDownloadHrEmployeeExportJob } from "@/hooks/api/hr/import-export";
 import { useDownloadExpenseExportJob } from "@/hooks/api/hr/expenses";
 
-/**
- * HRMS-E2E-009: an export job's download must pass the same checks as every
- * other export — a zero-byte body or an HTML/JSON body is refused, not saved.
- *
- * `lib/download-export.ts` already made those checks, but the two export-job
- * downloads (employee directory, expenses) fetched the blob with a bare
- * `apiClient.download` and their callers saved whatever came back, with a
- * success toast. These hooks are the only route to those two endpoints, so the
- * guard sits here rather than in each caller.
- */
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn().mockReturnValue(true),
@@ -23,7 +13,6 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn().mockReturnValue({ data: undefined, refetch: jest.fn() }),
 }));
 
-// The permission seam is covered by its own suite; here it only needs to run the mutation.
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: (_permission: string, options: object) => useMutation(options),
 }));
@@ -59,7 +48,6 @@ const cases = [
 
 beforeEach(() => jest.clearAllMocks());
 
-/** The error message, or "resolved". Plain strings keep a failure's diff small — a jsdom Blob is not. */
 async function outcome(run: Promise<unknown>): Promise<string> {
   try {
     await run;

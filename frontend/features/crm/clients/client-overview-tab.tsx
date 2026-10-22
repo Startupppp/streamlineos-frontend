@@ -10,15 +10,6 @@ import { ActivityItem } from "./activity-item";
 import { clientRecord } from "./client-record";
 import type { ClientAccountWithActivities } from "@/types/crm";
 
-/**
- * One client, rendered from the same description that produced the list.
- *
- * The two hand-written definition lists this replaces held their own labels,
- * their own renewal-stage map and their own INR-hardcoded money formatter — so a
- * client's amounts showed rupees to every tenant regardless of the currency the
- * organisation actually works in. The layout's `money` fields render through
- * `useOrgDisplay`, which is what fixed that.
- */
 export function ClientOverviewTab({ client }: { client: ClientAccountWithActivities }) {
   const layout = useTenantLayout(CLIENT_LAYOUT);
   const money = useOrgDisplay();

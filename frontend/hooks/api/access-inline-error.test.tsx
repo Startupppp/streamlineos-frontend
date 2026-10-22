@@ -12,7 +12,6 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(() => Promise.reject(new ApiError("Service Unavailable", 503, "SERVICE_UNAVAILABLE"))) },
 }));
 
-// Same default the app's provider installs: a failed read with no data throws.
 function wrapper({ children }: { children: ReactNode }) {
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, throwOnError: readErrorReachesBoundary } },

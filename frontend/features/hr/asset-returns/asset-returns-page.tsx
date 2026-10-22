@@ -31,7 +31,6 @@ import {
 } from "@/hooks/api/hr/asset-returns";
 
 export function AssetReturnsPage() {
-  // Backend POST/PATCH /hr/asset-returns require hr:assets:manage (assets.controller.ts).
   const isAdmin = useCan("hr:assets:manage");
 
   const [sheetOpen, setSheetOpen] = useState(false);

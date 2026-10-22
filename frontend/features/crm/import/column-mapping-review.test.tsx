@@ -18,8 +18,6 @@ const renderReview = (overrides: Record<string, string> = {}) => {
 
 describe("ColumnMappingReview", () => {
   it("says what will happen to every column, not only the questions", () => {
-    // A step that surfaces only the questions leaves a user unable to correct a
-    // confident wrong answer, which is the worse failure of the two.
     renderReview();
     expect(screen.getByText("Company Name")).toBeInTheDocument();
     expect(screen.getByText("Record ID")).toBeInTheDocument();
@@ -32,7 +30,6 @@ describe("ColumnMappingReview", () => {
   });
 
   it("presents an unrecognised column as kept, not lost", () => {
-    // Becoming a custom field is not a lesser outcome; the column survives.
     renderReview();
     expect(screen.getByText("Kept as an extra field")).toBeInTheDocument();
   });
@@ -44,7 +41,6 @@ describe("ColumnMappingReview", () => {
 
   it("lets any column be pointed somewhere else", () => {
     const { onOverride } = renderReview();
-    // Every column has a control, including the ones already decided.
     expect(screen.getAllByRole("combobox")).toHaveLength(columns.length);
     expect(onOverride).not.toHaveBeenCalled();
   });

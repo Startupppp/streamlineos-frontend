@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * `sign_certificates.certificate_json` is jsonb, so the API hands it over as
- * `Record<string, unknown>`. This mirrors what `SignPdfService.CertificateData`
- * writes into it and is parsed with `safeParse` — a certificate written by an
- * older shape still renders its typed columns rather than blanking the sheet.
- */
 export const certificateDetailsSchema = z.object({
   certificateNumber: z.string(),
   tenantName: z.string(),
@@ -39,7 +33,6 @@ export const certificateDetailsSchema = z.object({
       ipAddress: z.string().nullable(),
     }),
   ),
-  /** Present only on a certificate produced by the regeneration path. */
   regeneratedFrom: z.string().optional(),
 });
 

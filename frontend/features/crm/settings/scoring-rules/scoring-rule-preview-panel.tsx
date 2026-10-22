@@ -6,15 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { statusToneClasses } from "@/lib/design-tokens";
 import type { ScoringRule } from "@/hooks/api/crm/settings/scoring-rules";
 
-/**
- * What these rules would score a typical lead.
- *
- * Not a record surface — the lead is invented and never saved — but the most
- * useful thing on the page, because a scoring rule is otherwise a number with no
- * sense of scale. Scoring is done here rather than asked of the server because
- * there is no endpoint for it; if one appears, this becomes a mutation and the
- * arithmetic goes away.
- */
 
 const SAMPLE_LEAD: ReadonlyArray<{ field: string; label: string; value: string }> = [
   { field: "source", label: "Source", value: "referral" },

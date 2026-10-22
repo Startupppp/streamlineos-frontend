@@ -1,11 +1,9 @@
 import { z } from "zod";
 
-/** `chatUnreadResponseSchema` */
 export const chatUnreadContract = z
   .object({ total: z.number().int().min(0).max(100) })
   .strict();
 
-/** `chatOnlineResponseSchema` */
 export const chatOnlineUsersContract = z.array(
   z.object({
     userId: z.string(),
@@ -20,7 +18,6 @@ export const chatOnlineUsersContract = z.array(
 
 export type ChatOnlineUser = z.infer<typeof chatOnlineUsersContract>[number];
 
-/** `chatUsersResponseSchema` */
 export const chatOrgUsersContract = z.array(
   z.object({
     id: z.string(),

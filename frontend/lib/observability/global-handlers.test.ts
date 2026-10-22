@@ -2,16 +2,9 @@ import { resetErrorReporter, setErrorReporter, type ErrorReport } from "./error-
 import { installGlobalErrorHandlers } from "./global-handlers";
 import { ApiError } from "@/lib/api-envelope";
 
-/**
- * A real `ErrorEvent` carrying an `error` is treated by jsdom as an uncaught
- * exception and re-thrown, failing the test regardless of what listeners do.
- * A plain event with the same shape exercises the listener without that.
- */
 function dispatchError(error: unknown): void {
   const event = new Event("error", { cancelable: true }) as Event & { error?: unknown };
   event.error = error;
-  // jsdom escalates an uncancelled window "error" to an uncaught exception, and it
-  // surfaces asynchronously on whichever test happens to be running next.
   const swallowDefault = (e: Event): void => e.preventDefault();
   window.addEventListener("error", swallowDefault);
   try {

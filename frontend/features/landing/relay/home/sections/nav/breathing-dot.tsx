@@ -5,17 +5,8 @@ import { useEffect, useState } from "react";
 
 import { useRobot } from "@/features/landing/relay/components/common/robot-view";
 
-/**
- * Status dot that pulses: the dot swells and settles while a accent halo
- * expands out of it and fades, about every 1.8 s (motion brief, hero.status).
- *
- * The loop only starts once we know reduced motion is off: with react-spring's
- * global skipAnimation (set by <ReducedMotion />) a looping spring would finish
- * instantly and restart forever, locking the main thread.
- */
 export const BreathingDot = () => {
   const [motionOn, setMotionOn] = useState(false);
-  // The robot form sets skipAnimation too (D-016) — the same freeze.
   const robot = useRobot();
   const pulse = motionOn && !robot;
 

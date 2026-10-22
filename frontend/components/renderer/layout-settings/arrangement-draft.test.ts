@@ -10,14 +10,6 @@ import {
   setHidden,
 } from "./arrangement-draft";
 
-/**
- * What an administrator does, and what gets stored because of it.
- *
- * The editor's screen is thin; this is where its behaviour lives, so this is
- * where it is tested. Every assertion follows the round trip all the way to a
- * rendered layout — an arrangement that stores cleanly and then produces a
- * broken description would pass a test of the draft alone.
- */
 
 const draft = () => draftFrom(PARTY_LAYOUT, null);
 const columns = (rows: ReturnType<typeof draft>) =>
@@ -27,8 +19,6 @@ const columns = (rows: ReturnType<typeof draft>) =>
 
 describe("the arrangement an administrator is editing", () => {
   it("opens on every field the description declares, not only the visible ones", () => {
-    // An editor that could not see a hidden field would give a tenant no way to
-    // unhide it, which would make hiding a one-way door.
     expect(draft().map((row) => row.name)).toEqual(PARTY_LAYOUT.fields.map((f) => f.name));
   });
 

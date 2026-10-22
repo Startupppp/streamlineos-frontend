@@ -1,25 +1,13 @@
 import { PRICING, PRICING_TIERS } from "@/lib/pricing";
 
-/**
- * The trial length in words, from `PRICING.trialDays` — the backend's
- * DEFAULT_TRIAL_DAYS. Whole months read better than "182-day"; anything
- * under two months stays in days.
- */
 const trialMonths = Math.round(PRICING.trialDays / 30.44);
 export const TRIAL_LABEL =
   PRICING.trialDays >= 60 ? `${trialMonths}-month` : `${PRICING.trialDays}-day`;
 
-/** Where every "start" CTA goes: sign-up and sign-in are one flow (/signup redirects here). */
 export const SIGN_IN_HREF = "/signin";
 
-/** The plan cards are drawn for four feature lines. */
 const CARD_FEATURES = 4;
 
-/**
- * 09 Pricing — Figma 3488:22781 layout. Plans, prices, seats and the trial
- * come from `lib/pricing.ts` (mirrors the backend's plan entitlements);
- * nothing here restates a number. `seats` drives the people slider.
- */
 export const pricingMock = {
   head: {
     badge: "pricing",

@@ -13,7 +13,6 @@ const OPTIONS: { value: BillingPeriod; label: string }[] = [
   { value: "monthly", label: "Monthly" },
 ];
 
-/** Relay glass pill: the active period wears the brand gradient, as the CTAs do. */
 export function PricingBillingToggle({
   period,
   onChange,

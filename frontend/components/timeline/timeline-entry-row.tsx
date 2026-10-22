@@ -24,7 +24,6 @@ import { cn } from "@/lib/utils";
 import type { ActivityKind, TaskAnchorRef, TimelineEntry } from "@/types/crm/activities";
 import { taskAnchorHref, taskAnchorLabel } from "./task-anchor";
 
-/** Surface, ink and rule together — the tone's three halves are always used as one. */
 function tone(name: StatusTone): string {
   const classes = statusToneClasses(name);
   return cn(classes.surface, classes.ink, classes.rule);
@@ -46,7 +45,6 @@ const KIND_LABEL: Record<ActivityKind, string> = {
   task: "Task",
 };
 
-/** Stated once — the timeline, the task list and the mobile card all need it. */
 function isOverdue(entry: TimelineEntry): boolean {
   if (entry.kind !== "task" || entry.completedAt || !entry.dueAt) return false;
   return new Date(entry.dueAt).getTime() < Date.now();
@@ -56,7 +54,6 @@ function describe(entry: TimelineEntry): string {
   return entry.subject?.trim() || KIND_LABEL[entry.kind];
 }
 
-/** Who did it, in a reader's words. Never an identifier. */
 function actorText(entry: TimelineEntry): string {
   if (entry.actorKind === "system") return entry.actorLabel ?? "The system";
   return entry.actorName ?? "A team member";
@@ -64,34 +61,12 @@ function actorText(entry: TimelineEntry): string {
 
 export interface TimelineEntryRowProps {
   entry: TimelineEntry;
-  /**
-   * What the entry is about, on a surface that is not already about it.
-   *
-   * A timeline is read from the record it is anchored to, so it passes nothing;
-   * a person's own task list is read by assignee and every row belongs to
-   * something different, so it does.
-   */
   anchor?: TaskAnchorRef | null;
-  /**
-   * Whether a timestamp needs its date.
-   *
-   * A timeline groups rows under a day heading, so the date is already on the
-   * screen and repeating it on every row is noise. A task list is ordered by
-   * due date with no headings, where "Due 09:00" is the one thing a reader
-   * cannot work out.
-   */
   withDates?: boolean;
   onComplete?: (activityId: string) => void;
   isCompleting?: boolean;
 }
 
-/**
- * One entry.
- *
- * The autonomous ones are marked rather than styled loudly: the PRD requires a
- * reader to see plainly which fields the system set, and a wall of highlighted
- * rows communicates less than a quiet, consistent mark on the ones that are.
- */
 export function TimelineEntryRow({
   entry,
   anchor = null,
@@ -105,14 +80,6 @@ export function TimelineEntryRow({
   const overdue = isOverdue(entry);
   const done = entry.kind === "task" && !!entry.completedAt;
 
-  /**
-   * The analysis is fetched only once somebody asks for it.
-   *
-   * A timeline renders many calls, and mounting the panel on every one would put
-   * a read per row behind a page load. Kept closed by default for the same
-   * reason the backend split reading from running: the cheap thing should be the
-   * one that happens automatically.
-   */
   const [analysisOpen, setAnalysisOpen] = useState(false);
 
   function handleComplete() {
@@ -163,8 +130,6 @@ export function TimelineEntryRow({
         </div>
 
         {entry.body ? (
-          // Wrapped, not truncated: the ticket asks for the same information on a
-          // phone with nothing silently cut off.
           <p className="min-w-0 whitespace-pre-wrap break-words text-label text-muted-foreground">
             {entry.body}
           </p>

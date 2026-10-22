@@ -41,13 +41,6 @@ function isLandedCostStatus(value: string): value is LandedCostStatus {
   return value === "DRAFT" || value === "APPLIED";
 }
 
-/**
- * Landed cost, which existed only on the backend.
- *
- * Six routes, its own permission key, its own backfill migration, and no way in
- * the product to raise a voucher — so freight and duty never reached a cost
- * layer and every margin was computed off the goods price alone.
- */
 export function LandedCostClient() {
   const canView = useCan("inventory:valuation:read");
   const canManage = useCan("inventory:landed-cost:manage");

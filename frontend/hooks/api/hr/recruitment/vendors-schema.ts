@@ -69,11 +69,6 @@ export const vendorSubmissionRowContract = z.object({
   createdAt: z.string(),
 });
 
-/**
- * `RecruitmentVendorSourcingService.listVendors` projects ten columns plus three
- * aggregates. It does NOT select `contractType`, `slaDays` or
- * `replacementGuaranteeDays`, so this list type cannot carry them.
- */
 export const vendorListContract = z.array(
   z.object({
     id: z.number().int(),

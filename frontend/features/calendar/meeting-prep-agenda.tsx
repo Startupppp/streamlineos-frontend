@@ -10,12 +10,6 @@ interface MeetingPrepAgendaProps {
   isStreaming: boolean;
 }
 
-/**
- * The structured agenda the user sees, rendered from whatever the stream has
- * delivered so far. Every branch is guarded on its own content rather than on
- * completion, so the four affordances appear one at a time as the model reaches
- * them instead of all at once at the end.
- */
 export function MeetingPrepAgendaBody({ sections, isStreaming }: MeetingPrepAgendaProps) {
   return (
     <div className="space-y-2" aria-busy={isStreaming || undefined}>
@@ -46,11 +40,6 @@ export function MeetingPrepAgendaBody({ sections, isStreaming }: MeetingPrepAgen
   );
 }
 
-/**
- * Citations are NOT rendered here. `AiDraftCard` already owns them, including the
- * pending skeleton while `x-ai-sources` is in flight; the panel used to render a
- * second "Sources" block beneath, so every source appeared twice.
- */
 export function MeetingPrepAgendaDetails({
   sections,
 }: Omit<MeetingPrepAgendaProps, "isStreaming">) {

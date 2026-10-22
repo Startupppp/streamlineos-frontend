@@ -23,9 +23,7 @@ interface PickTaskRowProps {
   pickListId: number;
   line: PickWaveLine;
   disabled: boolean;
-  /** The task a scan just named. It scrolls into view and takes the thumb. */
   isActive: boolean;
-  /** The captured payload backing `isActive`, replayed to the server on confirm. */
   scannedPayload: string | null;
   onReportException: (line: PickWaveLine) => void;
   onConfirmed: () => void;
@@ -36,21 +34,6 @@ function remaining(line: PickWaveLine): string {
   return (left > 0 ? left : 0).toFixed(4);
 }
 
-/**
- * One task on the walk: where it is, what it is, how many, confirm.
- *
- * A card rather than a table row because this is the surface a picker holds in
- * one hand at 375px. The fields are stacked in the order the walk happens —
- * location first, because that is what the picker is looking for before they
- * look at anything else — and the confirm control is the last thing in the card
- * so a thumb reaches it without covering the quantity it is about to commit.
- *
- * B2 — the row no longer owns a scan box. A scan is captured once, at the top of
- * the wave, and lands here already resolved and already checked against the
- * tasks on this walk; the row replays that payload on confirm so the server
- * records which label the picker was holding. Fifteen rows each with their own
- * unvalidated text field was fifteen ways to post against the wrong task.
- */
 export function PickTaskRow({
   pickListId,
   line,
@@ -64,11 +47,6 @@ export function PickTaskRow({
   const confirmPick = useConfirmPick();
   const cardRef = useRef<HTMLLIElement>(null);
 
-  // B5. The server's answer, not a local re-derivation of it. The rule now has
-  // three clauses -- picked in full, a closing reason, and a reviewer's signature
-  // where one is required -- and a copy here would be a fourth place for it to
-  // drift. A WRONG_LOCATION line in particular still has work left in it, which
-  // the old "any reason closes the row" test got exactly backwards.
   const closed = line.line_closed;
 
   useEffect(
@@ -168,7 +146,7 @@ export function PickTaskRow({
               </Badge>
             ) : null}
           </div>
-          {/* Names, never ids: the picker needs to know who is holding this up. */}
+          
           {line.exception_owner_name ? (
             <p className="truncate text-micro text-muted-foreground">
               With {line.exception_owner_name}

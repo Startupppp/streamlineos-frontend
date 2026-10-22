@@ -6,10 +6,6 @@ interface ListTruncationNoticeProps {
   className?: string;
 }
 
-/**
- * A capped list that renders nothing about its cap lies about completeness: the
- * entry the reader is looking for is simply absent, and nothing says so.
- */
 export function ListTruncationNotice({
   shown,
   hint = "Keep typing to narrow the list.",

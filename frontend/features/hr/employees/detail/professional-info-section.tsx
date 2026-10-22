@@ -61,8 +61,7 @@ export function ProfessionalInfoSection() {
                   placeholder="Select Department"
                 />
               </FormControl>
-              {/* FormControl renders a Slot, which only accepts one child. The note
-                  has to sit beside the field or the Edit tab throws Children.only. */}
+              
               <p className="text-xs text-muted-foreground md:col-span-2">
                 Reporting managers are changed from the Reporting line card on the Overview tab.
               </p>

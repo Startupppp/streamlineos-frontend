@@ -9,19 +9,12 @@ export interface BulkOnboardErrorReportRow {
   details: string;
 }
 
-/**
- * Every row that did not become an employee, keyed by its row in the uploaded
- * file: rows the client check refused, rows the server preview held back
- * (ERROR, SKIPPED), and rows the commit itself failed or skipped. A WARNING row
- * that was created is not an error and is not listed.
- */
 export function buildBulkOnboardErrorReportRows(
   rows: BulkOnboardFlowRow[],
   commit: BulkOnboardCommit | null,
 ): BulkOnboardErrorReportRow[] {
   const report: BulkOnboardErrorReportRow[] = [];
   for (const row of rows) {
-    // Ready/warning rows were submitted; the commit results below speak for them.
     if (isCommittable(row)) continue;
     const clientErrors = row.preview.errors;
     report.push({

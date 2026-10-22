@@ -18,15 +18,6 @@ import { randomId } from "@/lib/random-id";
 const PUTAWAY_READ = "inventory:stock:read";
 const PUTAWAY_WRITE = "inventory:stock:transfer";
 
-/**
- * NEO-5 - putting a receipt away on a handheld.
- *
- * The destination comes from the task's own suggestion where it has one, which
- * is what makes this a single-decision screen: the operator confirms a bin
- * rather than choosing one from a list they cannot read at arm's length. Where
- * there is no suggestion the bin is typed, because inventing one would be the
- * system deciding where somebody's stock lives.
- */
 function RfPutawayContent() {
   const params = useParams<{ taskId: string }>();
   const router = useRouter();
@@ -147,7 +138,6 @@ function RfPutawayContent() {
       backHref="/inventory/rf"
     >
       <RfStep
-        // A new line is a new component: see the note in `rf-step.tsx`.
         key={line.id}
         sku={line.sku}
         productName={line.variant_name}

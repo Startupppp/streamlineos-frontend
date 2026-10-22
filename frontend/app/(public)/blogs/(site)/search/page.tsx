@@ -6,7 +6,6 @@ import { JOURNAL_NAME, blogUrl } from "@/lib/blog/seo";
 
 export const dynamic = "force-dynamic";
 
-/** Internal search results are never indexed; their links are still followed. */
 export const metadata: Metadata = {
   title: { absolute: `Search · ${JOURNAL_NAME}` },
   description: "Search every published story in the journal by title, summary or text.",

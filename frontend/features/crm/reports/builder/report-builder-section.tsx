@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 
 interface ReportBuilderSectionProps {
   title: string;
-  /** The bound this section is held to, said where the control is, not after a refusal. */
   hint?: string;
   description?: string;
   className?: string;

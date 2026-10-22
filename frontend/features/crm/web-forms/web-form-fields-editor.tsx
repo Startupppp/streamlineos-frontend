@@ -21,7 +21,6 @@ interface WebFormFieldsEditorProps {
   form: UseFormReturn<WebFormValues>;
 }
 
-/** The ordered field list, one row per field. */
 export function WebFormFieldsEditor({ form }: WebFormFieldsEditorProps) {
   const { fields, append, remove } = useFieldArray({ control: form.control, name: "fields" });
   const handleAdd = useCallback(() => append(EMPTY_FIELD), [append]);

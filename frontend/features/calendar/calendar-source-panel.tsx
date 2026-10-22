@@ -50,13 +50,6 @@ interface SourceFailureBannerProps {
   className?: string;
 }
 
-/**
- * A partially failed aggregate renders as a calendar quietly missing one
- * source's events — the surviving sources still draw, so nothing on screen is
- * broken enough to notice. The banner therefore has to be reachable without
- * opening the Sources popover; `CalendarToolbar` renders it on the surface and
- * the popover keeps a copy beside the toggles that explain it.
- */
 export function SourceFailureBanner({
   failures,
   className,

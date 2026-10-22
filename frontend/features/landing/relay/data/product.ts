@@ -1,4 +1,3 @@
-/** 04 Product — Figma 3488:21990. StreamlineOS Workflows copy; card figures are mock UI. */
 export const productMock = {
   head: {
     badge: "workflows",

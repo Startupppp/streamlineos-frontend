@@ -3,13 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CONTENT_PANEL_SOLID } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
 
-/**
- * Mirrors the two-pane roles view `ModuleAccessPage` opens on: a tab strip and
- * an audit-log action in the chrome, a narrow group list, and the permission
- * detail beside it. Built from primitives rather than importing the shared
- * module-access internals — that surface belongs to `features/module-access/`
- * and inventory neither owns nor may change its states.
- */
 export default function InventoryAccessLoading() {
   return (
     <PageWrapper

@@ -25,17 +25,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { TERRITORY_LAYOUT } from "@/lib/renderer/crm/settings/territory-layout";
 import type { Territory } from "@/hooks/api/crm/settings/territories";
 
-/**
- * Territories.
- *
- * The table is generated, so the criteria shown in it are the criteria stored —
- * the screen this replaces built a "Criteria" string with a helper that read
- * three of the eight and printed "No criteria" for the rest.
- *
- * Activating and deactivating stays a one-click switch in the row rather than a
- * trip through the edit sheet: it is one field on a record already on screen,
- * which is the bottom rung of the overlay ladder and needs no overlay at all.
- */
 export default function TerritoriesPage() {
   const layout = useTenantLayout(TERRITORY_LAYOUT);
   const [density, setDensity] = useDensity();

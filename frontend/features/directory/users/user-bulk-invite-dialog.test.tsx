@@ -1,13 +1,6 @@
 import { render, screen, fireEvent, waitFor, cleanup } from "@testing-library/react";
 import type { ReactNode } from "react";
 
-/**
- * P2's acceptance is about what the operator can SEE and DO after a batch only
- * half worked. The dialog used to collapse every outcome into one success toast,
- * so a plan-limit rejection and a forbidden domain were indistinguishable from a
- * delivered invitation, and the only way back was to retype the whole paste —
- * which re-invited everyone who had already succeeded.
- */
 
 interface BulkRow {
   email: string;
@@ -48,12 +41,6 @@ jest.mock("@/hooks/api/access", () => ({
 const toastSuccess = jest.fn();
 const toastError = jest.fn();
 
-/**
- * The dialog now states how many seats are free before the invite is sent
- * (BUG-HRMS-008). That read goes through `useSeatInfo`, which needs a session; the
- * cases in this file are about duplicate parsing and submission, so an unlimited
- * plan keeps the notice silent.
- */
 jest.mock("@/hooks/api/subscription", () => ({
   useSeatInfo: () => ({ data: { total: null, used: 1, available: null } }),
 }));

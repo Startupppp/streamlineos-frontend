@@ -6,6 +6,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { QueryKeyParams } from "@/lib/query-keys/base";
 import { useAccess } from "@/hooks/api/access";
+import { leaveContextQueryOptions } from "@/hooks/api/hr/leaves-query-identity-read-options";
 
 export const LEAVE_TYPES_KEY = [...humanResourcesQueryKeys.hr.all, "leaveTypesAdmin"] as const;
 
@@ -23,13 +24,6 @@ export type LeaveIdentity = ReturnType<typeof useLeaveQueryIdentity>;
 
 export function leaveContextKey(identity: LeaveIdentity) {
   return humanResourcesQueryKeys.hr.leaves(identity.orgId, identity.userId, identity.accessVersion);
-}
-
-export function leaveContextQueryOptions(orgId: string, userId: string, accessVersion: number) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.leaves(orgId, userId, accessVersion),
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function leaveTeamKey(identity: LeaveIdentity, params?: QueryKeyParams) {

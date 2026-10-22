@@ -2,13 +2,6 @@ import type { ReactNode } from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { useOneOnOneMeetings } from "@/hooks/api/hr";
 
-/**
- * PageState renders only its `empty` slot when the resolution is empty. The
- * create sheet once lived inside PageState's children, so on an organisation
- * with no meetings the empty state's "Schedule 1-on-1" set the open flag on a
- * sheet that was never mounted — nobody could create the first one. The same
- * shape was fixed in the cycles, goals, PIP and succession tabs.
- */
 jest.mock("@/hooks/api/use-page-state", () => {
   const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
     "@/lib/page-state/resolve-page-state",

@@ -13,7 +13,6 @@ import { viewKey, manageKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-/** Deferred — see `catalog.ts`; the contracts themselves are unchanged. */
 const memberPageContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleMemberPageContract),
 );

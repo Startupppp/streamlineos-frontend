@@ -101,8 +101,6 @@ export function SimulationHistory() {
     void refetch();
   }, [refetch]);
 
-  // Resolve denial ahead of "No simulations run yet" (FE-47); the history read
-  // is GET /hr/enterprise/ops/simulator/history (hr:policies:manage).
   const pageState = usePageState({ permission: "hr:policies:manage", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {

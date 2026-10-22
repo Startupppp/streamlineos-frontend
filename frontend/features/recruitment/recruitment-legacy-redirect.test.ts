@@ -1,7 +1,3 @@
-/**
- * Recruitment OS moved out of HRMS: `/hr/recruitment/**` became `/recruitment/**`.
- * Bookmarks and links in emails the backend already sent must keep resolving.
- */
 import nextConfig from "@/next.config";
 
 describe("legacy /hr/recruitment URLs", () => {

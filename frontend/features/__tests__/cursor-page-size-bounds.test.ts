@@ -1,14 +1,3 @@
-/**
- * `DataTable` slices a client-paginated table at its own default page size and,
- * since that slice became visible, shows its own pager whenever it bites. A
- * surface that already owns a cursor pager and hands the table MORE rows than
- * that default therefore grows a second pager: the reader pages inside a page,
- * and the two controls disagree about where they are.
- *
- * The invariant is that a cursor page never outgrows the table's window. It was
- * previously held by reading the ~20 page-size constants by hand; this executes
- * it instead, and follows the primitive rather than hard-coding 50.
- */
 import { readFileSync, readdirSync } from "node:fs";
 import { join, extname } from "node:path";
 

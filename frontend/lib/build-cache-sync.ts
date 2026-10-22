@@ -59,7 +59,6 @@ export function publishBuildCacheChange(
       window.localStorage.removeItem(channelName);
     }
   } catch {
-    // Browser storage restrictions must not turn a committed mutation into a failure.
   } finally {
     if (!existingChannel) channel?.close();
   }

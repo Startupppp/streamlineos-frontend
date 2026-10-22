@@ -23,8 +23,6 @@ describe("splitOrgChartRoots", () => {
   it("puts the owner alone at the top and never beside an unmanaged hire who happens to have reports", () => {
     const { owner, topLevel, unassigned } = splitOrgChartRoots([
       node("founder", { isOwner: true, isTopLevel: true, hasDirectReports: true }),
-      // Nobody placed them at the top; they just picked up a report and have
-      // no manager themselves. This is the fake second CEO.
       node("new-hire", {
         isOwner: false,
         isTopLevel: false,

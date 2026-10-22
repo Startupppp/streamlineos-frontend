@@ -6,7 +6,6 @@ jest.mock("@/hooks/api/gated-query", () => ({
 }));
 jest.mock("@/lib/api-client", () => ({ apiClient: { get: jest.fn() } }));
 
-// NEW-1: this read is mounted only on /hr/leaves?tab=approvals; a failure used to replace the whole page.
 describe("useHrTeamAvailability inline error policy", () => {
   it("keeps its errors inline", () => {
     useHrTeamAvailability({ startDate: "2026-10-01", endDate: "2026-10-31" });

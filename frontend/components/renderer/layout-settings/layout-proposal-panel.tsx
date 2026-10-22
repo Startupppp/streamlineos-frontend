@@ -15,19 +15,6 @@ export interface LayoutProposalPanelProps {
   disabled?: boolean;
 }
 
-/**
- * What the tenant's own records suggest this layout should be.
- *
- * The alternative is a screen of checkboxes and a paragraph asking an
- * administrator to think about each field, which is the failure "make it
- * configurable" always produces: the work is real, nobody does it, and the
- * default is what everyone lives with anyway. The records already say which
- * fields this organisation uses.
- *
- * It proposes and never applies. The evidence is on screen beside the
- * conclusion, because an administrator asked to accept a rearrangement of their
- * colleagues' screens deserves to see the argument.
- */
 export function LayoutProposalPanel({ layout, onApply, disabled }: LayoutProposalPanelProps) {
   const usage = useLayoutUsage(layout.key);
 

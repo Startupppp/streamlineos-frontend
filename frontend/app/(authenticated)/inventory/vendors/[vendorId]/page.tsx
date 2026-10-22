@@ -62,9 +62,6 @@ export default function VendorDetailPage({ params }: VendorDetailPageProps) {
     setEditOpen(true);
   }
 
-  // Denial and absence are different answers. Without this a reader who may not
-  // see vendors is told the vendor does not exist, because the gated query
-  // never fired.
   if (!canView) return <NoPermissionState permission="inventory:vendors:read" className="flex-1" />;
   if (vendorQuery.isLoading) return <LoadingState variant="form" />;
   if (vendorQuery.error) return <ErrorState description={getErrorMessage(vendorQuery.error)} onRetry={handleVendorRetry} />;

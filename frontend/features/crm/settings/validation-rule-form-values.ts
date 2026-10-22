@@ -47,14 +47,6 @@ export function toEntityType(value: string | undefined): CrmValidationEntityType
   return ENTITY_TYPES.find((candidate) => candidate === value);
 }
 
-/**
- * The stored `config` blob, built from the arm the rule is on.
- *
- * The engine has already dropped every value belonging to another arm, so this
- * only has to say which shape each arm stores. A rule with no configuration
- * stores `null` rather than `{}` — an empty object reads as "configured with
- * nothing", which is a different claim.
- */
 export function configFor(
   ruleType: CrmValidationRuleType,
   values: RecordFormValues,
@@ -78,7 +70,6 @@ export function configFor(
   return null;
 }
 
-/** The rule as the form's flat fields, with `config` spread back out. */
 export function initialValues(rule: CrmValidationRule, pipelineName: string): Record<string, unknown> {
   const config = rule.config ?? {};
   return {

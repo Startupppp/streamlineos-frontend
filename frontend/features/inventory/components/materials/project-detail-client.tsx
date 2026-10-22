@@ -29,14 +29,6 @@ function DetailSkeleton() {
   );
 }
 
-/**
- * B1 — one site, and what it is waiting for.
- *
- * The header answers "where and when"; the list answers "is it covered". Nothing
- * on this page asks the reader to add quantities up: every line shows required,
- * reserved, delivered and short side by side, because the arithmetic done in
- * somebody's head at 6am is the arithmetic that goes wrong.
- */
 export function ProjectDetailClient({ projectId }: { projectId: number }) {
   const canRead = useCan("inventory:projects:read");
   const { data, isLoading, error, refetch } = useProject(projectId);

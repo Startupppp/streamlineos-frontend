@@ -113,8 +113,6 @@ export function ReportVariance({ month }: ReportVarianceProps) {
     );
   }
 
-  // Before the empty state: a 500 is not the same fact as "no variance data",
-  // and the empty copy tells the operator to go run something.
   if (isError) {
     return (
       <ErrorState

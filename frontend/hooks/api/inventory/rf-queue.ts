@@ -6,27 +6,12 @@ import { usePutawayTasks } from "@/hooks/api/inventory/putaway";
 import { useCycleCounts } from "@/hooks/api/inventory/counts";
 import { useCan } from "@/hooks/api/access";
 
-/**
- * NEO-5 - the operator's queue, as one list.
- *
- * A picker on a handheld has one question - "what am I doing next" - and before
- * this the answer was spread across three desktop screens with their own filters,
- * their own pagination and their own idea of what "mine" means. This composes
- * the three existing queues rather than adding a fourth server surface: the
- * assignment filters already exist and are already warehouse-scoped, and a new
- * endpoint would be a second definition of "assigned to me".
- *
- * Deliberately not sorted by priority. There is no priority in the data, and
- * inventing one here would put an ordering on a picker's day that nothing in the
- * system can explain or change.
- */
 export type RfTaskKind = "PICK" | "PUTAWAY" | "COUNT";
 
 export interface RfTask {
   kind: RfTaskKind;
   id: number;
   reference: string;
-  /** What is left to do, in words the operator recognises. */
   summary: string;
   warehouseId: number | null;
   href: string;
@@ -36,7 +21,6 @@ export interface RfQueue {
   tasks: RfTask[];
   isLoading: boolean;
   isError: boolean;
-  /** True when the operator holds none of the three task permissions. */
   isDenied: boolean;
   refetch: () => void;
 }
@@ -58,14 +42,6 @@ export function useRfQueue(): RfQueue {
     { assignment: "MINE", limit: 25 },
     { enabled: canPutaway },
   );
-  // `useCycleCounts` gates itself on `inventory:stock:read`, but a COUNT task
-  // links to a screen that needs COUNT_KEY. Ungated, a picker with read but not
-  // reconcile was offered work that lands on Access Denied -- the one thing the
-  // route rules say never to render.
-  // COUNTING is the cycle-count status. IN_PROGRESS belongs to InspectionStatus,
-  // a different entity, and the API answers 400 for it — which took the whole
-  // queue down, because one failing source is enough to show "Could not load
-  // your tasks" over the picks and putaways that had loaded fine.
   const counts = useCycleCounts({ status: "COUNTING" }, { enabled: canCount });
 
   const tasks = useMemo<RfTask[]>(() => {
@@ -100,9 +76,6 @@ export function useRfQueue(): RfQueue {
         kind: "COUNT",
         id: count.id,
         reference: count.countNumber,
-        // Counting has its own screen and its own posting rules; the RF queue
-        // shows it so an operator's list is complete, and hands off rather than
-        // reimplementing a variance review on a handheld.
         summary: `${count.lineCount} line${count.lineCount === 1 ? "" : "s"} to count`,
         warehouseId: null,
         href: `/inventory/cycle-counts?count=${count.id}`,
@@ -119,9 +92,6 @@ export function useRfQueue(): RfQueue {
       (canPutaway && putaways.isLoading) ||
       counts.isLoading,
     isError: waves.isError || putaways.isError || counts.isError,
-    // Denied is its own answer, not an empty queue. A picker who has lost a
-    // permission sees "you may not do this" rather than "there is nothing to do",
-    // which is the defect the route-state check exists for.
     isDenied: !canPick && !canPutaway && !canCount,
     refetch: () => {
       void waves.refetch();

@@ -9,26 +9,10 @@ export interface RecordDetailProps<T extends RecordValue = RecordValue> {
   layout: RecordLayout;
   record: T;
   className?: string;
-  /** The tenant's currency, for `money` fields. See `RecordListProps.money`. */
   money?: MoneyDisplay;
-  /**
-   * Whether to head the sections with the record's name.
-   *
-   * True in a sheet, where nothing else names the record. False on a page whose
-   * wrapper already carries the name as its heading — printing it twice would
-   * put two `h1`s on one document and say the same thing to a screen reader
-   * twice.
-   */
   showTitle?: boolean;
 }
 
-/**
- * A record, rendered from the same description that produced its list.
- *
- * Sections come from the description rather than the component, so a tenant that
- * cares about different things sees a different arrangement without a screen
- * being written for them.
- */
 export function RecordDetail<T extends RecordValue = RecordValue>({
   layout,
   record,

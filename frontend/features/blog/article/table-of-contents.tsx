@@ -1,9 +1,5 @@
 import type { TocEntry } from "@/lib/blog/toc";
 
-/**
- * Plain anchor links, so the contents work without JavaScript. On small screens it is a
- * collapsible <details>; on wide screens the same list sits beside the article.
- */
 export function TableOfContents({ entries, variant }: { entries: TocEntry[]; variant: "mobile" | "desktop" }) {
   const list = (
     <ol className="space-y-2 text-sm">

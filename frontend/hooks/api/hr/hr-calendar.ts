@@ -22,11 +22,6 @@ export const HR_CALENDAR_TYPE_LABELS: Record<HrCalendarEventType, string> = {
   INTERVIEW: "Interview",
 };
 
-/**
- * Seven kinds of entry sharing one month grid, so the colour is how you read
- * the grid at a glance. Four of them collapsed onto "info" and two onto
- * "warning", which made a birthday and a review cycle the same chip.
- */
 export const HR_CALENDAR_TYPE_COLORS: Record<HrCalendarEventType, string> = {
   HOLIDAY: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",
   LEAVE: "bg-category-amber-surface text-category-amber-ink border-category-amber-rule",

@@ -48,18 +48,6 @@ function AlertDialogOverlay({
   )
 }
 
-/**
- * `AlertDialogPrimitive.Content` renders `DialogPrimitive.Content`, so it
- * carries the same close-focus defect S15 fixed for `Dialog` and `Sheet`:
- * Radix cancels FocusScope's restore and focuses its own `AlertDialogTrigger`,
- * which a controlled `ConfirmDialog` does not have — and `ConfirmDialog`'s own
- * type offers a controlled mode precisely so a row menu can own the open
- * state. Every destructive confirmation opened that way left focus on
- * `<body>`, measured, on both Escape and confirm. WCAG 2.4.3.
- *
- * A caller's own handler still wins: if it prevents the default, the restore
- * stands aside rather than fighting it.
- */
 function AlertDialogContent({
   className,
   onOpenAutoFocus,

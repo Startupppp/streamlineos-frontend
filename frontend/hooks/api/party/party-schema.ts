@@ -1,16 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Contracts for `PartyController` and `SubjectController` handlers.
- *
- * Party list uses offset-based pagination (`{ data, pagination: { page, limit,
- * total, totalPages, nextCursor, hasMore } }`), not cursor-only.
- * Subject list uses cursor-based pagination (`{ data, pagination }`) from
- * `cursorPageSchema`.
- *
- * NOT `.strict()`. Timestamps are ISO strings.
- */
 
 export const partyRowContract = z.object({
   partyId: z.string(),
@@ -31,14 +21,6 @@ export const partyRowContract = z.object({
   updatedAt: z.string(),
 });
 
-/**
- * `PartyService.listParties` answers in two shapes. Given a `cursor` it returns
- * the keyset page only — `{ page, limit, hasMore, nextCursor }`. Given none, it
- * also counts, and adds `total` + `totalPages`. `useParties` never sends a
- * cursor, so `total` and `totalPages` are declared required here: they are
- * present on every response this contract is applied to, and the parties table
- * renders its footer from them.
- */
 const partyPaginationContract = z.object({
   page: z.number(),
   limit: z.number(),
@@ -57,12 +39,6 @@ export const partyDetailContract = partyRowContract;
 
 export const partyMutationContract = partyRowContract;
 
-/**
- * `kind` and `tone` are narrowed to the backend's own closed sets — `FIELD_KINDS`
- * and `TONES` in `party/dto/subject.schemas.ts`, which every write to this JSONB
- * column passes through under `.strict()`. They are NOT the frontend's wider
- * `FieldKind`, which carries members this API cannot store.
- */
 const subjectTypeFieldContract = z.object({
   name: z.string(),
   label: z.string(),
@@ -110,11 +86,6 @@ const subjectItemContract = z.object({
   updatedAt: z.string(),
 });
 
-/**
- * The row `subject_party_links` actually stores — `linkedAt`/`linkedBy`, never
- * `createdAt`/`createdBy`. The module's `@ResponseSchema` names the latter pair,
- * which is why openapi does too; neither column exists on the table.
- */
 const subjectPartyLinkRowContract = z.object({
   subjectPartyLinkId: z.string(),
   subjectId: z.string(),
@@ -127,14 +98,6 @@ const subjectPartyLinkRowContract = z.object({
 
 export const subjectListContract = cursorPageContract(subjectItemContract);
 
-/**
- * `SubjectService.getSubject` resolves through the subject seam, so the single
- * read is a PROJECTION and not the row: it carries the type's declaration
- * (`typeKey`, `typeSingular`, `fields`) and drops `updatedAt`/`deletedAt`. Its
- * `parties` are the four columns the join selects, not whole link rows — the
- * declared `@ResponseSchema` describes neither, so this is written from
- * `subject.service.ts` `getSubject` and `subject-seam.ts` `SELECTION`.
- */
 export const subjectDetailContract = z.object({
   subjectId: z.string(),
   organizationId: z.string(),
@@ -163,10 +126,6 @@ export const subjectLinkContract = subjectPartyLinkRowContract;
 
 export const subjectUnlinkContract = z.object({ unlinked: z.literal(true) });
 
-/**
- * `SubjectService.listForParty` — the same link read from the party's side, and
- * a seven-column projection over a two-table join rather than a subject row.
- */
 export const partySubjectsContract = z.object({
   data: z.array(z.object({
     subjectId: z.string(),

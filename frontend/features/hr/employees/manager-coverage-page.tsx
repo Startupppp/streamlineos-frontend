@@ -112,7 +112,6 @@ function CoverageTable({ view, data, canEdit, canReview, memberNameMap, onOpenPe
           {...common}
           data={data.withoutManager}
           columns={canEdit ? [...WITHOUT_MANAGER_COLUMNS, WITHOUT_MANAGER_ASSIGN_COLUMN] : WITHOUT_MANAGER_COLUMNS}
-          // Cards until xl: with the sidebar open, 768-1279px clips the action column.
           mobileCardBreakpoint="xl"
           mobileCard={withoutManagerCard(canEdit)}
           getRowKey={(row) => row.employmentId}
@@ -191,7 +190,6 @@ export function ManagerCoveragePage() {
   const canEdit = useCan("hr:reporting-lines:manage");
   const canReview = useCan("hr:reporting-lines:review");
   const pageState = usePageState({ permission: "hr:employees:view", module: "hr", isLoading, isError, error });
-  // Names for loop members the read model did not name (older payloads carry ids only).
   const unnamed = (data?.circular ?? []).filter((cycle) => !cycle.members).flatMap((cycle) => cycle.userIds);
   const { data: cycleMembers } = useOrgMembersByIds([...new Set(unnamed)].slice(0, 100));
 
@@ -240,7 +238,7 @@ export function ManagerCoveragePage() {
   return (
     <PageWrapper title={PAGE_TITLE} subtitle={PAGE_SUBTITLE} actions={actions} contentClassName="flex min-h-0 flex-1 flex-col gap-4">
       {data.policyMissing ? <PolicyMissingCallout canConfigure={canEdit} /> : null}
-      {/* 2 / 3 / 6 columns; short labels so none truncates, the hint carries the detail. */}
+      
       <div data-testid="coverage-summary" className={SUMMARY_GRID_CLASS}>
         <StatCard wrapHint label="No manager" value={counts.withoutManager} icon={UserX} tone={counts.withoutManager > 0 ? "red" : "emerald"} hint={`${summary.withManager} of ${summary.employees} covered${topLevel > 0 ? ` · ${topLevel} top-level by design` : ""}`} />
         <StatCard wrapHint label="Fallback" value={counts.fallback} icon={Hourglass} tone={counts.fallback > 0 ? "amber" : "emerald"} hint="Temporary manager" />

@@ -14,6 +14,7 @@ import type {
   UpdateWipInput,
 } from "@/types/projects/workflow";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { workflowTransitionsQueryOptions } from "./workflow-read-options";
 
 
 const workflowTransitionListContract = lazyContract(() =>
@@ -37,13 +38,6 @@ function assertPermission(allowed: boolean): void {
 
 function customStateKeys(projectId: number) {
   return ["projects", projectId, "custom-states"] as const;
-}
-
-export function workflowTransitionsQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId),
-    staleTime: 60_000,
-  } as const;
 }
 
 export function useWorkflowTransitions(projectId: number) {

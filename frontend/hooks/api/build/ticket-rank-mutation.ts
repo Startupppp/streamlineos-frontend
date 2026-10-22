@@ -22,7 +22,6 @@ interface StatusMove {
   to: string;
 }
 
-/** Move one ticket's worth of count between two status columns, in every filtered count cache. */
 function shiftColumnCount(
   queryClient: QueryClient,
   projectId: number,
@@ -73,9 +72,6 @@ export function useRankTicket<TContext = unknown>(
         undefined,
         rankTicketResultLazy,
       ),
-    // The column counts move with the card, before the server answers (B-028);
-    // the source status must be read before the caller's onMutate re-statuses
-    // the ticket in cache.
     onMutate: (variables, mutationContext) => {
       const from = resolveTicketStatus(queryClient, variables.projectId, variables.ticketId);
       if (from) {
@@ -83,7 +79,6 @@ export function useRankTicket<TContext = unknown>(
         moves.current.set(variables.ticketId, { from, to });
         shiftColumnCount(queryClient, variables.projectId, from, to);
       }
-      // No caller onMutate means no caller context; TanStack passes undefined through.
       return callerOnMutate
         ? callerOnMutate(variables, mutationContext)
         : (undefined as TContext);

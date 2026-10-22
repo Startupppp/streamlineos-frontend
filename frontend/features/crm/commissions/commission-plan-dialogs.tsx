@@ -35,7 +35,6 @@ interface AssignDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Put a person on the plan from a date, optionally with their own quota. */
 export function AssignCommissionPlanDialog({ planId, currency, onOpenChange }: AssignDialogProps) {
   const assign = useAssignCommissionPlan();
   const handleSubmit = (values: AssignValues) =>
@@ -133,7 +132,6 @@ interface EndDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Take a person off the plan; the last day is inclusive. */
 export function EndCommissionAssignmentDialog({ assignmentId, personName, onOpenChange }: EndDialogProps) {
   const end = useEndCommissionAssignment();
   const handleSubmit = (values: EndValues) =>
@@ -184,7 +182,6 @@ interface EditPlanDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/** Name, description, retirement. Never money — that is a new version. */
 export function EditCommissionPlanDialog({ planId, initial, onOpenChange }: EditPlanDialogProps) {
   const update = useUpdateCommissionPlan();
   const handleSubmit = (values: PlanValues) =>

@@ -30,38 +30,9 @@ const WINDOWS = [
 
 const PAGE_SIZE = 25;
 
-/**
- * The shortlist starts at five and widens once.
- *
- * Five is what somebody will actually listen to; twenty is the ceiling because
- * past that a ranked recommendation is just the window in a different order.
- */
 const EXEMPLAR_PAGE_SIZE = 5;
 const EXEMPLAR_WIDE_SIZE = 20;
 
-/**
- * CRM-P2-05 and CRM-P2-06 on one screen: how a person's calls are going, and
- * which call to listen to next.
- *
- * Gated on `crm:call-analysis:view` — the key every CRM member holds — and not
- * on `crm:call-analysis:view-team`, which is what `/crm/intelligence` beside it
- * uses. That is the difference between the two pages rather than an
- * inconsistency: the digest is the whole team seen at once and is a manager's
- * surface; this one is "my numbers", and it happens to widen into "my team's
- * numbers" for somebody who holds the team key. The server decides which of
- * those a caller gets, per call, and says so in `meta.scope`; the page reads
- * that rather than inferring it from the row count, so a manager with one
- * direct report is not mislabelled as looking at their own calls.
- *
- * `backHref` points at the digest only for somebody who can open it. A back
- * button that lands on a permission wall is worse than no back button, and the
- * digest is genuinely where a manager came from.
- *
- * Both reads share the window, and the exemplar list additionally takes a
- * metric. They are two queries rather than one because they page independently
- * and because a metric change must not refetch the table — the two numbers on
- * screen would flicker for a filter that does not affect them.
- */
 export default function RepCallMetricsPage() {
   const [sinceDays, setSinceDays] = useState(30);
   const [metric, setMetric] = useState<ExemplarMetric>("talk-ratio");
@@ -73,8 +44,6 @@ export default function RepCallMetricsPage() {
   const handleWindowChange = useCallback((value: string) => {
     setSinceDays(Number(value));
     setExemplarLimit(EXEMPLAR_PAGE_SIZE);
-    // Every filter change resets pagination, or page three of a 90-day window
-    // becomes an empty page two of a 7-day one.
     setPage(1);
   }, []);
 
@@ -82,7 +51,6 @@ export default function RepCallMetricsPage() {
     const next = EXEMPLAR_METRICS.find((candidate) => candidate === value);
     if (!next) return;
     setMetric(next);
-    // A new metric is a new ranking, so the shortlist starts short again.
     setExemplarLimit(EXEMPLAR_PAGE_SIZE);
   }, []);
 
@@ -182,13 +150,6 @@ export default function RepCallMetricsPage() {
 
               <RepMetricsTable
                 response={metrics.data}
-                /**
-                 * True only while a different page or window is in flight and
-                 * the rows on screen belong to the previous one. An ordinary
-                 * background refetch keeps its rows — replacing a table the
-                 * reader is looking at with a skeleton is the "loader on every
-                 * refetch" anti-pattern.
-                 */
                 isLoading={metrics.isFetching && metrics.isPlaceholderData}
                 page={page}
                 pageSize={PAGE_SIZE}
@@ -219,10 +180,6 @@ export default function RepCallMetricsPage() {
   );
 }
 
-/**
- * A visual Xerox of the loaded page: four stat tiles, a table and the exemplar
- * panel. A spinner here would say "something is happening"; this says what.
- */
 function RepMetricsSkeleton() {
   return (
     <div className="flex flex-col gap-4">

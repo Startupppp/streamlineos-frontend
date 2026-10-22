@@ -202,11 +202,6 @@ export function useRemoveChannelMember() {
   );
 }
 
-/**
- * Promote or demote a channel member. The response is a bare `{ ok }`, so the
- * channel detail cache is patched with the role the caller asked for rather
- * than refetched (FE-133); the server refuses non-admin callers with 403.
- */
 export function useUpdateChannelMemberRole() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation<

@@ -1,23 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * Clients, as data.
- *
- * A client account is written by the lead conversion, never by hand: `/clients`
- * exposes reads, a timeline, opportunities and an onboarding checklist, and no
- * create or update route for the account itself. So every field is read-only and
- * `form.sections` is empty, and the two say the same thing twice deliberately —
- * a tenant arrangement replaces the declared sections on the form as well as the
- * detail view, so an empty section list alone would stop being empty the moment
- * an administrator grouped the fields. Read-only fields are dropped from a form
- * whatever the sections say, which is what actually holds the record read-only.
- *
- * `salesRepName` and `assignedCrmName` are not columns on the account. The API
- * sends `salesRep` and `assignedCrm` as nested objects, and a description can
- * only name a top-level key — so the surfaces flatten the rows through
- * `clientRecord` before handing them over. Naming the person rather than
- * rendering `salesRepId` is the point: an id on screen is a bug.
- */
 export const CLIENT_LAYOUT: RecordLayout = {
   key: "crm:client",
   singular: "Client",

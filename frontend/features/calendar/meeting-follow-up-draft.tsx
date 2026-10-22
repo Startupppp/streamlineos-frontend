@@ -43,14 +43,6 @@ interface FollowUpDraftBodyProps {
   isStreaming: boolean;
 }
 
-/**
- * The structured draft the user sees, rendered from whatever the stream has
- * delivered so far. Every branch is guarded on its own content rather than on
- * completion, so the subject, the email, the action items and the suggested next
- * meeting appear one at a time as the model reaches them instead of all at once
- * at the end. Before the first section arrives the skeleton stands in, so the
- * card is never an empty box.
- */
 export function FollowUpDraftBody({ draft, isStreaming }: FollowUpDraftBodyProps) {
   if (!hasFollowUpContent(draft)) return <FollowUpSkeleton />;
 

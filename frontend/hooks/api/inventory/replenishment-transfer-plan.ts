@@ -55,7 +55,6 @@ export interface ApprovedTransfer {
   created: boolean;
 }
 
-/** The move, never the amount — the server re-derives the quantity. */
 export interface ApproveTransferInput {
   productVariantId: number;
   fromWarehouseId: number;
@@ -82,13 +81,6 @@ export function useTransferPlan(
   });
 }
 
-/**
- * A fresh `Idempotency-Key` per attempt, not per recommendation.
- *
- * A retry of a failed approve is a new attempt and must be allowed to run; a
- * double-click within one attempt shares the key and replays the first
- * transfer, which is exactly the behaviour the backend guarantees.
- */
 export function useApproveTransferRecommendation() {
   const qc = useQueryClient();
   return useIdempotentMutation<ApprovedTransfer, Error, ApproveTransferInput>({

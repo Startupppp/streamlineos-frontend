@@ -1,11 +1,6 @@
 import { Users, Handshake, Contact2, Building2 } from "lucide-react";
 import type { ImportEntity } from "@/components/import-export/entity-card";
 
-/**
- * Settings-page export cards. Importing lives at `/crm/import`, which speaks the
- * JSON bulk-import APIs these entities actually take — this grid's FormData
- * uploader cannot satisfy those contracts, so it never offers import here.
- */
 export const CRM_IMPORT_EXPORT_ENTITIES: ImportEntity[] = [
   {
     id: "leads",

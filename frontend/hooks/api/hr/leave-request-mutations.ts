@@ -44,7 +44,6 @@ export function useApproveLeaveDedicated() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  // @Idempotent("hr.leave.approve"): one key per decision, reused on retry.
   return useAuthorizedIdempotentMutation<
     { success: boolean },
     Error,
@@ -71,7 +70,6 @@ export function useRejectLeaveDedicated() {
   const qc = useQueryClient();
   const identity = useLeaveQueryIdentity();
   const invalidateLeaveDashboard = useInvalidateLeaveDashboard();
-  // @Idempotent("hr.leave.reject"): one key per decision, reused on retry.
   return useAuthorizedIdempotentMutation<
     { success: boolean },
     Error,

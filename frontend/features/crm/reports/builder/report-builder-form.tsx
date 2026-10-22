@@ -25,7 +25,6 @@ interface ReportBuilderFormProps {
   form: UseFormReturn<ReportBuilderValues>;
   sources: readonly ReportingSource[];
   isRunning: boolean;
-  /** Saving and explaining are separate keys from running; the page resolves them. */
   canSave: boolean;
   canExplain: boolean;
   onSubmit: (values: ReportBuilderValues) => void;
@@ -49,12 +48,6 @@ export function ReportBuilderForm({
   const source = sources.find((entry) => entry.key === sourceKey);
   const options = sourceFieldOptions(source);
   const handleSubmit = form.handleSubmit(onSubmit);
-  /*
-    Both secondary actions run the same validation the submit does. Offering to
-    save a description the compiler would refuse only moves the refusal to the
-    server, and offering to explain one produces a 400 where the point of the
-    button is to show a statement.
-  */
   const handleSave = form.handleSubmit(onSave);
   const handleExplain = form.handleSubmit(onExplain);
 

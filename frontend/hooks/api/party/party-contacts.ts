@@ -18,7 +18,6 @@ const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-/** The writable fields of `createContactSchema` / `updateContactSchema`. */
 export interface PartyContactInput {
   firstName: string;
   lastName: string | null;
@@ -38,7 +37,6 @@ export function usePartyContacts(partyId: string | null) {
   });
 }
 
-/** Create omits nulls (the create schema takes `optional`, not `nullable`). */
 function forCreate(input: PartyContactInput) {
   return Object.fromEntries(Object.entries(input).filter(([, v]) => v !== null));
 }

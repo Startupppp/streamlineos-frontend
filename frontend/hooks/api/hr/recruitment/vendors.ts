@@ -43,10 +43,6 @@ export interface RecruitmentVendor {
   website: string | null;
   feePercent: string | null;
   status: VendorStatus;
-  /**
-   * Absent on the list route — `listVendors` does not select these three, so a
-   * card or sheet opened from the list has no value to render or prefill.
-   */
   contractType?: VendorContractType;
   slaDays?: number | null;
   replacementGuaranteeDays?: number | null;
@@ -56,7 +52,6 @@ export interface RecruitmentVendor {
   revenueTotal: string;
 }
 
-/** The full `recruitment_vendors` row a create/update returns — no aggregates. */
 export interface RecruitmentVendorRow {
   id: number;
   orgId: string;
@@ -105,7 +100,6 @@ export interface VendorSubmission {
   jobTitle: string | null;
 }
 
-/** The raw `vendor_candidate_submissions` row a create/update returns. */
 export interface VendorSubmissionRow {
   id: number;
   orgId: string;

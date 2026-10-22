@@ -41,22 +41,12 @@ const pushManager = {
   subscribe: jest.fn(),
 };
 
-/**
- * A real EventTarget for the container too: the hook listens for the service
- * worker's `pushsubscriptionchange` announcement here, so the test dispatches a
- * genuine MessageEvent rather than reaching into the handler.
- */
 class FakeServiceWorkerContainer extends EventTarget {
   register = jest.fn(async () => ({ pushManager }));
 }
 
 let serviceWorker = new FakeServiceWorkerContainer();
 
-/**
- * A real EventTarget so the hook's `change` listener is exercised rather than
- * simulated, counting live listeners so a test can wait for the asynchronous
- * `permissions.query()` to have wired one up instead of guessing at microtasks.
- */
 class FakePermissionStatus extends EventTarget {
   liveListeners = 0;
 
@@ -105,8 +95,6 @@ beforeEach(() => {
   define(navigator, "serviceWorker", serviceWorker);
   notification.permission = "granted";
   permissionStatus = new FakePermissionStatus();
-  // clearAllMocks wipes recorded calls but not implementations, and one test
-  // replaces this one with a rejection.
   permissions.query.mockImplementation(async () => permissionStatus);
   define(navigator, "permissions", permissions);
   pushManager.getSubscription.mockResolvedValue(null);
@@ -242,12 +230,6 @@ describe("usePushSubscription", () => {
     expect(api.post).not.toHaveBeenCalled();
   });
 
-  /**
-   * RT-005. `DELETE /push/subscribe` existed on the backend with no caller in the
-   * whole frontend, so the only way off push was revoking the browser permission —
-   * which is effectively permanent and which the app can never undo. These four
-   * pin the control that closes it.
-   */
   it("disable() drops the browser subscription and deletes the server row", async () => {
     const sub = subscriptionJson("https://push.example/kept");
     pushManager.getSubscription.mockResolvedValue(sub);

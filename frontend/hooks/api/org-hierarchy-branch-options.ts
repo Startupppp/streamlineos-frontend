@@ -15,7 +15,6 @@ const orgBranchListContract = lazyContract(() =>
 
 export const BRANCH_OPTIONS_PAGE_SIZE = 100;
 
-// The dropdown feed: `branch:view` rather than the settings surface's `settings:view`, and the route serves ACTIVE branches only.
 export function useBranchOptions(
   options?: Omit<
     UseQueryOptions<CursorResponse<OrgBranch>, Error>,

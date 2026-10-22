@@ -1,18 +1,5 @@
 import { resolveSessionIsActive } from "@/lib/auth-is-active";
 
-/**
- * A negative/runtime contract test for the one seam in the NextAuth `session`
- * callback where a JWT claim is read as a boolean.
- *
- * The defect this pins is not hypothetical arithmetic on types. `lib/auth.ts`
- * resolved the flag twice, differently: the happy path wrote
- * `fresh?.isActive ?? (token.isActive as boolean)` and the catch path wrote
- * `(token.isActive as boolean | undefined) ?? true`. A token minted before the
- * claim existed therefore produced `undefined` when the backend ANSWERED and
- * `true` when the backend THREW — a successful session resolution was strictly
- * more likely to present a live user as deactivated than a failed one, and the
- * `as boolean` is what let the declared type keep saying otherwise.
- */
 describe("resolveSessionIsActive", () => {
   it("returns a real boolean, never undefined, when the token claim is absent", () => {
     const result = resolveSessionIsActive(null, undefined);

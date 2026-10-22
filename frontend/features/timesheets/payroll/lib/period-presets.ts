@@ -11,13 +11,6 @@ import {
 } from "date-fns";
 import type { PayPeriod } from "../types";
 
-/**
- * Monday, chosen only so a biweekly block starts on the same weekday as the
- * WEEKLY preset's `weekStartsOn: 1`. A block's phase carries across every
- * January 1st rather than resetting there — resetting per calendar year is
- * what previously made "this period" and "last period" disagree across the
- * boundary and left December 31st in neither.
- */
 const BIWEEKLY_EPOCH = new Date(2024, 0, 1);
 
 export const PERIOD_PRESETS = [

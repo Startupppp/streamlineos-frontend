@@ -52,19 +52,6 @@ function actingAs(orgId: string): void {
   mockedSession.mockReturnValue({ data: { orgId }, status: "authenticated" });
 }
 
-/**
- * One cache, deliberately.
- *
- * The isolation criterion is asserted rather than assumed, and a single
- * `QueryClient` is exactly where two tenants collide on this side of the wire: a
- * person who belongs to both signs into both in one browser with one cache. A
- * hook keyed on the record type alone would pass every other test here and fail
- * these — and it would fail quietly in the product, because a rearranged screen
- * still looks like a working screen.
- *
- * Server-side isolation is a separate guarantee and is the backend's to assert;
- * this covers the half that lives in this repository.
- */
 function makeWrapper(client: QueryClient) {
   return function Wrapper({ children }: { children: ReactNode }) {
     return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
@@ -106,7 +93,6 @@ describe("two tenants sharing one browser", () => {
     actingAs(GLOBEX);
     const globex = renderHook(() => useLayoutAdjustment("specimen"), { wrapper });
 
-    // Never Acme's, not even for the render before Globex's own read lands.
     await waitFor(() => expect(globex.result.current.data).toEqual(GLOBEX_ARRANGEMENT));
     expect(globex.result.current.data).not.toEqual(ACME_ARRANGEMENT);
   });

@@ -1,4 +1,3 @@
-/** What the system decided on its own, as the review feed reads it. */
 
 export const DECISION_KINDS = [
   "task.extracted",
@@ -6,15 +5,6 @@ export const DECISION_KINDS = [
   "party.created",
   "activity.logged",
   "quote.sent",
-  /**
-   * The last three lagged the backend, and the switches panel is where it cost
-   * something: `GET /crm/autonomy/switches` resolves `effective` over every kind
-   * the backend enumerates, so it was already returning eight while this listed
-   * five. The panel renders `KIND_LABELS[kind]`, so the three newest — and most
-   * consequential — action types drew a switch with no name on it, and a tenant
-   * had no way to turn off outbound, cold outreach or unattended repair from the
-   * UI at all.
-   */
   "outbound.sent",
   "cold_outbound.sent",
   "field.repaired",
@@ -26,11 +16,6 @@ export type DecisionOutcome = (typeof DECISION_OUTCOMES)[number];
 
 export type ReversibilityClass = "instant" | "hold" | "irreversible";
 
-/**
- * Filing a communication is deterministic and effectively always right, so the
- * feed hides it unless asked. Recorded all the same: the audit trail is meant to
- * be complete rather than interesting.
- */
 
 export interface AutonomousDecision {
   autonomousDecisionId: string;
@@ -48,10 +33,8 @@ export interface AutonomousDecision {
   reversedAt: string | null;
   reversedByUserId: string | null;
   reversedReason: string | null;
-  /** The operator's columns — shown behind a disclosure, not in the default view. */
   model: string | null;
   promptVersion: string | null;
-  /** Resolved names, so a reader sees the record rather than an identifier. */
   dealName: string | null;
   partyName: string | null;
 }
@@ -91,7 +74,6 @@ export interface SwitchesResponse {
   effective: EffectiveSwitch[];
 }
 
-/** Plain-language labels. The feed is read by managers, not operators. */
 export const KIND_LABELS: Record<DecisionKind, string> = {
   "task.extracted": "Created a task",
   "stage.advanced": "Moved a deal",
@@ -115,19 +97,12 @@ export interface ScoreboardKindRow {
   kind: DecisionKind;
   actions: number;
   corrections: number;
-  /** Null when nothing has happened — distinct from a rate of zero. */
   correctionRate: number | null;
   shadowScored: number;
   shadowDisagreed: number;
   shadowDisagreementRate: number | null;
 }
 
-/**
- * The classes of data problem the queue files, mirroring
- * `DATA_QUALITY_PRODUCERS`. A producer is a class of evidence rather than a
- * check, because "the duplicate detector is noisy" and "our contact data is
- * unreachable" are different conversations with different owners.
- */
 export const DATA_QUALITY_CLASSES = [
   "duplicate",
   "contradiction",
@@ -137,7 +112,6 @@ export const DATA_QUALITY_CLASSES = [
 ] as const;
 export type DataQualityClass = (typeof DATA_QUALITY_CLASSES)[number];
 
-/** Plain language, for the same audience the rest of this scoreboard is written for. */
 export const DATA_QUALITY_CLASS_LABELS: Record<DataQualityClass, string> = {
   duplicate: "Duplicate records",
   contradiction: "Contradictory details",
@@ -149,12 +123,10 @@ export const DATA_QUALITY_CLASS_LABELS: Record<DataQualityClass, string> = {
 export interface DatasetHealthClass {
   producer: DataQualityClass;
   count: number;
-  /** What this class contributes to the composite once severity is applied. */
   weight: number;
 }
 
 export interface DatasetHealth {
-  /** The open queue weighted by severity. A penalty: lower is better. */
   composite: number;
   openTotal: number;
   bySeverity: { high: number; medium: number; low: number };
@@ -167,19 +139,11 @@ export interface DatasetHealthPoint {
   openTotal: number;
 }
 
-/**
- * Whether the dataset is getting better, and against what.
- *
- * `direction` and `delta` are null together, and only when there is no recorded
- * history to compare against. That is a different statement from "unchanged" —
- * the same distinction `correctionRate` makes by being null rather than zero.
- */
 export interface DatasetHealthTrend {
   windowDays: number;
   current: DatasetHealth;
   series: DatasetHealthPoint[];
   baseline: DatasetHealthPoint | null;
-  /** Negative is progress, because the composite is a penalty. */
   delta: number | null;
   direction: "improving" | "worsening" | "unchanged" | null;
 }
@@ -188,13 +152,6 @@ export interface Scoreboard {
   since: string;
   days: number;
   perKind: ScoreboardKindRow[];
-  /**
-   * The state of the data every autonomous action is taken against.
-   *
-   * On this card rather than a data-quality one of its own, because a rising
-   * correction rate and a rising dataset-health penalty are usually the same
-   * story — and a manager who has to visit two screens to notice that will not.
-   */
   dataset: DatasetHealthTrend;
   spend: { calls: number; totalTokens: number; estimatedCostUsd: string };
 }
@@ -216,13 +173,6 @@ export interface AutonomySettings {
   shadowSampleRate: number;
   shadowDailyCap: number;
   holdWindowSeconds: number;
-  /**
-   * CRM-P1-17. Whether the system may draft a quote without being asked.
-   *
-   * Was missing from this type while the endpoint had returned it all along, so
-   * the field could not be read or written from anywhere typed — an opt-in that
-   * existed only as a raw PATCH.
-   */
   autoQuoteEnabled: boolean;
 }
 
@@ -234,18 +184,9 @@ export interface LiveHold {
   createdAt: string;
   quoteSubject: string | null;
   summary: string | null;
-  /** Server-computed at fetch time; the browser counts down from it. */
   secondsRemaining: number;
 }
 
-/**
- * A class of outbound message that may no longer reach one party.
- *
- * Created when somebody stops a message: the stop applies to that class for
- * that party, not to the single message and not to the party everywhere.
- * Open-ended by design — only a person clears it, because a stop that quietly
- * expired is a stop the customer never agreed to.
- */
 export interface LiveClassStop {
   outboundClassStopId: string;
   partyId: string;
@@ -256,7 +197,6 @@ export interface LiveClassStop {
   stoppedAt: string;
 }
 
-/** The deterministic field repairs a tenant may grant, and its answer to each. */
 export const REPAIR_CLASSES = [
   "email.whitespace",
   "email.domain-dot-edge",
@@ -268,19 +208,12 @@ export interface EffectiveRepairPolicy {
   repairClass: RepairClass;
   findingKind: string;
   field: string;
-  /** Whether this class is on for a tenant that has never said anything. */
   conservative: boolean;
   reversibility: ReversibilityClass;
   description: string;
   enabled: boolean;
-  /** Whether the answer came from the tenant's own row or the platform default. */
   source: "tenant" | "default";
   reason: string | null;
-  /**
-   * `enabled` AND the wider kill switch. Reported separately from `enabled`
-   * because a tenant looking at a screen of granted classes while nothing is
-   * repaired needs to be told the switch is what stopped it.
-   */
   effective: boolean;
 }
 
@@ -289,7 +222,6 @@ export interface RepairPoliciesResponse {
   classes: EffectiveRepairPolicy[];
 }
 
-/** What a domain is registered to send, and what the cold track will accept. */
 export const SENDING_DOMAIN_PURPOSES = ["transactional", "cold"] as const;
 export type SendingDomainPurpose = (typeof SENDING_DOMAIN_PURPOSES)[number];
 
@@ -297,31 +229,19 @@ export interface SendingDomain {
   sendingDomainId: string;
   domain: string;
   purpose: SendingDomainPurpose;
-  /** DNS proved it. Null means the domain still sends nothing on the cold track. */
   verifiedAt: string | null;
-  /** The day the ramp counts from. Null means warm-up never began. */
   warmupStartedAt: string | null;
-  /**
-   * What to publish, and where. Null once the domain is verified — a record that
-   * has already done its job is noise on the screen.
-   */
   verificationRecord: { name: string; value: string } | null;
 }
 
 export interface ColdOutboundOverview {
   enabled: boolean;
   enabledAt: string | null;
-  /**
-   * Set by the send path itself when bounces or complaints cross their ceiling,
-   * and cleared only by a person. Distinct from `enabled: false`, which is
-   * somebody choosing not to run the track at all.
-   */
   pausedAt: string | null;
   pauseReason: string | null;
   domains: SendingDomain[];
 }
 
-/** One field the system changed on its own, and whether a person took it back. */
 export interface AutonomyRepair {
   autonomyRepairId: string;
   autonomousDecisionId: string | null;
@@ -343,17 +263,6 @@ export interface AutonomyRepairPage {
   nextCursor: string | null;
 }
 
-/**
- * How much of the queue the system cleared, against how much a person did, and
- * what is left.
- *
- * `automatedShare` is null rather than zero when nothing was decided: a ratio
- * over an empty window is not "no automation", it is no evidence, and the two
- * look the same on a chart only if one of them lies. `remaining` sits beside it
- * because the ratio alone is gameable — a loop that repaired every trivial
- * finding and left every hard one would show a rising share while the queue got
- * harder.
- */
 export interface RepairMeasure {
   windowDays: number;
   resolution: {
@@ -374,12 +283,6 @@ export interface RepairMeasure {
   };
 }
 
-/**
- * The classes of autonomous outbound message, mirroring `OUTBOUND_CLASSES`.
- *
- * The class is never a caller's choice — `judgeOutbound` picks it — so this
- * exists to read one back, not to send one.
- */
 export const OUTBOUND_CLASSES = [
   "follow_up",
   "nudge",
@@ -389,19 +292,9 @@ export const OUTBOUND_CLASSES = [
 ] as const;
 export type OutboundClass = (typeof OUTBOUND_CLASSES)[number];
 
-/**
- * What `POST /crm/autonomy/outbound` answers.
- *
- * The route is not "send a message" — it is "consider this customer", and its
- * most common honest answer is a refusal with a reason. Modelled as a
- * discriminated union on `held` because those two answers share no fields and a
- * screen that treated a refusal as a failed request would report an outage
- * every time the system correctly declined to write to somebody.
- */
 export type ComposeOutboundOutcome =
   | {
       readonly held: false;
-      /** Where it stopped, so a refusal is distinguishable from an outage. */
       readonly stage: "eligibility" | "draft" | "confidence";
       readonly reason: string;
     }

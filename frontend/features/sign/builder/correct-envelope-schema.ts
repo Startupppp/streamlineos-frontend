@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Mirrors `correctEnvelopeSchema` in the backend's `dto/e-sign.schemas.ts`, with
- * the empty string standing in for an absent optional so react-hook-form has a
- * controlled value; `""` is dropped back to `undefined` on submit.
- */
 export const correctEnvelopeSchema = z.object({
   reason: z.string().trim().max(1000, "Reason must be at most 1000 characters"),
   recipients: z

@@ -25,16 +25,10 @@ const QUESTION_TYPES = [
   { value: "multiple_choice", label: "Multiple Choice" },
 ] as const;
 
-/**
- * Built from the same constant the options render, so the guard cannot drift
- * from the list. A `v as SurveyQuestion["type"]` here would accept any string
- * the Select was ever given.
- */
 function isSurveyQuestionType(value: string): value is SurveyQuestion["type"] {
   return QUESTION_TYPES.some((type) => type.value === value);
 }
 
-/** "a, b, ,c" is three options, not four, and never an empty one. */
 interface SurveyEditorProps {
   questions: SurveyQuestion[];
   onChange: (questions: SurveyQuestion[]) => void;

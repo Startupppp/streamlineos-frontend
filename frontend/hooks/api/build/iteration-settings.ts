@@ -11,19 +11,13 @@ import type {
   IterationSettings,
   UpdateIterationSettingsInput,
 } from "./iteration-settings-schema";
+import { iterationSettingsQueryOptions } from "./iteration-settings-read-options";
 
 const iterationSettingsContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
     (m) => m.projectsSettingsIterationsGetSettingsResponseSchema,
   ),
 );
-
-export function iterationSettingsQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.iterationSettings(projectId),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useIterationSettings(
   projectId: number,

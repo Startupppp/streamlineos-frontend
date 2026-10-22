@@ -54,10 +54,6 @@ export interface OpportunitiesParams {
   sort?: "score" | "updated" | "evidence";
 }
 
-// Every Insights read renders its own inline error (list, pane, themes,
-// reviews). Letting a first-load failure reach the route boundary took the
-// whole product route down for one widget (MP-B-008), e.g. a stale
-// ?opportunity= id returning 404.
 export function useOpportunities(
   managedProductId: number,
   params?: OpportunitiesParams,

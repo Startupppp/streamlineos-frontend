@@ -47,19 +47,6 @@ function hasActivity(metrics: ThroughputMetrics): boolean {
   );
 }
 
-/**
- * B10 — what the warehouse did, and whether it did it on time.
- *
- * `GET inventory/reports/throughput` has had no UI at all; every figure here is
- * one it already computes, already scoped to the warehouses the reader is
- * assigned to through the same predicate on all three halves — receiving by its
- * location, picking and shipping by their warehouse. So a supervisor of site A
- * cannot see site B's receipts in the discrepancy rate, and that is enforced in
- * SQL rather than by anything on this page.
- *
- * The window lives in the URL, so a drill-through can carry it and a shared link
- * shows the same numbers.
- */
 export function ThroughputDashboardPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -220,12 +207,7 @@ export function ThroughputDashboardPage() {
             </StatCardGrid>
           </ThroughputSection>
 
-          {/*
-            B10. Throughput says how much moved; this says what has not. A lane
-            processing a hundred lines a day with one receipt stuck for a week
-            looks healthy above and is not, so the age bands sit beside the rates
-            rather than on a page of their own.
-          */}
+          
           <WorkAgingPanel />
 
           <p

@@ -18,7 +18,6 @@ jest.mock("@/hooks/api/access", () => ({
   useAccess: jest.fn().mockReturnValue({ data: undefined, refetch: jest.fn() }),
 }));
 
-// The permission seam has its own suite; here it only needs to run the mutation.
 jest.mock("@/hooks/api/authorized-mutation", () => ({
   useAuthorizedMutation: (_permission: string, options: object) => useMutation(options),
 }));

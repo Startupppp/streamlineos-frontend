@@ -46,7 +46,6 @@ export function GoalsPage() {
   const updateGoal = useUpdateGoal();
   const pageState = usePageState({ permission: "hr:performance:view", isLoading, isError, error });
   const canCreate = useCan("hr:performance:manage");
-  // PATCH /hr/performance/goals/:id is `hr:performance:view` (performance.controller.ts:109).
   const canUpdate = useCan("hr:performance:view");
   const editProgress = canUpdate ? handleOpenProgress : undefined;
 

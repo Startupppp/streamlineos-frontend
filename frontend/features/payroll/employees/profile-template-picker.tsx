@@ -8,7 +8,6 @@ import { useCanState } from "@/hooks/api/access";
 import type { PayrollTemplate } from "@/hooks/api/payroll/templates-schema";
 import type { SalaryComponentListItem } from "@/hooks/api/payroll/components-schema";
 
-/** The active components a template names, matched by code. */
 export function componentIdsForTemplate(
   template: Pick<PayrollTemplate, "defaultComponents">,
   components: readonly Pick<SalaryComponentListItem, "id" | "code">[],
@@ -22,8 +21,6 @@ interface ProfileTemplatePickerProps {
   onApply: (componentIds: number[]) => void;
 }
 
-// Per-employee structure (#26): "Use in Setup" is org-wide, so this lets one
-// profile start from a different template's components.
 export function ProfileTemplatePicker({ components, onApply }: ProfileTemplatePickerProps) {
   const id = useId();
   const canView = useCanState("payroll:templates:view") === "granted";

@@ -30,7 +30,6 @@ interface TemplatePatch {
   terms?: string;
 }
 
-/** Create and edit a quote template, rendered from the description. */
 export function QuoteTemplateSheet({ open, onOpenChange, template }: QuoteTemplateSheetProps) {
   const layout = useTenantLayout(QUOTE_TEMPLATE_LAYOUT);
   const createTemplate = useCreateQuoteTemplate();

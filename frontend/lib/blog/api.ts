@@ -13,16 +13,8 @@ import {
   blogSitemapTaxonomyContract,
 } from "./contracts";
 
-/**
- * Server-side reads of PUBLISHED blog content from the backend. Every call is no-store: the backend
- * is the authority on what is published, so a withdrawal is visible on the next request. A 404 is
- * `null` (a real "not found"); any other failure throws, so an outage renders the error boundary
- * instead of an empty page or a misleading 404. `cache()` dedupes within one request, so metadata
- * and body read the same response.
- */
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
-/** A syntactically valid slug the backend will accept; anything else cannot exist, so it is a 404. */
 export function isSlug(value: string, max = 120): boolean {
   return value.length <= max && SLUG.test(value);
 }
@@ -71,7 +63,6 @@ export const getAuthor = cache((slug: string) =>
   isSlug(slug) ? publicGetNoStore(`/blog/authors/${slug}`, undefined, blogAuthorContract) : Promise.resolve(null),
 );
 
-/** An editor-recorded redirect or retirement for an old `/blogs/...` path. */
 export const resolveBlogRedirect = cache((path: string) =>
   /^\/blogs\/[^?#\s]{1,590}$/.test(path) ? publicGetNoStore("/blog/redirects/resolve", { path }, blogRedirectContract) : Promise.resolve(null),
 );

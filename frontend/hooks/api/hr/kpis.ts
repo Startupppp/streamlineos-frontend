@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { hrKpisQueryOptions } from "@/hooks/api/hr/kpis-read-options";
 
 const kpiListC = lazyContract(() =>
   import("@/hooks/api/hr/kpis-schema").then((m) => m.kpiListContract),
@@ -61,19 +62,13 @@ export interface Competency {
   createdAt: string;
 }
 
-export const hrKpisQueryOptions = () =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.kpis(),
-    queryFn: ({ signal }) =>
-      apiClient.get<KpiDefinition[]>("/hr/kpis", undefined, signal, kpiListC),
-    staleTime: 2 * 60_000,
-  });
-
 export function useKpis() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     ...hrKpisQueryOptions(),
+    queryFn: ({ signal }) =>
+      apiClient.get<KpiDefinition[]>("/hr/kpis", undefined, signal, kpiListC),
     enabled: canView && hrEnabled,
   });
 }

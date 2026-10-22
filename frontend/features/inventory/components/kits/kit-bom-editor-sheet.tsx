@@ -27,26 +27,6 @@ interface KitBomEditorSheetProps {
   components: KitComponent[];
 }
 
-/**
- * Saying what a kit is made of.
- *
- * The kits page could read a bill of materials and never write one, and its own
- * empty state said "Set them on the product, then come back" — pointing at a
- * screen that does not exist. `PUT /inventory/kits/:kitVariantId/bom` was
- * mounted, carried `inventory:products:update`, and `useSetKitBom` was
- * referenced by nothing, so every kit in the product was one somebody had put
- * into the database by hand.
- *
- * The route replaces the whole list rather than merging, and its schema says
- * why: "these are the components" is what somebody editing a kit means, and a
- * partial merge would need a stable line identity they do not have in front of
- * them. So this is a sheet over the entire list, seeded from what is there —
- * rung 4, because it is a repeating multi-row form, not a field.
- *
- * An empty list is a legitimate save. The schema's own comment calls it "how a
- * kit stops being a kit", so the form permits it rather than enforcing a
- * minimum the server does not have.
- */
 export function KitBomEditorSheet({
   open,
   onOpenChange,

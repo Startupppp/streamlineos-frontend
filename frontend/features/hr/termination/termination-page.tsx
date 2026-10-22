@@ -24,7 +24,6 @@ import { useTerminationActions } from "./use-termination-actions";
 
 type StatusFilter = "ALL" | TerminationStatus;
 
-/** What `PATCH /hr/termination/:id/complete` does (termination-separation.service). */
 const COMPLETION_EFFECTS =
   "removes the employee's access to this organization, ends their employment record, opens a draft final settlement, creates asset-return records for their assigned assets and starts the exit checklist.";
 
@@ -69,8 +68,6 @@ export function TerminationPage() {
   const handleRetry = useCallback(() => {
     void refetch();
   }, [refetch]);
-  // FE-41: the old branch printed "Something went wrong" for every failure,
-  // discarding the 402 upgrade path and the backend message.
   const pageState = usePageState({ permission: "hr:exit:manage", isLoading, isError, error });
 
   const handleStatusFilterChange = useCallback((value: StatusFilter) => {

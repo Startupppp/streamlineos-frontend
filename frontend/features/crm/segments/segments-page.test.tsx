@@ -25,12 +25,10 @@ jest.mock("@animateicons/react/lucide", () => ({ PlusIcon: () => null }));
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({
     iconRef: { current: null },
-    /* AnimatedIconButton calls both on hover, so they have to be callable. */
     hoverHandlers: { onMouseEnter: () => undefined, onMouseLeave: () => undefined },
   }),
 }));
 
-/** Renderer-backed list: `useTenantLayout` reads the signed-in tenant's arrangement. */
 jest.mock("@/components/renderer/use-tenant-layout", () => ({
   useTenantLayout: <T,>(layout: T): T => layout,
 }));
@@ -39,12 +37,6 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-/**
- * The two sheets are stubbed down to what they were handed. What this page owes
- * them is the right subject — a create that carries no segment, an edit that
- * carries the stored criteria — and that is a property of this component, not of
- * the forms inside them.
- */
 jest.mock("./segment-sheet", () => ({
   SegmentSheet: ({ open, segment }: { open: boolean; segment: Segment | null }) =>
     open ? (
@@ -96,17 +88,6 @@ const mockedDelete = apiClient.delete as jest.Mock;
 const VIEW = "crm:segments:view";
 const MANAGE = "crm:segments:manage";
 
-/**
- * CRM-P2-02. The segment list and the way into a new one.
- *
- * `segment-criteria.test.ts` covers the conversion between what a person draws
- * and what the server stores — the part with the interesting arithmetic. This
- * covers the screen around it, which had nothing: which endpoint the list reads,
- * what "empty" means on a page whose search filters rows already in hand, and
- * the one asymmetry worth pinning — creating opens the sheet with no subject
- * while editing opens it with a segment the server was asked for by id.
- */
-
 const summary = (over: Partial<SegmentSummary> = {}): SegmentSummary => ({
   segmentId: "seg-1",
   name: "Textiles in Gujarat",
@@ -157,12 +138,10 @@ function renderPage() {
   return render(<SegmentsPage />, { wrapper: Wrapper });
 }
 
-/** Paths asked of the API during this test. */
 function paths(): string[] {
   return mockedGet.mock.calls.map(([path]) => path as string);
 }
 
-/** The list read's params, which is the second argument `apiClient.get` takes. */
 function listParams(): Record<string, unknown> | undefined {
   const call = mockedGet.mock.calls.filter(([path]) => path === "/crm/segments").at(-1);
   return call?.[1] as Record<string, unknown> | undefined;
@@ -186,11 +165,6 @@ describe("SegmentsPage", () => {
   });
 
   it("opens a new segment with no subject, and asks the server for none", async () => {
-    /**
-     * The asymmetry. `useSegment(editId)` is disabled while `editId` is null;
-     * if creating ever set an id the sheet would open pre-filled with somebody
-     * else's criteria, and saving would look like authoring a new segment.
-     */
     const user = userEvent.setup();
     renderPage();
     await screen.findAllByText("Textiles in Gujarat");
@@ -202,10 +176,6 @@ describe("SegmentsPage", () => {
   });
 
   it("opens an existing segment with the criteria the server holds", async () => {
-    /**
-     * The list projects no criteria tree, so an edit sheet fed from the row
-     * would open every segment as an empty one and save that over it.
-     */
     const user = userEvent.setup();
     renderPage();
     await screen.findAllByText("Textiles in Gujarat");
@@ -278,11 +248,6 @@ describe("SegmentsPage", () => {
   });
 
   it("distinguishes nothing on this page from nothing at all", async () => {
-    /**
-     * Search narrows the rows already loaded — `GET /crm/segments` takes no
-     * query — so "no matches" here means "not on this page", and offering
-     * "New segment" as the way out of it would be the wrong advice.
-     */
     const user = userEvent.setup();
     renderPage();
     await screen.findAllByText("Textiles in Gujarat");
@@ -291,7 +256,6 @@ describe("SegmentsPage", () => {
 
     expect(await screen.findByText(/no segments match that search/i)).toBeInTheDocument();
     expect(screen.getByText(/clear the search to see every segment/i)).toBeInTheDocument();
-    /* The empty state's own way out — the last of the two, after the input's. */
     await user.click(screen.getAllByRole("button", { name: /clear search/i }).at(-1)!);
 
     expect(await screen.findAllByText("Textiles in Gujarat")).not.toHaveLength(0);
@@ -302,7 +266,6 @@ describe("SegmentsPage", () => {
     renderPage();
 
     expect(await screen.findByText(/no segments yet/i)).toBeInTheDocument();
-    /* The header action plus the empty state's own. */
     expect(screen.getAllByRole("button", { name: /new segment/i })).toHaveLength(2);
   });
 

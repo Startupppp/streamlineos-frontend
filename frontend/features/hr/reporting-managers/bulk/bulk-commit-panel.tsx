@@ -20,7 +20,6 @@ interface BulkCommitPanelProps {
   onStartOver: () => void;
 }
 
-/** Step 3: review the previewed delta, give per-row reasons where needed, confirm, commit. */
 export function BulkCommitPanel({ job: previewed, onStartOver }: BulkCommitPanelProps) {
   const pager = useCursorPagination();
   const { data } = useReportingLineBulkJob(previewed.jobId, pager.cursor);
@@ -28,7 +27,6 @@ export function BulkCommitPanel({ job: previewed, onStartOver }: BulkCommitPanel
   const commit = useCommitReportingLineBulkJob();
   const reasonForm = useForm<RowReasonValues>({ defaultValues: { reasons: {} } });
   const [confirmOpen, setConfirmOpen] = useState(false);
-  // Rows needing a reason, from every row page seen so far (a page holds ≤ 100).
   const needsReason = useRef(new Set<number>());
   useEffect(() => {
     for (const row of job.rows) if (row.requiresRowReason) needsReason.current.add(row.rowNumber);

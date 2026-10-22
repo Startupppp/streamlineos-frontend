@@ -25,18 +25,6 @@ const epic = {
   version: 4,
 };
 
-/**
- * A sheet opened from a MENU ITEM has no trigger of its own, and the shape a
- * caller reaches for is a hidden proxy button the menu clicks. Radix then
- * restores focus to that proxy on close — an element that is `sr-only`,
- * `aria-hidden` and `tabIndex={-1}`, so a keyboard user lands somewhere they
- * cannot see and a screen reader announces nothing.
- *
- * The corpus scan in `components/__tests__/aria-semantics.contract.test.ts`
- * cannot see this: the proxy is out of the tab order, so it is correctly not a
- * `hiddenFocusable` finding. Only a rendered run reaches it. This is the class
- * of defect an automated pass structurally misses.
- */
 function Harness() {
   const [open, setOpen] = useState(false);
   return (

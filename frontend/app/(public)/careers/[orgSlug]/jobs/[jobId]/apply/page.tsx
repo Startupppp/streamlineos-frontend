@@ -12,12 +12,6 @@ type Props = { params: Promise<{ orgSlug: string; jobId: string }> };
 
 type JobDetail = z.infer<typeof publicJobDetailContract>;
 
-/**
- * The job is fetched with no store rather than on the 60s public revalidate.
- * A closed job must stop accepting applications the moment it closes, and the
- * endpoint only serves `OPEN` ones — a cached copy would keep an apply form on
- * screen that the POST behind it would then refuse.
- */
 async function loadJob(orgSlug: string, jobId: string): Promise<JobDetail | null> {
   const id = Number(jobId);
   if (!Number.isInteger(id) || id <= 0) return null;
@@ -81,12 +75,7 @@ export default async function ApplyPage({ params }: Props) {
           )}
         </div>
 
-        {/*
-          All three, not just the description. `requirements` and `benefits`
-          are written by the employer, served by this endpoint and were shown
-          nowhere on the public site — a candidate applied without ever reading
-          what the role asks for or what it pays for.
-        */}
+        
         {job.description && <JobProse title="About this role" html={job.description} />}
         {job.requirements && <JobProse title="What we are looking for" html={job.requirements} />}
         {job.benefits && <JobProse title="What we offer" html={job.benefits} />}

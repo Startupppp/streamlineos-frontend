@@ -1,19 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Contracts for delegation endpoints (`GET /access/delegations`,
- * `GET /access/delegations/given`, `POST /access/delegations`,
- * `DELETE /access/delegations/:id`).
- *
- * DISAGREEMENT FOUND: The frontend `Delegation` type used `delegatorId` and
- * `delegateeId` (string UUIDs), but the backend schema uses
- * `delegatorMembershipId` and `delegateeMembershipId` (integers).
- * The frontend type must be updated; these contracts match the backend.
- *
- * NOT `.strict()`. Timestamps are ISO strings.
- */
-
 const delegationItemContract = z.object({
   id: z.string(),
   orgId: z.string(),

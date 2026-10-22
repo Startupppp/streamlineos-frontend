@@ -6,23 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useDealForecastScore } from "@/hooks/api/crm/deal-forecast";
 import { formatRelativeTime } from "@/lib/date-utils";
 
-/**
- * CRM-P2-04. Why this deal scores what it scores.
- *
- * Renders nothing at all when the workspace is on the weighted arithmetic, or
- * when this deal has not been scored under the current model — a deal created
- * since the last nightly pass, or one that has closed. An empty card saying "no
- * score" on every deal in every workspace without a model would be noise on the
- * page it is least welcome on.
- *
- * The interval is shown beside the probability and not behind a tooltip. A
- * model fitted on sixty closed deals produces a wide one, and a rep who cannot
- * see that width will read 68% as if it were measured rather than estimated.
- *
- * Three factors, not fourteen. The backend sorts them by the size of their
- * contribution, so the top three are the ones that moved this deal; listing all
- * fourteen would bury them among the ones that did nothing.
- */
 
 const FACTOR_LABELS: Record<string, string> = {
   stageProbability: "Stage",
@@ -45,10 +28,6 @@ export function DealForecastScoreCard({ dealId }: { dealId: number }) {
   const score = useDealForecastScore(dealId);
 
   if (score.isLoading) return <Skeleton className="h-40 w-full" />;
-  /**
-   * Silence on error too. This card explains a number that appears elsewhere; a
-   * red box here would suggest the deal itself failed to load.
-   */
   if (score.isError || !score.data) return null;
 
   const { probability, intervalLower, intervalUpper, factors, scoredAt } = score.data;

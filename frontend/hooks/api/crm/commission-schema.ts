@@ -1,10 +1,5 @@
 import { z } from "zod";
 
-/**
- * Wire contracts for the commission writes, field for field with
- * `commission/dto/commission-response.schemas.ts` and
- * `commission/dto/commission-accrual-response.schemas.ts`.
- */
 
 export const commissionRuleSetSchema = z.object({
   basis: z.string(),

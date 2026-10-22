@@ -11,25 +11,12 @@ import { BloomDrift } from "./bloom-drift";
 import { StatColumn } from "./stat-column";
 import { PROOF_TIMING } from "./timing";
 
-/** Column x in the frame: 80 / 528 / 976 at 1440, 48 / 372 / 696 at 1024,
-    40 / 274 / 508 at 768. At 390 the columns are stacked cards in flow. */
 const COLUMN_LEFT = [
   "left-20 w1024:left-12 w768:left-10",
   "left-132 w1024:left-93 w768:left-68.5",
   "left-244 w1024:left-174 w768:left-127",
 ] as const;
 
-/**
- * 08 Proof — 1440 × 884 (3888:6908), 1024 × 816 (3888:11313), 768 × 906
- * (3832:8566), 390 × 1706 (3893:4222).
- * Everything sits at its frame coordinates: head at y96 / y40 / y40 / y48,
- * hairlines at y300 / y626 (1440), y246 / y643 (1024), y246 / y657 (768),
- * stat columns from y332 / y295 / y295. From 1024 down the head stacks
- * centred above the columns instead of splitting title left / aside right,
- * and the columns narrow 384 → 278 → 218. At 390 the three columns become
- * stacked 350-wide cards from y281, 12 apart, and the section hairlines go.
- * The shared field texture sits behind this section (backdrop), not here.
- */
 export const Proof = ({
   badge,
   title,
@@ -42,13 +29,7 @@ export const Proof = ({
     aria-label={`${title.before}${title.accent}${title.after}`}
     className="[content-visibility:auto] relative h-221 w1024:h-204 w768:h-226.5 w390:h-426.5"
   >
-    {/*
-      Blooms 3488:22725 / 3488:22726 — the Figma SVG (σ80 blur, 0.035 fill) baked
-      to dithered PNGs: Chrome's 8-bit SVG blur rounds every level up (+0.5–1 on
-      the whole glow, visible banding), Figma's export dithers. Unoptimized so
-      the dither survives; the wrapper clips at the section edges like the frame.
-      Each bloom drifts ±40 px with scroll, in opposite directions.
-    */}
+    
     <Reveal
       tag="div"
       variant="fade"

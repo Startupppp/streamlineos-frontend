@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 
-/** Copies the canonical URL and announces the result to screen readers. */
 export function CopyLink({ url }: { url: string }) {
   const [status, setStatus] = useState<"idle" | "copied" | "failed">("idle");
 

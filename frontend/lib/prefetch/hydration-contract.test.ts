@@ -1,14 +1,3 @@
-/**
- * The contract nothing else can check: a snapshot dehydrated on the SERVER must
- * be readable by the app's own client.
- *
- * When it was broken, every prefetch factory built a plain QueryClient while the
- * app hashed keys with the signed-in scope prefixed. The entry hydrated fine and
- * held its data — `getQueryData` on the identical key just returned undefined,
- * so the page refetched. Typecheck, the whole suite and `next build` all passed.
- * Only a test that hydrates one client's dehydrated state into the other can
- * catch it.
- */
 jest.mock("server-only", () => ({}));
 
 jest.mock("@/lib/get-server-auth", () => ({
@@ -70,11 +59,8 @@ describe("server prefetch → client cache", () => {
     const app = createAppQueryClient(authenticatedScope(ORG, USER));
     hydrate(app, state);
 
-    // The entry IS in the cache holding its data. That is what made this look
-    // like success for as long as it did.
     expect(app.getQueryCache().getAll()).toHaveLength(1);
     expect(app.getQueryCache().getAll()[0]?.state.data).toEqual(PAYLOAD);
-    // And it is unreachable by the key the app asks with.
     expect(app.getQueryData(key)).toBeUndefined();
   });
 
@@ -90,19 +76,12 @@ describe("server prefetch → client cache", () => {
   });
 
   it("the scope string is built one way, so the server and the client cannot drift apart", () => {
-    // The client builds it from a session that may be missing either field.
     expect(authenticatedScope(undefined, undefined)).toBe("authenticated::");
     expect(authenticatedScope(ORG, USER)).toBe(`authenticated:${ORG}:${USER}`);
     expect(scopedQueryKeyHashFn("s")(["a", "b"])).toBe(JSON.stringify(["s", ["a", "b"]]));
   });
 });
 
-/**
- * The tests above prove the mechanism. These run the REAL factories, because a
- * factory quietly reverting to `new QueryClient()` is the way this regresses —
- * and every existing factory test mocks the factory out entirely, which is
- * exactly why the defect survived.
- */
 describe("the shipped prefetch factories honour that contract", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -207,18 +186,6 @@ describe("the shipped prefetch factories honour that contract", () => {
   });
 });
 
-/**
- * PRD-C094 — the build project route reads `GET /build/:id` on the SERVER for its 404 /
- * access-denied / workspace-redirect decision, and 29 files then call `useProject(id)`,
- * which issued the identical request again from the browser on mount. The server read
- * now seeds the cache those callers read from.
- *
- * Three things have to hold together or the double fetch comes back silently:
- * the snapshot must be readable by the app's own scoped client, it must sit under the
- * key `useProject` asks with, and the layouts must actually wrap children in a
- * HydrationBoundary over it. The first two are behaviour; the third is the wiring, and
- * a factory nobody mounts is the same as no factory.
- */
 describe("build project prefetch feeds useProject's cache", () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -234,7 +201,6 @@ describe("build project prefetch feeds useProject's cache", () => {
     const app = createAppQueryClient(authenticatedScope(ORG, USER));
     hydrate(app, state);
 
-    // The layout is a consumer too: it needs the value for its 404/403/redirect branch.
     expect(project).toEqual(PROJECT);
     expect(app.getQueryData(queryKeys.projects.detail(314))).toEqual(PROJECT);
   });
@@ -252,8 +218,6 @@ describe("build project prefetch feeds useProject's cache", () => {
     const failure = Object.assign(new Error("forbidden"), { status: 403 });
     (serverGet as jest.Mock).mockRejectedValue(failure);
 
-    // `prefetchQuery` would swallow this and hand back an empty snapshot, and the
-    // access-denied branch would never run.
     await expect(prefetchBuildProject(314)).rejects.toBe(failure);
   });
 
@@ -262,14 +226,12 @@ describe("build project prefetch feeds useProject's cache", () => {
     const source = fs.readFileSync(path.join(FE_ROOT, relative), "utf8");
     expect([relative, source.includes("prefetchBuildProject")]).toEqual([relative, true]);
     expect([relative, /<HydrationBoundary state=\{hydrated\}>/.test(source)]).toEqual([relative, true]);
-    // The duplicate-fetch shape this replaced: a bare serverGet with nowhere to put it.
     expect([relative, source.includes("serverGet")]).toEqual([relative, false]);
   });
 });
 
 describe("scope construction", () => {
   it("is stable", () => {
-    // The client builds it from a session that may be missing either field.
     expect(authenticatedScope(undefined, undefined)).toBe("authenticated::");
     expect(authenticatedScope(ORG, USER)).toBe(`authenticated:${ORG}:${USER}`);
     expect(scopedQueryKeyHashFn("s")(["a", "b"])).toBe(JSON.stringify(["s", ["a", "b"]]));

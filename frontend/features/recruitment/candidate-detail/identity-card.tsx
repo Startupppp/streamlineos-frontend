@@ -5,14 +5,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useCandidateIdentity } from "@/hooks/api/hr/recruitment/identity";
 import type { IdentityStatus } from "@/hooks/api/hr/recruitment/identity-schema";
 
-/**
- * What each state means to a recruiter, in the words they would use.
- *
- * `UNAVAILABLE` and `FAILED` say different things on purpose. One is about our
- * setup and the other is about a person, and a shared label would let an
- * unconfigured integration read as a candidate who failed a check — which is
- * an accusation, made by a bug.
- */
 const STATUS_LABEL: Record<IdentityStatus, string> = {
   NOT_STARTED: "Not started",
   PENDING: "Check running",
@@ -33,36 +25,13 @@ interface Props {
   candidateId: number;
 }
 
-/**
- * Identity verification, as it stands for this candidate.
- *
- * It exists because `approveOffer` now refuses when a job requires
- * verification and the candidate has none — and until this card there was no
- * screen anywhere that said why. A backend rule with no visible half is how a
- * recruiter ends up staring at a refusal they cannot act on.
- *
- * Nothing here is editable. The verification takes a vendor token produced by
- * the candidate's own session, so a typeable field would only invite somebody
- * to record a check that never happened.
- */
 export function IdentityCard({ candidateId }: Props) {
   const { data, isLoading, isError } = useCandidateIdentity(candidateId);
 
   if (isLoading) return <Skeleton className="h-16 w-full rounded-xl" />;
 
-  /*
-    Silent on failure rather than an error card. This sits among several
-    optional panels on a busy tab; a candidate whose identity check is simply
-    not part of their story should not be told that something went wrong with
-    a feature they were never using.
-  */
   if (isError || !data) return null;
 
-  /*
-    Hidden entirely when nothing requires it and nothing has happened. Showing
-    "Not started" on every candidate in an organisation that does not do
-    identity checks would make an empty state look like an outstanding task.
-  */
   if (!data.requiredByAJob && data.status === "NOT_STARTED") return null;
 
   return (
@@ -85,11 +54,7 @@ export function IdentityCard({ candidateId }: Props) {
         {data.last4 && (
           <div className="flex gap-1.5">
             <dt>Document</dt>
-            {/*
-              The suffix is the whole of what this product holds. Rendered with
-              the mask so nobody reads four characters as a redaction of
-              something we stored — we did not store it.
-            */}
+            
             <dd className="font-mono text-foreground">••••{data.last4}</dd>
           </div>
         )}

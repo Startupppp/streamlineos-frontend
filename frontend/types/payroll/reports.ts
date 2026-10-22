@@ -58,13 +58,6 @@ export type VarianceReport = z.infer<typeof varianceReportContract>;
 
 export type JournalLine = z.infer<typeof journalReportContract>["lines"][number];
 
-/**
- * Mirrors `JournalResult` in `payroll/insights/journal.service.ts`. The three
- * fields below `unmappedCodes` were dropped from this type once, so the report
- * re-derived the totals in float from `lines` and adjudicated "balanced"
- * itself — over a line set the server had already filtered. The totals are the
- * server's, computed in integer paise; do not recompute them here.
- */
 export type JournalReport = z.infer<typeof journalReportContract>;
 
 export interface AccountingMapping {

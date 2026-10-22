@@ -11,6 +11,7 @@ const assetListPageC = lazyContract(() =>
 );
 import { useCan } from "@/hooks/api/access";
 import type { Asset } from "@/types/hr";
+import { hrAssetListPrefix, hrAssetListQueryOptions } from "@/hooks/api/hr/assets-read-options";
 
 export interface HrAssetListParams {
   cursor?: string;
@@ -30,20 +31,6 @@ export interface HrAssetListResponse {
   data: Asset[];
   counts: HrAssetCounts;
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
-
-export const hrAssetListPrefix = [...humanResourcesQueryKeys.hr.all, "assets"] as const;
-
-export function hrAssetListQueryOptions(params?: HrAssetListParams) {
-  const queryParams: Record<string, unknown> = {
-    limit: params?.limit ?? 20,
-    ...(params?.cursor ? { cursor: params.cursor } : {}),
-    ...(params?.status ? { status: params.status } : {}),
-  };
-  return {
-    queryKey: humanResourcesQueryKeys.hr.assets(queryParams),
-    staleTime: 60_000,
-  } as const;
 }
 
 export function useHrAssetList(params?: HrAssetListParams, options?: { enabled?: boolean }) {

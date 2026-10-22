@@ -5,16 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import SlottingPage from "@/app/(authenticated)/inventory/slotting/page";
 import type { SlottingRule } from "@/hooks/api/inventory/slotting-labor";
 
-/**
- * `POST /inventory/slotting/rules` and `PATCH /inventory/slotting/rules/:ruleId`
- * had no frontend caller at all. The page was a read-only window onto rows only
- * an API client could write, and its empty state named a thing the product could
- * not create.
- *
- * Everything here is driven from the page a planner actually opens. Testing the
- * sheet or the switch on their own would have passed for as long as nothing
- * mounted them, which is the defect rather than the proof.
- */
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
@@ -101,10 +91,6 @@ jest.mock("@/hooks/api/inventory/warehouses", () => ({
   }),
 }));
 
-/**
- * jsdom implements no pointer capture, and Radix's Select trigger calls it on
- * pointer-down — so opening one throws rather than opening.
- */
 beforeAll(() => {
   Element.prototype.hasPointerCapture = () => false;
   Element.prototype.releasePointerCapture = () => undefined;
@@ -150,10 +136,6 @@ it("offers New rule in the page header, beside a table that already has rows", (
   expect(screen.getByRole("button", { name: /new rule/i })).toBeInTheDocument();
 });
 
-/**
- * The whole point of the ticket: the empty state named a thing the product could
- * not create, and offered no way out of itself.
- */
 it("makes the empty state's own call to action open the create sheet", async () => {
   renderPage();
 
@@ -190,12 +172,6 @@ it("creates a rule from the sheet the header opens", async () => {
   );
 });
 
-/**
- * The server's `superRefine` refuses a rule that names two match payloads, so a
- * planner who tries a class, changes their mind and picks a category must not
- * send both — and must not be told their velocity class is wrong for a rule they
- * no longer believe matches on velocity.
- */
 it("sends only the payload the chosen match type owns", async () => {
   rules.push(liveRule);
   renderPage();
@@ -230,10 +206,6 @@ it("puts the on/off control on the rule row itself", () => {
   expect(screen.getByRole("switch", { name: /turn off fast movers to gold/i })).toBeInTheDocument();
 });
 
-/**
- * Off is the direction with the silent blast radius: putaway stops steering the
- * class to its zone while the rule goes on reading as configured in this table.
- */
 it("asks before turning a rule off, and says what changes", async () => {
   rules.push(liveRule);
   renderPage();
@@ -249,7 +221,6 @@ it("asks before turning a rule off, and says what changes", async () => {
   expect(setRuleActive).toHaveBeenCalledWith({ ruleId: 1, isActive: false }, expect.anything());
 });
 
-/** On restores what the rule already says it does, so it does not ask. */
 it("turns a rule back on without a confirmation", async () => {
   rules.push({ ...liveRule, isActive: false });
   renderPage();

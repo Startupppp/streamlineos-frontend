@@ -49,13 +49,6 @@ export interface LeadCampaign {
   name: string;
 }
 
-/**
- * The wire shape for a lead, as every `/leads*` mutation (create, update,
- * status change, assign, self-assign) actually returns it — bare party
- * fields, no relations. `assignedTo`/`assignedBy`/`campaign` are declared
- * optional here because the LIST and BOARD endpoints embed them on top of
- * this same shape; a mutation response simply omits them.
- */
 export type Lead = z.infer<typeof leadPartyContract> & {
   assignedTo?: LeadUser | null;
   assignedBy?: { id: string; name: string | null } | null;
@@ -72,13 +65,6 @@ export type LeadStats = z.infer<typeof leadStatsContract>;
 
 export type LeadBoardColumn = z.infer<typeof leadBoardContract>[string];
 
-/**
- * The board is keyed by the ORG's pipeline stages, not by a fixed six.
- * `LeadsBoardService.getBoard` derives the keys from `crm_pipeline_stages`, else
- * `crm_options`, else the statuses present in the data — so a tenant can send
- * five keys, seven, or none. Declaring the six as required properties is what
- * let `board[status].leads` compile and then throw at runtime.
- */
 export type LeadBoard = z.infer<typeof leadBoardContract>;
 
 export type SlaAlert = z.infer<typeof leadsSlaAlertsContract>["leads"][number];

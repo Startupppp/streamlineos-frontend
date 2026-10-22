@@ -31,13 +31,6 @@ const KIND_ICON: Record<DecisionKind, typeof CheckSquare> = {
   "field.repaired": Wrench,
 };
 
-/**
- * Outcome tones.
- *
- * `skipped` is deliberately neutral rather than a warning: the system choosing
- * not to act is the safety mechanism working, and colouring it as a problem
- * would teach a reader to scroll past the entries that mean the most.
- */
 const OUTCOME_TONE: Record<DecisionOutcome, StatusTone> = {
   applied: "success",
   held: "warning",
@@ -46,7 +39,6 @@ const OUTCOME_TONE: Record<DecisionOutcome, StatusTone> = {
   failed: "danger",
 };
 
-/** What it acted on, named rather than identified. */
 function subjectOf(decision: AutonomousDecision): string | null {
   return decision.dealName ?? decision.partyName ?? null;
 }
@@ -58,13 +50,6 @@ export interface DecisionEntryRowProps {
   isReversing?: boolean;
 }
 
-/**
- * One thing the system did, explained.
- *
- * The feed is the whole oversight mechanism — nothing asked for approval — so
- * the default view is what a manager needs to judge the decision, and the
- * operator's identifiers sit behind a disclosure rather than competing with it.
- */
 export function DecisionEntryRow({
   decision,
   canReverse,
@@ -73,31 +58,12 @@ export function DecisionEntryRow({
 }: DecisionEntryRowProps) {
   const [showDetail, setShowDetail] = useState(false);
 
-  /**
-   * Every lookup below is keyed on a value the *server* chose, so none of them
-   * is as total as its `Record<DecisionKind, …>` type claims. `DECISION_KINDS`
-   * and `DECISION_OUTCOMES` are hand-duplicated across the two repositories
-   * with no shared contract, so adding a sixth kind server-side would resolve
-   * `Icon` to `undefined` and `<Icon />` throws "Element type is invalid" —
-   * taking down the entire review feed through `crm/error.tsx`.
-   *
-   * This page is the whole oversight mechanism for a product that acts without
-   * asking. It must degrade to showing an unfamiliar decision plainly, never to
-   * showing nothing: an unreviewable action is worse than an unlabelled one.
-   */
   const Icon = KIND_ICON[decision.kind] ?? HelpCircle;
   const kindLabel = KIND_LABELS[decision.kind] ?? decision.kind;
   const outcomeTone = OUTCOME_TONE[decision.outcome] ?? "neutral";
   const outcomeLabel = OUTCOME_LABELS[decision.outcome] ?? decision.outcome;
   const subject = subjectOf(decision);
 
-  /**
-   * Reversible right now — not merely reversible in principle.
-   *
-   * A skipped decision changed nothing, and one already reversed cannot be
-   * reversed twice. The server refuses both anyway; hiding the control means a
-   * reader is never offered an undo that will fail.
-   */
   const canUndo =
     canReverse &&
     decision.reversibility === "instant" &&
@@ -125,7 +91,7 @@ export function DecisionEntryRow({
         </span>
 
         <div className="min-w-0 flex-1">
-          {/* Wraps on a phone, sits on one line from sm up. */}
+          
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className="text-sm font-medium">{kindLabel}</span>
             {subject ? (
@@ -136,21 +102,19 @@ export function DecisionEntryRow({
             </Badge>
           </div>
 
-          {/* The explanation, in the system's own words. */}
+          
           {decision.summary ? (
             <p className="mt-1 text-sm text-muted-foreground">{decision.summary}</p>
           ) : null}
 
           <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-micro text-muted-foreground">
-            {/* Relative to read, exact on hover — an audit trail must answer "when exactly". */}
+            
             <time dateTime={decision.decidedAt} title={new Date(decision.decidedAt).toLocaleString()}>
               {formatRelativeTime(decision.decidedAt)}
             </time>
             {decision.confidence !== null ? (
               <span>{Math.round(decision.confidence * 100)}% confident</span>
             ) : (
-              // No score rather than a fabricated one: this decision was
-              // deterministic, and showing "100%" would invent a measurement.
               <span>No model involved</span>
             )}
             {decision.reversedAt ? (
@@ -176,7 +140,7 @@ export function DecisionEntryRow({
         ) : null}
       </div>
 
-      {/* The operator's half. Present on every entry, in the way of none. */}
+      
       {decision.model || decision.promptVersion ? (
         <div className="pl-11">
           <button

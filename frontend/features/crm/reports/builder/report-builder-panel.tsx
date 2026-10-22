@@ -21,15 +21,6 @@ interface ReportBuilderPanelProps {
   onExplain: (values: ReportBuilderValues) => void;
 }
 
-/**
- * The form, and the only thing that owns it.
- *
- * It takes its starting values as a prop and is remounted by `key` when the
- * report being edited changes, rather than being reset from an effect. That is
- * the difference between "the form is derived from which report is open" and
- * "something writes into the form after the fact" — the second is what leaves a
- * half-loaded form on screen when a fetch resolves while somebody is typing.
- */
 export function ReportBuilderPanel({
   initialValues,
   sources,
@@ -45,7 +36,6 @@ export function ReportBuilderPanel({
     defaultValues: initialValues,
   });
 
-  /** A new source invalidates every field chosen under the old one. */
   function handleSourceChange(sourceKey: string) {
     form.reset({ ...DEFAULT_REPORT_BUILDER_VALUES, source: sourceKey });
   }

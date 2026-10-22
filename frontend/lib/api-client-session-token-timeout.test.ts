@@ -6,13 +6,6 @@ process.env.NEXT_PUBLIC_API_URL ??= "http://api.test";
 
 import { ApiError, apiClient, clearBackendTokenCache, getBackendToken } from "@/lib/api-client";
 
-/**
- * BUG-HRMS-011/012/019. A stalled /api/auth/session read held every query on the
- * page pending, so surfaces showed a skeleton that never ended. The read now has
- * a deadline, and running out of it is a TIMEOUT the page can show with Retry —
- * not a missing token, which would send the request unauthenticated and sign
- * the user out on the 401.
- */
 describe("the session token read has a deadline", () => {
   let sessionCalls = 0;
   let stall = true;
@@ -23,7 +16,6 @@ describe("the session token read has a deadline", () => {
     clearBackendTokenCache();
     jest.spyOn(AbortSignal, "timeout").mockImplementation(() => {
       const controller = new AbortController();
-      // The deadline elapses at once; the test does not wait 20s.
       queueMicrotask(() => controller.abort(new DOMException("timed out", "TimeoutError")));
       return controller.signal;
     });

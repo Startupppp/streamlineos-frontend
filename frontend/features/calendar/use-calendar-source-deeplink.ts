@@ -7,16 +7,6 @@ import {
   useSetCalendarSourcePreference,
 } from "@/hooks/api/calendar";
 
-/**
- * `/calendar?source=<key>` is how a module page hands its events to the one
- * unified calendar instead of rendering a calendar of its own. The source is a
- * per-user preference, so a viewer who had it switched off would otherwise
- * follow the link and land on a calendar with nothing on it.
- *
- * Only ever enables, never disables — a deep link is an "also show me this",
- * not a filter — and the param is stripped either way so a reload or a
- * back-navigation cannot re-apply it after the user toggles the source off.
- */
 export function useCalendarSourceDeepLink(enabled = true): void {
   const router = useRouter();
   const searchParams = useSearchParams();

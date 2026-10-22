@@ -21,10 +21,8 @@ const ScanCameraDialog = dynamic(
 
 interface ScanFieldProps<T> {
   scan: UseScanTargetResult<T>;
-  /** What a scan will do here, e.g. "Scan a unit to count it". */
   label: string;
   placeholder?: string;
-  /** Bleeds to the sheet edges and pins to the top of the scrolling body. */
   sticky?: boolean;
   disabled?: boolean;
   className?: string;
@@ -37,14 +35,6 @@ const OUTCOME_TONE: Record<Exclude<ScanOutcome["kind"], "idle">, StatusTone> = {
   error: "danger",
 };
 
-/**
- * Whether this browser can decode a barcode from a camera frame.
- *
- * Read through `useSyncExternalStore` rather than an effect, because the answer
- * differs between the server render (never) and the client (sometimes), and that
- * is exactly the mismatch this hook exists to reconcile. It never changes within
- * a session, so there is nothing to subscribe to.
- */
 const NO_SUBSCRIPTION = () => () => undefined;
 
 function readCameraSupport(): boolean {
@@ -58,22 +48,6 @@ function noCameraOnServer(): boolean {
   return false;
 }
 
-/**
- * B2, item 1 — the one scan input every operator surface uses.
- *
- * Three ways in, in the order they are reliable. A **wedge** is the real one and
- * needs no focus: warehouse operators scan while the page has focus wherever it
- * happens to be, so the listener is on the document and tells hardware from a
- * person by keystroke speed. The **text field** is the accessible equivalent and
- * the fallback for a label that will not read — it is a real labelled control,
- * not a hidden trap for the scanner, so it works with a keyboard and a screen
- * reader alone. The **camera** appears only where the browser can decode one.
- *
- * Every outcome is announced rather than only coloured. A picker holding a unit
- * is not looking at the screen when the beep happens, and "rejected" and
- * "already counted" are the two answers that must never be confused: one means
- * put it back, the other means carry on.
- */
 export function ScanField<T>({
   scan,
   label,
@@ -125,9 +99,6 @@ export function ScanField<T>({
 
   const { outcome } = scan;
   const tone = outcome.kind === "idle" ? null : statusToneClasses(OUTCOME_TONE[outcome.kind]);
-  // B11, item 3 — denied, offline and queued have to read as three different
-  // things. Denied hides the control entirely, offline says why it is inert, and
-  // queued says the work is real but not yet with the server.
   const queued = counts.queued + counts.inFlight;
 
   if (!scan.canScan) return null;

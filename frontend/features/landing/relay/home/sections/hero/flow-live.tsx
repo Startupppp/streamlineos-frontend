@@ -17,10 +17,8 @@ import { pick, useFrame, type Frame } from "@/features/landing/relay/hooks/use-f
 import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 
 import { LIVE, LOAD } from "./timeline";
-/** First screen: start as soon as it is visible, not at the VIEW_MARGIN line. */
 const HERO_MARGIN = "0px";
 
-/* ─── shared helpers ──────────────────────────────────────────────────── */
 
 const useMedia = (query: string) => {
   const [matches, setMatches] = useState(false);
@@ -36,7 +34,6 @@ const useMedia = (query: string) => {
 
 const useReducedMotion = () => useMedia("(prefers-reduced-motion: reduce)");
 
-/** `true` from the first time the attached node enters view. */
 const usePlayed = () => {
   const [setNode, inView] = useDynamicInView({ rootMargin: HERO_MARGIN });
   const [played, setPlayed] = useState(false);
@@ -46,10 +43,9 @@ const usePlayed = () => {
   return [setNode, played] as const;
 };
 
-/* ─── routes (window padding-box coordinates) ─────────────────────────── */
 
 type Pt = readonly [number, number];
-type Seg = readonly [Pt, Pt, Pt, Pt]; // cubic; a line repeats its ends
+type Seg = readonly [Pt, Pt, Pt, Pt];
 
 const cubic = (s: Seg, t: number): Pt => {
   const m = 1 - t;
@@ -66,9 +62,7 @@ const cubic = (s: Seg, t: number): Pt => {
 interface Route {
   pts: Pt[];
   len: number[];
-  /** Arc length of the whole trip. */
   total: number;
-  /** Arc length at the branch node's port — where that port flashes. */
   hit: number;
 }
 
@@ -99,11 +93,6 @@ const pointAt = ({ pts, len }: Route, d: number): Pt => {
   ];
 };
 
-/**
- * Refund created's port → along the drawn true / else connector (3684:95) into
- * Amount over 5000 / Log to warehouse, through the card to its right port →
- * along the drawn connector into Ask finance's port.
- */
 const branch = (y: number): Seg[] => [
   [
     [89, 279],
@@ -125,21 +114,13 @@ const branch = (y: number): Seg[] => [
   ],
 ];
 
-/**
- * The vertical flow of the narrow frames — the same trip turned 90°: down the
- * stem out of Refund created, along the true / else edge into the branch
- * column `x`, straight down through the card, then along the second edge and
- * stem into Ask finance. `c1` / `c2` are the edge's control-point drops.
- */
 interface VFlow {
-  /** Stem x and the y of Refund created's out-port. */
   cx: number;
   y0: number;
   stem: number;
   edge: number;
   c1: number;
   c2: number;
-  /** In-port to out-port through a branch card. */
   card: number;
 }
 
@@ -185,7 +166,6 @@ const vertical = (
   ];
 };
 
-/** 1024 (3726:647 … 3726:652) and 768 (3838:2 … 3838:7), padding-box px. */
 const V1024: VFlow = {
   cx: 257,
   y0: 189,
@@ -205,11 +185,6 @@ const V768: VFlow = {
   card: 60,
 };
 
-/**
- * Every frame hits the branch node's port at the end of segment 1. 390 runs
- * the 768 flow inside a wrapper scaled 310 / 380 (3957:1556), so it reuses the
- * 768 routes; only its packet box (the unscaled wrapper) differs.
- */
 const ROUTES: Record<Frame, { accent: Route; grey: Route }> = {
   1440: { accent: buildRoute(branch(199), 1), grey: buildRoute(branch(359), 1) },
   1024: {
@@ -226,7 +201,6 @@ const ROUTES: Record<Frame, { accent: Route; grey: Route }> = {
   },
 };
 
-/** Packet svg user units = the window's padding box, per frame. */
 const PACKET_BOX: Record<Frame, string> = {
   1440: "0 0 678 622",
   1024: "0 0 514 657",
@@ -235,22 +209,14 @@ const PACKET_BOX: Record<Frame, string> = {
 };
 
 const ease = (u: number) => (1 - Math.cos(Math.PI * u)) / 2;
-/** Trip fraction at which the eased packet reaches arc fraction `s`. */
 const easeInv = (s: number) => Math.acos(1 - 2 * s) / Math.PI;
 
 type PortId = "trigger" | "condition" | "log" | "approval";
 
-/* ─── provider + loop ─────────────────────────────────────────────────── */
 
 type Register = (id: string) => (el: Element | null) => void;
 const FlowContext = createContext<Register>(() => () => {});
 
-/**
- * "Живой прогон": after the load sequence a packet runs Refund created →
- * Amount over 5000 → Ask finance every LIVE.period (every LIVE.greyEvery-th
- * trip takes the grey branch through Log to warehouse), and each port it
- * reaches flashes. Runs only while in view; reduced motion renders nothing.
- */
 export const FlowLive = ({
   children,
   className = "",
@@ -357,7 +323,6 @@ export const FlowLive = ({
   );
 };
 
-/** Accent halo under a port — expands and fades when a packet reaches it. */
 export const PortFlash = ({
   id,
   className,
@@ -375,7 +340,6 @@ export const PortFlash = ({
   );
 };
 
-/** The travelling packets — one accent, one for the grey branch. */
 export const Packets = () => {
   const register = useContext(FlowContext);
   const frame = useFrame();
@@ -399,20 +363,12 @@ export const Packets = () => {
   );
 };
 
-/* ─── load-sequence strokes ───────────────────────────────────────────── */
 
-/**
- * Connectors inline so each path can draw from its source port: the right
- * group (3684:93) into Ask finance, the mirrored left group (3684:95) out of
- * Refund created towards Amount over 5000 (true) and Log to warehouse (else).
- * The accent stroke is brightest at the shared port in both.
- */
 export const Connectors = ({
   className,
   mirror = false,
 }: {
   className: string;
-  /** Left group 3684:95 — Refund created fanning out to true / else. */
   mirror?: boolean;
 }) => {
   const [setNode, played] = usePlayed();
@@ -435,10 +391,8 @@ export const Connectors = ({
   const v = pick(useFrame(), { 1440: FAN_1024, 768: FAN_768 });
   const m = v.w / 2;
   const h = v.stem + v.edge;
-  /** Stem foot → branch column `x` (top group). */
   const edgeDown = (x: number) =>
     `M${m} ${v.stem}C${m} ${v.stem + v.c1} ${x} ${v.stem + v.c2} ${x} ${h}`;
-  /** Branch column `x` → stem head (bottom group). */
   const edgeUp = (x: number) =>
     `M${x} 0C${x} ${v.c1} ${m} ${v.c2} ${m} ${v.edge}`;
   return (
@@ -482,10 +436,7 @@ export const Connectors = ({
         />
       </svg>
 
-      {/* 1024 (3726:647 … 3726:652) / 768 (3838:2 … 3838:7): the same fan
-          turned 90° — a grey stem on the shared side, then the accent true edge
-          and the grey else edge. Unlike 1440 the accent is brightest at the
-          *node* end (0.95 → 0.3). */}
+      
       <svg
         width={v.w}
         height={h}
@@ -535,7 +486,6 @@ export const Connectors = ({
   );
 };
 
-/** Vertical fan box per frame: branch-column span, stem, edge and its drops. */
 interface Fan {
   w: number;
   stem: number;
@@ -546,7 +496,6 @@ interface Fan {
 const FAN_1024: Fan = { w: 228, stem: 16, edge: 52, c1: 29, c2: 23 };
 const FAN_768: Fan = { w: 208, stem: 14, edge: 50, c1: 30, c2: 20 };
 
-/** Port that pops in at `delay` (ms into the load). */
 export const PortIn = ({
   children,
   delay,
@@ -580,7 +529,6 @@ export const PortIn = ({
   );
 };
 
-/** Canvas dots come up in a wave from the window centre. */
 export const GridWave = ({ children }: { children: ReactNode }) => {
   const [setNode, played] = usePlayed();
   const reduced = useReducedMotion();

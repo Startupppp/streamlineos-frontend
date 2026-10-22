@@ -8,16 +8,6 @@ import { DEFAULT_INVITE_ROLE } from "@/lib/constants/user-invite-roles";
 import { DEFAULT_HR_WORKER_TYPE } from "@/lib/constants/hr-worker-types";
 import { StepEmployment } from "./step-employment";
 
-/**
- * BUG-HRMS-006 / BUG-HRMS-007. An organisation with three configured offices put
- * every hire at no location, and a contractor or an intern could only be recorded
- * in the free-text designation, because the wizard offered neither field while
- * `hr_employments` carried both columns all along.
- *
- * The negative case matters as much as the positive one (FE-122): an org that
- * configured no location must still be able to hire, so the control is present
- * and inert rather than blocking.
- */
 
 jest.mock("./step-employment-reporting", () => ({ StepEmploymentReporting: () => null }));
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
@@ -77,7 +67,6 @@ function Harness({ locations }: { locations: Array<{ id: string; name: string }>
   );
 }
 
-/** Step order: role, worker type, location. */
 function selects(): HTMLElement[] {
   return screen.getAllByRole("combobox");
 }

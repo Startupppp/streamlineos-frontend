@@ -11,7 +11,6 @@ const importExpensesResultC = lazyContract(() =>
 interface ImportVariables {
   file: File;
   autoApprove: boolean;
-  /** The preview's choices for categories the server does not recognise. */
   categoryMapping?: Record<string, string>;
 }
 
@@ -23,10 +22,6 @@ interface ImportExpensesResult {
   error?: string;
 }
 
-/**
- * Backend `POST /hr/expenses/import` expects JSON
- * `{ fileName, content, autoApprove }` — not multipart FormData.
- */
 async function importExpensesRequest({
   file,
   autoApprove,

@@ -11,27 +11,10 @@ import { RfQueueList } from "@/features/inventory/components/rf/rf-queue-list";
 import { useCan } from "@/hooks/api/access";
 import { useRfQueue } from "@/hooks/api/inventory/rf-queue";
 
-/** The key `usePickWaves` is gated on, so the queue and its rows agree. */
 const PICK_READ = "inventory:sales-orders:read";
 
 const RF_QUEUE_HREF = "/inventory/rf";
 
-/**
- * T09 — `/inventory/rf/pick` used to 404.
- *
- * Only `/inventory/rf/pick/[pickListId]` was routable, so the segment above it
- * answered nothing. That is not a hypothetical URL: a scanner that mis-reads the
- * trailing digits of a wave barcode, a deep link truncated in a chat message, or
- * an operator backing one level up out of a task all land here — and landing on
- * a 404 while holding a scanner in one hand is the worst possible moment for it.
- *
- * So the segment answers with the thing the operator wanted: their picks. It is
- * the RF queue filtered to one kind, not a second queue — the rows, the hrefs
- * and the "assigned to me" definition all come from `useRfQueue`, the same hook
- * `/inventory/rf` reads, so the two screens can never disagree about what is
- * assigned. `RfShell` supplies the back affordance to the full queue, which is
- * also the "nothing selected" way out.
- */
 export default function RfPickQueuePage() {
   const canPick = useCan(PICK_READ);
   const { tasks, isLoading, isError, refetch } = useRfQueue();

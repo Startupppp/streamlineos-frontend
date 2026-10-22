@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-/** Real links, so every page of a listing is reachable without JavaScript. Page 1 is the root URL. */
 export function Pagination({ basePath, page, totalPages }: { basePath: string; page: number; totalPages: number }) {
   if (totalPages <= 1) return null;
   const href = (n: number) => (n === 1 ? basePath : `${basePath}/page/${n}`);

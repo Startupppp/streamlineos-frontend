@@ -4,50 +4,18 @@ import { getUserDisplayName } from "@/lib/person-display";
 
 import type { LeaveRequest } from "./components/leaves-types";
 
-/**
- * HRMS-E2E-022. The leave export used to be a closure over `myLeaveRequests`
- * with the button rendered only on the "My leaves" tab. An admin standing on
- * Approvals with four pending team requests had no export control at all, and
- * the one they could reach exported a different collection from the one on
- * screen — the two halves of "clicked export, got nothing".
- *
- * The export is described here as a *view*: the rows the person is looking at
- * plus how to name them. The caller picks the view from the active tab, so the
- * file always matches the screen, and there is exactly one workbook builder to
- * keep the two column sets honest.
- *
- * Nothing in here returns quietly. An empty row set is a real result and gets a
- * header-only workbook; anything that goes wrong throws, and the caller turns
- * that into a toast.
- */
 
 export const XLSX_MIME =
   "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
 
 export interface LeaveExportView {
-  /** Exactly the rows the current tab renders. */
   rows: LeaveRequest[];
-  /**
-   * Team exports name the person each row belongs to. A personal export does
-   * not — every row would repeat the reader's own name.
-   */
   includeEmployee: boolean;
-  /** Filename stem; the date is appended by the caller. */
   filePrefix: string;
-  /** Singular noun used in the toast: "leave request", "team leave request". */
   noun: string;
-  /** Worksheet tab name. */
   sheetName: string;
 }
 
-/**
- * Builds the export view for a tab.
- *
- * `approvals` only exists for an admin, and `incoming` is every loaded team row
- * — the same list the Approvals tab's "All" panel renders, not just the pending
- * subset, because an export of a filtered-down view that says nothing about the
- * filter is how people ship half a report.
- */
 export function leaveExportViewFor(
   activeTab: string,
   mine: LeaveRequest[],
@@ -73,14 +41,6 @@ export function leaveExportViewFor(
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}/;
 
-/**
- * Renders a date cell as `yyyy-MM-dd` without ever throwing.
- *
- * A plain `yyyy-MM-dd` string is passed through verbatim: parsing it to a Date
- * reads it as UTC midnight, which the host's timezone can shift back a day.
- * Anything unparseable becomes a dash rather than a `RangeError` that would
- * take the whole export down.
- */
 export function exportDateText(
   value: string | Date | null | undefined,
 ): string {
@@ -123,7 +83,6 @@ function rowValues(request: LeaveRequest, includeEmployee: boolean): string[] {
     : values;
 }
 
-/** Builds the workbook for a view and returns it as a Blob, or throws. */
 export async function buildLeaveExportBlob(
   view: LeaveExportView,
 ): Promise<Blob> {
@@ -148,7 +107,6 @@ export async function buildLeaveExportBlob(
   return blob;
 }
 
-/** Past-tense, specific, and truthful about an empty sheet (FE-81). */
 export function leaveExportToastMessage(view: LeaveExportView): string {
   if (view.rows.length === 0)
     return `Exported an empty ${view.noun} sheet — nothing matched this view`;

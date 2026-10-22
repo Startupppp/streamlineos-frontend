@@ -16,18 +16,6 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useParties } from "@/hooks/api/party/parties";
 import { useSubjects, useSubjectTypes } from "@/hooks/api/party/subjects";
 
-/**
- * Everything a deal points at, and the reason it is not in the description.
- *
- * An owner, a party and a subject are references to other records, searched
- * against live endpoints and rendered as names. `FieldKind` has no reference
- * member and no way to name a source, so a generated form cannot produce one of
- * these — they sit beside `RecordForm` rather than inside it.
- *
- * Deliberately built on the plain `Label` rather than the `Form*` primitives:
- * those read react-hook-form context through `useFormField`, and this block now
- * renders outside the generated form's provider.
- */
 
 export interface DealLinks {
   readonly assignedToId: string;
@@ -38,7 +26,6 @@ export interface DealLinks {
 interface DealLinkFieldsProps {
   value: DealLinks;
   onChange: (next: DealLinks) => void;
-  /** Omitted where the surface has no people list to offer. */
   employees?: Array<{ id: string; name: string | null }>;
 }
 

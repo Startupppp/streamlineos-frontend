@@ -1,9 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for `OnboardingController` handlers (onboarding session, module
- * checklists, guided tours). Timestamps are ISO strings over JSON. NOT `.strict()`.
- */
 
 const persistedOnboardingFlowSessionContract = z.object({
   id: z.number().int().positive(),

@@ -94,7 +94,6 @@ export const StepBasics = forwardRef<
             return false;
           }
         } catch {
-          // Network error: allow proceeding; server will catch any real conflict as 409.
         }
         updateDraft({
           name: v.name,
@@ -169,7 +168,6 @@ export const StepBasics = forwardRef<
           });
         }
       } catch {
-        // Ignore network or abort errors from the blur check.
       }
     }
 

@@ -9,20 +9,6 @@ import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useRepairPolicies, useSetRepairPolicy } from "@/hooks/api/crm/autonomy";
 
-/**
- * Which broken values the system may quietly fix.
- *
- * This screen existed on the server and nowhere else: the four repair endpoints
- * had no caller in this app at all, so a tenant could neither grant a class nor
- * take one back, and the two classes that are on by default were on with nothing
- * in the product that said so. That mattered more once the repair loop went onto
- * a schedule — a loop running unattended needs the screen that governs it.
- *
- * Each class is its own switch rather than one toggle. They are not equally
- * safe: removing a dot from the edge of a domain names the same mailbox, while
- * deleting whitespace from an address could undo a dot somebody meant to type,
- * which is why that one is off unless a tenant asks for it.
- */
 export function RepairPoliciesPanel() {
   const canRepair = useCan("crm:autonomy:repair");
   const { data, isLoading, isError } = useRepairPolicies();
@@ -42,11 +28,6 @@ export function RepairPoliciesPanel() {
       </Card>
     );
 
-  /**
-   * The kill switch vetoes every class at once. Said once at the top rather than
-   * folded into each row, because rendering three granted classes as "off" would
-   * make the setting a tenant just changed look broken.
-   */
   const vetoed = data ? !data.autonomy.allowed : false;
 
   return (
@@ -61,11 +42,6 @@ export function RepairPoliciesPanel() {
 
       <CardContent className="flex flex-col gap-gap-field">
         {isError || !data ? (
-          /*
-            An empty list reads as "nothing is granted", which is the wrong thing
-            to believe about a product that edits customer data. Failing to read
-            the policies is not the same as there being none.
-          */
           <p role="alert" className="text-label text-muted-foreground">
             These controls could not be loaded, so what the system is currently allowed to repair
             is unknown here. Reload to try again.
@@ -97,8 +73,6 @@ export function RepairPoliciesPanel() {
                   {policy.description}
                 </Label>
                 {policy.source === "default" ? (
-                  /* Say that nobody chose this. A class that is on because it
-                     shipped on is a different fact from one a tenant granted. */
                   <p className="text-micro text-muted-foreground">
                     {policy.enabled
                       ? "On unless you say otherwise."

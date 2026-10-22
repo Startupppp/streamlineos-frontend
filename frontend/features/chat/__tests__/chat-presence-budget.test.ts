@@ -9,10 +9,6 @@ jest.mock("ably/react", () => ({
   useAbly: jest.fn(),
 }));
 
-// use-chat-presence imports useChatHeartbeat from the leaf module, not the
-// "@/hooks/api" barrel. Jest keys mocks by resolved module, so the mock has to
-// name the same specifier the hook under test imports — mocking the barrel
-// leaves the real heartbeat (and its useAccess/useQuery chain) in place.
 jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useChatHeartbeat: jest.fn(),
 }));

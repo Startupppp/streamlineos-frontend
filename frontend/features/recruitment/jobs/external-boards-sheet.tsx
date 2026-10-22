@@ -37,13 +37,6 @@ import {
 
 const STATUS_OPTIONS: readonly JobBoardPostingStatus[] = SETTABLE_POSTING_STATUSES;
 
-/**
- * `STATUS_OPTIONS` above is what a recruiter may set by hand on a row they are
- * tracking themselves. The four below are written by the distribution pipeline
- * and are deliberately NOT offered in that menu: nobody should be able to mark
- * a posting `LIVE` from this screen, because live means a board returned an id
- * and only the outbox consumer can know that.
- */
 const STATUS_BADGE: Record<JobBoardPostingStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
   POSTED: "bg-status-success-surface text-status-success-ink",
@@ -282,12 +275,7 @@ export function ExternalBoardsSheet({
                 </div>
                 {posting.statusDetail && (
                   <p className="text-dense text-muted-foreground">
-                    {/*
-                      Why this board is where it is — the blocked code, or the
-                      vendor's own refusal. Without it a FAILED badge is a dead
-                      end: the recruiter cannot tell an expired key from a
-                      rejected description.
-                    */}
+                    
                     {posting.statusDetail}
                   </p>
                 )}

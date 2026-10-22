@@ -10,31 +10,31 @@ import { resolvePrefetchGate } from "@/lib/prefetch/prefetch-gate";
 import { getServerAuth } from "@/lib/get-server-auth";
 import { getServerAccessResult } from "@/lib/rbac/get-server-access";
 import { attendanceStatusContract } from "@/hooks/api/hr/attendance-schema";
-import { attendanceStatusQueryOptions } from "@/hooks/api/hr/attendance";
+import { attendanceStatusQueryOptions } from "@/hooks/api/hr/attendance-read-options";
 import { holidayListContract } from "@/hooks/api/hr/holidays-schema";
-import { holidaysQueryOptions } from "@/hooks/api/hr/holidays";
+import { holidaysQueryOptions } from "@/hooks/api/hr/holidays-read-options";
 import { geofenceListContract } from "@/hooks/api/hr/geofencing-schema";
-import { geofencesQueryOptions } from "@/hooks/api/hr/geofencing";
+import { geofencesQueryOptions } from "@/hooks/api/hr/geofencing-read-options";
 import { rostersListContract } from "@/hooks/api/hr/rosters-schema";
-import { rostersQueryOptions } from "@/hooks/api/hr/rosters";
+import { rostersQueryOptions } from "@/hooks/api/hr/rosters-read-options";
 import { shiftTemplateListContract } from "@/hooks/api/hr/shifts-schema";
-import { hrShiftsQueryOptions } from "@/hooks/api/hr/shifts";
+import { hrShiftsQueryOptions } from "@/hooks/api/hr/shifts-read-options";
 import { compOffBalanceListContract } from "@/hooks/api/hr/comp-off-schema";
-import { compOffQueryOptions } from "@/hooks/api/hr/comp-off";
+import { compOffQueryOptions } from "@/hooks/api/hr/comp-off-read-options";
 import { overtimeListContract } from "@/hooks/api/hr/overtime-schema";
-import { overtimeRequestsQueryOptions } from "@/hooks/api/hr/overtime";
+import { overtimeRequestsQueryOptions } from "@/hooks/api/hr/overtime-read-options";
 import { leaveContextContract } from "@/hooks/api/hr/leaves-schema";
-import { leaveContextQueryOptions } from "@/hooks/api/hr/leaves-query-identity";
+import { leaveContextQueryOptions } from "@/hooks/api/hr/leaves-query-identity-read-options";
 import { hrPolicyListContract } from "@/hooks/api/hr/policies-schema";
-import { hrPoliciesQueryOptions } from "@/hooks/api/hr/policies";
+import { hrPoliciesQueryOptions } from "@/hooks/api/hr/policies-read-options";
 import { hrTemplateListContract } from "@/hooks/api/hr/hr-templates-schema";
-import { hrTemplatesQueryOptions } from "@/hooks/api/hr/hr-templates";
+import { hrTemplatesQueryOptions } from "@/hooks/api/hr/hr-templates-read-options";
 import { workflowDefinitionListContract } from "@/hooks/api/hr/hr-workflows-schema";
-import { hrWorkflowDefinitionsQueryOptions } from "@/hooks/api/hr/hr-workflows";
+import { hrWorkflowDefinitionsQueryOptions } from "@/hooks/api/hr/hr-workflows-read-options";
 import { automationRuleListContract } from "@/hooks/api/hr/hr-automations-schema";
-import { hrAutomationsQueryOptions } from "@/hooks/api/hr/hr-automations";
+import { hrAutomationsQueryOptions } from "@/hooks/api/hr/hr-automations-read-options";
 import { hrWebhookSubscriptionListContract } from "@/hooks/api/hr/hr-webhooks-schema";
-import { hrWebhooksQueryOptions } from "@/hooks/api/hr/hr-webhooks";
+import { hrWebhooksQueryOptions } from "@/hooks/api/hr/hr-webhooks-read-options";
 import {
   hrFormListContract,
   hrFormRowContract,
@@ -43,10 +43,10 @@ import {
 import {
   hrFormsListQueryOptions,
   hrFormDetailQueryOptions,
-} from "@/features/hr/forms/hooks/use-hr-forms";
-import { hrFormSubmissionsQueryOptions } from "@/features/hr/forms/hooks/use-hr-form-submissions";
+} from "@/features/hr/forms/hooks/use-hr-forms-read-options";
+import { hrFormSubmissionsQueryOptions } from "@/features/hr/forms/hooks/use-hr-form-submissions-read-options";
 import { hrFieldDefListContract } from "@/features/hr/custom-fields/hooks/hr-custom-fields-schema";
-import { hrCustomFieldsQueryOptions } from "@/features/hr/custom-fields/hooks/use-hr-custom-fields";
+import { hrCustomFieldsQueryOptions } from "@/features/hr/custom-fields/hooks/use-hr-custom-fields-read-options";
 
 type AttendanceStatus = z.infer<typeof attendanceStatusContract>;
 type HolidayList = z.infer<typeof holidayListContract>;

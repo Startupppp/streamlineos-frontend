@@ -1,11 +1,5 @@
 import { getUserDisplayName, getUserInitials, normalizeNamePart } from "./person-display";
 
-/**
- * Ticket 07. One precedence for every surface, matching the backend's
- * `resolvePersonDisplayName`. The directory card composed first+last itself while
- * this helper preferred the account name, so the same person could read one way
- * on a card and another in the table, the CSV and the profile PDF.
- */
 describe("getUserDisplayName", () => {
   it("prefers the name the person chose over the composed first and last", () => {
     expect(
@@ -65,7 +59,6 @@ describe("getUserInitials", () => {
   });
 
   it("never renders an empty badge", () => {
-    // A nameless person falls through to the "Unknown" display name.
     expect(getUserInitials({})).toBe("U");
     expect(getUserInitials(null)).toBe("?");
   });

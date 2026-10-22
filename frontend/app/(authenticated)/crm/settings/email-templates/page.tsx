@@ -27,16 +27,6 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EMAIL_TEMPLATE_LAYOUT } from "@/lib/renderer/crm/settings/email-template-layout";
 
-/**
- * Email templates.
- *
- * A table rather than a grid of cards. A template is identified by its name and
- * distinguished by its subject, both of which are one line — a card grid spent
- * three columns of a wide screen showing nine of them where a table shows
- * twenty-five, and the body preview it added was three clipped lines nobody can
- * read anyway. The preview that is worth having is the one with the variables
- * filled in, and that is a row action.
- */
 export default function EmailTemplatesPage() {
   const layout = useTenantLayout(EMAIL_TEMPLATE_LAYOUT);
   const [density, setDensity] = useDensity();

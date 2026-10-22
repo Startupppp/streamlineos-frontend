@@ -183,7 +183,6 @@ export function DocumentTypesPage() {
     : undefined;
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {
-    // Was a hand-rolled "Something went wrong" that dropped the error (FE-41).
     return (
       <PageWrapper title="Document Types" subtitle="Configure required onboarding documents">
         <PageState

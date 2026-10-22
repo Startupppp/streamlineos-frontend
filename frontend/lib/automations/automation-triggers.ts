@@ -1,16 +1,3 @@
-/**
- * The automation trigger vocabulary, mirrored from the backend engine.
- *
- * SOURCE OF TRUTH: `streamlineos-backend/src/db/schema/automation/rules.ts`
- * (AUTOMATION_TRIGGERS) and `src/modules/automation/automation-trigger-modules.ts`
- * (AUTOMATION_TRIGGER_MODULE). Both halves are asserted against this file by
- * `lib/automations/__tests__/automation-trigger-mirror.test.ts`, which reads the
- * backend repo, so drift is a red test rather than a screen that silently drops
- * triggers.
- *
- * Do not add a trigger here that the engine does not dispatch: it would be dead
- * forever. Do not leave one out: it would be unreachable in the UI.
- */
 
 export const AUTOMATION_TRIGGERS = [
   "lead.created",

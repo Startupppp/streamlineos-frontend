@@ -32,15 +32,6 @@ const STATUS_LABEL: Record<TemplateApprovalStatus, string> = {
   REJECTED: "Rejected",
 };
 
-/**
- * COMP-004 / COMP-005. WhatsApp and SMS refuse to send a template the provider has not
- * approved — so without somewhere to record that approval, those channels are permanently
- * unusable no matter how the template is written.
- *
- * The approval itself happens outside this product (Meta for WhatsApp, an Indian DLT
- * operator for SMS). This records the outcome and the identifier the provider issued;
- * it does not request or grant anything.
- */
 export function TemplateApprovalDialog({
   template,
   open,
@@ -55,8 +46,6 @@ export function TemplateApprovalDialog({
   const [reason, setReason] = useState(template.approvalRejectionReason ?? "");
   const setApproval = useSetTemplateApproval();
 
-  // The backend rejects APPROVED without a provider name, because an approved template
-  // with nothing to send under fails per message instead of once, here.
   const providerNameMissing = status === "APPROVED" && providerName.trim().length === 0;
 
   function handleStatusChange(next: string) {

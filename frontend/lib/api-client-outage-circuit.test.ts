@@ -12,12 +12,6 @@ import {
 import { resetOutageCircuit } from "@/lib/api-outage-circuit";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 
-/**
- * SEC-HRMS-003. During an origin outage (Cloudflare 502 without CORS headers
- * surfaces as a fetch TypeError) one tab sent ~60 req/min: every retry layer
- * above the client re-fired on its own clock. The circuit in
- * `fetchOrThrowTransportError` makes those retries fail fast instead.
- */
 
 function jsonResponse(
   status: number,
@@ -69,15 +63,12 @@ it("sends one request per backoff window during an outage, failing the rest fast
 
   const failedFast = await Promise.all(Array.from({ length: 20 }, read));
   expect(apiFetch).toHaveBeenCalledTimes(1);
-  // Same classification as a real transport failure, so the UI still reads
-  // "Server temporarily unavailable".
   for (const error of failedFast) expect(isTransientNetworkError(error)).toBe(true);
 
   jest.advanceTimersByTime(5_000);
   await read();
   expect(apiFetch).toHaveBeenCalledTimes(2);
 
-  // The window doubled: 5s later is still inside it.
   jest.advanceTimersByTime(5_000);
   await read();
   expect(apiFetch).toHaveBeenCalledTimes(2);
@@ -96,7 +87,6 @@ it("closes on the first successful response once the origin is back", async () =
   expect(await read()).toBeNull();
   expect(apiFetch).toHaveBeenCalledTimes(4);
 
-  // The backoff reset too: the next outage starts at 5s again, not 10s.
   origin = "down";
   await read();
   jest.advanceTimersByTime(5_000);

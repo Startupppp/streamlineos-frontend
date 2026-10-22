@@ -231,18 +231,11 @@ export interface SignBulkSendRow {
 
 export interface SignBulkSendJobDetail {
   job: SignBulkSendJob;
-  /** The first page of the job's rows, by row number — not all of them. */
   rows: SignBulkSendRow[];
-  /** How many rows the job has, counted server-side. */
   rowTotal: number;
   rowsTruncated: boolean;
 }
 
-/**
- * `GET /sign/bulk-send/jobs/:id/error-report`: the failed rows, filtered in SQL
- * and capped at `limit`, beside the job's own failure tally so a capped list
- * cannot understate how many rows failed.
- */
 export interface SignBulkSendErrorReport {
   rows: SignBulkSendRow[];
   failedCount: number;
@@ -251,11 +244,6 @@ export interface SignBulkSendErrorReport {
   truncated: boolean;
 }
 
-/**
- * The stored row. `certificateJson` is jsonb on the backend and typed there as
- * `Record<string, unknown>`, so it stays unknown here too — the sheet narrows it
- * through a Zod schema rather than asserting a shape it cannot prove.
- */
 export interface SignCertificate {
   id: number;
   orgId: string;

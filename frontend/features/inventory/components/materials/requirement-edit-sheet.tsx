@@ -23,12 +23,6 @@ const REQUIREMENT_MANAGE = "inventory:projects:manage";
 
 const NO_STORE = "none";
 
-/**
- * Mirrors `updateRequirementSchema`. The three settable statuses are the whole
- * list the backend accepts — `RESERVED`, `PARTIALLY_FULFILLED` and `FULFILLED`
- * are what reserving and dispatching make true, and offering one here would let
- * a line claim stock is held that nothing is holding.
- */
 const schema = z.object({
   warehouseId: z.string().optional(),
   requiredQty: z
@@ -55,17 +49,6 @@ interface RequirementEditSheetProps {
   projectId: number;
 }
 
-/**
- * `PATCH /inventory/projects/:projectId/requirements/:requirementId` had no
- * caller. A line raised for the wrong quantity, the wrong date or the wrong
- * store could be reserved against and released, but never corrected — and a line
- * raised in error could not be cancelled, so it stayed on the site's shortfall
- * and in the at-risk count for good.
- *
- * A line already reserved or delivered keeps its status: the settable set is
- * only what a planner decides, and lowering the quantity below what is committed
- * is refused by the server rather than silently accepted here.
- */
 export function RequirementEditSheet({ requirement, projectId }: RequirementEditSheetProps) {
   const canManage = useCan(REQUIREMENT_MANAGE);
   const [open, setOpen] = useState(false);

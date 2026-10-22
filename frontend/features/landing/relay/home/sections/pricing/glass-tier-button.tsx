@@ -11,13 +11,11 @@ const AnimatedLink = animated(Link);
 
 type Side = "left" | "right";
 
-/** Side of the pill the pointer crossed — the fill grows from / retracts to it. */
 const sideOf = (event: MouseEvent<HTMLElement>): Side => {
   const box = event.currentTarget.getBoundingClientRect();
   return event.clientX < box.left + box.width / 2 ? "left" : "right";
 };
 
-/** Pill clip for a fill `v` (0 → 1) anchored on `side`. */
 const clip = (side: Side, v: number) => {
   const rest = `${(1 - Math.min(1, Math.max(0, v))) * 100}%`;
   return side === "left"
@@ -25,15 +23,6 @@ const clip = (side: Side, v: number) => {
     : `inset(0 0 0 ${rest} round 999px)`;
 };
 
-/**
- * Tier glass button (3488:22827) — Figma's flat 7% fill with a 16% hairline,
- * not the shared gradient GlassButton. On hover the pill fills with accent: the
- * accent layer grows in from the side the pointer entered on a spring, and the
- * label turns on-accent ink exactly under the fill edge (the fill carries its
- * own ink copy of the label, centred on the same line), so it stays readable.
- * Leaving retracts the fill toward the exit side. No stroke, and the
- * accent cursor steps aside (data-cursor) so no ring sits on the fill. A press squashes it. At rest nothing but the Figma pill shows.
- */
 export const GlassTierButton = ({
   href,
   children,

@@ -1,13 +1,3 @@
-/**
- * App Router prefetches every `<Link>` that enters the viewport, and each
- * speculative RSC request re-runs the authenticated layout's session and
- * permission reads. A product sidebar carries up to 57 nav routes, so the
- * default behaviour turns one page load into dozens of backend round-trips
- * for routes nobody opened.
- *
- * These tests pin the two halves of the fix: viewport prefetch is off, and a
- * route is asked for once, on intent.
- */
 import React from "react";
 import { render, screen, fireEvent } from "@testing-library/react";
 

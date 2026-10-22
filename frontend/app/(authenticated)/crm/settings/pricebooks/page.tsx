@@ -27,14 +27,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { PRICEBOOK_LAYOUT } from "@/lib/renderer/crm/settings/pricebook-layout";
 import type { Pricebook } from "@/types/crm/pricebooks";
 
-/**
- * Pricebooks.
- *
- * Opening a row opens its prices, which is the reason anyone comes here — the
- * old table carried a "Manage Entries" button in its own column, which is a
- * destination dressed as a cell. Editing the book itself and deleting it stay in
- * the row's action column, where the rest of the product puts them.
- */
 export default function PricebooksPage() {
   const layout = useTenantLayout(PRICEBOOK_LAYOUT);
   const money = useOrgDisplay();

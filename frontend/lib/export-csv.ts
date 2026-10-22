@@ -7,7 +7,6 @@ export function exportToCsv(filename: string, rows: Array<Record<string, unknown
       headers.map((h) => {
         const v = r[h];
         if (v == null) return "";
-        // A text cell starting with = + - @ runs as a formula in Excel/Sheets.
         const text = typeof v === "string" && /^[=+\-@\t\r]/.test(v) ? `'${v}` : String(v);
         const str = text.replace(/"/g, '""');
         return str.includes(",") || str.includes("\n") || str.includes('"') ? `"${str}"` : str;

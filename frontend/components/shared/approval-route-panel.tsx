@@ -40,7 +40,6 @@ interface ApprovalRoutePanelProps {
   isLoading: boolean;
   error: unknown;
   unownedHint?: string;
-  /** A link to the screen that fixes an unroutable request; replaces the hint when present. */
   unownedAction?: { href: string; label: string } | null;
   className?: string;
 }

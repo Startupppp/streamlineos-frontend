@@ -12,13 +12,6 @@ import { usePreviewTerritory } from "@/hooks/api/crm/settings/territories";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { statusToneClasses } from "@/lib/design-tokens";
 
-/**
- * "Which territory would this lead land in?"
- *
- * Not a record surface and deliberately not rendered by the engine: nothing here
- * is stored, so there is no record to describe. It is a question asked of the
- * server and its answer.
- */
 export function TerritoryPreviewPanel() {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");

@@ -5,17 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { RequirementRow } from "./requirement-row";
 import type { ProjectRequirement } from "@/hooks/api/inventory/projects";
 
-/**
- * `PATCH /inventory/projects/:projectId/requirements/:requirementId` had no
- * caller. A material line raised for the wrong quantity, the wrong date or the
- * wrong store could be reserved against and released, but never corrected — and
- * a line raised in error could not be cancelled, so it stayed on the site's
- * shortfall and in the at-risk count for good.
- *
- * The control is asserted from the requirement row the project screen renders,
- * which is the mount point a test of the sheet alone would have skipped.
- */
-
 const mockCan = jest.fn((_key: string): boolean => true);
 jest.mock("@/hooks/api/access", () => ({ useCan: (key: string) => mockCan(key) as boolean }));
 
@@ -69,7 +58,6 @@ const requirement: ProjectRequirement = {
   },
 };
 
-/** jsdom implements no pointer capture, which Radix's Select trigger calls. */
 beforeAll(() => {
   Element.prototype.hasPointerCapture = () => false;
   Element.prototype.releasePointerCapture = () => undefined;
@@ -122,11 +110,6 @@ it("sends the line the endpoint's own fields, quantity as a string", async () =>
   );
 });
 
-/**
- * `RESERVED`, `PARTIALLY_FULFILLED` and `FULFILLED` are what reserving and
- * dispatching make true. The endpoint refuses them and so does the form, rather
- * than offering a status that would claim stock is held that nothing is holding.
- */
 it("offers only the three statuses a planner may set", async () => {
   renderRow();
   await userEvent.click(screen.getByRole("button", { name: /edit line/i }));

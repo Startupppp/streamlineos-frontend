@@ -13,39 +13,16 @@ export interface FeatureCopy {
 }
 
 export interface FeatureRowProps extends FeatureCopy {
-  /** The 760 × 328 card (528 wide at 1024 / 768, 350 at 390). */
   visual: ReactNode;
-  /** Card on the left, copy on the right (Row 02). */
   flip?: boolean;
-  /** Row height and padding per frame — each row is a different height. */
   className?: string;
-  /** Extra width constraint for the title (Row 02 wraps at 1024 only). */
   titleClassName?: string;
-  /** Extra classes for the body copy — e.g. a narrower 1440 measure. */
   copyClassName?: string;
 }
 
-/**
- * Card chrome shared by every row visual — 760 wide, r26 (3888:5827);
- * 528 wide, r18.063 at 1024 (3888:10234); 528, r24 at 768 (3849:2);
- * 350, r24 at 390 (3893:3101). Each card sets its own height.
- */
 export const CARD =
   "relative w-190 shrink-0 overflow-clip rounded-product-card border border-product-card-border bg-product-card w1024:w-132 w390:w-87.5";
 
-/**
- * Feature row — each row reveals on its own: copy rises (the 01 index rolls,
- * title then body focus in a STEP apart), the card rises one STEP later, then the card plays its own sequence (motion brief, product.layout).
- * 1280 × 424, py 48, copy column and card spread by
- * `justify-between` (Row 01 3488:21999, Row 02 3488:22044, Row 03 3488:22078).
- *
- * At 1024 the same split holds inside 928 with a 360 copy column and py 32
- * (Row 01 3888:10229, Row 02 3888:10274, Row 03 3888:10308).
- *
- * At 768 the row stacks: centred 520 copy, 32 gap, the 528 card centred,
- * py 32 (3832:7496). At 390 it is copy (350) over the card with a 24 gap
- * and no padding; index → title 8, title → body 16 (3893:3096).
- */
 export const FeatureRow = ({
   index,
   title,

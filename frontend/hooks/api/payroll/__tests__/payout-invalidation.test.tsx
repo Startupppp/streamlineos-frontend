@@ -29,22 +29,6 @@ jest.mock("@/hooks/api/access", () => ({
 
 const mockedPost = apiClient.post as jest.Mock;
 
-/**
- * Marking a batch or an item paid/sent/failed, and importing a bank return,
- * change what `GET /payroll/runs` and the payroll command centre report — a run
- * moves towards PAID and the command centre's outstanding-payout tile drops.
- *
- * `queryKeys.payroll.run(id)` is `[..., "payroll", "runs", id]` and
- * `queryKeys.payroll.runs(params)` is `[..., "payroll", "runs", params]`, so
- * they diverge at index 3. TanStack matches invalidation by key PREFIX, so
- * invalidating the narrow per-run key can never reach the list — and
- * `usePayrollRuns` carries `staleTime: 60_000`, so the operator keeps reading a
- * minute-old run status after paying the batch.
- *
- * These assertions read `isInvalidated` off the query cache rather than spying
- * on `invalidateQueries`, so they pin the observable outcome and stay true
- * whichever key shape the hook chooses.
- */
 
 const RUN_ID = 3;
 const BATCH_ID = 7;
@@ -59,13 +43,6 @@ const VALIDATION_KEY = queryKeys.payroll.bankValidation(RUN_ID);
 
 const MONTH = "2026-01";
 const REPORT_PARAMS = { month: MONTH } as Record<string, unknown>;
-// Every payroll report response carries a server-computed `provisional` flag —
-// `run === null || !PAYROLL_LOCKED_STATUSES.includes(run.status)` — and the
-// summary, register, pivot and journal surfaces render it as "Figures are
-// provisional until the run is locked". Lock writes LOCKED, publish writes
-// PAYSLIPS_PUBLISHED and reopen writes REOPENED, so all three flip that flag.
-// The reports hang off `[..., "payroll", "reports", kind, params]`, which no
-// `payroll/runs` prefix reaches, and they carry `staleTime: 60_000`.
 const REPORT_KEYS = [
   queryKeys.payroll.reports("summary", REPORT_PARAMS),
   queryKeys.payroll.reports("register", REPORT_PARAMS),
@@ -79,9 +56,6 @@ const REPORT_KEYS = [
   queryKeys.payroll.reports("variance", { month: MONTH }),
   queryKeys.payroll.reports("journal", { month: MONTH }),
 ] as const;
-// A control: the run lifecycle must not be "fixed" by sweeping the whole
-// `payroll` namespace, which would refetch every unrelated payroll query on
-// screen. Templates are payroll data no run transition can change.
 const UNRELATED_KEY = queryKeys.payroll.templates({ limit: 20 });
 
 function seed(client: QueryClient) {
@@ -227,8 +201,6 @@ describe("locking a run invalidates its pre-flight payout surfaces", () => {
       await result.current.mutateAsync({ runId: RUN_ID });
     });
 
-    // The lock resolves the blockers the validation panel is rendering, and
-    // changes which payees a new batch may instruct.
     expect(invalidated(client, VALIDATION_KEY)).toBe(true);
     expect(invalidated(client, BATCHES_KEY)).toBe(true);
     expect(invalidated(client, RUNS_LIST_KEY)).toBe(true);

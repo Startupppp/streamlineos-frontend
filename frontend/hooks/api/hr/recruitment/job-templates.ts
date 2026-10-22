@@ -54,14 +54,12 @@ export interface JobTemplatesPage {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-/** Exactly the keys the backend's `.strict()` list schema accepts — any other key is a 400, not an ignored filter. */
 export interface JobTemplatesParams {
   type?: string;
   cursor?: string;
   limit?: number;
 }
 
-/** The half-typed posting the picker offers up so the server can fill only what is missing. */
 export interface JobTemplateDraft {
   title?: string;
   departmentId?: string;
@@ -95,11 +93,6 @@ function templateQueryParams(params: JobTemplatesParams | undefined, limit: numb
   return queryParams;
 }
 
-/**
- * The bounded library list a picker renders: the first keyset page, nothing
- * more. A picker that walked every page would hold a whole tenant's library in
- * memory to populate a dropdown nobody scrolls past the top of.
- */
 export function useJobTemplates(params?: JobTemplatesParams) {
   const queryParams = templateQueryParams(params, params?.limit ?? 100);
 
@@ -118,7 +111,6 @@ export function useJobTemplates(params?: JobTemplatesParams) {
   });
 }
 
-/** The whole keyset envelope, for a management screen that pages the library rather than picking from it. */
 export function useJobTemplatesPage(params?: JobTemplatesParams) {
   const queryParams = templateQueryParams(params, params?.limit ?? 20);
 
@@ -178,16 +170,6 @@ export function useDeleteJobTemplate() {
   });
 }
 
-/**
- * Asks the server to merge a template into the draft the recruiter has so far.
- *
- * A mutation because the draft travels in the body — a description can run to
- * ten thousand characters, which has no business in a query string — but it is
- * gated on `hr:requisitions:view` and invalidates nothing, because it is a read
- * of the template library and creates no posting. Gating it on `manage` would
- * hide the picker from every recruiter who may open the create form but not
- * curate the library.
- */
 export function useApplyJobTemplate() {
   return useAuthorizedMutation("hr:requisitions:view", {
     mutationKey: ["hr", "recruitment", "job-templates", "apply"],

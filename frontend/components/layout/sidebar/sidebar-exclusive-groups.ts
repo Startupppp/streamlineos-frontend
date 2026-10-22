@@ -29,7 +29,6 @@ export function resolveExclusiveOpenLabel(
   return alreadyOpen ?? labels[0] ?? null;
 }
 
-/** Every group open (collapsed = false). */
 export function allGroupsOpen(labels: string[]): Record<string, boolean> {
   const next: Record<string, boolean> = {};
   for (const label of labels) {
@@ -38,7 +37,6 @@ export function allGroupsOpen(labels: string[]): Record<string, boolean> {
   return next;
 }
 
-/** Merge stored collapse flags onto the current label set; unknown labels start open. */
 export function mergeCollapsedGroups(
   labels: string[],
   stored: Record<string, boolean> | null | undefined,

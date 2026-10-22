@@ -7,13 +7,6 @@ import { Ruler } from "./ruler";
 import { StatementTitle } from "./title";
 import { TIMELINE } from "./use-statement-seen";
 
-/**
- * 05 Statement — accent contrast plate: 1440 × 552 (Figma 3888:5969), 1024 × 528
- * (3888:10366), 768 × 528 (3832:7633), 390 × 371 (3893:3266).
- * Every child sits at its frame coordinate; motion lives in the client
- * leaves (`title`, `mark`, `ruler`, `dot-field`) on one shared timeline that
- * `StatementPlate` starts once the logo transition has opened the plate.
- */
 export const Statement = ({
   kicker,
   title,

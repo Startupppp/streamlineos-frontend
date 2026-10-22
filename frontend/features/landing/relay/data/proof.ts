@@ -1,8 +1,3 @@
-/**
- * 08 Proof — Figma 3488:22724. Every number is read from the StreamlineOS
- * code (Ask OS tool registry and proposal flow), not from customers; the quote
- * slots carry product statements, not testimonials.
- */
 export const proofMock = {
   badge: "ask os",
   title: {
@@ -53,7 +48,6 @@ export const proofMock = {
       },
     },
   ],
-  /** Hours column: 11 lit bars (one union asset) + 3 dim bars (3488:22760–62). */
   dimHours: 3,
 } as const;
 

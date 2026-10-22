@@ -69,10 +69,6 @@ export function EmployeesDirectoryStats({
           value={counts.data.pending}
           icon={MailQuestion}
           tone="amber"
-          // Its own card rather than a slice of Active. These people have an
-          // account and no acceptance: counting them as headcount is what made
-          // a two-person org report two active employees when one had never
-          // opened the invitation.
           hint="Invited, not yet accepted"
         />
       ) : null}

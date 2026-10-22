@@ -1,15 +1,6 @@
 import { z } from "zod";
 import type { HrSensitiveData } from "@/types/hr/core";
 
-/**
- * The sensitive-employee form contract: the Zod schema the form validates
- * against, and the two mappings between it and `HrSensitiveData`.
- *
- * Kept out of `sensitive-tab.tsx` because the mapping is where a money bug would
- * live — salary is stored in integer cents and edited as a decimal string — and
- * because §6 puts a feature's schema in its own `*-schema.ts` rather than inline
- * in the component that renders it.
- */
 
 const emptyOrValid = (schema: z.ZodString) =>
   schema.or(z.literal(""));

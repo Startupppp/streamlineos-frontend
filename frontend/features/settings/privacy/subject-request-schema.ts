@@ -10,7 +10,6 @@ export const subjectRequestSchema = z.object({
 
 const subjectFilter = z.string().trim().toLowerCase().email();
 
-/** The queue's `?subject=` filter: a valid email narrows the list, anything else is no filter. */
 export function readSubjectFilter(value: string): string | undefined {
   const parsed = subjectFilter.safeParse(value);
   return parsed.success ? parsed.data : undefined;
@@ -19,7 +18,6 @@ export function readSubjectFilter(value: string): string | undefined {
 export type SubjectRequestInput = z.input<typeof subjectRequestSchema>;
 export type SubjectRequestValues = z.output<typeof subjectRequestSchema>;
 
-/** Blank optional fields are omitted: the DTO is strict and `dueBy` is coerced to a date. */
 export function toExecutePayload(values: SubjectRequestValues): ExecuteSubjectRequestInput {
   return {
     kind: values.kind,

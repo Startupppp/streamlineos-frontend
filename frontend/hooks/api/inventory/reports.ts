@@ -91,12 +91,8 @@ function toReorderRowFromFlat(row: RawReorderRow): ReorderReportRow {
     locationId: row.locationId,
     locationCode: row.locationCode,
     onHand: row.onHand,
-    // A1. This was an eighth copy of the availability formula, two terms
-    // short — it ignored blocked, quality-held and picked-not-shipped stock.
     availableQty: row.availableQty,
     reorderPoint: row.reorderPoint,
-    // `deficit` is `suggestedQty` above, so the old inner branch was the same
-    // test twice and could never be reached.
     reorderQty: row.suggestedQty > 0 ? row.suggestedQty : null,
     deficit,
     costPrice: null,

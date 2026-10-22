@@ -34,14 +34,6 @@ interface ForecastDriftEvidenceSheetProps {
   warehouseId: number | null;
 }
 
-/**
- * C7 — the evidence behind a drift status.
- *
- * The split-half comparison the service made, and beneath it the stored forecast
- * versions the numbers were read from. Opening this changes nothing: every read
- * here is a GET over rows that already exist, so a degrading forecast still
- * looks degrading after somebody has looked at it.
- */
 export function ForecastDriftEvidenceSheet({
   open,
   onOpenChange,

@@ -21,13 +21,6 @@ import { usePutShelfLifeRule, type ShelfLifeRule } from "@/hooks/api/inventory/s
 
 const EVERY_CUSTOMER = "__default__";
 
-/**
- * Mirrors `putShelfLifeRuleSchema`. Zero is meaningful and is not the same as
- * absent: the backend deletes the row on zero, because a stored zero would read
- * on this screen as a rule somebody set. Ten years is the ceiling, because a
- * floor longer than any shelf life in the catalogue refuses every lot and
- * presents as "allocation is broken" rather than as a setting.
- */
 const schema = z.object({
   clientId: z.string(),
   minShelfLifeDays: z
@@ -49,8 +42,6 @@ export function ShelfLifeRuleSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const put = usePutShelfLifeRule();
-  // Gated inside the hook: an inventory administrator who does not also hold
-  // `crm:clients:read` gets no list rather than a 403 on every open.
   const canReadCustomers = useCan("crm:clients:read");
   const { data: clients } = useSimpleClientsList();
 

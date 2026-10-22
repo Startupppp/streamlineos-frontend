@@ -5,14 +5,8 @@ import { useState, useSyncExternalStore } from "react";
 import { useDynamicInView } from "@/features/landing/relay/hooks/animation/use-dynamic-in-view";
 import { VIEW_MARGIN } from "@/features/landing/relay/lib/view";
 
-/** Delay from a card entering view to its own sequence: card rise (STEP) settles first. */
 export const CARD_START = 240;
 
-/**
- * Card visibility for the product row visuals.
- * `played` latches true on first entry (sequences play once);
- * `inView` stays live so loops run only while the card is visible.
- */
 export const useCardPlay = () => {
   const [ref, inView] = useDynamicInView({ rootMargin: VIEW_MARGIN });
   const [played, setPlayed] = useState(false);
@@ -28,7 +22,6 @@ const subscribeReduced = (onChange: () => void) => {
   return () => query.removeEventListener("change", onChange);
 };
 
-/** `prefers-reduced-motion: reduce` — loops render their resting state instead. */
 export const useReducedMotionPref = () =>
   useSyncExternalStore(
     subscribeReduced,

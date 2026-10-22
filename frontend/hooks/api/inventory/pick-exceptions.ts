@@ -13,18 +13,9 @@ import {
   type PickExceptionStatus,
 } from "./picking";
 
-/**
- * B5 — the supervisor's side of picking.
- *
- * Split from `picking.ts` because it is a different job with a different
- * audience and a different permission: a reviewer works a queue across every
- * wave in their warehouses and is not necessarily anybody who may walk one.
- * Raising an exception stays beside the pick controls, where the picker is.
- */
 
 type QueryOptions<T> = Omit<UseQueryOptions<T, Error>, "queryKey" | "queryFn">;
 
-/** One row of the supervisor queue. */
 export interface PickExceptionSummary {
   pickLineId: number;
   pickListId: number;
@@ -52,7 +43,6 @@ export interface PickExceptionSummary {
   foundLocationCode: string | null;
   warehouseId: number | null;
   warehouseName: string | null;
-  /** Whether this row is what is keeping its wave open. */
   blocksWave: boolean;
 }
 
@@ -61,7 +51,6 @@ export interface PickExceptionListResponse {
   total: number;
   page: number;
   totalPages: number;
-  /** Open across the caller's warehouses, whatever the status filter says. */
   openCount: number;
 }
 
@@ -74,13 +63,6 @@ export interface PickExceptionFilters {
   ownership?: PickExceptionOwnership;
 }
 
-/**
- * B5, item 5 — the supervisor queue.
- *
- * A queue whose whole value is being current: an exception somebody resolved a
- * second ago must not still read as waiting, so it sits on the same short
- * staleTime as the wave board rather than the standard list tier.
- */
 export function usePickExceptions(
   filters?: PickExceptionFilters,
   options?: QueryOptions<PickExceptionListResponse>,
@@ -112,10 +94,6 @@ export function usePickExceptions(
   });
 }
 
-/**
- * Resolving unblocks the wave the exception was holding open, so the board and
- * the wave detail are both stale afterwards.
- */
 export function useResolvePickException() {
   const qc = useQueryClient();
   return useIdempotentMutation<

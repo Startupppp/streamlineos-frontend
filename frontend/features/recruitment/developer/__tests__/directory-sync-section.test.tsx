@@ -39,12 +39,6 @@ describe("DirectorySyncSection", () => {
     useDirectorySyncState.mockReset();
   });
 
-  /**
-   * The screen an administrator reads before writing "SSO: yes" on a security
-   * questionnaire. If it ever renders anything that reads as supported, the
-   * next thing that happens is somebody assuming IdP deprovisioning removes
-   * access to candidate data here — which it does not.
-   */
   it("says both are not available and never implies otherwise", () => {
     useDirectorySyncState.mockReturnValue({ data: BLOCKED, isLoading: false });
     render(<DirectorySyncSection />);
@@ -68,11 +62,6 @@ describe("DirectorySyncSection", () => {
     expect(screen.getByText(/Manual invitations and the members API/)).toBeInTheDocument();
   });
 
-  /**
-   * Renders nothing while loading rather than an empty shell. A momentary blank
-   * card headed "SSO" with no verdict is exactly the frame in which somebody
-   * screenshots it and concludes it is configurable.
-   */
   it("renders nothing while it does not know", () => {
     useDirectorySyncState.mockReturnValue({ data: undefined, isLoading: true });
     const { container } = render(<DirectorySyncSection />);

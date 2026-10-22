@@ -26,11 +26,6 @@ function severityClass(severity: string): string {
   return SEVERITY_CLASS[severity.toLowerCase()] ?? "bg-muted text-muted-foreground border-border";
 }
 
-/**
- * What the row itself says its window was, preferred over the registry's current
- * one. A finding is a claim about a moment, and the moment includes the
- * threshold that was in force.
- */
 function windowCaption(row: InvAnomalyRow): string | null {
   if (row.windowDays !== null && row.detector) {
     return `${row.detector.windowLabel} · measured over ${row.windowDays} day${row.windowDays === 1 ? "" : "s"} when raised`;

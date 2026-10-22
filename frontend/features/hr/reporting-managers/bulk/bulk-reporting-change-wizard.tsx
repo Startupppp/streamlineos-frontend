@@ -17,7 +17,6 @@ type SourceTab = "select" | "upload";
 
 const EMPTY_SELECTION: EmployeeSelectionValue = { employeeUserIds: [], manager: null };
 
-/** The preview is only offered once the chosen source names something to change. */
 export function resolveSource(tab: SourceTab, selection: EmployeeSelectionValue, rows: BulkReassignmentRowInput[]): BulkSource | null {
   if (tab === "upload") return rows.length > 0 ? { kind: "rows", rows } : null;
   const count = selection.employeeUserIds.length;
@@ -25,7 +24,6 @@ export function resolveSource(tab: SourceTab, selection: EmployeeSelectionValue,
   return { kind: "selection", employeeUserIds: selection.employeeUserIds, primaryManagerUserId: selection.manager.userId };
 }
 
-/** HR → Employees → Bulk reporting change (PRD §7.6): source → preview → review and commit. */
 export function BulkReportingChangeWizard() {
   const [tab, setTab] = useState<SourceTab>("select");
   const [selection, setSelection] = useState<EmployeeSelectionValue>(EMPTY_SELECTION);

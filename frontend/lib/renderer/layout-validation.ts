@@ -8,13 +8,6 @@ export interface LayoutProblem {
   readonly message: string;
 }
 
-/**
- * Reports what a description refers to but does not define.
- *
- * Descriptions will eventually be written by the system and edited by
- * administrators, so they have to be checkable — a silent omission would show up
- * as a column that renders nothing.
- */
 export function validateLayout(layout: RecordLayout): LayoutProblem[] {
   const problems: LayoutProblem[] = [];
   const known = new Set(layout.fields.map((field) => field.name));
@@ -40,12 +33,6 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
     });
   }
 
-  /*
-    A description with no columns at all is a singleton — organisation-wide quote
-    settings, say: one record, reached from a settings page, never listed. That
-    is a real shape, so it is not an error; what is an error is a list that has
-    columns and no primary one, which renders a mobile card with no title.
-  */
   if (layout.list.columns.length > 0 && !layout.list.columns.some((column) => column.primary))
     problems.push({
       where: "list.columns",
@@ -53,10 +40,6 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
     });
 
   for (const field of layout.fields) {
-    /*
-      There is no control that types a run of figures. A writable series would
-      render as a text input over an array, and submit "[object Object]".
-    */
     if (field.kind === "series" && !field.readOnly)
       problems.push({
         where: `fields (${field.name})`,
@@ -136,18 +119,9 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
       if (line.kind === "lines")
         problems.push({ where, message: "a line cannot itself hold rows" });
 
-      /*
-        A repeating group is edited, and a series is not editable. A column that
-        can only be read has no business in a row somebody is filling in.
-      */
       if (line.kind === "series")
         problems.push({ where, message: "a line cannot hold a series, which is never editable" });
 
-      /*
-        A row is the same shape on every row. A conditional, create-only or
-        edit-only column would make one row's header wrong for the next, and
-        the engine renders one header over the whole group.
-      */
       if (line.visibleWhen !== undefined)
         problems.push({ where, message: "visibleWhen on a line, which every row shares" });
       if (line.editOnly || line.createOnly)
@@ -188,8 +162,6 @@ export function validateLayout(layout: RecordLayout): LayoutProblem[] {
           where: `fields (${field.name})`,
           message: `referenceLabel on a ${field.kind} field, which points at nothing`,
         });
-      // A label naming a field the record does not carry renders the raw
-      // identifier on every row — visible, but wrong, and silently so.
       if (!known.has(field.referenceLabel))
         problems.push({
           where: `fields (${field.name}).referenceLabel`,

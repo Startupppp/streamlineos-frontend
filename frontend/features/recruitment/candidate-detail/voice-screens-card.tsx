@@ -13,14 +13,6 @@ interface Props {
   candidateId: number;
 }
 
-/**
- * Automated phone screens, and whether one actually took place.
- *
- * The card renders nothing at all when there are none and no vendor is
- * connected: an empty "Voice screens" panel on every candidate in every
- * organisation would be a permanent advertisement for a capability nobody here
- * has.
- */
 export function VoiceScreensCard({ candidateId }: Props) {
   const { data, isLoading, isError } = useCandidateVoiceScreens(candidateId);
 
@@ -61,11 +53,7 @@ function VoiceScreenRow({ screen }: { screen: VoiceScreenView }) {
         </div>
       </div>
 
-      {/*
-        The distinction the whole feature rests on. A screen that was requested
-        and never happened must not read like one that did, so the absence of a
-        completion says so in words rather than being left to the status badge.
-      */}
+      
       <p className="text-xs text-muted-foreground">
         {screen.completedBy === "PROVIDER"
           ? `Completed by the screening vendor · ${screen.answers.length} answers recorded`

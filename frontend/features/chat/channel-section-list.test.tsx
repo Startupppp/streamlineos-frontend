@@ -1,9 +1,3 @@
-/**
- * `useChatChannels` drains every cursor page into a single array, so the sidebar
- * holds every channel the member belongs to and mounts each one twice — compact
- * rail plus section. These assert the bound, that nothing is lost behind it, and
- * that the bound does not cost the list its semantics.
- */
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChannelSectionList } from "./channel-section-list";

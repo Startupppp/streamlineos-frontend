@@ -19,13 +19,6 @@ interface FieldProps {
 
 const YES_NO = ["Yes", "No"];
 
-/**
- * One screening question.
- *
- * The passing answer (`knockoutAnswer`) is not in the payload and must never be
- * inferred here — a knockout is decided by the server on submit, so this
- * renders the question and nothing about how it will be judged.
- */
 function ScreeningField({ question, value, error, onChange, disabled }: FieldProps) {
   const fieldId = `screening-${question.id}`;
   const handleInput = useCallback(

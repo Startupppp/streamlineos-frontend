@@ -36,10 +36,6 @@ describe("PendingSendsPanel", () => {
     jest.useRealTimers();
   });
 
-  /**
-   * A permanently empty box teaches people to stop looking at the place the
-   * warnings appear.
-   */
   it("renders nothing when nothing is waiting", () => {
     mockHolds.mockReturnValue({ data: [] });
     const { container } = render(<PendingSendsPanel />);
@@ -53,7 +49,6 @@ describe("PendingSendsPanel", () => {
   });
 
   it("counts down from the server's number, not the browser clock", () => {
-    // A browser with a wrong clock would otherwise show a closed window as open.
     render(<PendingSendsPanel />);
     act(() => {
       jest.advanceTimersByTime(3000);
@@ -80,7 +75,6 @@ describe("PendingSendsPanel", () => {
     mockCan.mockReturnValue(false);
     render(<PendingSendsPanel />);
     expect(screen.queryByRole("button", { name: /stop it/i })).not.toBeInTheDocument();
-    // They still see it, because seeing it is what makes someone go and stop it.
     expect(screen.getByText("Quote for Acme renewal")).toBeInTheDocument();
   });
 

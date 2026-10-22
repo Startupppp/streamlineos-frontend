@@ -11,14 +11,6 @@ import {
   Package,
 } from "lucide-react";
 
-/**
- * Nine spend categories, which is a taxonomy: Travel is not a notice and Meals
- * is not a warning. On the status scale they rendered as five looks, so a
- * report grouped by category had four pairs of rows that matched.
- *
- * Equipment takes indigo rather than the blue it shared with Travel before the
- * migration — the only entry whose hue is new rather than restored.
- */
 export const CATEGORY_CONFIG: Record<string, { icon: React.ComponentType<{ className?: string }>; label: string; bg: string; text: string }> = {
   Travel:            { icon: Plane,           label: "Travel",    bg: "bg-category-blue-surface",   text: "text-category-blue-ink" },
   Meals:             { icon: UtensilsCrossed, label: "Meals",     bg: "bg-category-orange-surface", text: "text-category-orange-ink" },

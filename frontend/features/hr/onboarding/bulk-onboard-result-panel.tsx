@@ -15,7 +15,6 @@ import type { BulkOnboardCommit } from "./use-bulk-onboard-flow";
 
 interface BulkOnboardResultPanelProps {
   commit: BulkOnboardCommit;
-  /** Rows that did not become employees, from before and during the commit. */
   report: BulkOnboardErrorReportRow[];
   onReset: () => void;
 }

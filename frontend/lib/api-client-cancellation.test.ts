@@ -6,16 +6,6 @@ process.env.NEXT_PUBLIC_API_URL ??= "http://api.test";
 
 import { apiClient, authedFetch, isApiError } from "@/lib/api-client";
 
-/**
- * The test that had to exist: it asserts the CALLER'S signal actually aborts the
- * request. The one that missed this mocked `authedFetch` and inspected
- * `init.signal` — which stayed truthy the whole time the client was discarding
- * it, first by overwriting `init.signal` with its own, then by dropping the
- * caller's signal entirely wherever `AbortSignal.any` is unavailable.
- *
- * So `fetch` itself is the mock here, and it never resolves until the signal it
- * was handed says otherwise.
- */
 
 interface FetchCall {
   readonly url: string;
@@ -26,11 +16,6 @@ const calls: FetchCall[] = [];
 
 type FetchImpl = typeof fetch;
 
-/**
- * jsdom ships no `Response`, so the doubles are asserted into that slot here and
- * nowhere else. Only `ok`, `status`, `statusText` and `json` are ever read on
- * this path.
- */
 function responseDouble(fields: {
   ok: boolean;
   status: number;
@@ -47,7 +32,6 @@ function responseDouble(fields: {
 
 const SESSION_MISS = responseDouble({ ok: false, status: 401 });
 
-/** The token lookup is itself a fetch, so the real request is two ticks away. */
 async function untilRequestIssued(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
@@ -56,7 +40,6 @@ function abortError(): DOMException {
   return new DOMException("The operation was aborted.", "AbortError");
 }
 
-/** Hangs until the signal it was given aborts — a real request that outlives Stop. */
 function hangingFetch(): FetchImpl {
   return (input, init) => {
     const url = String(input);

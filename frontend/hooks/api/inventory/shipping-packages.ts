@@ -8,14 +8,6 @@ import type { PackageStatus } from "@/features/inventory/lib";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
-/**
- * B6. These are the column names the API actually returns and accepts.
- *
- * They were declared as `variantId`/`qty`, which the backend's strict Zod
- * schemas reject outright on the way in and never emit on the way out — so
- * every package line rendered blank and every line save came back 400. A
- * contract that does not match is not a smaller contract, it is a broken one.
- */
 export interface PackageLine {
   id: number;
   productVariantId: number;

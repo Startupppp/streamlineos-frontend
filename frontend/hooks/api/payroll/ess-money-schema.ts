@@ -1,17 +1,5 @@
 import { z } from "zod";
 
-/**
- * Employee self-service money beyond the payslip: what someone is paid, what
- * they are owed and what they owe back.
- *
- * Every amount is a `decimal(15,2)` string. `balance` on a loan is computed
- * server-side and rounded to two places; `percent` on a salary component is
- * `decimal(7,4)`, so it arrives as `"40.0000"` and is a percentage, not a rate.
- *
- * `description` on a reimbursement is nullable in the database even though the
- * client type demanded a string — an expense filed with no note read as the
- * literal `undefined` in the UI.
- */
 
 export const salaryComponentTypeContract = z.enum([
   "EARNING",
@@ -98,7 +86,6 @@ export const essLoanContract = z.object({
   createdAt: z.string(),
 });
 
-/** Also a bare array, silently truncated at the service default of 100. */
 export const essLoansContract = z.array(essLoanContract);
 
 export type EssSalaryComponent = z.infer<typeof essSalaryComponentContract>;

@@ -10,18 +10,9 @@ import { describeSweepEntry } from "./lifecycle-format";
 interface RenewalSweepDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Names the page already holds, so an entry reads as a customer, not an id. */
   partyNames: ReadonlyMap<string, string>;
 }
 
-/**
- * Run the renewal sweep once, now.
- *
- * Confirmed rather than one-click: a sweep opens renewal opportunities, spends
- * AI credits drafting outreach and starts hold windows that end in mail unless
- * somebody cancels them. The answer stays in the dialog after it runs, because
- * the stand-downs and refusals are the part somebody has to act on.
- */
 export function RenewalSweepDialog({ open, onOpenChange, partyNames }: RenewalSweepDialogProps) {
   const sweep = useSweepLifecycleTriggers();
   const result = sweep.data;

@@ -68,7 +68,6 @@ export function useRecomputeCustomerHealth() {
   });
 }
 
-/** One contract with the evidence behind its score, newest signal first. */
 export function useCustomerLifecycle(customerLifecycleId: string | null) {
   return useGatedQuery("crm:lifecycle:view", {
     queryKey: queryKeys.crmLifecycle.detail(customerLifecycleId ?? ""),
@@ -104,12 +103,6 @@ export type LifecycleSignalKind =
   | "renewal-commitment"
   | "note";
 
-/**
- * The renewal book's list is filtered server-side by status, band and renewal
- * window — after a write the row may belong to a different page or none, which
- * the client cannot decide. So the detail is patched from the response and the
- * list prefix is marked stale rather than patched into a wrong membership.
- */
 function useLifecycleWriteSettled() {
   const qc = useQueryClient();
   return (customerLifecycleId: string, patch: Partial<LifecycleDetail>) => {
@@ -192,11 +185,6 @@ export function useCloseLifecycle() {
   });
 }
 
-/**
- * Walk the renewal book and hand what is due to the outbound loop. Spends AI
- * credits and opens hold windows, hence its own key and an idempotency key so a
- * retried press is not a second sweep.
- */
 export function useSweepLifecycleTriggers() {
   return useAuthorizedIdempotentMutation<LifecycleSweepResult, Error, { limit?: number }>(
     "crm:lifecycle-triggers:run",
@@ -213,7 +201,6 @@ export function useSweepLifecycleTriggers() {
   );
 }
 
-/** The sweep's decision for one contract — "look at this one now", not an override. */
 export function useConsiderLifecycleTrigger() {
   return useAuthorizedIdempotentMutation<LifecycleSweepEntry, Error, string>(
     "crm:lifecycle-triggers:run",

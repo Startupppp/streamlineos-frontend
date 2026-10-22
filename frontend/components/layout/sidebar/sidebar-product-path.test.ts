@@ -36,7 +36,6 @@ describe("a pathname resolves to a product through the navigation model", () => 
     expect(getProductFromPathname("/nothing-here")).toBe("home");
   });
 
-  // An exception that navigation has started covering is dead weight that outlives its reason.
   it("keeps no exception that the navigation model already answers", () => {
     const redundant = PRODUCT_PATH_EXCEPTIONS.filter((exception) =>
       NAVIGABLE_HREFS.has(exception.prefix),

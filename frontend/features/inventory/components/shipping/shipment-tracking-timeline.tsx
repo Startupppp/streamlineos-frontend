@@ -27,17 +27,6 @@ interface ShipmentTrackingTimelineProps {
   trackingNumber: string | null | undefined;
 }
 
-/**
- * B7, item 4 — the journey a parcel has actually been reported to have taken.
- *
- * This surface used to say "carrier integrations coming soon", which was wrong
- * in both directions: it promised something nobody was building, and it hid a
- * contract that has been live all along. Tracking events are deduplicated by the
- * carrier's own event id, refuse to move a shipment backwards, and are recorded
- * even when they are declined — so the record is complete whether the events
- * arrive from an integration or from somebody at a desk reading a courier's
- * website.
- */
 export function ShipmentTrackingTimeline({
   shipmentId,
   trackingNumber,
@@ -59,9 +48,6 @@ export function ShipmentTrackingTimeline({
   function handleRefresh(): void {
     refresh.mutate(shipmentId, {
       onSuccess: (result) => {
-        // Three different answers, said differently. Reporting "up to date" when
-        // there was nobody to ask is how a warehouse comes to believe a courier
-        // is being polled.
         if (!result.polled) {
           toast.info("This carrier is tracked manually — record updates by hand.");
         } else if (result.deadLettered) {
@@ -155,8 +141,7 @@ export function ShipmentTrackingTimeline({
                   >
                     {SHIPMENT_STATUS_LABEL[event.status]}
                   </Badge>
-                  {/* The exact instant beside the readable one: a tracking
-                      history has to be able to answer "when exactly". */}
+                  
                   <time
                     dateTime={event.occurredAt}
                     title={formatShortDate(event.occurredAt)}

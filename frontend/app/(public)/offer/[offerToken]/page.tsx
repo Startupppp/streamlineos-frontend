@@ -105,13 +105,7 @@ export default async function OfferAcceptancePage({ params }: Props) {
             <CardDescription>Please review the details below and respond.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-5">
-            {/*
-              Passed as children so it renders between the offer's terms and the
-              Accept button, where a candidate reads it — and stays server-side
-              while doing so. This page is opened from an email on a phone, and
-              the breakdown is the reason it was opened: it belongs in the first
-              HTML rather than behind a hydration the connection may not finish.
-            */}
+            
             <OfferActionIsland offer={offer} token={offerToken}>
               <CtcBreakdownPanel preview={offer.ctcPreview} currency={offer.currency} />
             </OfferActionIsland>

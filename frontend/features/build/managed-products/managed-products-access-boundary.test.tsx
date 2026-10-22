@@ -1,15 +1,3 @@
-/**
- * Access boundary tests for managed-products from the frontend.
- *
- * Covers three assertions the backend e2e spec cannot:
- *   1. A denied page state renders denial UI, not an empty list (the FE-47 trap).
- *   2. A not-found (404) page state renders not-found UI, not an empty list.
- *   3. The query cache is scoped per (orgId, userId) so tenant A cannot read
- *      tenant B's cached data in the same browser session.
- *
- * The row-action permission tests (canUpdate/canDelete gating) already live in
- * managed-product-table-columns.permission.test.tsx and are not duplicated here.
- */
 import "./managed-products-page.test-fixtures";
 import { render, screen } from "@testing-library/react";
 import { ManagedProductsPage } from "./managed-products-page";

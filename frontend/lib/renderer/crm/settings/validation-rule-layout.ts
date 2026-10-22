@@ -1,38 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * A validation rule, as data — the list and the form both.
- *
- * This description is the reason `visibleWhen` exists. A validation rule is one
- * record with fifteen arms: a `regex` rule carries a pattern, a `numeric_min`
- * carries a number, a `conditional_required` carries a field and a value it must
- * hold, and the rest carry none of them. Before the vocabulary could say "only
- * when", the choice was a hand-written sheet with five branches in it or a
- * generated form that showed all four config fields to everybody — and a form
- * offering a regex box on a "required" rule is worse than the sheet it replaces.
- *
- * The condition is domain rather than presentation, which is what makes the rest
- * follow: a pattern is not *hidden* on a numeric rule, it is not part of that
- * record. So it is not validated — `configPattern` is `required` and a numeric
- * rule still submits — and it is not sent, so the API is never stored a leftover
- * pattern that nobody can see and the next reader has to explain.
- *
- * `entityType` is `createOnly`. Which entity a rule governs is decided once: the
- * update endpoint accepts the key and the old sheet rendered the control
- * disabled, which is a control that looks broken rather than one that is not
- * offered.
- *
- * The rule *type* is where the hand-written table kept a fifteen-entry
- * `RULE_TYPE_COLORS` map naming a status surface, ink and rule class per type.
- * Described here, each type declares which of the five tones it belongs to and
- * the engine paints it, so the dark pairing comes from the token rather than
- * from fifteen strings somebody has to keep in step.
- *
- * `pipelineId` is a `reference` whose name lives in `pipelineName`, so the list
- * shows the pipeline a rule is scoped to rather than its identifier, and the
- * form asks the surface for a picker. `pipeline` has no page in the product, so
- * the engine renders the name as text rather than as a link to nowhere.
- */
 
 const CONFIG_NUMERIC = ["numeric_min", "numeric_max", "currency_min", "currency_max"] as const;
 

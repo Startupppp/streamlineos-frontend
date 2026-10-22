@@ -15,7 +15,6 @@ import {
   type OrgModule,
 } from "@/hooks/api/access/org-modules-normalize";
 
-/** Deferred so the sidebar, which imports this module, does not carry Zod. */
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -59,8 +58,6 @@ export function useOrgModules() {
       normalizeOrgModulesResponse(
         await apiClient.get("/access/org-modules", undefined, signal, orgModulesContract),
       ),
-    // Also protects an in-memory query cache created by an older hot-reloaded
-    // bundle that stored the response envelope instead of the list.
     select: normalizeOrgModulesResponse,
     staleTime: 60_000,
     enabled: canManage,

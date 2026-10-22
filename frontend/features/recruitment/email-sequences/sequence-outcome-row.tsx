@@ -6,14 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEmailSequenceMetrics } from "@/hooks/api/hr/recruitment/email-sequences";
 import type { EnrollmentStatus } from "@/hooks/api/hr/recruitment/email-sequences-schema";
 
-/**
- * Why a campaign stopped sending to someone, in words a recruiter can act on.
- *
- * Each of these is a different problem. "Held — no consent" is the recruiter's
- * to fix by collecting consent; "applied" is the campaign having worked;
- * "suppressed" is an address nobody may mail. Rendering them all as "stopped"
- * would hide the only distinction that matters.
- */
 const STATUS_LABEL: Record<EnrollmentStatus, string> = {
   ACTIVE: "In progress",
   COMPLETED: "Finished",
@@ -55,21 +47,10 @@ function Figure({ label, value }: { label: string; value: number }) {
 export function SequenceOutcomeRow({ sequenceId, enrollments }: Props) {
   const [open, setOpen] = useState(false);
 
-  /*
-    Mounted closed. `enabled` keeps the request from firing until a recruiter
-    asks for it, because this row renders once per sequence and eagerly
-    fetching would put one request per card on a page that already has the
-    enrollment statuses in hand.
-  */
   const { data, isLoading, isError } = useEmailSequenceMetrics(sequenceId, open);
 
   const handleToggle = useCallback(() => setOpen((wasOpen) => !wasOpen), []);
 
-  /*
-    Derived from the enrollments the list already carries, so the breakdown
-    costs nothing and is right even when the metrics request is refused,
-    failing or not yet asked for.
-  */
   const breakdown = useMemo(() => {
     const counts = new Map<EnrollmentStatus, number>();
     for (const enrollment of enrollments) {
@@ -103,12 +84,6 @@ export function SequenceOutcomeRow({ sequenceId, enrollments }: Props) {
           {isLoading ? (
             <Skeleton className="h-10 w-full" />
           ) : isError || !data ? (
-            /*
-              Says which numbers are missing rather than blanking the row. The
-              breakdown above is still on screen and still correct, and a
-              recruiter who cannot tell the difference between "zero sent" and
-              "we could not load it" will conclude the campaign is broken.
-            */
             <p className="text-xs text-muted-foreground">
               Send and reply counts could not be loaded. The enrollment breakdown above is
               unaffected.

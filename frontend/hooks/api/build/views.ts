@@ -14,6 +14,7 @@ import type {
   CreateWorkspaceViewInput,
   UpdateWorkspaceViewInput,
 } from "@/types/projects";
+import { viewsListQueryOptions } from "./views-read-options";
 
 const viewPageContract = lazyContract(() =>
   import("@/hooks/api/build/workspace-schema").then((m) => m.viewPageContract),
@@ -29,13 +30,6 @@ const noContentLazy = lazyContract(() =>
 );
 
 type ViewPage = { data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } };
-
-export function viewsListQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: [...buildWorkQueryKeys.projects.views(projectId), params ?? {}],
-    staleTime: 60_000,
-  };
-}
 
 export function useViews(
   projectId: number,

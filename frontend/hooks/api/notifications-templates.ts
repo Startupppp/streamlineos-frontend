@@ -189,7 +189,6 @@ export const usePreviewTemplate = () => {
   });
 };
 
-/** Renders and delivers one template to one member, through the real channel. */
 export const useTestSendNotificationTemplate = () =>
   useAuthorizedMutation<
     { recipientId: string; channel: string; sentAt: string },
@@ -201,7 +200,6 @@ export const useTestSendNotificationTemplate = () =>
       apiClient.post(`/notification-templates/${templateId}/test`, dto, undefined, templateTestSendContract),
   });
 
-/** The built-in transactional emails, rendered with sample data. */
 export const useEmailTemplatePreviews = () =>
   useGatedQuery("settings:email-templates:manage", {
     queryKey: platformCoreQueryKeys.notifications.emailTemplatePreviews(),

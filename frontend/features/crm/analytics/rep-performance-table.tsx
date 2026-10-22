@@ -16,22 +16,6 @@ import { useSalesLeaderboard } from "@/hooks/api/leads";
 import type { SalesLeaderboardEntry } from "@/types/leads";
 import { AnalyticsChartCard } from "./analytics-chart-card";
 
-/**
- * Rep performance.
- *
- * No table is written here. The columns, the right-aligned tabular figures, the
- * conversion rate's tone and the mobile card all come from
- * `REP_PERFORMANCE_LAYOUT`; what is left is the card it sits in and which of the
- * four states the reader is actually in.
- *
- * It was in none of them before. The card had no loading branch at all, so a
- * query still in flight rendered "No rep activity in this period" — a product
- * telling somebody their team did nothing, at the moment it did not yet know.
- * The status comes from the same leaderboard query the analytics page already
- * reads: identical key, so Query serves it from cache and no second request is
- * made. Rows still arrive as a prop, because the page holds them.
- */
-
 interface RepPerformanceTableProps {
   leaderboard: SalesLeaderboardEntry[] | undefined;
 }

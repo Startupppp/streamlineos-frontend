@@ -18,42 +18,10 @@ import {
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";
 
-/**
- * INV-21, the transfer leg: stock is moved from one bin to another and the
- * books follow it the whole way.
- *
- * A transfer is not one movement, and that is the reason this spec is longer
- * than the adjust leg. Dispatch takes the goods off the source shelf and puts
- * them into the warehouse's transit location; completion takes them out of
- * transit and lands them at the destination. Two commands, four ledger rows,
- * and a window in between where the stock is on neither shelf — the state a
- * stocktake has to be able to explain. Asserting only the endpoints would pass
- * against an implementation that teleported the goods and left transit
- * permanently holding them.
- *
- * The stock being moved is received first, through the receiving chain, so the
- * source bin holds a known quantity on a known grain. Transferring whatever
- * happened to be in a bin makes the arithmetic depend on other suites.
- */
 
 const TRANSFER_QTY = 3;
-/** Received into the source bin first, so there is more there than we move. */
 const STOCKED_QTY = 6;
 
-/**
- * The New Transfer sheet's pickers carry no accessible name — `Combobox` takes
- * an `ariaLabel` and this call site does not pass one — so they cannot be
- * addressed the way every other form in these specs is. They are taken in DOM
- * order instead, which the component fixes: one `WarehouseLocationPicker`
- * renders From Warehouse then From Location, and the second renders To
- * Warehouse then To Location.
- *
- * Position is a weak address, so nothing rests on it. The option is matched on
- * its own unique code rather than its name, the trigger is then asserted to
- * show that entity, and the request body is checked against the ids that were
- * intended — so a picker taken in the wrong order swaps `from` and `to` and
- * fails on the request, loudly, rather than moving stock the wrong way quietly.
- */
 const PICKER = {
   fromWarehouse: 0,
   fromLocation: 1,
@@ -82,7 +50,6 @@ async function choosePositional(
   await expect(control).toContainText(triggerShows);
 }
 
-/** The four rows a completed transfer must have written, in order of travel. */
 function transferMovements(
   ledger: LedgerEntry[],
   transferId: number,
@@ -102,18 +69,6 @@ function transferMovements(
   };
 }
 
-/**
- * The oracle, the stocked bins and the session, as fixtures rather than as
- * hooks.
- *
- * `api` is worker-scoped, so one authenticated API context is built per worker
- * and disposed when that worker ends. `seeded` stocks the source bin through the
- * real receiving chain, so the quantity being moved is one this suite put there
- * and the arithmetic in the test does not depend on what any other suite left
- * behind. It carries its own budget because it is several sequential round trips
- * against a shared remote cache — a single list read here has been measured at
- * ten seconds — and the test's own budget is for the four screens it drives.
- */
 const test = base.extend<
   { signedIn: void },
   { api: ApiOracle; seeded: { target: SeedTarget; destination: WarehouseLocation | undefined } }
@@ -151,12 +106,6 @@ const test = base.extend<
   ],
 });
 
-/**
- * Runtime-selected, because whether this suite can run is a property of the
- * environment rather than of the code: with no seeded tenant there is nothing
- * for it to assert against. The reason rides along as an annotation so a skipped
- * run still says which variables are missing.
- */
 const HAS_TENANT = hasTenantEnv();
 
 const describeWithTenant: (title: string, details: TestDetails, callback: () => void) => void =
@@ -167,8 +116,6 @@ const TENANT_DETAILS: TestDetails = HAS_TENANT
   : { annotation: { type: "skip", description: SKIP_REASON } };
 
 describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
-  // Four screens, three commands and a `next dev` compile of each route on first
-  // visit. The default budget covers the click, not the compile.
   test.describe.configure({ timeout: 180_000 });
 
   test("a transfer walks the stock from one bin to another and the ledger follows", async ({
@@ -204,8 +151,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
     await choosePositional(sheet, PICKER.fromLocation, target.bin.code, target.bin.name);
     await choosePositional(sheet, PICKER.toWarehouse, target.warehouseName, target.warehouseName);
     await choosePositional(sheet, PICKER.toLocation, destination!.code, destination!.name);
-    // Matched on the SKU, which is unique, and confirmed by the product name,
-    // which is what the trigger renders. Two different strings on purpose.
     await choosePositional(
       sheet,
       PICKER.variant,
@@ -234,8 +179,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
     const created = await createResponse;
     expect(created.status(), await created.text()).toBeLessThan(300);
 
-    // Direction is the whole content of a transfer, and the two pickers are
-    // addressed by position. This is where that becomes safe.
     expect(sent.fromLocationId).toBe(target.bin.id);
     expect(sent.toLocationId).toBe(destination!.id);
     expect(sent.lines?.[0]?.productVariantId).toBe(target.variantId);
@@ -252,10 +195,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
 
     await expect(page.getByText("Transfer created")).toBeVisible({ timeout: 20_000 });
 
-    // A created transfer has moved NOTHING. Asserting that before dispatching
-    // is what separates "the paperwork exists" from "the stock moved", and an
-    // implementation that debited the source on create would pass every
-    // later assertion in this file without it.
     expect(await onHandFor(api, target.variantId, target.bin.id)).toBe(sourceBefore);
 
     await page.goto(`/inventory/stock/transfers/${transferId}`);
@@ -266,8 +205,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
     await clickAndAwait(page, "Reserve Transfer", `/inventory/stock/transfers/${transferId}/reserve`);
     await expect(page.getByText("Transfer reserved")).toBeVisible({ timeout: 20_000 });
 
-    // Reserving holds stock; it does not move it. Same reasoning as above, and
-    // the two are routinely confused because both change the document's status.
     expect(await onHandFor(api, target.variantId, target.bin.id)).toBe(sourceBefore);
 
     await clickAndAwait(
@@ -277,10 +214,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
     );
     await expect(page.getByText("Transfer dispatched")).toBeVisible({ timeout: 20_000 });
 
-    // Dispatch is the first real movement: off the source shelf and into
-    // transit. The goods are now on neither shelf, and the destination must not
-    // have been credited yet — a transfer that credits on dispatch shows stock
-    // in two buildings at once for the length of the journey.
     let issue: LedgerEntry | undefined;
     await expect(async () => {
       const ledger = await recentLedger(api, target.variantId, 25);
@@ -311,8 +244,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
         res.url().includes(`/inventory/stock/transfers/${transferId}/complete`) &&
         res.request().method() === "POST",
     );
-    // The sheet arrives pre-filled with what was dispatched, which is what a
-    // storeman confirms in the ordinary case.
     await receiveSheet.getByRole("button", { name: "Confirm Receipt" }).click();
     const completed = await completeResponse;
     expect(completed.status(), await completed.text()).toBeLessThan(300);
@@ -341,9 +272,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
         Number(arrival!.quantityAfter),
       );
 
-      // Conservation. The source is down by exactly what the destination is up
-      // by, and nothing was created or lost in transit — which is the one thing
-      // a two-command move can silently get wrong.
       expect(await onHandFor(api, target.variantId, target.bin.id)).toBe(
         sourceBefore - TRANSFER_QTY,
       );
@@ -361,15 +289,6 @@ describeWithTenant("inventory · stock transfer", TENANT_DETAILS, () => {
   });
 });
 
-/**
- * Click a lifecycle button and wait for the command it stands for.
- *
- * Waiting for the RESPONSE rather than for the next button to appear: these
- * actions re-render the header, so "the next button is on screen" is satisfied
- * by a stale render as well as by a successful command, and a failed command
- * leaves the old button in place — which reads as a slow click rather than a
- * refusal.
- */
 async function clickAndAwait(page: Page, button: string, path: string): Promise<void> {
   const response = page.waitForResponse(
     (res) => res.url().includes(path) && res.request().method() === "POST",

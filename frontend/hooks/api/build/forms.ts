@@ -15,6 +15,10 @@ import type {
   FormType,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  formsListQueryOptions,
+  formDetailQueryOptions,
+} from "./forms-read-options";
 
 const formListContract = lazyContract(() =>
   import("@/hooks/api/build/forms-schema").then((m) => m.formResponseContract),
@@ -158,22 +162,5 @@ export function useSubmitForm(projectId: number, formId: number) {
       });
     },
   });
-}
-
-export function formsListQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.forms.list(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    staleTime: 60_000,
-  };
-}
-
-export function formDetailQueryOptions(projectId: number, formId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, formId),
-    staleTime: 60_000,
-  } as const;
 }
 

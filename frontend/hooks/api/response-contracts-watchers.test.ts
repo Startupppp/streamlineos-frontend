@@ -5,17 +5,6 @@ import {
   supportTicketWatchersContract,
 } from "@/hooks/api/watchers-schema";
 
-/**
- * Both watcher lists shipped the same defect, and in both the consequence was
- * that UN-following became unreachable: `isFollowing` / `isWatching` is an
- * equality test on `userId`, `userId` was `undefined` on every row, so the
- * component could only ever take the follow branch. `follow` uses
- * `onConflictDoNothing`, so every repeat click returned success and changed
- * nothing.
- *
- * The ACCEPTS half is the payload the services build today; the BITE half is the
- * payload that shipped.
- */
 
 const SUPPORT_WATCHER = {
   id: 5,
@@ -67,11 +56,6 @@ describe("the watcher contracts accept what the services actually build", () => 
 });
 
 describe("BITE — the watcher payloads that actually shipped are rejected", () => {
-  /**
-   * Support: the row shipped `userMembershipId` and a `membership` join, with no
-   * `user` columns selected at all. `isFollowing` was permanently false, the star
-   * never filled, and `DELETE /support/:id/follow` was unreachable from the UI.
-   */
   it("rejects the support row with the identity left under membership", () => {
     const shipped = {
       id: 5,
@@ -88,12 +72,6 @@ describe("BITE — the watcher payloads that actually shipped are rejected", () 
     expect(paths).toEqual(expect.arrayContaining(["userId", "user"]));
   });
 
-  /**
-   * Build: the `ticket_watchers.user` relation points at `organization_members`,
-   * so `w.user` was a MEMBERSHIP row — no name, no email, no image. Every avatar
-   * fell back to "?" and `key={w.userId}` was `undefined` on every row, which is
-   * also a duplicate-React-key bug.
-   */
   it("rejects the build row whose user is really an organization_members row", () => {
     const shipped = {
       id: 12,

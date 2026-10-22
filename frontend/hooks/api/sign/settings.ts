@@ -41,8 +41,6 @@ export function useUpdateSignSettings() {
   });
 }
 
-// Both sweeps come back whether or not they have ever run: an absent run is reported as
-// neverRun, which is the state SignOS actually shipped in and the one a screen must not hide.
 export function useSignSweepStatus() {
   return useGatedQuery("sign:admin:manage", {
     queryKey: growthAndSignQueryKeys.signAdmin.sweepStatus(),

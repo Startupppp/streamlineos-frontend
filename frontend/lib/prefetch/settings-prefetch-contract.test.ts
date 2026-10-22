@@ -1,11 +1,3 @@
-/**
- * @jest-environment node
- */
-/**
- * The settings prefetch seam must refuse a drifted body rather than hydrate it.
- * `settings-prefetch.test.ts` mocks `serverGet`, so the envelope parser never
- * runs there; this file mocks `fetch` so the real contract executes.
- */
 jest.mock("server-only", () => ({}));
 
 jest.mock("@/lib/get-server-auth", () => ({
@@ -73,7 +65,6 @@ interface Reported {
 
 let reports: Reported[] = [];
 
-/** `/me/access` answers first so the prefetch gate opens; every other path gets `body`. */
 function respondWith(body: unknown): void {
   global.fetch = jest.fn(async (input: RequestInfo | URL) => {
     const url = String(input);

@@ -33,13 +33,6 @@ export function useRecruitingAnalytics(window: AnalyticsWindow) {
   });
 }
 
-/**
- * The URL a browser downloads the funnel from.
- *
- * Built here rather than fetched through `apiClient`, because the response is a
- * file rather than an envelope and the browser saves it better than any code
- * here could.
- */
 export function funnelCsvUrl(window: AnalyticsWindow): string {
   const base = process.env.NEXT_PUBLIC_API_URL ?? "";
   const query = new URLSearchParams({ from: window.from, to: window.to });

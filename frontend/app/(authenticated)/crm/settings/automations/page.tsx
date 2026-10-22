@@ -30,18 +30,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { AUTOMATION_LAYOUT } from "@/lib/renderer/crm/settings/automation-layout";
 import type { CrmAutomationRule } from "@/types/crm";
 
-/**
- * Automations.
- *
- * The list is generated; the builder it opens is not, and is not going to be —
- * an automation is a graph of nodes and branches, which no field vocabulary
- * describes. What moved onto the engine is the part that was a table pretending
- * not to be one.
- *
- * A row's state is one badge instead of three separate signals — a "Draft" chip
- * beside the name, a version line under it and a switch in its own column all
- * said something about whether the rule was running.
- */
 export default function AutomationsPage() {
   const router = useRouter();
   const layout = useTenantLayout(AUTOMATION_LAYOUT);

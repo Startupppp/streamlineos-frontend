@@ -3,15 +3,6 @@ import userEvent from "@testing-library/user-event";
 import { CreateWorkspaceDialog } from "./create-workspace-dialog";
 import { DEFAULT_ORG_COUNTRY, DEFAULT_ORG_TIMEZONE } from "@/lib/location/org-locale-options";
 
-/**
- * BUG-HRMS-009. Organization create asked for a name and an optional billing
- * email, so country stayed null and the time zone stayed `Asia/Kolkata` from the
- * column default for every organization — including one created in another
- * country, whose every leave date and payroll cut-off then read from IST.
- *
- * The defaults are India-first and must keep working: an operator who changes
- * nothing has to get exactly what they got before the field existed.
- */
 
 const createMutateAsync = jest.fn();
 const switchMutate = jest.fn();

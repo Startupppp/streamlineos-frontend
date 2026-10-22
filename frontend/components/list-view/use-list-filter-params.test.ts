@@ -11,11 +11,6 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-/**
- * Deliberately not a ticket list. The point of the spec-driven interface is that
- * a page with different vocabulary and different parameter names needs no code
- * in the hook, so the test that proves it must not be Build-shaped.
- */
 const PAYROLL_RUN_SPEC: ListFilterSpec = {
   categories: [
     { key: "state", label: "State", arity: "multi", params: ["runState"] },

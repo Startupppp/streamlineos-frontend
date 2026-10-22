@@ -1,12 +1,3 @@
-/**
- * What the forecast on screen actually is.
- *
- * These mirror `deals-analytics.service.ts` and `forecast-cold-start.ts` on the
- * backend exactly, including the discriminated union. The union is the point: a
- * boolean and some optional fields would let a surface render a learned model's
- * accuracy next to a naive total by forgetting a check, and this is precisely
- * the number people plan a quarter around.
- */
 
 export interface ForecastAccuracy {
   count: number;
@@ -29,15 +20,6 @@ export interface ForecastReadiness {
   lostDealsNeeded: number;
 }
 
-/**
- * Why the tenant is on the weighted arithmetic rather than a model.
- *
- * `insufficient-history` and `not-trained-yet` are not the same message and must
- * not be collapsed: the first is the tenant's gap and readiness says how much is
- * missing, the second means they qualify and no model has earned acceptance yet.
- * The four rejection reasons say a fit ran and was refused, which is a different
- * and better thing to be told than silence.
- */
 export type ForecastNaiveReason =
   | "insufficient-history"
   | "not-trained-yet"

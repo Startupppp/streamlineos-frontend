@@ -6,11 +6,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 import { useMyInternalApplications } from "@/hooks/api/hr/recruitment/internal-mobility";
 
-/**
- * Plain words for a pipeline status, because the applicant is an employee and
- * not a recruiter. `SHORTLISTED` on a screen somebody reads about their own
- * career is internal vocabulary leaking out of a board.
- */
 const STATUS_LABELS: Record<string, string> = {
   APPLIED: "Received",
   SHORTLISTED: "In review",
@@ -21,13 +16,6 @@ const STATUS_LABELS: Record<string, string> = {
   WITHDRAWN: "Withdrawn",
 };
 
-/**
- * What the applicant is told about their manager's part in it.
- *
- * `NOT_REQUIRED` says so outright rather than showing nothing, because an
- * empty space here reads as "still waiting" and the applicant would go on
- * waiting for an approval nobody was ever asked for.
- */
 const MANAGER_LABELS: Record<string, string> = {
   PENDING: "Manager approval pending",
   APPROVED: "Manager approved",
@@ -38,11 +26,6 @@ const MANAGER_LABELS: Record<string, string> = {
 export function MyInternalApplicationsSection() {
   const { data: applications = [], isLoading, isError } = useMyInternalApplications();
 
-  /*
-    Silent on failure and silent when empty. This sits above a list of openings
-    somebody came here to browse, and an error card about a section they have
-    nothing in would be noise on the one screen that has to stay inviting.
-  */
   if (isError) return null;
 
   if (isLoading) {

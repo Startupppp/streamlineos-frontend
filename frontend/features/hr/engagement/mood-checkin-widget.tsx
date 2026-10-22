@@ -14,7 +14,6 @@ export function MoodCheckinWidget() {
   const checkin = useMoodCheckin();
   const { data: history } = useMyMoodHistory();
 
-  // Local calendar day: toISOString() is UTC and logged the wrong day east of UTC.
   const todayStr = getTodayString();
   const todayEntry = history?.find((h) => h.date === todayStr);
 

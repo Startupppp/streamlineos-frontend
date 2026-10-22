@@ -14,15 +14,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/**
- * How one vault document is PRESENTED: its type vocabulary, the icon and badge
- * class each type gets, the antivirus verdict chip, and the delete affordance.
- *
- * `vault-document-list.tsx` owns the list itself — fetching, the delete
- * confirmation and the empty/loading states. This is the half that changes when
- * a new document type or scan verdict is added, and none of it touches the
- * candidate vault hooks.
- */
 
 export const DOCUMENT_TYPES = [
   { value: "AADHAR", label: "Aadhar Card" },

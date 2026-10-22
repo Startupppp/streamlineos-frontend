@@ -10,13 +10,6 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 import type { LiveHold } from "@/types/crm/autonomy";
 
-/**
- * Counts down from the server's number rather than from the clock.
- *
- * A browser whose clock is wrong would otherwise show a window that has closed
- * as still open, or the reverse. The send is decided by the workflow; this is
- * only a readout, and it stops at zero rather than going negative.
- */
 function useCountdown(startingFrom: number): number {
   const [remaining, setRemaining] = useState(startingFrom);
 
@@ -65,8 +58,6 @@ function HoldRow({
             "tabular-nums text-sm font-medium",
             urgent ? statusToneClasses("danger").ink : statusToneClasses("warning").ink,
           )}
-          // Announced only as it gets urgent — a live region ticking every
-          // second would make a screen reader unusable.
           aria-live={urgent ? "polite" : "off"}
         >
           {remaining > 0 ? `${remaining}s` : "sending…"}
@@ -88,13 +79,6 @@ function HoldRow({
   );
 }
 
-/**
- * The window in which a send can still be stopped.
- *
- * Nobody approves anything here — the only control is cancel. The panel hides
- * itself when nothing is waiting, because a permanently empty box teaches
- * people to stop looking at the place the warnings appear.
- */
 export function PendingSendsPanel() {
   const canCancel = useCan("crm:autonomy:reverse");
   const { data: holds } = useLiveHolds();

@@ -153,16 +153,6 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         ],
         children: [
           {
-            /**
-             * T09. `inventory.md:1358` — "Do not 404 `/inventory/pick-lists` if
-             * you keep picking under operations — then make operations picking
-             * the pick-list surface and say so in nav." Picking is kept under
-             * operations, so this is the nav half of that sentence: the wave
-             * workbench listed under the name people look for. Without it the
-             * word "pick" appeared nowhere in the inventory sidebar, and the
-             * only route that said it was a 404. Gated on the key the workbench
-             * itself asks for, not on the Operations parent's pair.
-             */
             label: "Pick lists",
             icon: ListChecks,
             href: "/inventory/operations/picking",
@@ -171,12 +161,6 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        /**
-         * T09. The parent used to point at `/inventory/reports/stock-summary`,
-         * aliasing its own first child, because `/inventory/reports` had no
-         * page and answered 404. It has a hub now — derived from these very
-         * children — so the group lands on the group.
-         */
         label: "Reports",
         icon: BarChart3,
         href: "/inventory/reports",
@@ -309,14 +293,6 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        // C2/C5/C7. The group and its Replenishment child share an href, so the
-        // parent has to require what that page requires — it used to ask for
-        // `inventory:reports:read` while the page asks for
-        // `inventory:replenishment:read`, which showed the entry to people who
-        // then landed on NoPermissionState. A parent nobody may open is not a
-        // dead end here: `filterRoute` promotes its accessible children instead
-        // of hiding them, so a reports-only reader still reaches Forecasting,
-        // Valuation, Costing and Reconciliation.
         label: "Planning",
         icon: TrendingUp,
         href: "/inventory/replenishment",
@@ -379,14 +355,6 @@ export const INVENTORY_NAV_GROUPS: NavGroup[] = [
         ],
       },
       {
-        /**
-         * F3/F6 — the AI surfaces, which had no entry at all before this: the
-         * copilot was written, tested and mounted nowhere, and a page nobody can
-         * navigate to has not shipped. Gated on the surfaces' own key rather
-         * than on `inventory:stock:read`, because `inventory:ai:read` is exactly
-         * what the pages behind it require — a parent that asks for less shows
-         * the entry to people who then land on NoPermissionState.
-         */
         label: "AI",
         icon: Sparkles,
         href: "/inventory/ai",

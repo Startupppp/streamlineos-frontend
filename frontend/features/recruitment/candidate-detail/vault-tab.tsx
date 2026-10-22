@@ -96,18 +96,10 @@ export function VaultTab(props: VaultTabProps) {
 
       <AssessmentsCard candidateId={props.candidateId} />
       <VoiceScreensCard candidateId={props.candidateId} />
-      {/*
-        Beside the background check, because they answer adjacent questions and
-        a recruiter refused an offer by the identity gate looks here first.
-      */}
+      
       <IdentityCard candidateId={props.candidateId} />
 
-      {/*
-        Beside the vault rather than in the row actions. This card states what
-        the candidate's data may be used for and when it expires, and the erase
-        control that ends it deletes the documents listed immediately below —
-        keeping the two together is what makes the consequence legible.
-      */}
+      
       <CandidateConsentCard candidateId={props.candidateId} />
 
       <Card className="rounded-2xl border border-border/70 bg-card/90 backdrop-blur-sm shadow-card overflow-hidden">

@@ -14,7 +14,6 @@ interface ArchiveEmployeeActionProps {
   onArchived: () => void;
 }
 
-/** NEW-7: archive an employee without running a termination; Rehire restores them. */
 export function ArchiveEmployeeAction({ employeeUserId, employeeName, onArchived }: ArchiveEmployeeActionProps) {
   const [open, setOpen] = useState(false);
   const archive = useArchiveEmployee();

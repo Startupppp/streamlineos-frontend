@@ -10,25 +10,6 @@ import { useCreateParty, useUpdateParty } from "@/hooks/api/party/parties";
 import type { BusinessParty, CreatePartyInput, UpdatePartyInput } from "@/types/party/parties";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * The create and edit form, rendered from the layout description.
- *
- * This used to be three hundred lines of hand-written fields, with its own Zod
- * schema listing the same columns the layout already describes. Two descriptions
- * of one record drift: the hand-written one had never gained `displayName` or
- * `notes`, both of which the API has always accepted.
- *
- * The layout is now the only place a party's shape is written down, so the list,
- * the detail view and this form cannot disagree about what a party is.
- */
-
-/**
- * Empty strings mean "not provided" on create, and "clear it" on edit.
- *
- * The API distinguishes them: `undefined` means "do not change" to the update
- * DTO, so sending it would make a field impossible to clear — the same trap
- * ticket 08 hit with the deal links.
- */
 function forCreate(values: RecordFormValues): CreatePartyInput {
   const optional: Record<string, string> = {};
   for (const [key, value] of Object.entries(values)) {
@@ -37,9 +18,6 @@ function forCreate(values: RecordFormValues): CreatePartyInput {
     if (trimmed) optional[key] = trimmed;
   }
 
-  // `name` is stated rather than swept up with the rest: it is the one field the
-  // API requires, and building it generically would leave the type unable to
-  // promise it is there.
   return { ...optional, name: values.name?.trim() ?? "" } as CreatePartyInput;
 }
 
@@ -109,8 +87,6 @@ export function PartyFormDialog({ open, onOpenChange, mode, defaultValues }: Pro
       title={mode === "create" ? "Add a party" : "Edit party"}
     >
       <RecordForm
-        // Remounted per open so the form resets to the record being edited
-        // rather than keeping the last one's values.
         key={`${mode}:${defaultValues?.partyId ?? "new"}:${String(open)}`}
         layout={PARTY_LAYOUT}
         mode={mode}

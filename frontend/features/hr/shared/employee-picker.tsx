@@ -18,14 +18,6 @@ interface EmployeePickerProps {
   ariaLabel?: string;
 }
 
-/**
- * `EmployeeListItem` carries `image` and the list contract parses it, so the
- * photo was already being fetched on every open of this picker and then dropped
- * at the render — the same person showed a face in the attendance roster and a
- * bare name here. This is the roster's own markup: the initials fallback is what
- * renders for anyone without a photo, so a row is never left with an empty gap
- * where the others have a face.
- */
 function EmployeeAvatar({
   employee,
 }: {

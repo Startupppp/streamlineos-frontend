@@ -3,11 +3,6 @@
 import { InviewSeen } from "@/features/landing/relay/components/ui/inview-seen";
 import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 
-/**
- * Hairline that draws itself from the left edge when it enters the viewport
- * (motion brief, shared.hairlines). Pass the line's own size, position and
- * colour classes.
- */
 export const DrawLine = ({
   className = "",
   delay = 0,

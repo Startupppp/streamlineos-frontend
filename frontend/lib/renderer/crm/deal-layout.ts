@@ -2,33 +2,6 @@ import { formatDealId } from "@/lib/format-utils";
 import type { Deal } from "@/types/crm";
 import type { FieldTone, RecordLayout, SelectOption } from "../layout";
 
-/**
- * Deals, as data.
- *
- * Two things a deal carries that the vocabulary cannot state, and both are
- * supplied here rather than worked around on a screen.
- *
- * Its stages are the tenant's own — a pipeline an administrator configured, not
- * an enum — so `stage` ships with no options and `withDealStages` fills them
- * from the pipeline the organisation actually uses. A hardcoded list would be a
- * form offering values the API rejects for every tenant that renamed a stage.
- *
- * And two of its columns are derived rather than sent: the human deal reference
- * is computed from the id, and the owner arrives as a nested `assignedTo`
- * object the engine has no path syntax to reach. `dealRecordFields` flattens
- * both into named fields, which is why they can be described at all; they are
- * read-only because neither is a thing the API accepts back.
- *
- * The detail sections carry the deal's own facts and nothing else. The
- * reference, the owner and the dates are columns rather than sections because
- * the detail page's header and sidebar already state them, and a record view
- * that repeats its own page header twice is noise, not information.
- *
- * Neither `value` nor `probability` carries a `sign`. A sign is a verdict —
- * above zero is good news, below it is bad — and a deal's value is a quantity,
- * a probability a likelihood. Tinting them would be the engine inventing a
- * judgement the number does not make.
- */
 export const DEAL_LAYOUT: RecordLayout = {
   key: "crm:deal",
   singular: "Deal",
@@ -50,8 +23,6 @@ export const DEAL_LAYOUT: RecordLayout = {
       name: "actualCloseDate",
       label: "Actual close",
       kind: "date",
-      // `CreateDealInput` has no such key; only the update DTO accepts it, and a
-      // deal being created has not closed.
       editOnly: true,
     },
     { name: "contactPerson", label: "Contact", kind: "text" },
@@ -61,7 +32,6 @@ export const DEAL_LAYOUT: RecordLayout = {
       name: "lostReason",
       label: "Lost reason",
       kind: "text",
-      // Update accepts it, create does not — a deal cannot be born lost.
       editOnly: true,
     },
     { name: "notes", label: "Notes", kind: "longText" },
@@ -99,13 +69,6 @@ export const DEAL_LAYOUT: RecordLayout = {
   },
 };
 
-/**
- * A pipeline stage as the layout needs it.
- *
- * Structural rather than an import of `CrmPipelineStage`, so the description
- * stays a description: it needs a key, a label and which end of the pipeline the
- * stage sits at, and nothing else about how CRM metadata is fetched.
- */
 export interface DealStageOption {
   readonly key: string;
   readonly label: string;
@@ -119,14 +82,6 @@ const STAGE_TONES: Record<DealStageOption["stageType"], FieldTone> = {
   archived: "neutral",
 };
 
-/**
- * The description with this organisation's own pipeline in it.
- *
- * Returns the layout untouched when no stages have loaded: a select with an
- * empty option list still renders the stored key, which is the honest thing to
- * show while the pipeline is in flight. Replacing it with an invented list would
- * offer values this tenant does not have.
- */
 export function withDealStages(
   layout: RecordLayout,
   stages: readonly DealStageOption[],
@@ -147,7 +102,6 @@ export function withDealStages(
   };
 }
 
-/** One deal in the shape the description names, derived fields included. */
 export function dealRecordFields(deal: Deal): Record<string, unknown> {
   return {
     id: deal.id,

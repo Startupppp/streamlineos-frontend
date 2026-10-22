@@ -32,13 +32,6 @@ import { DecisionEntryRow } from "./decision-entry-row";
 
 const ANY = "__any__";
 
-/**
- * Everything the system did, in one place.
- *
- * Because nothing asks for approval, this feed is the entire oversight
- * mechanism. That makes readability a correctness property rather than a
- * nicety: a log dump nobody scrolls is the same as no oversight at all.
- */
 export function AutonomyReviewFeed() {
   const [filters, setFilters] = useState<DecisionFilters>({});
   const [density, setDensity] = useDensity();
@@ -59,7 +52,7 @@ export function AutonomyReviewFeed() {
 
   return (
     <div className="flex flex-col gap-gap-grid" {...densityAttribute(density)}>
-      {/* Toolbar. Wraps to two rows on a phone rather than scrolling sideways. */}
+
       <div className="flex flex-wrap items-center gap-gap-toolbar">
         <Select
           value={filters.kind ?? ANY}
@@ -121,7 +114,6 @@ export function AutonomyReviewFeed() {
           </Label>
         </div>
 
-        {/* One shared control: density is the engine's property, not this screen's. */}
         <DensityToggle density={density} onChange={setDensity} className="ml-auto" />
       </div>
 

@@ -37,22 +37,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { queryKeys } from "@/lib/query-keys";
 import { ASSIGNMENT_RULE_LAYOUT } from "@/lib/renderer/crm/settings/assignment-rule-layout";
 
-/**
- * Assignment rules.
- *
- * The screen this replaces drew its own card per rule, its own badge for the
- * assignment type and its own "N conditions" line, and lived in `app/` at 429
- * lines. All three are the description now — the type is a `select` with its
- * labels, and the condition count is what a `lines` column reads.
- *
- * Order is the rule's priority, so it stays editable from the row. It moved
- * from drag to a pair of buttons deliberately: the list is a generated table
- * and, below the breakpoint, it is a stack of cards where a drag handle has
- * nowhere to drag to. Two buttons work on a phone, are reachable from a
- * keyboard, and say which direction they move — none of which was true of the
- * handle. Reordering itself is unchanged: the same optimistic write, the same
- * endpoint, the same rollback.
- */
 export function AssignmentRulesPage() {
   const layout = useTenantLayout(ASSIGNMENT_RULE_LAYOUT);
   const [density, setDensity] = useDensity();
@@ -63,13 +47,6 @@ export function AssignmentRulesPage() {
   const [editing, setEditing] = useState<AssignmentRule | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AssignmentRule | null>(null);
 
-  /*
-    No `access` here, and no `<Gated>` either, unlike the sibling settings pages.
-    The route is a server component that calls
-    `requirePermission("crm:assignment-rules:manage")` before this renders, so a
-    caller without the permission is refused before the query is ever made --
-    there is no denied-but-rendered state for an empty list to be confused with.
-  */
   const { data, isLoading, isError, refetch } = useAssignmentRules();
   const createRule = useCreateAssignmentRule();
   const updateRule = useUpdateAssignmentRule();
@@ -153,13 +130,6 @@ export function AssignmentRulesPage() {
     [updateRule],
   );
 
-  /**
-   * Moves a rule one place, optimistically.
-   *
-   * The list is the priority, so the row has to move before the round trip or
-   * the person pressing the button watches nothing happen. A failure puts the
-   * server's order back rather than leaving the optimistic one on screen.
-   */
   const handleMove = useCallback(
     (rule: AssignmentRule, direction: -1 | 1) => {
       const from = rules.findIndex((candidate) => candidate.id === rule.id);

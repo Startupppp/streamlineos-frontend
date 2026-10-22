@@ -1,12 +1,6 @@
 import { act, renderHook } from "@testing-library/react";
 import { useDebouncedValue, useFlushableDebouncedValue } from "./use-debounce";
 
-/**
- * HRMS ticket 01. The employee directory issued one `/hr/employees` request per
- * keystroke. The fix is a trailing debounce that Enter can flush, so these two
- * properties are the contract: typing costs nothing until it settles, and Enter
- * costs exactly one publish of the newest value.
- */
 beforeEach(() => jest.useFakeTimers());
 afterEach(() => jest.useRealTimers());
 
@@ -60,8 +54,6 @@ describe("useFlushableDebouncedValue", () => {
 
     rerender({ value: "anna" });
     act(() => result.current[1]());
-    // The timer from the keystroke is still armed; when it fires it must land on
-    // the same value, never revert the flushed one.
     act(() => void jest.advanceTimersByTime(300));
 
     expect(result.current[0]).toBe("anna");

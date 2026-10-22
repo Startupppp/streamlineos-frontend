@@ -23,18 +23,6 @@ const erasedC = lazyContract(() =>
 const transcriptKey = (interviewId: number) =>
   ["hr", "recruitment", "interviews", interviewId, "transcript"] as const;
 
-/**
- * Gated on `manage`, matching the route — including the read.
- *
- * Anyone who can see an interview can see its outcome and its scorecard; a
- * verbatim record of what somebody said in a room is a different thing. The
- * backend audits every read of it, which is only meaningful if the read is
- * behind the narrower key.
- *
- * `enabled` is the caller's, so a collapsed panel does not fetch a transcript
- * nobody asked to see — and therefore does not write an audit row for a read
- * that never happened.
- */
 export function useInterviewTranscript(interviewId: number, enabled: boolean) {
   return useGatedQuery("hr:interviews:manage", {
     queryKey: transcriptKey(interviewId),

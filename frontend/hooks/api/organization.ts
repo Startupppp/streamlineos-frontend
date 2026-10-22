@@ -21,13 +21,6 @@ export {
   useDeleteOrg,
 } from "./organization-lifecycle";
 
-/**
- * Deferred: `leave-organization-control.tsx` sits in the shell's org switcher,
- * so this module is eager on every authenticated route. The contract is
- * unchanged and still passed to the seam — `GET /organization/members` is
- * keyset paginated and the client once declared `{ page, total, totalPages }`,
- * a shape the server has never sent.
- */
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
@@ -59,13 +52,6 @@ export const useOrgSettings = (
   });
 };
 
-/**
- * `page` is inert and kept only so the ~50 existing call sites compile.
- * `GET /organization/members` is keyset paginated and its query DTO is
- * `.strict()`, so sending `page` was a 400 rather than a no-op. Page 2 comes
- * from `pagination.nextCursor`, and the cursor is invalidated by a filter
- * change.
- */
 export const useOrgMembers = (
   page = 1,
   limit = 20,

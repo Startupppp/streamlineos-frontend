@@ -43,13 +43,6 @@ import {
   textOrOmit,
 } from "../shared/record-payload";
 
-/**
- * A sequence: what it is, what it does, and who it is doing it to.
- *
- * Three generated surfaces in three tabs rather than three hand-written ones.
- * Tabs, not steps — nothing here has a next button and nothing is lost by
- * closing the sheet, so a sheet is the right rung rather than a page.
- */
 
 const STEP_TYPES: readonly SequenceStepType[] = ["email", "call_task", "whatsapp_task", "wait"];
 
@@ -112,16 +105,6 @@ export function SequenceSheet({ open, onOpenChange, sequence }: SequenceSheetPro
     );
   }
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:sequences:manage") === "denied")
     return <NoPermissionState permission="crm:sequences:manage" />;
 

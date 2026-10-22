@@ -9,19 +9,11 @@ interface MatrixRow {
 }
 
 const MATRIX: readonly MatrixRow[] = [
-  // ── retired URLs ────────────────────────────────────────────────────────────
-  // No page component remains; next.config.ts redirects serve the old bookmark.
   { path: "/home", universalMatch: false, decisionKind: "unknown", label: "retired home alias — redirects to /dashboard" },
   { path: "/notifications", universalMatch: false, decisionKind: "unknown", label: "retired notifications root — redirects to /inbox?view=notifications" },
   { path: "/settings/notifications", universalMatch: false, decisionKind: "unknown", label: "retired settings notifications index — redirects to my-preferences" },
 
-  // ── /notifications ──────────────────────────────────────────────────────────
-  // sub-routes deleted; handled by next.config.ts redirects
-
-  // ── /knowledge ──────────────────────────────────────────────────────────────
-  // root read allowed
   { path: "/knowledge", universalMatch: true, decisionKind: "universal", label: "knowledge root" },
-  // approved descendants allowed (wiki reading surfaces)
   { path: "/knowledge/wiki", universalMatch: true, decisionKind: "universal", label: "wiki reading root" },
   { path: "/knowledge/wiki/shared", universalMatch: true, decisionKind: "universal", label: "wiki shared pages" },
   { path: "/knowledge/wiki/private", universalMatch: true, decisionKind: "universal", label: "wiki private pages" },
@@ -29,7 +21,6 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/knowledge/wiki/doc/123/history", universalMatch: true, decisionKind: "universal", label: "wiki page history" },
   { path: "/knowledge/chat", universalMatch: true, decisionKind: "universal", label: "knowledge AI chat" },
   { path: "/knowledge/wiki/spaces/1", universalMatch: true, decisionKind: "universal", label: "individual space page reading — extension is exact so only the list is gated" },
-  // administrative descendants DENIED
   { path: "/knowledge/wiki/import", universalMatch: false, decisionKind: "permission", label: "wiki import admin" },
   { path: "/knowledge/wiki/analytics", universalMatch: false, decisionKind: "permission", label: "wiki analytics admin" },
   { path: "/knowledge/wiki/reviews", universalMatch: false, decisionKind: "permission", label: "wiki review admin" },
@@ -37,75 +28,47 @@ const MATRIX: readonly MatrixRow[] = [
   { path: "/knowledge/wiki/templates", universalMatch: false, decisionKind: "permission", label: "wiki template management" },
   { path: "/knowledge/wiki/trash", universalMatch: false, decisionKind: "permission", label: "wiki trash admin" },
 
-  // ── /chat ───────────────────────────────────────────────────────────────────
-  // root read allowed
   { path: "/chat", universalMatch: true, decisionKind: "universal", label: "chat root" },
-  // approved descendant allowed (invite acceptance)
   { path: "/chat/channels", universalMatch: false, decisionKind: "unknown", label: "retired channel list — redirects to /chat?search=channels" },
   { path: "/chat/channels/general", universalMatch: false, decisionKind: "unknown", label: "retired channel subtree — no route" },
   { path: "/chat/invite/token123", universalMatch: true, decisionKind: "universal", label: "invite acceptance" },
 
-  // ── /calendar ───────────────────────────────────────────────────────────────
-  // root read allowed (single unified calendar page)
   { path: "/calendar", universalMatch: true, decisionKind: "universal", label: "unified calendar" },
-  // administrative descendant DENIED
   { path: "/calendar/settings", universalMatch: false, decisionKind: "permission", label: "calendar admin settings — gated on calendar:admin:manage" },
 
-  // ── /directory ──────────────────────────────────────────────────────────────
-  // root read allowed
   { path: "/directory", universalMatch: true, decisionKind: "universal", label: "people directory root" },
-  // individual profile is nav-resolved (not prefix-universal), not an admin denial
   { path: "/directory/123", universalMatch: false, decisionKind: "permission", label: "individual person profile — nav-resolved, not prefix-universal" },
-  // administrative descendant DENIED
   { path: "/directory/workers", universalMatch: false, decisionKind: "permission", label: "workforce admin — extension-gated on directory:workers:view" },
 
-  // ── /me ─────────────────────────────────────────────────────────────────────
-  // root read allowed — all /me/* is self-service universal (§8)
   { path: "/me", universalMatch: true, decisionKind: "universal", label: "self-service root" },
-  // approved descendants (ALL /me/* is self-service — no admin descendants exist here)
   { path: "/me/attendance", universalMatch: true, decisionKind: "universal", label: "own attendance" },
   { path: "/me/time-off", universalMatch: true, decisionKind: "universal", label: "own time-off" },
   { path: "/me/pay", universalMatch: true, decisionKind: "universal", label: "own pay" },
   { path: "/me/expenses", universalMatch: true, decisionKind: "universal", label: "own expenses" },
   { path: "/me/documents", universalMatch: true, decisionKind: "universal", label: "own documents" },
 
-  // ── /mail ───────────────────────────────────────────────────────────────────
-  // root read allowed — /mail itself is the only real page; exact-by-default so new sub-routes fail closed
   { path: "/mail", universalMatch: true, decisionKind: "universal", label: "mail root" },
 
-  // ── /inbox ──────────────────────────────────────────────────────────────────
-  // root read allowed
   { path: "/inbox", universalMatch: true, decisionKind: "universal", label: "unified inbox" },
 
-  // ── /dashboard and /home ────────────────────────────────────────────────────
-  // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/dashboard", universalMatch: true, decisionKind: "universal", label: "dashboard root" },
   { path: "/post-invite", universalMatch: true, decisionKind: "universal", label: "authenticated invitation landing" },
   { path: "/post-invite/unknown", universalMatch: false, decisionKind: "unknown", label: "invitation landing descendants stay closed" },
 
-  // ── /announcements and /hr/announcements ────────────────────────────────────
-  // root read allowed — only the root itself is universal; exact-by-default so any new sub-route fails closed
   { path: "/hr/announcements", universalMatch: true, decisionKind: "universal", label: "announcements under HR prefix — universal reading" },
 
-  // ── /settings ───────────────────────────────────────────────────────────────
-  // root read allowed (personal account landing)
   { path: "/settings", universalMatch: true, decisionKind: "universal", label: "personal account landing" },
-  // administrative descendants DENIED (organisation admin lives under /settings/*)
   { path: "/settings/roles", universalMatch: false, decisionKind: "permission", label: "org role management — not personal account" },
   { path: "/settings/billing", universalMatch: false, decisionKind: "permission", label: "billing admin — not personal account" },
 
-  // ── /settings/notifications ─────────────────────────────────────────────────
-  // root and personal preferences are universal
   { path: "/settings/notifications/my-preferences", universalMatch: true, decisionKind: "universal", label: "personal notification preferences under settings" },
   { path: "/settings/notifications/my-preferences/channels", universalMatch: true, decisionKind: "universal", label: "notification preferences sub-page under settings" },
-  // administrative descendants DENIED
   { path: "/settings/notifications/providers", universalMatch: false, decisionKind: "permission", label: "notification provider admin under settings" },
   { path: "/settings/notifications/templates", universalMatch: false, decisionKind: "permission", label: "notification template admin under settings" },
   { path: "/settings/notifications/events", universalMatch: false, decisionKind: "permission", label: "notification event-catalog admin under settings" },
   { path: "/settings/notifications/policy", universalMatch: false, decisionKind: "permission", label: "notification policy admin under settings" },
   { path: "/settings/notifications/broadcasts", universalMatch: false, decisionKind: "permission", label: "broadcast admin under settings" },
 
-  // ── utility pages ───────────────────────────────────────────────────────────
   { path: "/access-denied", universalMatch: true, decisionKind: "universal", label: "access-denied page" },
   { path: "/access-suspended", universalMatch: true, decisionKind: "universal", label: "access-suspended page" },
 ];

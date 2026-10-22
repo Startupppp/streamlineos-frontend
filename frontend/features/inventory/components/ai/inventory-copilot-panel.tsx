@@ -26,32 +26,12 @@ import {
   type InvCopilotToolResult,
 } from "@/hooks/api/inventory/ai";
 
-/**
- * F2 — the inventory copilot.
- *
- * Every number on this screen was computed by the inventory engine and arrived
- * as a row from one of seven allowlisted reads. The prose above the tables is
- * the model narrating those rows, and it is rendered *after* them in the
- * markup's meaning if not its order: when the provider is unreachable the
- * tables render alone and the page is still worth having, which is the whole
- * reason retrieval and narration are separate calls.
- *
- * Nothing here can perform an action. There is no confirm, no link that
- * mutates, no button that writes — the copilot reads.
- */
 
-/**
- * Columns are server-supplied and change per tool, so the header labels are
- * derived from the key rather than hard-coded. A camelCase key becomes spaced
- * words; that is the whole transformation, and it means a new column on the
- * server does not need a matching edit here.
- */
 function headerLabel(column: string): string {
   const spaced = column.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-/** Right-align anything that reads as a figure so columns do not jitter. */
 const NUMERIC_COLUMNS = new Set([
   "onHand",
   "committed",
@@ -71,8 +51,6 @@ function ToolSection({ tool }: { tool: InvCopilotToolResult }) {
           {tool.rowCount} row{tool.rowCount === 1 ? "" : "s"}
         </Badge>
         {tool.truncated ? (
-          // A capped result is a sample, and saying so is the difference between
-          // "these are the late orders" and "these are some of them".
           <Badge variant="outline" className="text-micro">
             Showing the first {tool.rowCount}
           </Badge>
@@ -142,9 +120,6 @@ function AnswerBody({ answer }: { answer: InvCopilotAnswer }) {
   return (
     <div className="space-y-4">
       {answer.status === "facts_only" ? (
-        // The provider is down. Saying so beside the tables is honest; hiding
-        // the tables because the sentence failed would throw away the half that
-        // was never in doubt.
         <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3">
           <TriangleAlert
             className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"

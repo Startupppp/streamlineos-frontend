@@ -118,9 +118,6 @@ export default function AdjustmentsPage() {
     page,
     limit: 20,
     status: statusFilter !== "all" ? statusFilter : undefined,
-    // Server-side: filtering one page of rows in the browser hid every match
-    // that happened to fall on page two, and the count under the filter was the
-    // unfiltered total.
     reason: reasonFilter !== "all" && reasonFilter !== "write-offs" ? reasonFilter : undefined,
     writeOffsOnly: reasonFilter === "write-offs" ? true : undefined,
   });

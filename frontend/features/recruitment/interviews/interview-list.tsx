@@ -34,8 +34,6 @@ const RESULT_CONFIG: Record<string, { label: string; className: string; icon: Re
   },
   NO_SHOW: {
     label: "No Show",
-    // A no-show is an outcome, not a state still in flight; it read as amber
-    // beside PENDING and the two were indistinguishable.
     className: "bg-category-orange-surface text-category-orange-ink border-category-orange-rule",
     icon: XCircle,
   },
@@ -46,13 +44,6 @@ const RESULT_CONFIG: Record<string, { label: string; className: string; icon: Re
   },
 };
 
-/**
- * Interview format is a taxonomy — a phone screen is not more "informational"
- * than an onsite. Three of the six read "info" and were one chip.
- *
- * PHONE and TECHNICAL take sky and indigo rather than the blue all three
- * shared before the migration; VIDEO keeps it.
- */
 const TYPE_CONFIG: Record<string, { className: string }> = {
   VIDEO: { className: "bg-category-blue-surface text-category-blue-ink" },
   PHONE: { className: "bg-category-sky-surface text-category-sky-ink" },

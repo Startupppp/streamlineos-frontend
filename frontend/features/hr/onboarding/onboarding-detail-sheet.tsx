@@ -97,8 +97,6 @@ export const EmployeeDocumentsTab = forwardRef<
   const isLoading = docsLoading || typesLoading;
   const isError = docsFailed || typesFailed;
   const isWizard = variant === "wizard";
-  // Both reads are disabled without self:onboarding-docs, which used to land on
-  // "No documents required" (FE-47). Resolve the surface's permission first.
   const accessState = usePageState({ permission: "self:onboarding-docs", isLoading: false, isError: false, error: null });
 
   const handleRetryLoad = useCallback(() => {

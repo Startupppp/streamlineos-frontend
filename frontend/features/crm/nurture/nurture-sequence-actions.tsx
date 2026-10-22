@@ -32,14 +32,6 @@ interface NurtureSequenceActionsProps {
   sequence: NurtureSequenceSummary;
 }
 
-/**
- * The three things that can be done to a cadence as a whole.
- *
- * `draft` is not offered as a destination: a sequence that has been active has
- * enrolments behind it, and describing it as never having run would lose that.
- * Pausing is the way to stop it — and it stops the enrolments already inside,
- * which is why the confirmation says so rather than calling it a toggle.
- */
 export function NurtureSequenceActions({ sequence }: NurtureSequenceActionsProps) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);

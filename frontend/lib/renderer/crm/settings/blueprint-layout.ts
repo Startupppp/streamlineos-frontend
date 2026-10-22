@@ -1,18 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * A blueprint — the rules about which stage may follow which — as data.
- *
- * Only the blueprint's own identity is described here: what it is called, which
- * pipeline it governs, whether it is on. The transitions themselves are not, and
- * will not be: a transition matrix is a state machine drawn as a grid of
- * from-stage against to-stage, and a `RecordLayout` describes a record with
- * fields, not a relation between two axes. `transition-matrix.tsx` stays.
- *
- * `pipelineId` is a `reference`, so the form asks the surface for a picker; the
- * list shows `pipelineName`, resolved by the surface from metadata it already
- * holds, because a visible identifier is a bug.
- */
 export const BLUEPRINT_LAYOUT: RecordLayout = {
   key: "crm:settings:blueprint",
   singular: "Blueprint",

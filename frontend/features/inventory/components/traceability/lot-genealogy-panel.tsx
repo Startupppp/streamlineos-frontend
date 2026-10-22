@@ -38,13 +38,6 @@ const DIRECTION_LABELS: Readonly<Record<GenealogyDirection, string>> = {
 
 const DEPTH_OPTIONS = [2, 4, 6, 8] as const;
 
-/**
- * Why the answer stopped, in the operator's language.
- *
- * A recall trace that says "complete" when a cap cut it short reads the absence
- * of a customer as the goods never having reached one, so every reason the walk
- * stopped is spelled out rather than implied by a shorter list.
- */
 const TRUNCATION_LABELS: Readonly<Record<GenealogyTruncationReason, string>> = {
   MAX_DEPTH: "the depth limit was reached — raise it to follow the chain further",
   MAX_NODES: "the node limit was reached — narrow the direction or the depth",
@@ -144,14 +137,6 @@ interface LotGenealogyPanelProps {
   lotId: number;
 }
 
-/**
- * D1 — the genealogy graph for one lot.
- *
- * Rendered as its edge list rather than a canvas: the answer is already capped
- * at 100 nodes by the server, and a node list is only readable while it stays
- * paginated. `DataTable` windows it; nothing here renders an unbounded
- * collection.
- */
 export function LotGenealogyPanel({ lotId }: LotGenealogyPanelProps) {
   const canView = useCan(GENEALOGY_PERMISSION);
   const [direction, setDirection] = useState<GenealogyDirection>("both");

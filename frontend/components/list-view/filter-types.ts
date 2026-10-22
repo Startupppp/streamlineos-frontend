@@ -27,11 +27,6 @@ export interface ProjectOption {
   key: string;
 }
 
-/**
- * Open on purpose. The filter controls are generic over the category set; the
- * closed union below is Build's own list, not the platform's, and keeping the
- * two apart is what lets another module reuse these controls.
- */
 export type FilterCategory = string;
 
 export type BuildFilterCategory =
@@ -53,7 +48,6 @@ export interface StatusFilterOption {
 export const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 export const TYPES = DB_ENUMS.ticket_type;
 
-/** `satisfies` keeps Build's nine exhaustive; the wider type lets any key be looked up. */
 const BUILD_CATEGORY_TITLES = {
   status: "Status",
   priority: "Priority",
@@ -67,7 +61,6 @@ const BUILD_CATEGORY_TITLES = {
 
 export const FILTER_CATEGORY_TITLES: Record<string, string> = BUILD_CATEGORY_TITLES;
 
-/** Falls back to the key itself, because an open category set has no exhaustive title map. */
 export function categoryTitle(category: FilterCategory): string {
   return FILTER_CATEGORY_TITLES[category] ?? category;
 }

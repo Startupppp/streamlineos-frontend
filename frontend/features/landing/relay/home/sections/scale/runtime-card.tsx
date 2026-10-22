@@ -15,11 +15,6 @@ type RuntimeCardProps = ScaleContent["runtime"] & { index: number };
 const MONO_DIM =
   "font-mono text-scale-mono leading-scale-mono text-foreground-dim";
 
-/**
- * Card / One runtime, every app — 3888:6454 (art 3888:6457), 3949:13127,
- * 3832:8118, 3893:3752. Label and caption sit outside the hub group in every
- * frame: (24, 24 / 292), (0, 0 / 256), (0, 24 / 296), (0, 0 / 236).
- */
 export const RuntimeCard = ({
   title,
   copy,

@@ -16,7 +16,6 @@ export interface LeaveOverlap {
   status: string | null;
 }
 
-/** The server refuses any overlap with a PENDING or APPROVED request. */
 const BLOCKING_STATUSES = new Set(["PENDING", "APPROVED"]);
 
 const pad = (value: number): string => String(value).padStart(2, "0");

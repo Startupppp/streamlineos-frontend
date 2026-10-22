@@ -8,11 +8,6 @@ import { SPRING, SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 
 import { DROP, TIMELINE, useStatementSeen } from "./use-statement-seen";
 
-/**
- * App tile 3488:22130 + drop line 3488:22135 — "pinned in": the tile drops
- * 40px and lands with a small overshoot, the stem grows down to "now". While
- * in view the chevrons take a short step forward and back every ~4 s.
- */
 export const StatementMark = () => {
   const { seen, inView, reduced } = useStatementSeen();
   const [step, setStep] = useState(false);

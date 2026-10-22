@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { rostersQueryOptions } from "@/hooks/api/hr/rosters-read-options";
 import { invalidateCalendarProjectionWindows } from "@/lib/calendar-projection-cache";
 
 const rostersListC = lazyContract(() =>
@@ -44,13 +45,6 @@ export interface RosterEntry {
   date: string;
   isDayOff: boolean | null;
   notes: string | null;
-}
-
-export function rostersQueryOptions() {
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] as const,
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useRosters() {
@@ -121,8 +115,6 @@ export function useUpsertRosterEntry() {
 
 export function usePublishRoster() {
   const qc = useQueryClient();
-  // PATCH .../publish is @Idempotent("hr.roster.publish"): the key must belong
-  // to the intent, not the attempt, or a retried publish is a new command.
   return useAuthorizedIdempotentMutation<Roster, Error, number>("hr:attendance:manage", {
     mutationKey: ["hr", "rosters", "publish"],
     mutationFn: (rosterId, idempotencyKey) =>

@@ -5,12 +5,6 @@ type Policy = Pick<
   "defaultPrimaryManager" | "defaultPrimaryManagerEligible" | "fallbackOrder" | "actorQualifiesAsFallback"
 >;
 
-/**
- * Who a blank primary resolves to under this policy when that is the org's
- * configured default: it is tried first, or the uploader does not qualify
- * (mirrors the backend's fallback resolver). When the uploader would be picked
- * instead, this returns null and the server has the last word.
- */
 export interface AssignedDefault {
   userId: string;
   name: string;

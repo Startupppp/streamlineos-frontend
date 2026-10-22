@@ -105,19 +105,6 @@ const pricingFaqs = [
   },
 ];
 
-/**
- * Ticket 12. The prices and the residency list are read from the public API at
- * request time, so this page quotes the number the checkout will actually
- * charge, in the visitor's currency rather than always in rupees.
- *
- * Both reads are allowed to fail. `applyLivePrices(null)` is the compiled-in
- * table and `DataResidencySection` renders nothing without an answer -- a
- * marketing page that 500s because an API is slow costs more than a stale price.
- *
- * `?currency=` and `?country=` rather than sniffing headers: a visitor who wants
- * to see euros can ask for them, and the result is a URL that can be shared and
- * cached.
- */
 export default async function PricingPage({
   searchParams,
 }: {
@@ -137,8 +124,7 @@ export default async function PricingPage({
     <>
       <FAQJsonLd faqs={[...faqs, ...pricingFaqs]} />
       <PublicShell>
-        {/* Relay's page column and section rhythm (features/landing/relay/home):
-            the same 1280 / 928 / 688 / 350 content edge and h-section-gap. */}
+        
         <div className="relay-ui mx-page flex w-page flex-col gap-section-gap px-page-inset">
           <header className="flex flex-col items-center gap-6 pt-12 text-center w768:pt-6 w390:gap-4">
             <Badge label="pricing" />

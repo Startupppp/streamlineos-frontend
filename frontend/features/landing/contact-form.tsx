@@ -17,16 +17,11 @@ import { PublicFormField, fieldErrorId } from "./components/public-form-field";
 import { withCorrelation } from "@/lib/observability/with-correlation";
 import { contactErrorBodySchema } from "./contact-api-schema";
 
-/* Relay's footer signup field — a light pill with navy ink — on the dark page.
-   Focus draws a light-cyan outline outside the pill; an invalid field a danger
-   ring, so the two never hide each other. */
 const FIELD_BASE =
   "w-full bg-footer-signup-fill px-5 text-body leading-body text-on-accent outline-none placeholder:text-footer-ink-copy transition-shadow duration-(--motion-fast) focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-solid focus-visible:outline-accent-soft aria-invalid:ring-2 aria-invalid:ring-status-danger-ink";
 const FIELD = `${FIELD_BASE} h-13 rounded-full`;
 const TEXTAREA_FIELD = `${FIELD_BASE} min-h-32 resize-y rounded-footer-panel py-4`;
 
-/* The phone control is a composite (country button + input): the pill is its
-   wrapper, the inner parts go transparent on it. */
 const PHONE_FIELD =
   "h-13 items-center rounded-full bg-footer-signup-fill pr-5 pl-2 focus-within:outline-2 focus-within:outline-offset-3 focus-within:outline-solid focus-within:outline-accent-soft [&_button]:h-10 [&_button]:rounded-full [&_button]:border-0 [&_button]:bg-transparent [&_button]:text-on-accent [&_input]:h-12 [&_input]:border-0 [&_input]:bg-transparent [&_input]:px-3 [&_input]:text-base [&_input]:text-on-accent [&_input]:shadow-none [&_input]:placeholder:text-footer-ink-copy [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0";
 

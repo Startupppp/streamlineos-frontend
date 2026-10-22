@@ -1,7 +1,8 @@
 import "server-only";
 
-import { dehydrate, QueryClient } from "@tanstack/react-query";
+import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
+import { resolvePrefetchGate } from "@/lib/prefetch/prefetch-gate";
 import { serverGet } from "@/lib/server-fetch";
 import { listCyclesContract } from "@/hooks/api/hr/performance-schema";
 import { benefitPlansPageContract } from "@/hooks/api/hr/benefits-schema";
@@ -15,212 +16,246 @@ import { recognitionListContract } from "@/features/hr/engagement/engagement-sch
 import { costSummaryContract, listCompCyclesContract, listGrantsContract } from "@/hooks/api/hr/enterprise-comp-schema";
 import { hrHubSnapshotContract } from "@/hooks/api/hr/hub-schema";
 import { retentionPolicyListContract } from "@/features/hr/governance/hooks/retention-schema";
-import { reviewCyclesQueryOptions } from "@/hooks/api/hr/performance";
-import { benefitPlansQueryOptions } from "@/hooks/api/hr/benefits";
-import { hrGoalsQueryOptions } from "@/hooks/api/hr/goals";
-import { feedbackCyclesQueryOptions } from "@/hooks/api/hr/feedback";
-import { hrAnalyticsQueryOptions } from "@/hooks/api/hr/analytics";
-import { hrAnnouncementsQueryOptions } from "@/hooks/api/hr/announcements";
-import { hrKpisQueryOptions } from "@/hooks/api/hr/kpis";
-import { hrWorkforcePlansQueryOptions } from "@/hooks/api/hr/workforce";
-import { recognitionQueryOptions } from "@/hooks/api/hr/engagement";
-import { workforceCostSummaryQueryOptions, compCyclesQueryOptions, equityGrantsQueryOptions } from "@/hooks/api/hr/enterprise-comp";
-import { hrHubQueryOptions, localDateKey } from "@/hooks/api/hr/hub";
-import { retentionPoliciesQueryOptions } from "@/features/hr/governance/hooks/use-retention";
+import { reviewCyclesQueryOptions } from "@/hooks/api/hr/performance-read-options";
+import { benefitPlansQueryOptions } from "@/hooks/api/hr/benefits-read-options";
+import { hrGoalsQueryOptions } from "@/hooks/api/hr/goals-read-options";
+import { feedbackCyclesQueryOptions } from "@/hooks/api/hr/feedback-read-options";
+import { hrAnalyticsQueryOptions } from "@/hooks/api/hr/analytics-read-options";
+import { hrAnnouncementsQueryOptions } from "@/hooks/api/hr/announcements-read-options";
+import { hrKpisQueryOptions } from "@/hooks/api/hr/kpis-read-options";
+import { hrWorkforcePlansQueryOptions } from "@/hooks/api/hr/workforce-read-options";
+import { recognitionQueryOptions } from "@/hooks/api/hr/engagement-read-options";
+import { workforceCostSummaryQueryOptions, compCyclesQueryOptions, equityGrantsQueryOptions } from "@/hooks/api/hr/enterprise-comp-read-options";
+import { hrHubQueryOptions, localDateKey } from "@/hooks/api/hr/hub-read-options";
+import { retentionPoliciesQueryOptions } from "@/features/hr/governance/hooks/use-retention-read-options";
 
 export async function prefetchHrReviewCycles() {
   try {
-    const opts = reviewCyclesQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:performance:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...reviewCyclesQueryOptions(),
       queryFn: () => serverGet("/hr/performance/cycles", listCyclesContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrBenefitPlans() {
   try {
-    const opts = benefitPlansQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:benefits:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...benefitPlansQueryOptions(),
       queryFn: () => serverGet("/hr/benefits/plans", benefitPlansPageContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrGoals() {
   try {
-    const opts = hrGoalsQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:performance:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...hrGoalsQueryOptions(),
       queryFn: () => serverGet("/hr/performance/goals", goalListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrFeedbackCycles() {
   try {
-    const opts = feedbackCyclesQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:performance:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...feedbackCyclesQueryOptions(),
       queryFn: () => serverGet("/hr/feedback/cycles", feedbackListCyclesContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrAnalyticsOverview() {
   try {
-    const opts = hrAnalyticsQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:analytics:read")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...hrAnalyticsQueryOptions(),
       queryFn: () => serverGet("/hr/analytics", hrAnalyticsOverviewContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrAnnouncements() {
   try {
-    const opts = hrAnnouncementsQueryOptions();
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      ...opts,
+      ...hrAnnouncementsQueryOptions(),
       queryFn: () => serverGet("/org/announcements", announcementListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrKpis() {
   try {
-    const opts = hrKpisQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:performance:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...hrKpisQueryOptions(),
       queryFn: () => serverGet("/hr/kpis", kpiListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrWorkforcePlans() {
   try {
-    const opts = hrWorkforcePlansQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:headcount:read")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...hrWorkforcePlansQueryOptions(),
       queryFn: () =>
         serverGet("/hr/analytics-plus/workforce/plans", workforcePlansContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrRecognition() {
   try {
-    const opts = recognitionQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:engagement:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...recognitionQueryOptions(),
       queryFn: () => serverGet("/hr/recognition", recognitionListContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrWorkforceCostSummary() {
   try {
-    const opts = workforceCostSummaryQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:analytics:read")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...workforceCostSummaryQueryOptions(),
       queryFn: () =>
         serverGet("/hr/enterprise/comp/costing/summary", costSummaryContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrHub() {
   try {
     const today = localDateKey();
-    const opts = hrHubQueryOptions(today);
     const queryClient = await createServerQueryClient();
     await queryClient.prefetchQuery({
-      ...opts,
+      ...hrHubQueryOptions(today),
       queryFn: () => serverGet(`/hr/hub?today=${today}`, hrHubSnapshotContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrCompCycles() {
   try {
-    const opts = compCyclesQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:compensation:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...compCyclesQueryOptions(),
       queryFn: () =>
         serverGet("/hr/enterprise/comp/planning/cycles", listCompCyclesContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrEquityGrants() {
   try {
-    const opts = equityGrantsQueryOptions();
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:equity:view")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...equityGrantsQueryOptions(),
       queryFn: () =>
         serverGet("/hr/enterprise/comp/equity/grants", listGrantsContract),
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }
 
 export async function prefetchHrRetentionPolicies() {
   try {
-    const opts = retentionPoliciesQueryOptions({ limit: 20 });
-    const queryClient = await createServerQueryClient();
+    const [queryClient, gate] = await Promise.all([
+      createServerQueryClient(),
+      resolvePrefetchGate(),
+    ]);
+    if (!gate.can("hr:retention:manage")) return dehydrate(queryClient);
     await queryClient.prefetchQuery({
-      ...opts,
+      ...retentionPoliciesQueryOptions({ limit: 20 }),
       queryFn: () =>
         serverGet(
           "/hr/governance/retention/policies?limit=20",
@@ -229,6 +264,6 @@ export async function prefetchHrRetentionPolicies() {
     });
     return dehydrate(queryClient);
   } catch {
-    return dehydrate(new QueryClient());
+    return dehydrate(await createServerQueryClient());
   }
 }

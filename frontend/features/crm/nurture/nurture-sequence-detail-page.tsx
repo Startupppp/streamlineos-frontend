@@ -30,14 +30,6 @@ interface NurtureSequenceDetailPageProps {
   nurtureSequenceId: string;
 }
 
-/**
- * One cadence: what it does, and who it is doing it to.
- *
- * The two tabs are deliberately not one scroll. Editing the cadence changes
- * what happens to everybody already inside it, and a screen that put the step
- * fields directly above the list of enrolled customers would invite editing the
- * first without reading the second.
- */
 export function NurtureSequenceDetailPage({
   nurtureSequenceId,
 }: NurtureSequenceDetailPageProps) {

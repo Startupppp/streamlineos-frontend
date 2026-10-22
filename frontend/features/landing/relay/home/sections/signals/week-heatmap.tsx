@@ -12,7 +12,6 @@ import {
   useSeen,
 } from "./use-signals-motion";
 
-/** SPRING_SOFT ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SOFT_FAST = {
   tension: SPRING_SOFT.tension * 1.5,
   friction: SPRING_SOFT.friction * 1.22,
@@ -30,41 +29,22 @@ const loadStyle = ([r, g, b, from, to]: SignalsLoad) =>
 const LOAD_GRADIENT =
   "bg-linear-to-r/srgb from-[rgb(var(--signals-load-r)_var(--signals-load-g)_var(--signals-load-b)/var(--signals-load-from))] to-[rgb(var(--signals-load-r)_var(--signals-load-g)_var(--signals-load-b)/var(--signals-load-to))]";
 
-/** Softer than SPRING_SOFT so neighbouring cells overlap into one flow. */
 const CELL_SPRING = { tension: 105, friction: 26.9 } as const;
-/** Slow settle for the peak's glow (it rises and falls on one spring). */
 const GLOW_SPRING = { tension: 33, friction: 15.9 } as const;
-/** ms before the first cell (after the widget has started to rise). */
 const START = 208;
-/** ms between diagonals (mon/top → sun/bottom). */
 const DIAG = 36;
-/** Loop: wave + peak + rule (~2.2 s) → hold → soft diagonal fade out → again. */
 const PLAY = 2240;
 const LOOP = { hold: 2800, reset: 1200 } as const;
-/** ms between diagonals while fading out (same direction, quicker). */
 const FADE_DIAG = 20;
 
-/** Day label brightening as the wave passes: soft rise, slower fall. */
 const LABEL_UP = { tension: 135, friction: 29.4 } as const;
 const LABEL_DOWN = { tension: 60, friction: 24.4 } as const;
-/** ms the label holds at full brightness before easing back to rest. */
 const LABEL_HOLD = 96;
 
-/**
- * Cell look at progress v: fades up and grows from 0.92 → 1, resting = no
- * transform. No per-cell blur: 56 animated blur filters cost ~40ms a frame
- * while scrolling (measured); opacity + scale stay on the compositor.
- */
 const scale = (v: number) => (v >= 1 ? "none" : `scale(${0.92 + 0.08 * v})`);
 
 type Props = Pick<SignalsContent["week"], "days" | "today" | "todayPeak">;
 
-/**
- * Heatmap columns — a soft continuous diagonal wave: every cell fades and
- * grows in on a long overlapping spring; today's accent peak settles last with
- * a glow that fades, then the today rule draws. Holds at the frame, fades
- * out along the same diagonal and plays again while on screen.
- */
 export const WeekHeatmap = ({ days, today, todayPeak }: Props) => {
   const [ref, seen, inView] = useSeen();
   const { on } = useLoopPhase(seen, inView, { play: PLAY, ...LOOP });
@@ -92,12 +72,6 @@ export const WeekHeatmap = ({ days, today, todayPeak }: Props) => {
     }),
   );
 
-  /*
-   * Day labels: no typing caret (seven accent carets flickered in a row). Each
-   * label fades in when the wave's bottom cell reaches its column, and on
-   * every cycle a white copy over it breathes up and back to the Figma
-   * colour at that same moment — a calm left→right shimmer, no accent.
-   */
   const reduced = useReducedMotionPref();
   const labelAt = (c: number) => START + (c + rows - 1) * DIAG;
   const labels = useSprings(

@@ -20,15 +20,6 @@ function toFieldSpec(field: WebFormField): FieldSpec {
   };
 }
 
-/**
- * The lead a visitor files through one web form, as data.
- *
- * Built per form rather than registered: the fields are whatever the form's
- * owner configured in the web-form editor, so that editor is this record's
- * layout editor and there is nothing for a tenant arrangement to address. It is
- * still one description, so the visitor's form gets the engine's controls and
- * its "<label> is required" wording, which is the backend's own.
- */
 export function webFormLeadLayout(definition: {
   readonly name: string;
   readonly fields: readonly WebFormField[];

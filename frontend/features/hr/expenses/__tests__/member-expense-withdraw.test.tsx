@@ -2,11 +2,6 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { MemberExpenseList } from "@/features/hr/expenses/expense-list";
 import type { ExpenseWithRelations } from "@/types/hr/expenses";
 
-/**
- * NEW-6: the backend has `POST /me/expenses/:expenseId/withdraw` for a PENDING
- * claim, but the employee list offered no way to reach it, so a mistaken
- * claim stayed in the approval queue forever.
- */
 
 function claim(id: number, status: string): ExpenseWithRelations {
   return {

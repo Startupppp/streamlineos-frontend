@@ -77,8 +77,6 @@ export function DepartmentCombobox({
   const selfLoading = providedDepartments === undefined;
   const { data: loadedDepartments = [], isLoading: listLoading } =
     useHrDepartments({ enabled: selfLoading });
-  // FE-47: the picker's own read is disabled without hr:employees:view, which
-  // looks exactly like an empty list. Say "denied", not "no departments".
   const listAccess = useCanState("hr:employees:view");
   const listDenied = selfLoading && listAccess === "denied";
   const canCreate = useCan("hr:employees:manage");

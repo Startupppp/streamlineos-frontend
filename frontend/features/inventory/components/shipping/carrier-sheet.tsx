@@ -124,7 +124,6 @@ export function CarrierSheet({
         carrierId = created.id;
       }
 
-      // If transport or credentials were changed/specified, set them on the org row
       const transportVal = values.transport?.trim() || null;
       const apiBaseUrlVal = values.apiBaseUrl?.trim() || null;
       const apiCredentialVal = values.apiCredential?.trim() || undefined;

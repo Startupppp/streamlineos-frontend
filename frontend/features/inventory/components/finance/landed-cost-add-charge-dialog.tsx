@@ -33,24 +33,6 @@ interface LandedCostAddChargeDialogProps {
   voucherNumber: string | undefined;
 }
 
-/**
- * A charge that turned up after the voucher was raised.
- *
- * Freight is invoiced by one party and duty assessed by another, days apart, so
- * a voucher raised on the first invoice is routinely incomplete. Until now the
- * only way to add the second was to delete the draft and raise it again from
- * scratch, retyping every charge already on it — `POST
- * /inventory/landed-cost/:voucherId/charges` existed the whole time and nothing
- * called it.
- *
- * Rung 3 of the overlay ladder rather than a second sheet: four fields, and the
- * voucher stays on screen behind it, which is what makes "is this one already
- * on here?" answerable without closing anything.
- *
- * The amount stays decimal text all the way to `toMinorUnits`. The backend takes
- * integer minor units and says why — the figure becomes both a debit and a
- * credit, so a binary fraction in it is an unbalanced journal entry.
- */
 export function LandedCostAddChargeDialog({
   open,
   onOpenChange,

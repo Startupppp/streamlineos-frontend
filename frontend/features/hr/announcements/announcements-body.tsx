@@ -17,7 +17,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 interface AnnouncementsBodyProps {
   isLoading: boolean;
   isError: boolean;
-  /** The failed read's error, so the message and request reference reach the user (FE-41). */
   error?: unknown;
   list: HrAnnouncement[];
   canManage: boolean;

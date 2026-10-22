@@ -7,13 +7,6 @@ import { authenticatedScope } from "@/lib/query-scope";
 import type { AccessResponse } from "@/types/access";
 import type { ReplyMailBody, SendMailBody } from "@/types/mail";
 
-/**
- * `/me/inbox/unified` serves mail as a first-class kind, so a send or a reply
- * changes what it returns. `useMailAction` invalidates both `mail.all` and
- * `inbox.all`; send and reply invalidated only `mail.all`, so the unified inbox
- * kept serving pages that predate the message for the life of its staleTime.
- */
-
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { orgId: "org-1", user: { id: "user-1" } },

@@ -13,21 +13,6 @@ import {
 } from "@/hooks/api/chat-schema";
 import { chatChannelDetailContract } from "@/hooks/api/chat-extra-schema";
 
-/**
- * Two halves, and the second one is the whole point.
- *
- * The ACCEPTS half is built from what the backend actually emits — the
- * `CHANNEL_LIST_COLUMNS` projection plus the four keys `withMemberPreview` and
- * `listMemberChannels` add, and the member shape pinned by
- * `CHANNEL_MEMBER_WIRE_KEYS`. A contract that rejects real traffic turns a
- * working screen into an error page.
- *
- * The BITE half feeds each contract the payload that actually shipped. A
- * contract copied from `types/chat.ts` would pass every test in the first half
- * and none in the second, which is the difference between a contract that is
- * satisfiable and one that is true.
- */
-
 const MEMBER = {
   id: 41,
   channelId: 7,
@@ -119,13 +104,6 @@ describe("the chat contracts accept what the backend actually builds", () => {
 });
 
 describe("BITE — the payload that actually shipped is rejected", () => {
-  /**
-   * The defect. `chat_channel_members` reaches `users` through
-   * `organization_members`, and the read path shipped that join verbatim, so the
-   * identity arrived two levels down under a table name. `member.user` was
-   * `undefined` on every row: the favourites filter never matched, DIRECT
-   * headers read "Unknown" and the channel-admin controls never appeared.
-   */
   it("rejects the identity nested under membership instead of flattened", () => {
     const { userId: _userId, user: _user, ...rest } = MEMBER;
     const shipped = {
@@ -139,10 +117,6 @@ describe("BITE — the payload that actually shipped is rejected", () => {
     expect(paths).toEqual(expect.arrayContaining(["userId", "user"]));
   });
 
-  /**
-   * The same lie one level up: a channel whose members carry the nested shape is
-   * rejected at the channel, not silently accepted with an empty roster.
-   */
   it("rejects a channel whose members carry the nested shape", () => {
     const { userId: _userId, user: _user, ...rest } = MEMBER;
     const broken = {
@@ -152,10 +126,6 @@ describe("BITE — the payload that actually shipped is rejected", () => {
     expect(chatChannelContract.safeParse(broken).success).toBe(false);
   });
 
-  /**
-   * `columns: {}` selects NOTHING and emits `{}`. This is the huddle defect's
-   * shape applied to a member: the join is paid for and arrives empty.
-   */
   it("rejects a member whose sub-select was empty", () => {
     expect(chatChannelMemberPreviewContract.safeParse({ ...MEMBER, user: {} }).success).toBe(false);
   });
@@ -165,10 +135,6 @@ describe("BITE — the payload that actually shipped is rejected", () => {
     expect(chatChannelMemberPreviewContract.safeParse(withoutId).success).toBe(false);
   });
 
-  /**
-   * `createdBy` is not a compatible addition — it is a field `types/chat.ts`
-   * declared and no read path ever emitted. If it appears, something changed.
-   */
   it("rejects a channel carrying a key the projection does not select", () => {
     expect(chatChannelContract.safeParse({ ...CHANNEL, createdBy: "usr_bob" }).success).toBe(false);
   });
@@ -238,13 +204,6 @@ describe("the channel-detail contract mirrors channelDetailSchema, not types/cha
     expect(chatChannelDetailContract.safeParse(CHANNEL).success).toBe(false);
   });
 
-  /**
-   * A member who has just joined a channel and not yet opened it has
-   * `lastReadAt = null` — the column is nullable in the DB and `nullableWireDate()`
-   * in the backend schema. The frontend contract required `z.string()` (non-null),
-   * which caused the full channel-detail parse to fail for any channel where at
-   * least one member had never read a message. The fix is `z.string().nullable()`.
-   */
   it("accepts a channel-detail member whose lastReadAt is null (never read the channel)", () => {
     const memberWithNoReads = {
       ...MEMBER,
@@ -317,11 +276,6 @@ describe("BITE — a huddle read without a meeting link key is rejected, not sil
 });
 
 describe("BITE — the huddle payload that actually shipped is rejected", () => {
-  /**
-   * `with: { membership: { columns: {} } }` — an empty selection selects
-   * NOTHING. `userId` was never on the payload, so every tile read "Unknown"
-   * and `isInHuddle` was permanently false.
-   */
   it("rejects a participant whose membership sub-select was empty", () => {
     const shipped = { ...HUDDLE, participants: [{ id: 3, huddleId: 11, joinedAt: "2026-09-02T12:00:00.000Z", leftAt: null, membership: {} }] };
     const result = chatHuddleContract.safeParse(shipped);
@@ -416,12 +370,6 @@ describe("the message contract accepts what the timeline actually builds", () =>
     ).toBe(true);
   });
 
-  /**
-   * `latestPosition` is the server-authored resume point the poller advances on,
-   * and `chat-message-timeline.service.ts` emits it on every page. A missing key
-   * is drift, not a compatible older deploy: a client that resumed from its own
-   * cursor instead would skip or replay the backlog.
-   */
   it("rejects a poll page with no latestPosition", () => {
     expect(
       chatPollPageContract.safeParse({ messages: [MESSAGE], nextCursor: null, hasMore: false })
@@ -429,12 +377,6 @@ describe("the message contract accepts what the timeline actually builds", () =>
     ).toBe(false);
   });
 
-  /**
-   * `orgId`, `clientKey`, `channelPosition` and `senderMembershipId` are on the
-   * wire because the timeline selects no `columns:`. The contract is deliberately
-   * NOT `.strict()` there: "every column of the table" is a set that grows with a
-   * migration, and failing closed on it would take the timeline down.
-   */
   it("accepts the columns the client does not read, and a column added later", () => {
     expect(chatMessagesPageContract.safeParse({ messages: [{ ...MESSAGE, aNewColumn: 1 }], nextCursor: null }).success).toBe(true);
   });
@@ -474,13 +416,6 @@ describe("the message contract accepts what the timeline actually builds", () =>
 });
 
 describe("BITE — the message payload that actually shipped is rejected", () => {
-  /**
-   * The worst of the seven. `chat_messages` has no `sender_id` column, so the
-   * read path shipped `senderMembership` and `senderId` was on NO payload.
-   * `isOwn = msg.senderId === currentUserId` was therefore always false: your own
-   * messages rendered as somebody else's, Edit and Delete never appeared, and
-   * `undefined === undefined` collapsed different senders under one header.
-   */
   it("rejects a message with the identity left under senderMembership", () => {
     const { senderId: _senderId, sender: _sender, ...rest } = MESSAGE;
     const shipped = {
@@ -494,12 +429,6 @@ describe("BITE — the message payload that actually shipped is rejected", () =>
     expect(paths).toEqual(expect.arrayContaining(["messages.0.senderId", "messages.0.sender"]));
   });
 
-  /**
-   * The ninth instance, found by writing this contract. The timeline projected
-   * five attachment columns and not `fileUrl`, while `forward-message-dialog`
-   * re-posts `fileUrl` into a send DTO that requires `z.string()` — so every
-   * forward of a message with an attachment came back 400.
-   */
   it("rejects an attachment with no fileUrl, which is what forwarding posted", () => {
     const { fileUrl: _fileUrl, ...withoutUrl } = ATTACHMENT;
     const result = chatMessagesPageContract.safeParse({

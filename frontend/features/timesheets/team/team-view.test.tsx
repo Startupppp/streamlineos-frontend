@@ -1,16 +1,3 @@
-/**
- * QA-FE-003, FE-TS-007 and FE-TS-008 — the Team page's three honesty defects.
- *
- * QA-FE-003: the live page rendered "Team Time Error: Failed to load team time
- * data", which is the route's error.tsx, not the ErrorState this view already
- * draws. Both of its reads threw to the boundary, so the in-page retry was
- * unreachable and a failure of the billable-percentage satellite took the whole
- * route with it. The reads are inline now; the assertion here is that a failed
- * summary stays inside the page.
- *
- * FE-TS-007: the week was pinned to Monday regardless of the org's work week.
- * FE-TS-008: billable % was computed as 0 when the reports read was refused.
- */
 import { render, screen } from "@testing-library/react";
 import { useCan } from "@/hooks/api/access";
 import { useTeamWeekSummary } from "@/hooks/api/timesheets-core/team";
@@ -44,7 +31,7 @@ const SUMMARY_OK = {
 
 beforeEach(() => {
   jest.clearAllMocks();
-  jest.useFakeTimers().setSystemTime(new Date("2026-09-30T12:00:00Z")); // a Wednesday
+  jest.useFakeTimers().setSystemTime(new Date("2026-09-30T12:00:00Z"));
   can.mockReturnValue(true);
   summary.mockReturnValue(SUMMARY_OK);
   overview.mockReturnValue({ data: undefined, isLoading: false });
@@ -72,7 +59,7 @@ describe("FE-TS-007 — week bounds follow the org work week", () => {
   });
 
   it("uses the org's configured work week start", () => {
-    settings.mockReturnValue({ data: { workWeekStart: 0 } }); // Sunday
+    settings.mockReturnValue({ data: { workWeekStart: 0 } });
     render(<TeamView />);
     expect(summary).toHaveBeenCalledWith([], "2026-09-27", "2026-10-03", true);
   });

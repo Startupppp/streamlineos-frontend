@@ -7,7 +7,7 @@ export type EmployeeListFilters = {
   q: string;
   departmentId: string | undefined;
   status: EmployeeStatusFilter;
-  role: string; // "all" or role key e.g. ENGINEERING
+  role: string;
   size: number;
 };
 
@@ -16,7 +16,6 @@ export const DEFAULT_PAGE_SIZE = 20;
 
 export function parseStatus(raw: string | null): EmployeeStatusFilter {
   if (raw === "inactive" || raw === "all" || raw === "active" || raw === "pending") return raw;
-  // Legacy / mistaken values
   if (raw === "Inactive" || raw === "terminated") return "inactive";
   if (raw === "Active") return "active";
   if (raw === "All") return "all";
@@ -60,7 +59,6 @@ export function parseEmployeeListFilters(
   };
 }
 
-/** Map UI filters → GET /hr/employees query params. */
 export function toHrEmployeesApiParams(
   filters: EmployeeListFilters,
 ): HrEmployeesParams & { isActive: Exclude<HrEmployeesParams["isActive"], "current"> } {
@@ -80,7 +78,6 @@ export function toHrEmployeesApiParams(
   };
 }
 
-/** Whether any non-default filter is active (for Clear + empty states). */
 export function hasActiveEmployeeFilters(
   filters: EmployeeListFilters,
   defaults?: { status?: EmployeeStatusFilter },
@@ -88,7 +85,6 @@ export function hasActiveEmployeeFilters(
   return countActiveEmployeeFilters(filters, defaults) > 0;
 }
 
-/** How many non-default filters are active (for a compact filter-count badge). */
 export function countActiveEmployeeFilters(
   filters: EmployeeListFilters,
   defaults?: { status?: EmployeeStatusFilter },
@@ -102,7 +98,6 @@ export function countActiveEmployeeFilters(
   ].filter(Boolean).length;
 }
 
-/** Apply router-style updates (null deletes the key) to a copy of the current params. */
 export function applyEmployeeUrlUpdates(
   current: URLSearchParams,
   updates: Record<string, string | null>,
@@ -115,7 +110,6 @@ export function applyEmployeeUrlUpdates(
   return params;
 }
 
-/** Build URL updates for router; null deletes the key. */
 export function employeeFiltersToUrlUpdates(
   next: Partial<EmployeeListFilters> & {
     q?: string | null;

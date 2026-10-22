@@ -39,23 +39,6 @@ import type {
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * Activities.
- *
- * A queue, not a timeline. The distinction decided how this screen is built: a
- * timeline is a narrative about one record read downward, and the CRM has one of
- * those under `features/crm/timeline`. This is a filterable, paginated list of
- * work with a status, a due date and a thing you do to it — which is a record
- * list, so no table is written here. `ACTIVITY_LAYOUT` supplies the columns, the
- * status tone, the notes riding under each title and the mobile card; the page
- * supplies the filters, the "done" control and which of the four states the
- * reader is in.
- *
- * The cards this replaces stacked title, badges, notes and three dates into a
- * block per row — twenty activities filled a screen. The same twenty now fit
- * where five did, and the state that was previously missing outright, a query
- * still in flight, no longer renders as "No activities yet".
- */
 
 const PAGE_SIZE = 30;
 
@@ -84,20 +67,12 @@ interface ActivityRowActionsProps {
   onComplete: (activityId: number) => void;
 }
 
-/**
- * The one thing a row can have done to it.
- *
- * A component rather than markup inline in the cell, because the cell is a
- * callback and a callback cannot hold a handler bound to its row without
- * rebuilding every other row's handler with it.
- */
 function ActivityRowActions({
   activityId,
   status,
   isPending,
   onComplete,
 }: ActivityRowActionsProps) {
-  /* The row navigates to the linked record, so the button must not do both. */
   const handleClick = useCallback(
     (event: MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();

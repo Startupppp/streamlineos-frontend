@@ -1,6 +1,3 @@
-/**
- * @jest-environment node
- */
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import nextConfig from "@/next.config";

@@ -85,14 +85,6 @@ interface UserAvatarMenuBodyProps {
   layout: "dropdown" | "drawer";
 }
 
-/**
- * Everything inside the account menu, split off so it loads on first open.
- *
- * Radix mounts a menu's content only while it is open, so this whole subtree —
- * the eleven link icons and the theme switcher — stays
- * out of the first load of every authenticated route until someone opens it.
- * The avatar trigger next to it is what the header actually paints.
- */
 export function UserAvatarMenuBody({
   name,
   email,

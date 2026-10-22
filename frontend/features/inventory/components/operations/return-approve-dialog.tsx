@@ -24,12 +24,6 @@ export interface ReturnApproveDialogProps {
   onApprove: (creditReference: string | undefined) => void;
 }
 
-/**
- * B9, item 1. The sign-off, as its own confirmed step rather than a side effect
- * of posting.
- *
- * One field, so rung 3 of the overlay ladder (§13): a Dialog, not a Sheet.
- */
 export function ReturnApproveDialog({
   open,
   onOpenChange,

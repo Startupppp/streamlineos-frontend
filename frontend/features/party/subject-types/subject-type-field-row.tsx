@@ -100,13 +100,6 @@ export interface SubjectTypeFieldRowProps {
   canRemove: boolean;
 }
 
-/**
- * One declared field.
- *
- * The machine name is derived from the label rather than asked for twice, but
- * stays editable: it is the key a tenant's own integrations address, so once a
- * type exists renaming it is a breaking change they have to make deliberately.
- */
 export function SubjectTypeFieldRow({ form, index, onRemove, canRemove }: SubjectTypeFieldRowProps) {
   const kind = form.watch(`fields.${index}.kind`);
 

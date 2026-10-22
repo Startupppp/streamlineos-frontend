@@ -16,25 +16,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-/**
- * S15 found that every controlled `Dialog` and `Sheet` in the product dropped
- * focus onto `<body>` on close, because Radix's `DialogContentModal` cancels
- * FocusScope's natural restore and then focuses a `DialogTrigger` that a
- * controlled shell does not have. `SheetContent` and `DialogContent` were
- * fixed; `AlertDialogContent` was not, and it is the same primitive underneath
- * — `AlertDialogPrimitive.Content` renders `DialogPrimitive.Content`.
- *
- * That matters more than it sounds, because `ConfirmDialog`'s own type offers
- * a controlled mode with no trigger (`{ open, onOpenChange }`), and the
- * overlay ladder says every destructive action goes through `ConfirmDialog`.
- * A delete confirmed from a row menu therefore left the keyboard at the top of
- * the document, on the exact interaction where knowing what happened matters
- * most. WCAG 2.4.3.
- *
- * `Drawer` is asserted beside it because the ladder sends every rung-2 popover
- * and rung-3/4 filter panel through it below `md`, so on a phone it is the
- * dominant overlay in the product and nothing had ever measured it.
- */
 
 function ConfirmHarness() {
   const [open, setOpen] = useState(false);

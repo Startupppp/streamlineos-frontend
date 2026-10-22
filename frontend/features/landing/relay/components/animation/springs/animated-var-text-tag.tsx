@@ -1,4 +1,3 @@
-// 📖 Docs: obsidian/frontend/components/animation-springs.md
 import { Tags } from "@/features/landing/relay/types/springs";
 import { animated, ElementType } from "@react-spring/web";
 import {

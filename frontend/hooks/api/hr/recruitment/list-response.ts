@@ -1,10 +1,5 @@
 import { isRecord } from "@/lib/is-record";
 
-/**
- * Backend recruitment list endpoints return ListResponse:
- * { items, total, page, pageSize, totalPages } (+ optional extras).
- * Older handlers (or tests) may still return a bare array.
- */
 
 export interface RecruitmentListResponse<T> {
   items: T[];
@@ -60,7 +55,6 @@ export function normalizeRecruitmentList<T>(
   };
 }
 
-/** Safe list extract for pages and pickers that expect T[]. */
 export function unwrapRecruitmentItems<T>(
   res: T[] | RecruitmentListResponse<T> | null | undefined,
 ): T[] {

@@ -11,22 +11,10 @@ import { RfQueueList } from "@/features/inventory/components/rf/rf-queue-list";
 import { useCan } from "@/hooks/api/access";
 import { useRfQueue } from "@/hooks/api/inventory/rf-queue";
 
-/** The key `usePutawayTasks` is gated on, so the queue and its rows agree. */
 const PUTAWAY_READ = "inventory:stock:read";
 
 const RF_QUEUE_HREF = "/inventory/rf";
 
-/**
- * T09 — `/inventory/rf/putaway` used to 404, for the same reason its pick
- * sibling did: only `/inventory/rf/putaway/[taskId]` was routable.
- *
- * A receiver who scans a pallet label that resolves to no task id, or who backs
- * one level out of a task screen, arrives here. The segment now answers with
- * their putaway work rather than a dead end, filtered out of `useRfQueue` so the
- * rows, the hrefs and the "assigned to me" definition stay the same ones
- * `/inventory/rf` uses. `RfShell` carries the back affordance to that full
- * queue, which doubles as the way out when nothing is selected.
- */
 export default function RfPutawayQueuePage() {
   const canPutaway = useCan(PUTAWAY_READ);
   const { tasks, isLoading, isError, refetch } = useRfQueue();

@@ -5,16 +5,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { LotDetailClient } from "./lot-detail-client";
 import { downloadGenealogyCsv } from "@/hooks/api/inventory/genealogy";
 
-/**
- * `GET /inventory/traceability/genealogy/export` had no caller. A recall chain
- * could be read on screen and never handed to a regulator, an insurer or anybody
- * without a login — which for an audit trail is most of the way to not having
- * one.
- *
- * Reachability is the claim being tested. The button lives in the genealogy
- * panel, the panel lives on the lot detail screen, and that chain is what a
- * component test of the button alone would not have exercised.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -126,11 +116,6 @@ it("exports the walk the reader is looking at, not a differently bounded one", a
   });
 });
 
-/**
- * Reading a chain and carrying it out of the building are different rights, and
- * the route says so: the graph is `inventory:stock:read`, the export is
- * `inventory:export`.
- */
 it("hides the export from somebody who may read the chain but not take it", () => {
   mockCan.mockImplementation((key: string) => key !== "inventory:export");
   renderLot();

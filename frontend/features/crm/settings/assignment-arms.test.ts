@@ -26,11 +26,6 @@ describe("armPayload", () => {
   });
 
   it("names the arm on every type, including the base two", () => {
-    /*
-     * `updateAssignmentRule` reads an absent `assignmentTypeText` as "leave it
-     * alone", so a weighted rule switched back to a plain round robin by
-     * omission would go on weighting.
-     */
     for (const type of ASSIGNMENT_TYPES)
       expect(armPayload(type, NO_ARM).assignmentTypeText).toBe(type);
   });
@@ -89,16 +84,6 @@ describe("reading a rule back", () => {
   });
 });
 
-/**
- * The drift guard, and the reason this file exists.
- *
- * The picker offered five assignment types and sent the chosen one straight
- * into `assignmentType`, whose Zod enum admits two, alongside `weightedMembers`,
- * `windowHours` and `territoryId` against a `.strict()` schema. Three of the
- * five arms could not be saved at all. Nothing compared the two lists, and
- * because a rejected enum and an unknown key both come back as
- * `Validation failed.`, the screen could not say so either.
- */
 describe("the assignment contract matches the backend", () => {
   const SOURCE = readFileSync(
     backendPath("src/modules/crm/core/dto/rules.schemas.ts"),
@@ -137,7 +122,6 @@ describe("the assignment contract matches the backend", () => {
     const allowed = [...(block?.[1] ?? "").matchAll(/^ {2}(\w+):/gm)].map((m) => m[1] as string);
     expect(allowed).toContain("assignmentTypeText");
 
-    // Every key the sheet can put on the wire, arm keys and fixed keys alike.
     const sent = new Set(["name", "conditions", "priority", "isActive"]);
     for (const type of ASSIGNMENT_TYPES)
       for (const key of Object.keys(armPayload(type, NO_ARM))) sent.add(key);

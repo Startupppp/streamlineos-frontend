@@ -47,14 +47,6 @@ function splitSerials(value: string | undefined): string[] {
     .filter(Boolean);
 }
 
-/**
- * B1 — the same sheet, with somewhere to stop.
- *
- * "Record receipt" used to be the only exit: typing a delivery posted it to the
- * stock ledger, and a clerk who was halfway through a pallet had to either
- * finish or throw the count away. "Save as draft" opens the receipt without
- * moving anything, and it is finished later on the receipts workbench.
- */
 export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetProps) {
   const receiveMutation = useReceiveGoods(po.id);
   const draftMutation = useCreateGrnDraft();
@@ -101,15 +93,6 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
 
   const { fields } = useFieldArray({ control: form.control, name: "lines" });
 
-  /**
-   * B2 — the count a receiver scanned, per PO line.
-   *
-   * Kept beside the form rather than derived from it, because the two mean
-   * different things: the form field starts at what the order still owed, and a
-   * tally starts at nothing. Once a line has been scanned even once its count is
-   * the tally, so a partial delivery cannot post the ordered quantity because
-   * nobody cleared a pre-filled box.
-   */
   const [scannedTally, setScannedTally] = useState<Record<number, number>>({});
 
   useEffect(
@@ -137,12 +120,6 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
     onResolved: handleScanResolved,
   });
 
-  /**
-   * A scanned unit lands on its line, and the grains the label carried land with
-   * it. A GS1 label knows its own lot and serial; making the receiver retype
-   * them is how a lot number ends up transposed on a receipt that has to answer
-   * a recall.
-   */
   function handleScanResolved(meta: DraftLineMeta, resolved: ResolvedScan): void {
     const index = lineMetas.findIndex((candidate) => candidate.poLineId === meta.poLineId);
     if (index < 0) return;
@@ -198,7 +175,6 @@ export function ReceiveGoodsSheet({ open, onOpenChange, po }: ReceiveGoodsSheetP
     form.resetField("locationId");
   }
 
-  /** The counted lines, or `null` when the count itself does not hold together. */
   function buildLines(values: GrnFormValues): GrnDraftLineInput[] | null {
     const counted = values.lines
       .map((line, index) => ({ line, meta: lineMetas[index] }))

@@ -22,12 +22,6 @@ if (typeof globalThis.TextEncoder === "undefined")
 
 installAbortSignalPolyfill();
 
-/**
- * The live calendar follow-up surface. Everything from the panel's click handler
- * down runs for real — `streamMeetingFollowUp`, `streamAiText`, `authedFetch`,
- * the combined abort signal, and `apiClient.post` for the send — with only
- * `global.fetch` mocked.
- */
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,

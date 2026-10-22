@@ -1,17 +1,5 @@
 import { z } from "zod";
 
-/**
- * Employee self-service payroll: an individual's own pay and bank details.
- *
- * Every money field here is a Postgres `decimal` and therefore arrives as a
- * STRING, never a number — `net`, and everything the total-rewards statement
- * emits through its `money()` helper. A contract that said `z.number()` would
- * reject every real response, and a client type that said `number` would let
- * arithmetic run on a string.
- *
- * `masked` on the bank read is `null` exactly when `hasBank` is false, which is
- * why it is a discriminated union rather than two loosely-related fields.
- */
 
 export const essPayslipContract = z.object({
   publicationId: z.number(),

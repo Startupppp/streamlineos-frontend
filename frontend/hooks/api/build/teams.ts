@@ -1,7 +1,7 @@
 ﻿"use client";
 
 
-import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
@@ -18,6 +18,10 @@ import type {
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import {
+  teamsListQueryOptions,
+  buildTeamsParams,
+} from "./teams-read-options";
 
 
 const teamPageContract = lazyContract(() =>
@@ -60,7 +64,11 @@ export function useProjectTeams(params?: {
   leadId?: string;
   memberId?: string;
 }) {
-  return useGatedQuery<TeamListResponse>("build:teams:view", teamsListQueryOptions(params));
+  const query = buildTeamsParams(params);
+  return useGatedQuery<TeamListResponse>("build:teams:view", {
+    ...teamsListQueryOptions(params),
+    queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),
+  });
 }
 
 export function useProjectTeam(teamId: number) {
@@ -226,22 +234,3 @@ export function useRemoveTeamProject(teamId: number) {
   });
 }
 
-export function teamsListQueryOptions(params?: {
-  cursor?: string;
-  search?: string;
-  pageSize?: number;
-  leadId?: string;
-  memberId?: string;
-}) {
-  const query: Record<string, string> = {};
-  if (params?.cursor) query["cursor"] = params.cursor;
-  if (params?.pageSize) query["pageSize"] = String(params.pageSize);
-  if (params?.search) query["search"] = params.search;
-  if (params?.leadId) query["leadId"] = params.leadId;
-  if (params?.memberId) query["memberId"] = params.memberId;
-  return queryOptions<TeamListResponse>({
-    queryKey: buildWorkQueryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
-    queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),
-    staleTime: 60_000,
-  });
-}

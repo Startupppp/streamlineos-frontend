@@ -24,8 +24,6 @@ export function ReportSummary({ month, department, costCenter, workerType }: Rep
 
   if (isLoading) return <StatCardGridSkeleton cols={4} count={7} />;
 
-  // "No payroll run for this period — run payroll for this month" is an
-  // instruction, and a 500 must never issue it: the run may already exist.
   if (isError) {
     return (
       <ErrorState

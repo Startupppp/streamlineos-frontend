@@ -70,15 +70,6 @@ function isStatus(value: string | null): value is PickWaveStatus {
   return STATUSES.some((status) => status === value);
 }
 
-/**
- * B5, item 5 — the supervisor queue is a view of this screen, not a second
- * route.
- *
- * A picker and the person who signs off what a picker could not do are looking at
- * two faces of one job, and splitting them across two URLs means a second nav
- * entry, a second permission row in the sidebar coverage test, and a supervisor
- * navigating away from the board to answer a question about it.
- */
 type WorkbenchView = "waves" | "exceptions";
 
 const EXCEPTION_STATUSES: ReadonlyArray<PickExceptionStatus> = ["OPEN", "RESOLVED"];
@@ -99,28 +90,11 @@ function progressLabel(wave: PickWaveSummary): string {
   return `${wave.linesClosed}/${wave.lineCount}`;
 }
 
-/**
- * B5. Why a wave that looks finished is not.
- *
- * `linesClosed` now counts a damaged or substituted line only once a reviewer has
- * signed it, so a wave can sit at 3/4 with nobody walking. Saying so on the row is
- * the difference between "the picker is slow" and "this is on a supervisor's desk".
- */
 function blockedLabel(wave: PickWaveSummary): string | null {
   if (wave.openExceptions === 0) return null;
   return `${wave.openExceptions} to review`;
 }
 
-/**
- * B4, item 5 — the picking surface is a wave board, not a sales-order table.
- *
- * `/inventory/operations/picking` used to render the RESERVED sales-order queue:
- * a list of documents somebody might pick, with no way to start, claim or finish
- * a walk, and no call to any wave endpoint at all. This is the queue a picker
- * actually works — available walks, the ones they hold, and the tasks inside
- * one — and every row opens onto the shelf-level detail rather than onto an
- * order.
- */
 export function PickWorkbenchPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -144,8 +118,6 @@ export function PickWorkbenchPage() {
     ? assignmentParam
     : "UNCLAIMED";
   const status: PickWaveStatus | undefined = isStatus(statusParam) ? statusParam : undefined;
-  // A view nobody may open falls back to the board rather than rendering an
-  // access-denied dead end somebody arrived at through a shared link.
   const view: WorkbenchView = isView(viewParam) && canReview ? viewParam : "waves";
   const exceptionStatus: PickExceptionStatus | undefined = isExceptionStatus(statusParam)
     ? statusParam
@@ -170,17 +142,12 @@ export function PickWorkbenchPage() {
     if (next.ownership) params.set("ownership", next.ownership);
     if (next.view) {
       params.set("view", next.view);
-      // The two views share the word "status" and mean different vocabularies by
-      // it, so switching drops the old one rather than carrying a filter the new
-      // list cannot honour.
       params.delete("status");
     }
     if (next.status !== undefined) {
       if (next.status === "all") params.delete("status");
       else params.set("status", next.status);
     }
-    // Every filter change resets the page, or page 4 of the old filter is an
-    // empty screen the picker has to work out how to leave.
     setPage(1);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }

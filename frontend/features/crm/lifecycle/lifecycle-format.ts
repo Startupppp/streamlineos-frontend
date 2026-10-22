@@ -53,7 +53,6 @@ export function formatBps(value: number, locale: string) {
   return formatRatioAsPercent(value / 10_000, locale, 0);
 }
 
-/** What the sweep's decider said about one contract, in a sentence. */
 export function describeSweepEntry(entry: LifecycleSweepEntry): string {
   if (entry.action === "stood-down") return entry.reason ?? "Nothing due yet.";
   const opened = entry.action === "opened" ? "Opened a renewal opportunity" : "Re-offered the renewal";

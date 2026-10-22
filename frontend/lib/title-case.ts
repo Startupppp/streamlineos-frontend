@@ -1,15 +1,3 @@
-/**
- * Title-case a short human label — a shift template name, a job designation.
- *
- * A word that already carries a capital is returned verbatim. That single rule
- * covers an initialism (`IST`), an internal capital (`McDonald`, `iOS`) and a
- * label the author already capitalised, so no acronym allow-list is needed and
- * none can go stale. Only an all-lowercase word is touched.
- *
- * Deliberately NOT for a person's name. HRMS-E2E-027 settled that names are
- * passed through verbatim end to end; `dto/employee-name-verbatim.spec.ts` in
- * the backend pins it.
- */
 export function titleCaseLabel(value: string): string {
   return value
     .trim()

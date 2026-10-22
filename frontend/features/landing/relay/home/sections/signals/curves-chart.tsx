@@ -12,14 +12,12 @@ import {
   useSeen,
 } from "./use-signals-motion";
 
-/** SPRING_SOFT ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SOFT_FAST = {
   tension: SPRING_SOFT.tension * 1.5,
   friction: SPRING_SOFT.friction * 1.22,
 } as const;
 
 type Pt = readonly [number, number];
-/** Start point + three cubic segments [c1, c2, end] (signals-curves.svg). */
 type Curve = { m: Pt; segs: readonly (readonly [Pt, Pt, Pt])[] };
 
 const RECOVERED: Curve = {
@@ -67,17 +65,14 @@ const RECOVERED_D =
 const FAILED_D =
   "M0 34C60.8333 34 76.0417 86 128.185 82C182.5 78 193.363 28 252.024 30C310.685 32 325.893 72 365 76";
 
-/** Crossing marker centres in the frame (3888:6630…6632), left → right. */
 const MARKS: readonly Pt[] = [
   [62, 56],
   [185, 56],
   [322, 56],
 ];
-/** Drift: loop length and horizontal amplitude of the inner turns, px. */
 const PERIOD = 4800;
 const AMP = 10;
 
-/** Shift every point except the fixed ends by dx. */
 const shift = (c: Curve, dx: number): Curve => ({
   m: c.m,
   segs: c.segs.map((seg, s) =>
@@ -94,7 +89,6 @@ const toD = ({ m, segs }: Curve) =>
     .map((seg) => `C${seg.map(([x, y]) => `${f(x)} ${f(y)}`).join(" ")}`)
     .join("");
 
-/** Samples along the whole curve, x ascending. */
 const sample = ({ m, segs }: Curve) => {
   const out: Pt[] = [];
   let p0: Pt = m;
@@ -127,10 +121,8 @@ const yAt = (pts: Pt[], x: number) => {
   return pts[pts.length - 1][1];
 };
 
-/** Scan window (px either side of the resting centre) for each crossing. */
 const WINDOW = 45;
 
-/** Where the two curves cross near each marker (scan x, interpolate the sign change). */
 const crossings = (a: Curve, b: Curve): Pt[] => {
   const sa = sample(a);
   const sb = sample(b);
@@ -158,13 +150,6 @@ const draw = (v: number) => ({
   opacity: v > 0 ? 1 : 0,
 });
 
-/**
- * Failures vs recoveries: both lines draw in, then drift slowly in opposite
- * phase (4.8 s loop, only while in view) with the three crossing markers
- * gliding along their intersections. The 365 × 110 art scales with the widget
- * (253 wide at 1024, 290 at 768). Off screen everything rewinds to the
- * undrawn start.
- */
 export const CurvesChart = ({
   label,
   delay = 0,

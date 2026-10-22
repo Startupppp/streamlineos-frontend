@@ -1,13 +1,5 @@
 import { z } from "zod";
 
-/**
- * Conversion over a period, as distinct from the pipeline right now.
- *
- * Every rate is nullable and that is the contract's point: `null` means "there
- * was nobody to convert", `0` means "people arrived and none converted". A
- * client that coalesced the first to zero would tell a recruiter their
- * screening is broken when they simply have no applicants.
- */
 export const recruitingAnalyticsContract = z.object({
   window: z.object({ from: z.coerce.date(), to: z.coerce.date() }),
   funnel: z.array(
@@ -46,7 +38,6 @@ export const recruitingAnalyticsContract = z.object({
     outstanding: z.number().int(),
     acceptRate: z.number().nullable(),
   }),
-  /** True when the window produced no rows at all. */
   empty: z.boolean(),
 });
 

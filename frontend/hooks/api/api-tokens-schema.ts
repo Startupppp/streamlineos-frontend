@@ -1,18 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Contracts for `ApiTokensController` (org-level tokens).
- *
- * DISAGREEMENT FIXED: The frontend `ApiToken.id` was `string`, but
- * `api_tokens.id` is a `serial` integer — backend `apiTokenItemSchema.id = z.number().int()`.
- *
- * DISAGREEMENT FIXED: `ApiTokenPage` previously declared `meta.{ page, limit, total, totalPages }`
- * (offset-paged) but the backend wraps with `cursorPageSchema`. Corrected here.
- *
- * Timestamps are ISO strings over JSON (wireDate). NOT `.strict()`.
- */
-
 const apiTokenItemContract = z.object({
   id: z.number(),
   name: z.string(),

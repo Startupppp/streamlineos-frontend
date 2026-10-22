@@ -208,7 +208,6 @@ export function PIPTab() {
 
   const handleUpdateStatus = useCallback(
     (id: number, status: string) => {
-      // Terminating a PIP is a lifecycle action: confirm first (FE-83).
       if (status === "TERMINATED") {
         setTerminateId(id);
         return;

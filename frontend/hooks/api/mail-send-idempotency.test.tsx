@@ -9,15 +9,6 @@ import type { AccessResponse } from "@/types/access";
 import type { RequestConfig } from "@/lib/api-client";
 import type { ReplyMailBody, SendMailBody } from "@/types/mail";
 
-/**
- * The defect this pins: the idempotency key was minted inside the transport,
- * once per HTTP call. So pressing Retry after a send timed out issued a
- * genuinely new send, and the recipient got two emails — the backend's replay
- * machinery was working, it was simply never handed the same key twice.
- *
- * A key that changes on retry is not an idempotency key, it is a request id.
- */
-
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { orgId: "org-1", user: { id: "user-1" } },

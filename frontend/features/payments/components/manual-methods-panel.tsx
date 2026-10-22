@@ -167,10 +167,6 @@ export function ManualMethodsPanel() {
     void refetch();
   }
 
-  // A denied or failed read settles to `methods === undefined`, which the
-  // editors below would render as five blank forms reading "Missing
-  // instructions" — an operator would conclude their live bank details were
-  // gone, and a Save from that state would overwrite them with blanks.
   if (!canView) {
     return (
       <NoPermissionState

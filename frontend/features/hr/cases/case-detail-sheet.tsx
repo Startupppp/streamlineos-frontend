@@ -48,7 +48,6 @@ export function CaseDetailSheet({ caseId, open, onOpenChange }: Props) {
   const { data: hrCase, isLoading, isError, error, refetch } = useHrCase(caseId);
   const startInvestigation = useStartInvestigation(caseId);
   const updateCase = useUpdateCase(caseId);
-  // Both transitions hit hr:cases:manage endpoints (hr-cases.controller.ts).
   const canManage = useCan("hr:cases:manage");
   const [activeTab, setActiveTab] = useState<"details" | "notes" | "documents">("details");
 

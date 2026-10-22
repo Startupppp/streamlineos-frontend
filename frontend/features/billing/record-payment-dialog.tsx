@@ -78,7 +78,6 @@ export function RecordPaymentDialog({
   outstanding,
   onOpenChange,
 }: RecordPaymentDialogProps) {
-  // POST /invoices/:invoiceId/payments declares accounting:create.
   const canRecordPayment = useCan("accounting:create");
   const recordPayment = useRecordPayment();
   const { data: manualMethods, isError: methodsFailed } = useManualMethods();

@@ -21,20 +21,6 @@ import { formatMoney, type MoneyDisplay } from "@/lib/format-utils";
 import { withColumns } from "@/lib/renderer/layout-adjustment";
 import { cn } from "@/lib/utils";
 
-/**
- * Leads, asked for in a sentence.
- *
- * The table this replaced was a third hand-written `DataTableColumn[]` over the
- * same record, with its own `STATUS_BADGE` and `PRIORITY_BADGE` maps and its own
- * `formatValue` that printed a hardcoded rupee sign in lakhs and crores — so an
- * organisation billing in dirhams was told its pipeline was worth ₹4.2L. The
- * columns, the badges and the currency now come from the shared description and
- * the organisation's own display settings.
- *
- * What is genuinely this screen's own is the query box, the worked examples and
- * the read-back of how the sentence was interpreted, which is the part that
- * makes a natural-language search trustworthy rather than magic.
- */
 
 const EXAMPLE_QUERIES = [
   "Hot leads not yet contacted",
@@ -65,15 +51,6 @@ const FILTER_LABELS: Record<string, string> = {
   assignedToName: "Assigned to",
 };
 
-/**
- * The search result in the shape the description names.
- *
- * The endpoint calls the money `value` and sends the owner as a flat `assignedTo`
- * string; `LEAD_LAYOUT` calls them `potentialValue` and `assignedToName`,
- * because that is what the lead endpoint sends everywhere else. Renaming them
- * here is what lets one description drive this table too, instead of a second
- * one that agrees with it until somebody edits one of them.
- */
 function toSearchRecords(leads: readonly NLSearchLead[]): RecordValue[] {
   return asRecordValues(
     leads.map((lead) => ({
@@ -256,12 +233,6 @@ export default function SmartLeadSearchPage() {
         ) : isPending ? (
           <DataTableSkeleton rows={10} columns={layout.list.columns.length} className="flex-1" />
         ) : !hasResult ? (
-          /*
-            Not one of the four empty states, and deliberately not dressed as
-            one: nothing is missing and nothing failed — no question has been
-            asked yet. Telling somebody "no leads found" before they have
-            searched would be the product answering a question nobody put to it.
-          */
           <div className="flex flex-1 flex-col items-center justify-center gap-4 text-center">
             <div className="rounded-full bg-muted p-5">
               <Sparkles className="h-10 w-10 text-muted-foreground" />

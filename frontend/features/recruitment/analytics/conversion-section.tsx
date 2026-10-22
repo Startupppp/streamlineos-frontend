@@ -10,7 +10,6 @@ import { useRecruitingAnalytics } from "@/hooks/api/hr/recruitment/recruiting-an
 
 const WINDOW_DAYS = 90;
 
-/** A rate that may legitimately be unknown, rendered as such. */
 function Rate({ value }: { value: number | null }) {
   return (
     <span className="font-mono tabular-nums">{value === null ? "—" : `${value}%`}</span>
@@ -27,16 +26,6 @@ function Figure({ label, value, hint }: { label: string; value: string; hint?: s
   );
 }
 
-/**
- * Conversion over a period, which is a different question from the pipeline
- * chart above it.
- *
- * That one counts candidates by their current status — the shape of the funnel
- * right now, and everybody who already passed through is gone from it. This one
- * counts applications and keeps their terminal status, which is what a
- * conversion rate is actually about. Both are useful and they are not the same
- * number, so they are labelled rather than merged.
- */
 export function ConversionSection() {
   const window = useMemo(() => {
     const to = new Date();
@@ -57,11 +46,6 @@ export function ConversionSection() {
     <PageState resolution={pageState} loading={<Skeleton className="h-64 w-full rounded-xl" />}>
       <div className="space-y-4">
         {data?.empty ? (
-          /*
-            Said in words rather than drawn as five charts of zero. An empty
-            dashboard reads as broken software; "nothing happened in this
-            period" reads as a quiet quarter, which is what it is.
-          */
           <Card>
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">

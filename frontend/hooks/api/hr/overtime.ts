@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { overtimeRequestsQueryOptions } from "@/hooks/api/hr/overtime-read-options";
 
 const overtimeListC = lazyContract(() =>
   import("@/hooks/api/hr/overtime-schema").then((m) => m.overtimeListContract),
@@ -47,13 +48,6 @@ export interface OvertimeRequestsResponse {
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-export function overtimeRequestsQueryOptions(params?: { cursor?: string; pageSize?: number }) {
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests", params ?? {}] as const,
-    staleTime: 30_000,
-  } as const;
-}
-
 export function useOvertimeRequests(params?: { cursor?: string; pageSize?: number }) {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
@@ -81,7 +75,6 @@ export function useCreateOvertimeRequest() {
 
 export function useApproveOvertime() {
   const qc = useQueryClient();
-  // @Idempotent("hr.overtime.approve"): one key per decision, reused on retry.
   return useAuthorizedIdempotentMutation<OvertimeRequest, Error, number>("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "approve"],
     mutationFn: (overtimeId, idempotencyKey) =>
@@ -92,7 +85,6 @@ export function useApproveOvertime() {
 
 export function useRejectOvertime() {
   const qc = useQueryClient();
-  // @Idempotent("hr.overtime.reject"): one key per decision, reused on retry.
   return useAuthorizedIdempotentMutation<OvertimeRequest, Error, number>("hr:attendance:manage", {
     mutationKey: ["hr", "overtime", "reject"],
     mutationFn: (overtimeId, idempotencyKey) =>

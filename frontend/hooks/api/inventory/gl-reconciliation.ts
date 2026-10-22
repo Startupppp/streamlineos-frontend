@@ -5,17 +5,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
-/**
- * Stock valuation against the journals it should have produced.
- *
- * Read-only by design on the backend, and read-only here: the fix for a
- * `MISSING_COA` row is a chart-of-accounts entry in the accounting module, and
- * the fix for an `UNMATCHED` row is re-running the document that should have
- * posted. Neither belongs to a report.
- *
- * Both routes were mounted and neither was called from this repo, so the one
- * report that can say "this movement produced no journal entry" was unreachable.
- */
 
 export const GL_RECON_STATUSES = [
   "MATCHED",
@@ -38,7 +27,6 @@ export interface GlReconRow {
   hasCost: boolean;
   accountCodes: string[];
   missingAccountCodes: string[];
-  /** A kernel (`gl_journals`) id, which is a uuid string. */
   journalEntryId: string | null;
   journalEntryNumber: string | null;
   journalEntryDate: string | null;
@@ -83,7 +71,6 @@ export interface GlReconReport {
 }
 
 export interface GlReconPeriod {
-  /** A `gl_periods` id: the reconciliation reads the default book's periods. */
   periodId: string;
   name: string;
   startDate: string;
@@ -117,7 +104,6 @@ export function useGlReconciliation(filters?: GlReconFilters) {
       if (filters?.limit) params.limit = String(filters.limit);
       return apiClient.get<GlReconReport>("/inventory/reconciliation/gl", params, signal);
     },
-    // A period-scoped comparison over a ledger that is still being written to.
     staleTime: 2 * 60_000,
     enabled: canView,
   });

@@ -148,7 +148,6 @@ describe("Reporting line editor — change-warning UI (PRD D4)", () => {
     await openEditor();
     expect(screen.getByRole("status")).toHaveTextContent("changed 3 times in the last 24 hours (limit 3)");
     expect(screen.getByRole("status")).toHaveTextContent("The limit does not apply when only the additional managers change.");
-    // Like the server, a reason is required only once the primary actually changes.
     expect(screen.getByRole("textbox", { name: /Reason \(optional\)/ })).toHaveAttribute("aria-required", "false");
     await userEvent.click(screen.getByRole("combobox", { name: "Primary reporting manager" }));
     expect(screen.getByRole("textbox", { name: /Reason \*/ })).toHaveAttribute("aria-required", "true");

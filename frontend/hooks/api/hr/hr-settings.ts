@@ -90,7 +90,6 @@ export function useUpdateDocument() {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsExpiryAll });
-      // A company document in the Knowledge Base is a live view of its HR document: editing or deleting the source changes or removes the entry.
       void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     },
   });
@@ -106,7 +105,6 @@ export function useDeleteDocument() {
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsStats() });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsExpiryAll });
-      // A company document in the Knowledge Base is a live view of its HR document: editing or deleting the source changes or removes the entry.
       void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });
     },
   });

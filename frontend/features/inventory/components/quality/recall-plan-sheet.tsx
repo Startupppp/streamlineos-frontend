@@ -59,21 +59,6 @@ const MODE_LABEL: Record<RecallMode, string> = {
   vendor: "A supplier",
 };
 
-/**
- * D4 — plan a recall, then execute it.
- *
- * Three acts in one sheet, and the order is the point. Say what the recall is
- * about; see what it would do; then, and only then, do it. The screen this
- * replaces skipped the middle act entirely — an operator typed comma-separated
- * lot ids into a text field and pressed "Create Recall", and the first time
- * anybody learned that 31 customers already had the goods was after the holds
- * had been placed.
- *
- * The evidence version returned by the simulate is carried into the execute, so
- * the server can refuse if the warehouse has moved underneath the picture on
- * screen. When it does, the sheet re-simulates rather than asking the operator
- * to work out what changed.
- */
 export function RecallPlanSheet({ open, onOpenChange }: Props) {
   const canRecall = useCan("inventory:quality:recall");
   const canRead = useCan("inventory:quality:read");
@@ -84,11 +69,6 @@ export function RecallPlanSheet({ open, onOpenChange }: Props) {
   const [description, setDescription] = useState("");
   const [titleError, setTitleError] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  /**
-   * Minted once per planned recall and held across retries. A key minted per
-   * attempt is not an idempotency key at all — the retry after a timeout would
-   * raise a second recall against the same lots.
-   */
   const [idempotencyKey, setIdempotencyKey] = useState<string>(() => randomId());
 
   const simulateMut = useSimulateRecall();
@@ -227,11 +207,6 @@ export function RecallPlanSheet({ open, onOpenChange }: Props) {
           setConfirmOpen(false);
           handleOpenChange(false);
 
-          // INV-33. The recall's own status is OPEN whether the quarantine held
-          // every line or none of them — the same failure the list/detail
-          // screens (recall-affected-lines.tsx) were fixed for. A create screen
-          // that only ever says "Recall executed" is the one place left where
-          // that gap still reads as success.
           const unheld = data.lines.filter((line) =>
             isRecallLineUnheld(toRecallLineQuarantine(line.status)),
           );
@@ -247,9 +222,6 @@ export function RecallPlanSheet({ open, onOpenChange }: Props) {
         },
         onError: (e) => {
           setConfirmOpen(false);
-          // 409 is the evidence check, not a failure the operator caused: the
-          // warehouse moved between the simulate and the execute. Re-run it so
-          // they review the new picture rather than guessing what changed.
           if (isApiError(e) && e.status === 409) {
             toast.error("Stock moved since you simulated. Review the updated impact.");
             runSimulation(form.getValues());

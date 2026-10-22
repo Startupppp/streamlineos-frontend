@@ -2,11 +2,6 @@ import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { SearchInput } from "./search-input";
 
-/**
- * HRMS ticket 01/11. Debounced search boxes need an escape hatch for Enter, and
- * the search row frequently sits inside a form — so Enter must search rather
- * than submit whatever form happens to enclose it.
- */
 function renderSearch(props: Partial<React.ComponentProps<typeof SearchInput>> = {}) {
   const onValueChange = jest.fn();
   const onSubmitSearch = jest.fn();

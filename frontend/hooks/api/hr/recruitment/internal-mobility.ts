@@ -27,15 +27,6 @@ const approvalResultContract = lazyContract(() =>
   ),
 );
 
-/**
- * Deliberately not gated on a permission.
- *
- * Both routes are `@AuthorizedInService`: the authority is being the applicant,
- * or being the head of that applicant's department, and the service puts that
- * membership in the SQL predicate. Gating them on `hr:requisitions:view` would
- * hide a manager's own approval queue from every manager who is not also a
- * recruiter — which is nearly all of them.
- */
 export function useMyInternalApplications() {
   return useQuery({
     queryKey: humanResourcesQueryKeys.hr.internalMyApplications,

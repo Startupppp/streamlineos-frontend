@@ -43,25 +43,9 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { QuoteStatus } from "@/types/crm/quotes";
 
-/**
- * The quotes on a deal, rendered from the quote description.
- *
- * This was a second implementation of the quotes list: its own row card, its own
- * `STATUS_CONFIG` mapping five statuses to five tone classes, and its own
- * `formatAmount(amount, currency = "USD")` fixed to `en-US` — so a quote written
- * in rupees was grouped in thousands on the deal page and in lakhs on the quotes
- * page, and a quote with no currency was priced in dollars. None of that was a
- * decision anybody made; it is what happens when one record has two lists.
- *
- * It is now the same description, narrowed to the four columns that fit beside a
- * deal. `withColumns` narrows what the tenant already sees rather than declaring
- * a second, smaller layout — so a column a tenant hid on the quotes page cannot
- * reappear here, and the status tones come from the one place that names them.
- */
 
 const EMBEDDED_COLUMNS = ["quoteNumber", "status", "netAmount", "validUntil"] as const;
 
-/** The quote a fresh row starts as, until somebody opens it and prices it. */
 const QUOTE_VALID_DAYS = 30;
 
 interface QuoteRowActionsProps {
@@ -90,11 +74,6 @@ function QuoteRowActions({ quote, dealId, onDeleteRequest }: QuoteRowActionsProp
     [id, dealId, updateStatus],
   );
 
-  /*
-   * Sending goes through its own endpoint, not `changeStatus`. Only that route
-   * refuses a quote pending discount approval or one with no linked contact,
-   * writes the audit row and emits `quote.sent` for the automation rules.
-   */
   const handleMarkSent = useCallback(() => {
     sendQuote.mutate(
       { id, dealId },
@@ -212,16 +191,6 @@ export function DealQuotesSection({ dealId }: DealQuotesSectionProps) {
     [dealId, handleDeleteRequest],
   );
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:quotes:read") === "denied")
     return <NoPermissionState permission="crm:quotes:read" />;
 

@@ -12,39 +12,9 @@ import {
 import { signIn } from "./fixtures/session";
 import { SKIP_REASON, hasTenantEnv, tenantEnv } from "./fixtures/tenant";
 
-/**
- * INV-20 — the RF surface on the device it is actually used on.
- *
- * 375px is the ticket's subject, not a detail of it, so it is set explicitly
- * rather than inherited from whatever the runner defaults to.
- *
- * This deliberately does not repeat what `rf-surface.test.ts` and
- * `rf-surface-render.test.tsx` already assert in jsdom — that the RF screens
- * render no data table, that a task runner scans before it confirms, that
- * denied and offline are distinct answers. jsdom has no layout: it computes no
- * geometry, so it cannot see an element wider than the viewport, a tap target
- * too small for a thumb, or a floating panel landing on top of the task number.
- * Those are the failures that actually strand an operator holding a scanner,
- * and they are what this file measures.
- */
 
-/** iPhone-class portrait width the ticket names. */
 const RF_VIEWPORT = { width: 375, height: 812 };
 
-/**
- * Every geometric assertion below is only meaningful if the RF surface is the
- * thing on screen. It is not enough that SOMETHING rendered.
- *
- * Two other pages answer on these routes and both carry an `h1` that fits
- * inside 375px: the module/permission wall ("You don't have access to this
- * screen") and the queue's own failure card ("Could not load your tasks",
- * rendered inside the RF shell, so even the status badge is present). An early
- * draft of this file passed its overflow, tap-target and overlap checks against
- * the access-denied page and reported RF as covered.
- *
- * So each state is named and failed on explicitly. A spec that cannot tell the
- * screen under test from an error card is not testing the screen.
- */
 async function expectRfSurface(page: Page): Promise<void> {
   await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
 
@@ -59,18 +29,6 @@ async function expectRfSurface(page: Page): Promise<void> {
   ).toHaveCount(0);
 }
 
-/**
- * The queue with its data in, not the skeleton that precedes it.
- *
- * `RfShell` is given a subtitle ONLY on the loaded branch — the loading, error
- * and denied branches all pass a bare title — so "N waiting" is proof the three
- * queries resolved and the list has rendered whatever it is going to render.
- *
- * This is not a nicety. Counting list items before that point returns 0 for a
- * queue that has work, and the count-then-branch below would then wait for an
- * empty state that is never coming; that is exactly how this file failed the
- * first time the tenant had tasks in it.
- */
 async function expectRfQueueLoaded(page: Page): Promise<void> {
   await expectRfSurface(page);
   await expect(
@@ -79,34 +37,12 @@ async function expectRfQueueLoaded(page: Page): Promise<void> {
   ).toBeVisible({ timeout: 30_000 });
 }
 
-/**
- * WCAG 2.5.5 asks for 44x44 CSS px. A control an operator misses while wearing
- * a glove costs a rescan, so this is a usability floor rather than a checkbox.
- */
 const MIN_TAP_TARGET = 44;
 
 const RF_ROUTES = ["/inventory/rf", "/inventory/rf/putaway", "/inventory/rf/pick"] as const;
 
-/** Units on the seeded receipt. Small enough to fit any bin with headroom. */
 const SEED_QTY = 4;
 
-/**
- * The oracle, the seeded task and the session, as fixtures rather than as hooks.
- *
- * `api` is worker-scoped, so one authenticated API context is built per worker
- * and disposed when that worker ends. `task` carries its own budget: the seed is
- * a chain of backend commands, and this machine runs several backends against
- * one shared remote cache — a single list read here has been measured at ten
- * seconds, which is more than a test's default budget is sized for.
- *
- * `auto`, because the queue is measured with work in it: an empty queue
- * exercises one branch of one component, and the geometry that stranded an
- * operator is the geometry of a task ROW. Every test in this file therefore
- * waits for the task, not only the one that opens it. It is built through the
- * backend's own commands — purchase order, receipt, putaway, claim — so the row
- * on screen is a document the application produced rather than a fixture's idea
- * of one.
- */
 const test = base.extend<{ signedIn: void }, { api: ApiOracle; task: ClaimedPutawayTask }>({
   api: [
     async ({}, use) => {
@@ -138,12 +74,6 @@ const test = base.extend<{ signedIn: void }, { api: ApiOracle; task: ClaimedPuta
   ],
 });
 
-/**
- * Runtime-selected, because whether this suite can run is a property of the
- * environment rather than of the code: with no seeded tenant there is nothing
- * for it to assert against. The reason rides along as an annotation so a skipped
- * run still says which variables are missing.
- */
 const HAS_TENANT = hasTenantEnv();
 
 const describeWithTenant: (title: string, details: TestDetails, callback: () => void) => void =
@@ -157,9 +87,6 @@ test.use({ viewport: RF_VIEWPORT });
 
 describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
   test("the viewport under test really is 375 wide", async ({ page }) => {
-    // Anti-vacuity. Every geometric assertion below is only meaningful at this
-    // width, and a `test.use` that silently stopped applying would turn the
-    // whole file into a desktop suite that passes for the wrong reason.
     await page.goto("/inventory/rf");
     expect(page.viewportSize()?.width).toBe(375);
     expect(await page.evaluate(() => window.innerWidth)).toBe(375);
@@ -170,9 +97,6 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
       await page.goto(route);
       await expectRfSurface(page);
 
-      // A horizontal scrollbar on a scanner is not a cosmetic problem: the
-      // operator holds the device one-handed and never finds the content that
-      // went off the right edge.
       const overflow = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
@@ -182,9 +106,6 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
         `${route} scrolls horizontally at 375px (${overflow.scrollWidth} > ${overflow.clientWidth})`,
       ).toBeLessThanOrEqual(overflow.clientWidth);
 
-      // And no individual element wider than the viewport, which is the same
-      // bug one level down: a page can avoid document overflow by clipping a
-      // child that is still unreachable.
       const wide = await widestOffenders(page, overflow.clientWidth);
       expect(wide, `elements wider than the viewport on ${route}`).toEqual([]);
     });
@@ -196,7 +117,6 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
 
     const heading = page.getByRole("heading", { level: 1 });
 
-    // The heading is on screen, inside the viewport, and with nothing painted over its centre.
     const box = await heading.boundingBox();
     expect(box, "the RF heading has no layout box at all").toBeTruthy();
     expect(box!.y).toBeGreaterThanOrEqual(0);
@@ -215,8 +135,6 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
 
   test("every tap target on the queue is big enough for a thumb", async ({ page }) => {
     await page.goto("/inventory/rf");
-    // Loaded, not merely rendered: skeletons have no controls, so measuring
-    // them finds no offenders and reports a pass over an empty measurement.
     await expectRfQueueLoaded(page);
 
     const small = await page.evaluate((min) => {
@@ -226,8 +144,6 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
       );
       for (const el of controls) {
         const rect = el.getBoundingClientRect();
-        // Zero-sized elements are hidden, not small; measuring them would
-        // report every collapsed menu as a usability defect.
         if (rect.width === 0 || rect.height === 0) continue;
         if (rect.height < min)
           offenders.push(`${el.tagName.toLowerCase()} "${(el.textContent ?? "").trim().slice(0, 30)}" h=${Math.round(rect.height)}`);
@@ -244,38 +160,16 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
     await page.goto("/inventory/rf");
     await expectRfQueueLoaded(page);
 
-    // The desktop lists are a different audience's screen. This is the rendered
-    // counterpart of the source-level rule in `rf-surface.test.ts`: a table
-    // introduced by a shared component rather than by the RF source would pass
-    // that one and fail here.
     await expect(page.getByRole("table")).toHaveCount(0);
 
     const tasks = page.getByRole("listitem");
     const emptyState = page.getByText(/Nothing assigned to you/i);
 
-    // One or the other, and never neither — a queue that renders no rows AND no
-    // empty state is a blank screen an operator cannot act on or report.
-    //
-    // The count is read only after the queue has said how many it has, so the
-    // branch is decided on the rendered answer rather than on a race.
     const taskCount = await tasks.count();
     if (taskCount === 0) await expect(emptyState).toBeVisible();
     else await expect(tasks.first().getByRole("link")).toHaveAttribute("href", /\S/);
   });
 
-  /**
-   * The queue is a way IN to the work, not a list of it. This walks that step
-   * and nothing else: the seeded task is found on the queue by its own task
-   * number, tapped, and the runner it lands on is checked for being a runner.
-   *
-   * Addressed by task number rather than as "the first row", which is the
-   * assertion that passes on somebody else's task. This tenant is shared, other
-   * suites raise waves and putaways in it, and a spec that taps whatever is on
-   * top proves only that SOME row navigates somewhere.
-   *
-   * The flows those runners drive — put away, pick — are walked to their ledger
-   * consequences in `inventory-rf-walks.spec.ts`.
-   */
   test("an assigned task opens its own single-column runner", async ({ page, task }) => {
     await page.goto("/inventory/rf");
     await expectRfQueueLoaded(page);
@@ -292,10 +186,6 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
 
     await expect(page).toHaveURL(new RegExp(`/inventory/rf/putaway/${task.taskId}$`));
 
-    // The runner is one screen for one thumb: the task's own number as the
-    // heading — not a generic "Put away", which is what the loading, denied and
-    // error branches render, so this also proves the task itself loaded — a way
-    // back, and no sideways scroll.
     await expect(page.getByRole("heading", { level: 1 })).toHaveText(task.taskNumber);
     await expect(page.getByLabel("Back to tasks")).toBeVisible();
 
@@ -307,7 +197,6 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
   });
 });
 
-/** Elements laid out wider than the viewport, named well enough to find. */
 async function widestOffenders(page: Page, clientWidth: number): Promise<string[]> {
   return page.evaluate((limit) => {
     const offenders: string[] = [];
@@ -315,9 +204,6 @@ async function widestOffenders(page: Page, clientWidth: number): Promise<string[
       const rect = el.getBoundingClientRect();
       if (rect.width === 0) continue;
 
-      // Only elements that START on screen. A drawer parked off-canvas at
-      // translateX(-100%) is correctly positioned, not overflowing, and
-      // counting it reports every closed mobile menu as a defect.
       if (rect.left < 0 || rect.left > limit) continue;
 
       if (rect.right > limit + 1) {
@@ -328,7 +214,6 @@ async function widestOffenders(page: Page, clientWidth: number): Promise<string[
         offenders.push(`${el.tagName.toLowerCase()}${id}${cls} right=${Math.round(rect.right)}`);
       }
     }
-    // Deepest offender is usually the cause; its ancestors merely inherit it.
     return offenders.slice(-5);
   }, clientWidth);
 }

@@ -2,10 +2,6 @@ import { createHash } from "node:crypto";
 import { NAV_GROUPS, type NavRoute } from "./sidebar-nav-items";
 import { EXPECTED_NAVIGATION_INVENTORY_DIGEST } from "./sidebar-nav-inventory-digest";
 
-// The expected digest, and every reason it has moved, live in
-// `sidebar-nav-inventory-digest.ts`. When this goes red because a route or its
-// permission changed on purpose, recompute the digest there and add a note
-// beside it saying why.
 
 function serializeNavigationRoute(route: NavRoute): unknown {
   return {

@@ -3,10 +3,6 @@
 import { InviewSeen } from "@/features/landing/relay/components/ui/inview-seen";
 import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 
-/**
- * The badge's accent dot with a one-off halo when it first comes into view
- * (motion brief, shared.badge: "точка вспыхивает").
- */
 export const PulseDot = ({ delay = 250 }: { delay?: number }) => (
   <span className="relative size-1.5 shrink-0 rounded-full bg-accent-marker">
     <InviewSeen

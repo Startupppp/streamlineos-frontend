@@ -8,7 +8,6 @@ export interface PrefetchGate {
   can: (permission: PermissionKey) => boolean;
 }
 
-// A failed access read denies everything, so a prefetch never calls an endpoint the client would not.
 export async function resolvePrefetchGate(): Promise<PrefetchGate> {
   const result = await getServerAccessResult();
   const access = result.ok ? result.access : undefined;

@@ -24,7 +24,6 @@ export type BulkSource =
 
 export function buildCreateInput(source: BulkSource, values: BulkPreviewValues): CreateBulkJobInput {
   const jobReason = values.jobReason.trim();
-  // Q9: an omitted date is the organisation-local "today" on the server, never the browser's.
   const effectiveFrom = values.effectiveFrom ? { effectiveFrom: values.effectiveFrom } : {};
   return source.kind === "selection"
     ? { jobReason, ...effectiveFrom, employeeUserIds: source.employeeUserIds, primaryManagerUserId: source.primaryManagerUserId }
@@ -32,12 +31,10 @@ export function buildCreateInput(source: BulkSource, values: BulkPreviewValues):
 }
 
 interface BulkPreviewFormProps {
-  /** Null until the source step has something to preview. */
   source: BulkSource | null;
   onPreviewed: (job: BulkJob) => void;
 }
 
-/** Step 2: a job-level reason (always required) and an optional date, then a server preview that writes nothing. */
 export function BulkPreviewForm({ source, onPreviewed }: BulkPreviewFormProps) {
   const createJob = useCreateReportingLineBulkJob();
   const form = useForm<BulkPreviewValues>({

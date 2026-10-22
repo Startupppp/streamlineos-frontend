@@ -33,12 +33,6 @@ const STATUS_VARIANT: Record<SignBulkSendJob["status"], "default" | "secondary" 
   cancelled: "destructive",
 };
 
-/**
- * What "pending" means to a reader. The backend status is accurate but terse,
- * and "pending" on its own reads as stuck rather than queued — which, since
- * SIGN-P0-05 moved the work onto a worker, is now the state most jobs are in
- * for their first few seconds.
- */
 const STATUS_LABEL: Record<SignBulkSendJob["status"], string> = {
   pending: "queued",
   validating: "validating",
@@ -58,7 +52,6 @@ function BulkSendJobRow({ job, templateName, onOpen }: BulkSendJobRowProps) {
   const cancel = useCancelBulkSendJob();
   const isActive = ACTIVE_BULK_SEND_STATUSES.has(job.status);
   const settled = job.successCount + job.failedCount;
-  /** Guard the divide: a job can exist with no rows, and 0/0 is not 0%. */
   const percent = job.totalCount > 0 ? Math.round((settled / job.totalCount) * 100) : 0;
 
   async function handleCancel() {
@@ -116,7 +109,6 @@ export function BulkSendList() {
   const { data: jobs, isLoading, isFetching, isError, error, refetch, access } = useBulkSendJobs();
   const hasPublished = (templates ?? []).some((t) => t.status === "published");
 
-  /** Only show skeleton on initial load, not on background refetch */
   const showSkeleton = !jobs && (isLoading || isFetching);
 
   function templateNameFor(job: SignBulkSendJob): string | undefined {

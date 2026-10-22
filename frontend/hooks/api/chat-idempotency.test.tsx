@@ -11,27 +11,6 @@ import { backendPath } from "@/test-utils/backend-repo";
 import type { RequestConfig } from "@/lib/api-client";
 import type { AccessResponse } from "@/types/access";
 
-/**
- * Every `@Idempotent` chat route, and the hook that calls it.
- *
- * `IdempotencyInterceptor` (backend src/common/idempotency/idempotency.interceptor.ts:87)
- * reads `idempotency-key` off the request and throws
- * `BadRequestException("An Idempotency-Key header is required for this operation")`
- * BEFORE the handler runs. The header is therefore part of the route's contract, not a
- * reliability nicety — a hook that omits it does not "lose replay protection", it 400s
- * every single call.
- *
- * Measured at backend 299cd1009 / frontend 7633c38b9, before this file existed: the chat
- * module had THREE `@Idempotent` routes and ALL THREE were called with no header —
- * `/chat/entity-actions/submit` (chat-entities.ts), `/chat/huddles/:huddleId/invite`
- * (chat-huddles.ts) and, once they were fenced, `/chat/actions/create-task-from-message` and
- * `/chat/channels/:channelId/summarize`. Grepping every `hooks/api/chat*.ts` at that commit
- * returns 0 occurrences of "Idempotency-Key", so the count of chat hooks that got this right
- * was 0 of 0. That is why the corpus below is
- * DERIVED from the backend's own controllers rather than listed by hand: a table of the
- * three routes already known to be broken cannot see the fourth.
- */
-
 jest.mock("next-auth/react", () => ({
   useSession: () => ({
     data: { orgId: "org-1", user: { id: "user-1", name: "Ada" } },
@@ -55,20 +34,10 @@ import { useChatSummarize } from "@/hooks/api/chat-summarize";
 
 const post = apiClient.post as jest.MockedFunction<typeof apiClient.post>;
 
-/** Measured: entity-actions/submit, huddles/:id/invite, actions/create-task-from-message, summarize. */
 const MEASURED_FENCED_ROUTE_FLOOR = 4;
 
 const CHAT_CONTROLLER_DIR = backendPath("src", "modules", "chat");
 
-/**
- * The full route path of every `@Idempotent` handler in the backend's chat module.
- *
- * Read from source rather than from a checked-in copy, and by walking BACK from the
- * `@Idempotent` line to the nearest HTTP-method decorator and then to the enclosing
- * `@Controller` prefix — the same reason the backend's own gate script does it that way:
- * `@Post("submit")` under `@Controller("chat/entity-actions")` is anonymous on the method
- * decorator alone.
- */
 function backendFencedChatRoutes(): string[] {
   const routes: string[] = [];
   for (const file of fs.readdirSync(CHAT_CONTROLLER_DIR)) {
@@ -103,10 +72,8 @@ function backendFencedChatRoutes(): string[] {
 }
 
 interface FencedCall {
-  /** The concrete URL the hook is expected to POST to. */
   readonly url: string;
   readonly useHook: () => unknown;
-  /** Not every caller is a mutation — `useChatSummarize` returns a plain async function. */
   readonly call: (hookResult: never, input: never) => Promise<unknown>;
   readonly input: unknown;
   readonly otherInput: unknown;
@@ -193,12 +160,6 @@ function keySentOn(url: string): string | undefined {
   return config?.headers?.["Idempotency-Key"];
 }
 
-/**
- * Every key sent, in call order, regardless of URL. The retry and distinct-operation
- * cases reset the mock first and then make exactly two calls, and `useChatSummarize`
- * puts its only input IN the path — so filtering by URL would silently see one call
- * for it and turn the assertion into a no-op.
- */
 function allKeysSent(): (string | undefined)[] {
   return post.mock.calls.map(
     ([, , config]) => (config as RequestConfig | undefined)?.headers?.["Idempotency-Key"],
@@ -222,15 +183,11 @@ beforeEach(() => {
 describe("every @Idempotent chat route is called with an Idempotency-Key", () => {
   it("reads the fenced routes out of the backend's own chat controllers", () => {
     const routes = backendFencedChatRoutes();
-    // Anti-vacuity: a regex that stopped matching would derive an EMPTY corpus and
-    // every per-route assertion below would silently vanish with it.
     expect(routes.length).toBeGreaterThanOrEqual(MEASURED_FENCED_ROUTE_FLOOR);
     for (const route of routes) expect(route.startsWith("/chat")).toBe(true);
   });
 
   it("has a caller in this file for every fenced chat route", () => {
-    // A fenced route added later with no entry here fails HERE rather than in
-    // production with a 400 nobody attributed to a missing header.
     expect(backendFencedChatRoutes()).toEqual(Object.keys(CALLERS).sort());
   });
 

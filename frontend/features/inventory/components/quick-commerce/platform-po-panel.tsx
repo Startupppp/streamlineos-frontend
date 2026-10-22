@@ -68,8 +68,6 @@ const LINE_COLUMNS: DataTableColumn<PlatformPoLine>[] = [
   {
     key: "match",
     header: "Match",
-    // The reason a line failed is the whole value of keeping a rejected
-    // document: "no product carries EAN 89012…" is actionable, "rejected" is not.
     cell: (row) =>
       row.validationError ? (
         <span className="text-dense text-status-danger-ink">{row.validationError}</span>
@@ -123,10 +121,6 @@ const FILL_RATE_COLUMNS: DataTableColumn<FillRateLine>[] = [
   },
 ];
 
-/**
- * NEO-2 / NEO-3 - one platform purchase order: what they asked for, what matched
- * our catalogue, and how we did against it.
- */
 export function PlatformPoPanel({ open, onOpenChange, platformPoId }: PlatformPoPanelProps) {
   const channelState = useCanState("inventory:channels:manage");
   const canAccept = useCan("inventory:purchase-orders:create");

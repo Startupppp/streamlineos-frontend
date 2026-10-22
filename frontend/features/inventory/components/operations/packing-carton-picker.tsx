@@ -24,15 +24,6 @@ interface PackingCartonPickerProps {
   onSuggest: () => void;
 }
 
-/**
- * INV-206 at the bench.
- *
- * The service is advisory and says so: it checks weight and the longest edge,
- * because those are the two ways a wrong answer is expensive, and it declines to
- * recommend anything at all when an item has no measurements. All three of those
- * facts are shown rather than smoothed over — a packer told "SMALL" by a system
- * that had no dimensions for half the order would trust it exactly once.
- */
 export function PackingCartonPicker({
   suggestion,
   isSuggesting,

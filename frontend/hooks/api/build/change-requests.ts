@@ -12,6 +12,10 @@ import type {
   UpdateChangeRequestInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  changeRequestsListQueryOptions,
+  type CrFilters,
+} from "./change-requests-read-options";
 
 
 const changeRequestListContract = lazyContract(() =>
@@ -23,18 +27,6 @@ const changeRequestRowContract = lazyContract(() =>
 const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
-
-interface CrFilters {
-  status?: string;
-  impact?: string;
-  requesterId?: string;
-  approverId?: string;
-  releaseId?: number;
-  clientVisible?: boolean;
-  q?: string;
-  cursor?: string;
-  limit?: number;
-}
 
 export function useChangeRequests(projectId: number, filters?: CrFilters) {
   const canView = useCan("build:changerequests:view");
@@ -106,12 +98,3 @@ export function useDeleteChangeRequest(projectId: number) {
   });
 }
 
-export function changeRequestsListQueryOptions(projectId: number, filters?: CrFilters) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.changeRequests.list(
-      projectId,
-      filters && Object.keys(filters).length > 0 ? filters : undefined,
-    ),
-    staleTime: 60_000,
-  };
-}

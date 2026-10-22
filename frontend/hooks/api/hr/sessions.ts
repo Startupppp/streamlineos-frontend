@@ -33,13 +33,6 @@ export const useSessions = () =>
     queryKey: accessAndCrmQueryKeys.sessions.list(),
     queryFn: ({ signal }) => apiClient.get("/sessions", undefined, signal, sessionListContract),
     staleTime: 30 * 1000,
-    /*
-     * SETTINGS-001. This is one panel on Account Settings, and the page's other
-     * three sections do not depend on it — but it threw to the route boundary,
-     * so a 503 on /sessions replaced the whole page with "Server temporarily
-     * unavailable". Its own section already draws an ErrorState with a Retry; it
-     * had simply never been reachable.
-     */
     ...INLINE_READ_ERROR,
   });
 

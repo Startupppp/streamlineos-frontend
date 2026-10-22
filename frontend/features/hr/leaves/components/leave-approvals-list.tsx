@@ -15,8 +15,6 @@ export function LeaveApprovalsList({
   requests,
   currentUserId,
 }: LeaveApprovalsListProps) {
-  // V-044. The mutations and both dialogs now live in `leave-decision-controls`,
-  // so /hr/approvals drives exactly the same decision path this list does.
   const { onProcess, processingId, decisionDialogs } = useLeaveDecisions();
 
   return (

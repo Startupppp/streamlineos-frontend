@@ -21,12 +21,6 @@ import { InterviewList } from "@/features/recruitment/interviews/interview-list"
 import { InterviewFormSheet } from "@/features/recruitment/interviews/interview-form-sheet";
 import { ErrorState } from "@/components/shared/error-state";
 
-/**
- * Interviews are a SOURCE on the one unified calendar, never a calendar of
- * their own (root CLAUDE.md §8). `hr-interviews` is already registered with
- * `CalendarSourceRegistry`, so `/calendar` renders these events beside every
- * other source; the deep link turns that source on if the viewer has it off.
- */
 const INTERVIEW_CALENDAR_HREF = "/calendar?source=hr-interviews";
 
 export function InterviewsPage() {

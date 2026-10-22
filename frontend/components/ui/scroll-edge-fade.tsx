@@ -12,14 +12,9 @@ import { cn } from "@/lib/utils";
 type ScrollEdgeFadeProps = {
   children: ReactNode;
   className?: string;
-  /** Extra class on the scrollable element (the direct overflow container). */
   viewportClassName?: string;
 };
 
-/**
- * Horizontal scroll container with edge fades that appear only when
- * more content exists off-screen — so users can tell the row is scrollable.
- */
 export function ScrollEdgeFade({
   children,
   className,

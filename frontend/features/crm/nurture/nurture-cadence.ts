@@ -4,24 +4,11 @@ import {
   type NurtureStep,
 } from "@/types/crm/nurture";
 
-/**
- * What the server will actually store, worked out before it is asked.
- *
- * `NurtureSequencesService.replaceSteps` clamps every wait on the way in and
- * `waitMsForStep` clamps again on the way out, so a cadence typed as 24 hours
- * is silently run at 240. Mirroring the clamp here is the difference between an
- * editor that shows what will happen and one that shows what was typed — and
- * the second kind produces a sequence somebody believes is weekly.
- *
- * The rule is copied rather than fetched because nothing publishes it; the risk
- * that carries is recorded on `MIN_STEP_WAIT_HOURS` in `types/crm/nurture.ts`.
- */
 export function clampWaitHours(hours: number): number {
   if (!Number.isFinite(hours)) return MIN_STEP_WAIT_HOURS;
   return Math.min(MAX_STEP_WAIT_HOURS, Math.max(MIN_STEP_WAIT_HOURS, Math.floor(hours)));
 }
 
-/** Hours as a person reads them: "10 days", "10 days 6 hours", "18 hours". */
 export function describeWaitHours(hours: number): string {
   if (!Number.isFinite(hours) || hours <= 0) return "no wait";
 
@@ -37,14 +24,6 @@ export function describeWaitHours(hours: number): string {
   return `${dayPart} ${hourPart}`;
 }
 
-/**
- * Why the number they typed is not the number that will run, or null when it is.
- *
- * Said as a consequence rather than as a constraint. "Minimum 240" reads as
- * arbitrary; "a tighter cadence pays for a draft the guardrails then refuse" is
- * the reason the floor exists, and it is the sentence that stops somebody
- * raising a ticket about the field ignoring them.
- */
 export function clampNoticeFor(hours: number): string | null {
   if (!Number.isFinite(hours)) return null;
 
@@ -60,14 +39,6 @@ export function clampNoticeFor(hours: number): string | null {
   return `Runs at ${describeWaitHours(clamped)}.`;
 }
 
-/**
- * When each step comes due, counted from enrolment.
- *
- * A per-step wait tells you nothing about whether the cadence is four months
- * long, and four months is exactly the length the step ceiling was chosen to
- * allow. The offsets are cumulative over the CLAMPED waits, because that is the
- * schedule the sender keeps.
- */
 export function cadenceOffsetsHours(steps: readonly { waitHours: number }[]): number[] {
   const offsets: number[] = [];
   let total = 0;
@@ -80,19 +51,11 @@ export function cadenceOffsetsHours(steps: readonly { waitHours: number }[]): nu
   return offsets;
 }
 
-/** How long the whole cadence runs, as the sender will run it. */
 export function cadenceLengthHours(steps: readonly { waitHours: number }[]): number {
   const offsets = cadenceOffsetsHours(steps);
   return offsets.length === 0 ? 0 : (offsets[offsets.length - 1] ?? 0);
 }
 
-/**
- * Stored steps as the editor's fields.
- *
- * Ordered by `stepNumber` rather than trusted in arrival order: the server
- * derives numbering from the array it is sent, so an editor seeded out of order
- * would renumber the cadence on the next save.
- */
 export function stepsToFields(steps: readonly NurtureStep[]): { waitHours: string }[] {
   return [...steps]
     .sort((a, b) => a.stepNumber - b.stepNumber)

@@ -4,15 +4,6 @@ import { renderWithProviders } from "@/test-utils";
 import { ChannelSnapshotDiffsPanel } from "./channel-snapshot-diffs-panel";
 import type { Channel, ChannelSnapshotDiff } from "@/hooks/api/inventory/channels";
 
-/**
- * The nightly sweep writes these rows and nothing read them, so an oversold
- * listing produced a difference that sat unseen.
- *
- * Two gates have to hold on the screen, because both are real on the server and
- * a button that 409s is worse than no button: accepting posts a stock movement
- * and needs `inventory:stock:adjust`, and the channel's own snapshot policy can
- * forbid accepting at all.
- */
 
 const mockUseCan = jest.fn(() => true);
 jest.mock("@/hooks/api/access", () => ({
@@ -103,7 +94,6 @@ describe("channel snapshot differences", () => {
     renderWith({ data: result([diff()]) }, { canAdjust: false });
 
     expect(screen.queryByRole("button", { name: /^Accept$/i })).not.toBeInTheDocument();
-    // Dismissing touches nothing, so it stays available.
     expect(screen.getByRole("button", { name: /^Dismiss$/i })).toBeInTheDocument();
   });
 

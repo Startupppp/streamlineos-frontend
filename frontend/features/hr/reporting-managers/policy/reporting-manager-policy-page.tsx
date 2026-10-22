@@ -68,7 +68,6 @@ function PolicyForm({ policy, onConflict }: PolicyFormProps) {
     defaultValues: policyToFormValues(policy),
   });
 
-  // A newer version (ours after save, or someone else's after a conflict) resets the form.
   useEffect(() => {
     form.reset(policyToFormValues(policy));
   }, [policy, form]);

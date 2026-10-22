@@ -37,13 +37,6 @@ const nurtureMetricsC = lazyContract(() =>
   ),
 );
 
-/**
- * What a campaign actually did, gated on `view` to match the route.
- *
- * A short `staleTime`: these numbers move whenever the sender ticks, and a
- * recruiter watching a campaign they just launched reads a stale zero as the
- * campaign not working.
- */
 export function useEmailSequenceMetrics(emailSequenceId: number, enabled = true) {
   return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.emailSequenceMetrics(emailSequenceId),

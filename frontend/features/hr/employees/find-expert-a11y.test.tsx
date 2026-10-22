@@ -25,13 +25,6 @@ function findExpert(over: Record<string, unknown>) {
   });
 }
 
-/**
- * An automated axe pass over the Find Expert surface BUG-011 and BUG-016
- * touched. This is the machine-checkable share of accessibility only: axe sees
- * labels, roles and contrast in the tree, and cannot see focus order, focus
- * restoration after an overlay closes, or how a screen reader narrates a
- * pending search. Those still need a browser (FE-123).
- */
 const EXPERT_FIXTURE = [
   {
     userId: "u1",

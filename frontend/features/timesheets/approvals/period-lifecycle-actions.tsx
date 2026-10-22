@@ -34,11 +34,6 @@ interface PeriodLifecycleActionsProps {
   onDone: () => void;
 }
 
-/**
- * Lock / unlock / reopen for an approved or locked period. The backend allows
- * lock only from APPROVED, unlock only from LOCKED and reopen from either, so the
- * offered actions follow the status rather than letting the server refuse them.
- */
 export function PeriodLifecycleActions({ period, onDone }: PeriodLifecycleActionsProps) {
   const canManage = useCan("timesheets:approvals:manage");
   const [pending, setPending] = useState<LifecycleAction | null>(null);

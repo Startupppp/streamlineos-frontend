@@ -10,8 +10,6 @@ import type { AtsPipelineStage } from "@/types/hr/recruitment";
 
 const STAGE_BADGE: Record<string, string> = {
   NEW: "bg-muted text-muted-foreground",
-  // Two consecutive stages, sky then blue, that the migration flattened into
-  // one "info". HIRED and REJECTED below are outcomes and keep their statuses.
   SCREENING: "bg-category-sky-surface text-category-sky-ink",
   INTERVIEW: "bg-category-blue-surface text-category-blue-ink",
   OFFER: "bg-primary/10 text-foreground dark:bg-primary/10 dark:text-foreground",

@@ -4,12 +4,6 @@ import { CtaTitle } from "./cta-title";
 import { SignupForm } from "./signup-form";
 import { CUE, CueFocus, CueRise, CueType } from "./stage";
 
-/**
- * CTA panel 3488:22896 — 730 × 308 at (630, 96), accent fill; narrow
- * 3888:11495 — 457 × 278 at (519, 0); 768 3876:123 — 688 × 278 at (40, 330);
- * 390 3954:721 — 350 × 340 at (20, 321). It leads the footer timeline: panel,
- * then title (eyebrow typing with it), copy, form.
- */
 export const CtaPanel = ({
   eyebrow,
   title,

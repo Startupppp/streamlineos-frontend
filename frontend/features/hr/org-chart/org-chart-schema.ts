@@ -9,8 +9,6 @@ const orgChartNodeContract = z.object({
   departmentId: z.string().nullable(),
   departmentName: z.string().nullable(),
   hasDirectReports: z.boolean(),
-  // V-026. Optional until the org-chart row carries them; `splitOrgChartRoots`
-  // falls back to `hasDirectReports` while they are absent.
   isOwner: z.boolean().optional(),
   isTopLevel: z.boolean().optional(),
 });

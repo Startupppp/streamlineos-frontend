@@ -1,14 +1,5 @@
 import Image from "next/image";
 
-/**
- * Bloom 3488:22870, Aurora / blue 3488:22871, Aurora / violet 3488:22872.
- * Exported SVGs carry their 80px blur, so each image box is the ellipse grown
- * by the filter bleed (160 on every side).
- * At 1024 / 768 / 390 (3888:11465…, 3876:93…, 3893:4377…) all three sit at
- * x 0 (y -32 / 0 / -72) and span the frame width, heights unchanged — so each
- * box keeps its height and is stretched horizontally by
- * <frame width> / <1440 ellipse width>, bleed included.
- */
 export const Glows = () => (
   <div aria-hidden className="pointer-events-none">
     <Image

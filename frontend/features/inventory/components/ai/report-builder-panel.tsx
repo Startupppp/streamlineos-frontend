@@ -23,19 +23,6 @@ import {
 } from "@/hooks/api/inventory/report-builder";
 import { ReportBuilderPreview } from "./report-builder-preview";
 
-/**
- * F5 — the natural-language report builder.
- *
- * The whole surface had no caller: three finished routes, carefully defended,
- * and no hook, no page and no link anywhere in this repo. A feature nobody can
- * reach has not shipped.
- *
- * The catalogue is offered as six buttons rather than left for the reader to
- * guess at, which is what the controller's own comment asks for — "so a client
- * can offer the six as buttons rather than making everybody guess what the box
- * understands". A button fills the question box rather than submitting it: the
- * ask costs credits, so the press that spends them is always the reader's own.
- */
 
 const ASK_PERMISSION = "inventory:ai:read" as const;
 
@@ -80,11 +67,6 @@ export function ReportBuilderPanel() {
     ask.mutate({ question: trimmed });
   };
 
-  /**
-   * A catalogue button writes the question rather than sending it. The reader
-   * can then edit it — "expiring lots" into "expiring lots at Pune" — and the
-   * request that costs credits is still one they chose to make.
-   */
   const handlePick = (report: InvReportCatalogEntry) => {
     setQuestion(report.description);
   };
@@ -97,13 +79,6 @@ export function ReportBuilderPanel() {
     exportCsv.mutate(spec);
   };
 
-  /**
-   * `gate.denied` and not `!gate.allowed`. `useCan` is false both when the
-   * answer is a refusal and while the access snapshot is still in flight, and a
-   * screen that reads the second as the first tells a permitted reader they have
-   * no access. Only a resolved refusal closes the surface; an unresolved one
-   * leaves the box up and holds the button.
-   */
   if (gate.denied) {
     return (
       <NoPermissionState
@@ -132,9 +107,6 @@ export function ReportBuilderPanel() {
               ))}
             </div>
           ) : catalog.isError ? (
-            // The catalogue is the only read here, and losing it costs the six
-            // buttons and nothing else — the box still works. Saying so beats a
-            // full-page error over a surface that is still usable.
             <p className="text-dense text-muted-foreground" role="status">
               The report list could not be loaded ({getErrorMessage(catalog.error)}). You
               can still ask in your own words.

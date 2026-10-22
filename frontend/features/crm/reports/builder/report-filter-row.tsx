@@ -33,7 +33,6 @@ function isComparisonOperator(value: string): value is ReportingComparisonOperat
   return REPORTING_COMPARISON_OPERATORS.some((entry) => entry === value);
 }
 
-/** A control shaped like the value, so a date is a date picker and not a hope. */
 function inputTypeFor(fieldType: ReportingFieldType | ""): string {
   if (fieldType === "number") return "number";
   if (fieldType === "date") return "date";

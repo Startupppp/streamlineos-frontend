@@ -2,14 +2,6 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DataTable, type DataTableColumn } from "./data-table";
 
-/**
- * Sorting is server-only. `sortState` names the fields the endpoint accepts and
- * the table hands those columns a control; a table without it has no sort
- * affordance at all, which is the property the deleted `sortable` prop only
- * ever appeared to provide — it built display columns with no accessor, so
- * `getCanSort()` was false for all 234 of its declarations and the control
- * never rendered on any screen.
- */
 
 interface SortRow {
   id: string;
@@ -105,11 +97,6 @@ describe("DataTable — server sort", () => {
     expect(onChange).toHaveBeenCalledWith("score", "asc");
   });
 
-  /**
-   * Table-core removes the sort on the third click unless
-   * `enableSortingRemoval` is off, which yields an empty sorting state and so
-   * no field to report — the header would stop responding after two clicks.
-   */
   it("keeps reporting a direction past the second click", async () => {
     const user = userEvent.setup();
     const onChange = jest.fn();

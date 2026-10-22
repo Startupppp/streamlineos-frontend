@@ -10,20 +10,6 @@ import {
 } from "@/test-support/inventory-report-builder-fixtures";
 import InventoryAiPage from "@/app/(authenticated)/inventory/ai/page";
 
-/**
- * `inventory/ai/reports` — catalog, ask and export — had no frontend caller at
- * all. No hook, no page, no link. A complete natural-language report builder,
- * carefully defended, that nobody in the product could reach.
- *
- * Every test here drives it from the page, not from the component: the panel is
- * a tab on /inventory/ai, so a test that mounted `ReportBuilderPanel` directly
- * would keep passing on the day the tab is removed and the feature is
- * unreachable again — which is the exact failure being fixed.
- *
- * The rest of the file is about the four things the response says that a table
- * cannot. Each is a way for correct rows to tell a lie, and each was designed
- * into the contract on purpose.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -96,11 +82,6 @@ describe("reaching it at all", () => {
     expect(screen.getByRole("button", { name: "Build report" })).toBeInTheDocument();
   });
 
-  /**
-   * The controller's own comment asks for this: the catalogue exists "so a
-   * client can offer the six as buttons rather than making everybody guess what
-   * the box understands".
-   */
   it("offers all six reports as buttons", async () => {
     await openReportBuilder();
 
@@ -108,10 +89,6 @@ describe("reaching it at all", () => {
       expect(screen.getByRole("button", { name: report.label })).toBeInTheDocument();
   });
 
-  /**
-   * Picking one writes the question rather than sending it. Asking spends
-   * credits, so the press that spends them stays the reader's.
-   */
   it("fills the box from a catalogue button without spending a credit", async () => {
     await openReportBuilder();
 
@@ -137,11 +114,6 @@ describe("reaching it at all", () => {
 });
 
 describe("what the answer says beyond its rows", () => {
-  /**
-   * `plannedBy: "deterministic"` means the model did not answer and a keyword
-   * fallback picked the report. Presenting that as the assistant's answer is the
-   * exact dishonesty the backend went out of its way to avoid.
-   */
   it("says out loud when the assistant did not choose the report", async () => {
     mockPreview = preview({ plannedBy: "deterministic" });
     await openReportBuilder();
@@ -160,11 +132,6 @@ describe("what the answer says beyond its rows", () => {
     expect(screen.queryByText(/The assistant did not choose this report/)).toBeNull();
   });
 
-  /**
-   * A filter removed because it named a warehouse outside the asker's scope
-   * makes a narrowed result look like a complete one. The reason travels with
-   * the field for exactly this reason, and both have to render.
-   */
   it("names every filter the server removed, and why", async () => {
     mockPreview = preview({
       stripped: [
@@ -184,7 +151,6 @@ describe("what the answer says beyond its rows", () => {
     ).toBeInTheDocument();
   });
 
-  /** "25 rows" under a table showing 25 of 3,000 is a lie. */
   it("reports a truncated preview against the real total, not its own row count", async () => {
     mockPreview = preview({ rowCount: 25, total: 3000, truncated: true });
     await openReportBuilder();
@@ -193,7 +159,6 @@ describe("what the answer says beyond its rows", () => {
     expect(screen.queryByText("25 rows")).toBeNull();
   });
 
-  /** A report that cannot count still says the preview is a sample. */
   it("says a capped preview is a sample when the report reports no total", async () => {
     mockPreview = preview({ rowCount: 25, total: null, truncated: true });
     await openReportBuilder();
@@ -236,12 +201,6 @@ describe("the export control", () => {
 });
 
 describe("a report the asker may not read", () => {
-  /**
-   * `not_permitted` is a state, not an error and not an empty result. The model
-   * chose a report whose own key the asker does not hold — valuation is the one
-   * that makes it concrete — and an empty table here would read as "there is
-   * nothing there", which is a different claim entirely.
-   */
   it("names the permission the chosen report costs instead of showing an empty table", async () => {
     mockPreview = preview({
       status: "not_permitted",
@@ -271,7 +230,6 @@ describe("the rows themselves", () => {
 
     const table = screen.getByRole("table");
     expect(within(table).getByText("LOT-44")).toBeInTheDocument();
-    // parseISO, not `new Date`: UTC midnight prints 30 September west of London.
     expect(within(table).getByText("1 Oct 2026")).toBeInTheDocument();
   });
 });

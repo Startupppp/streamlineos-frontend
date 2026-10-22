@@ -2,18 +2,6 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { renderWithProviders, axeViolationIds } from "@/test-utils";
 import { PickWaveReassign } from "./pick-wave-reassign";
 
-/**
- * The reassign control's five outcomes, kept apart on purpose.
- *
- * The hook behind this shipped unreferenced: `POST
- * /inventory/picking/waves/:id/reassign` existed, was permissioned and was
- * idempotency-fenced, and no component called it. What made wiring it awkward
- * is that the roster and the action carry *different* backend keys, so a real
- * operator can hold one and not the other — the `INVENTORY_MANAGER` template
- * carries both, but a shipping-only role carries neither directory. Each of
- * those combinations has to say which one it is, because "no members found" and
- * "you may not read the roster" look identical and mean opposite things.
- */
 
 const mockMutate = jest.fn();
 const mockRefetch = jest.fn();
@@ -40,8 +28,6 @@ jest.mock("@/hooks/api/inventory/warehouses", () => ({
   useWarehouseAssignees: () => ({ ...mockRoster, refetch: mockRefetch }),
 }));
 
-// MemberPicker's own directory sources. An explicit candidate list disables all
-// of them, but the hooks still run and they have no business fetching here.
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
   useOrgMembersByIds: () => ({ data: undefined }),

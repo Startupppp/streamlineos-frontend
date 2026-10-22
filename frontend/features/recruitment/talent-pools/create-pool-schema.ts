@@ -1,14 +1,5 @@
 import { z } from "zod";
 
-/**
- * Tags are typed as one comma-separated line rather than collected through a
- * chip editor.
- *
- * A pool carries a handful of short labels and is created once; a tag widget
- * here would be more component than the task needs. The normalisation —
- * trimming, lowercasing, deduping — matches what the API does on the way in, so
- * what the recruiter sees after saving is what they typed.
- */
 export const TAG_LIMIT = 20;
 
 export function parseTags(raw: string): string[] {

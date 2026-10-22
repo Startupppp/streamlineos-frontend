@@ -70,16 +70,9 @@ export function useChatGlobalNotifications(
     [channels],
   );
 
-  // RT-003: the second on-mount permission prompt, removed. Opening chat is not
-  // consent to be notified, and a denial here is effectively permanent — the ask now
-  // belongs to the explicit control in notification preferences (`usePushSubscription`).
-  // Chat still shows OS notifications when permission was already granted.
-
   useEffect(() => {
     if (!orgId || channelIdSignature === "") return;
 
-    // Captured after the guard: the narrowing does not reach into the hoisted
-    // `setup` declaration below, and the channel name builder takes a string.
     const org = orgId;
     const channelIds = channelIdSignature.split(",").map(Number);
     let cancelled = false;
@@ -219,10 +212,6 @@ export function useChatGlobalNotifications(
       void reauthorizeAblyClients();
     };
 
-    // The per-channel `message` subscriptions above only cover channels on pages the
-    // sidebar has already fetched. The backend also publishes `notification:message`
-    // (DMs) and `notification:mention` to this per-user channel for every recipient,
-    // so a DM or mention in a channel that is not loaded still moves the badges.
     const inboxHandler = (event: string) => (msg: InboundMessage) => {
       if (isForgedServerFrame(event, msg.clientId)) return;
       const data: unknown = msg.data;

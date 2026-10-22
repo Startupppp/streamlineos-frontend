@@ -15,7 +15,6 @@ export function useProjectAiSummary(pid: number) {
     "build:ai:use",
     {
       mutationKey: ["projects", pid, "ai", "summary"],
-      // Quota/deny must settle once — never storm POST /summary on 402.
       retry: false,
       mutationFn: (input) =>
         apiClient.post<ProjectSummaryResult>(`/ai/projects/${pid}/summary`, undefined, { signal: input?.signal }, projectSummaryContract),

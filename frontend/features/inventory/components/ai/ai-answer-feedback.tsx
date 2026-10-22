@@ -16,26 +16,6 @@ import {
   type InvAiVerdict,
 } from "@/hooks/api/inventory/ai-review";
 
-/**
- * F6 — saying what an AI answer was worth, on the record.
- *
- * Four verdicts rather than a thumb, because the four are acted on by different
- * people. `Wrong` points at the arithmetic, which is the deterministic engine's
- * rather than the model's. `Stale` says the figures were right when computed and
- * have moved since — a different fact, and the one the evidence hash exists to
- * settle. `Unsafe` says the answer invited an operator to do something they
- * should not, and it is never averaged into a satisfaction score.
- *
- * A complaint asks for a sentence before it will submit. That is not friction
- * for its own sake: a `Wrong` with no explanation cannot be acted on, and a
- * table full of them is a system that has stopped hearing about its own
- * failures while appearing to listen.
- *
- * Nothing here sends the answer text anywhere. Only identifiers travel — which
- * call, which prompt version, which contract, which evidence — and the server
- * reads what the call cost from the gateway's own log rather than believing the
- * browser.
- */
 
 export interface AiAnswerProvenance {
   promptKey: string;
@@ -47,9 +27,7 @@ export interface AiAnswerProvenance {
 
 interface AiAnswerFeedbackProps {
   surface: InvAiSurface;
-  /** `null` when no model spoke — there is then nothing to have an opinion about. */
   provenance: AiAnswerProvenance | null;
-  /** The fingerprint the answer was built on, where the surface carries one. */
   evidenceHash?: string | null;
   className?: string;
 }
@@ -102,9 +80,6 @@ export function AiAnswerFeedback({
   const [note, setNote] = useState("");
   const [filed, setFiled] = useState<InvAiVerdict | null>(null);
 
-  // No model spoke, so there is no call to have an opinion about. Offering the
-  // buttons anyway would collect verdicts on the deterministic layer under an
-  // AI heading.
   if (!provenance) return null;
 
   function fileVerdict(verdict: InvAiVerdict, withNote?: string): void {

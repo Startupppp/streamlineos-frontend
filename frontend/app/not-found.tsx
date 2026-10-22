@@ -62,7 +62,7 @@ export default function GlobalNotFound() {
             size="lg"
             className="min-w-[200px] shadow-lg shadow-primary/20"
           >
-            {/* "/" sends signed-in users on to /dashboard; a signed-out visitor stays public (#6). */}
+            
             <Link href="/">
               <Home className="mr-2 h-4 w-4" />
               Back to home

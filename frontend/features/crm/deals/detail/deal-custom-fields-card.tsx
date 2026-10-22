@@ -13,7 +13,6 @@ interface DealCustomFieldsCardProps {
   customData: Record<string, unknown> | null | undefined;
 }
 
-/** The tenant's deal custom fields, editable through `PATCH /deals/:id/custom-data`. */
 export function DealCustomFieldsCard({ dealId, customData }: DealCustomFieldsCardProps) {
   const canUpdate = useCan("crm:deals:update");
   const update = useUpdateDealCustomData(dealId);

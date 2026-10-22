@@ -24,22 +24,12 @@ const usePointer = () => {
   return pointer;
 };
 
-/** Hero-relative anchor the pointer is measured from — the window centre.
-    768 / 390 stack the window under the copy (3834:893, 3957:695). */
 const ANCHOR: Record<1440 | 768 | 390, { x: number; y: number }> = {
   1440: { x: 1100 / 1440, y: 0.5 },
   768: { x: 0.5, y: 649 / 976 },
   390: { x: 0.5, y: 679.5 / 949 },
 };
 
-/**
- * Cursor reaction "3D-наклон": tracks the pointer over #hero as a vector
- * (−1…1, length clamped to 1) measured from the product window centre, and
- * springs back to 0 when the pointer leaves. Desktop fine pointers only (the
- * listener is never attached elsewhere); reduced motion keeps everything
- * still. Renders no DOM and holds no state — a move writes straight into the
- * springs, which reach the layers through context, so moves never re-render.
- */
 export const HeroTilt = ({ children }: { children: ReactNode }) => {
   const [{ x, y }, api] = useSpring(() => ({ x: 0, y: 0, config: SPRING_SOFT }));
   const anchor = pick(useFrame(), ANCHOR);
@@ -92,7 +82,6 @@ export const HeroTilt = ({ children }: { children: ReactNode }) => {
   );
 };
 
-/** Whole window group — rotateX/rotateY ±3° around the window centre. */
 export const TiltGroup = ({
   children,
   className = "",
@@ -117,7 +106,6 @@ export const TiltGroup = ({
   );
 };
 
-/** Parallax layer — shifts with the pointer by `depth` px (4 / 8 / 12, bloom 60). */
 export const DepthLayer = ({
   depth,
   children,

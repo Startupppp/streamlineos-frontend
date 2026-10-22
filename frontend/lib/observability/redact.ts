@@ -1,10 +1,3 @@
-/**
- * Makes a value safe to send to an error tracker.
- *
- * The browser is the easiest place to leak a token by accident: a failed request
- * carries its own headers, and a component's props are attached to whatever
- * error it threw. Deny-by-default on anything whose key suggests a secret.
- */
 
 const MAX_DEPTH = 4;
 const MAX_STRING = 1_000;
@@ -48,12 +41,6 @@ export function redact(value: unknown): unknown {
   return walk(value, 0, new WeakSet());
 }
 
-/**
- * The record-shaped entry point. `redact` returns `unknown` because it accepts
- * anything, so a caller holding a bag and needing a bag back had to assert the
- * result — a claim about a shape the compiler had already discarded. This one
- * carries the shape through instead.
- */
 export function redactRecord(value: Record<string, unknown>): Record<string, unknown> {
   const seen = new WeakSet<object>();
   seen.add(value);

@@ -53,15 +53,6 @@ import { cn } from "@/lib/utils";
 import { clientRecords } from "./client-record";
 import type { ClientAccountStatus } from "@/types/crm";
 
-/**
- * Clients.
- *
- * Read-only, and the description says so — every field is marked read-only and
- * the form has no sections, so no create or edit surface can be generated from
- * it. The status labels and their tones now live in `CLIENT_LAYOUT` rather than
- * in two maps beside a hand-written column, so the list, the detail view and any
- * future surface agree on what "PLAN_SELECTED" is called and what colour it is.
- */
 
 const PAGE_SIZE = 20;
 

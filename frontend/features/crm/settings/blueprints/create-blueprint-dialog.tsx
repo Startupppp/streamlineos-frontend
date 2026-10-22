@@ -28,17 +28,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { BLUEPRINT_LAYOUT } from "@/lib/renderer/crm/settings/blueprint-layout";
 import { flagOr, requiredText, textOrNull } from "../shared/record-payload";
 
-/**
- * Create a blueprint, rendered from the description.
- *
- * A dialog rather than a sheet, and correctly: three fields, one decision,
- * nothing to lose by pressing Escape. The overlay ladder says take the lowest
- * rung that fits, and this fits.
- *
- * The pipeline picker is supplied through `controls` because which pipelines
- * exist is the tenant's business, not the blueprint's shape.
- */
-
 interface CreateBlueprintDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;

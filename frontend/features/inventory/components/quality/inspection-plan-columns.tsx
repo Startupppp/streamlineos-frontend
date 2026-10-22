@@ -9,13 +9,6 @@ import { describeSampling } from "@/hooks/api/inventory/inspection-plans";
 import type { InspectionPlan } from "@/hooks/api/inventory/inspection-plans";
 import { InspectionPlanRowActions } from "./inspection-plan-row-actions";
 
-/**
- * The plans table, with the row menu appended only for somebody who may use it.
- *
- * `canManage` is `inventory:quality:plans:manage`, the key the backend puts on
- * `PATCH` and `DELETE` alike — a reader gets the same table without a column
- * whose every entry would fail closed.
- */
 export function buildInspectionPlanColumns(canManage: boolean): DataTableColumn<InspectionPlan>[] {
   const columns: DataTableColumn<InspectionPlan>[] = [
     {

@@ -10,7 +10,6 @@ import { useSubprocessorNotices } from "@/hooks/api/privacy/subprocessors";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { subprocessorNoticeSchema, type SubprocessorNoticeValues } from "./subprocessor-notice-schema";
 
-/** Email notice of subprocessor changes, ahead of the 30-day window the policy promises. */
 export function SubprocessorNoticeForm() {
   const notices = useSubprocessorNotices();
   const form = useForm<SubprocessorNoticeValues>({

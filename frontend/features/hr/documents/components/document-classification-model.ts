@@ -8,7 +8,6 @@ export interface ClassificationOption {
   label: string;
   tone: BadgeTone;
   description: string;
-  /** Internal and Restricted are the only classes that can reach the Knowledge Base, and only for someone who may publish. */
   shareable: boolean;
 }
 
@@ -68,7 +67,6 @@ export const classificationFormSchema = z
 
 export type ClassificationFormValues = z.infer<typeof classificationFormSchema>;
 
-/** What the form shows for a document as the server has it. A document nobody has given an audience is HR only. */
 export function formValuesFromView(view: {
   classification: DocumentClassification;
   effectiveDate: string | null;
@@ -91,7 +89,6 @@ export function formValuesFromView(view: {
   };
 }
 
-/** The audience set to send. Only Internal and Restricted carry one; anything else is sent as none, which the server clears anyway. */
 export function audiencesFromForm(values: ClassificationFormValues): DocumentAudienceEntry[] {
   if (!classificationOption(values.classification).shareable) return [];
   if (values.audienceMode === "ALL_EMPLOYEES") return [{ kind: "ALL_EMPLOYEES", refId: null }];

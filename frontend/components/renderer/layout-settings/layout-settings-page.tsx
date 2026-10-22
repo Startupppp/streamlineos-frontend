@@ -43,26 +43,11 @@ import {
 import { FieldArrangement } from "./field-arrangement";
 import { LayoutProposalPanel } from "./layout-proposal-panel";
 
-/**
- * Where a tenant arranges a record type.
- *
- * A page rather than a dialog. Reordering twenty fields, hiding some and
- * grouping the rest is multi-step work with a state a person could lose by
- * pressing Escape, and that is the line a modal is on the wrong side of.
- */
 export function LayoutSettingsPage() {
   const canAdjust = useCanAdjustLayouts();
   const access = useAccess();
   const [layoutKey, setLayoutKey] = useState<string | null>(null);
 
-  /*
-    Only the record types this account may read.
-
-    Arranging a record type you cannot see is not a job anybody has, and the
-    picker would otherwise name the fields of modules a tenant has not bought.
-    It is the same read gate each surface already uses — an arrangement neither
-    grants access nor needs more of it than looking at the list does.
-  */
   const allowed = useMemo<RegisteredLayout[]>(() => {
     const scopes = access.data;
     if (!scopes) return [];
@@ -92,12 +77,6 @@ export function LayoutSettingsPage() {
   const save = useSaveLayoutAdjustment(layout?.key ?? "");
   const reset = useResetLayoutAdjustment(layout?.key ?? "");
 
-  /*
-    The edit is held only once somebody makes one, and the arrangement on screen
-    is otherwise derived from what the server sent. Copying the server's answer
-    into state in an effect would render one arrangement and then replace it,
-    which is the flash this screen exists to avoid on every other surface.
-  */
   const [edited, setEdited] = useState<{ key: string; rows: FieldRowDraft[] } | null>(null);
 
   const saved = useMemo(
@@ -131,13 +110,6 @@ export function LayoutSettingsPage() {
     [setRows],
   );
 
-  /*
-    A permission check in flight is not an empty result. Showing "no record
-    types" to somebody whose scopes have not arrived yet is the failure this
-    product has already made thirty times over — a loading query dressed as
-    emptiness — and it is worse here, because the honest answer a second later
-    is the opposite one.
-  */
   if (access.isLoading)
     return (
       <PageWrapper title="Record layouts">
@@ -163,10 +135,7 @@ export function LayoutSettingsPage() {
   if (!layout)
     return (
       <PageWrapper title="Record layouts">
-        {/*
-          A denial, said as one. There are record types; this account may not
-          read any of them.
-        */}
+        
         <EmptyState
           title="No record types you can arrange"
           description="Arranging a record type needs permission to read it. Ask an administrator for access to the records you want to lay out."

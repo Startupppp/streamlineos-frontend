@@ -41,9 +41,6 @@ export function LiveActivationPanel({ providerKey }: { providerKey: string }) {
 
   if (!canActivate) return null;
 
-  // Readiness is the gate on this panel's own button. A failed read must not
-  // disappear the panel: silence there is indistinguishable from "this
-  // provider cannot go live", and the operator has no way to tell.
   if (readinessFailed) {
     return (
       <ErrorState

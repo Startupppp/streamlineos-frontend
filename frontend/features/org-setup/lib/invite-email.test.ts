@@ -25,8 +25,6 @@ describe("validateInviteEmail", () => {
     expect(result).toEqual({ ok: true, email: "teammate@company.com" });
   });
 
-  // The old check was `includes("@")`, which let all of these through to a
-  // bulk-invite request the backend rejects wholesale.
   it.each(["a@", "@b", "a@@b", "@", "no-at-sign", "spaced out@x.com"])(
     "rejects %p",
     (value) => {

@@ -10,18 +10,6 @@ import { useSeatInfo } from "@/hooks/api/subscription";
 import { SEAT_RULE } from "@/lib/billing/seat-rule";
 import { cn } from "@/lib/utils";
 
-/**
- * BUG-HRMS-008. How many seats are actually free, said before the invite is sent.
- *
- * A pending invitation reserves a seat, and an onboarded employee is admitted as a
- * member, so a ten-seat plan with one owner and nine pending invites is full — and
- * the invite dialog showed nothing about it. QA sent a bulk invite, watched it
- * accept 8 of 10 and then name failures, and only found the ceiling in Billing
- * afterwards.
- *
- * Renders nothing on an unlimited plan, and nothing for a viewer who cannot read
- * billing — a read they are not allowed is not a number to guess at.
- */
 export function InviteSeatNotice({ requesting }: { requesting?: number }) {
   const { data: seats } = useSeatInfo();
   if (!seats || seats.available === null) return null;

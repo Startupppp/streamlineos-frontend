@@ -28,21 +28,10 @@ import { SegmentCriterionRow } from "./segment-criterion-row";
 import { SegmentMatchCount } from "./segment-match-count";
 import { MAX_SEGMENT_CRITERIA, type SegmentFormValues } from "./segment-schema";
 
-/**
- * The segment form: what to call it, what it selects from, and what makes a row
- * a member.
- *
- * The source select is disabled once a segment exists. Every criterion names a
- * field of one source, so re-pointing a saved segment would leave criteria
- * referencing fields the new source does not have — the server refuses it, and
- * the control says so up front rather than letting somebody build an edit that
- * cannot be saved. Building a segment over different data is a create.
- */
 
 interface SegmentFormFieldsProps {
   form: UseFormReturn<SegmentFormValues>;
   sources: readonly SegmentSource[];
-  /** Editing an existing segment, so the source is settled. */
   isEditing: boolean;
 }
 

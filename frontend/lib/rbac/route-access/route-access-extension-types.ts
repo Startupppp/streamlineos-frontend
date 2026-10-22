@@ -15,6 +15,5 @@ export interface RouteAccessExtension {
   readonly module?: ModuleKey;
   readonly permission?: PermissionRequirement;
   readonly reason: string;
-  // Set it and the suite asserts this operation's backend x-permission equals `permission`.
   readonly backendRoute?: BackendRouteRef;
 }

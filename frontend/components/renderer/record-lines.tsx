@@ -20,36 +20,7 @@ import { blankLine, type RecordLine } from "@/lib/renderer/layout-schema";
 import { cn } from "@/lib/utils";
 import { controlType } from "./control-type";
 
-/**
- * A repeating group, rendered from the same description that renders the rest.
- *
- * Four surfaces had written this by hand before the description could say it —
- * an assignment rule's conditions, a subject type's declared fields, a quote's
- * line items and the grid beside them — and no two agreed on where the add
- * button went, what an empty row held, or whether the last row could be removed.
- * What is here is the one answer, and it is short precisely because a line's
- * columns are ordinary `FieldSpec`s: the control a column gets is the control
- * that column's kind gets anywhere else.
- *
- * Rows are a labelled stack rather than a table. A five-column table at 375px
- * is a horizontal scroll inside a sheet that is already a scroll, and the phone
- * is where a quote most often gets a line added; a labelled grid reflows
- * instead. The label repeats per row rather than sitting in a header, because a
- * header over columns that have stacked under each other names the wrong thing.
- */
 
-/**
- * The slice of the form this component operates on.
- *
- * `RecordForm` holds one form whose fields are strings *or* rows, and
- * react-hook-form's path types cannot express "the array-valued members of a
- * heterogeneous record" — `FieldArrayPath` of that shape is `never`, so no name
- * is nameable. Reading the shared context as the rows half is narrower than the
- * truth and exactly true of the field this component is given: a `lines` field
- * holds `RecordLine[]` and nothing else. It is a re-typing at one boundary
- * rather than a cast at every call site, and it keeps `record-form.tsx` free of
- * `as`.
- */
 interface LinesFormShape extends FieldValues {
   [name: string]: RecordLine[];
 }
@@ -63,12 +34,6 @@ export interface LineFieldControl {
 export interface RecordLinesProps {
   field: FieldSpec;
   disabled?: boolean;
-  /**
-   * A control for a column the platform's primitives cannot render on their
-   * own — a product picker on a quote line. Keyed by the column's name, and
-   * supplied by the surface for the same reason a record's own controls are:
-   * who may be picked depends on the caller rather than on the row's shape.
-   */
   controls?: Record<string, (control: LineFieldControl, index: number) => ReactNode>;
 }
 
@@ -104,11 +69,7 @@ export function RecordLines({ field, disabled, controls }: RecordLinesProps) {
             ))}
           </div>
 
-          {/*
-            The last row stays when the record may not go below it. Offering a
-            control that produces a record the API rejects is a form that waits
-            until submit to say no.
-          */}
+          
           {fields.length > minimum ? (
             <RemoveLineButton
               index={index}
@@ -155,7 +116,6 @@ function RemoveLineButton({ index, label, disabled, onRemove }: RemoveLineButton
   );
 }
 
-/** A leaf path into one row, as a template type so the value at it is a string. */
 type LinePath = `${string}.${number}.${string}`;
 
 interface LineControlProps {
@@ -166,16 +126,6 @@ interface LineControlProps {
   render?: (control: LineFieldControl, index: number) => ReactNode;
 }
 
-/**
- * One column of one row.
- *
- * Deliberately the same ladder `RecordForm` walks for a top-level field, in the
- * same order, so a `select` in a line and a `select` on the record are the same
- * control. What differs is only that the label is quieter and the message sits
- * under the control that earned it rather than at the top of the group — on a
- * five-line quote that is the difference between a fixable error and a form
- * that just says no.
- */
 function LineControl({ column, path, index, disabled, render }: LineControlProps) {
   const { control } = useFormContext<LinesFormShape>();
 

@@ -32,29 +32,8 @@ import { Faq } from "@/features/landing/relay/home/sections/faq";
 import type { FAQ } from "@/features/landing/data/faqs";
 import { PreloadScript } from "@/features/landing/relay/home/preload-script";
 
-/**
- * Home view — the Relay landing page, drawn as four Figma frames: 1440
- * (3888:2736), 1024 (3888:7141), 768 (3832:4407) and 390 (3893:2); the
- * narrower ones are `w1024:` / `w768:` / `w390:` variants (see globals.css).
- * A Server Component: every section below is a server shell with client
- * animation leaves. Section heights are the frames' own.
- * Block-to-block transitions (motion brief t1–t8) wrap the sections here, so
- * each section stays unaware of its neighbours.
- *
- * Every block below the hero sits in its own `<Suspense>` (no fallback — all
- * of it is in the server HTML): React then hydrates the first screen first
- * and each block after it in a task of its own, yielding in between, instead
- * of the whole page in one ~1 s task on a phone (ADR-0028). Inside each,
- * `HydrateNear` holds that hydration until the block is near the viewport —
- * the server HTML stands in until then (see the component).
- *
- * `robot` is the form the proxy serves crawlers and lab tools (D-016,
- * `app/robot-view`): no preloader, no particle stream, no cursor; every spring
- * at rest (`RobotView` sets react-spring's `skipAnimation`).
- */
 interface HomeViewProps {
   faqs: readonly FAQ[];
-  /** CSP nonce for the inline preload script. */
   nonce?: string;
   robot?: boolean;
 }
@@ -64,19 +43,17 @@ export const HomeView = ({ faqs, nonce, robot = false }: HomeViewProps) => (
     {robot && <RobotView />}
     {!robot && <PreloadScript nonce={nonce} />}
     {!robot && <Preloader />}
-    {/* The page column centres between the frames' widths; decorations may
-        bleed past it into the margins, clipped at the viewport here. */}
+    
     <div className="relay-ui overflow-x-clip">
       <main className="relative mx-page w-page overflow-y-clip">
         <Backdrop />
-        {/* the accent particle stream: fixed to the viewport over the backdrop,
-            under every section, laid out along the whole page */}
+        
         {!robot && <ParticleStream />}
         <Nav {...navMock} />
-        {/* the nav is fixed; this keeps its slot in the flow (88, 64 at 768, 56 at 390) */}
+        
         <div aria-hidden="true" className="h-22 w768:h-16 w390:h-14" />
         <Hero {...heroMock} />
-        {/* t2 — blur hand-off */}
+        
         <Suspense>
           <HydrateNear id="integrations">
             <ScrollBlur leave still>
@@ -84,10 +61,9 @@ export const HomeView = ({ faqs, nonce, robot = false }: HomeViewProps) => (
             </ScrollBlur>
           </HydrateNear>
         </Suspense>
-        {/* section rhythm: 1.5× the frames' gaps (h-section-gap between blocks) */}
+        
         <div aria-hidden="true" className="h-section-gap" />
-        {/* Product → Proof sit on one frosted slab (not in Figma), bled to the
-            viewport's edges, so the stream underneath reads through it. */}
+        
         <div className="relative">
           <div
             aria-hidden="true"
@@ -101,7 +77,7 @@ export const HomeView = ({ faqs, nonce, robot = false }: HomeViewProps) => (
             </HydrateNear>
           </Suspense>
           <div aria-hidden="true" className="h-section-gap" />
-          {/* t3 + t4 — the accent plate grows out of the Relay logo and folds back into it */}
+          
           <Suspense>
             <HydrateNear id="statement">
               <LogoOpen>
@@ -110,7 +86,7 @@ export const HomeView = ({ faqs, nonce, robot = false }: HomeViewProps) => (
             </HydrateNear>
           </Suspense>
           <div aria-hidden="true" className="h-section-gap" />
-          {/* t5 t6 t7 — blur hand-offs */}
+          
           <Suspense>
             <HydrateNear id="scale">
               <ScrollBlur leave>
@@ -136,8 +112,7 @@ export const HomeView = ({ faqs, nonce, robot = false }: HomeViewProps) => (
           </Suspense>
         </div>
         <div aria-hidden="true" className="h-section-gap" />
-        {/* t8 — pricing hands over to the footer by plain scroll; its cards
-        simply sit there, only their contents animate in (client call) */}
+        
         <Suspense>
           <HydrateNear id="pricing">
             <Pricing {...pricingMock} />

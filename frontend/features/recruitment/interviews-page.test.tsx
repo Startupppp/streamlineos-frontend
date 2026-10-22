@@ -1,16 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { renderWithProviders } from "@/test-utils/render";
 
-/**
- * Root CLAUDE.md §8: one unified calendar, module events are toggleable
- * SOURCES on it and never a calendar page of their own. `/recruitment/interviews`
- * rendered a second full month/week calendar off `useInterviews`, which also made
- * it the only feature->feature importer of `features/calendar/**` (root §9).
- *
- * These tests pin the replacement: a list, plus a link that routes the surface at
- * `/calendar` with `hr-interviews` — an already-registered aggregate source —
- * switched on.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), prefetch: jest.fn() }),

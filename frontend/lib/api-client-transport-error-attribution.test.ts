@@ -28,7 +28,6 @@ function jsonResponse(status: number, body: unknown): Response {
 
 beforeEach(() => {
   clearBackendTokenCache();
-  // The first case trips the origin-outage circuit; each case starts closed.
   resetOutageCircuit();
 });
 

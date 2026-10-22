@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { hrShiftsQueryOptions } from "@/hooks/api/hr/shifts-read-options";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const shiftListContract = lazyContract(() =>
@@ -60,13 +61,6 @@ export interface ShiftSwap {
   reason: string | null;
   status: string;
   createdAt: string;
-}
-
-export function hrShiftsQueryOptions() {
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] as const,
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useHrShifts() {

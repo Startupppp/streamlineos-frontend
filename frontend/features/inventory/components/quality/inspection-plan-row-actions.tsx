@@ -21,24 +21,11 @@ interface InspectionPlanRowActionsProps {
   plan: InspectionPlan;
 }
 
-/**
- * Edit and retire, on the row rather than behind the detail sheet.
- *
- * `PATCH` and `DELETE` on a plan both existed, were permissioned and had hooks;
- * neither had a caller, so a plan created with the wrong name or the wrong
- * trigger could only be worked around. The sheet the row opens owns versions,
- * which are append-only — the plan's own fields are edited here.
- */
 export function InspectionPlanRowActions({ plan }: InspectionPlanRowActionsProps) {
   const deletePlan = useDeleteInspectionPlan();
   const [editOpen, setEditOpen] = useState(false);
   const [retireOpen, setRetireOpen] = useState(false);
 
-  /**
-   * The row is itself a button that opens the plan. Without these the menu
-   * would open the detail sheet underneath itself, by mouse and by keyboard
-   * alike — the row's own Enter/Space handler is what the second one stops.
-   */
   function handleCellClick(event: MouseEvent<HTMLDivElement>): void {
     event.stopPropagation();
   }

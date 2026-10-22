@@ -25,7 +25,6 @@ export const bankDetailsContract = z.object({
   statutory: z.record(z.string(), z.string()),
 });
 
-/** `successSchema` — the two detail-save writes answer `{ success: true }`. */
 export const onboardingSuccessContract = z.object({ success: z.literal(true) });
 
 export const onboardingCompletionContract = z.object({

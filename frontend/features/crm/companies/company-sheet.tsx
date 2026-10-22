@@ -22,13 +22,6 @@ import type {
   UpdateCrmOrganizationInput,
 } from "@/types/crm";
 
-/**
- * Add and edit a company, rendered from the description.
- *
- * Editing used to be a link to `/crm/companies/:id/edit`, a route that has never
- * existed — the button was a 404. The form the layout already describes is the
- * same one create needs, so the sheet serves both and the dead link is gone.
- */
 
 interface CompanySheetProps {
   open: boolean;
@@ -47,23 +40,16 @@ function asAccountTier(value: string | undefined): CrmAccountTier | undefined {
   return ACCOUNT_TIERS.find((candidate) => candidate === value?.trim());
 }
 
-/** Omitted keys never reach the wire, and create rejects anything it did not ask for. */
 function orUndefined(value: string | undefined): string | undefined {
   const text = value?.trim();
   return text ? text : undefined;
 }
 
-/** Empty means "clear it" on update, which `undefined` cannot say. */
 function orNull(value: string | undefined): string | null {
   const text = value?.trim();
   return text ? text : null;
 }
 
-/**
- * `organizationCreateSchema` validates both links as absolute URLs, and a `url`
- * field accepts a bare host — someone typing "example.com" got a 400 rather than
- * a company.
- */
 function absolute(value: string | null | undefined): string | undefined {
   if (!value) return undefined;
   return /^https?:\/\//i.test(value) ? value : `https://${value}`;

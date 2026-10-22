@@ -34,7 +34,6 @@ export function RegularizationStatusBadge({ status }: { status: string }) {
   );
 }
 
-/** "+45 min", "−1 h 10 min" or null when either punch is missing or they match. */
 function punchShift(original: string | null | undefined, requested: string | null | undefined): string | null {
   if (!original || !requested) return null;
   const minutes = Math.round((Date.parse(requested) - Date.parse(original)) / 60_000);

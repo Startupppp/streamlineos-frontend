@@ -7,7 +7,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 
 export interface SubmittedApplication {
   trackingToken: string;
-  /** True when this email had already applied; the token is the first one's. */
   duplicate: boolean;
   resumeStored: boolean;
   resumeReason: string | null;
@@ -18,14 +17,6 @@ interface Props {
   orgSlug: string;
 }
 
-/**
- * `resumeReason` is a machine code, and this is the display boundary.
- *
- * Two of the codes are not failures and must not be reported as one:
- * `no-file` is a candidate who attached nothing, and `duplicate-application`
- * is the duplicate path, which the headline already explains. Both map to
- * null, so no warning is shown.
- */
 const RESUME_REASON: Record<string, string | null> = {
   "no-file": null,
   "duplicate-application": null,
@@ -44,21 +35,8 @@ function resumeWarning(result: SubmittedApplication): string | null {
   return known === undefined ? "We could not store the file you attached." : known;
 }
 
-/**
- * What the candidate is told after a successful POST.
- *
- * A duplicate is NOT dressed up as a new application: the server returned the
- * first application's tracking token and wrote nothing, and this says so. A
- * résumé the server refused is named with the server's own reason rather than
- * left to look as though the file went through.
- */
 export function ApplySubmittedPanel({ result, orgSlug }: Props) {
   const router = useRouter();
-  /**
-   * Read once at mount rather than in an effect. This panel only ever renders
-   * after a client-side submit, so there is no server render to disagree with —
-   * and the candidate wants a URL they can copy, not a path.
-   */
   const [origin] = useState(() => (typeof window === "undefined" ? "" : window.location.origin));
 
   const warning = resumeWarning(result);

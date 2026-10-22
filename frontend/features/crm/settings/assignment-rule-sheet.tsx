@@ -38,23 +38,10 @@ import {
   textOrOmit,
 } from "./shared/record-payload";
 
-/**
- * Create and edit an assignment rule, rendered from the description.
- *
- * The sheet that stood here drew its own conditions editor with
- * `useFieldArray`, its own weighted-member editor with a second one, and five
- * hand-written `assignmentType === …` branches deciding which of them to show.
- * All three are description now: the arms are `visibleWhen`, and the two
- * repeating groups are `lines`. What is left here is the boundary work only a
- * screen can do — who may be picked, and what the API wants each arm's payload
- * to look like.
- */
 
 function initialValues(rule: AssignmentRule): Record<string, unknown> {
   return {
     name: rule.name,
-    // What the rule does, not the column it is stored in: opening a weighted
-    // rule showed "Round robin" and its member weights nowhere.
     assignmentType: effectiveTypeOf(rule),
     priority: rule.priority,
     isActive: rule.isActive,
@@ -66,7 +53,6 @@ function initialValues(rule: AssignmentRule): Record<string, unknown> {
   };
 }
 
-/** Rows that name a field, an operator and something to compare against. */
 function conditionsFrom(lines: RecordFormLines | undefined): AssignmentRuleCondition[] {
   return (lines?.conditions ?? [])
     .map((row) => ({
@@ -77,7 +63,6 @@ function conditionsFrom(lines: RecordFormLines | undefined): AssignmentRuleCondi
     .filter((condition) => condition.field && condition.operator);
 }
 
-/** Rows that name a member; a row with nobody in it is not a share of anything. */
 function weightedRows(lines: RecordFormLines | undefined): WeightedMember[] {
   return (lines?.weightedMembers ?? [])
     .map((row) => ({ userId: row.userId?.trim() ?? "", weight: Number(row.weight ?? "") }))
@@ -198,14 +183,6 @@ export function AssignmentRuleSheet({
   );
 }
 
-/**
- * The round-robin roster, as the comma-joined string the engine carries.
- *
- * A list of members is a control rather than a shape, exactly as a territory's
- * chip fields are: the description says the field holds text, the surface hands
- * it something better than a text box, and the value stays one string so the
- * generated schema and defaults go on working without knowing this exists.
- */
 function RoundRobinMembers({ control }: { control: RecordFieldControl }) {
   const values = control.value
     .split(",")

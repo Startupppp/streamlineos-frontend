@@ -5,11 +5,6 @@ import type {
   QueryKey,
 } from "@tanstack/react-query";
 
-/**
- * The four cache shapes this codebase stores rows in. Everything else is left
- * untouched by a patch rather than guessed at, so an unrecognised shape degrades
- * to "no optimistic update" instead of a corrupted cache.
- */
 export type RowPage<TRow> = TRow[] | { data: TRow[] } | { items: TRow[] };
 export type RowCache<TRow> = RowPage<TRow> | InfiniteData<RowPage<TRow>>;
 
@@ -31,11 +26,6 @@ function patchPage<TRow>(
   return page;
 }
 
-/**
- * Cancel every in-flight read for these keys and snapshot what is there now.
- * Cancelling first is what stops a refetch that started before the mutation from
- * landing after the optimistic write and silently undoing it.
- */
 export async function cancelAndSnapshot(
   queryClient: QueryClient,
   filters: readonly QueryFilters[],
@@ -44,15 +34,10 @@ export async function cancelAndSnapshot(
   return filters.flatMap((filter) => queryClient.getQueriesData(filter));
 }
 
-/** Put every snapshotted entry back exactly as it was. */
 export function restoreSnapshot(queryClient: QueryClient, snapshot: CacheSnapshot): void {
   for (const [key, value] of snapshot) queryClient.setQueryData(key, value);
 }
 
-/**
- * Apply `update` to the rows of every query matching `filters`, whatever shape
- * each one stores them in — flat array, cursor page, or InfiniteData over either.
- */
 export function patchRows<TRow>(
   queryClient: QueryClient,
   filters: QueryFilters,
@@ -66,7 +51,6 @@ export function patchRows<TRow>(
   });
 }
 
-/** Replace one row wherever it appears, matched by `identity`. */
 export function patchRow<TRow>(
   queryClient: QueryClient,
   filters: QueryFilters,
@@ -78,7 +62,6 @@ export function patchRow<TRow>(
   );
 }
 
-/** Drop one row wherever it appears, matched by `identity`. */
 export function removeRow<TRow>(
   queryClient: QueryClient,
   filters: QueryFilters,
@@ -87,7 +70,6 @@ export function removeRow<TRow>(
   patchRows<TRow>(queryClient, filters, (rows) => rows.filter((row) => !identity(row)));
 }
 
-/** Update a scalar count cache, leaving a missing entry missing. */
 export function patchCount(
   queryClient: QueryClient,
   key: QueryKey,
@@ -98,7 +80,6 @@ export function patchCount(
   );
 }
 
-/** Update a single detail entry, leaving a missing entry missing. */
 export function patchDetail<TValue>(
   queryClient: QueryClient,
   key: QueryKey,

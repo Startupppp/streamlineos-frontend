@@ -28,20 +28,6 @@ export interface IssueStageControlProps {
   canEscalate: boolean;
 }
 
-/**
- * The only way a stage moves.
- *
- * Deliberately not a field on the generated form. The description marks `stage`
- * read-only, so `formFields` drops it and the form is physically incapable of
- * moving one — which is what makes the ledger complete rather than a convention
- * somebody could edit around. Every move made here writes a row saying who and
- * why.
- *
- * Escalation is a separate control with a separate key, because raising a record
- * above its owner is a different authority from working it, and its reason is
- * required rather than optional: an escalation without one leaves the person it
- * lands on with an accusation and no case.
- */
 export function IssueStageControl({
   issueRecordId,
   currentStage,
@@ -151,8 +137,6 @@ export function IssueStageControl({
               <LoadingButton
                 type="button"
                 isPending={escalate.isPending}
-                // A required reason is enforced here as well as at the boundary,
-                // so the refusal is immediate rather than a round trip.
                 disabled={reason.trim().length === 0}
                 onClick={handleEscalate}
               >

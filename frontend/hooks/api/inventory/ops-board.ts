@@ -5,16 +5,6 @@ import { apiClient } from "@/lib/api-client";
 import { queryKeys } from "@/lib/query-keys";
 import { useCan } from "@/hooks/api/access";
 
-/**
- * B2 — the operations board.
- *
- * Quantities arrive as **strings** and are converted here, once. The API sends
- * decimals as text on purpose: a quantity that leaves Postgres as `numeric` and
- * arrives as a JSON float has already been through a binary double, and
- * `0.1 + 0.2` is a discrepancy no stock count will ever explain. Converting at
- * the seam means the rest of the UI can use numbers for display without any
- * component having to remember why.
- */
 function num(value: string | number | null | undefined): number {
   const parsed = typeof value === "number" ? value : Number(value);
   return Number.isFinite(parsed) ? parsed : 0;
@@ -84,7 +74,6 @@ interface RawDarkStore extends Omit<DarkStoreRow, "onHand" | "reserved" | "damag
   picked: string; inTransit: string; available: string; stockValue: string;
 }
 
-/** Refreshed on a short interval: this is the screen a store lead leaves open. */
 const BOARD_STALE_MS = 30_000;
 
 export function useOpsSummary() {

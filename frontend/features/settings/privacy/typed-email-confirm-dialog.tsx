@@ -21,10 +21,6 @@ interface TypedEmailConfirmDialogProps {
   onConfirm: (values: ErasureConfirmValues) => void;
 }
 
-/**
- * The confirm for an irreversible erasure. The button stays shut until the operator
- * types the subject's email, so a mis-picked person cannot be erased by a reflex click.
- */
 export function TypedEmailConfirmDialog({
   open,
   onOpenChange,

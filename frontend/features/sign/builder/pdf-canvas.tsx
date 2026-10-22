@@ -65,7 +65,6 @@ export function PdfCanvas({ fileUrl, pageNumber, onPageInfo, onCanvasClick, rend
     return () => {
       cancelled = true;
     };
-    // Intentionally only reload the document when its URL changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fileUrl]);
 
@@ -88,11 +87,6 @@ export function PdfCanvas({ fileUrl, pageNumber, onPageInfo, onCanvasClick, rend
     onCanvasClick(xPx / scale, yPx / scale);
   }
 
-  /**
-   * A pointer places a field where it was pressed. A keyboard has no pointer,
-   * so Enter or Space places it at the centre of the page instead — otherwise
-   * placement is a mouse-only capability.
-   */
   function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (!onCanvasClick || !canvasRef.current) return;
     if (!isActivationKey(e)) return;

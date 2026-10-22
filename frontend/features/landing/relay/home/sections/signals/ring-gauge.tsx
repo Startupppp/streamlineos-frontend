@@ -6,21 +6,14 @@ import { SPRING_SOFT } from "@/features/landing/relay/lib/motion";
 
 import { useLoopPhase, useSeen } from "./use-signals-motion";
 
-/** SPRING_SOFT ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SOFT_FAST = {
   tension: SPRING_SOFT.tension * 1.5,
   friction: SPRING_SOFT.friction * 1.22,
 } as const;
 
-/** Loop: draw (~1.45 s) → hold at 82% → ease back to 0 → again. */
 const LOOP = { hold: 2800, reset: 1120 } as const;
 const DRAW = 1440;
 
-/**
- * Hands-off gauge (signals-ring.svg, inlined): the accent arc draws from 0 to
- * its 82% end while the figure counts up with it on the same spring, holds,
- * then eases back to 0 and draws again (loops while on screen).
- */
 export const RingGauge = ({
   value,
   delay = 0,

@@ -14,7 +14,6 @@ import { METRIC_UNKNOWN, formatBpsPercent, formatQuestionsPerTenTurns } from "./
 
 interface BestCallExemplarsProps {
   response: CallExemplarsResponse;
-  /** Widens the shortlist. Absent when there is nothing more to show. */
   onShowMore?: () => void;
 }
 
@@ -24,22 +23,6 @@ export const EXEMPLAR_METRIC_LABEL: Record<ExemplarMetric, string> = {
   "next-step": "Ended with a next step",
 };
 
-/**
- * CRM-P2-06: a shortlist of calls worth listening to, and an honest account of
- * what is missing from it.
- *
- * The list is deliberately thin — a name, a date and the one number the ranking
- * used. There is no quote, no objection and no next-step sentence, because the
- * server does not send any: an exemplar is a pointer, and the reader follows it
- * to the call, where the visibility rule is applied again on its own terms. A
- * richer card here would have made this a second way to read analyses in bulk.
- *
- * The footnote is the part most likely to be cut and the part that makes the
- * list trustworthy. A rep who ran forty calls and sees three exemplars needs to
- * know whether the other thirty-seven were bad, unmeasurable, still private, or
- * blocked for want of a consent record — four facts leading to four different
- * next actions, which a single "37 excluded" would collapse into none.
- */
 export function BestCallExemplars({ response, onShowMore }: BestCallExemplarsProps) {
   const { data: rows, meta } = response;
   const withheld = response.pagination.total - rows.length;
@@ -68,12 +51,6 @@ export function BestCallExemplars({ response, onShowMore }: BestCallExemplarsPro
       )}
 
       {onShowMore && withheld > 0 ? (
-        /**
-         * Not a pager. The list is a shortlist somebody is going to listen to,
-         * and page two of a ranked recommendation is a set of calls the ranking
-         * already said were worse — so the control widens the shortlist once
-         * rather than walking a reader through every call in the window.
-         */
         <Button variant="outline" size="sm" className="self-start" onClick={onShowMore}>
           {`Show ${withheld} more`}
         </Button>
@@ -110,12 +87,6 @@ function ExemplarRow({ row, metric }: { row: CallExemplar; metric: ExemplarMetri
 function headlineFor(row: CallExemplar, metric: ExemplarMetric): string {
   if (metric === "question-rate") return formatQuestionsPerTenTurns(row.questionRateBps);
   if (metric === "talk-ratio") return formatBpsPercent(row.talkRatioBps);
-  /**
-   * `next-step` has no ranked value and the server sends null rather than
-   * inventing one, so the cell shows the rep's turn count — a fact about the
-   * call that helps somebody choose between three of them, rather than a score
-   * that would imply a measurement nobody made.
-   */
   return row.repTurnCount === null ? METRIC_UNKNOWN : `${row.repTurnCount} turns`;
 }
 
@@ -126,7 +97,6 @@ function captionFor(metric: ExemplarMetric, targetBps: number): string {
   return "Ended with a specific action both sides agreed to, most recent first.";
 }
 
-/** Which of the four absences produced an empty list, in the order that helps. */
 function emptyReason(response: CallExemplarsResponse): string {
   const { meta } = response;
   if (meta.consentBlocked > 0 && meta.ineligible === 0 && meta.embargoed === 0)

@@ -2,17 +2,6 @@ import { screen } from "@testing-library/react";
 import { renderWithProviders } from "@/test-utils";
 import { CostingClient } from "./costing-client";
 
-/**
- * The costing table reads `GET /inventory/products/variants`, whose rows are
- * catalogue rows — `{ id, productId, productName, name, sku, costPrice, isActive }`
- * — and whose query schema is `.strict()` over `activeOnly`, `page` and `limit`.
- *
- * The screen used to render a costing method, an average cost, an on-hand
- * quantity and a lock the endpoint has never sent, and to send a `search` term
- * it rejects outright. `costPrice` is `decimal(18,4)` in the organisation's own
- * currency, so it renders through the org money formatter and is never divided
- * by a hundred.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),

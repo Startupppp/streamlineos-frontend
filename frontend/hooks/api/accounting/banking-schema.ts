@@ -1,14 +1,6 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
-/**
- * Bank and cash accounts. `openingBalance` and `currentBalance` are
- * `decimal(18,4)` selected with no projection at all, so they arrive as
- * four-decimal STRINGS (`"0.0000"`), never numbers.
- *
- * `openingBalanceDate` is NOT declared here on purpose: it is not a column on
- * `fin_bank_accounts` and no read route has ever sent it.
- */
 
 export const bankAccountTypeContract = z.enum([
   "BANK",
@@ -107,7 +99,6 @@ const ruleActionShapeContract = z.discriminatedUnion("type", [
 
 const DEFAULT_RULE_ACTION = { type: "fee" as const };
 
-// conditions/action are jsonb; parse against the create schema's shapes and fall back to a safe empty/no-op value.
 export const reconRuleContract = z.object({
   id: z.number(),
   orgId: z.string(),

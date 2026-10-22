@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** Matches backend createCandidateSchema phone rule after optional + and digits only. */
 const PHONE_REGEX = /^\+?[1-9]\d{7,14}$/;
 
 export function normalizeCandidatePhone(value: string | undefined | null): string | undefined {

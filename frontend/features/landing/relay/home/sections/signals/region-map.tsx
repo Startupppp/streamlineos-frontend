@@ -17,26 +17,15 @@ import {
 } from "./use-signals-motion";
 import { TYPED_CLIP } from "./widget";
 
-/** SPRING_SOFT ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SOFT_FAST = {
   tension: SPRING_SOFT.tension * 1.5,
   friction: SPRING_SOFT.friction * 1.22,
 } as const;
-/** SPRING ~20% quicker: tension ×1.5, friction ×√1.5 keeps its damping. */
 const SPRING_FAST = {
   tension: SPRING.tension * 1.5,
   friction: SPRING.friction * 1.22,
 } as const;
 
-/**
- * Marker geometry per region, in widget coordinates straight from the frames
- * (inside the 1px border): the dot (region ring 28, blurred halo, pin 9) at
- * the ring's corner, the label plate and its label.
- * 1440 3888:6892…6907 · 1024 3888:11297…11312 (dot parts only move, map
- * scaled to 253 × 91, plate 77 wide) · 768 3840:2588…2607 (dot drawn at 24,
- * plate 73 × 22, map 290 × 104) · 390 3893:4089…4108 (dot 26, plate 78 × 23
- * with 15/21 labels, map 310 × 111).
- */
 const MARKER = {
   iad: {
     dot: "top-21.25 left-16.25 w1024:top-23.75 w1024:left-12.25 w768:top-30.75 w768:left-8.75 w390:top-26.25 w390:left-8",
@@ -55,19 +44,15 @@ const MARKER = {
   },
 } as const;
 
-/** Halo (exported 34 with its blur bleed) and pin inside the 28 dot box. */
 const HALO = "-top-0.75 -left-0.75 w1024:-top-0.5 w1024:-left-0.5";
 const PIN = "top-2.5 left-2.5 w1024:top-2.25 w1024:left-2.25";
 
-/** Dots fade in by pseudo-random bucket so the map fills in scattered. */
 const BUCKETS = 9;
 const bucketOf = (i: number) => (Math.imul(i + 1, 2654435761) >>> 0) % BUCKETS;
 const DOT_STEP = 44;
-/** Pins drop after the dots, one region at a time. */
 const PIN_START = 416;
 const PIN_STEP = 112;
 const DROP = 14;
-/** Ping: every PERIOD ms per pin, offset per region, visible for PING ms. */
 const PERIOD = 2400;
 const PING = 1040;
 const PING_OFFSET = 360;
@@ -76,11 +61,6 @@ type Props = Pick<SignalsContent["regions"], "mapLabel" | "markers"> & {
   delay?: number;
 };
 
-/**
- * Where-it-ran map: dots appear scattered, pins drop in, then a ring pings
- * out of each pin every ~2.4 s while the widget is in view. Off screen it
- * rewinds to the empty map, so the next visit starts from the dots again.
- */
 export const RegionMap = ({ mapLabel, markers, delay = 0 }: Props) => {
   const [ref, seen, inView] = useSeen();
   const reduced = useReducedMotionPref();
@@ -148,8 +128,7 @@ export const RegionMap = ({ mapLabel, markers, delay = 0 }: Props) => {
           </animated.g>
         ))}
       </svg>
-      {/* Frame order: every label plate + label first, the ring / halo / pin
-          stacks above them (a plate never covers a pin). */}
+      
       <ul aria-hidden="true">
         {markers.map(({ id, label }, k) => {
           const m = MARKER[id];

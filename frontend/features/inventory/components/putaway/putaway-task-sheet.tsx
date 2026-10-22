@@ -29,21 +29,10 @@ interface PutawayTaskSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   taskId: number | null;
-  /** The signed-in operator, so the sheet can tell "mine" from "someone else's". */
   currentUserId: string | null;
   canPutAway: boolean;
 }
 
-/**
- * The walk itself.
- *
- * Lines are listed in the order the server sorted them — by destination bin, so
- * the list is a route through the building rather than a set of errands — and
- * the confirm controls stay disabled until this operator holds the claim. That
- * is the whole point of the claim: two operators sharing a task both carry
- * goods off the dock, and only the second one's confirm is refused, by which
- * time the pallet has already moved.
- */
 export function PutawayTaskSheet({
   open,
   onOpenChange,
@@ -70,14 +59,6 @@ export function PutawayTaskSheet({
     [lines],
   );
 
-  /**
-   * B2 — the pallet is scanned at the dock before anything about it moves.
-   *
-   * The capture is the point: a putaway the server later refuses still leaves
-   * evidence the goods reached the door, which a stock movement that never
-   * happened cannot provide. Matching against the task's own open lines is what
-   * stops a pallet from the next bay being put away against this one.
-   */
   const scan = useScanTarget<PutawayTaskLine>({
     candidates: openLines,
     documentNoun: "task",
@@ -121,14 +102,6 @@ export function PutawayTaskSheet({
     });
   }
 
-  /**
-   * Killing the task, which is not the same as handing it back.
-   *
-   * Handing back returns it to the queue for somebody else; cancelling takes it
-   * out of the queue. A task raised against a receipt that was later reversed
-   * had neither route out — the route existed on the backend and nothing called
-   * it, so the task stayed in the RF queue forever.
-   */
   function handleCancel(): void {
     if (!taskId) return;
     cancel.mutate(taskId, {
@@ -238,12 +211,6 @@ export function PutawayTaskSheet({
 
           <ul className="flex flex-col gap-2">
             {lines.map((line) => (
-              // The key carries what has already been walked on purpose. The row
-              // seeds its quantity field from the line's remainder, and a seed is
-              // an initial value: after a partial putaway the refetched line has a
-              // smaller remainder and a row React kept would still be offering the
-              // old one, which the server then refuses. Changing the key remounts
-              // it with the new remainder.
               <PutawayLineRow
                 key={`${line.id}:${line.quantity_moved}`}
                 taskId={task.id}

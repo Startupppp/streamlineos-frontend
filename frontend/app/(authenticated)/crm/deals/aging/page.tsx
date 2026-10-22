@@ -27,20 +27,6 @@ import { useCrmStages } from "@/hooks/api/crm/metadata";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
 
-/**
- * Deals that have stopped moving.
- *
- * No table is written here. The columns, their alignment, the stage badge, the
- * severity badge and the mobile card all come from `DEAL_AGING_LAYOUT`; what is
- * left is the four figures at the top and where a row goes when you click it.
- *
- * The severity verdict is a badge the description carries rather than the
- * `getDayClassName` helper this screen used to hold, which tinted the day count
- * red past thirty and amber past fifteen. Two things follow: the judgement now
- * has a word in it, so it survives greyscale and a screen reader, and the
- * thresholds live once beside the field they define instead of once per screen
- * that shows a day count.
- */
 export default function DealAgingPage() {
   const router = useRouter();
   const money = useOrgDisplay();

@@ -15,16 +15,6 @@ import {
   REPORT_QUERY_LIMITS,
 } from "./report-query-limits";
 
-/**
- * What the builder lets somebody assemble, and nothing the compiler would then
- * refuse.
- *
- * The form carries a `fieldType` beside every chosen field so that the rules
- * which are per-type on the server — which operators apply, which aggregates
- * apply, what a value has to look like — are decidable here without the schema
- * having to reach for the source catalogue. Whoever sets `field` sets
- * `fieldType` in the same change; changing the source clears both.
- */
 
 export const NO_AGGREGATE = "none" as const;
 
@@ -85,7 +75,6 @@ export type ReportProjectionRow = z.infer<typeof projectionRowSchema>;
 export type ReportFilterRow = z.infer<typeof filterRowSchema>;
 export type ReportSortRow = z.infer<typeof sortRowSchema>;
 
-/** What the server's `checkValue` will accept for this type, asked early. */
 export function scalarValueProblem(raw: string, type: ReportingFieldType): string | null {
   const trimmed = raw.trim();
   if (trimmed === "") return "A value is required";
@@ -111,7 +100,6 @@ export function scalarValueProblem(raw: string, type: ReportingFieldType): strin
   }
 }
 
-/** `in`/`not_in` lists are one value per line, so a value may contain a comma. */
 export function splitListValues(raw: string): string[] {
   return raw
     .split("\n")
@@ -138,11 +126,6 @@ function checkProjections(values: ReportBuilderValues, ctx: z.RefinementCtx): vo
   });
 }
 
-/**
- * The SQL grouping rule, checked here for the reason `assertGroupingIsValid`
- * gives: Postgres would say the same thing, hours later, to somebody who is no
- * longer looking at the control that caused it.
- */
 function checkGrouping(values: ReportBuilderValues, ctx: z.RefinementCtx): void {
   const hasAggregate = values.select.some((row) => row.aggregate !== NO_AGGREGATE);
   if (!hasAggregate) return;
@@ -220,11 +203,6 @@ function checkFilters(values: ReportBuilderValues, ctx: z.RefinementCtx): void {
   });
 }
 
-/**
- * Sorting names an index into `select`, never a field — the server refuses a
- * sort on a column the caller did not project, because repeated queries ordered
- * by an unseen column reconstruct it.
- */
 function checkSorting(values: ReportBuilderValues, ctx: z.RefinementCtx): void {
   values.orderBy.forEach((row, index) => {
     if (row.select >= values.select.length)

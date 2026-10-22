@@ -29,20 +29,6 @@ const DISCREPANCY_OPTIONS: GrnDiscrepancyReason[] = ["SHORT", "OVER", "DAMAGED",
 
 export type { DraftLineMeta } from "./receive-goods-types";
 
-/**
- * One line of a delivery, as the receiver sees it on the dock.
- *
- * The discrepancy reason is the field B1 adds. It was in the payload type and
- * in the schema and had no control anywhere, so `SHORT` and `DAMAGED` could be
- * stored by the API and never entered by a human — the receipt recorded that
- * eight of ten arrived and no way to say why.
- *
- * B11 — below `md` only the line being worked is open. A delivery of nine lines
- * is nine stacked forms on a 375px screen, and a receiver holding a carton
- * cannot scroll past eight of them to reach the ninth. The summary row stays
- * visible for all of them, a scan opens the line it names, and every field is
- * present at `md` and above exactly as before.
- */
 export const GrnLineRow = memo(function GrnLineRow({
   meta,
   index,
@@ -56,8 +42,6 @@ export const GrnLineRow = memo(function GrnLineRow({
   const serialNumbersValue = useWatch({ control, name: `lines.${index}.serialNumbers` });
   const outstanding = meta.ordered - meta.alreadyReceived;
   const entered = Number(quantityReceived);
-  // Offered whenever the count is not what the order still owed, and kept
-  // available otherwise — damage is a discrepancy at the right quantity.
   const suggestReason = Number.isFinite(entered) && entered !== outstanding;
   const serialCount = serialNumbersValue
     ? serialNumbersValue

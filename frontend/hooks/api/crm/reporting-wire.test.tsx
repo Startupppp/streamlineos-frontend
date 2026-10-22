@@ -25,11 +25,6 @@ jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
 
-/**
- * The keys this render holds. Resolved throughout: an empty set is a refusal,
- * never "not known yet", so a query left disabled by a pending gate cannot be
- * mistaken for one the permission closed.
- */
 const mockGranted = new Set<string>();
 jest.mock("@/hooks/api/access", () => {
   const { permissionGate } =
@@ -44,23 +39,6 @@ jest.mock("@/hooks/api/access", () => {
   };
 });
 
-/**
- * CRM-P1-03. The reporting builder's data layer, held to the two things the
- * ticket names: that it talks to `crm/reporting` and to nothing else, and that
- * each read carries the key the controller declares.
- *
- * The existing builder suites are all about the question a person assembles —
- * the schema, the round trip, the results table. None of them watch the wire,
- * so a hook pointed at the wrong path or gated on the wrong key type-checks,
- * renders identically, and fails only against a running server.
- *
- * The key split is not decoration. `view` reads what exists and returns no
- * tenant data, which is why it is grantable to an auditor on its own; `run`
- * executes and is the only key with a cost; `manage` authors, and `explain`
- * sits there because the statement it hands back names physical tables. A hook
- * that drifted onto the wrong one either 403s in production or discloses more
- * than the key was granted for.
- */
 
 const DESCRIPTION: ReportingQueryDescription = {
   source: "deals",
@@ -79,7 +57,6 @@ function wrapper() {
   };
 }
 
-/** Every path any apiClient verb was handed during this test. */
 function paths(): string[] {
   return [
     ...(apiClient.get as jest.Mock).mock.calls,
@@ -175,20 +152,12 @@ describe("the reporting builder's data layer", () => {
       for (const other of REPORTING_KEYS) if (other !== key) mockGranted.add(other);
       renderHook(() => useRead(), { wrapper: wrapper() });
 
-      /* Nothing to wait for; a request that is going to happen happens on mount. */
       await Promise.resolve();
       expect(paths()).toHaveLength(0);
     });
   });
 
   it("runs a saved report through its own id, never down the ad-hoc path", async () => {
-    /**
-     * The two routes execute the same statement, so nothing on screen would
-     * differ. What differs is the audit row: `definitions/:id/run` records
-     * which report was run and `run` cannot, so sending a saved report the
-     * short way leaves "how often is this run, and by whom" unanswerable
-     * forever — and silently, because the answer is an empty log, not an error.
-     */
     mockGranted.add("crm:reporting:run");
     renderHook(() => useReportDefinitionRun("def-9", { limit: 25, offset: 0 }), {
       wrapper: wrapper(),
@@ -211,7 +180,6 @@ describe("the reporting builder's data layer", () => {
   });
 
   it("asks nothing until there is a question to ask", async () => {
-    /** A null description is an unfinished form, not an empty report. */
     mockGranted.add("crm:reporting:run");
     mockGranted.add("crm:reporting:manage");
     renderHook(
@@ -264,7 +232,6 @@ describe("the reporting builder's data layer", () => {
       });
       await result.current.deleteSchedule.mutateAsync({ reportScheduleId: "s-1" });
 
-      /* Sorted: `paths()` reads the verbs in turn, so call order is not its order. */
       expect([...paths()].sort()).toEqual([
         "/crm/reporting/definitions",
         "/crm/reporting/definitions/def-1",

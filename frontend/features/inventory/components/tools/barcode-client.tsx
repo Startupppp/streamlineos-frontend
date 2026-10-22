@@ -30,16 +30,6 @@ interface RecentScan {
   at: Date;
 }
 
-/**
- * B2 — the lookup bench, now recording what it reads.
- *
- * Every read here goes through `/scan/capture`, not `/scan`, for the same
- * reason the operator surfaces do: a scan is a fact about the building, and a
- * warehouse that can only reconstruct its scans from the movements they caused
- * has no record of the ones that caused none. The idempotency key is minted per
- * submission, so a retry of one read replays and a deliberate second read of the
- * same label records a second fact.
- */
 export function BarcodeClient() {
   const canScan = useCan(SCAN_PERMISSION);
   const { isOnline } = useInventoryOutbox();
@@ -157,15 +147,7 @@ export function BarcodeClient() {
             {capture.data ? <ScanResultCard result={capture.data} /> : null}
           </div>
 
-          {/*
-           * G8 — the bench's own empty state.
-           *
-           * Before the first scan there is genuinely nothing to show, and a blank
-           * area below the field reads as a page that failed to load. It says
-           * what to do instead, and names the wedge as well as the box, because
-           * the wedge needs no focus and an operator holding a scanner should not
-           * be hunting for a cursor.
-           */}
+          
           {recent.length === 0 && !capture.data && !capture.error ? (
             <EmptyState
               className="flex-1 min-h-0"

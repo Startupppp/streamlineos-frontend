@@ -12,10 +12,6 @@ import {
 import { proposeFromFill, MIN_SAMPLE } from "./layout-proposal";
 import { formFields, patchForUpdate, payloadForCreate, schemaForLayout } from "./layout-schema";
 
-/**
- * A description the engine has never seen, so nothing here can pass by knowing
- * what a party or an issue happens to be called.
- */
 const LAYOUT: RecordLayout = {
   key: "specimen",
   singular: "Specimen",
@@ -91,8 +87,6 @@ describe("an arrangement applied to a description", () => {
   });
 
   it("refuses to hide a required field, which would leave the form unsubmittable", () => {
-    // `label` is the only required field here and is also the title; a second
-    // required field proves the rule is about `required`, not about the title.
     const withRequired: RecordLayout = {
       ...LAYOUT,
       fields: LAYOUT.fields.map((field) =>
@@ -111,7 +105,6 @@ describe("an arrangement applied to a description", () => {
   it("keeps a hidden optional field out of the form without dropping it from the schema source", () => {
     const adjusted = applyAdjustment(LAYOUT, { layoutKey: "specimen", hidden: ["notes"] });
     expect(formFields(adjusted, "edit").map((field) => field.name)).not.toContain("notes");
-    // A field absent from a PATCH is a field left alone, not a field cleared.
     expect(adjusted.fields.some((field) => field.name === "notes")).toBe(true);
   });
 
@@ -164,19 +157,8 @@ describe("an arrangement applied to a description", () => {
   });
 });
 
-/**
- * The criterion hiding exists to satisfy, and the one it is easiest to violate.
- *
- * "Display only" is a claim about two different things, and both are asserted
- * here rather than assumed: a hidden field must not become a way to see
- * something a permission would deny, and it must not become a way to lose data
- * a tenant only asked to stop looking at.
- */
 describe("hiding a field is display and nothing else", () => {
   it("cannot reveal a field the description never published", () => {
-    // An arrangement names fields; it cannot invent one. There is no allow-list
-    // here and no permission key, so there is nothing for a tenant to widen:
-    // what a user may read was decided before a layout was ever applied.
     const adjusted = applyAdjustment(LAYOUT, {
       layoutKey: "specimen",
       order: ["salary", "label"],
@@ -195,9 +177,6 @@ describe("hiding a field is display and nothing else", () => {
   });
 
   it("unhiding a field cannot make a denied read succeed, because it changes no request", () => {
-    // The adjustment describes an arrangement of fields the API already
-    // returned. Applying one produces a layout whose field set is identical to
-    // the description's, so nothing downstream asks the server for more.
     const hiddenEverything = applyAdjustment(LAYOUT, {
       layoutKey: "specimen",
       hidden: hidableFields(LAYOUT),
@@ -209,13 +188,6 @@ describe("hiding a field is display and nothing else", () => {
   });
 
   it("leaves a hidden field out of an update entirely, rather than sending it as null", () => {
-    /*
-      The trap this test exists for. A hidden field is not rendered, so the
-      submitted values carry no key for it; a caller that names its keys reads
-      undefined, sends null, and the API clears a column nobody touched. On a
-      PATCH, absent means "leave alone" and null means "clear" — building the
-      body from the layout keeps the two apart.
-    */
     const adjusted = applyAdjustment(LAYOUT, { layoutKey: "specimen", hidden: ["notes"] });
     const patch = patchForUpdate(adjusted, { label: "S-1", owner: "Priya", site: "", collectedAt: "", mass: "" });
 
@@ -248,13 +220,6 @@ describe("hiding a field is display and nothing else", () => {
 });
 
 describe("a layout proposed from what the tenant fills in", () => {
-  /**
-   * Fill counts as the server would send them: how many of the sampled records
-   * carry a value for each field. The counting itself is deliberately not done
-   * here — a proposal built from the page of rows a list happens to have loaded
-   * is a proposal about page one — so what is tested is the judgement made from
-   * the counts, which is the part that lives on the client.
-   */
   const ALL = MIN_SAMPLE;
   const counts = (over: Record<string, number> = {}) => ({
     label: ALL,
@@ -277,8 +242,6 @@ describe("a layout proposed from what the tenant fills in", () => {
   });
 
   it("leaves a field alone that one record in the sample uses", () => {
-    // Not a threshold: one in twenty is used, and hiding it would cost that one
-    // record its data being visible.
     expect(proposeFromFill(LAYOUT, ALL, counts({ owner: 1 }))?.hiding).not.toContain("owner");
   });
 
@@ -346,18 +309,11 @@ describe("a description narrowed for one composer", () => {
   });
 
   it("ignores a field the form never offered, rather than smuggling one in", () => {
-    // `collectedAt` is on the form; `nothingCalledThis` is not declared at all.
     const composer = withFormFields(LAYOUT, ["nothingCalledThis", "collectedAt"]);
     expect(formFields(composer, "create").map((field) => field.name)).toEqual(["collectedAt"]);
   });
 
   it("offers no controls when it can keep nothing, rather than widening to the whole form", () => {
-    /*
-      The opposite of `withColumns`, deliberately. A panel showing every column
-      is worse than one showing four; a "log a note" box that quietly became the
-      full six-field record form is worse than one that says it has nothing to
-      show, which is what `RecordForm` renders for an empty section list.
-    */
     const composer = withFormFields(LAYOUT, ["nothingCalledThis"]);
     expect(composer.form.sections).toEqual([]);
     expect(formFields(composer, "create")).toEqual([]);
@@ -390,8 +346,6 @@ describe("a composer whose fields the tenant has all hidden", () => {
     const adjusted = applyAdjustment(LAYOUT, { layoutKey: "specimen", hidden: ["notes"] });
     const composer = withFormFields(adjusted, ["notes"]);
     expect(formFields(composer, "edit")).toEqual([]);
-    // Not the full description: a "log a note" box that became a six-field form
-    // is a worse outcome than one that says it has nothing to show.
     expect(composer.form.sections).toEqual([]);
   });
 });
@@ -400,8 +354,6 @@ describe("a composer that insists on more than the record type does", () => {
   it("marks a field required for this framing only", () => {
     const composer = withFormFields(LAYOUT, ["notes"], { required: ["notes"] });
     expect(formFields(composer, "create")[0]?.required).toBe(true);
-    // The shared description is untouched: a call logged with no notes is still
-    // a call, and only this composer says otherwise.
     expect(LAYOUT.fields.find((field) => field.name === "notes")?.required).toBeUndefined();
   });
 

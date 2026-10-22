@@ -23,15 +23,6 @@ const employeeEmploymentSchema = z
   })
   .strict();
 
-/**
- * HRMS-E2E-018. What the server observed about the last invite email.
- *
- * The enum matches the backend's `INVITE_DELIVERY_STATUSES` exactly and has no
- * `delivered` and no `bounced`: no provider receipt is joinable to an invite, so
- * neither state exists on the server and neither may be parsed into this screen.
- * `deliveryConfirmed` is a literal `false` so the contract itself refuses a
- * payload that starts claiming arrival.
- */
 const inviteDeliverySchema = z
   .object({
     status: z.enum(["none", "queued", "sent", "failed", "suppressed"]),
@@ -70,7 +61,6 @@ export const employeeDataSchema = z
     employment: employeeEmploymentSchema.nullable(),
     inviteDelivery: inviteDeliverySchema,
     allowedActions: z.array(z.string()).optional(),
-    // Compatibility-only presentation fields are explicit and remain non-sensitive.
     departmentName: z.string().nullable().optional(),
     gender: z.enum(["MALE", "FEMALE", "OTHER"]).nullable().optional(),
   })

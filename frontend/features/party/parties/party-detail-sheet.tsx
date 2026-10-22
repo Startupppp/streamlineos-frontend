@@ -22,18 +22,9 @@ import { PartyContactsSection } from "./party-contacts-section";
 export interface PartyDetailSheetProps {
   partyId: string | null;
   onOpenChange: (open: boolean) => void;
-  /** Opens the subject on the other end of a link. */
   onOpenSubject?: (subjectId: string) => void;
 }
 
-/**
- * One party, rendered from the same description that produced its list.
- *
- * The linked subjects are the reverse of the subject surface's linked parties —
- * the same `subject_party_links` rows, read from this end. Following a link in
- * either direction lands on the record, which is what makes the relationship
- * navigable rather than merely stored.
- */
 export function PartyDetailSheet({ partyId, onOpenChange, onOpenSubject }: PartyDetailSheetProps) {
   const party = useParty(partyId);
   const subjects = usePartySubjects(partyId);

@@ -1,31 +1,3 @@
-/**
- * The module manifest, validated WITHOUT Zod — and validated just as strictly.
- *
- * WHY THIS ONE IS NOT A `lazyContract`. Every other schema in this app guards a
- * WIRE boundary, so deferring the schema module until the read runs costs
- * nothing: `apiClient` resolves the contract in parallel with the request and
- * parses the body exactly as before. This one guards `lib/module-manifest.json`,
- * a file compiled INTO the bundle, and `lib/org-module-keys.ts` reads the
- * parsed result at module scope to build the lookup maps `normalizeOrgModuleKey`
- * answers from. There is no later moment to defer to: the value has to exist
- * synchronously at import time, so a Zod schema here pins Zod's whole runtime
- * (56,661 B gzip) into the first load of every authenticated route, for an input
- * that cannot change after the build.
- *
- * SO THE VALIDATION STAYED AND THE DEPENDENCY WENT. `parseModuleManifest`
- * accepts and rejects exactly what the Zod schema it replaces did — same twelve
- * fields, same nullability, same `id` non-empty rule, same three-value `ladder`
- * enum, same `version` positive-integer rule, same non-empty `modules`, and
- * unknown keys are dropped rather than rejected, as a non-`.strict()` object
- * did. It throws on a violation instead of returning a result, which is what
- * `.parse()` did too. `module-manifest-schema.test.ts` bite-proves one rejection
- * per rule, so "it still validates" is a measured claim rather than a promise.
- *
- * The types below are hand-declared because they can no longer be `z.infer`red.
- * Nothing narrows by unchecked predicate and nothing is cast: each field is read
- * through a checker that returns the narrowed value or throws, so the object
- * this function returns is a `ModuleManifest` by construction.
- */
 
 export type ModuleLadder = "delegable" | "universal" | "platform-admin";
 

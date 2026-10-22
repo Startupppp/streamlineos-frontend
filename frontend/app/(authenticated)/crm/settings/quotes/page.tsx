@@ -27,14 +27,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { QUOTE_TEMPLATE_LAYOUT } from "@/lib/renderer/crm/settings/quote-template-layout";
 import type { QuoteTemplate } from "@/types/crm/pricebooks";
 
-/**
- * Quoting rules, and the documents quotes are rendered into.
- *
- * Both halves are generated. The template list comes from a description with
- * columns; the rules above it come from a singleton description with none —
- * there is one settings record per tenant and no list of it, which is a shape
- * the vocabulary admits rather than one it has to be lied to about.
- */
 export default function QuoteSettingsPage() {
   const layout = useTenantLayout(QUOTE_TEMPLATE_LAYOUT);
   const canManage = useCan("crm:pricebooks:manage");

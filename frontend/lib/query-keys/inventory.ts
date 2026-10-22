@@ -1,35 +1,11 @@
 import { queryKeyBase as base, trimKey as k } from "./base";
 
-/**
- * R2 — a key never ends in `undefined`.
- *
- * A4 found the shape of the bug on `products()`: an optional trailing argument
- * that is not supplied still occupies a slot, so `products()` yielded
- * `[..., "products", undefined]`. TanStack's partial match walks the *filter*
- * key's own indexes, so index 3 compared `undefined` against a stored params
- * object and never matched — every no-argument
- * `invalidateQueries({ queryKey: products() })` was a silent no-op, and there
- * were roughly 110 of them across the inventory hooks. Two families got a
- * hand-written `*List` sibling; the other forty did not.
- *
- * Trimming the trailing gap here fixes all of them at once and makes the fix
- * structural rather than a convention to remember: a params-less call *is* the
- * prefix, so it partial-matches every filtered variant of the same list. The
- * `*List` constants below are that same array under a name, kept because the
- * hooks already read them and because naming the prefix says out loud that
- * invalidation is what it is for.
- */
 const list = (segment: string) => [...base, "inventory", segment] as const;
 
 export const inventoryQueryKeys = {
   inventory: {
     all: [...base, "inventory"] as const,
 
-    /**
-     * Params-less prefixes, for invalidation. Each is exactly what the matching
-     * factory returns when called with no argument; read with `products(params)`,
-     * invalidate with either.
-     */
     productsList: list("products"),
     productVariantsList: list("productVariants"),
     reservationsList: list("reservations"),
@@ -173,31 +149,14 @@ export const inventoryQueryKeys = {
     carriers: () => k(...base, "inventory", "carriers"),
     channels: () => k(...base, "inventory", "channels"),
 
-    /**
-     * NEO-1. `channelPoolsAll` is the params-less prefix every pool key hangs
-     * off, so one invalidation after an allocation reaches the channel list, the
-     * per-variant popover and the availability probe together — the R2 rule at
-     * the top of this file, applied to a family added after it was written.
-     */
     channelPoolsAll: [...base, "inventory", "channelPools"] as const,
 
-    /**
-     * NEO-2 / NEO-3. Same R2 discipline as the pool keys above: a params-less
-     * prefix per family, so one invalidation after an ingest or an accept reaches
-     * the list, the detail and the fill-rate report together.
-     */
     platformPurchaseOrdersList: [...base, "inventory", "platformPurchaseOrders"] as const,
     platformPurchaseOrders: (filters?: Record<string, unknown>) =>
       k(...base, "inventory", "platformPurchaseOrders", filters),
     platformPurchaseOrder: (platformPoId: number) =>
       k(...base, "inventory", "platformPurchaseOrders", "detail", platformPoId),
-    /**
-     * Restored: `useAsns` (`hooks/api/inventory/quick-commerce.ts`) reads this.
-     * It was deleted as "no caller anywhere" while that hook was calling it, and
-     * the hook was then deleted too rather than the key being put back.
-     */
     asns: (filters?: Record<string, unknown>) => k(...base, "inventory", "asns", filters),
-    /** NEO-9, NEO-11, NEO-12. Params-less prefixes, then the shapes screens read. */
     kitsAll: [...base, "inventory", "kits"] as const,
     kitBom: (kitVariantId: number) => k(...base, "inventory", "kits", "bom", kitVariantId),
     kitBuildable: (kitVariantId: number, warehouseId: number | null) =>
@@ -212,7 +171,6 @@ export const inventoryQueryKeys = {
     dockAppointments: (range: Record<string, unknown>) =>
       k(...base, "inventory", "dockAppointments", range),
 
-    /** NEO-6 / NEO-7. Same R2 discipline: a params-less prefix per family. */
     slottingRulesAll: [...base, "inventory", "slottingRules"] as const,
     slottingRules: (warehouseId: number | null) =>
       k(...base, "inventory", "slottingRules", warehouseId ?? "all"),
@@ -222,7 +180,6 @@ export const inventoryQueryKeys = {
     laborBoardAll: [...base, "inventory", "laborBoard"] as const,
     laborBoard: (filters?: Record<string, unknown>) => k(...base, "inventory", "laborBoard", filters),
 
-    /** NEO-4. Params-less prefix plus the two shapes the screens read. */
     handlingUnitsList: [...base, "inventory", "handlingUnits"] as const,
     handlingUnits: (filters?: Record<string, unknown>) =>
       k(...base, "inventory", "handlingUnits", filters),
@@ -269,11 +226,6 @@ export const inventoryQueryKeys = {
       k(...base, "inventory", "demandBaseline", productVariantId),
     supplierDelayBriefing: (vendorId?: string) =>
       k(...base, "inventory", "supplierDelayBriefing", vendorId),
-    /**
-     * Restored: `useVariantLabel` (`hooks/api/inventory/labels.ts`) reads this.
-     * It was deleted as a leaf with no reader in the same second a sibling sweep
-     * deleted that hook, so the two deletions each looked justified by the other.
-     */
     variantLabel: (productVariantId: number, lotId?: number) =>
       k(...base, "inventory", "variantLabel", productVariantId, lotId),
     qualityHold: (qualityHoldId: number) => k(...base, "inventory", "qualityHold", qualityHoldId),

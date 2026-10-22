@@ -53,13 +53,6 @@ export function useDeleteDealCompetitor(dealId: number) {
   });
 }
 
-/**
- * CRM-P2-12. What the system noticed and nobody has ruled on yet.
- *
- * Gated on `crm:deals:read` — the same key as the deal's own timeline, which is
- * where the evidence comes from, so a proposal discloses nothing its reader
- * could not already open. Deciding is a separate key and a separate hook.
- */
 export function useDealCompetitorSuggestions(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: queryKeys.dealCompetitorSuggestions.list(dealId, "pending"),
@@ -74,16 +67,6 @@ export function useDealCompetitorSuggestions(dealId: number) {
   });
 }
 
-/**
- * Asks the server to read the deal's recent timeline and file what it
- * recognises.
- *
- * A mutation and not a query, because it writes proposal rows — and it is a
- * button rather than something the card does on mount, which is the frontend
- * half of "no autonomous deal open". A `useEffect` firing this on render would
- * make the product propose things nobody asked it to, which is the behaviour the
- * ticket exists to refuse.
- */
 export function useScanDealCompetitorSuggestions(dealId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:deals:update", {
@@ -101,14 +84,6 @@ export function useScanDealCompetitorSuggestions(dealId: number) {
   });
 }
 
-/**
- * Records that a named person agreed, and only then does a competitor exist.
- *
- * `confirmedCompetitorKey` is not ceremony: the server compares it against what
- * it stored and refuses a mismatch, so a card showing a stale proposal cannot
- * turn a click into a competitor its reader never saw. Both lists are
- * invalidated because exactly one row moves between them.
- */
 export function useAcceptDealCompetitorSuggestion(dealId: number) {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<

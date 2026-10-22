@@ -4,11 +4,6 @@ import type { SignalsContent } from "@/features/landing/relay/data/signals";
 import { FaceStack } from "./face-stack";
 import { TEXT_AFTER, Widget, WidgetTitle, widgetDelay } from "./widget";
 
-/**
- * Widget / waiting on people — 413 × 244, five overlapping faces (3888:6615)
- * / 301 × 268 (3888:11020) / 338 × 248 with 44 faces (3865:85) / 350 × 290
- * with 60 faces (3925:12628).
- */
 export const WaitingWidget = ({
   title,
   faces,

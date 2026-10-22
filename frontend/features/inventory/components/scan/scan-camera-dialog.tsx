@@ -12,22 +12,8 @@ interface ScanCameraDialogProps {
   onDetected: (payload: string) => void;
 }
 
-/** Roughly six looks per second. A scan that needs more than that needs a scanner. */
 const DETECT_INTERVAL_MS = 160;
 
-/**
- * B2, item 1 — the camera, where the browser has one.
- *
- * A phone camera is slower and less reliable than a wedge, which is why it is
- * the third input rather than the first: the manual field is the fallback that
- * always works, and this is a convenience for an operator holding a phone and
- * no scanner. It never becomes the only way in, so a browser without
- * `BarcodeDetector` loses nothing.
- *
- * The stream is stopped on every exit path. A camera left running behind a
- * closed dialog keeps the indicator light on, which operators reasonably read as
- * the app watching them.
- */
 export function ScanCameraDialog({ open, onOpenChange, onDetected }: ScanCameraDialogProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -44,8 +30,6 @@ export function ScanCameraDialog({ open, onOpenChange, onDetected }: ScanCameraD
     function runCamera() {
       if (!open) return;
 
-      // Captured now, not in the cleanup: by the time this unwinds the ref may
-      // already point somewhere else, and the stream would outlive the dialog.
       const video = videoRef.current;
       let stream: MediaStream | null = null;
       let timer: ReturnType<typeof setInterval> | null = null;
@@ -78,7 +62,6 @@ export function ScanCameraDialog({ open, onOpenChange, onDetected }: ScanCameraD
                 onDetectedRef.current(first.rawValue);
               })
               .catch(() => {
-                // A frame that will not decode is the normal case, not an error.
               });
           }, DETECT_INTERVAL_MS);
         } catch {

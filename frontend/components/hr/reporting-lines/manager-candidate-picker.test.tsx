@@ -24,7 +24,6 @@ jest.mock("@/hooks/api/hr/my-reporting-line", () => ({
   useMyManagerCandidates: (...args: unknown[]) => selfCandidates(...args),
 }));
 
-// The picker's own directory sources stay idle when candidates are explicit.
 jest.mock("@/hooks/api/access", () => ({ useCan: () => false }));
 jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
@@ -55,9 +54,7 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
       expect.stringContaining("Asha Rao"),
       expect.stringContaining("Ben Ortiz"),
     ]);
-    // The employee is never offered as their own manager.
     expect(screen.queryByRole("option", { name: /Sam Subject/ })).not.toBeInTheDocument();
-    // Designation and status are visible before choosing.
     expect(screen.getByText("Engineering Manager · Active")).toBeInTheDocument();
     expect(screen.getByText("On notice")).toBeInTheDocument();
 
@@ -74,7 +71,6 @@ describe("ManagerCandidatePicker — accessible manager selection", () => {
     await user.type(screen.getByPlaceholderText("Search members…"), "as");
 
     await waitFor(() => expect(hrCandidates).toHaveBeenLastCalledWith("as", "u-subject", { enabled: true }));
-    // Server-filtered: the picker does not re-filter the capped list client-side.
     expect(screen.getAllByRole("option")).toHaveLength(2);
   });
 

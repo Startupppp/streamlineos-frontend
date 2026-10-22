@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-/**
- * A voice screen, and whether anybody actually spoke to the candidate.
- *
- * `completedBy` is the field that matters: it is null until a result arrives
- * with answers in it, so a screen that was requested and never happened cannot
- * read as one that did.
- */
 export const voiceScreenViewContract = z.object({
   id: z.number().int(),
   candidateId: z.number().int(),

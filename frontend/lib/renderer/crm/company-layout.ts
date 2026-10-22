@@ -1,35 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * Companies, as data.
- *
- * The eight fields the create endpoint accepts are the eight the form renders,
- * and `organizationUpdateSchema` accepts the same eight — so nothing here is
- * `editOnly`. What the update endpoint accepts and this description withholds is
- * `parentId`, `notes` and `healthScore`, and each is withheld for its own
- * reason.
- *
- * `tier` is the eighth, and unlike `healthScore` it is editable on purpose:
- * nothing derives it, a person states it, and the roadmap weights by it. A
- * company with no tier set is the normal case and weights nothing.
- *
- * `parentId` and `notes` already have owners on the detail page — the parent
- * picker and the notes editor — and a second control writing the same column
- * from a generic form is two editors racing over one value. Neither is declared
- * at all, because a description that names a field nothing renders is dead data.
- *
- * `healthScore` is declared and read-only. The API does accept it, but the
- * product derives the score (`computeHealthScore`) and reads
- * `org.healthScore ?? derived` — so one hand-typed number silently switches the
- * account off its derivation for good. Read-only keeps the figure visible in the
- * list and on the record without offering that trade in a form.
- *
- * The health column loses its traffic-light. The hand-written table painted it
- * green above 70 and red below 40, and the vocabulary has no way to say that:
- * `sign` reports a verdict about zero, and every health score is above zero, so
- * `gain` would paint every account green. The number survives; the banding does
- * not, and inventing a colour here would put presentation back into the data.
- */
 export const COMPANY_LAYOUT: RecordLayout = {
   key: "crm:company",
   singular: "Company",

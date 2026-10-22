@@ -29,7 +29,6 @@ export interface CopyLastWeekResult {
   failed: number;
 }
 
-/** One line for the whole copy, so a 20-entry week is not 20 toasts. */
 export function describeCopyResult({ created, skipped, failed }: CopyLastWeekResult): string {
   if (created === 0 && failed === 0)
     return skipped > 0
@@ -197,8 +196,6 @@ export function WeekGrid({
           source: "MANUAL",
         });
       }
-      // Awaited, so "Copying…" outlives the writes it started, and reported
-      // once rather than one toast and one refetch per row.
       const { created, failed } = await copyEntries.mutateAsync(rows);
       toast[failed > 0 ? "error" : "success"](
         describeCopyResult({ created, skipped, failed }),
@@ -250,15 +247,7 @@ export function WeekGrid({
         data-hidden-right={gridOverflow.hiddenRight}
         className={cn("overflow-x-auto rounded-lg border border-border scrollbar-thin", OVERFLOW_EDGE_FADE_CLASS)}
       >
-        {/*
-          `table-fixed` is load-bearing, not cosmetic. Under the default auto
-          layout a cell's declared width is only a suggestion, so the sticky
-          project column grew to the longest project name — 242px of a 356px
-          scroll port at 390px wide — and, being sticky, it then sat on top of
-          Thu/Fri/Sat at every scroll offset that would have revealed them.
-          Fixed layout makes `w-28 sm:w-48` the real width and lets the
-          `truncate` inside the cell do its job (QA-TS-001).
-        */}
+        
         <table className="w-full table-fixed text-xs" style={{ minWidth: 800 }}>
           <caption className="sr-only">
             Hours by project and day for the week of{" "}
@@ -267,8 +256,7 @@ export function WeekGrid({
           </caption>
           <thead>
             <tr className="bg-muted/40 border-b border-border">
-              {/* Opaque, not `bg-muted/40`: a translucent sticky cell lets the
-                  day columns it is covering show through it (QA-TS-001). */}
+              
               <th className="sticky left-0 z-10 bg-card text-left px-3 py-2 font-medium text-muted-foreground w-28 sm:w-48 border-r border-border">
                 Project / Ticket
               </th>

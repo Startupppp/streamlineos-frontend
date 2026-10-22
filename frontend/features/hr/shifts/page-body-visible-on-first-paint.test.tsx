@@ -1,4 +1,3 @@
-/** @jest-environment node */
 import { renderToStaticMarkup } from "react-dom/server";
 import { ShiftsPage } from "./shifts-page";
 import { DevicesPage } from "@/features/hr/devices/devices-page";

@@ -41,13 +41,6 @@ export interface ConnectIntegrationInput {
 
 const integrationsKey = ["hr", "recruitment", "integrations"] as const;
 
-/**
- * Gated on `manage`, not `view`, and matching the route.
- *
- * Which providers an organisation has connected and which keys it holds is
- * administrative: it is the screen those are changed from, and a hint of a
- * credential is still information about a credential.
- */
 export function useRecruitmentIntegrations() {
   return useGatedQuery("hr:requisitions:manage", {
     queryKey: integrationsKey,
@@ -92,13 +85,6 @@ export function useDisconnectIntegration() {
   });
 }
 
-/**
- * Mints the secret a board signs its inbound application callbacks with.
- *
- * The value comes back exactly once. Nothing caches it and the list endpoint
- * never returns it again, so the screen has to show it at the moment it is
- * created or not at all.
- */
 export function useRotateInboundSecret() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation("hr:requisitions:manage", {

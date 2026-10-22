@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-/**
- * B1 — the project form's rules, held once.
- *
- * The same shape the server validates, so the operator is told before the round
- * trip; the server remains the authority and refuses the same things
- * independently. Every message names what to do rather than what failed.
- */
 export const ZONES = [
   { value: "HYD_NORTH", label: "Hyderabad North" },
   { value: "HYD_SOUTH", label: "Hyderabad South" },

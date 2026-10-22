@@ -2,14 +2,6 @@ import React from "react";
 import { render, screen } from "@testing-library/react";
 import { EmployeesDirectoryStats } from "./employees-directory-stats";
 
-/**
- * HRMS-E2E-014b. QA created one employee who never opened the invitation and the
- * directory reported two active. `users.isActive` is the ACCOUNT flag, set the
- * moment an administrator creates the person, so headcount counted an invitation
- * as a hire — and headcount is the number a founder reads off this screen.
- *
- * Pending is now its own card rather than a slice of Active.
- */
 jest.mock("@/components/ui/stat-card", () => ({
   StatCard: ({ label, value, hint }: { label: string; value: number; hint?: string }) => (
     <div data-testid={`stat-${label.toLowerCase().replace(/\s+/g, "-")}`}>

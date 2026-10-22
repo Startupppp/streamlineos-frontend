@@ -16,14 +16,9 @@ export function resolutionReason(resolution: ManagerResolutionKind): string {
 
 interface ManagerResolutionCellProps {
   primaryManager: { name: string; email: string; resolution: ManagerResolutionKind } | null;
-  /** The file row that creates this manager, when they are new in the same upload. */
   dependsOnRow?: number | null;
 }
 
-/**
- * Who a row's primary manager resolved to and why (PRD §7.3.6): a fallback always
- * names the person it picked and the rule that picked them — never "automatic".
- */
 export function ManagerResolutionCell({ primaryManager, dependsOnRow }: ManagerResolutionCellProps) {
   if (!primaryManager) return <span className="text-xs text-muted-foreground">No manager</span>;
   const display = RESOLUTION_DISPLAY[primaryManager.resolution];

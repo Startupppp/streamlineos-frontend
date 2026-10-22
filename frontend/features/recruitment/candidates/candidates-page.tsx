@@ -136,11 +136,6 @@ export function CandidatesPage() {
 
   const handleStatusChange = useCallback(
     (id: number, status: CandidateStatus) => {
-      /*
-        A reject goes through the dialog, never straight to the mutation. The
-        endpoint refuses one that carries no reason, so firing here would turn
-        picking "Rejected" in the card's dropdown into a 422 toast.
-      */
       if (status === "REJECTED") {
         const candidate = filteredCandidates.find((c) => c.id === id);
         setPendingReject({

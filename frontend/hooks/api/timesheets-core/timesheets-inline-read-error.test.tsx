@@ -1,16 +1,3 @@
-/**
- * QA-FE-003 — why `/timesheets/team` showed "Failed to load team time data".
- *
- * That copy is the route's own `error.tsx`, not the ErrorState `TeamView`
- * draws. `throwOnError: readErrorReachesBoundary` is set on the provider for
- * every read, so a 500 on either of the page's two reads was thrown to the
- * route boundary and replaced the whole page — taking the page's retry with it,
- * and letting a failure of the billable-percentage satellite destroy a Team
- * page whose own data had loaded fine.
- *
- * Both reads are declared `INLINE_READ_ERROR` now. The probe below is the
- * measurement: a 500 must leave the component mounted and reporting `isError`.
- */
 import { Component, type ReactNode } from "react";
 import { render, screen, waitFor } from "@testing-library/react";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";

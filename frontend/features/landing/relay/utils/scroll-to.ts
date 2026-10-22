@@ -1,17 +1,8 @@
-/**
- * @fileoverview Utility function for smooth scrolling to elements or positions
- * Handles both scrolling to element IDs and numeric positions
- * Temporarily disables scroll state during animation if scroll is enabled
- */
 
-//if lenis
 import { useScroll } from "@/features/landing/relay/hooks/smooth-scroll/use-scroll";
-//endif
 
 export const scrollTo = (id?: string | number, immediate?: boolean) => {
-  //if lenis
   const isEnabled = useScroll.getState().isEnableScroll;
-  //endif
 
   if (typeof id === "string") {
     const el = document.getElementById(id);
@@ -19,11 +10,9 @@ export const scrollTo = (id?: string | number, immediate?: boolean) => {
       return;
     }
 
-    //if lenis
     if (isEnabled) {
       useScroll.setState({ isEnableScroll: false });
     }
-    //endif
 
     setTimeout(() => {
       window.scrollTo({

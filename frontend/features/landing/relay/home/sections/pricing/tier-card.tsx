@@ -10,7 +10,6 @@ import { useSeen } from "@/features/landing/relay/hooks/use-seen";
 import type { PricingContent } from "@/features/landing/relay/data/pricing";
 import { SPRING, SPRING_SOFT, STEP } from "@/features/landing/relay/lib/motion";
 
-/** Feature lines follow each other quickly (user: the card should play faster). */
 const FAST = 40;
 
 import { Check } from "./check";
@@ -25,15 +24,8 @@ const FEATURE_SIZE = {
   body: "text-body leading-body",
 } as const;
 
-/** "most picked" pops in with a small overshoot (motion brief, pricing cards). */
 const POP = { tension: 320, friction: 17 } as const;
 
-/**
- * 1024 and 390 nudge the featured card's whole text block 6px down against its
- * taller tag (Tier / Team 3888:11424, 3950:735 vs Starter 3888:11405,
- * 3950:716) — 390 also its hairline and button; 768 moves only the text block,
- * 8px (3876:51 vs 3876:32). 1440 keeps all three cards on the same lines.
- */
 const HEAD = {
   plain: {
     name: "w1024:top-5.75",
@@ -53,41 +45,14 @@ const HEAD = {
   },
 } as const;
 
-/**
- * Feature rows are a fixed 32 at 1440 and 768; 1024 gives the 16/24 lines 36,
- * and 390 sets every line 16/24 on a 36 pitch.
- */
 const ROW_HEIGHT = {
   label: "h-8 w1024:h-9 w768:h-8 w390:h-9",
   body: "h-8 w1024:h-9 w768:h-8 w390:h-9",
 } as const;
 
-/** FocusText's mask sweep, driven by the card's own trigger (see below). */
 const MASK =
   "linear-gradient(90deg, black calc(var(--reveal) - 40%), transparent var(--reveal))";
 
-/**
- * Plan card, 413 × 398 (Tier / Starter 3888:6997, Team 3888:7015, Scale
- * 3888:7035) and 301.33 × 434 at 1024 (3888:11405/24/45), where the price
- * drops to 36/50, the feature column to 229 (so the last line of Team and
- * Scale wraps), the buttons grow to 60 and the hairline above them comes back.
- * 768 (3876:32/51/72) is 688 × 311: price 36/50 with the period beside it,
- * the features 16/24 in two 332 columns, a 48 button. 390 (3950:716/35/56) is
- * 350 wide: every feature line 16/24 on a 36 pitch, a 60 button.
- * Children sit at the frame's coordinates, measured inside the
- * 1px border. The accent stroke + glow of the selected plan is painted by the
- * board over the row, so every card here keeps the plain hairline border; the
- * featured card keeps its tag, light checks and accent button. Glass buttons
- * draw their drop shadow as a blurred layer behind the 7% fill, as Figma
- * shows it through (showShadowBehindNode).
- *
- * Text entrance: the plan name types, the price focuses in, then the period
- * types; each feature line focuses in a STEP after its check pops. The list
- * and checks run off the card being seen, not each line: the lower lines sit
- * below the view line when the card rests at the bottom of the screen, and
- * would otherwise stay blank there.
- */
-/** Glass button box inside a card (1440 / 1024 / 768 / 390). */
 const BUTTON_BOX =
   "absolute top-79.25 right-7.75 left-7.75 w1024:top-87.25 w1024:right-5.75 w1024:left-5.75 w768:top-59.5 w768:h-12 w390:right-4.75 w390:left-4.75 w390:h-15";
 
@@ -98,7 +63,6 @@ export const TierCard = ({
 }: {
   tier: Tier;
   delay: number;
-  /** Carries the Team look (accent button) — Team by default, else the hovered card. */
   lit: boolean;
 }) => {
   const look = useSpring({ l: lit ? 1 : 0, config: SPRING_SOFT });
@@ -118,8 +82,7 @@ export const TierCard = ({
       >
         {tier.name}
       </TypeLabel>
-      {/* Price over period; 768 sets the period beside the price, 12 after
-          it, on the price's last line minus 6 (3876:34/35). */}
+      
       <div
         className={`absolute top-14.25 left-7.75 flex flex-col items-start gap-2.5 whitespace-nowrap w1024:left-5.75 w1024:gap-1 w768:flex-row w768:items-end w768:gap-3 w390:left-4.75 w390:flex-col w390:items-start w390:gap-1 ${head.price}`}
       >
@@ -183,16 +146,13 @@ export const TierCard = ({
         ))}
       </ul>
 
-      {/* No hairline above the buttons at 1440; 1024, 768 and 390 draw one
-          (3888:11421, 3876:48, 3950:732). */}
+      
       <span
         aria-hidden="true"
         className={`absolute top-81.25 left-5.75 hidden h-px w-63.25 bg-pricing-hairline w1024:block w768:top-53.5 w768:w-160 w390:left-4.75 w390:w-77.5 ${head.rule}`}
       />
 
-      {/* Both looks are always there and cross-fade: the lit card (Team by
-          default, or the one under the pointer) shows the accent button, the
-          others the glass one — only the visible one takes clicks. */}
+      
       <animated.div
         aria-hidden={lit}
         inert={lit}

@@ -7,12 +7,6 @@ import {
   classifySource,
 } from "@/test-utils/surface-state-analysis";
 
-/**
- * A ratchet, not a target. Every number here was measured; lowering one is a
- * deliberate edit and raising one fails review. Loading, read-error and
- * permission gates are all at zero, so any surface that loses one fails
- * immediately rather than after a slide.
- */
 const BASELINE = {
   minimumSurfaces: 540,
   missingLoading: 0,
@@ -22,19 +16,6 @@ const BASELINE = {
   filterEmptyConflation: 55,
 } as const;
 
-/**
- * A count alone lets one surface lose its empty state while another gains one
- * and the ratchet never moves. These eight are the whole residue, and every one
- * of them was read: none renders a server collection that can come back with
- * zero rows, so an EmptyState here would be decoration that never appears.
- * Adding a route to this list is the same weight as lowering a number.
- *
- * `/inventory/operations` left on 2026-09-12: it renders an `EmptyState` of its
- * own now, so pinning it would excuse the next surface added at that route.
- * `/inventory/reports` did not take its place — the reports hub can render zero
- * cards when the nav model carries none that the caller may open, so it was
- * given a real empty state rather than an entry here.
- */
 const EMPTY_STATE_NOT_APPLICABLE = [
   "/build/[projectId]/@panel/(.)tickets/[ticketKey]",
   "/build/[projectId]/settings/iterations",

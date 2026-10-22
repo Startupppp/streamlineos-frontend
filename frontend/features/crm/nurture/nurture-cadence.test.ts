@@ -9,11 +9,6 @@ import {
 } from "./nurture-cadence";
 
 describe("clampWaitHours", () => {
-  /**
-   * The floor is the whole reason this screen exists rather than a plain number
-   * input: a cadence authored below it is drafted, paid for and then refused at
-   * send time, and the sequence goes on reporting itself as running.
-   */
   it("raises anything under the floor to the floor", () => {
     expect(clampWaitHours(0)).toBe(MIN_STEP_WAIT_HOURS);
     expect(clampWaitHours(24)).toBe(MIN_STEP_WAIT_HOURS);
@@ -35,7 +30,6 @@ describe("clampWaitHours", () => {
     expect(clampWaitHours(500.9)).toBe(500);
   });
 
-  /** A blank or unparseable field is a wait, not a crash: the floor is the answer. */
   it("answers the floor for anything that is not a finite number", () => {
     expect(clampWaitHours(Number.NaN)).toBe(MIN_STEP_WAIT_HOURS);
     expect(clampWaitHours(Number.POSITIVE_INFINITY)).toBe(MIN_STEP_WAIT_HOURS);
@@ -71,10 +65,6 @@ describe("clampNoticeFor", () => {
     expect(clampNoticeFor(720)).toBeNull();
   });
 
-  /**
-   * The notice explains the consequence, not the constraint. "Minimum 240" reads
-   * as arbitrary and invites a ticket about the field ignoring what was typed.
-   */
   it("explains that a tighter cadence would be drafted and never sent", () => {
     const notice = clampNoticeFor(48);
     expect(notice).toContain("10 days");
@@ -93,11 +83,6 @@ describe("clampNoticeFor", () => {
 });
 
 describe("cadenceOffsetsHours", () => {
-  /**
-   * Cumulative over the CLAMPED waits, because that is the schedule the sender
-   * keeps. Summing what was typed would tell somebody their cadence finishes in
-   * a week when it finishes in a month.
-   */
   it("accumulates the waits the sender will actually keep", () => {
     expect(cadenceOffsetsHours([{ waitHours: 240 }, { waitHours: 240 }])).toEqual([240, 480]);
   });
@@ -117,11 +102,6 @@ describe("cadenceOffsetsHours", () => {
 });
 
 describe("stepsToFields", () => {
-  /**
-   * The server numbers steps from the array it is sent, so seeding the editor in
-   * arrival order would renumber the cadence on the next save — turning a read
-   * into a silent write.
-   */
   it("orders by step number rather than trusting arrival order", () => {
     const fields = stepsToFields([
       { nurtureStepId: "c", stepNumber: 3, waitHours: 720 },

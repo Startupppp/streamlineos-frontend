@@ -102,11 +102,6 @@ export function CreateTaskDialog({
 
   const handleSubmit = useCallback(
     (values: RecordFormValues) => {
-      /*
-        The linked record is read from the prefill when the form did not offer
-        the fields, never from an absent value: hiding a field is a decision to
-        stop asking, not a decision to unlink the task.
-      */
       const entityType = hasPrefilledEntity
         ? asEntityType(defaultEntityType)
         : asEntityType(values.entityType);

@@ -32,15 +32,6 @@ interface EnrolInNurtureDialogProps {
 
 const DEFAULTS: EnrolInNurtureFormValues = { partyId: "", dealId: "" };
 
-/**
- * Putting one customer into a cadence.
- *
- * The deal is optional on the wire and all but required in practice: it carries
- * the salesperson to write as and the conversation to write from, so an
- * enrolment without one produces steps that refuse before they draft. Said in
- * the field's own description rather than enforced, because the server accepts
- * it and a client that refused would be a second, stricter contract.
- */
 export function EnrolInNurtureDialog({
   nurtureSequenceId,
   open,

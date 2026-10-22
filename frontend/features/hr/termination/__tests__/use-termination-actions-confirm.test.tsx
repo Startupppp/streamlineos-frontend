@@ -17,7 +17,6 @@ jest.mock("@/hooks/api/hr", () => {
 
 import { useTerminationActions } from "../use-termination-actions";
 
-/** HR-U-026: an approver's create used to approve the termination on the first click. */
 
 function setup(canApproveExit: boolean) {
   const { result } = renderHook(() =>

@@ -13,11 +13,6 @@ function pathnameFrom(value: string | null): string | null {
   }
 }
 
-/**
- * Resolve the route currently being rendered. The proxy-provided pathname is
- * authoritative; Referer describes the page navigation started from and must
- * only be used as a last resort.
- */
 export function resolveRequestPath(headers: HeaderReader): string | null {
   return (
     pathnameFrom(headers.get("x-pathname")) ??

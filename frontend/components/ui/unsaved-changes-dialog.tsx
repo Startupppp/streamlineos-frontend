@@ -19,16 +19,11 @@ export type UnsavedChangesDialogProps = {
   keepEditingLabel?: string;
   discardLabel?: string;
   saveLabel?: string;
-  /** When omitted, only Discard + Keep editing are shown. */
   onSave?: () => void;
   onDiscard: () => void;
   isSaving?: boolean;
 };
 
-/**
- * Shared HRMS leave-with-dirty confirm — same layout as ConfirmSheet,
- * with Keep editing / Discard / Save changes.
- */
 export function UnsavedChangesDialog({
   open,
   onOpenChange,

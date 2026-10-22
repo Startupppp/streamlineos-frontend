@@ -34,34 +34,6 @@ import type { SegmentSummary } from "@/types/crm/segments";
 import { SegmentMembersSheet } from "./segment-members-sheet";
 import { SegmentSheet } from "./segment-sheet";
 
-/**
- * Segments.
- *
- * The list is of *criteria*, not of people. Nothing on this page is a stored
- * membership, and the one number that would imply otherwise — a size beside each
- * row — is deliberately absent: showing it would mean one `COUNT` per row per
- * render, and a page that quietly issues twenty-five aggregate queries to draw a
- * table is the kind of cost nobody sees until a tenant has a hundred segments.
- * Opening a row evaluates that segment, once, and reports its exact size.
- *
- * No table is written here. The columns, their labels, the description under the
- * name and the mobile card all come from `SEGMENT_LAYOUT`; the source column
- * takes its labels from `GET /crm/segments/sources` through `withSegmentSources`
- * rather than from a lookup written beside the column, which is what stops a
- * renamed source reading as a raw key. What is left on this page is the search,
- * the two row controls and which sheet a row opens.
- *
- * Search filters the page in hand rather than the server, and that is a real
- * limitation stated rather than hidden: `GET /crm/segments` takes `limit` and
- * `offset` and no query, so this narrows what is already loaded. It is honest at
- * the scale a tenant's segment list actually reaches — dozens, not thousands —
- * and the empty state says which kind of empty it is.
- *
- * `noInternalScroll` because `DataTable` renders its own
- * `flex-1 min-h-0 overflow-auto` body. Leaving the page's content zone
- * scrollable too would nest one scroller inside another, and the sticky header
- * row would slide away from the rows it labels.
- */
 
 const PAGE_SIZE = 25;
 
@@ -83,11 +55,6 @@ export function SegmentsPage() {
     offset: (page - 1) * pageSize,
   });
   const { data: sources } = useSegmentSources();
-  /**
-   * The stored criteria, fetched only while the edit sheet is open. The list
-   * projects no criteria tree — it is the largest field on the row and no list
-   * cell renders it — so editing reads the one segment it is about.
-   */
   const { data: editing } = useSegment(editId);
   const deleteSegment = useDeleteSegment();
 
@@ -110,7 +77,6 @@ export function SegmentsPage() {
 
   const rows = useMemo(() => asRecordValues(matches.map(segmentRecordFields)), [matches]);
 
-  /** The row that was clicked, as the summary the sheets take. */
   const segmentFor = useCallback(
     (row: RecordValue) =>
       matches.find((candidate) => candidate.segmentId === row.segmentId) ?? null,
@@ -291,11 +257,6 @@ export function SegmentsPage() {
             mode: "server",
             page,
             pageSize,
-            /**
-             * The endpoint returns a page, not a total, so the count shown is
-             * what has been loaded. Saying so with the real page length is
-             * better than inventing a total the server never sent.
-             */
             total: (page - 1) * pageSize + (data?.length ?? 0),
             onPageChange: setPage,
             onPageSizeChange: setPageSize,

@@ -1,11 +1,3 @@
-/**
- * B1 — the project shapes, and the one place a decimal becomes a number.
- *
- * Quantities cross the wire as **strings**: a `numeric` that arrives as a JSON
- * float has already been through a binary double, and a quantity that reads
- * 79.99999999999999 is a discrepancy no stock count will explain. The
- * conversion happens here, once, so no component has to remember why.
- */
 
 export type ProjectStatus = "PLANNING" | "ACTIVE" | "ON_HOLD" | "COMPLETED" | "CANCELLED";
 export type RequirementStatus =

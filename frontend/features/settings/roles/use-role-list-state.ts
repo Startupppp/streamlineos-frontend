@@ -70,7 +70,6 @@ export function useRoleListState() {
       requestedSearchRef.current = null;
       return;
     }
-    // Browser history can change URL state without an input event.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSearch(serverSearch);
   }, [serverSearch]);

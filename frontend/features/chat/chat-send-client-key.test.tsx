@@ -29,29 +29,7 @@ function QueryWrapper({ children }: { children: ReactNode }) {
   return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
 }
 
-/**
- * The backend built `clientKey` end to end — the column, the partial unique
- * index `uniq_chat_messages_client_key`, the `findByClientKey` pre-check, the
- * CHAT_MESSAGE_CLIENT_KEY_CONFLICT arbiter with its predicate, the
- * DuplicateSendError race path that replays the winner, and
- * `chat-send-idempotency.spec.ts` — and no frontend caller ever sent one.
- * `grep -rn clientKey` over the whole frontend returned two hits, both inside a
- * test fixture. `POST /chat/channels/:id/messages` carries no `@Idempotent`
- * decorator either, so there was no Idempotency-Key path as a substitute: a send
- * that was re-issued inserted a second row, fired a second outbox event and ran
- * a second push fanout, and the backend spec passed green over a path production
- * never took.
- *
- * The key must also be SCOPED to one logical send: reusing it for edited content
- * would make the server replay the first message and silently drop the edit.
- */
 
-/**
- * `crypto.randomUUID` is a browser API (secure contexts) this repo already uses
- * in ten production call sites; jsdom ships `crypto` without it. Stood in here
- * rather than softened in the composer — a fallback in application code would
- * exist only for the test environment.
- */
 beforeAll(() => {
   if (typeof globalThis.crypto?.randomUUID === "function") return;
   let n = 0;
@@ -175,19 +153,6 @@ describe("chat send idempotency key", () => {
   });
 });
 
-/**
- * Contract test: the body posted to POST /chat/channels/:id/messages must not
- * include `channelId`. The backend `sendMessageSchema` (chat/dto/chat.schemas.ts)
- * is `.strict()`, so any extra key returns 400 — which was exactly the live
- * defect: every send failed with 400 Bad Request.
- *
- * The schema inline below is read off the backend source, not off our own types,
- * so drift between the two sides is what the test catches.
- *
- * "Prove it bites" means: the first assertion shows the OLD mutation-fn behaviour
- * (passing the full SendMessageInput including channelId) fails the strict schema,
- * and the second shows the fixed behaviour (stripping channelId) passes it.
- */
 const backendSendMessageSchema = z
   .object({
     content: z.string().optional(),
@@ -218,7 +183,6 @@ describe("send-message body — backend strict schema contract", () => {
     };
     const result = backendSendMessageSchema.safeParse(fullInput);
     expect(result.success).toBe(false);
-    // Zod 4 .strict() puts the offending key in `issue.keys`, not `issue.path`
     const hasChannelIdIssue = result.error?.issues.some(
       (i) =>
         ("keys" in i && Array.isArray(i.keys) && (i.keys as string[]).includes("channelId")) ||

@@ -20,6 +20,7 @@ import type {
   HrPolicyStatus,
 } from "@/types/hr/policies";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { hrPoliciesQueryOptions } from "@/hooks/api/hr/policies-read-options";
 
 const hrPolicyListC = lazyContract(() =>
   import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyListContract),
@@ -52,33 +53,6 @@ const seedPoliciesC = lazyContract(() =>
   import("@/hooks/api/hr/policies-schema").then((m) => m.seedPoliciesContract),
 );
 
-export const hrPoliciesQueryOptions = (params?: {
-  cursor?: string;
-  limit?: number;
-  type?: HrPolicyType;
-  status?: HrPolicyStatus;
-  search?: string;
-}) => {
-  const query = new URLSearchParams();
-  if (params?.cursor) query.set("cursor", params.cursor);
-  if (params?.limit) query.set("limit", String(params.limit));
-  if (params?.type) query.set("type", params.type);
-  if (params?.status) query.set("status", params.status);
-  if (params?.search) query.set("search", params.search);
-  const qs = query.toString();
-  return {
-    queryKey: humanResourcesQueryKeys.hr.hrPoliciesList(params),
-    queryFn: ({ signal }: { signal?: AbortSignal }) =>
-      apiClient.get<PoliciesListResponse>(
-        `/hr/policies${qs ? `?${qs}` : ""}`,
-        undefined,
-        signal,
-        hrPolicyListC,
-      ),
-    staleTime: 60_000,
-  } as const;
-};
-
 export function useHrPolicies(params?: {
   cursor?: string;
   limit?: number;
@@ -88,8 +62,22 @@ export function useHrPolicies(params?: {
 }) {
   const canView = useCan("hr:policies:view");
   const hrEnabled = useModuleEnabled("hr");
+  const query = new URLSearchParams();
+  if (params?.cursor) query.set("cursor", params.cursor);
+  if (params?.limit) query.set("limit", String(params.limit));
+  if (params?.type) query.set("type", params.type);
+  if (params?.status) query.set("status", params.status);
+  if (params?.search) query.set("search", params.search);
+  const qs = query.toString();
   return useQuery({
     ...hrPoliciesQueryOptions(params),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get<PoliciesListResponse>(
+        `/hr/policies${qs ? `?${qs}` : ""}`,
+        undefined,
+        signal,
+        hrPolicyListC,
+      ),
     placeholderData: keepPreviousData,
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,

@@ -1,42 +1,6 @@
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, resolve } from "node:path";
 
-/**
- * The seventeen selectable interface themes, resolved the way the cascade
- * resolves them.
- *
- * `contrast-tokens.test` reads `globals.css` and nothing else, so it judges
- * exactly one palette: the untinted default. Every authenticated user who has
- * picked a theme is running a DIFFERENT palette — `themes.css` replaces
- * `--primary`, `--ring` and the sidebar accents per theme, and then rewrites
- * every neutral surface underneath them with `color-mix(in srgb, var(--brand-core) N%, …)`.
- * Judging the default and calling the product accessible is a category error:
- * the failure lives in the file the test never opens.
- *
- * WHY A RESOLVER AND NOT A REGEX. A token's value in a themed root is decided
- * by three cascade layers, and picking the wrong one silently reports a
- * passing number for a palette nobody renders:
- *
- *   light  ·  :root:not(.dark)[class*="theme-"]   (0,3,0)  wins
- *          ·  :root.theme-<id>                    (0,2,0)
- *          ·  globals :root                       (0,1,0)
- *   dark   ·  :root.dark.theme-<id>               (0,3,0)  wins on source order
- *          ·  :root.dark[class*="theme-"]         (0,3,0)
- *          ·  :root.theme-<id>                    (0,2,0)
- *          ·  globals .dark / :root
- *
- * `color-mix(in srgb, …)` interpolates in the GAMMA-ENCODED sRGB space — CSS
- * Color 5 spells the linear-light space `srgb-linear` — so the mix is a plain
- * per-channel average of the 0–255 values, and only the WCAG luminance step
- * linearizes. Mixing in the wrong space shifts every tinted surface by a few
- * percent and moves ratios across the 3:1 line.
- *
- * WHAT THIS CANNOT SEE: anything painted with an alpha modifier
- * (`text-muted-foreground/60`) composites at render time over whatever surface
- * it lands on and is judged separately; and a token whose value is a gradient,
- * an `oklch()` or a semi-transparent `color-mix` is reported unresolvable
- * rather than guessed at.
- */
 
 const FE_ROOT = resolve(__dirname, "..");
 
@@ -139,11 +103,6 @@ function declarations(body: string): Map<string, string> {
   return map;
 }
 
-/**
- * The cascade layers, most specific first. A layer is a flat token map; the
- * first layer that declares a token owns it, which is what the browser does
- * once specificity and source order have been settled above.
- */
 export interface ThemePalette {
   id: string;
   mode: ThemeMode;
@@ -238,20 +197,6 @@ function resolveValue(
 
 export { FE_ROOT };
 
-/**
- * Alpha-composited text, which no token pair can see.
- *
- * `text-muted-foreground/60` is not `--muted-foreground`: Tailwind paints it
- * at 60% opacity, so the pixels the reader actually sees are a composite of
- * the ink and whatever surface is behind it. A token-pair test reads the token
- * and reports the ink's own ratio — a number that is never painted anywhere.
- * The composite is what WCAG measures, so the composite is what this returns.
- *
- * The surface is not knowable statically, so a call site is judged against the
- * WORST of the surfaces a shared primitive can be dropped onto. That is the
- * right default for a design-system component precisely because its author
- * does not choose where it lands.
- */
 export interface AlphaTextSite {
   file: string;
   line: number;

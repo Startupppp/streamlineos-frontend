@@ -11,15 +11,6 @@ import type {
 } from "./picking-types";
 import { useIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
-/**
- * Confirming a pick moves a reservation into the picked bucket and can move the
- * sales order with it, so stock levels, reservations and the sales-order lists
- * are all stale afterwards — not just the wave.
- *
- * The `Idempotency-Key` is generated per attempt rather than per line: a retry
- * of *this* click must replay, and the picker's next partial pick of the same
- * line must not.
- */
 export function useConfirmPick() {
   const qc = useQueryClient();
   return useIdempotentMutation<ConfirmPickResult, Error, ConfirmPickInput>({
@@ -44,20 +35,6 @@ export function useConfirmPick() {
   });
 }
 
-/**
- * B5. Two endpoints behind one hook, because they are one act at the shelf.
- *
- * `SUBSTITUTED` posts to `/substitute`, which carries
- * `inventory:picking:substitute`; every other reason posts to `/exception`,
- * which carries the picker's own key. The server splits them because
- * `PermissionGuard` reads exactly one permission per handler, and a single route
- * covering every reason could only be gated at the weakest of them.
- *
- * Reporting an exception now releases the reservation on the unpicked remainder,
- * and a substitution moves the reservation onto the new SKU and rewrites the
- * sales-order line — so reservations, stock levels and the sales-order lists are
- * all stale afterwards, not just the wave.
- */
 export function useReportPickException() {
   const qc = useQueryClient();
   return useIdempotentMutation<PickExceptionResult, Error, ReportPickExceptionInput>({

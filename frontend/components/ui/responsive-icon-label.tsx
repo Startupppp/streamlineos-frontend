@@ -9,10 +9,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-/**
- * Shared trigger classes for Filters / Display controls that are icon-only
- * below `md` and labeled from `md` up (FE-117: aria-label on the button).
- */
 export const RESPONSIVE_ICON_LABEL_TRIGGER_CLASS =
   "size-9 shrink-0 gap-1.5 bg-card p-0 text-sm font-normal data-[state=open]:border-primary md:h-9 md:w-auto md:px-2.5";
 
@@ -24,7 +20,6 @@ interface MobileOnlyLabelTooltipProps {
   always?: boolean;
 }
 
-/** Tooltip naming the control when its text label is hidden or icon-only. */
 export function MobileOnlyLabelTooltip({
   label,
   children,

@@ -142,8 +142,6 @@ export function PartiesPage() {
   const [editTarget, setEditTarget] = useState<BusinessParty | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<BusinessParty | null>(null);
 
-  // The open record lives in the URL so a link from a subject's linked-parties
-  // panel lands on the party itself, not merely on the list.
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -277,13 +275,7 @@ export function PartiesPage() {
         value={search}
         onValueChange={handleSearchChange}
       />
-      {/*
-        No `ml-auto` here. FILTER_TOOLBAR_ROW is a `flex-nowrap overflow-x-auto`
-        strip with a hidden scrollbar, so pushing an item right does not move it
-        to the right-hand edge — it pushes it into the scroll overflow, past the
-        viewport, where there is no visible scrollbar to reveal it. The control
-        was rendering at x=1569 on a 1280-wide screen.
-      */}
+      
       <DensityToggle density={density} onChange={setDensity} />
       <Select value={partyTypeFilter} onValueChange={handlePartyTypeChange}>
         <SelectTrigger

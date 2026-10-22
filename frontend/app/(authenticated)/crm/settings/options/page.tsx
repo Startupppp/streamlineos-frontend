@@ -337,12 +337,7 @@ export default function CrmOptionsPage() {
         title="Options"
         subtitle="Manage dropdown values used across CRM records"
       >
-        {/*
-          * Ticket 26. A disabled query reports `isLoading: false` with no data,
-          * which is indistinguishable from a loaded-and-empty one -- so the
-          * ternary this replaced told a caller without the permission that there
-          * was nothing here, rather than that they were not allowed to look.
-          */}
+        
         <PageState
           resolution={state}
           onRetry={handleRetry}

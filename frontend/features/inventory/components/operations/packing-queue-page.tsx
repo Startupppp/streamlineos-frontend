@@ -49,16 +49,6 @@ function ProgressBadge({ row }: { row: PackingQueueRow }) {
   );
 }
 
-/**
- * B6 — the packing queue, read off the cartons.
- *
- * It used to render sales orders whose status happened to be PICKED. That drops
- * an order the moment somebody starts packing it — so the half-packed order with
- * an open carton on the bench disappeared from the screen of the person packing
- * it — and it showed orders whose goods were still on the shelf as ready to go.
- * The queue now comes from picked quantities and the cartons standing against
- * them, which is what the bench actually needs to know.
- */
 export function PackingQueuePage() {
   const canPack = useCan(PACKING_PERMISSION);
   const [search, setSearch] = useState<string>("");
@@ -259,10 +249,6 @@ interface PackRowActionProps {
   onOpen: (row: PackingQueueRow) => void;
 }
 
-/**
- * Extracted because a DataTable cell is a callback, and `useAnimatedIcon` cannot
- * run inside one.
- */
 function PackRowAction({ row, onOpen }: PackRowActionProps) {
   function handleClick(): void {
     onOpen(row);

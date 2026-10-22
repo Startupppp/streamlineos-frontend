@@ -23,7 +23,6 @@ export function leaveStartFloor(
 
 const pad = (n: number): string => String(n).padStart(2, "0");
 
-/** yyyy-MM-dd in local time — never via toISOString, which shifts the day. */
 function toDay(value: string | Date | null | undefined): string | null {
   if (value instanceof Date)
     return Number.isNaN(value.getTime())
@@ -52,12 +51,6 @@ function leaveDaysInYear(r: DatedLeaveRequest, year: number): number {
   return r.isHalfDay && days === 1 ? 0.5 : days;
 }
 
-/**
- * V-045. Approved leave *days* taken in `year` — workdays, halved for a
- * half-day request, clamped to the year so a request spanning new year is not
- * counted twice. The card used to show a count of approved *requests*, which
- * is not what "Approved (YTD)" means to anyone reading it.
- */
 export function approvedDaysInYear(
   requests: DatedLeaveRequest[],
   year: number = new Date().getFullYear(),

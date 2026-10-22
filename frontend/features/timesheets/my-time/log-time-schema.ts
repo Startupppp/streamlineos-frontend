@@ -4,7 +4,6 @@ import {
   requiredFieldMessage,
 } from "@/features/timesheets/settings/required-fields";
 
-/** A day cannot hold more hours than it has. Shared with the week grid's cell validation. */
 export const MAX_HOURS_PER_DAY = 24;
 
 const baseLogTimeSchema = z.object({

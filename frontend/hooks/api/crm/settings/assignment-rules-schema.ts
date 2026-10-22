@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * One `lead_assignment_rules` row as the server returns it. It has no
- * `updatedAt` column, and the weighted/territory arms live in `config` and
- * `assignmentTypeText`, not in columns of their own; the response is validated
- * here, so a field the table does not have would fail every read.
- */
 const assignmentRuleSchema = z.object({
   id: z.number().int(),
   orgId: z.string(),

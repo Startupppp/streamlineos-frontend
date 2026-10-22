@@ -49,7 +49,6 @@ type ToggleSettingsSectionProps = {
   activeVersion: PolicyVersionRow | null | undefined;
 };
 
-/** "Asha Rao, Ben Das and 10 others" — the server sends up to 10 names plus the full count. */
 export function affectedNamesText(impact: { affectedEmployeeCount: number; affectedEmployeeNames: string[] }): string {
   const names = impact.affectedEmployeeNames;
   if (names.length === 0) return "";

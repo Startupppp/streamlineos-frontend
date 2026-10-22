@@ -27,24 +27,10 @@ const ON_TONE = statusToneClasses("success");
 const OFF_TONE = statusToneClasses("neutral");
 const HALTED_TONE = statusToneClasses("danger");
 
-/** Every badge here is the same shape; only the tone carries the meaning. */
 function toneBadgeClass(tone: ReturnType<typeof statusToneClasses>): string {
   return cn("h-5 px-2 py-0.5 text-micro", tone.surface, tone.ink, tone.rule);
 }
 
-/**
- * Whether the product may write to people who never asked to hear from it.
- *
- * The server refuses cold sends until a tenant has registered a separate domain,
- * proved they own it and started its warm-up ramp — and until this screen there
- * was no way to do any of those, so the track could pause itself and never come
- * back. Every control here is one of the states the send-time gate reads.
- *
- * The order is the order the work happens in, and each step says why the next
- * one is not available yet. A screen that offered "enable" as a switch would be
- * offering something the server would refuse, with the reason arriving only as a
- * failed request.
- */
 export function ColdOutboundPanel() {
   const canManage = useCan("crm:autonomy:manage");
   const { data, isLoading, isError, error } = useColdOutbound();
@@ -56,7 +42,6 @@ export function ColdOutboundPanel() {
   const setTrack = useSetColdTrack();
   const resume = useResumeColdTrack();
 
-  /* Not rendered at all without the key: the pause reason is an incident. */
   if (!canManage) return null;
 
   if (isLoading)
@@ -74,13 +59,6 @@ export function ColdOutboundPanel() {
 
   const cold = data?.domains.find((d) => d.purpose === "cold") ?? null;
   const ready = Boolean(cold?.verifiedAt && cold.warmupStartedAt);
-  /*
-    A failed read is not an empty configuration. Without this the panel falls
-    through to the "Add domain" form — because `data` is undefined, so `cold` is
-    null — and invites a tenant to register a second domain beside one that may
-    already exist, which is the exact "nothing is configured" reading the alert
-    above exists to prevent.
-  */
   const unknown = isError || !data;
 
   const handleRegister = () => {
@@ -112,20 +90,13 @@ export function ColdOutboundPanel() {
 
       <CardContent className="flex flex-col gap-gap-field">
         {isError ? (
-          /*
-            An empty panel would read as "nothing is configured", which is the
-            wrong thing to believe about a track that may be running.
-          */
           <p role="alert" className="text-label text-muted-foreground">
             {getErrorMessage(error)} — whether cold outreach is running is unknown here. Reload to
             try again.
           </p>
         ) : null}
 
-        {/*
-          A halt is the send path's own doing and outranks everything below it,
-          so it is said first and cleared on its own control.
-        */}
+        
         {data?.pausedAt ? (
           <div className={cn(
               "flex flex-wrap items-center justify-between gap-gap-field rounded-md border p-3",
@@ -216,10 +187,7 @@ export function ColdOutboundPanel() {
                   : "Add a sending domain above first."}
             </p>
           </div>
-          {/*
-            Turning it off must never be gated on the same conditions as turning
-            it on, or a tenant whose domain fell out of shape could not stop it.
-          */}
+          
           <LoadingButton
             size="sm"
             variant={data?.enabled ? "outline" : "default"}
@@ -250,13 +218,6 @@ interface ColdDomainRowProps {
   failure: string | null;
 }
 
-/**
- * One domain, and the single next thing to do about it.
- *
- * Showing verify and warm-up as two always-present buttons would offer an
- * action the server refuses; each state names only the step that is actually
- * available.
- */
 function ColdDomainRow({
   domain,
   onVerify,
@@ -294,11 +255,7 @@ function ColdDomainRow({
         )}
       </div>
 
-      {/*
-        The record is the whole verification step, so it is shown rather than
-        described — an operator who has to be told the format out of band will
-        publish the wrong thing.
-      */}
+      
       {domain.verificationRecord ? (
         <div className="flex flex-col gap-1 rounded-md bg-muted p-2">
           <p className="text-micro text-muted-foreground">

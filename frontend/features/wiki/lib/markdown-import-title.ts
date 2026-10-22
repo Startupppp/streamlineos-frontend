@@ -7,11 +7,6 @@ function unquote(value: string): string {
   return value.replace(/^(["'])(.*)\1$/, "$2").trim();
 }
 
-/**
- * Title and body for an imported Markdown file: front-matter `title:`, else the
- * first `# H1`, else the file name. Front-matter is dropped from the body, and
- * an H1 that opens the document is dropped too since it became the title.
- */
 export function markdownImportItem(text: string, fileName: string): { title: string; contentText: string } {
   const fallback = fileName.replace(/\.(md|markdown|txt)$/i, "");
   const frontMatter = FRONT_MATTER.exec(text);

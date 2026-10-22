@@ -147,8 +147,6 @@ function buildGrnColumns(onRowClick: (id: number) => void): DataTableColumn<GrnR
       ),
     },
     {
-      // B1. A receipt on this order may be a draft nobody has posted, which is
-      // the difference between "these goods are in stock" and "a lorry arrived".
       key: "status",
       header: "Status",
       cell: (row) => (
@@ -189,19 +187,8 @@ export default function PurchaseOrderDetailPage({ params }: PoDetailPageProps) {
   const closeMutation = useClosePurchaseOrder(id);
   const cancelMutation = useCancelPurchaseOrder(id);
 
-  /**
-   * G8. `usePurchaseOrder` gates its query on this exact key (`enabled: canView`),
-   * so a denied user's `query.data` is always undefined — falling through to the
-   * not-found branch below reads as "this PO doesn't exist" rather than "you
-   * don't have access to it". Checked before the not-found branch, not after.
-   */
   const canRead = useCan("inventory:purchase-orders:read");
 
-  /**
-   * B1. The exact key `POST /purchase-orders/:poId/receive` and every goods-receipt
-   * route carries. The receive control was offered on document status alone, so a
-   * clerk without it was shown a button that could only ever 403.
-   */
   const canReceiveGoods = useCan("inventory:purchase-orders:receive");
 
   const [receiveSheetOpen, setReceiveSheetOpen] = useState<boolean>(false);

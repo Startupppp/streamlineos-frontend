@@ -13,13 +13,6 @@ import { authenticatedScope } from "@/lib/query-scope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import type { AccessResponse } from "@/types/access";
 
-/**
- * The eight read states of §8, proved at the layer that produces them. A page
- * can only render a state the data layer makes distinguishable, and the two
- * that collapse without help are empty-vs-denied (a disabled v5 query reports
- * `isPending: true, isFetching: false`, exactly like a finished empty read) and
- * denied-vs-not-yet-known.
- */
 
 const ORG_ID = "org-1";
 const USER_ID = "user-1";

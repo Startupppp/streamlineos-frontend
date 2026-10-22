@@ -33,55 +33,19 @@ import {
   type ImportFileContents,
 } from "./import-file";
 
-/** A file this size is a paste, not a migration; the connectors are Phase 2. */
 const MAX_ROWS = 5_000;
 
-/**
- * Bringing a file in, planned on the server.
- *
- * The one import on this page with a plan behind it: the server decides what
- * every row would do before anything is written, the commit runs as a durable
- * job, and the whole thing can be taken back afterwards.
- *
- * The entity is chosen here rather than guessed from the file. A deals export
- * and a contacts export share most of their headers — `Name`, `Owner`, `Stage`
- * against `Name`, `Owner`, `Status` — so inferring the target from the columns
- * gets it wrong on exactly the files people actually have, and gets it wrong
- * silently: the preview would look reasonable and land a thousand opportunities
- * as companies. Asking is one click and cannot be misread.
- */
 export function PlannedImportSection() {
   const [entity, setEntity] = useState<PlannedEntity>("party");
   const [subjectTypeId, setSubjectTypeId] = useState<string>("");
   const [parsed, setParsed] = useState<ImportFileContents | null>(null);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [preview, setPreview] = useState<ImportPreview | null>(null);
-  /**
-   * The answers the *current* preview was actually built from.
-   *
-   * Committing sends nothing but `crmImportId` — the server replays the plan it
-   * persisted at preview time, and overrides are applied only while planning.
-   * So a choice made after the preview returned has not reached the plan, and
-   * without this the local `overrides` would vouch for a plan that never saw
-   * them: the mapping panel says "You chose Email", the commit button enables,
-   * and the import runs with that column still unmapped.
-   */
   const [previewOverrides, setPreviewOverrides] = useState<Record<string, string>>({});
   const [committed, setCommitted] = useState<ImportProgress | null>(null);
   const [isReading, setIsReading] = useState(false);
-  /**
-   * How far a multi-call commit has got.
-   *
-   * A large file is committed across several requests under a server-side time
-   * budget, and a progress bar that sits at "importing…" for four minutes looks
-   * indistinguishable from one that has hung.
-   */
   const [progress, setProgress] = useState<{ done: number; remaining: number } | null>(null);
 
-  /*
-    An entity nobody may write is not offered. The server checks the same key on
-    top of `crm:imports:manage`, so a control left visible here would fail there.
-  */
   const canParty = useCan("party:parties:create");
   const canSubject = useCan("party:subjects:manage");
   const canPipeline = useCan("crm:deals:create");
@@ -101,21 +65,10 @@ export function PlannedImportSection() {
   const commitImport = useCommitImport();
   const revertImport = useRevertImport();
 
-  /**
-   * What is still unanswered, taken from the server rather than from local
-   * state. `applyOverrides` rewrites an answered column to `mapped`, and
-   * `needsConfirmation` reports only the `ambiguous` ones — so the plan itself
-   * is the honest account of what is still open.
-   */
   const unanswered = preview?.needsConfirmation ?? [];
-  /** Answers have moved on since this plan was built, so it no longer describes what would happen. */
   const choicesChanged = preview !== null && !sameAnswers(overrides, previewOverrides);
 
   const openFile = useCallback(async (file: File) => {
-    // A new file invalidates everything staged for the old one. Cleared up
-    // front so that every early return below leaves nothing behind — a rejected
-    // file used to leave the previous one loaded and importable, under the new
-    // file's name in the user's mind.
     setParsed(null);
     setPreview(null);
     setPreviewOverrides({});
@@ -131,9 +84,6 @@ export function PlannedImportSection() {
       }
       setParsed(opened);
     } catch (error) {
-      // A file that cannot be parsed unambiguously is refused outright.
-      // Importing an approximation of someone's data is worse than not
-      // importing it, because nothing downstream would reveal the difference.
       toast.error(error instanceof ImportFileError ? error.message : getErrorMessage(error));
     } finally {
       setIsReading(false);
@@ -164,14 +114,6 @@ export function PlannedImportSection() {
     [openFile],
   );
 
-  /**
-   * Changing the target throws the plan away.
-   *
-   * A plan is built for one entity: its column mapping, its duplicate matching
-   * and its per-row verdicts are all that entity's. Left on screen after the
-   * target changed, the commit button would still be live and would send a
-   * `crmImportId` the server planned as something else.
-   */
   const handleEntityChange = useCallback((value: string) => {
     setEntity(value as PlannedEntity);
     setPreview(null);
@@ -199,8 +141,6 @@ export function PlannedImportSection() {
 
   const handlePreview = useCallback(() => {
     if (!parsed) return;
-    // Captured rather than read at settle time: the answers this plan is built
-    // from are the ones sent with it, not whatever state holds when it returns.
     const sent = overrides;
     previewImport.mutate(
       {
@@ -239,8 +179,6 @@ export function PlannedImportSection() {
           setCommitted(result);
           const parts = [`${result.created} created`, `${result.updated} updated`];
           if (result.merged > 0) parts.push(`${result.merged} folded into rows above`);
-          // Not written, and the reason a person needs to know: they are waiting
-          // in the data quality queue for somebody's judgement, not lost.
           if (result.review > 0) parts.push(`${result.review} sent for review`);
           if (result.failed > 0) parts.push(`${result.failed} could not be read`);
           toast.success(parts.join(", "));
@@ -257,8 +195,6 @@ export function PlannedImportSection() {
     if (!committed) return;
     revertImport.mutate(committed.crmImportId, {
       onSuccess: (result) => {
-        // Revert returns the same job shape as commit now, so what came back is
-        // a count of rows undone rather than two separate tallies.
         toast.success(`Undone — ${result.reverted} of ${result.total} rows put back as they were`);
         setCommitted(null);
         setPreview(null);

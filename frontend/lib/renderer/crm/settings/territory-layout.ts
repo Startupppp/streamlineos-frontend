@@ -1,21 +1,5 @@
 import type { RecordLayout } from "../../layout";
 
-/**
- * A territory, as data.
- *
- * The eight criteria are described as ordinary `text` fields, not as an invented
- * array kind. What a territory matches on is a list of short values typed one at
- * a time, and that is a control rather than a shape: the surface hands
- * `RecordForm` a chip editor through `controls`, exactly as it would hand it a
- * person picker, and the value the engine carries is still one string. Growing
- * the vocabulary an array kind to hold "Maharashtra, Gujarat" would put a
- * container in the description where a comma already does the job.
- *
- * The old table summarised three of the eight criteria into a "Criteria" column
- * built by a helper. Three of them are columns here instead, so the value shown
- * is the value stored — a summary string is a field the API never sends and no
- * tenant could rearrange.
- */
 export const TERRITORY_LAYOUT: RecordLayout = {
   key: "crm:settings:territory",
   singular: "Territory",

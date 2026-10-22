@@ -1,13 +1,5 @@
 import { z } from "zod";
 
-/**
- * Response contracts for the tasks module.
- * Derived from backend `tasks-response.schemas.ts`.
- * wireDate() → z.string() on the wire.
- * NOT `.strict()`.
- */
-
-/** `taskRowSchema` */
 export const taskRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -34,7 +26,6 @@ export const taskRowContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `taskAnalyticsSchema` */
 export const taskAnalyticsContract = z.object({
   period: z.number().int(),
   total: z.number().int(),
@@ -53,14 +44,8 @@ export const taskAnalyticsContract = z.object({
   ),
 });
 
-/** `taskSuccessSchema` */
 export const taskSuccessContract = z.object({ success: z.literal(true) });
 
-/**
- * `tasksListResponseSchema` — a keyset page. `total` is present only on the
- * first page (the service skips the count once a cursor is supplied), and there
- * is no `page`/`limit`.
- */
 export const tasksListContract = z.object({
   tasks: z.array(taskRowContract),
   hasMore: z.boolean(),

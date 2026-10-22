@@ -27,17 +27,6 @@ import { PRODUCT_LAYOUT } from "@/lib/renderer/crm/settings/product-layout";
 import { toast } from "sonner";
 import type { Product } from "@/types/crm/products";
 
-/**
- * The product catalogue.
- *
- * No columns are written here. Their labels, their alignment, the currency each
- * price renders in and the mobile card all come from `PRODUCT_LAYOUT` — the same
- * description the create and edit sheet validates against, so the table cannot
- * claim a product has a field the form has never heard of.
- *
- * What is left is what a description cannot say: the one filter this domain has,
- * who may add a product, and that deleting one is irreversible.
- */
 export default function ProductCatalogPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -67,8 +56,6 @@ export default function ProductCatalogPage() {
   const { data, isLoading, isError, refetch } = useProducts(query || undefined);
   const deleteProduct = useDeleteProduct();
 
-  // Memoised because a row renderer depends on it; a fresh [] each render
-  // would rebuild every row of the catalogue on every keystroke of the search.
   const products = useMemo(() => data?.products ?? [], [data?.products]);
 
   const handleOpenCreate = useCallback(() => {

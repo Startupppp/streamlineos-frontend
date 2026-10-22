@@ -2,7 +2,6 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import path from "node:path";
 
 const ROOT = path.resolve(__dirname, "../../..");
-// Recruitment OS moved out of /hr to /recruitment; its pages keep the same invariant.
 const ROUTE_ROOTS = ["hr", "recruitment"];
 
 function hrPageFiles(): string[] {

@@ -35,18 +35,6 @@ import type { Pricebook } from "@/types/crm/pricebooks";
 import { numberOr, numberOrOmit } from "../shared/record-payload";
 import { RecordRowActions } from "../shared/record-row-actions";
 
-/**
- * The prices inside one pricebook.
- *
- * A pricebook entry is a record type, not a nested blob, so it gets a
- * description of its own and the sheet renders a list and a form from it rather
- * than hand-drawing both. The product picker is supplied through `controls`
- * because who may be priced depends on the tenant's catalogue, which is a screen
- * concern — the description names the domain and stops there.
- *
- * Prices are typed and shown as money. The API stores minor units; converting on
- * the boundary is what stops one screen showing "1000" beside "₹10.00".
- */
 
 interface PricebookEntriesSheetProps {
   open: boolean;
@@ -160,16 +148,6 @@ export function PricebookEntriesSheet({
     );
   }
 
-  /**
-   * Ticket 26. The read below disables itself without this permission, and a
-   * disabled query in TanStack Query v5 reports `isLoading: false` with no rows
-   * -- the same flags an empty result has. Without this guard the branches under
-   * it tell somebody their data does not exist, when the truth is that they are
-   * not allowed to see it.
-   *
-   * Checked before the loading branch on purpose: a query that was never allowed
-   * to run has no loading state worth waiting for.
-   */
   if (useCanState("crm:pricebooks:manage") === "denied")
     return <NoPermissionState permission="crm:pricebooks:manage" />;
 

@@ -31,16 +31,10 @@ export function DashboardGate({
     void refetch();
   }, [refetch]);
 
-  // Session/access refreshes must not unmount the current page. The branded
-  // loading screen is only appropriate before we have an authorization
-  // snapshot; background refetches keep rendering the last verified state.
   if ((status === "loading" && !session) || (accessLoading && !access)) {
     return <AppLoadingScreen />;
   }
 
-  // A failed authorization read is not a refusal. Falling through to
-  // AccessDenied told the reader they lack a permission when in fact nothing
-  // was ever read, and offered no way to try again.
   if (accessFailed && !access) {
     return (
       <ErrorState

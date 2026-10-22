@@ -139,7 +139,6 @@ export function AppThemeProvider({ children }: { children: React.ReactNode }) {
     try {
       window.localStorage.setItem(APP_THEME_MODE_STORAGE_KEY, next);
     } catch {
-      /* still apply DOM + state */
     }
     setModeState(next);
     if (typeof window !== "undefined") {

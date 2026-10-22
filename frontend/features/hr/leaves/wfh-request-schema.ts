@@ -3,7 +3,6 @@ import { format } from "date-fns";
 
 export const WFH_NOTES_MAX_LENGTH = 500;
 
-/** The backend caps `reason` at 1000, and notes are appended to it on submit. */
 export const WFH_REASON_MAX_LENGTH = 1000;
 const NOTES_SEPARATOR = " — ";
 

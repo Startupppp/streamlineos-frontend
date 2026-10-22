@@ -8,16 +8,6 @@ import { inventoryOpsMetricsQueryKeys } from "./inventory-ops-metrics";
 import { inventoryQualityPlanQueryKeys } from "./inventory-quality-plans";
 import { inventoryVendorScorecardQueryKeys } from "./inventory-vendor-scorecard";
 
-/**
- * R2 — the invalidation keys have to be able to match.
- *
- * A no-argument factory call is what ~110 mutation handlers pass to
- * `invalidateQueries`. If it ends in `undefined`, TanStack compares that slot
- * against the stored params object and never matches, and the invalidation is a
- * silent no-op: post a receipt and the list behind it keeps the old row. This
- * walks every inventory key namespace and calls every factory with no argument,
- * so a new factory written the old way fails here rather than in production.
- */
 
 const NAMESPACES = {
   ...inventoryQueryKeys,
@@ -30,7 +20,6 @@ const NAMESPACES = {
   ...inventoryVendorScorecardQueryKeys,
 } as Record<string, Record<string, unknown>>;
 
-/** Factories whose first argument is a required id — a no-arg call is not a real key. */
 function callableWithNoArgs(fn: (...args: never[]) => unknown): boolean {
   return fn.length === 0;
 }

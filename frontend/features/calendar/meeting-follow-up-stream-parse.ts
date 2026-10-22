@@ -1,38 +1,13 @@
 import type { ActionItem, FollowUpDraft } from "@/hooks/api/meetings-ai";
 
-/**
- * `POST /ai/meetings/follow-up/stream` answers in raw UTF-8 text deltas, and the
- * prompt behind it (`followUpStreamPrompt`) asks for markdown with four `##`
- * sections in a fixed order: Subject, Email, Action items, Next meeting. The
- * panel renders those four as a structured draft AND has to hand the same draft
- * to `POST /ai/meetings/follow-up/propose-send`, so the stream is folded back
- * into a `FollowUpDraft` on every token rather than once at the end.
- *
- * Everything here is a pure function of the text received so far. Called with a
- * prefix it returns that prefix's draft; called with the whole answer it returns
- * the whole answer's. That is what lets the panel render structure while the
- * answer is still arriving, and still send what it has when the user stops
- * halfway.
- */
 
 type SectionKey = "subject" | "body" | "actionItems" | "nextMeetingDate";
 
 const HEADING = /^\s{0,3}#{1,6}\s*(.+?)\s*$/;
 const BOLD_HEADING = /^\s{0,3}\*\*(.+?)\*\*\s*:?\s*$/;
-/**
- * The trailing `(?:\s+|$)` is load-bearing. A bullet marker arrives before its
- * text, so `- ` exists for a frame; without it the marker survives stripping and
- * renders as an action item reading "-" that then vanishes.
- */
 const BULLET = /^\s*(?:[-*+•]|\d+[.)])(?:\s+|$)/;
 const EMPTY_FIELD = /^(?:none|n\/?a|unassigned|tbd|not specified|-|—)$/i;
 
-/**
- * A heading arrives one token at a time, so `## Action it` exists for a frame.
- * Rendered as body text it would flash the next section's title into the
- * previous section's prose. An incomplete trailing line that could still become
- * a heading is therefore withheld until its newline arrives.
- */
 function couldBecomeHeading(line: string): boolean {
   const trimmed = line.trimStart();
   return trimmed.startsWith("#") || trimmed.startsWith("*");
@@ -76,12 +51,6 @@ function labelled(segment: string, label: string): string | null {
   return value;
 }
 
-/**
- * `- <task> | owner: <name> | due: <date>`. Reading the labels rather than the
- * positions is what survives a half-arrived line: while `| owner: Pri` is on the
- * wire there is a task and a partial owner, and both refine on the next token
- * instead of the whole item waiting for its newline.
- */
 function toActionItem(line: string): ActionItem | null {
   const [first, ...rest] = stripMarkers(line).split("|");
   const item = first?.trim() ?? "";
@@ -149,11 +118,6 @@ export function hasFollowUpContent(draft: FollowUpDraft): boolean {
   );
 }
 
-/**
- * The send flow posts the draft to `propose-send`, whose Zod body requires a
- * subject and a body. A stream stopped before the email arrived has neither, so
- * offering "Send via Calendar" there would spend a click on a guaranteed 400.
- */
 export function isSendableFollowUp(draft: FollowUpDraft): boolean {
   return draft.subject.length > 0 && draft.body.length > 0;
 }

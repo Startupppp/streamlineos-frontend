@@ -15,21 +15,6 @@ import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useSalesLeaderboard } from "@/hooks/api/leads";
 import type { SalesLeaderboardEntry } from "@/types/leads";
 
-/**
- * The team leaderboard.
- *
- * `TEAM_LEADERBOARD_LAYOUT` describes the table. Revenue is the engine's `money`
- * kind read through `useOrgDisplay` rather than a helper that printed ₹ at every
- * tenant; the conversion rate is computed once in the description instead of
- * being re-derived in a cell; and the rank's medal tinting is gone because it
- * gave first and third the same amber and second the same grey as tenth, which
- * is decoration dressed as a status.
- *
- * Rows and the loading flag come from the page. Whether the request failed is
- * asked of the same leaderboard query — identical key, answered from cache — so
- * a failure reads as a failure rather than as a team that has done nothing.
- */
-
 interface TeamLeaderboardCardProps {
   leaderboard: SalesLeaderboardEntry[] | undefined;
   isLoading: boolean;

@@ -19,17 +19,10 @@ export type AdjustmentReason =
   | "OTHER"
   | "SCRAP";
 
-/**
- * D8. The reasons that condemn stock. A write-off is one of these on an
- * ordinary adjustment — there is no second document and no second endpoint —
- * so the client asks the same questions of it that the server does: every line
- * must remove stock, and a scrap location is only meaningful here.
- */
 export const WRITE_OFF_REASONS: readonly AdjustmentReason[] = ["DAMAGE", "EXPIRY", "THEFT", "SCRAP"];
 
 const WRITE_OFF_REASON_SET: ReadonlySet<string> = new Set(WRITE_OFF_REASONS);
 
-/** Takes a plain string, so a detail payload's `reason` needs no cast. */
 export function isWriteOffReason(reason: string): boolean {
   return WRITE_OFF_REASON_SET.has(reason);
 }
@@ -45,7 +38,6 @@ export interface AdjustmentListItem {
   createdAt: string;
   createdByName: string | null;
   lineCount: number;
-  /** Absent for a caller without `inventory:valuation:read`. */
   writtenOffValue: string | null | undefined;
 }
 
@@ -104,15 +96,6 @@ function signedQuantity(type: AdjustmentType, quantity: number): number {
   return type === "OUT" ? -magnitude : magnitude;
 }
 
-/**
- * The wire shape of an adjustment document, as `getAdjustment` and every command
- * on it return it: the row with its relations nested (`creator`,
- * `lines[].productVariant`, `lines[].location`) and quantities as decimal
- * strings. `AdjustmentDetail` is the flattened view the screens read, so without
- * this mapping the detail sheet rendered a fallback for "Created by" and for
- * every line's variant and location. Everything past the row is optional: a
- * command answers with its lines bare, not with their variant and location.
- */
 interface RawAdjustmentDetailLine {
   id: number;
   productVariantId: number;
@@ -152,7 +135,6 @@ function toAdjustmentDetail(raw: RawAdjustmentDetail): AdjustmentDetail {
     createdByName: raw.creator?.name ?? null,
     scrapLocationId: raw.scrapLocationId ?? null,
     scrapLocation: raw.scrapLocation ?? null,
-    // Absent, not null, for a caller without `inventory:valuation:read`.
     ...("writtenOffValue" in raw ? { writtenOffValue: raw.writtenOffValue } : {}),
     lines: (raw.lines ?? []).map((line) => ({
       id: line.id,
@@ -230,10 +212,6 @@ export function useCreateAdjustment() {
             },
           ],
         },
-        // A write-off is the case where a duplicate is not cosmetic: two
-        // documents, both approvable, both postable, against the same missing
-        // stock. The key `apiClient` mints is per fetch, so it cannot prevent
-        // that; this one belongs to the operator's intent and survives a retry.
         { headers: { "Idempotency-Key": idempotencyKey } },
       )),
     onSuccess: () => {

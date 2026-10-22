@@ -30,21 +30,6 @@ const assignmentLazy = lazyContract(() => schema().then((m) => m.commissionAssig
 const calculateLazy = lazyContract(() => schema().then((m) => m.calculateCommissionContract));
 const rebuildLazy = lazyContract(() => schema().then((m) => m.rebuildAccrualContract));
 
-/**
- * Reads of the commission ledger.
- *
- * Every read below is gated on `crm:commission-earnings:view` or
- * `crm:commission-plans:view`, and the accrual reads deliberately share the
- * earnings key rather than taking one of their own — the backend gates them the
- * same way, for the reason spelled out in `commission-accrual.controller.ts`: an
- * accrual is a set of earnings summed, and a key that granted the total while
- * withholding the parts would be permission to see a number nobody could check.
- *
- * Whose rows come back is not decided here. The server narrows by the caller's
- * RBAC scope, so a rep asking for the team's ledger gets their own — passing a
- * `userId` is how a manager at scope `all` names somebody, not how a rep reaches
- * a colleague.
- */
 
 export function useCommissionPlans() {
   return useGatedQuery("crm:commission-plans:view", {
@@ -74,13 +59,6 @@ export function useCommissionEarnings(params?: ListEarningsParams) {
   });
 }
 
-/**
- * The period figure and the parts that produced it.
- *
- * `on` is any date inside the period rather than a period label, because how
- * long a period is belongs to the plan version in force — asking for "2026-03"
- * would mean different spans for two reps on different plans.
- */
 export function useCommissionAccrual(params?: AccrualParams) {
   return useGatedQuery("crm:commission-earnings:view", {
     queryKey: queryKeys.crmCommission.accrual(params),
@@ -96,7 +74,6 @@ export function useCommissionAccrual(params?: AccrualParams) {
   });
 }
 
-/** What one deal paid, to whom, under which band of which version. */
 export function useCommissionAccrualByDeal(dealId: number) {
   return useGatedQuery("crm:commission-earnings:view", {
     queryKey: queryKeys.crmCommission.accrualByDeal(String(dealId)),
@@ -110,7 +87,6 @@ export function useCommissionAccrualByDeal(dealId: number) {
   });
 }
 
-/** One earning taken apart, band by band. 404s for somebody else's. */
 export function useCommissionEarningBreakdown(earningId: string) {
   return useGatedQuery("crm:commission-earnings:view", {
     queryKey: queryKeys.crmCommission.earningBreakdown(earningId),
@@ -124,13 +100,6 @@ export function useCommissionEarningBreakdown(earningId: string) {
   });
 }
 
-/**
- * Approve a calculated earning for payout.
- *
- * A separate key from the one that defines a plan, so the person who wrote the
- * rate cannot also sign off their own number. The backend 409s on anything that
- * is not `CALCULATED`; the caller surfaces that message rather than retrying.
- */
 export function useApproveCommissionEarning() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation<CommissionEarning, Error, string>(
@@ -144,14 +113,12 @@ export function useApproveCommissionEarning() {
           { headers: { "Idempotency-Key": idempotencyKey } },
         ),
       onSuccess: () => {
-        // The accrual is a roll-up of these rows, so it goes stale with them.
         void qc.invalidateQueries({ queryKey: queryKeys.crmCommission.all });
       },
     },
   );
 }
 
-/** A plan with every version and assignment it has ever had. */
 export function useCommissionPlan(planId: string | null) {
   return useGatedQuery("crm:commission-plans:view", {
     queryKey: queryKeys.crmCommission.plan(planId ?? ""),
@@ -162,7 +129,6 @@ export function useCommissionPlan(planId: string | null) {
   });
 }
 
-/** Patch a cached plan detail from a write that returned one of its parts. */
 function usePatchPlan() {
   const qc = useQueryClient();
   return (planId: string, update: (detail: CommissionPlanDetail) => CommissionPlanDetail) =>
@@ -238,7 +204,6 @@ export interface CommissionVersionInput {
   note?: string;
 }
 
-/** A new dated version. The only way to change what a sealed plan pays. */
 export function useCreateCommissionVersion() {
   const patch = usePatchPlan();
   return useAuthorizedIdempotentMutation("crm:commission-plans:manage", {
@@ -255,7 +220,6 @@ export function useCreateCommissionVersion() {
   });
 }
 
-/** Edits an unsealed version; the server 409s once money has been computed from it. */
 export function useUpdateCommissionVersion() {
   const patch = usePatchPlan();
   return useAuthorizedMutation("crm:commission-plans:manage", {
@@ -311,10 +275,6 @@ export function useEndCommissionAssignment() {
   });
 }
 
-/**
- * Compute the earning for one won deal. Seals the plan version it used, and
- * the server's unique index makes a second call return the first earning.
- */
 export function useCalculateCommission() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation("crm:commission-earnings:calculate", {
@@ -327,8 +287,6 @@ export function useCalculateCommission() {
         calculateLazy,
       ),
     onSuccess: () => {
-      // The ledger and accrual are server aggregates over the new row, and the
-      // version it used is now sealed: none of it is computable here.
       void qc.invalidateQueries({ queryKey: queryKeys.crmCommission.all });
     },
   });
@@ -340,7 +298,6 @@ export interface RebuildAccrualInput {
   planId?: string;
 }
 
-/** Re-derive the accrual decomposition over a range. Never changes an amount. */
 export function useRebuildCommissionAccrual() {
   const qc = useQueryClient();
   return useAuthorizedIdempotentMutation("crm:commission-accruals:rebuild", {

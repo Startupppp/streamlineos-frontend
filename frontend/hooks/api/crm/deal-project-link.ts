@@ -19,7 +19,6 @@ interface DealProjectLink {
   projectId: number;
 }
 
-/** The Build project delivering this deal, or null. */
 export function useDealLinkedProject(dealId: number) {
   return useGatedQuery("crm:deals:read", {
     queryKey: customerWorkQueryKeys.deals.linkedProject(dealId),

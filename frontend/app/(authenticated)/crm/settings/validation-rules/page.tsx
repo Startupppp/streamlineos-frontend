@@ -31,14 +31,6 @@ function isEntityType(value: string): value is CrmValidationEntityType {
   return ENTITY_TABS.some((tab) => tab.value === value);
 }
 
-/**
- * Validation rules, one entity type at a time.
- *
- * Table and form are both generated now. A rule's configuration depends on its
- * type, which `visibleWhen` says in the description — so this page has no idea
- * that a regex rule has a pattern and a numeric one has a limit, and neither
- * does the sheet it opens.
- */
 export default function ValidationRulesPage() {
   const canManage = useCan("crm:settings:manage");
   const canView = useCan("crm:settings:view");

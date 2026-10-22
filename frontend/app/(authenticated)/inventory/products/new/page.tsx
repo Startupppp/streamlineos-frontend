@@ -38,9 +38,6 @@ export default function NewProductPage() {
       barcode: values.barcode || undefined,
       reorderEnabled: values.reorderEnabled,
       reorderPoint: values.reorderPoint ? Number(values.reorderPoint) : undefined,
-      // B1. Only sent when filled in: an empty box is "not answered", and the
-      // server refuses every one of these outright while the pack is off, so a
-      // blank string would turn a create into a named 400.
       ...(values.brand ? { brand: values.brand } : {}),
       ...(values.materialGrade ? { materialGrade: values.materialGrade } : {}),
       ...(values.finish ? { finish: values.finish } : {}),
@@ -60,11 +57,6 @@ export default function NewProductPage() {
     router.push("/inventory/products");
   }
 
-  // G8. A create form is not a list, so it has no empty state — but it can
-  // still be opened by somebody who may not save, and letting them fill it
-  // in before the server refuses is the worst version of that. Placed after
-  // every hook: an early return above one makes hook order depend on a
-  // permission, which React forbids.
   if (!canCreate) {
     return (
       <PageWrapper title="New Product">

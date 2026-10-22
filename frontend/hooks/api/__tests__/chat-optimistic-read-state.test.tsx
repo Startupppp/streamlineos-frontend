@@ -50,7 +50,6 @@ jest.mock("@/hooks/api/authorized-mutation", () => {
 jest.mock("@/lib/ably", () => ({ reauthorizeAblyClients: jest.fn().mockResolvedValue(undefined) }));
 jest.mock("sonner", () => ({ toast: Object.assign(jest.fn(), { error: jest.fn() }) }));
 
-
 const mockedPost = jest.mocked(apiClient.post);
 const mockedDelete = jest.mocked(apiClient.delete);
 

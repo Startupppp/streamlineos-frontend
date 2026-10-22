@@ -109,9 +109,6 @@ describe("OAuthButtons", () => {
       expect(results).toHaveNoViolations();
     });
 
-    // jsdom reports zero for every layout measurement, so an overflow is not
-    // observable here. `scripts/verify-identity-journey.mjs` is what checks 320px
-    // for real; this only pins that the buttons mount in a narrow container.
     it("mounts inside a 320px container (overflow itself is proved in the browser harness)", () => {
       const { container } = render(
         <div style={{ width: "320px" }}>

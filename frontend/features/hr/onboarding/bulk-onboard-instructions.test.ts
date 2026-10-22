@@ -1,16 +1,6 @@
 import { BULK_ONBOARD_COLUMNS } from "./bulk-onboard-columns";
 import { buildBulkOnboardInstructionRows } from "./bulk-onboard-download";
 
-/**
- * HRMS-E2E-002c. The template's Employees sheet carried reportingManagerEmail
- * and topLevelRoleReason; the Instructions sheet beside it documented every
- * other column and not those two. So the two fields that decide whether a row
- * can be created at all were the only ones nobody was told about — which is why
- * QA filled a sheet that failed five rows on a manager they had supplied.
- *
- * This asserts the two sheets describe the same file, which is the property that
- * was broken rather than either field individually.
- */
 describe("bulk onboard template instructions", () => {
   it("documents every column the template writes", () => {
     const documented = new Set(buildBulkOnboardInstructionRows([]).map((row) => row.field));

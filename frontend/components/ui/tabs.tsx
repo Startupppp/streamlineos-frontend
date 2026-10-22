@@ -36,9 +36,6 @@ function TabsList({
       data-hidden-left={overflow.hiddenLeft}
       data-hidden-right={overflow.hiddenRight}
       className={cn(
-        // Spans the row up to `md` so triggers share it equally; sizes to its
-        // own tabs from `md` up. Never hardcode a width at a call site — that
-        // is what crushes triggers into each other.
         TAB_LIST_CLASSES,
         OVERFLOW_EDGE_FADE_CLASS,
         className,
@@ -56,9 +53,6 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        // `flex-1` splits the list evenly; `min-w-fit` floors every trigger at
-        // its own label width, so a long label is never squashed — once the
-        // labels outgrow the list it scrolls instead.
         TAB_TRIGGER_CLASSES,
         className,
       )}
@@ -105,8 +99,6 @@ function TabsContent({
     <TabsPrimitive.Content
       data-slot="tabs-content"
       className={cn(
-        // Only apply flex when active — unconditional `flex` can override the
-        // HTML `hidden` attribute and stack inactive panels under the tab list.
         "min-h-0 outline-none data-[state=inactive]:hidden data-[state=active]:flex data-[state=active]:flex-1 data-[state=active]:flex-col",
         className,
       )}

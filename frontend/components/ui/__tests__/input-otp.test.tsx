@@ -8,16 +8,6 @@ import {
   InputOTPSlot,
 } from "@/components/ui/input-otp";
 
-/**
- * The REAL wrapper, not the bare `<input>` the signin-form suite substitutes.
- * Only our own additions are under test — `digitsOnly` reaching `pasteTransformer`
- * and `onChange`, the digits-only `pattern` default, and ref forwarding through
- * to the element the form focuses. The vendor's slot machinery is exercised only
- * as far as it carries those.
- */
-
-// jsdom ships no `elementFromPoint`; input-otp's password-manager badge probe
-// calls it from a timer and the rejection lands as an unrelated test failure.
 beforeAll(() => {
   if (typeof document.elementFromPoint !== "function")
     Object.defineProperty(document, "elementFromPoint", {

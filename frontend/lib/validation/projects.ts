@@ -12,7 +12,6 @@ export function stripBidiControls(v: string): string {
   return v.replace(BIDI_STRIP_RE, "");
 }
 
-/** Same rule as the backend's create/PATCH/from-deal DTOs: trimmed, 2..100. */
 export const projectNameSchema = z
   .string()
   .trim()

@@ -25,8 +25,6 @@ describe("useDensity", () => {
   });
 
   it("still works when storage throws", () => {
-    // A private window, cleared site data, or a browser set to block storage
-    // all throw on access rather than returning nothing.
     const getItem = jest.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
       throw new Error("blocked");
     });
@@ -37,7 +35,6 @@ describe("useDensity", () => {
     const { result } = renderHook(() => useDensity());
     expect(result.current[0]).toBe("comfortable");
     act(() => result.current[1]("compact"));
-    // The choice still applies to this page; it just is not remembered.
     expect(result.current[0]).toBe("compact");
 
     getItem.mockRestore();

@@ -10,16 +10,6 @@ import { useAccess, useCan } from "@/hooks/api/access";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 
-/**
- * Client-side mutation guard. The backend remains authoritative, but this
- * seam prevents a disabled UI from issuing commands while access is loading
- * or absent. Permission selection is centralized by mutation namespace so a
- * newly added call site cannot silently omit the guard.
- *
- * An unresolved access snapshot is `pending`, not `denied` — refusing there
- * would tell a permitted user who acted early that they lack access, so the
- * guard resolves the snapshot first and only then decides.
- */
 const ACCESS_WAIT_MS = 5_000;
 
 async function withinAccessWait<T>(work: Promise<T>): Promise<T> {

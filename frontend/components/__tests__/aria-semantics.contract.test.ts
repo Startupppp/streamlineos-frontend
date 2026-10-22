@@ -6,34 +6,12 @@ import {
   type AriaFindingKind,
 } from "@/test-utils/aria-semantics-analysis";
 
-/**
- * The sibling of `keyboard-reachability.contract`. That one censuses whether a
- * keyboard can REACH a control; this one censuses what the assistive technology
- * is TOLD once it arrives — names, roles and ARIA references — over the same
- * corpus, with the same denominator discipline.
- *
- * WHAT A GREEN RUN HERE DOES NOT MEAN. This is a static walk. It cannot see a
- * missing focus trap, a name that exists but is wrong, an `aria-live` region
- * that never announces, or anything inside a PascalCase component. An
- * axe-style automated pass has the same shape of blind spot for a different
- * reason — it can only judge what a fixture happened to mount. Both together
- * are a floor, not coverage; the module header lists the exclusions in full.
- *
- * A ratchet, not a target. Lowering a number is a deliberate edit; raising one
- * fails review.
- */
 const BASELINE: Record<AriaFindingKind, number> = {
   invalidRole: 0,
   invalidAriaAttribute: 0,
   danglingReference: 0,
   hiddenFocusable: 0,
   redundantRole: 0,
-  /**
-   * `features/crm/import/bulk-import-section.tsx` — CRM is excluded from this
-   * release, so the finding is pinned rather than fixed. Pinned BY ROUTE below
-   * as well as by count: a bare count would let one surface lose its name while
-   * another gained one and the number would never move.
-   */
   unnamedControl: 2,
   positiveTabIndex: 0,
 };

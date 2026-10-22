@@ -31,19 +31,10 @@ import {
 export interface ReturnInspectLineProps {
   returnId: number;
   line: CustomerReturnLine;
-  /** The SKU behind `line.productVariantId`. A visible id is a bug (§5). */
   sku: string;
-  /** False once the return leaves DRAFT — the approval signed off this verdict. */
   editable: boolean;
 }
 
-/**
- * INV-209 / B9 — one line's inspection, as its own small form.
- *
- * Per line rather than a single bulk save, because that is how the goods arrive:
- * somebody opens one box, decides, and writes it down. A bulk form would also
- * mean one failure discards eleven decisions already made.
- */
 export function ReturnInspectLine({ returnId, line, sku, editable }: ReturnInspectLineProps) {
   const inspect = useInspectCustomerReturnLine();
   const inspected = line.inspectedAt !== null;

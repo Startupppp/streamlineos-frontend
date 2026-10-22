@@ -15,13 +15,6 @@ interface EmployeeCardProps {
   onOpen?: (employee: EmployeeListItem) => void;
 }
 
-/**
- * One per loaded employee in the directory grid, and `useInfiniteHrEmployees`
- * accumulates its pages — so the mounted count grows with every "Load more"
- * while the page re-renders on each search keystroke. Both props are already
- * stable (`employees` is a `useMemo` over the query pages, `department` a
- * string), so memo turns 60 avoidable renders per keystroke into zero.
- */
 export const EmployeeCard = memo(function EmployeeCard({
   employee: emp,
   department,
@@ -35,16 +28,10 @@ export const EmployeeCard = memo(function EmployeeCard({
     },
     [onOpen, emp],
   );
-  // Ticket 07: one name policy for the card, the table, the export and the PDF.
   const displayName = getUserDisplayName(emp);
   const initials = getUserInitials(emp);
   const designation = emp.designation?.trim() || null;
   const employeeId = emp.employeeId?.trim() || null;
-  // PROVISIONAL (product default E-4): an account exists from the moment an
-  // administrator creates it, so `isActive` alone badges a never-accepted
-  // invitee as "Active" right beside a summary counting them "Pending invite".
-  // Acceptance is the server-derived `hasAccepted`; absent, fall back to the
-  // old two-state reading rather than inventing a Pending.
   const status: "active" | "pending" | "inactive" = !emp.isActive
     ? "inactive"
     : emp.hasAccepted === false

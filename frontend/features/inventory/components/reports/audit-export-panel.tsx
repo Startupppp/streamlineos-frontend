@@ -25,13 +25,6 @@ import {
   type AuditExportJob,
 } from "@/hooks/api/inventory/audit-export";
 
-/**
- * Taking the ledger away, with a checksum that proves it did not change.
- *
- * All five routes were unreachable, so `inventory:audit:export` — a key that
- * exists precisely because taking evidence away is a stronger right than reading
- * the trail — governed nothing a person could do.
- */
 export function AuditExportPanel() {
   const canExportState = useCanState("inventory:audit:export");
   const [from, setFrom] = useState("");

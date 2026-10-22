@@ -1,16 +1,3 @@
-/**
- * HRMS-E2E-027 reproduced on the frontend write path.
- *
- * The onboarding wizard applied a `toTitleCase` to `firstName` and `lastName`
- * before the mutation, so "McDonald" was stored as "Mcdonald" and "QA" as "Qa".
- * The backend never altered a name — `dto/employee-name-verbatim.spec.ts` pins
- * that — which is why the earlier pass closed the ticket as not-reproduced after
- * reading the server only. The transform was here, on the client, on write.
- *
- * Names are now passed through verbatim. The designation, which the product does
- * normalise, goes through `titleCaseLabel`, whose own rule keeps an acronym
- * intact without an allow-list to maintain.
- */
 import { buildOnboardEmployeePayload } from "./onboarding-payload";
 
 const base = {

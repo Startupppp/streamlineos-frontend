@@ -40,7 +40,6 @@ describe("JobErrorsSheet", () => {
   });
 
   it("counts a committed job's list as every row not imported, with the failures split by where they happened", () => {
-    // 30 rows: 12 written, 3 failed while being written, 15 never passed validation. `errorRows` on the job is only the 3.
     open({ job: importJob({ totalRows: 30, validRows: 12, errorRows: 3 }), errorRows: rowsOf(18) });
 
     expect(screen.getByText("Rows written")).toBeInTheDocument();
@@ -54,7 +53,6 @@ describe("JobErrorsSheet", () => {
   });
 
   it("does not say all rows processed without errors when the only failures were validation failures", () => {
-    // Nothing failed while being written, so the job's own `errorRows` is 0 — but two rows never passed validation.
     open({ job: importJob({ totalRows: 10, validRows: 8, errorRows: 0 }), errorRows: [row(3, "Invalid email"), row(8, "Missing hire date")] });
 
     expect(screen.getByText(/rows with errors \(2\)/i)).toBeInTheDocument();
@@ -65,7 +63,6 @@ describe("JobErrorsSheet", () => {
   });
 
   it("says the server sends at most 50 error rows when a committed job has more, and how many cannot be shown", () => {
-    // 300 rows: 100 written, 10 failed while being written, 190 never passed validation, so 200 sit in error.
     open({ job: importJob({ totalRows: 300, validRows: 100, errorRows: 10 }), errorRows: rowsOf(SERVER_ERROR_ROW_CAP) });
 
     expect(screen.getByText(/rows with errors \(showing 50 of 200\)/i)).toBeInTheDocument();

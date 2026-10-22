@@ -361,14 +361,3 @@ export function useDeleteCampaign() {
   });
 }
 
-const recognitionListC = lazyContract(() =>
-  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionListContract),
-);
-
-export const recognitionQueryOptions = () =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.hrRecognition,
-    queryFn: ({ signal }) =>
-      apiClient.get("/hr/recognition", undefined, signal, recognitionListC),
-    staleTime: 60_000,
-  });

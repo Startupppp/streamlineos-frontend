@@ -67,10 +67,6 @@ interface CasesFilterBarProps {
   onSeverityChange: (value: CaseSeverity | "") => void;
 }
 
-/**
- * Owns the filter vocabulary and the narrowing from a Radix `string` back to the
- * typed value, so the page holds state and never re-derives the option lists.
- */
 export function CasesFilterBar({
   search,
   status,

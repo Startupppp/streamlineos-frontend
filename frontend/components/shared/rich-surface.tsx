@@ -143,13 +143,6 @@ export function RichQuickAction({
   description?: string;
   tone?: RichTone;
 }) {
-  /**
-   * `sky` is a sixth tone, not a second name for `blue`, and it is the reason
-   * `bg-gradient-to-br` lives here rather than on the wrapper: the gradient
-   * stops are named per status tone and there is no `sky` status, so the tone
-   * that has no status equivalent carries a flat categorical surface instead
-   * of a wash. Sharing `gradient-info-*` is what made the two identical.
-   */
   const tones: Record<RichTone, string> = {
     blue: "bg-gradient-to-br from-gradient-info-wash-from to-gradient-info-wash-to text-status-info-ink group-hover:border-status-info-rule",
     emerald:
@@ -259,8 +252,6 @@ export function RichIconWell({
     amber: "bg-status-warning-surface text-status-warning-ink",
     rose: "bg-status-danger-surface text-status-danger-ink",
     slate: "bg-muted text-muted-foreground",
-    // No `sky` status, so the sixth tone reads the categorical scale rather
-    // than repeating `info`.
     sky: "bg-category-sky-surface text-category-sky-ink",
   };
 

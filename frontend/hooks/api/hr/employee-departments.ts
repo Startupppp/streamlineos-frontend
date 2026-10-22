@@ -40,8 +40,6 @@ export function useCreateDepartment() {
           : [...current, { id: created.id, name: created.name }];
       }
       qc.setQueryData<Department[]>(humanResourcesQueryKeys.hr.departments(), appendCreated);
-      // The onboarding wizard lists departments from this key; without the
-      // patch an inline "Add 'QA Dept'" showed as unset until a refetch (#18).
       qc.setQueryData<Department[]>(
         humanResourcesQueryKeys.hr.onboardingTemplateDepartments(),
         appendCreated,

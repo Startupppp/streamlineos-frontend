@@ -6,10 +6,8 @@ import { METRIC_UNKNOWN, formatBpsPercent } from "./call-metric-format";
 
 interface RepTrendSparklineProps {
   points: RepTrendPoint[];
-  /** Which of the three per-bucket figures to draw. */
   metric: "talkRatio" | "questionRate" | "nextStep";
   bucket: "day" | "week";
-  /** For the accessible label: whose trend this is. */
   repLabel: string;
 }
 
@@ -58,26 +56,6 @@ function computeSparklinePath(
   };
 }
 
-/**
- * One rep's metric across the window, drawn small enough to sit in a table cell.
- *
- * Inline SVG rather than a charting library, deliberately. The whole series is
- * at most fourteen points — the server bounds it, see `trendBucketFor` — so a
- * library would add a client bundle and a render pass to draw thirteen line
- * segments. It also gives the empty case somewhere honest to go: a bucket with
- * no calls has a null median, and this draws a gap rather than joining the line
- * through it, because a straight line across a quiet fortnight is a claim that
- * nothing changed rather than that nothing happened.
- *
- * The `viewBox` is unitless and the element stretches, so the same component
- * works in a dense table cell and in a wider panel without a hardcoded height —
- * which is also why there is no `h-*` on the svg itself; the caller's cell owns
- * the box.
- *
- * A sparkline is decoration to a screen reader, so the whole thing carries one
- * `role="img"` and a label that states the range in words. Reading out fourteen
- * unlabelled coordinates would be worse than reading nothing.
- */
 export function RepTrendSparkline({
   points,
   metric,

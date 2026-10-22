@@ -1,11 +1,6 @@
 import { buildAvailableHint } from "./components/leaves-summary-strip";
 import { approvedDaysInYear, pendingDaysByLeaveType } from "./leave-date-helpers";
 
-/**
- * V-045. This suite used to agree with the bug: it asserted the no-policy copy
- * for "no balances at all", which is also true of a configured 12-day policy
- * nobody has used. The copy now keys on whether a leave type is configured.
- */
 describe("the available-days hint distinguishes an unconfigured organisation from a spent balance, because both render as 0", () => {
   it("says no policy is set up only when no leave type is configured", () => {
     expect(buildAvailableHint([], null, true)).toBe(
@@ -88,7 +83,6 @@ describe('V-045. "Approved (YTD)" counts days, not requests', () => {
   const year = 2026;
 
   it("counts the workdays of each approved request, not the request", () => {
-    // One request, Mon 2026-09-21 → Fri 2026-09-25: five days, one row.
     expect(
       approvedDaysInYear(
         [
@@ -133,6 +127,6 @@ describe('V-045. "Approved (YTD)" counts days, not requests', () => {
         ],
         year,
       ),
-    ).toBe(2); // 1 and 2 Jan 2026 are Thu and Fri
+    ).toBe(2);
   });
 });

@@ -7,19 +7,11 @@ import type { ProofStat } from "@/features/landing/relay/data/proof";
 
 import { PROOF_TIMING } from "./timing";
 
-/** Same focus-in as the shared FocusText (blur + left → right mask sweep). */
-/** Quicker than SPRING_SOFT: each line resolves in ~0.45 s. */
 const QUOTE_SPRING = { tension: 260, friction: 30 } as const;
 
 const MASK =
   "linear-gradient(90deg, black calc(var(--reveal) - 40%), transparent var(--reveal))";
 
-/**
- * FocusText with an external trigger: the name and role sit ~70 px under
- * the quote, below the VIEW_MARGIN line when the section fills a 900 px
- * screen, so the whole figure starts on the figure being seen.
- * (Shared FocusText has no `trigger` prop yet.)
- */
 const Focus = ({
   trigger,
   tag,
@@ -48,13 +40,6 @@ const Focus = ({
   </InviewSeen>
 );
 
-/**
- * Column quote at offset 326 (381 at 1024, where it runs three lines in a
- * 278-wide column and the caption follows 24 under it; 395 at 768, where the
- * caption row sits at a fixed 112 under the quote top whatever its length,
- * 3832:8607; in flow at 390, caption 12 under the quote): the quote focuses in as soon as the row is
- * seen, name and role follow right behind it (whole figure ≈ 0.7 s).
- */
 export const ProofQuote = ({
   quote,
   delay,

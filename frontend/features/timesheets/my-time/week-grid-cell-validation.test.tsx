@@ -5,10 +5,6 @@ import type { TimesheetEntry } from "@/features/timesheets";
 
 type Mutation = { mutate: jest.Mock; isPending: boolean; isError: boolean; isSuccess: boolean };
 
-/**
- * Settles the moment it is called. A mutation that never settles holds the
- * cell's in-flight lock, which is what `a commit still in flight` exercises.
- */
 function idleMutation(): Mutation {
   return {
     mutate: jest.fn((_vars: unknown, options?: { onSettled?: () => void }) =>
@@ -179,7 +175,6 @@ describe("pressing Enter commits a cell once, not twice", () => {
 describe("FE-TS-015 — a cell whose commit is still in flight does not commit again", () => {
   function inFlightSetup() {
     const { view, createEntry, updateEntry, voidEntry } = setup();
-    // Hold the mutation open: no onSettled, so the cell's lock is never released.
     createEntry.mutate.mockImplementation(() => undefined);
     return { view, createEntry, updateEntry, voidEntry };
   }

@@ -1,5 +1,4 @@
 import { resolveManagerHeader } from "@/components/hr/reporting-lines/manager-columns";
-/** Canonical template columns — keep in sync with backend bulkOnboardEmployeeRowSchema. */
 export const BULK_ONBOARD_COLUMNS = [
   {
     key: "firstName",
@@ -51,7 +50,6 @@ export const BULK_ONBOARD_COLUMNS = [
     sample: "Engineering",
   },
   {
-    /** BUG-HRMS-006: a file names an office; the server resolves it by name, code or id. */
     key: "location",
     header: "location",
     required: false,
@@ -59,7 +57,6 @@ export const BULK_ONBOARD_COLUMNS = [
     sample: "Bengaluru HQ",
   },
   {
-    /** BUG-HRMS-007: blank means FULL_TIME, the column default. */
     key: "workerType",
     header: "workerType",
     required: false,
@@ -198,25 +195,10 @@ export type ColumnKey = (typeof BULK_ONBOARD_COLUMNS)[number]["key"];
 
 export type ParsedRow = Record<string, string>;
 
-/**
- * Set on a parsed row when two headers fill the same column with different
- * values (e.g. `primaryManagerEmail` and legacy `reportsTo`). Guessing which the
- * operator meant would silently pick a manager, so the row is refused instead.
- */
 export const CONFLICT_KEY = "__conflictingColumns";
 
-/**
- * Set on a parsed row whose primary manager came from a legacy header
- * (`reportsTo` …). The payload then carries it as `reportingManagerEmail`, the
- * backend's read-only alias, so the server records `legacyManagerHeader`.
- */
 export const LEGACY_PRIMARY_KEY = "__legacyPrimaryHeader";
 
-/**
- * The row's own data-row number in the uploaded file (header not counted),
- * carried from the parser because blank rows are dropped: without it every row
- * after a blank line would be renumbered in the preview, result and report.
- */
 export const SOURCE_ROW_KEY = "__sourceRow";
 
 export function sourceRowOf(row: ParsedRow, fallback: number): number {
@@ -294,7 +276,6 @@ const HEADER_ALIASES: Record<string, ColumnKey> = {
   uan: "pfUanNumber",
 };
 
-/** Manager headers resolve through the one shared alias map; everything else here. */
 export function normalizeHeader(h: string): ColumnKey | null {
   const manager = resolveManagerHeader(h);
   if (manager) return manager.column;

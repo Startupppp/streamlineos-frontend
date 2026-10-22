@@ -56,7 +56,6 @@ export function EntityActionsProvider({
   );
 }
 
-// What the server says this actor may do here - never a permission key the client guessed.
 function useAvailableActions(
   reference: EntityReferenceInput,
 ): EntityAction[] {

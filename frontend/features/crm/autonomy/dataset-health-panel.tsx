@@ -8,25 +8,7 @@ import {
   type DatasetHealthTrend,
 } from "@/types/crm/autonomy";
 
-/**
- * The state of the data everything else on this card was decided against.
- *
- * Part of the scoreboard rather than a surface of its own, and that is the
- * argument for it existing at all: a correction rate and a dataset-health
- * penalty are usually two readings of one problem. An autonomous system working
- * from records that contradict each other gets corrected more often, and a
- * manager watching a correction rate climb needs to see, in the same glance,
- * whether the model or the data underneath it is the cause.
- */
 
-/**
- * The composite is a penalty, so down is good and the arrow has to say so.
- *
- * `null` is not "unchanged" — it means nothing has been recorded to compare
- * against, and drawing a flat line for a tenant whose queue was switched on this
- * morning is the same reassuring lie this card refuses when it renders a null
- * correction rate as "—".
- */
 const DIRECTION: Record<
   NonNullable<DatasetHealthTrend["direction"]>,
   { tone: StatusTone; Icon: typeof ArrowDownRight; verb: string }
@@ -65,14 +47,6 @@ function DirectionBadge({ trend }: { trend: DatasetHealthTrend }) {
   );
 }
 
-/**
- * A sparkline drawn from the recorded series.
- *
- * Inline SVG rather than a charting dependency: this is one polyline over at
- * most a year of daily points, and it has to read in both themes, which
- * `currentColor` gives for free. Fewer than two points is not a line — a single
- * dot implying a trend would be the graph making a claim the data cannot.
- */
 function Sparkline({ trend }: { trend: DatasetHealthTrend }) {
   if (trend.series.length < 2) return null;
 
@@ -84,8 +58,6 @@ function Sparkline({ trend }: { trend: DatasetHealthTrend }) {
   const points = values
     .map((value, index) => {
       const x = (index / (values.length - 1)) * 100;
-      // Inverted, because the composite is a penalty: a falling line is progress
-      // and it should read as one.
       const y = 24 - ((value - lowest) / span) * 20;
       return `${x.toFixed(2)},${y.toFixed(2)}`;
     })
@@ -142,11 +114,7 @@ export function DatasetHealthPanel({ trend }: { trend: DatasetHealthTrend }) {
           <p className="text-micro text-muted-foreground">
             {clean
               ? "Nothing open"
-              : /*
-                  The weighted number and the raw count both, because they mean
-                  different things: 24 from three high-severity contradictions is
-                  a different afternoon from 24 stale leads.
-                */
+              :
                 `${current.openTotal} open · ${current.bySeverity.high} high, ${current.bySeverity.medium} medium, ${current.bySeverity.low} low`}
           </p>
         </div>
@@ -157,11 +125,6 @@ export function DatasetHealthPanel({ trend }: { trend: DatasetHealthTrend }) {
       </div>
 
       {current.byClass.length > 0 ? (
-        /*
-          Heaviest first, which is the order somebody would work them in — and
-          the weights add up to the headline, so the breakdown explains the
-          number rather than telling a second story about it.
-        */
         <ul className="flex flex-col gap-gap-inline">
           {current.byClass.map((row) => (
             <li

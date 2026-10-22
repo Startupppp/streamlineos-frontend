@@ -180,15 +180,7 @@ export function CycleCountsClient() {
         }
       >
         <div className="flex flex-1 min-h-0 flex-col">
-        {/*
-         * G8 — denied is a different answer from empty.
-         *
-         * The list query is gated on the read key inside its hook, so a reader
-         * without it received an empty page and was told the warehouse has no
-         * cycle counts. The branch sits below every hook on purpose: an early return
-         * above them would make hook order depend on a permission, which only
-         * breaks for the person who lacks it.
-         */}
+        
         {!canView ? (
           <NoPermissionState className="flex-1" permission={COUNT_READ_KEY} />
         ) : error ? (

@@ -2,20 +2,12 @@ import { render, screen } from "@testing-library/react";
 import { useComplianceEvents } from "@/hooks/api/hr/global";
 import { ComplianceEventsTab } from "./compliance-events-tab";
 
-/**
- * HRMS-LEGACY-06: an empty compliance calendar must never read as "all clear".
- * The tab showed a green success check over "No compliance events found." for
- * an org with no requirements, or with requirements whose deadlines were never
- * generated — coverage the product does not have.
- */
 
 jest.mock("@/hooks/api/hr/global", () => ({
   useComplianceEvents: jest.fn(),
   useMarkEventDone: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-// The tab resolves denial/loading/error through usePageState, which reads the
-// access query; these cases are about the granted, loaded branch.
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: (options: { isLoading: boolean; isError: boolean; error?: unknown }) =>
     jest.requireActual("@/lib/page-state/resolve-page-state").resolvePageState({

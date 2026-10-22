@@ -42,7 +42,6 @@ export interface ListEventsParams {
 
 const BASE = "/hr/enterprise/ops/event-stream";
 
-
 const _listHrEventsContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listHrEventsContract),
 );

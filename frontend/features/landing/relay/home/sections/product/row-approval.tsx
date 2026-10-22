@@ -3,7 +3,6 @@ import type { ProductContent } from "@/features/landing/relay/data/product";
 import { ApprovalCard } from "./approval-card";
 import { FeatureRow } from "./feature-row";
 
-/** Row 02 — Slack-style approval card left, copy right (1440 3888:5867; 1024 3888:10274, 384 tall; 768 545; 390 429 — copy above the card from 768 down). */
 export const RowApproval = ({ approval }: Pick<ProductContent, "approval">) => (
   <FeatureRow
     flip

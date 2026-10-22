@@ -12,11 +12,6 @@ function coverLabel(position: WarehousePosition): string {
   return `${position.weeksOfCover.toFixed(1)} wk`;
 }
 
-/**
- * A site with no demand has no cover figure, and that is not the same as having
- * an enormous one — reporting infinity as a number makes every idle site look
- * like the best donor in the network.
- */
 function coverTone(position: WarehousePosition): StatusTone {
   if (position.weeksOfCover === null) return "neutral";
   if (position.weeksOfCover < 2) return "danger";
@@ -24,7 +19,6 @@ function coverTone(position: WarehousePosition): StatusTone {
   return "success";
 }
 
-/** The tone tokens carry their own dark pairing, so no `dark:` twin is written here. */
 export function toneChipClass(tone: StatusTone): string {
   const classes = statusToneClasses(tone);
   return cn(classes.surface, classes.ink, classes.rule);
@@ -34,15 +28,6 @@ interface TransferEvidencePanelProps {
   plan: TransferPlan;
 }
 
-/**
- * C5 — the evidence behind every recommendation.
- *
- * A recommendation to move two hundred units is unarguable until you can see
- * what each site holds and how long it lasts them, which is why the positions
- * sit beside the moves rather than behind another click. Every figure here is
- * the exact decimal string the ledger holds; the cover figures are the only
- * estimates and are labelled in weeks.
- */
 export function TransferEvidencePanel({ plan }: TransferEvidencePanelProps) {
   return (
     <div className="flex flex-col gap-3">

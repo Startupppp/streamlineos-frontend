@@ -69,9 +69,6 @@ export function useKbPageComments(pageId: number) {
 
 type KbPageCommentsCache = InfiniteData<KbPageCommentsPage>;
 
-// KB-B-022: every comment mutation used to only invalidate, so the thread kept
-// the old text (and a closed editor) until the refetch landed. The responses
-// already carry the new state; write them into the loaded pages (FE-133).
 function patchLoadedComments(
   qc: QueryClient,
   pageId: number,

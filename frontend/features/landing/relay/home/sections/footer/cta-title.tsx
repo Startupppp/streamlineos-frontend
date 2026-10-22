@@ -2,13 +2,6 @@ import type { FooterContent } from "@/features/landing/relay/data/footer";
 
 import { CueLineRise } from "./stage";
 
-/**
- * CTA title 3488:22898 — "Построчно": the single line rises out of a mask
- * (the h2 clips), serif "hate" travelling with it. Ink on accent.
- * 1024 (3888:11497) and 390 (3954:723) drop to 32/42, 768 (3876:125) to
- * 26/34 — the serif word stops stepping up (sizes switch in footer.css). At
- * 390 the title wraps to two lines, so the rise is a share of its own height.
- */
 export const CtaTitle = ({
   title,
   delay = 0,

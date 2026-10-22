@@ -7,6 +7,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type { AgentToken, CreateAgentTokenResponse } from "@/hooks/api/build/agent-tokens-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { agentTokensQueryOptions } from "./agent-tokens-read-options";
 
 
 const agentTokenListContract = lazyContract(() =>
@@ -19,13 +20,6 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-
-export function agentTokensQueryOptions() {
-  return {
-    queryKey: buildWorkQueryKeys.projects.agentTokens(),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useAgentTokens() {
   const canView = useCan("settings:api-tokens:read");

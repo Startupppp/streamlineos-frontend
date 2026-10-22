@@ -21,7 +21,6 @@ interface PipCardProps {
   pip: PIP;
   onOpenEdit(pip: PIP): void;
   onUpdateStatus(id: number, status: string): void;
-  /** `hr:performance:manage` — PATCH /hr/performance/pip/:id. */
   canManage: boolean;
   isUpdating: boolean;
 }

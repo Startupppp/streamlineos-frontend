@@ -25,14 +25,6 @@ interface PaginatedResponse<T> {
   totalPages: number;
 }
 
-/**
- * A type alias, not an interface: only an alias gets TypeScript's implicit index
- * signature, and the query-key factories take `Record<string, unknown>`.
- *
- * `limit`, not `pageSize`. The list endpoint's Zod schema is `.strict()`, so the
- * `pageSize` this used to send was not ignored — it was rejected, and every
- * request the returns page made came back 400.
- */
 type ReturnFilters = {
   status?: ReturnStatus;
   page?: number;
@@ -49,7 +41,6 @@ function returnListParams(filters?: ReturnFilters): Record<string, string> {
 
 export interface ApproveReturnInput {
   returnId: number;
-  /** Item 5. A pointer at whatever raised the credit — never a gate on the stock. */
   creditReference?: string;
 }
 

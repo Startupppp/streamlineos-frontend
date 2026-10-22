@@ -4,21 +4,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ApiError } from "@/lib/api-envelope";
 
-/**
- * PRD-C155's reach clause on the three AI surfaces that answered every backend
- * refusal with one grey toast.
- *
- * `toast.error(getErrorMessage(e))` renders 402 INSUFFICIENT_CREDITS, 429
- * queue-full, 503 breaker and 403 revoked-permission as the same transient
- * sentence: no upgrade path, no retry where retry helps, and no retry
- * suppression where it cannot. The nine states already existed in
- * `components/ai`; these three screens simply never reached them.
- *
- * Each assertion is two-sided on purpose. Asserting only that the state
- * renders would still pass if the toast fired alongside it, which is the
- * behaviour being removed — so every case also asserts `toast.error` was NOT
- * called for the AI failure.
- */
 
 const toastError = jest.fn();
 const toastSuccess = jest.fn();
@@ -99,7 +84,6 @@ function renderWithClient(ui: React.ReactElement) {
 
 interface Surface {
   name: string;
-  /** Opened before the AI trigger is reachable (a dialog or popover). */
   open?: RegExp;
   trigger: RegExp;
   ui: () => React.ReactElement;

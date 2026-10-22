@@ -62,23 +62,10 @@ function QuantityRow({ label, value, note, emphasis }: QuantityRowProps) {
 interface ForecastProposalSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** The persisted `inv_demand_forecasts` row this sheet explains. */
   proposal: BatchableProposal | null;
-  /** The override staged for it on the list, if a person has recorded one. */
   override: ProposalOverrideInput | null;
 }
 
-/**
- * C2 — the evidence behind a recorded proposal, and nothing that orders it.
- *
- * The sheet used to carry a "Create draft PO" button that posted a quantity it
- * had read off the live proposal. That was the last client-originated quantity
- * on this screen, and it is gone: ordering happens from the list, where the
- * server's own figure and any override are both visible and the request carries
- * proposal ids only. What remains here is the working — the position, the
- * reorder point, the caveats and the demand baseline — which is what a planner
- * who disagrees with the number actually needs.
- */
 export const ForecastProposalSheet = memo(function ForecastProposalSheet({
   open,
   onOpenChange,
@@ -169,9 +156,7 @@ export const ForecastProposalSheet = memo(function ForecastProposalSheet({
             </>
           ) : null}
 
-          {/* Contextual AI on the record it explains (frontend §5). The panel
-              gates itself on `inventory:ai:propose` and renders nothing without
-              it, so it is safe to mount unconditionally here. */}
+          
           <ReorderProposalPanel
             variantId={proposal.productVariantId}
             variantName={proposal.productName}

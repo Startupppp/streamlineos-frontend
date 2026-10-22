@@ -37,18 +37,6 @@ interface ResolveExceptionDialogProps {
   exception: PickExceptionSummary | null;
 }
 
-/**
- * B5, item 4 — the supervisor's signature.
- *
- * A damaged or substituted line holds its wave open until somebody has looked at
- * it, and this is the act that ends the block. It moves no stock, in either
- * direction: by the time a reviewer sees the row the goods have already been
- * taken off a shelf or found broken, and the reservation arithmetic was settled
- * when the exception was raised. "Not accepted" therefore means the report is
- * disputed and somebody has to chase it, not that it can be undone from a
- * screen — so the copy says that rather than implying an undo the warehouse
- * cannot honour.
- */
 export function ResolveExceptionDialog({
   open,
   onOpenChange,

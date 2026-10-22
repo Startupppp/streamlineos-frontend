@@ -23,7 +23,6 @@ export const chatChannelDetailContract = z.object({
 
 export type ChatChannelDetailWire = z.infer<typeof chatChannelDetailContract>;
 
-/** `storageUploadResponseSchema` — quarantine record from the upload handler. */
 export const storageUploadContract = z.object({
   quarantineId: z.string(),
   status: z.literal("pending_scan"),
@@ -33,7 +32,6 @@ export const storageUploadContract = z.object({
   sha256: z.string(),
 });
 
-/** `aiConversationSchema` */
 export const aiConversationContract = z.object({
   id: z.number().int(),
   title: z.string().nullable(),
@@ -41,13 +39,11 @@ export const aiConversationContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `listConversationsResponseSchema` */
 export const aiConversationListContract = z.object({
   conversations: z.array(aiConversationContract),
   nextCursor: z.number().int().nullable(),
 });
 
-/** `chatHistoryResponseSchema` — conversation message history page. */
 export const aiConversationMessagesContract = z.object({
   messages: z.array(
     z.object({
@@ -60,12 +56,10 @@ export const aiConversationMessagesContract = z.object({
   nextCursor: z.number().int().nullable(),
 });
 
-/** `deleteConversationResponseSchema` */
 export const aiDeleteConversationContract = z.object({ success: z.literal(true) });
 
 export const aiStarterSuggestionsContract = z.object({
   suggestions: z.array(z.string().min(1).max(160)).max(5),
 });
 
-/** chat attachment URL response */
 export const chatAttachmentUrlContract = z.object({ url: z.string() });

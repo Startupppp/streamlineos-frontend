@@ -48,14 +48,6 @@ const ERROR_COLUMNS: DataTableColumn<StagedImportRowError>[] = [
 
 type Phase = "ready" | "running" | "finished" | "failed";
 
-/**
- * The resume loop, driven by a click rather than by an effect.
- *
- * Open the job, stage the file's rows in chunks, then call process until the
- * server says `finished`. Every step is a mutation the operator started, which
- * is why this is not a `useEffect` — an effect firing the loop would restart it
- * on every StrictMode double-invoke and on every re-render the parent causes.
- */
 export function StagedImportRunner({
   file,
   importType,
@@ -91,8 +83,6 @@ export function StagedImportRunner({
       if (parsed.rows.length === 0) throw new Error("This file has a header and no rows.");
 
       const rows = parsed.rows.map((cells, index) => ({
-        // 1-based and counting the header, so an error cites the line a person
-        // sees in their spreadsheet.
         rowNumber: index + 2,
         payload: Object.fromEntries(
           parsed.headers.map((header, column) => [header, cells[column] ?? ""]),
@@ -116,8 +106,6 @@ export function StagedImportRunner({
       }
 
       let current = opened;
-      // Bounded so a server that stops advancing ends the loop instead of
-      // hammering the endpoint forever; the job stays resumable either way.
       for (let turn = 0; turn < 10_000; turn++) {
         current = await process.mutateAsync(opened.jobId);
         setProgress(current);

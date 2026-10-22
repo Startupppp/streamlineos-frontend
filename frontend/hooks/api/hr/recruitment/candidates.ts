@@ -138,7 +138,6 @@ export type CandidatesParams = {
   status?: string;
   source?: string;
   jobId?: number;
-  /** Server-side search (first/last name, email, company) */
   search?: string;
   cursor?: string;
   limit?: number;
@@ -160,11 +159,6 @@ function candidateQueryParams(params: CandidatesParams | undefined, limit: numbe
   return queryParams;
 }
 
-/**
- * The endpoint is keyset-paginated, so this reads the first page only. Every
- * consumer here wants a bounded picker list, not a walk of the whole pipeline —
- * `useCandidatesPage` is what pages.
- */
 export function useCandidates(
   params?: CandidatesParams,
   options?: { throwOnError?: false },
@@ -187,7 +181,6 @@ export function useCandidates(
   });
 }
 
-/** Full keyset page (includes statusCounts for filter chips). */
 export function useCandidatesPage(params?: CandidatesParams) {
   const queryParams = candidateQueryParams(params, params?.limit ?? 20);
 
@@ -347,15 +340,6 @@ export function useDeleteCandidate() {
   });
 }
 
-/**
- * Erase a candidate's personal data, résumé vault included.
- *
- * Deliberately separate from `useDeleteCandidate`, which hits a 204 route and
- * therefore cannot report anything. This one returns what was and was not
- * deleted, because the résumé objects live in a store the API does not own and
- * "we tried" is a different claim from "it is gone". Callers must branch on
- * `status` rather than treating a resolved promise as success.
- */
 export function useEraseCandidate() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
@@ -408,12 +392,6 @@ export function useUpdateCandidateStage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:requisitions:manage", {
     mutationKey: ["hr", "recruitment", "candidates", "update-stage"],
-    /*
-      The disposition rides with the stage. The endpoint refuses a move to
-      REJECTED that carries no reason, so a caller that omits it gets a 422
-      rather than a silent reject — which is why every reject control routes
-      through `RejectCandidateDialog` before reaching here.
-    */
     mutationFn: ({
       candidateId,
       ...body
@@ -438,8 +416,6 @@ export function useUpdateCandidateStage() {
                 ...s,
                 candidates: withoutCandidate,
                 total: hadCandidate ? Math.max(0, s.total - 1) : s.total,
-                // `shown` is what this column renders; it moves with the cards,
-                // or the board's "N of M" would drift from the list beneath it.
                 shown: withoutCandidate.length,
               };
             }

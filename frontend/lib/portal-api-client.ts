@@ -19,13 +19,6 @@ function notifyPortalTokenChanged(): void {
   for (const listener of [...tokenListeners]) listener();
 }
 
-/**
- * The portal has no session, so nothing else tells the cache that the subject
- * changed. `(portal)` is one layout across the invitation page and the board,
- * so accepting a second client's invitation in the same browser previously kept
- * the first client's QueryClient — and `queryKeys.portal.projects()` carries no
- * subject dimension, so customer B read customer A's project list out of cache.
- */
 export function subscribePortalToken(listener: () => void): () => void {
   tokenListeners.add(listener);
   if (typeof window !== "undefined") window.addEventListener("storage", listener);
@@ -37,10 +30,6 @@ export function subscribePortalToken(listener: () => void): () => void {
 
 export const PORTAL_ANONYMOUS_SCOPE = "portal:anonymous";
 
-/**
- * A short, stable digest of the bearer token — enough to key one client's cache
- * apart from another's, and not the token itself sitting in a cache key.
- */
 export function portalTokenScope(): string {
   const token = getPortalToken();
   if (!token) return PORTAL_ANONYMOUS_SCOPE;
@@ -147,8 +136,6 @@ async function portalFetch(
   if (authenticated && res.status === 401) {
     clearPortalToken();
     if (typeof window !== "undefined") {
-      // The invitation page lives in the `(portal)` route group, which adds no URL segment.
-      // `/portal/accept-invitation` resolved into the authenticated staff area instead.
       window.location.href = "/accept-invitation?reason=expired";
     }
     throw new PortalApiError(

@@ -65,7 +65,6 @@ export function DocumentsPage() {
   const pageSize = 20;
 
   const canManageDocs = useCan("hr:documents:manage");
-  // Classification and sharing is organisation-wide authority the server refuses below scope `all`; `canManageDocs` is scope-blind.
   const canClassify = useCanClassifyDocuments();
   const hrKbLink = useHrKbLinkFlags();
   const [isLetterGenOpen, setIsLetterGenOpen] = useState(false);
@@ -188,8 +187,6 @@ export function DocumentsPage() {
 
   if (pageState.kind === "loading") return <DocumentLibrarySkeleton />;
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {
-    // The old error branch said "Something went wrong" for every failure and
-    // dropped the error, so a 402 never showed its upgrade path (FE-41).
     return (
       <DocumentLibraryState>
         <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">

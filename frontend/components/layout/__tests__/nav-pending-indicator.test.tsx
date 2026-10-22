@@ -1,17 +1,3 @@
-/**
- * Ticket 27 turned viewport prefetch off for the sidebar, which was right — 57
- * speculative RSC requests per product re-ran the authenticated layout. The
- * cost is that a nav click now starts a cold navigation, and an authenticated
- * route on this app answers in 400-1000ms. Measured with
- * `scripts/measure-web-vitals.mjs`, tapping a nav link on the mobile profile
- * produced NO DOM change for up to 1,739ms — the interface looked frozen while
- * work ran, which is exactly what the perceived-responsiveness target forbids.
- *
- * `useLinkStatus` is Next's own answer for "prefetch is off and the
- * destination is dynamic". These tests pin the two properties the fix has to
- * have: the pending state reaches the DOM, and the indicator costs no layout
- * shift because it is present and absolutely positioned in both states.
- */
 import React from "react";
 import { render, screen } from "@testing-library/react";
 

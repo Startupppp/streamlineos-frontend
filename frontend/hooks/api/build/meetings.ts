@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import { useQuery, useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -19,6 +18,10 @@ import type {
   AddAttendeeInput,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import {
+  meetingsListQueryOptions,
+  meetingDetailQueryOptions,
+} from "./meetings-read-options";
 
 
 const meetingPageContract = lazyContract(() =>
@@ -205,23 +208,6 @@ export function useDeleteActionItem(projectId: number, meetingId: number) {
   });
 }
 
-export function meetingsListQueryOptions(projectId: number, params?: Record<string, string>) {
-  const hasParams = params && Object.keys(params).length > 0;
-  return {
-    queryKey: buildWorkQueryKeys.projects.meetings.list(projectId, hasParams ? params : undefined),
-    initialPageParam: undefined as string | undefined,
-    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
-      last.pagination.nextCursor ?? undefined,
-    staleTime: 60_000,
-  };
-}
-
-export function meetingDetailQueryOptions(projectId: number, meetingId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.meetings.detail(projectId, meetingId),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useConvertActionItemToTask(projectId: number, meetingId: number) {
   const qc = useQueryClient();

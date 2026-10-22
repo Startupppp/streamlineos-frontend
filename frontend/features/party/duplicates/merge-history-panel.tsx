@@ -20,20 +20,6 @@ import { cn } from "@/lib/utils";
 
 const PAGE_SIZE = 10;
 
-/**
- * What has been merged, and the offer to take it back.
- *
- * This panel is the reason `GET /party/merges` exists. `party_merges` has always
- * held everything a revert needs, but nothing read it — so the only moment a
- * merge could be undone was the moment it happened, from whatever the caller
- * still had in hand. An action that is reversible for as long as a toast is
- * visible is not one a user can rely on, and the merges the system performs
- * unattended had no toast at all.
- *
- * Reverted rows are shown too, greyed and without the control: "this was undone"
- * is the answer to the question that brings someone here, and hiding it would
- * make them look for a merge that is no longer in the list and merge again.
- */
 export function MergeHistoryPanel() {
   const [page, setPage] = useState(1);
   const [revertTarget, setRevertTarget] = useState<PartyMergeRecord | null>(null);

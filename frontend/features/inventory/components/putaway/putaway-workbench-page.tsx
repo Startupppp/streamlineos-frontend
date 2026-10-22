@@ -60,16 +60,6 @@ function isStatus(value: string | null): value is PutawayTaskStatus {
   return STATUSES.some((status) => status === value);
 }
 
-/**
- * B3, item 3 — the putaway queue.
- *
- * A goods receipt lands every accepted unit on one location, and until this
- * screen existed nothing recorded that anybody had taken them anywhere: the
- * suggestion endpoint could say where they ought to go, and the answer went to
- * nobody. This is the queue an operator actually works — tasks waiting, the ones
- * they hold, and the lines inside one — and every row opens onto the shelf-level
- * detail rather than onto a receipt.
- */
 export function PutawayWorkbenchPage() {
   const router = useRouter();
   const pathname = usePathname();
@@ -103,8 +93,6 @@ export function PutawayWorkbenchPage() {
       if (next.status === "all") params.delete("status");
       else params.set("status", next.status);
     }
-    // Every filter change resets the page, or page 4 of the old filter is an
-    // empty screen the operator has to work out how to leave.
     setPage(1);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
   }

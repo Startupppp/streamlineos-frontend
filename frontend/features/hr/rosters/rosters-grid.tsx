@@ -43,7 +43,6 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
   const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
   const { data: entries, isLoading: entriesLoading } = useRosterEntries(expanded ? roster.id : 0);
   const publishRoster = usePublishRoster();
-  // Entries carry a shiftId; show the shift's name, never "Shift #12" (FE-85).
   const { data: shifts } = useHrShifts();
   const shiftNameById = useMemo(
     () => new Map((shifts ?? []).map((shift) => [shift.id, shift.name])),
@@ -77,7 +76,6 @@ function RosterCard({ roster, canManage }: RosterCardProps) {
     setConfirmPublishOpen(true);
   }
 
-  // Publishing shows the week to every rostered employee; confirm it (FE-83).
   function handlePublish() {
     publishRoster.mutate(roster.id, {
       onSuccess: () => {
@@ -204,8 +202,6 @@ export function RostersGrid({ canManage }: Props) {
     void refetch();
   }, [refetch]);
 
-  // No route guard and useRosters is gated on hr:attendance:view: a denied
-  // caller read "No rosters yet" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {

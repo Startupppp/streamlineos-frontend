@@ -13,7 +13,6 @@ import {
 interface SaveReportDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Present when an already-saved report is being renamed or overwritten. */
   defaultValues: SaveReportValues;
   isExisting: boolean;
   isSubmitting: boolean;

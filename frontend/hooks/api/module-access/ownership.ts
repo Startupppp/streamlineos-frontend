@@ -8,7 +8,6 @@ import type { ModuleOwnership } from "./types";
 import { viewKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
 
-/** Deferred — see `catalog.ts`; the contract itself is unchanged. */
 const ownershipContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleOwnershipContract),
 );

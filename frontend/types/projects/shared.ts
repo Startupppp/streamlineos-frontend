@@ -18,7 +18,6 @@ export type IntakeSource = "manual" | "web_form" | "email" | "feedbucket" | "por
 
 export type ViewLayoutType = "board" | "list" | "table" | "calendar" | "gantt";
 
-// `total` rides the first page only; later pages carry no count because the cursor already knows there is more.
 export interface CursorPaginatedResponse<T> {
   data: T[];
   total?: number;

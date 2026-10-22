@@ -19,7 +19,6 @@ import {
 
 const IGNORE = "__ignore__";
 
-/** What the system decided about a column, in the user's words. */
 function describe(column: MappedColumn): { text: string; tone: "success" | "warning" | "neutral" } {
   switch (column.mapping.kind) {
     case "mapped":
@@ -30,7 +29,6 @@ function describe(column: MappedColumn): { text: string; tone: "success" | "warn
         tone: column.mapping.confidence < 1 ? "warning" : "success",
       };
     case "custom":
-      // Not a lesser outcome. The column survives and is findable afterwards.
       return { text: "Kept as an extra field", tone: "neutral" };
     case "ambiguous":
       return { text: "Needs an answer", tone: "warning" };
@@ -45,14 +43,6 @@ export interface ColumnMappingReviewProps {
   onOverride: (header: string, field: string) => void;
 }
 
-/**
- * Every column, and what will happen to it.
- *
- * The ambiguous ones are asked about, but all of them are shown and all of them
- * can be changed. A confirmation step that only surfaces the questions leaves a
- * user unable to correct a confident wrong answer, which is the worse failure of
- * the two.
- */
 export function ColumnMappingReview({ columns, overrides, onOverride }: ColumnMappingReviewProps) {
   const unanswered = columns.filter((column) => column.mapping.kind === "ambiguous");
 

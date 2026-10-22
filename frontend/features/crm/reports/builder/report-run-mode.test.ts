@@ -5,10 +5,6 @@ import {
   type ReportBuilderValues,
 } from "./report-builder-schema";
 
-/**
- * Which run route a click takes is an audit decision, not a routing detail, so
- * it is pinned here rather than left to a component test to notice.
- */
 
 const saved: ReportBuilderValues = {
   ...DEFAULT_REPORT_BUILDER_VALUES,
@@ -60,11 +56,6 @@ describe("planReportRun", () => {
   });
 
   it("keeps the saved route across paging and a changed row count", () => {
-    /**
-     * Both are overrides on `runDefinitionSchema`, so neither makes this a
-     * different report. If either were treated as an edit, every second page of
-     * a saved report would be filed in the audit log as an ad-hoc query.
-     */
     const plan = planReportRun({
       request: { kind: "form", values: { ...saved, limit: 250 } },
       reportDefinitionId: "def-1",
@@ -81,11 +72,6 @@ describe("planReportRun", () => {
   });
 
   it("falls back to ad hoc the moment the question itself is edited", () => {
-    /**
-     * The other half of the same rule: attributing somebody's experiment to the
-     * saved report would make the run log say the shared report returned
-     * numbers it never returned.
-     */
     const edited: ReportBuilderValues = {
       ...saved,
       filters: [

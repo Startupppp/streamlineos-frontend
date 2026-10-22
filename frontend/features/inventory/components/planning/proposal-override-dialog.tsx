@@ -17,7 +17,6 @@ export interface OverridableProposal {
   proposalId: number;
   productName: string;
   variantSku: string;
-  /** The engine's own number for this proposal, as an exact decimal string. */
   engineQuantity: string;
 }
 
@@ -29,15 +28,6 @@ interface ProposalOverrideDialogProps {
   onSave: (override: ProposalOverrideInput) => void;
 }
 
-/**
- * C2 — overruling the engine is a form, not an editable cell.
- *
- * Two fields, no context needed, so it is rung 3 of the overlay ladder rather
- * than an inline editor. That is not only the ladder: an inline number box is
- * exactly the shape that made the old screen post whatever the browser
- * computed. Changing the quantity here costs a sentence saying why, and the
- * engine's own figure stays on screen beside the field being typed into.
- */
 export const ProposalOverrideDialog = memo(function ProposalOverrideDialog({
   proposal,
   existing,

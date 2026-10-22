@@ -14,16 +14,6 @@ interface AccrualSummaryProps {
   locale: string;
 }
 
-/**
- * The headline figure, and an honest statement of whether it is fully explained.
- *
- * `reconciles` travels in the payload precisely so a screen showing a total
- * beside a breakdown can assert the two agree rather than implying it by
- * placing them next to each other. When it is false the notice below says so in
- * the same view as the number — a rep who cannot reconcile their own commission
- * should learn that from the screen, not from adding the rows up themselves and
- * finding a gap.
- */
 export function AccrualSummary({ accrual, locale }: AccrualSummaryProps) {
   const reconciled = accrual.reconciles.byDeal && accrual.reconciles.byRule;
 

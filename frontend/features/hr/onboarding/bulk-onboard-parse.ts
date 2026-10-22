@@ -3,7 +3,6 @@ import { BULK_ONBOARD_COLUMNS, CONFLICT_KEY, LEGACY_PRIMARY_KEY, SOURCE_ROW_KEY,
 
 interface SourceRow {
   values: Record<string, string>;
-  /** Data-row number in the file, header not counted. */
   sourceRow: number;
 }
 

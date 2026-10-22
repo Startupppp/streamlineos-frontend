@@ -82,9 +82,6 @@ function idempotencyKeyFor(signature: string): string {
   return minted;
 }
 
-// The same file dropped again while its first upload is in flight would reuse
-// the idempotency key and get a 409 "matching request in progress"; share the
-// in-flight upload instead.
 const inFlightUploads = new Map<string, Promise<UploadedEditorMedia>>();
 
 async function sendUpload(file: File, signature: string, pageId?: number): Promise<UploadedEditorMedia> {

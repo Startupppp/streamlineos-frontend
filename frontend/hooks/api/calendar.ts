@@ -42,7 +42,6 @@ import type {
 import { allowOfflineCalendarPolicy, clearOfflineCalendarSnapshot, revokeOfflineCalendarPolicy, saveOfflineCalendarSnapshot } from "@/lib/offline/calendar-offline-cache";
 import { useCalendarOfflinePolicy } from "./calendar-offline-policy";
 
-// ---- Re-exports — all public imports from this module remain intact ----
 export type {
   CalendarOrgMember,
   CalendarOooConflict,
@@ -78,8 +77,6 @@ export {
   useTakeProviderEventVersion,
 } from "./calendar-event-detail";
 import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
-
-// ---- Member lookup hook ----
 
 export const MEMBER_PICKER_SEARCH_LIMIT = 25;
 export const MEMBER_PICKER_ROSTER_LIMIT = 100;
@@ -117,8 +114,6 @@ export function useCalendarMemberLookup({
     placeholderData: isSearch ? keepPreviousData : undefined,
   });
 }
-
-// ---- Range-list hooks ----
 
 export function useCalendarEvents(start: Date, end: Date, enabled = true, filter?: { q?: string; sourceKey?: string }) {
   const qc = useQueryClient();

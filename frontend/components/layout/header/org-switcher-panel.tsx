@@ -19,14 +19,6 @@ const ArchivedOrgsRestore = dynamic(
   { ssr: false },
 );
 
-/**
- * The body of the workspace switcher, split off so it loads on first open.
- *
- * Radix mounts a menu's content only while it is open, so a `next/dynamic`
- * boundary here is enough: the organisation list, the archived-org restore
- * control and the leave-organisation item stay out of every authenticated
- * route's first load until someone actually opens the switcher.
- */
 export interface WorkspaceOrg {
   id: string;
   name: string;

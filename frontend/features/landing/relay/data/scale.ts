@@ -1,4 +1,3 @@
-/** 06 Scale — Figma 3488:22268. StreamlineOS platform copy; row figures are the brief's illustrative sample data. */
 export const scaleMock = {
   head: {
     badge: "platform",
@@ -11,7 +10,6 @@ export const scaleMock = {
     copy: "Ask OS works across CRM, HR, inventory and finance. It drafts the action, cites its sources and waits. Nothing is written until you confirm.",
     label: "ask os, every module",
     caption: "77 tools, 35 confirm-gated writes",
-    /** Order matches the node layout (four nodes round the hub). */
     apps: [
       { code: "CR", name: "crm" },
       { code: "HR", name: "hrms" },

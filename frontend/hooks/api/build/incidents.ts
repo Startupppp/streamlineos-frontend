@@ -11,6 +11,10 @@ import type {
   IncidentsGetIncidentResponse,
 } from "@/contracts/build-contracts.generated";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import {
+  incidentsListQueryOptions,
+  incidentDetailQueryOptions,
+} from "./incidents-read-options";
 
 const incidentListContract = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
@@ -30,14 +34,6 @@ type IncidentFilters = {
   cursor?: string;
   limit?: number;
 };
-
-type IncidentPageParam = {
-  updatesCursor?: number;
-  decisionsCursor?: number;
-  followUpActionsCursor?: number;
-};
-
-const INITIAL_INCIDENT_PAGE_PARAM: IncidentPageParam = {};
 
 export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   const canView = useCan("build:incidents:view");
@@ -66,24 +62,6 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   });
 }
 
-export function incidentsListQueryOptions(projectId: number, params?: Record<string, string>) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.incidents.list(
-      projectId,
-      params && Object.keys(params).length > 0 ? params : undefined,
-    ),
-    staleTime: 60_000,
-  };
-}
-
-export function incidentDetailQueryOptions(projectId: number, incidentId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.incidents.detail(projectId, incidentId),
-    initialPageParam: INITIAL_INCIDENT_PAGE_PARAM,
-    getNextPageParam: () => undefined as IncidentPageParam | undefined,
-    staleTime: 15_000,
-  };
-}
 
 export function useIncident(projectId?: number, incidentId?: number) {
   const canView = useCan("build:incidents:view");

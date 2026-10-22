@@ -4,15 +4,6 @@ import { renderWithProviders } from "@/test-utils";
 import { GlReconciliationClient } from "./gl-reconciliation-client";
 import type { GlReconReport, GlReconRow } from "@/hooks/api/inventory/gl-reconciliation";
 
-/**
- * The states a reconciliation report must not blur into one another.
- *
- * "Accounting is not installed" and "every movement failed to post" produce the
- * same page of zeroes unless the report says which it is — which is why the
- * backend returns the sentence rather than implying it. A refused read produces
- * the same empty table as a clean month. And a filtered-out result is not the
- * same as a month in which nothing moved.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),

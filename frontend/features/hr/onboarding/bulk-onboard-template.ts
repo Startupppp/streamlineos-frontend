@@ -33,9 +33,7 @@ function cell(row: ParsedRow, key: ColumnKey): string {
 export function validateAndMap(
   raw: ParsedRow,
   deptNames: Set<string>,
-  /** The organisation's secondary-manager cap, or null while unknown; the server re-checks it. */
   secondaryCap: number | null = null,
-  /** Who a blank primary resolves to under the loaded policy, or null while unknown. */
   assignedDefault: AssignedDefault | null = null,
 ): {
   payload: BulkOnboardEmployeeRow | null;
@@ -86,12 +84,6 @@ export function validateAndMap(
   if (roleRaw && !isUserInviteRole(roleRaw)) {
     errors.push("role must be MEMBER or ORG_ADMIN");
   }
-  /**
-   * BUG-HRMS-007. Checked here because a mistyped worker type would otherwise
-   * cost a round trip to find out. `location` is not checked locally: the
-   * server resolves it against the org's live locations and refuses an unknown
-   * one rather than inventing an office (BUG-HRMS-006).
-   */
   if (workerTypeRaw && !isHrWorkerType(workerTypeRaw)) {
     errors.push(`workerType must be one of ${HR_WORKER_TYPE_VALUES.join(", ")}`);
   }

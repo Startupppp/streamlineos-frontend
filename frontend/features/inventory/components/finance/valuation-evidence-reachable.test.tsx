@@ -4,25 +4,6 @@ import { renderWithProviders } from "@/test-utils";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ValuationClient } from "./valuation-client";
 
-/**
- * `GET /inventory/valuation/consumptions` and `GET /inventory/valuation/periods`
- * were permissioned on `inventory:valuation:read` — the key the valuation screen
- * already holds — and called by nothing. The drill-down stopped at the receipt,
- * so a valuation figure could be opened but a cost of goods sold figure could
- * not: nothing on screen said which layer an issue drew from, or at what cost.
- *
- * The valuation table above it read a contract the backend does not send either:
- * a flat `rows` array of numeric minor units, against a response carrying
- * `items` of `numeric(18,4)` decimal strings in the organisation's own
- * currency. The mock below is the service's own projection.
- *
- * The same sheet's Layers tab was reading a contract the backend does not send.
- * It asked for `id` / `qty` / `remainingQty` / `receivedAt` against a response
- * carrying `layerId` / `quantity` / `remainingQuantityAsAt` / `createdAt`, and
- * ran the unit cost through a `/100` that belongs to a different endpoint's
- * minor units. Every cell was `undefined` and every figure was a hundredth of
- * itself; the tests below pin both halves to the real payload.
- */
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
@@ -180,11 +161,6 @@ it("names the layer each issue drew from, and what the draw cost", async () => {
   expect(screen.getByText("₹1,875.00")).toBeInTheDocument();
 });
 
-/**
- * `postingDate` arrives as a bare `2026-09-01`. Read with `new Date` that is UTC
- * midnight, which renders as 31 August for every reader west of UTC — so this
- * assertion is what fails if `formatCalendarDate` ever goes back to `new Date`.
- */
 it("renders a bare posting date as the day it was posted", async () => {
   await openEvidenceSheet();
   await userEvent.click(await screen.findByRole("tab", { name: /consumption/i }));

@@ -104,16 +104,6 @@ export function useMessageTimeline({
 
   const [revealed, setRevealed] = useState({ channelId, pages: 1 });
 
-  /**
-   * Every older page the reader asks for has to land INSIDE the render window,
-   * or the fetch paints nothing: `messages` is oldest-first, so a 50-row page
-   * arrives at the front and `resolveMessageWindowStart`'s tail immediately
-   * slices it back off. Both routes to an older page — the "Load older messages"
-   * control and `useChatScroll`'s scroll-to-top auto-load, which calls
-   * `fetchNextPage` directly — went through that, so the reader saw no change
-   * and had to ask twice. The server page is 50 (`chat.schemas.ts`) against a
-   * 60-row window, so one window page per network page covers it.
-   */
   const renderPages = Math.max(
     revealed.channelId === channelId ? revealed.pages : 1,
     history.data?.pages.length ?? 0,

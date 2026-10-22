@@ -130,9 +130,6 @@ export function EmployeesTab({ runId, isLocked }: EmployeesTabProps) {
     void refetch();
   }
 
-  // "No employees in this run — generate payroll to include employees" is an
-  // instruction; a failed read must never issue it over a run that already has
-  // employees.
   if (isError) {
     return (
       <ErrorState

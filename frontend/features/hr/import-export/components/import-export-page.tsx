@@ -144,10 +144,6 @@ export function ImportExportPage() {
 
   const activeConfig = IMPORT_ENTITIES.find((e) => e.id === openEntity);
 
-  // FE-44/45: the route admits either key, so each section is gated on the
-  // exact key its endpoint enforces — hr:import:manage for /hr/import/jobs,
-  // hr:export:manage for GET /hr/export/:entity, hr:expenses:read for the
-  // expenses export job.
   const canImport = useCan("hr:import:manage");
   const canExport = useCan("hr:export:manage");
   const canExportExpenses = useCan("hr:expenses:read");

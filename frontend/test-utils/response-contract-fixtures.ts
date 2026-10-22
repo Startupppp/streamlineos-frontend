@@ -1,9 +1,3 @@
-/**
- * The response shapes the backend services actually build, verified against
- * their controllers and the Drizzle column types — including the fields the
- * client does not read. A contract that rejects real traffic turns a working
- * screen into an error page, so these are the "accepts" half of the proof.
- */
 
 import type { Entitlements } from "@/hooks/api/entitlements-schema";
 

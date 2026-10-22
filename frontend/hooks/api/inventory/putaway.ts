@@ -46,15 +46,6 @@ export interface PutawayTaskFilters {
   assignment?: PutawayAssignment;
 }
 
-/**
- * A bin the goods would fit in, with the room actually left in it.
- *
- * `capacity` and `remaining` are `null` where the bin records no capacity, which
- * means unlimited — deliberately not "very large", so an unmeasured bin cannot
- * outrank every measured one. Both are decimal strings: these are
- * `numeric(18,4)` values and the whole point of the server-side arithmetic is
- * that they never become floats, so they are rendered as they arrive.
- */
 export interface PutawaySuggestion {
   locationId: number;
   code: string;
@@ -64,19 +55,10 @@ export interface PutawaySuggestion {
   remaining: string | null;
   holdsVariant: boolean;
   fits: boolean;
-  /** True when this bin sits inside a zone the slotting rules point at for this SKU. */
   inSlot: boolean;
-  /** The rule that put it there, so a screen can explain the order. */
   slotRuleName: string | null;
 }
 
-/**
- * One line of a task.
- *
- * Snake-cased because the backend returns the projection row as it reads it —
- * the task detail is a raw SQL result rather than a mapped DTO, and renaming it
- * on the way through would be a second contract to keep in step.
- */
 export interface PutawayTaskLine {
   id: number;
   product_variant_id: number;
@@ -120,7 +102,6 @@ export interface CreatePutawayTaskResult {
 export interface CompletePutawayInput {
   taskId: number;
   taskLineId: number;
-  /** Decimal string at scale 4 — this becomes a stock movement. */
   quantity: string;
   toLocationId?: number;
 }
@@ -160,9 +141,6 @@ export function usePutawayTasks(
         ...(params.status ? { status: params.status } : {}),
         ...(params.warehouseId ? { warehouseId: String(params.warehouseId) } : {}),
       }, signal),
-    // A queue whose whole value is being current. An operator looking at a task
-    // somebody else claimed thirty seconds ago is the failure this screen exists
-    // to prevent.
     staleTime: 15_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
@@ -226,14 +204,6 @@ export function useAbandonPutawayTask() {
   });
 }
 
-/**
- * Walking a line relocates stock, so the stock levels and the receipt queue are
- * stale afterwards — not just the task.
- *
- * The `Idempotency-Key` is generated per attempt rather than per line: a retry
- * of *this* confirmation must replay, and the operator's next partial putaway of
- * the same line must not.
- */
 export function useCompletePutaway() {
   const qc = useQueryClient();
   return useIdempotentMutation<CompletePutawayResult, Error, CompletePutawayInput>({
@@ -259,14 +229,6 @@ export function useCompletePutaway() {
   });
 }
 
-/**
- * Killing a task nobody is going to walk.
- *
- * A supervisor's action rather than an operator's abandon: abandon puts the task
- * back in the queue, cancel takes it out of the queue entirely. It was mounted
- * and never called, so a task raised against a receipt that was later reversed
- * stayed in the RF queue forever and could only be worked or ignored.
- */
 export function useCancelPutawayTask() {
   const qc = useQueryClient();
   return useIdempotentMutation<{ taskId: number; status: string }, Error, number>({
@@ -282,14 +244,6 @@ export function useCancelPutawayTask() {
   });
 }
 
-/**
- * Where the slotting rules say this quantity should go.
- *
- * Uncalled, so the RF putaway runner asked an operator to choose a bin from the
- * whole warehouse with no ranking at all — which is how stock ends up in a bin
- * the rules point somewhere else, and how a slotting rule quietly stops meaning
- * anything.
- */
 export function usePutawaySuggestions(input: {
   warehouseId: number | null;
   productVariantId: number | null;

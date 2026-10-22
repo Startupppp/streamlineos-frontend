@@ -7,16 +7,6 @@ export interface CrmTokenClasses {
   chartHex: string;
 }
 
-/**
- * A tenant picked these, so the hue is the whole point: ten choices have to
- * look like ten choices.
- *
- * `sky`, `orange` and `red` used to borrow `blue`, `amber` and `rose` because
- * the categorical scale had no hue of their own, which made the picker offer
- * pairs of identical swatches while `chartHex` kept them apart — the same
- * stage reading as two colours on one screen. Every entry now names its own
- * hue, and `chartHex` is that hue's 500.
- */
 const TOKEN_MAP: Record<CrmColorToken, CrmTokenClasses> = {
   blue: {
     badgeClass: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",

@@ -10,13 +10,6 @@ import { useOpsSummary } from "@/hooks/api/inventory/ops-board";
 import { DEFAULT_MONEY_DISPLAY, formatMoneyRounded } from "@/lib/format-utils";
 import { StockBucketBar } from "./stock-bucket-bar";
 
-/**
- * B2 — "what do we have, and how much of it can we actually promise".
- *
- * The seven buckets side by side, never a single "stock" number: the whole
- * failure this module exists to prevent is somebody reading on-hand as
- * available and selling material that is already held for a site.
- */
 export function OperationalPositionCard() {
   const canRead = useCan("inventory:stock:read");
   const { data, isLoading, error, refetch } = useOpsSummary();

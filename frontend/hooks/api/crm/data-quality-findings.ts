@@ -18,7 +18,6 @@ const resolveResultLazy = lazyContract(() =>
   import("@/hooks/api/crm/data-quality-findings-schema").then((m) => m.dataQualityResolveResultContract),
 );
 
-/** The `GET /crm/data-quality/findings` query contract (`listFindingsQuerySchema`). */
 export interface DataQualityFindingFilters {
   status?: "open" | "resolved" | "dismissed";
   producer?: "duplicate" | "contradiction" | "reachability" | "staleness" | "import-uncertainty";
@@ -42,13 +41,6 @@ export function useDataQualityFindings(filters: DataQualityFindingFilters) {
   });
 }
 
-/**
- * Resolve or dismiss findings picked by id.
- *
- * Only the `ids` selection is offered: a `group` selection can cover findings
- * whose proposed action is a party merge, and merging is held for a product
- * decision. `apply` on a finding that proposes `none` only closes the finding.
- */
 export interface ResolveDataQualityFindingsInput {
   findingIds: string[];
   action: "apply" | "dismiss";
@@ -74,13 +66,11 @@ export function useResolveDataQualityFindings() {
     onSuccess: (result, vars) => {
       const failed = new Set(result.failures.map((f) => f.findingId));
       const closed = new Set(vars.findingIds.filter((id) => !failed.has(id)));
-      // A closed finding has left the open queue; drop it from every cached page.
       qc.setQueriesData<DataQualityFindingsPage>(
         { queryKey: growthAndSignQueryKeys.crmDataQuality.findings() },
         (page) =>
           page ? { ...page, data: page.data.filter((f) => !closed.has(f.findingId)) } : page,
       );
-      // The resolved/dismissed views gain rows the client cannot build; mark them stale only.
       void qc.invalidateQueries({
         queryKey: growthAndSignQueryKeys.crmDataQuality.findings(),
         refetchType: "none",

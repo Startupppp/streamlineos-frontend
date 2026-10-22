@@ -1,35 +1,3 @@
-/**
- * @fileoverview A React hook for creating scroll-triggered spring animations.
- *
- * The hook provides two modes of operation:
- * - "scrub": Smoothly interpolates between values based on scroll position
- * - "toggle": Switches between two states based on scroll threshold
- *
- * Features:
- * - Configurable trigger points using element positions (top/center/bottom)
- * - Mobile device handling with optional disabling
- * - Frame rate control for performance optimization
- * - Progress tracking and change notifications
- * - Spring configuration customization
- * - SSR-safe implementation
- *
- * @param {Object} props - Hook configuration options
- * @param {boolean} [props.enabled=true] - Whether the trigger is enabled
- * @param {RefObject<HTMLElement>} [props.trigger] - Optional trigger element ref
- * @param {TriggerPos} [props.start="top bottom"] - Starting trigger position
- * @param {TriggerPos} [props.end="bottom top"] - Ending trigger position
- * @param {Object} [props.from={}] - Starting values for spring animation
- * @param {Object} [props.to={}] - Target values for spring animation
- * @param {Function} [props.onChange] - Callback when progress changes
- * @param {boolean} [props.disableOnMobile=false] - Whether to disable on mobile
- * @param {SpringConfig} [props.config] - Spring animation configuration
- * @param {number} [props.frameInterval=10] - Frame rate interval in ms
- * @param {"toggle"|"scrub"} [props.mode="scrub"] - Animation mode
- * @param {RefObject<HTMLElement>} props.elementRef - Target element ref
- *
- * Returns spring values that can be used with react-spring animations
- * and an interpolated progress value between 0 and 1.
- */
 
 import { SpringConfig, useSpring } from "@react-spring/web";
 import { RefObject, useEffect, useMemo, useRef } from "react";

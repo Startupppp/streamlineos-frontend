@@ -24,9 +24,7 @@ interface InspectionLine {
   serialId?: number | null;
   qty: number;
   disposition?: string | null;
-  /** D3. What this inspection is holding out of ATP right now. */
   heldQuantity?: string | null;
-  /** How many units the governing plan requires be opened. */
   sampleQuantity?: string | null;
   locationId?: number | null;
   planVersionId?: number | null;
@@ -44,7 +42,6 @@ interface Inspection {
   source: string | null;
   lines: InspectionLine[];
   statusTimeline?: TimelineEntry[];
-  /** Set on a compensating correction; the original stays untouched. */
   correctsInspectionId?: number | null;
   correctionReason?: string | null;
   createdAt: string;
@@ -187,11 +184,6 @@ export function useDisposeInspection() {
   });
 }
 
-/**
- * D3. Cancelling hands back whatever the inspection was holding, so it moves
- * stock — hence the idempotency key and the stock invalidations, neither of
- * which it needed while a cancel was a pure status flip.
- */
 export function useCancelInspection() {
   const qc = useQueryClient();
   return useIdempotentMutation<Inspection, Error, number>({
@@ -210,10 +202,6 @@ export function useCancelInspection() {
   });
 }
 
-/**
- * D3. A completed result is evidence and is never edited — correcting one raises
- * a fresh inspection that names what it supersedes, and both stay readable.
- */
 export function useCorrectInspection() {
   const qc = useQueryClient();
   return useIdempotentMutation<Inspection, Error, { inspectionId: number; reason: string }>({

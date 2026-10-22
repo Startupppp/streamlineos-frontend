@@ -45,8 +45,6 @@ export function ShiftTemplatesTab({ canManage, onEdit }: Props) {
     });
   }
 
-  // No route guard; useHrShifts is gated on hr:attendance:view, so a denied
-  // caller must be told so, not "No shift templates yet" (FE-47).
   const pageState = usePageState({ permission: "hr:attendance:view", isLoading, isError, error });
 
   if (pageState.kind !== "ready" && pageState.kind !== "empty") {

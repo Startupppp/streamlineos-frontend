@@ -1,4 +1,3 @@
-/** A file's bytes as bare base64 (the `data:` prefix `readAsDataURL` adds is stripped). */
 export function readFileAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

@@ -45,7 +45,6 @@ interface ReviewAnswers {
 export function MyReviewsTab() {
   const { data: reviews = [], isLoading, isError, error, refetch } = useMyPendingReviews();
   const submitFeedback = useSubmitFeedbackResponse();
-  // POST /hr/feedback/requests/:id/respond is `hr:performance:view` (feedback.controller.ts:80).
   const canRespond = useCan("hr:performance:view");
   const pageState = usePageState({
     permission: "hr:performance:view",

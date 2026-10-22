@@ -160,10 +160,6 @@ function LowStockAlertSection({ canReadReports }: { canReadReports: boolean }) {
         const urgency = URGENCY_CONFIG[item.urgency];
         return (
           <div
-            // B4. The report is one row per stock level, so the SKU alone is not
-            // an identity — nor is the store: a SKU can be low in two bins of the
-            // same store. React silently dropped the duplicate, hiding a bin that
-            // was genuinely short. The bin is the row.
             key={`${item.productId}-${item.variantSku}-${item.locationId}`}
             className={`flex items-center gap-3 rounded-lg border p-3 ${urgency.className}`}
           >
@@ -350,11 +346,7 @@ export function InventoryDashboardClient() {
       actions={canCreateProduct ? <AddProductLink /> : undefined}
     >
       <div className="space-y-4">
-        {/*
-          B2 — the two things somebody opens this page for, above everything
-          else: what is on the shelf right now, and what needs a decision today.
-          The KPI grid below them is the weekly read, not the morning one.
-        */}
+        
         <OperationalPositionCard />
         <NeedsAttentionBoard />
 

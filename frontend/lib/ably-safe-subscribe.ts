@@ -27,7 +27,6 @@ const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
   "notification:mention",
 ]);
 
-/** True when a server-authored event arrives with a `clientId`, i.e. a browser published it. */
 export function isForgedServerFrame(
   event: string,
   clientId: string | null | undefined,

@@ -34,7 +34,6 @@ export interface GenealogyEdge {
   direction: "forward" | "backward";
   transactionId: number | null;
   transactionType: string | null;
-  /** Decimal(18,4) as text. Never parsed to a float. */
   quantity: string | null;
   locationId: number | null;
   occurredAt: string | null;
@@ -84,15 +83,6 @@ export interface GenealogyParams {
   [key: string]: unknown;
 }
 
-/**
- * D1. The bounded genealogy graph around one lot or serial.
- *
- * The server caps depth, breadth and total nodes and reports in
- * `truncation` whether those caps cut the answer short — so a partial recall
- * trace can never be rendered as a complete one. The caps travel in the query
- * key, because a graph walked to depth 2 is a different answer from the same
- * lot walked to depth 6.
- */
 export function useLotGenealogy(
   params: GenealogyParams,
   options?: Omit<UseQueryOptions<GenealogyGraph, Error>, "queryKey" | "queryFn">,
@@ -117,19 +107,6 @@ export function useLotGenealogy(
   });
 }
 
-/**
- * The same walk as a CSV, one row per edge.
- *
- * Not a `useQuery`: the response is a file, and a recall trace held in the query
- * cache would keep every byte of it for the rest of the session. It takes the
- * caps the reader is looking at, so the file is the screen rather than a second,
- * differently-bounded answer.
- *
- * `X-Genealogy-Complete` and `X-Genealogy-Truncation-Reasons` ride on the
- * response and are not readable through a Blob. They do not need to be: the JSON
- * walk behind the same filters is already on screen and says so in the
- * truncation banner above this control.
- */
 export async function downloadGenealogyCsv(params: GenealogyParams): Promise<void> {
   const blob = await apiClient.download("/inventory/traceability/genealogy/export", {
     lotId: params.lotId,

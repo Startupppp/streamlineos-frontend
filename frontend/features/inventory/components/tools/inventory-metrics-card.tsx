@@ -9,14 +9,6 @@ import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useInventoryMetrics, useRunExpirySweep } from "@/hooks/api/inventory/system-health";
 
-/**
- * The six numbers that say whether inventory is quietly broken.
- *
- * `GET /inventory/metrics` had no caller, so a dead outbox — the state where an
- * inventory webhook has been retried to exhaustion and dropped — showed up
- * nowhere in the product. Neither did a negative stock level, which is only
- * legitimate when the workspace has turned negative stock on.
- */
 export function InventoryMetricsCard() {
   const { data, isLoading, isError, error, refetch } = useInventoryMetrics();
   const sweep = useRunExpirySweep();

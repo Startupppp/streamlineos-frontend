@@ -153,11 +153,6 @@ export default function NewPurchaseOrderPage() {
     </div>
   );
 
-  // G8. A create form is not a list, so it has no empty state — but it can
-  // still be opened by somebody who may not save, and letting them fill it
-  // in before the server refuses is the worst version of that. Placed after
-  // every hook: an early return above one makes hook order depend on a
-  // permission, which React forbids.
   if (!canCreate) {
     return (
       <PageWrapper title="New Purchase Order">

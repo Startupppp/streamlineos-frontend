@@ -67,7 +67,6 @@ interface UpdateTerritoryInput {
 
 export interface TerritoryPreviewResult {
   matchedTerritory: Territory | null;
-  /** Raw `crmPersonId` values — for logic only. Render `assignedRepNames` (§15). */
   assignedReps: number[];
   assignedRepNames: string[];
 }

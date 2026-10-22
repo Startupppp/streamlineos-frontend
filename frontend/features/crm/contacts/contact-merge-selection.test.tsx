@@ -44,13 +44,6 @@ function selectionOf(contacts: Contact[]) {
 
 describe("useContactMergeSelection", () => {
   it("produces a party-grain pair once two contacts are picked", () => {
-    /**
-     * The screens speak contact ids; the merge does not. A contact is one row in
-     * `contact_party_map` — a number aliasing a `business_parties` row — and the
-     * contact-grain merge endpoint that took those numbers is gone, because it
-     * soft-deleted the party behind them without moving its identifiers, roles
-     * or employees and left nothing to undo.
-     */
     const { result } = selectionOf([ANA, ANNA]);
 
     act(() => result.current.toggle(1));
@@ -64,13 +57,6 @@ describe("useContactMergeSelection", () => {
   });
 
   it("offers nothing when the two rows are aliases of one record", () => {
-    /**
-     * `contact_party_map.party_id` is not unique: a merge re-points the loser's
-     * row onto the survivor so an old bookmark still resolves. The list read
-     * shows only the canonical alias, but a stale page can still hold both — and
-     * the server would refuse this as merging a party with itself, so the button
-     * should not be there to press.
-     */
     const twin = contact(3, "party-ana", "Ana Rao");
     const { result } = selectionOf([ANA, twin]);
 
@@ -82,11 +68,6 @@ describe("useContactMergeSelection", () => {
   });
 
   it("offers nothing for a row cached before the party id existed", () => {
-    /**
-     * Rather than sending an empty `partyId` and merging whichever two records
-     * the server resolves that to. A stale cache is a refetch away; merging the
-     * wrong pair is a revert away at best.
-     */
     const legacy = { ...ANNA, partyId: "" } as Contact;
     const { result } = selectionOf([ANA, legacy]);
 

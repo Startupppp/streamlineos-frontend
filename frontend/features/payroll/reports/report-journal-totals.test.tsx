@@ -5,23 +5,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ReportJournal } from "./report-journal";
 
-/**
- * The journal footer prints a balance verdict on a payroll period.
- *
- * `JournalReport` had been narrowed to `{ lines, unmappedCodes }`, so the six
- * fields the server actually returns were invisible to this component and it
- * re-derived the two totals itself — `lines.reduce((s, l) => s + Number(l.debit))`
- * in float, over the line set that had survived the server's own filtering. Two
- * consequences, both of which these tests pin:
- *
- *   1. The footer answered "does the table on screen add up", not "does the
- *      journal balance". The server sums every line in integer paise; the client
- *      summed what it was handed. When those differ the client wins the argument
- *      and prints its own verdict.
- *   2. `provisional` — the server's flag for "the run behind these numbers is
- *      not locked, they can still move" — was dropped on the floor, so a
- *      provisional journal rendered an unqualified "Balanced".
- */
 
 jest.mock("@/hooks/api/payroll/reports", () => ({
   usePayrollJournal: jest.fn(),
@@ -29,8 +12,6 @@ jest.mock("@/hooks/api/payroll/reports", () => ({
 jest.mock("@/hooks/api/payroll/journal-batches", () => ({
   usePeriodReconciliation: jest.fn(),
 }));
-// The two sheets are separate surfaces with their own data; stubbing them keeps
-// this suite pointed at the footer.
 jest.mock("./accounting-mappings-sheet", () => ({
   AccountingMappingsSheet: () => null,
 }));
@@ -98,8 +79,6 @@ describe("the payroll journal footer reports the server's totals", () => {
     );
     render(<ReportJournal month="2026-01" />);
 
-    // The single row carries debit 1000. A footer reading ₹1,000.00 is the
-    // client re-deriving the total from the rows it happens to hold.
     const footer = screen.getByText(/total debit/i).textContent ?? "";
     expect(footer).toMatch(/2,50,000\.00/);
     expect(footer).not.toMatch(/₹1,000\.00/);

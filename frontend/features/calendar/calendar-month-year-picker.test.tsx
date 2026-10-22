@@ -1,14 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { CalendarMonthYearPicker } from "./calendar-month-year-picker";
 
-/**
- * Day and week navigation moved the period while the live region still read
- * "Showing September 2026". The caller owns the granularity of `title`; this
- * component owns the announcement, and an announcement only reaches a reader
- * when the SAME live element's text changes. A region re-created per title is
- * a new node with no previous value, so assistive tech has nothing to compare
- * and stays silent — hence the identity assertion below.
- */
 describe("CalendarMonthYearPicker — period announcement", () => {
   it("announces the new period when the title changes", () => {
     const { rerender } = render(

@@ -1,6 +1,5 @@
 import { z } from "zod";
 
-/** `POST /gdpr/export/me` and `POST /gdpr/export/:personId` — `exportResultSchema`. */
 export const gdprExportResultContract = z.object({
   exportedAt: z.string(),
   subject: z.object({
@@ -17,7 +16,6 @@ export const gdprExportResultContract = z.object({
 });
 export type GdprExportResult = z.infer<typeof gdprExportResultContract>;
 
-/** `exportJobSchema` — create, status. `pending` and `running` are the only non-terminal states. */
 export const gdprExportJobContract = z.object({
   id: z.string(),
   status: z.string(),
@@ -33,7 +31,6 @@ export const gdprExportJobContract = z.object({
 });
 export type GdprExportJob = z.infer<typeof gdprExportJobContract>;
 
-/** `POST /gdpr/rectification/me` — `rectifyProfileSchema`. */
 export const gdprRectificationContract = z.object({
   requestId: z.number().int(),
   field: z.string(),
@@ -48,7 +45,6 @@ const storageWork = z.object({
   errors: z.number().int().optional(),
 });
 
-/** `POST /gdpr/erasure/:subjectId` — `erasureResultSchema`. */
 export const gdprErasureContract = z.discriminatedUnion("blocked", [
   z.object({
     blocked: z.literal(true),

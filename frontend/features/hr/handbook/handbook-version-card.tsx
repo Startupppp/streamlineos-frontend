@@ -29,7 +29,6 @@ interface HandbookVersionCardProps {
   onEdit: (version: HandbookVersion) => void;
   onDelete: (id: number) => void;
   isUpdating: boolean;
-  /** hr:handbook:manage — PATCH/DELETE /hr/handbook/:id. */
   canManage: boolean;
 }
 

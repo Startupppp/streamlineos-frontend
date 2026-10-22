@@ -46,7 +46,6 @@ interface OrgCatalogTableProps<T extends CatalogItem> {
   items: T[] | undefined;
   isLoading: boolean;
   isError: boolean;
-  /** Passed through to `getErrorMessage`, so the failure names itself (FE-41). */
   error?: unknown;
   onRetry: () => void;
   canManage: boolean;
@@ -200,10 +199,6 @@ function getCatalogRowKey(item: CatalogItem): number {
   return item.id;
 }
 
-/**
- * A row's own component so the edit and delete handlers are named rather than
- * arrows closed over the row inside a `cell` callback (FE-69).
- */
 function CatalogRowActions<T extends CatalogItem>({
   item,
   onEdit,
@@ -276,7 +271,6 @@ export function OrgCatalogTable<T extends CatalogItem>({
     setEditing(item);
     setUpsertOpen(true);
   }, []);
-  // Delete used to fire from the menu with no confirmation (FE-83).
   const [pendingDelete, setPendingDelete] = useState<T | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const handleDeleteClick = useCallback((item: T) => setPendingDelete(item), []);
@@ -309,13 +303,6 @@ export function OrgCatalogTable<T extends CatalogItem>({
   );
   const filtersActive = search.trim().length > 0;
 
-  /**
-   * Ticket 05. Position Control is the reference for this surface, so the rows
-   * are a `DataTable` with the same toolbar shape (filter, count, one primary
-   * action on the right) rather than the bespoke divided card this used to
-   * render. The table also bounds what is mounted: the catalog reads are
-   * unpaginated, and the old `filtered.map` mounted every row (FE-112).
-   */
   const columns: DataTableColumn<T>[] = useMemo(() => {
     const base: DataTableColumn<T>[] = [
       {

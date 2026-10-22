@@ -1,12 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * One of the platform's built-in transactional emails, as data.
- *
- * The platform ships these; an organisation previews them and sends itself a
- * test, never edits one here, so the form is empty. `version` is declared so
- * the column exists; the surface draws it as `v3` through `cells`.
- */
 export const EMAIL_TEMPLATE_PREVIEW_LAYOUT: RecordLayout = {
   key: "notifications:email-template-preview",
   singular: "Email template",

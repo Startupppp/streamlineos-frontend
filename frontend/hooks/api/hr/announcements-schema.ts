@@ -1,16 +1,5 @@
 import { z } from "zod";
 
-/**
- * Both were `z.string()`, and the consumer type restated them as bare `string`
- * — WIDER than the write path, which validates
- * `z.enum(["ALL","DEPARTMENT","BRANCH","ROLE"])` and
- * `z.enum(["DRAFT","SCHEDULED","PUBLISHED","EXPIRED"])` in
- * `backend/src/modules/organization/setup/dto/announcements.schemas.ts` on every
- * create and update. A `string` here made `HrAnnouncement["targetType"]` equal
- * `string`, so `Record<HrAnnouncement["targetType"], ReactNode>` in the card
- * degraded to `Record<string, ReactNode>` and a narrowing cast against it
- * checked nothing at all.
- */
 export const announcementTargetTypeContract = z.enum([
   "ALL",
   "DEPARTMENT",

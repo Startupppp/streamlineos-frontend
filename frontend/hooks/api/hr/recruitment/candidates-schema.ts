@@ -32,13 +32,6 @@ export const candidateSchema = z.object({
   bgvNotes: z.string().nullable(),
   bgvInitiatedAt: z.string().nullable(),
   bgvCompletedAt: z.string().nullable(),
-  /**
-   * Why this candidate was rejected. Optional as well as nullable because the
-   * columns arrive with backend migration 1185: a frontend pointed at a
-   * database that has not applied it would otherwise fail this contract and
-   * render the whole candidate list as an error, which looks nothing like the
-   * schema drift it actually is.
-   */
   rejectionReason: z.enum(REJECTION_REASONS).nullable().optional(),
   rejectionNote: z.string().nullable().optional(),
   sourceUrl: z.string().nullable(),
@@ -54,11 +47,6 @@ export const candidateListResponseSchema = z.object({
   statusCounts: z.record(z.string(), z.number()),
 });
 
-/**
- * Duplicate detection projects eight columns, not the whole candidate row
- * (`recruitment-candidates.service.ts` `findDuplicates`), so this deliberately
- * does not reuse `candidateSchema`.
- */
 export const candidateDuplicateGroupSchema = z.object({
   key: z.string(),
   candidates: z.array(
@@ -94,19 +82,6 @@ const jobApplicationSchema = z.object({
   notes: z.string().nullable(),
   screeningAnswers: z.record(z.string(), z.string()).nullable(),
   status: z.enum(["APPLIED", "SHORTLISTED", "INTERVIEWING", "OFFERED", "ACCEPTED", "REJECTED", "WITHDRAWN"]).nullable(),
-  /**
-   * What the candidate consented to, and when that consent expires.
-   *
-   * `consentPurpose` is a plain string rather than an enum on purpose: the
-   * closed list lives in the backend and is enforced by a CHECK there, and a
-   * second enum here would reject a purpose the backend legitimately added and
-   * blank the whole application row. Unrecognised values are labelled as
-   * unrecognised instead, which is the honest rendering.
-   *
-   * All four are null on every application created before backend migration
-   * 1187. That is left visible rather than defaulted — an unknown retention
-   * period must not render as though somebody agreed to one.
-   */
   consentAt: z.string().nullable().optional(),
   consentPurpose: z.string().nullable().optional(),
   consentVersion: z.string().nullable().optional(),
@@ -233,14 +208,8 @@ export const compositeScoreResultSchema = z.object({
 export const pipelineStageSchema = z.object({
   stage: z.enum(["NEW", "SCREENING", "INTERVIEW", "OFFER", "HIRED", "REJECTED"]),
   total: z.number().int(),
-  /**
-   * How many of `total` this response actually carries, and whether the column
-   * is cut. The endpoint caps each stage, so a board that printed `total` over
-   * a short list was claiming to show candidates it had never sent.
-   */
   shown: z.number().int(),
   truncated: z.boolean(),
-  /** Present when the open jobs agree on a round name for this column. */
   roundLabel: z.string().nullable().optional(),
   candidates: z.array(
     z.object({
@@ -306,14 +275,6 @@ export const recruitmentAnalyticsSchema = z.object({
   totalHired: z.number().int(),
 });
 
-/**
- * What came back from erasing a candidate.
- *
- * `vault` is a discriminated union, not a flag, because the two cases are
- * different claims about a real person's data: CLEARED means the object store
- * accepted every delete, NOT_CONFIRMED means at least one résumé may still
- * exist. The UI must never collapse them into one "Deleted" toast.
- */
 export const candidateErasureContract = z.object({
   candidateId: z.number().int(),
   status: z.enum(["ERASED", "VAULT_NOT_CONFIRMED"]),

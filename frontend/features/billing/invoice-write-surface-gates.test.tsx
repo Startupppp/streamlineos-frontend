@@ -1,22 +1,3 @@
-/**
- * The two invoice write surfaces the first gating pass missed.
- *
- * `invoices-client.tsx` and `invoice-detail-actions.tsx` were gated, but the
- * dialogs they open were not — and neither dialog is mounted conditionally:
- *
- *   CreateInvoiceDialog — mounted unconditionally by `invoices-client.tsx`,
- *     rendered a full create form with a Create Invoice submit for any caller.
- *   InvoiceLineItems    — mounted unconditionally by `invoice-detail-content.tsx`,
- *     rendered the Edit Invoice dialog with a Save Changes button that rewrites
- *     line items, GST rate and totals.
- *
- * `useCreateInvoice` / `useUpdateInvoice` go through `useAuthorizedMutation`,
- * so submitting either without the key does not reach the server — it throws
- * "Missing permission: …" and toasts. That is a late, confusing failure, not a
- * gate: the control must not be offered in the first place. Each is pinned to
- * the key its own route declares (POST /invoices -> accounting:create,
- * PATCH /invoices/{invoiceId} -> accounting:update).
- */
 import { render as rtlRender, screen } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CreateInvoiceDialog } from "./create-invoice-dialog";

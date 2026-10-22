@@ -1,17 +1,5 @@
 import { z } from "zod";
 
-/**
- * Only events a backend service actually dispatches through
- * `WebhooksDispatchService`. Derived by diffing this list against every
- * `dispatch(orgId, "<event>")` call site — the previous catalog offered 17
- * events that no dispatcher ever emitted (all HR, inventory and invoicing
- * entries, plus `deal.created`, `deal.stage_changed`, `lead.assigned`,
- * `lead.converted`, `lead.status_changed`), so subscribing to them was a silent
- * no-op, while 8 events that DO fire could not be selected at all.
- *
- * Adding an entry here without a dispatcher recreates that bug. If you add a
- * `dispatch()` call, add it here in the same change.
- */
 export const AVAILABLE_EVENTS = [
   { id: "lead.created", label: "Lead Created" },
   { id: "lead.updated", label: "Lead Updated" },

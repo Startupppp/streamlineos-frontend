@@ -1,7 +1,6 @@
 ﻿"use client";
 
 import {
-  queryOptions,
   useInfiniteQuery,
   useQuery,
   useQueryClient,
@@ -40,6 +39,10 @@ import type {
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useHydratedProject } from "@/features/build/project-detail/project-hydration-context";
 import { projectReadErrorReachesBoundary } from "@/lib/query-error-policy";
+import {
+  projectsListQueryOptions,
+  projectDetailQueryOptions,
+} from "./projects-read-options";
 
 export {
   useAddProjectMember,
@@ -82,6 +85,13 @@ export function useProjects(
   const canView = useCan("build:view");
   return useQuery<ProjectListResponse>({
     ...projectsListQueryOptions(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectListResponse>(
+        "/build",
+        filters ? { ...filters } : undefined,
+        signal,
+        projectListPageLazy,
+      ),
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -134,6 +144,13 @@ export function useProject(
   const hydratedProject = useHydratedProject(projectId);
   return useQuery<ProjectWithDetails | null>({
     ...projectDetailQueryOptions(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectWithDetails | null>(
+        `/build/${projectId}`,
+        undefined,
+        signal,
+        projectDetailLazy,
+      ),
     initialData: hydratedProject,
     throwOnError: projectReadErrorReachesBoundary,
     ...options,
@@ -391,32 +408,3 @@ export function useCheckProjectKeyAvailable() {
     );
 }
 
-export function projectsListQueryOptions(filters?: ProjectFilters) {
-  return queryOptions<ProjectListResponse>({
-    queryKey: buildWorkQueryKeys.projects.list(
-      filters ? { ...filters } : undefined,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProjectListResponse>(
-        "/build",
-        filters ? { ...filters } : undefined,
-        signal,
-        projectListPageLazy,
-      ),
-    staleTime: 30_000,
-  });
-}
-
-export function projectDetailQueryOptions(projectId: number) {
-  return queryOptions<ProjectWithDetails | null>({
-    queryKey: buildWorkQueryKeys.projects.detail(projectId),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProjectWithDetails | null>(
-        `/build/${projectId}`,
-        undefined,
-        signal,
-        projectDetailLazy,
-      ),
-    staleTime: 30_000,
-  });
-}

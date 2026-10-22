@@ -24,11 +24,6 @@ import { useMotionVariants } from "@/lib/motion-variants";
 
 type OtpValues = { emailOtp: string };
 
-/**
- * HRMS-026: `maxLength={6}` let the browser cut a pasted " 123456" or "123 456"
- * to six characters before anything saw it, silently dropping the last digit.
- * Keep the digits, then cap at six.
- */
 function otpDigits(raw: string): string {
   return raw.replace(/\D/g, "").slice(0, 6);
 }

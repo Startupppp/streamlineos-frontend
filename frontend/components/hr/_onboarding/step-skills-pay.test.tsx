@@ -69,7 +69,6 @@ describe("the Skills & Pay step's salary field", () => {
 
     const input = salaryInput();
     expect(input.value).toBe("");
-    // 25000 is a hint about the shape of the answer, not the answer.
     expect(input).toHaveAttribute("placeholder", "25000");
   });
 

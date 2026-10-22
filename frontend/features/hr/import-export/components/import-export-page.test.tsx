@@ -14,7 +14,6 @@ jest.mock("@/components/hr/reporting-lines/policy-missing-banner", () => ({ Poli
 describe("HR import — employees entity (HRM-15 §7.4)", () => {
   it("documents the canonical reporting columns, same names as bulk onboarding", async () => {
     render(<ImportExportPage />);
-    // Employees is the first import card.
     const [employeesImport] = screen.getAllByRole("button", { name: /Import CSV/ });
     if (!employeesImport) throw new Error("no import card rendered");
     await userEvent.click(employeesImport);

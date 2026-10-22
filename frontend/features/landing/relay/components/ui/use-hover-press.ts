@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-/** Hover + press state for pointer devices that can actually hover. */
 export const useHoverPress = () => {
   const [canHover, setCanHover] = useState(false);
   const [hovered, setHovered] = useState(false);

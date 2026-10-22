@@ -1,14 +1,5 @@
 import type { RecordLayout } from "../layout";
 
-/**
- * A filed data-subject request, as data.
- *
- * Filed by running an export or erasure, never typed in as a record, so the
- * form is empty: running one is `SubjectRequestDialog`'s job. `dueBy` is
- * declared so the column exists; the surface draws it through `cells`,
- * because it is a calendar day and a `date` field would parse it as UTC
- * midnight and show the day before west of Greenwich.
- */
 export const SUBJECT_REQUEST_LAYOUT: RecordLayout = {
   key: "settings:privacy-subject-request",
   singular: "Subject request",

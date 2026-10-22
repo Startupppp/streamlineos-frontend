@@ -87,12 +87,6 @@ export function useCreateInvoiceDraft() {
   });
 }
 
-/**
- * Reverses `useCreateInvoiceDraft`: puts entries stuck at `INVOICE_DRAFTED`
- * back to billable when the draft never became a real invoice — the fix for
- * a stranded entry `entries.service.ts`'s `voidEntry` otherwise refuses to
- * touch (it blocks voiding anything already drafted or invoiced).
- */
 export function useReleaseInvoiceDraft() {
   const qc = useQueryClient();
   return useAuthorizedMutation("timesheets:billing:invoice", {

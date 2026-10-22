@@ -1,9 +1,3 @@
-/**
- * `channel.members` rides the channel payload with no cursor and no cap, so the
- * info panel mounted one row per member of the channel — an org-wide channel
- * put its whole headcount into a 320px column. The two groups are windowed
- * independently, and each row still carries its position in its own group.
- */
 import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChannelMembersSection } from "./channel-members-section";

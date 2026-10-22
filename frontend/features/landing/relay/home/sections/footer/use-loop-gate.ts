@@ -2,11 +2,6 @@
 
 import { useEffect, useRef, useState } from "react";
 
-/**
- * Gate for the footer's ambient loops: `inView` follows an
- * IntersectionObserver on the returned ref, `reduced` mirrors
- * `prefers-reduced-motion`. Loops run only while `inView && !reduced`.
- */
 export const useLoopGate = <T extends Element>() => {
   const ref = useRef<T>(null);
   const [inView, setInView] = useState(false);

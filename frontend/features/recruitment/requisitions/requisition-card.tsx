@@ -35,16 +35,6 @@ export const PRIORITY_STYLES: Record<string, string> = {
   URGENT: "bg-status-danger-surface text-status-danger-ink border-status-danger-rule",
 };
 
-/**
- * The five statuses a requisition can actually hold.
- *
- * `PUBLISHED` and `CLOSED` were in here and are not in the backend's
- * `REQUISITION_STATUSES` — a requisition is never published, a job posting is,
- * and there is no CLOSED transition. `FILLED` was missing, which is the one a
- * requisition reaches on its own: the last opening on its job going means the
- * hire marks it FILLED, and that outcome was falling through this map onto the
- * DRAFT-shaped fallback.
- */
 export const STATUS_STYLES: Record<string, { badge: string; label: string; dot: string }> = {
   DRAFT: { badge: "bg-muted text-muted-foreground border-border", label: "Draft", dot: "bg-muted-foreground/50" },
   PENDING_APPROVAL: { badge: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule", label: "Pending Approval", dot: "bg-status-warning-fill" },

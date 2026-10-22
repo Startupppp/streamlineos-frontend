@@ -19,7 +19,6 @@ export const reportingIssueSchema = z.object({
 export type ReportingIssueInput = z.input<typeof reportingIssueSchema>;
 export type ReportingIssueValues = z.output<typeof reportingIssueSchema>;
 
-/** Blank optional fields are omitted, never sent as "" (the DTO is strict). */
 export function toCreateRequestPayload(values: ReportingIssueValues): CreateReportingManagerRequestInput {
   return {
     reason: values.reason,
@@ -28,7 +27,6 @@ export function toCreateRequestPayload(values: ReportingIssueValues): CreateRepo
   };
 }
 
-/** CONTRACT Addendum 2: the reply to "more info needed" is 20..1000 like the original reason. */
 export const respondSchema = z.object({ reason: employeeReason });
 
 export type RespondInput = z.input<typeof respondSchema>;

@@ -27,7 +27,6 @@ import { CRM_MCP_SCOPE_GROUPS, resolveCrmMcpScopes } from "./mcp-scopes";
 
 type DialogPhase = "form" | "reveal";
 
-/** Ninety days, matching the layout's middle expiry option. */
 const DEFAULT_EXPIRY_DAYS = 90;
 
 interface CrmMcpTokenDialogProps {
@@ -35,21 +34,6 @@ interface CrmMcpTokenDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-/**
- * Issuing an agent token, in two phases.
- *
- * The first is a generated form: three fields, described by `MCP_TOKEN_LAYOUT`,
- * with the scope options and their explanations filled in from
- * `mcp-scopes.ts` — which is where the groups live beside the permission keys
- * they resolve to, so this screen carries no second copy of a security decision.
- * The generated resolver validates the same description that rendered the
- * controls, which is what retired the hand-written `mcp-token-schema.ts` beside
- * it: two statements of what a token is could disagree, and one cannot.
- *
- * The second phase is not a record and is not described. The secret is shown
- * once, is not recoverable, and the only thing to do with it is copy it — there
- * is no field here, only a value and a warning.
- */
 export function CrmMcpTokenDialog({ open, onOpenChange }: CrmMcpTokenDialogProps) {
   const [phase, setPhase] = useState<DialogPhase>("form");
   const [created, setCreated] = useState<CreateAgentTokenResponse | null>(null);
@@ -112,11 +96,7 @@ export function CrmMcpTokenDialog({ open, onOpenChange }: CrmMcpTokenDialogProps
                 Scope this token to the CRM tools the agent should be allowed to use.
               </DialogDescription>
             </DialogHeader>
-            {/*
-              Keyed on the dialog's own state so a closed and reopened dialog
-              starts blank rather than holding the last agent's name, which is
-              how the form used to be reset by hand.
-            */}
+            
             <RecordForm
               key={open ? "open" : "closed"}
               layout={layout}

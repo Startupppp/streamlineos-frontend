@@ -107,8 +107,6 @@ describe("EmployeeHeaderCard name", () => {
 
     expect(screen.getAllByText("Ada B. Lovelace")).toHaveLength(1);
     expect(screen.getAllByRole("heading", { level: 2 })).toHaveLength(1);
-    // The composed first+last reading, which used to win here and to render a
-    // second time as the page title above the card.
     expect(screen.queryByText("Ada Lovelace")).not.toBeInTheDocument();
   });
 

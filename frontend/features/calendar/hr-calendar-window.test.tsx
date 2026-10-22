@@ -84,12 +84,6 @@ jest.mock("@tanstack/react-query", () => {
   };
 });
 
-/**
- * The window `calendar-view.tsx` hands every source: three whole months.
- * Written out rather than imported because the assertion is about what this
- * caller must survive, and if that window ever changes this is where the
- * conversation belongs.
- */
 function viewWindow(anchor: Date): { rangeStart: Date; rangeEnd: Date } {
   return {
     rangeStart: startOfMonth(subMonths(anchor, 1)),
@@ -97,12 +91,6 @@ function viewWindow(anchor: Date): { rangeStart: Date; rangeEnd: Date } {
   };
 }
 
-/**
- * `HrCalendarService.getEvents` measures the request exactly this way:
- * `Math.ceil((new Date(to) - new Date(from)) / 86_400_000)`, on the two
- * `YYYY-MM-DD` strings the client sends — so the check has to run on the
- * formatted strings, not on the Date objects behind them.
- */
 function backendDiffDays(from: string, to: string): number {
   return Math.ceil(
     (new Date(to).getTime() - new Date(from).getTime()) / (1000 * 60 * 60 * 24),

@@ -16,22 +16,11 @@ function isoDaysFromNow(days: number): string {
 }
 
 interface Props {
-  /** The people who must all attend, by user id. */
   panelUserIds: string[];
   durationMinutes?: number;
-  /** Called with the ISO start when a recruiter picks one. */
   onPick?: (startIso: string) => void;
 }
 
-/**
- * Times the whole panel is free, over the next fortnight.
- *
- * The banner under the results is the part that matters. With no calendar
- * connected these slots avoid interviews already in StreamlineOS and nothing
- * else — an interviewer's own diary is invisible — and a recruiter who reads
- * "free" as "confirmed free" will double-book somebody and blame the product.
- * So the source of the answer is stated every time, not only when it is bad.
- */
 export function SuggestSlotsPanel({ panelUserIds, durationMinutes = 60, onPick }: Props) {
   const suggest = useSuggestSlots();
   const [result, setResult] = useState<SuggestedSlots | null>(null);
@@ -94,11 +83,7 @@ export function SuggestSlotsPanel({ panelUserIds, durationMinutes = 60, onPick }
               </div>
             )}
 
-            {/*
-              Stated on every result, not only the blocked one. "These avoid
-              interviews in StreamlineOS" is a smaller claim than "everyone is
-              free", and the difference is a double-booked interviewer.
-            */}
+            
             <p className="text-xs text-muted-foreground">
               {result.source === "calendar"
                 ? "Checked against each interviewer's connected calendar."

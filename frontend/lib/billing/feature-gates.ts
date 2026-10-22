@@ -1,10 +1,3 @@
-/**
- * Frontend plan feature gates — MUST stay aligned with backend
- * `src/modules/ai/billing/feature-gates.ts`. Backend `requireFeature` is the
- * enforcement authority; this matrix is only for upgrade CTAs and UI hiding.
- *
- * Consistency is covered by `lib/__tests__/feature-gates-consistency.test.ts`.
- */
 
 export const PLANS = ["FREE", "STARTER", "PROFESSIONAL", "ENTERPRISE"] as const;
 export type Plan = (typeof PLANS)[number];
@@ -38,7 +31,6 @@ const FEATURES = [
   "branding.custom",
   "rbac.custom-roles",
   "audit-log.full",
-  // KB / portal extras (frontend UX only; server still enforces PLAN_FEATURE_FLAGS.kbPublicSharing)
   "kb.public-portal",
   "kb.ai",
   "kb.multi-space",
@@ -100,7 +92,6 @@ export function minPlanFor(feature: Feature): Plan | null {
   return null;
 }
 
-/** Human labels for upgrade messages. */
 export const PLAN_DISPLAY_NAMES: Record<Plan, string> = {
   FREE: "Free",
   STARTER: "Starter",

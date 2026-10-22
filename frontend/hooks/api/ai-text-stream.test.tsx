@@ -8,15 +8,6 @@ if (typeof globalThis.TextEncoder === "undefined")
 
 installAbortSignalPolyfill();
 
-/**
- * Drives the REAL `lib/api-client` with a mocked `global.fetch`, because the defect this
- * client exists to prevent lived between the hook and `authedFetch`: a signal placed in
- * `init` is overwritten, so a test that mocks `authedFetch` and reads `init.signal` passes
- * while every cancel in the app is a no-op.
- *
- * The route under test is a NON-chat `/stream` route, since the point of the extraction is
- * that the other nine routes get the same client rather than a second copy of the loop.
- */
 
 const JD_PATH = "/ai/generate-jd/stream";
 

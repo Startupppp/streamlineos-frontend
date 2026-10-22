@@ -76,12 +76,6 @@ jest.mock("@/components/ui/alert-dialog", () => {
   return { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction };
 });
 
-/**
- * ConfirmDialogProps is `trigger` XOR `{ open, onOpenChange }`, so a
- * `Partial<>` of the whole union erases the discriminant and nothing can be
- * spread onto it. Every override below is a base prop, so that is what the
- * parameter is.
- */
 type ConfirmDialogBaseProps = Omit<
   React.ComponentProps<typeof ConfirmDialog>,
   "trigger" | "open" | "onOpenChange"

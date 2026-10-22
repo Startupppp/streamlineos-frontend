@@ -36,8 +36,6 @@ export function InvoiceDetailActions({
   onVoid,
   onDownload,
 }: InvoiceDetailActionsProps) {
-  // Each key is the one its own route declares: PATCH /invoices/:id -> accounting:update,
-  // POST /invoices/:id/payments -> accounting:create, POST /invoices/:id/void -> accounting:manage.
   const canUpdate = useCan("accounting:update");
   const canCreate = useCan("accounting:create");
   const canVoid = useCan("accounting:manage");

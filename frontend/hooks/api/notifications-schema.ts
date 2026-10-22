@@ -51,12 +51,10 @@ const notificationItemContract = z
   })
   .strict();
 
-/** Keyset page of notifications — `notificationListResponseSchema`. */
 export const notificationListContract = idCursorPageContract(
   notificationItemContract,
 );
 
-/** Unread count — `notificationCountResponseSchema`. */
 export const notificationCountContract = z
   .object({ count: z.number().int().nonnegative() })
   .strict();
@@ -65,12 +63,10 @@ export const notificationStreamTokenContract = z
   .object({ token: z.string().min(1) })
   .strict();
 
-/** Generic mutation ack — `notificationSuccessResponseSchema`. */
 export const notificationAckContract = z
   .object({ success: z.literal(true) })
   .strict();
 
-/** Provider row — `notificationProviderRowSchema`. */
 export const notificationProviderContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -90,12 +86,10 @@ export const notificationProviderContract = z.object({
   hasCredentials: z.boolean(),
 });
 
-/** `notificationProvidersListSchema` */
 export const notificationProvidersListContract = z.array(
   notificationProviderContract,
 );
 
-/** `notificationProviderTestSchema` */
 export const notificationProviderTestContract = z.object({
   status: z.enum(["SENT", "FAILED"]),
   sandbox: z.boolean(),
@@ -130,12 +124,10 @@ const notificationEventDefinitionBase = z.object({
   overridden: z.boolean(),
 });
 
-/** `notificationEventsListSchema` */
 export const notificationEventsListContract = z.array(
   notificationEventDefinitionBase,
 );
 
-/** `notificationEventDefinitionSchema` (single row update) */
 export const notificationEventDefinitionContract =
   notificationEventDefinitionBase;
 
@@ -160,13 +152,10 @@ const notificationPolicyBase = z.object({
   updatedAt: z.string(),
 });
 
-/** `notificationPolicyListSchema` */
 export const notificationPoliciesListContract = z.array(notificationPolicyBase);
 
-/** `notificationPolicyRowSchema` */
 export const notificationPolicyRowContract = notificationPolicyBase;
 
-/** `notificationPreferenceSchema` */
 export const notificationPreferenceContract = z.object({
   id: z.number().int().optional(),
   userId: z.string(),
@@ -207,13 +196,10 @@ const suppressionBase = z.object({
   createdAt: z.string(),
 });
 
-/** `notificationSuppressionsListSchema` */
 export const suppressionsListContract = z.array(suppressionBase);
 
-/** `suppressionRowSchema` */
 export const suppressionRowContract = suppressionBase;
 
-/** `notificationSuccessSchema` */
 export const notificationSuccessContract = z.object({
   success: z.literal(true),
 });
@@ -228,7 +214,6 @@ export const notificationEmitContract = z.object({
   failedRecipients: z.number().int(),
 });
 
-/** `notificationTemplateRowSchema` */
 export const notificationTemplateContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -251,7 +236,6 @@ export const notificationTemplateContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `notificationTemplatesListSchema` — offset page of templates. */
 export const notificationTemplatesListContract = z.object({
   items: z.array(notificationTemplateContract),
   page: z.number().int(),
@@ -260,7 +244,6 @@ export const notificationTemplatesListContract = z.object({
   totalPages: z.number().int(),
 });
 
-/** `templatePreviewSchema` */
 export const templatePreviewContract = z.object({
   subject: z.string().nullable(),
   body: z.string(),
@@ -275,7 +258,6 @@ const broadcastAudienceSchema = z.object({
   userIds: z.array(z.string()).optional(),
 });
 
-/** `broadcastRowSchema` */
 export const broadcastRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -296,16 +278,13 @@ export const broadcastRowContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `broadcastListResponseSchema` — cursor page with integer cursor. */
 export const broadcastListContract = z.object({
   items: z.array(broadcastRowContract),
   nextCursor: z.number().int().optional(),
 });
 
-/** `broadcastSuccessSchema` */
 export const broadcastSuccessContract = z.object({ success: z.literal(true) });
 
-/** `notificationPreferenceRuleRowSchema` — one row from GET /notification-preferences/rules. */
 export const preferenceRuleRowContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -317,13 +296,10 @@ export const preferenceRuleRowContract = z.object({
   updatedAt: z.string(),
 });
 
-/** `notificationPreferenceRulesListSchema` */
 export const preferenceRulesListContract = z.array(preferenceRuleRowContract);
 
-/** `preferenceRuleOkSchema` */
 export const preferenceRuleOkContract = z.object({ ok: z.literal(true) });
 
-/** One item from the user-facing GET /notification-preferences/events catalog. */
 export const preferenceEventCatalogItemContract = z.object({
   eventKey: z.string(),
   displayName: z.string(),
@@ -338,12 +314,10 @@ export const preferenceEventCatalogItemContract = z.object({
   userPreference: z.unknown().nullable(),
 });
 
-/** `notificationEventCatalogSchema` (user-facing) */
 export const preferenceEventCatalogContract = z.array(
   preferenceEventCatalogItemContract,
 );
 
-/** `consentRowSchema` — COMP-003, the record of agreement SMS/WhatsApp routing requires. */
 export const consentRowContract = z.object({
   channel: z.string(),
   destination: z.string(),
@@ -357,7 +331,6 @@ export const consentRowContract = z.object({
 export type NotificationConsent = z.infer<typeof consentRowContract>;
 export const consentsListContract = z.array(consentRowContract);
 
-/** `templateTestSendSchema`. */
 export const templateTestSendContract = z.object({
   success: z.literal(true),
   recipientId: z.string(),
@@ -367,7 +340,6 @@ export const templateTestSendContract = z.object({
   sentAt: z.string(),
 });
 
-/** `emailTemplatePreviewResponseSchema` — every built-in email, rendered with sample data. */
 export const emailTemplatePreviewsContract = z.array(
   z.object({
     id: z.string(),
@@ -382,7 +354,6 @@ export const emailTemplatePreviewsContract = z.array(
 );
 export type EmailTemplatePreview = z.infer<typeof emailTemplatePreviewsContract>[number];
 
-/** `emailTemplateTestResponseSchema`. */
 export const emailTemplateTestContract = z.object({
   sent: z.literal(true),
   to: z.string(),

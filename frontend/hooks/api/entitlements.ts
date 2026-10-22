@@ -21,7 +21,6 @@ export function signalEntitlementsInvalidation(orgId: string): void {
   } catch {}
 }
 
-/** Deferred: the product switcher in the shell header imports this hook. */
 const entitlementsResponseContract = lazyContract(() =>
   import("@/hooks/api/entitlements-schema").then((m) => m.entitlementsContract),
 );

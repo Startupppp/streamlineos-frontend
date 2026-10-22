@@ -8,17 +8,8 @@ function secondaryNote(slot: number, cap: number): string {
   return "Optional dotted-line (functional/project) manager. Informational only — never approves leave, time or expenses. Same rules as primaryManagerEmail; must differ from it.";
 }
 
-/**
- * The Instructions sheet, extracted so a test can hold it against the columns.
- *
- * The two sheets drifted apart once already: the Employees sheet carried
- * reportingManagerEmail and topLevelRoleReason and this list documented every
- * other column, so the two fields that decide whether a row can be created at
- * all were the only ones nobody was told about.
- */
 export function buildBulkOnboardInstructionRows(
   departmentNames: string[],
-  /** The organisation's `maxSecondaryManagersPerEmployee`; the server re-checks it. */
   secondaryCap = 0,
 ): Array<{ field: string; required: string; notes: string }> {
   return [

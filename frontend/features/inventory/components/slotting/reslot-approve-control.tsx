@@ -10,34 +10,11 @@ import { locationsUnder } from "./location-tree";
 
 interface ReslotApproveControlProps {
   recommendation: SlottingRecommendation;
-  /** `inventory:warehouses:read` — the key the locations list is gated on. */
   canReadLocations: boolean;
   isPending: boolean;
   onApprove: (recommendation: SlottingRecommendation, toLocationId: number) => void;
 }
 
-/**
- * Naming the destination for a re-slot.
- *
- * This control used to be `<Input placeholder="Bin id" inputMode="numeric">`. It
- * asked a supervisor to recall the primary key of a bin — §5 forbids showing an
- * id, and *asking* for one is the same violation pointed the other way — and it
- * accepted any positive integer, including a bin in a different building, which
- * the server would have taken: `SlottingService.approve` checks only that the
- * location is visible to the caller, not that it sits under the zone the
- * recommendation is about.
- *
- * The options are the zone's own subtree, computed the way `slotFor` computes
- * it, so the picker cannot express a destination the recommendation does not
- * mean.
- *
- * ⚠️ `GET /inventory/warehouses/:id/locations` returns at most 100 rows ordered
- * by `code` and its controller takes no page parameter, so in a warehouse with
- * more than 100 locations the subtree below is a prefix rather than the whole.
- * The empty branch says the list may be short instead of implying the zone is
- * bare. Fixing it properly needs a paged or zone-scoped locations read, which is
- * a backend change and not this ticket's.
- */
 export function ReslotApproveControl({
   recommendation,
   canReadLocations,

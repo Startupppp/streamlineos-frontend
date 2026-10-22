@@ -25,20 +25,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { InventoryProduct } from "@/types/inventory";
 import { isRestorableStatus } from "./product-status-badge";
 
-/**
- * The product lifecycle, as controls.
- *
- * Restore existed here only as a menu item behind `product.isArchived`, a field
- * no product endpoint returns — so the one action that undoes archiving never
- * rendered. What archiving actually produces is `status: "INACTIVE"`, and the
- * restore endpoint also clears a soft delete, so the control keys off the
- * status the API really sends.
- *
- * Every confirm keeps its dialog open on failure. Restore answers 409 when the
- * SKU has been taken by a live product since, and delete answers 409 while the
- * product still holds stock; both messages name what to fix, which is no use in
- * a toast that outlives the dialog by three seconds.
- */
 
 type LifecycleAction = "archive" | "restore" | "delete";
 
@@ -206,7 +192,6 @@ interface ProductActionsProps {
   product: InventoryProduct;
 }
 
-/** Row menu for the products table. */
 export function ProductRowActions({ product }: ProductActionsProps) {
   const canUpdate = useCan("inventory:products:update");
   const canDelete = useCan("inventory:products:delete");
@@ -264,7 +249,6 @@ export function ProductRowActions({ product }: ProductActionsProps) {
   );
 }
 
-/** Header control for the product detail page. */
 export function ProductLifecycleButton({ product }: ProductActionsProps) {
   const canUpdate = useCan("inventory:products:update");
   const lifecycle = useProductLifecycle(product);

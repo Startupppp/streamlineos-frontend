@@ -31,7 +31,6 @@ function result(over: Partial<ReportingRunResult> = {}): ReportingRunResult {
   };
 }
 
-/** `n` rows of the one text column, so a page can be made full at any limit. */
 function rows(n: number): Record<string, unknown>[] {
   return Array.from({ length: n }, (_, index) => ({ c0: `Deal ${index + 1}` }));
 }
@@ -73,7 +72,6 @@ describe("ReportResultsPanel", () => {
       expect(screen.queryByText("No rows matched")).not.toBeInTheDocument();
     });
 
-    /** Inviting a run somebody cannot make sends them at a 403. */
     it("names the missing permission instead, when the run key is refused", () => {
       renderPanel({ hasRun: false, result: undefined, access: DENIED });
 
@@ -113,12 +111,6 @@ describe("ReportResultsPanel", () => {
     expect(screen.queryByText("Nothing on this page")).not.toBeInTheDocument();
   });
 
-  /**
-   * The run response carries `rowCount` and `truncated` and never a total —
-   * counting the rows behind the page would be a second scan of the same table.
-   * So every number on screen is "at least this many", and nothing here may
-   * present one as measured.
-   */
   describe("the page count is a floor, not a fact", () => {
     it("counts the rows in hand and claims no total behind them", () => {
       renderPanel({
@@ -153,7 +145,6 @@ describe("ReportResultsPanel", () => {
       expect(screen.queryByRole("button", { name: /next page/i })).not.toBeInTheDocument();
     });
 
-    /** The floor rises as pages are read; it never jumps to a number nobody counted. */
     it("counts only as far as the pages already read", () => {
       renderPanel({
         result: result({ rows: rows(2), rowCount: 2, truncated: true }),
@@ -164,10 +155,6 @@ describe("ReportResultsPanel", () => {
       expect(screen.getByText("Showing 3–4 of 5")).toBeInTheDocument();
     });
 
-    /**
-     * `maxOffset` is the server's own bound; paging past it would be a 400 the
-     * reader did nothing to earn.
-     */
     it("will not page past the offset the server accepts", () => {
       renderPanel({
         result: result({ rows: rows(100), rowCount: 100, truncated: true }),
@@ -180,10 +167,6 @@ describe("ReportResultsPanel", () => {
     });
   });
 
-  /**
-   * A page beyond the last row is not the same answer as "this report matched
-   * nothing", and rendering an empty table would say the second.
-   */
   describe("a page past the end of the report", () => {
     const pastTheEnd: Partial<PanelProps> = {
       result: result({ rows: [], rowCount: 0, truncated: false }),
@@ -268,7 +251,6 @@ describe("ReportResultsPanel", () => {
       expect(screen.getByText("—")).toBeInTheDocument();
     });
 
-    /** Zero and false are answers; an empty cell would read as "not measured". */
     it("does not mistake a zero for a missing value", () => {
       renderPanel({
         result: result({

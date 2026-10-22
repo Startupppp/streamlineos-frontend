@@ -1,15 +1,3 @@
-/**
- * `/notifications` fired all fourteen of its mutations while offline.
- *
- * `use-notification-inbox.ts` had zero connectivity guards across every `.mutate()`
- * site (mark read, mark all read, archive, unarchive, pin, unpin, snooze, delete,
- * bulk mark read, bulk archive, bulk delete, approve, reject) — underneath the
- * offline banner this very page renders. Each press dispatched a request that could
- * not succeed, the optimistic cache patch applied and then rolled back, and the row
- * visibly changed and changed back with nothing to explain it. The sibling
- * `/inbox` surface routed all eight of its mutations through `runWhenOnline` and
- * renders no banner: exactly inverted coverage.
- */
 import { act, renderHook } from "@testing-library/react";
 import { toast } from "sonner";
 import { useNotificationInbox } from "./use-notification-inbox";

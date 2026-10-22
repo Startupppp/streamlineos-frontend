@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * Contracts for the document-level surfaces shared by AR and AP detail pages:
- * attachments (`be/src/modules/accounting/attachments/dto/attachments-response.schemas.ts`)
- * and e-invoicing compliance (`be/src/modules/accounting/compliance/dto/compliance-response.schemas.ts`).
- * Transcribed field for field; timestamps are ISO strings over JSON.
- */
 
 export const ATTACHABLE_DOCUMENT_TYPES = [
   "sales_invoice",

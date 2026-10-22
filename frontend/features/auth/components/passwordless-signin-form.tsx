@@ -139,12 +139,6 @@ export function PasswordlessSigninForm({ getCallbackUrl, initialEmail }: Passwor
       setVerifyError(getErrorMessage(error));
       applyRateLimitCooldown(error);
       toast.error(getErrorMessage(error));
-      // A server verdict (the code was wrong, expired or rate-limited) means this
-      // code is spent, so the field is cleared and a new one must be requested.
-      // A request that never reached a verdict leaves the code still valid, so the
-      // digits stay and the Verify control becomes the retry — which is the only
-      // state in which that control is reachable, since reaching six digits
-      // otherwise auto-submits in the same render.
       if (isApiError(error) && typeof error.status === "number") setOtpValue("");
     },
   });

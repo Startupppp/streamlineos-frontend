@@ -27,14 +27,6 @@ export interface LeadRecordTableProps {
   onAssign: (leadId: number, userId: string) => void;
 }
 
-/**
- * The rendered lead table, behind its own `next/dynamic` boundary.
- *
- * Everything the table alone needs lives here — the tenant layout, the record
- * projection and the row menu — so the route's first load carries the header,
- * the stats and the filters, and pays for the renderer only once there are rows
- * to render.
- */
 export function LeadRecordTable({
   leads,
   density,

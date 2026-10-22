@@ -65,7 +65,6 @@ interface LegalHoldSheetProps {
 }
 
 export function LegalHoldSheet({ open, onClose, hold }: LegalHoldSheetProps) {
-  // "Items" is reachable with hr:legalhold:view; attach/detach need :manage.
   const canManage = useCan("hr:legalhold:manage");
   const itemsAccess = useCanState("hr:legalhold:view");
   const [showAttach, setShowAttach] = useState(false);

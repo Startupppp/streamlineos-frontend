@@ -42,12 +42,6 @@ function FabMenuRow({
   );
 }
 
-/**
- * The content rows rendered inside the FAB drawer once it has painted.
- * Kept in its own chunk so the first tap only pays the overlay + skeleton;
- * this module (animated icons, context hooks, avatar menu) loads in the rAF
- * that fires after the drawer frame is on screen.
- */
 export function FabPanelBody({ onClose, onOpenMobileMenu }: FabPanelBodyProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const { open: askOsOpen, toggle: toggleAskOs } = useAskOs();

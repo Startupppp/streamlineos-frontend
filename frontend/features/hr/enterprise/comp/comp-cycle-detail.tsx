@@ -143,7 +143,6 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
     const amount = Number(val);
     if (!val || !Number.isFinite(amount) || amount < 0) return;
     setCalibratingId(rec.id);
-    // The field is entered in major units (the column shows major units); the API takes cents.
     calibrateMut.mutate(
       { recommendationId: rec.id, hrCalibratedCents: Math.round(amount * 100) },
       {
@@ -155,7 +154,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
 
   return (
     <div className="space-y-6">
-      {/* Budget Pools */}
+      
       {poolsIsError ? (
         <ErrorState
           title="Couldn't load budget pools"
@@ -173,7 +172,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
         </div>
       ) : null}
 
-      {/* Merit Matrix */}
+      
       {cycle?.meritMatrix && Object.keys(cycle.meritMatrix).length > 0 && (
         <div className="p-4 rounded-xl border bg-card">
           <p className="text-sm font-semibold mb-3">Merit Matrix</p>
@@ -188,7 +187,7 @@ export function CompCycleDetail({ cycleId, canManage }: Props) {
         </div>
       )}
 
-      {/* Recommendations */}
+      
       <div>
         <p className="text-sm font-semibold mb-3">Recommendations ({recs.length})</p>
         {recsLoading ? (

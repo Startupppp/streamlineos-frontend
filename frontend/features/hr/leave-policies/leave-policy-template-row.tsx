@@ -8,11 +8,6 @@ import type {
   LeavePolicyTemplateKey,
 } from "@/hooks/api/hr/leave-policy-templates-schema";
 
-/**
- * Ticket 08. One editable offer row, plus the client validation the dialog's
- * submit gate reads. Kept beside the dialog rather than inside it so neither
- * file has to be read to change the other.
- */
 export interface DraftRow {
   selected: boolean;
   leaveTypeName: string;

@@ -14,6 +14,10 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useModuleEnabled } from "@/hooks/api/access";
+import {
+  feedbucketWidgetsQueryOptions,
+  type WidgetListParams,
+} from "./use-feedbucket-widgets-read-options";
 
 const feedbucketWidgetListC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-widget-schema").then((m) => m.feedbucketWidgetListContract),
@@ -24,12 +28,6 @@ const feedbucketWidgetWithProjectC = lazyContract(() =>
 const feedbucketRotateKeyC = lazyContract(() =>
   import("@/hooks/api/feedbucket/feedbucket-schema").then((m) => m.feedbucketRotateKeyContract),
 );
-
-interface WidgetListParams {
-  managedProductId?: number;
-  cursor?: string;
-  limit?: number;
-}
 
 export function useFeedbucketWidgets(params?: WidgetListParams) {
   const feedbucketEnabled = useModuleEnabled("build");
@@ -85,9 +83,3 @@ export function useRotateFeedbucketWidgetKey() {
   });
 }
 
-export function feedbucketWidgetsQueryOptions(params?: WidgetListParams) {
-  return {
-    queryKey: growthAndSignQueryKeys.feedbucket.widgets(params),
-    staleTime: 30_000,
-  };
-}

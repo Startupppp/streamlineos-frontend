@@ -12,11 +12,6 @@ import {
   widgetDelay,
 } from "./widget";
 
-/**
- * Hour labels sit beside every other bar row (inside the 1px border):
- * 1440 68 / 102 / 136 / 170, 1024 66 / 100 / 134 / 168 (3888:11006…),
- * 768 77 / 117 / 157 / 197 (3865:72…), 390 100 / 134 / 168 / 202 (3928:73…).
- */
 const HOUR_TOP = [
   "top-17 w1024:top-16.5 w768:top-19.25 w390:top-25",
   "top-25.5 w1024:top-25 w768:top-29.25 w390:top-33.5",
@@ -24,11 +19,6 @@ const HOUR_TOP = [
   "top-42.5 w1024:top-42 w768:top-49.25 w390:top-50.5",
 ] as const;
 
-/**
- * Widget / this week, run by run — 876 × 256 (3888:6532) / 458 × 258
- * (3888:10936) / 688 × 298 (3865:2) / 350 × 295 with the chip under the
- * title (3928:3).
- */
 export const WeekWidget = ({
   title,
   nextRun,

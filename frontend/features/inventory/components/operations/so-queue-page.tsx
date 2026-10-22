@@ -105,13 +105,6 @@ export function SoQueuePage({ status, title, emptyTitle, emptyDescription }: SoQ
       )
     : allItems;
 
-  /**
-   * G8 — the queue's own gate, read from the same key `useSalesOrders` uses.
-   *
-   * Without it a picker who cannot read sales orders saw "Nothing to ship",
-   * which is a statement about the warehouse rather than about their access, and
-   * is the exact confusion this rule exists to stop.
-   */
   const canView = useCan(SO_READ_KEY);
 
   function handleSearchChange(value: string): void {

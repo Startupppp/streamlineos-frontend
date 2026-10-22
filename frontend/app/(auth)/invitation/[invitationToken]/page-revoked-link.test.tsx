@@ -4,13 +4,6 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import { ApiError } from "@/lib/api-envelope";
 
-/**
- * SEC-HRMS-004. The sibling page tests mock `useValidateInvitation` whole, so
- * the provider's `throwOnError` default never ran against this page: a revoked
- * link's 404 threw to the route boundary (rendered as blank "empty") and the
- * page's own "Invitation expired" card was unreachable. This one keeps the
- * real hook and the real query client, and fakes only the transport.
- */
 
 jest.mock("framer-motion", () => {
   function MotionDiv({

@@ -15,15 +15,6 @@ import {
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
 
-/**
- * Issues the token the Chrome sourcing extension holds.
- *
- * Separate from the provider cards above it because it is not a provider: no
- * vendor is being connected and no key is being stored on our side. What is
- * being handed out is a credential for our own API, with one permission and a
- * deadline, and the copy has to say that plainly — a recruiter who reads this
- * as "connect LinkedIn" will wonder later why nothing synced.
- */
 export function SourcingExtensionCard() {
   const issue = useIssueExtensionToken();
   const canIssue = useCan("settings:api-tokens:write");
@@ -90,11 +81,6 @@ export function SourcingExtensionCard() {
             </p>
           </div>
         ) : (
-          /*
-            Fails closed on `useCan`: a recruiter who cannot mint tokens is not
-            offered a button that would 403. The copy says which permission,
-            because "you cannot do this" without a name is unactionable.
-          */
           <div className="space-y-2">
             <LoadingButton
               size="sm"

@@ -13,13 +13,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { statusToneClasses } from "@/lib/design-tokens";
 import type { CrmValidationEntityType } from "@/types/crm/metadata";
 
-/**
- * "Would this record pass?"
- *
- * Not a record surface: the thing being built here is never saved. It is a
- * question put to the server with a made-up record and the answer it gives back,
- * so there is nothing for a description to describe.
- */
 export function ValidationRuleTestPanel({ entityType }: { entityType: CrmValidationEntityType }) {
   const [fieldKey, setFieldKey] = useState("");
   const [fieldValue, setFieldValue] = useState("");

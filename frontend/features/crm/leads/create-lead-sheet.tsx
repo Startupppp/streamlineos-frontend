@@ -15,19 +15,6 @@ import { useCreateLead } from "@/hooks/api/leads";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { CreateLeadInput, LeadPriority, LeadSource } from "@/types/leads";
 
-/**
- * Adding a lead, rendered from the description.
- *
- * There is no schema beside this file any more. The one that used to live here
- * listed eleven of the fifteen fields the create endpoint accepts and validated
- * them a second time; the four it never gained — WhatsApp number, designation,
- * and the two the record has always carried — simply could not be entered.
- *
- * `status` and `score` do not appear, and not because this file omits them: the
- * description marks them read-only because the create endpoint does not take
- * them. A control whose value the API drops is a form that appears to work.
- */
-
 const SOURCES: readonly LeadSource[] = [
   "referral",
   "campaign",
@@ -40,7 +27,6 @@ const SOURCES: readonly LeadSource[] = [
 
 const PRIORITIES: readonly LeadPriority[] = ["HOT", "WARM", "COLD"];
 
-/** Empty means "not supplied", which the create endpoint reads as absent. */
 function orUndefined(value: string | undefined): string | undefined {
   const text = value?.trim();
   return text ? text : undefined;
@@ -105,8 +91,6 @@ export function CreateLeadSheet({ open, onOpenChange }: CreateLeadSheetProps) {
 
         <SheetBody className="px-6 py-5">
           <RecordForm
-            // Remounted per open so a cancelled draft does not survive into the
-            // next lead.
             key={String(open)}
             layout={layout}
             mode="create"

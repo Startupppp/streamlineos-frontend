@@ -10,11 +10,6 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-/**
- * Old waitlist invitation links still land here. Claiming was retired with
- * /signup (the backend answers 410 Gone), so the page says so and points to
- * the two ways forward instead of showing a form that cannot succeed.
- */
 export default function ClaimPage() {
   return (
     <PublicShell>

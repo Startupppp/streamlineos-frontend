@@ -56,7 +56,6 @@ interface ActivityFiltersProps {
   onStatusChange: (v: CrmActivityStatus | "") => void;
   onClear: () => void;
   hasActiveFilters: boolean;
-  /** Controls that belong in the filter row but are not filters — the density toggle. */
   trailing?: ReactNode;
 }
 
@@ -75,11 +74,6 @@ export function ActivityFilters({
 }: ActivityFiltersProps) {
   const { data: declaredTypes } = useCrmOptions("activity_type");
 
-  /*
-    The same options the list and the log dialog read. Filtering by a type the
-    dropdown does not offer is not possible, so an empty dropdown while the
-    tenant's options load meant the filter silently did not exist.
-  */
   const activityTypes = useMemo(() => activityTypeOptions(declaredTypes), [declaredTypes]);
 
   const handleSearchChange = useCallback(

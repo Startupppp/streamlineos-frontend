@@ -10,21 +10,12 @@ export interface ReturnRowActionsProps {
   status: ReturnStatus;
   canManage: boolean;
   isPosting: boolean;
-  /** Customer returns only — a vendor return has nothing to inspect. */
   onInspect?: () => void;
   onApprove: () => void;
   onPost: () => void;
   onCancel: () => void;
 }
 
-/**
- * B9, item 1 — the ladder, rendered as a ladder.
- *
- * A DRAFT return offers the step that comes next, not the last step: `Post` used
- * to sit on a draft nobody had signed off, which is how a disposition guessed
- * from the customer's description reached the ledger. Both directions get the
- * same rungs — that is what "same discipline" means for the vendor side.
- */
 export function ReturnRowActions({
   returnNumber,
   status,

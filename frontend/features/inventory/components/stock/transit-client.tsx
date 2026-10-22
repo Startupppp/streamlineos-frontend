@@ -41,17 +41,6 @@ function isTransitView(value: string): value is StrandedTransitView {
   return value === "ANY" || value === "STRANDED";
 }
 
-/**
- * Goods on a van, and goods a short receipt left behind.
- *
- * `dispatchTransfer` parks stock at the source warehouse's transit bin and
- * `completeTransfer` takes off it only what was actually received. The
- * difference stays there — on hand, unsellable, counted against the source
- * warehouse — and `cancelTransfer` refuses anything past RESERVED, so until the
- * exit command existed there was no route out of the waypoint at all. This is
- * the queue that command acts on: one row per transfer line that dispatched
- * more than it received.
- */
 export function TransitClient() {
   const canView = useCan("inventory:stock:read");
   const canExit = useCan("inventory:transit:abandon");

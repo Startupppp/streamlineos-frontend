@@ -41,7 +41,6 @@ const board = (over: Partial<Scoreboard> = {}): Scoreboard => ({
 const dataset = (over: Partial<DatasetHealthTrend> = {}): DatasetHealthTrend => ({
   windowDays: 30,
   current: {
-    // 2 high + 1 medium + 5 low, weighted 8/3/1.
     composite: 24,
     openTotal: 8,
     bySeverity: { high: 2, medium: 1, low: 5 },
@@ -73,11 +72,6 @@ describe("AutonomyScoreboard", () => {
     expect(screen.getByText("120 actions, 3 corrected")).toBeInTheDocument();
   });
 
-  /**
-   * "0%" over three actions and "0%" over four hundred are different claims.
-   * Showing them identically is how a scoreboard becomes reassuring rather than
-   * informative.
-   */
   it("shows the denominator while the sample is small", () => {
     mockUseScoreboard.mockReturnValue({
       access: allowed,
@@ -101,10 +95,6 @@ describe("AutonomyScoreboard", () => {
     expect(screen.getByText("0% of 4")).toBeInTheDocument();
   });
 
-  /**
-   * A rate of zero and no data yet mean opposite things to somebody deciding
-   * whether to trust an action type.
-   */
   it("does not claim perfection for something that never happened", () => {
     render(<AutonomyScoreboard />);
     expect(screen.getByText("Has not happened yet")).toBeInTheDocument();
@@ -124,18 +114,12 @@ describe("AutonomyScoreboard", () => {
 });
 
 describe("when the numbers cannot be read", () => {
-  /**
-   * A card with a heading and nothing under it reads as "there is no data",
-   * which is the opposite of what a failed request means — and on a scoreboard,
-   * "nothing to correct" is exactly the reassuring lie worth avoiding.
-   */
   it("says so, rather than rendering an empty card", () => {
     mockUseScoreboard.mockReturnValue({ access: allowed, data: undefined, isLoading: false, isError: true });
     render(<AutonomyScoreboard />);
 
     const alert = screen.getByRole("alert");
     expect(alert).toHaveTextContent(/could not be loaded/i);
-    // And it does not imply the measurement itself is missing.
     expect(alert).toHaveTextContent(/still being recorded/i);
   });
 
@@ -146,10 +130,6 @@ describe("when the numbers cannot be read", () => {
   });
 });
 
-/**
- * Dataset health is on this card rather than a data-quality one of its own,
- * because a rising correction rate and worsening data are usually one story.
- */
 describe("the dataset behind the numbers", () => {
   beforeEach(() => {
     mockUseScoreboard.mockReturnValue({ access: allowed, data: board(), isLoading: false });
@@ -158,8 +138,6 @@ describe("the dataset behind the numbers", () => {
   it("shows the composite with the raw count beside it", () => {
     render(<AutonomyScoreboard />);
     expect(screen.getByText("24")).toBeInTheDocument();
-    // The weighted number alone cannot say whether it is three bad
-    // contradictions or twenty-four stale leads.
     expect(screen.getByText(/8 open · 2 high, 1 medium, 5 low/)).toBeInTheDocument();
   });
 
@@ -175,11 +153,6 @@ describe("the dataset behind the numbers", () => {
     expect(classes[0]).toContain("16");
   });
 
-  /**
-   * The distinction the whole trend rests on. A tenant whose queue was switched
-   * on this morning has no direction — rendering that as "unchanged" would claim
-   * a month of flat data that was never recorded.
-   */
   it("does not invent a direction before there is history", () => {
     mockUseScoreboard.mockReturnValue({
       access: allowed,

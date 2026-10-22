@@ -293,7 +293,6 @@ export function useCompanionRealtimeVoice(
                       JSON.parse(call.arguments ?? "{}") as { request?: string }
                     ).request?.trim() ?? "";
                 } catch {
-                  /* invalid model arguments */
                 }
                 if (!request) {
                   outputs.push({

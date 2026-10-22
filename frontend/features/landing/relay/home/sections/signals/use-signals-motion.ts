@@ -11,12 +11,6 @@ import {
 import { useDynamicInView } from "@/features/landing/relay/hooks/animation/use-dynamic-in-view";
 import { VIEW_MARGIN } from "@/features/landing/relay/lib/view";
 
-/**
- * `seen` turns true once the node's widget is properly on screen (VIEW_MARGIN —
- * entrances start where the reader is looking) and false again once it has
- * left the screen entirely, so every visit replays from the first frame.
- * `inView` is plain visibility with no margin (pauses loops off-screen).
- */
 export const useSeen = () => {
   const [seen, setSeen] = useState(false);
   const [setSeenNode] = useDynamicInView({
@@ -28,7 +22,6 @@ export const useSeen = () => {
   });
   const setNode = useCallback(
     (node: Element | null) => {
-      /* Start with the widget card, not the art inside it. */
       setSeenNode((node?.closest("article") ?? node) as HTMLElement | null);
       setViewNode(node as HTMLElement | null);
     },
@@ -37,14 +30,6 @@ export const useSeen = () => {
   return [setNode, seen, inView] as const;
 };
 
-/**
- * Loop phase for an illustration: `on` turns true once `seen`, stays for
- * `lead + play + hold` ms the first time, `play + hold` after (sequence plays, then rests at the Figma state), turns
- * false for `reset` ms (springs ease back), and so on. Timers run only while
- * `inView`; once `seen` drops (fully off screen) the loop rewinds to cycle 0,
- * so the next visit starts with the entrance again.
- * Reduced motion: `on` latches true — the static resting state.
- */
 export const useLoopPhase = (
   seen: boolean,
   inView: boolean,
@@ -54,7 +39,6 @@ export const useLoopPhase = (
     hold,
     reset,
   }: {
-    /** Extra ms before the first play only (entrance stagger). */
     lead?: number;
     play: number;
     hold: number;
@@ -88,7 +72,6 @@ export const useLoopPhase = (
 
 const REDUCE = "(prefers-reduced-motion: reduce)";
 
-/** Live `prefers-reduced-motion` (false on the server). */
 export const useReducedMotionPref = () =>
   useSyncExternalStore(
     (onChange) => {
@@ -100,7 +83,6 @@ export const useReducedMotionPref = () =>
     () => false,
   );
 
-/** Flips true `ms` after `start` turns true; back to false with `start`. */
 export const useAfter = (start: boolean, ms: number) => {
   const [done, setDone] = useState(false);
   if (!start && done) setDone(false);
@@ -112,12 +94,6 @@ export const useAfter = (start: boolean, ms: number) => {
   return start && done;
 };
 
-/**
- * rAF loop that runs only while `active`. `onFrame` receives the elapsed
- * running time in ms — it accumulates across pauses, so a loop resumes where
- * it stopped instead of jumping. While `rewind` is true the clock goes back
- * to 0 and `onRewind` puts the visual on its first frame.
- */
 export const useFrameLoop = (
   active: boolean,
   onFrame: (elapsed: number) => void,

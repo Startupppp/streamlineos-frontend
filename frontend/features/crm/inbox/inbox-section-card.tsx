@@ -71,15 +71,6 @@ function DueChip({ dueAt }: { dueAt: string | null }) {
   );
 }
 
-/**
- * Mirrors `InboxSectionCard`'s box exactly — same shell, a 32px header row and
- * the same 1px divider over a 40px body — so the section list is laid out at
- * its real size before the items land. Rendering the card itself with no items
- * instead painted eight "All clear" sections and then reflowed the stack when
- * the read resolved: on the mobile profile one section grew 75px -> 355px and
- * pushed the five below it down 280px, which was the whole of this route's
- * 0.109 CLS.
- */
 export function InboxSectionCardSkeleton() {
   return (
     <div className="rounded-xl border border-border bg-card overflow-hidden">

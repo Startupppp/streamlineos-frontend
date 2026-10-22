@@ -25,12 +25,6 @@ const costingVariantsContract = lazyContract(() =>
   import("@/hooks/api/inventory/valuation-schema").then((m) => m.costingVariantsContract),
 );
 
-/**
- * Every quantity and money figure on the valuation evidence endpoints leaves
- * Postgres as `text` and stays a string here. They are `numeric(18,4)` in the
- * organisation's own currency — not minor units — so neither `/100` nor
- * `parseFloat` belongs anywhere near them.
- */
 export interface ValuationLayer {
   layerId: number;
   createdAt: string;
@@ -62,16 +56,11 @@ interface ValuationLayersResponse {
   totalPages: number;
 }
 
-/**
- * `installed: false` is the ordinary answer, not a failure: periods live in the
- * accounting module and an organisation without it has none.
- */
 interface ValuationPeriodsResponse {
   installed: boolean;
   items: InventoryPeriod[];
 }
 
-/** One layer an issue drew from: how much it took, and what that draw cost. */
 export interface ValuationConsumption {
   consumptionId: number;
   createdAt: string;
@@ -170,13 +159,6 @@ export function useValuationLayers(variantId: number, page?: number) {
   });
 }
 
-/**
- * The accounting periods a valuation figure can be quoted against.
- *
- * Catalog-tier staleness: a period list changes when the books are closed, which
- * is monthly at most. `installed: false` means the accounting module is absent —
- * the caller renders no period filter rather than an empty one.
- */
 export function useValuationPeriods() {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationPeriodsResponse, Error>({
@@ -187,11 +169,6 @@ export function useValuationPeriods() {
   });
 }
 
-/**
- * Which layer each issue drew from, and at what cost — the rows a cost of goods
- * sold figure is reproducible from. Defaults to the current month server-side
- * when no window is named.
- */
 export function useValuationConsumptions(params?: ValuationConsumptionsParams) {
   const canView = useCan("inventory:valuation:read");
   return useQuery<ValuationConsumptionsResponse, Error>({
@@ -215,11 +192,6 @@ export function useValuationConsumptions(params?: ValuationConsumptionsParams) {
   });
 }
 
-/**
- * The costing table reads the variant list, so the gate is that endpoint's own key.
- * Gating it on `inventory:valuation:read` sent a 403 for anyone holding valuation
- * without products; the page-level finance gate lives in `CostingClient`.
- */
 export function useCostingProducts(params?: CostingParams) {
   const canView = useCan("inventory:products:read");
   return useQuery<CostingVariants, Error>({

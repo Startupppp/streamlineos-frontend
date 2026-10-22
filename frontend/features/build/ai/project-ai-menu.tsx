@@ -22,7 +22,6 @@ import { useAiPopoverAction } from "@/components/ai/use-ai-popover-action";
 import { useProjectAiSummary } from "@/hooks/api/build/ai";
 import type { ProjectSummaryResult } from "@/types/projects/ai";
 
-/** Backend NO_DATA short-circuit copy from projects-ai.service. */
 const NO_DATA_SUMMARY =
   "This project has no tickets yet. Add tasks to unlock AI features.";
 
@@ -31,10 +30,6 @@ export type ProjectAiRunRef = MutableRefObject<(() => void) | null>;
 interface ProjectAiMenuProps {
   projectId: number;
   hideTrigger?: boolean;
-  /**
-   * Parent-owned ref. Assigned only in useLayoutEffect — never call execute
-   * during registration, and never notify the parent via setState.
-   */
   runRef?: ProjectAiRunRef;
 }
 

@@ -232,12 +232,6 @@ interface GenerateJdInput {
   salaryMax?: number;
 }
 
-/**
- * Streams. `POST /ai/generate-jd/stream` takes the same body and the same permission as the
- * buffered route, so the only thing the buffered call bought was a blank pane until the whole
- * draft existed. `signal` and `onToken` are stripped from the body by the rest spread — a
- * serialised AbortSignal is the trap `ai-mutation-signal.test.tsx` guards.
- */
 export function useGenerateJobDescription() {
   return useAuthorizedMutation<
     AiTextStreamResult,

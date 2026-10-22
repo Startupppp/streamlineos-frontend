@@ -11,10 +11,6 @@ interface PolicyImpactPreviewProps {
   className?: string;
 }
 
-/**
- * Live policy impact strip — "who and what this toggle affects"
- * before the owner commits a change.
- */
 export function PolicyImpactPreview({
   impact,
   loading,

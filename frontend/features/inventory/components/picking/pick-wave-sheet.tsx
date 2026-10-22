@@ -30,21 +30,10 @@ interface PickWaveSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   pickListId: number | null;
-  /** The signed-in picker, so the sheet can tell "mine" from "someone else's". */
   currentUserId: string | null;
   canPick: boolean;
 }
 
-/**
- * The walk itself.
- *
- * Tasks are listed in the order the server sorted them — by location code, so
- * the list is a route through the building rather than a set of errands — and
- * the confirm controls stay disabled until this picker holds the claim. That is
- * the whole point of the claim: two pickers sharing a wave both take goods off
- * the shelf, and only the second one's confirm is refused, by which time the
- * stock has already moved.
- */
 export function PickWaveSheet({
   open,
   onOpenChange,
@@ -71,18 +60,6 @@ export function PickWaveSheet({
     [detail],
   );
 
-  /**
-   * B2 / B11 — one scan field for the whole walk, not one per row.
-   *
-   * A picker at 375px holding a unit in the other hand cannot find the right
-   * row and then its field. The wedge fires wherever focus happens to be, the
-   * scan is captured before anything moves, and the task it names becomes the
-   * active one — which is also what makes the confirm control reachable with a
-   * thumb instead of buried in a list.
-   *
-   * `openLines` is the whole scope: a unit that belongs to no open task on this
-   * wave is refused here, with the goods still in the picker's hand.
-   */
   const scan = useScanTarget<PickWaveLine>({
     candidates: openLines,
     documentNoun: "wave",
@@ -234,15 +211,7 @@ export function PickWaveSheet({
               ) : null}
             </div>
 
-            {/*
-              B4, item 3 — the supervisor's half of the claim.
-
-              `abandon` is the picker saying "not me"; this is somebody else
-              saying "not them". It sits under the sentence explaining who holds
-              the wave because that sentence is what prompts it, and it hides
-              itself when the viewer cannot ship, so a picker sees the walk and
-              nothing else.
-            */}
+            
             <PickWaveReassign
               pickListId={detail.id}
               warehouseId={detail.warehouseId}
@@ -252,12 +221,6 @@ export function PickWaveSheet({
 
             <ul className="flex flex-col gap-2">
               {detail.lines.map((line) => (
-                // The key carries what has already been picked, for the reason
-                // `putaway-task-sheet.tsx` gives: the row seeds its quantity
-                // field from the line's remainder, and a seed is an initial
-                // value. After a partial pick the refetched line has a smaller
-                // remainder and a row React kept would still be offering the old
-                // one. Changing the key remounts it with the new remainder.
                 <PickTaskRow
                   key={`${line.id}:${line.quantity_picked}`}
                   pickListId={detail.id}

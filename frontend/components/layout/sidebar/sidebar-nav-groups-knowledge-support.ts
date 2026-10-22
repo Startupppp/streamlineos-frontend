@@ -111,8 +111,6 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
 {
     label: "SignOS",
     module: "sign",
-    // The group opens for any key one of its routes needs: a member holding only
-    // `sign:audit:view` or `sign:access:view` used to see no SignOS entry at all.
     requiredPermission: [
       "sign:envelope:view",
       "sign:template:manage",

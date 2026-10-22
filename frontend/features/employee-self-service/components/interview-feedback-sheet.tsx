@@ -26,14 +26,6 @@ import {
 } from "@/hooks/api/employee-self-service/recruitment";
 import { getErrorMessage } from "@/lib/get-error-message";
 
-/**
- * The scorecard an interviewer fills in for one assigned interview.
- *
- * It is the only WRITE on this surface — the page around it is a paged read of
- * the interviews assigned to the signed-in member — and it owns its own draft
- * state, its own submit mutation and its own validation. Keeping it here means
- * the page is a list and this is a form, rather than one file being both.
- */
 
 type Recommendation = "HIRE" | "NO_HIRE" | "MAYBE";
 

@@ -136,7 +136,6 @@ export function useExportContacts() {
   });
 }
 
-/** `GET /contacts/:id/vcard` as a Blob; the caller hands it to `downloadBlob`. */
 export function useDownloadContactVcard() {
   return useAuthorizedMutation("crm:contacts:view", {
     mutationKey: ["contacts", "vcard"] as const,

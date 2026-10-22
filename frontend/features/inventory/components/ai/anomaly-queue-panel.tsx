@@ -35,28 +35,6 @@ function isSeverity(value: string): value is AnomalySeverity {
   return value === "high" || value === "medium" || value === "low";
 }
 
-/**
- * F3 — the anomaly queue.
- *
- * The screen this replaces listed findings. This one makes them *reviewable*,
- * which needs three things the list never had.
- *
- * **The formula and the window.** "Stockout risk: SKU-7" is an assertion.
- * "Available quantity is below mean weekly sales over the last 90 days" is an
- * assertion somebody can disagree with, and only the second kind is worth
- * putting in a queue. Both come from the server's detector registry — the same
- * constants the query used — so the caption cannot describe a window nobody ran.
- *
- * **The window as it was.** A finding carries the window it was raised under, so
- * a threshold changed last week does not retroactively rewrite what last
- * month's alert claimed. Where the stored window and the detector's current one
- * disagree, the stored one is what is shown.
- *
- * **A review with a name on it.** Acknowledging records who and when, and asks
- * for a note. Nothing on this screen can post stock: there is no quantity field,
- * no location field, and the route behind these two buttons updates one status
- * column and nothing else.
- */
 export function AnomalyQueuePanel() {
   const canRead = useCan("inventory:ai:read");
   const canManage = useCan("inventory:ai:manage");
@@ -124,9 +102,6 @@ export function AnomalyQueuePanel() {
 
       <CardContent className="space-y-3 pt-3">
         {data?.orgWideSignalsHidden ? (
-          // The honest gate would otherwise read as a broken screen: four of the
-          // six detectors compute across every site, and those findings are not
-          // this reader's to see.
           <div className="flex items-start gap-2 rounded-md border border-border bg-muted/40 p-3">
             <ShieldCheck
               className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground"

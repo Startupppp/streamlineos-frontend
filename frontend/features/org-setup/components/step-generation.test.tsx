@@ -618,7 +618,6 @@ describe("StepGeneration — server destination replaces hardcoded /dashboard", 
   });
 });
 
-
 describe("StepGeneration — SETUP_IN_PROGRESS", () => {
   it("polls status like TIMEOUT instead of setup-failed", async () => {
     mockIsApiError.mockReturnValue(true);
@@ -634,7 +633,6 @@ describe("StepGeneration — SETUP_IN_PROGRESS", () => {
     await waitFor(() => {
       expect(capturedProgressProps.setupError).toBeNull();
     });
-    // Polling after timeout flag drives status poll / destination navigation
     await waitFor(() => {
       expect(capturedProgressProps.isPollingAfterTimeout === true || capturedProgressProps.setupError === null).toBe(true);
     });

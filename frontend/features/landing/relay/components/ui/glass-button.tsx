@@ -16,20 +16,12 @@ export interface GlassButtonProps {
   className?: string;
 }
 
-/**
- * Glass pill — on hover a brighter stroke runs once around the pill, clockwise
- * from the top (motion brief, shared.glass: "обводка заполняется по кругу").
- * The base 22% hairline stays underneath; the fill is a conic ring on top,
- * painted over the border box — the pill must not clip its overflow, or the
- * ring (which sits on the 1px border) is cut away.
- */
 export const GlassButton = ({
   href,
   children,
   className = "",
 }: GlassButtonProps) => {
   const { hovered, pressed, handlers } = useHoverPress();
-  /* the stroke travels round in 1.1 s; it retracts faster on leave */
   const { p } = useSpring({
     p: hovered ? 100 : 0,
     config: { duration: hovered ? 1100 : 450, easing: easings.easeInOutCubic },

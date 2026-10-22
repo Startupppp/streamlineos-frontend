@@ -1,13 +1,6 @@
 import { z } from "zod";
 import { decimalQuantityOrZeroSchema } from "@/features/inventory/lib/quantity-schema";
 
-/**
- * `"none"` is a sentinel, not a reason.
- *
- * A Radix `SelectItem` cannot carry an empty value, so "no discrepancy" needs a
- * string of its own; it is stripped when the payload is built rather than being
- * sent to an API whose enum has never heard of it.
- */
 export const NO_DISCREPANCY = "none";
 
 const grnLineSchema = z.object({

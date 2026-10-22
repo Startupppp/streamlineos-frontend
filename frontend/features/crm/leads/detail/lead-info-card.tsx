@@ -14,20 +14,6 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import type { Lead, LeadPriority, LeadSource, UpdateLeadInput } from "@/types/leads";
 import { toLeadRecord } from "../lead-record";
 
-/**
- * One lead, read and written from the same description.
- *
- * This used to be a hand-written edit form over nine fields sitting above a
- * hand-written label/value list over six others, and the two disagreed: the form
- * could not reach `source`, `whatsappNumber` or `designation`, all of which the
- * update endpoint accepts, and the read view showed a source the form could
- * never correct. Both are now `LEAD_LAYOUT`, so they cannot drift again.
- *
- * The custom fields stay hand-mounted. Tenant-defined fields are a separate
- * mechanism with their own storage and their own editor; the layout describes
- * the record the API declares, and inventing entries for fields it does not know
- * about would be the description claiming more than it can render.
- */
 
 const SOURCES: readonly LeadSource[] = [
   "referral",
@@ -49,7 +35,6 @@ function toPriority(value: string | undefined): LeadPriority | undefined {
   return PRIORITIES.find((candidate) => candidate === value);
 }
 
-/** Empty means "clear it": the update endpoint stores what it is sent. */
 function text(value: string | undefined): string {
   return value?.trim() ?? "";
 }

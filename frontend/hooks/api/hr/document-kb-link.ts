@@ -52,7 +52,6 @@ export interface DocumentVersionsView {
   versions: DocumentVersionRow[];
 }
 
-/** Organisation-wide: the route answers 403 to a caller whose `hr:documents:view` scope is below `all`, so it is not asked for one (see `useCanReadDocumentSharing`). */
 export function useDocumentKbLink(documentId: number | null, options?: { enabled?: boolean }) {
   const canView = useCan("hr:documents:view");
   const orgWide = useCanReadDocumentSharing();
@@ -65,7 +64,6 @@ export function useDocumentKbLink(documentId: number | null, options?: { enabled
   });
 }
 
-/** Everything a change to an entry can touch: the entry itself, the KB lists that show it, and the document's own view. */
 function useRefreshAfterLinkChange() {
   const qc = useQueryClient();
   return (state: DocumentKbLinkState) => {
@@ -77,7 +75,6 @@ function useRefreshAfterLinkChange() {
 
 export interface PublishDocumentInput {
   documentId: number;
-  /** Omitted: the entry is for the same people the document is for. */
   audiences?: DocumentAudienceEntry[];
 }
 
@@ -93,7 +90,6 @@ export function usePublishDocumentToKb() {
 
 export interface WithdrawDocumentInput {
   documentId: number;
-  /** Why it is being taken out, in the publisher's words. It goes on the entry and into the audit log. */
   reason: string;
 }
 
@@ -107,7 +103,6 @@ export function useWithdrawDocumentFromKb() {
   });
 }
 
-/** Organisation-wide, like the link state: not asked for a caller whose `hr:documents:view` scope is below `all`. */
 export function useDocumentVersions(documentId: number | null, options?: { enabled?: boolean }) {
   const canView = useCan("hr:documents:view");
   const orgWide = useCanReadDocumentSharing();
@@ -164,7 +159,6 @@ export function useApproveDocumentVersion() {
       apiClient.post<DocumentVersionsView>(`/hr/documents/${documentId}/versions/${version}/approve`, undefined, undefined, versionsLazy),
     onSuccess: (view) => {
       qc.setQueryData(humanResourcesQueryKeys.hr.documentVersions(view.documentId), view);
-      // The file everyone reads just changed: the HR list, the entry and its readers all have a new version.
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentsAll });
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.documentKbLink(view.documentId) });
       void qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments() });

@@ -129,10 +129,6 @@ export function DealDetailView({ dealIdParam }: DealDetailViewProps) {
     void refetch();
   }, [refetch]);
 
-  /*
-   * Ticket 26: without crm:deals:read the detail read disables itself and looks
-   * like an empty result. Checked after the last hook, before any return.
-   */
   if (useCanState("crm:deals:read") === "denied")
     return <NoPermissionState permission="crm:deals:read" />;
 

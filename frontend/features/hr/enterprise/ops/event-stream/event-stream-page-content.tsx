@@ -139,8 +139,6 @@ export function EventStreamPageContent() {
   const handleRetryEvents = useCallback(() => { void refetch(); }, [refetch]);
   const eventsState = usePageState({ permission: "hr:eventstream:view", isLoading, isError, error });
 
-  // The export route returns the rows as JSON; without a download the button
-  // spun and then did nothing visible.
   const handleExport = useCallback(() => {
     exportMutation.mutate(
       { limit: 100 },

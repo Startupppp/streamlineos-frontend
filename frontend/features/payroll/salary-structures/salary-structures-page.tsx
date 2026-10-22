@@ -189,8 +189,6 @@ export function SalaryStructuresPageContent() {
     toast.error(getErrorMessage(err));
   }
 
-  // PAY-B-020: a double click fires two submits before isPending re-renders the
-  // button disabled, so the in-flight state is held synchronously here.
   const submitInFlight = useRef(false);
 
   function handleFormSubmit(data: CreateSalaryTemplateInput) {

@@ -7,20 +7,16 @@ import { pick, useFrame } from "@/features/landing/relay/hooks/use-frame";
 
 import { loopFade, phase, useProofLoop } from "./use-proof-loop";
 
-/** 11 lit bars, radius 6 (was the proof-hours.svg union). */
 const LIT = 11;
 const HEIGHT = 56;
 
 interface Geometry {
-  /** Union width = viewBox width. */
   span: number;
   pitch: number;
   width: number;
-  /** End of the fill gradient's vector, userSpaceOnUse. */
   gradient: readonly [number, number];
 }
 
-/** 3888:6927 — 20-wide bars on a 28 pitch across 300. */
 const G1440: Geometry = {
   span: 300,
   pitch: 28,
@@ -28,7 +24,6 @@ const G1440: Geometry = {
   gradient: [36.7842, 98.398],
 };
 
-/** 3888:11332 — the same 11 bars squeezed into 218 at 1024. */
 const G1024: Geometry = {
   span: 218,
   pitch: 20.3467,
@@ -36,7 +31,6 @@ const G1024: Geometry = {
   gradient: [45.6208, 88.6796],
 };
 
-/** 3832:8585 — 11.86-wide bars on a 15.86 pitch across 170.43 at 768. */
 const G768: Geometry = {
   span: 170.429,
   pitch: 15.8571,
@@ -44,7 +38,6 @@ const G768: Geometry = {
   gradient: [51.5176, 78.2171],
 };
 
-/** 3893:4241 — 18-wide bars on a 22.46 pitch across 242.62 at 390. */
 const G390: Geometry = {
   span: 242.615,
   pitch: 22.4615,
@@ -52,16 +45,10 @@ const G390: Geometry = {
   gradient: [42.6534, 92.4756],
 };
 
-/** Cycle clock, ms: each bar grows over RISE, the next one BAR_STEP later. */
 const BAR_STEP = 48;
 const RISE = 520;
 const PLAY = (LIT - 1) * BAR_STEP + RISE;
 
-/**
- * Hour bars 3585:29609: the lit bars fill from the bottom one after another
- * (motion brief, proof "Рисуются"). The dim bars are static siblings. Loops
- * while on screen: fill, hold the Figma frame, fade out, fill again.
- */
 export const HourBars = ({ delay = 0 }: { delay?: number }) => {
   const { ref, t } = useProofLoop<SVGSVGElement>(PLAY, delay);
   const id = useId().replace(/:/g, "");

@@ -7,6 +7,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { feedbackCyclesQueryOptions } from "@/hooks/api/hr/feedback-read-options";
 
 export interface CreateFeedbackCycleInput {
   name: string;
@@ -55,9 +56,11 @@ export interface FeedbackResult {
   }[];
 }
 
-export const feedbackCyclesQueryOptions = () =>
-  queryOptions({
-    queryKey: humanResourcesQueryKeys.hr.feedbackCycles(),
+export function useFeedbackCycles() {
+  const canView = useCan("hr:performance:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    ...feedbackCyclesQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get<FeedbackCycle[]>(
         "/hr/feedback/cycles",
@@ -67,14 +70,6 @@ export const feedbackCyclesQueryOptions = () =>
           import("@/hooks/api/hr/feedback-schema").then((m) => m.listCyclesContract),
         ),
       ),
-    staleTime: 2 * 60_000,
-  });
-
-export function useFeedbackCycles() {
-  const canView = useCan("hr:performance:view");
-  const hrEnabled = useModuleEnabled("hr");
-  return useQuery({
-    ...feedbackCyclesQueryOptions(),
     enabled: canView && hrEnabled,
   });
 }

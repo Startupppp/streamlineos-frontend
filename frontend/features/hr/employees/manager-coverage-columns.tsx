@@ -39,17 +39,10 @@ export function personLink(userId: string | null, name: string | null, fallback:
   );
 }
 
-// Rows open the employee; a control inside a row must not. React events bubble
-// through a popover's portal, so they are stopped at the cell boundary.
 function stopRowActivation(event: SyntheticEvent) {
   event.stopPropagation();
 }
 
-/**
- * Assigns through the canonical reporting-line PUT (HRM-15), never the profile
- * PATCH. A change past the repeated-change threshold needs a reason this cell
- * cannot collect, so that refusal points HR at the profile's editor.
- */
 export function AssignManagerCell({ userId, currentManagerUserId }: { userId: string | null; currentManagerUserId?: string | null }) {
   const setLine = useSetReportingLine();
   if (!userId) return <span className="text-xs text-muted-foreground">No user account</span>;
@@ -161,7 +154,6 @@ export const FALLBACK_COLUMNS: DataTableColumn<FallbackRow>[] = [
   { key: "since", header: "Since", cell: (row) => <span className="font-mono text-dense">{formatShortDate(row.effectiveFrom)}</span> },
 ];
 
-/** Replace = assign the right manager; Keep = confirm the fallback as intended. */
 export const FALLBACK_ACTION_COLUMN: DataTableColumn<FallbackRow> = {
   key: "actions",
   header: "Resolve",
@@ -181,7 +173,6 @@ export function pendingReviewColumns(canReview: boolean): DataTableColumn<Pendin
     {
       key: "review",
       header: "Request",
-      // Addendum 1 Q6: link only for reviewers; others would land on Access Denied.
       cell: (row) =>
         canReview ? (
           <Link href={`/hr/employees/reporting-requests?request=${row.requestId}`} className="text-primary hover:underline">
@@ -194,10 +185,6 @@ export function pendingReviewColumns(canReview: boolean): DataTableColumn<Pendin
   ];
 }
 
-/**
- * Below `sm` the coverage tables render as stacked cards (DataTable `mobileCard`),
- * so the Assign / Keep / Review actions stay on screen at 375px.
- */
 function MobileCard({ title, meta, children }: { title: ReactNode; meta?: ReactNode; children?: ReactNode }) {
   return (
     <div className="flex min-w-0 flex-col gap-2 rounded-lg border border-border p-3">

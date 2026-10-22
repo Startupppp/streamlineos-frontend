@@ -12,7 +12,6 @@ const leaveTypeRowSchema = z.object({
   name: z.string(),
   daysPerYear: z.number().int(),
   carryForward: z.boolean(),
-  /** V-049. The configured policy's own name. Optional until the backend half lands. */
   policyName: z.string().nullish(),
 });
 
@@ -79,11 +78,6 @@ const leavesTeamItemSchema = leaveRequestRowSchema.extend({
       image: z.string().nullable(),
     })
     .nullable(),
-  /**
-   * V-044. Where this request is routed, so a queue row can name its target
-   * instead of being an anonymous link. Optional until the backend half lands;
-   * the row renders nothing rather than guessing.
-   */
   approvalRoute: z
     .object({
       rung: approvalRungContract.nullable(),
@@ -145,10 +139,6 @@ export const leaveContextContract = z.object({
     }),
   ),
   approvalRoute: approvalRouteContract,
-  /**
-   * V-045. True when the org has configured no leave type at all. Optional
-   * until the backend half lands; the page falls back to `types.length === 0`.
-   */
   noPolicyConfigured: z.boolean().optional(),
 });
 
@@ -202,7 +192,6 @@ const orgHolidayRowSchema = z.object({
 
 export const holidaysListContract = z.array(orgHolidayRowSchema);
 
-// GET /hr/holidays/calendar merges org_holidays with the legacy table.
 const hrHolidayRowSchema = z.object({
   id: z.string(),
   name: z.string(),

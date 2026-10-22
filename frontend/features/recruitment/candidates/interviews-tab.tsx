@@ -34,11 +34,6 @@ const InterviewRow = memo(function InterviewRow({
 }: InterviewRowProps) {
   const handleToggle = useCallback(() => onToggle(interview.id), [onToggle, interview.id]);
 
-  /*
-    Local rather than lifted like the scorecard's: the transcript panel is
-    audited on read, so it must not open because a sibling row did. Each row
-    owns whether its own transcript has been asked for.
-  */
   const [transcriptOpen, setTranscriptOpen] = useState(false);
   const handleToggleTranscript = useCallback(() => setTranscriptOpen((open) => !open), []);
 

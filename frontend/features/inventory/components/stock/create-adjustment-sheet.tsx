@@ -41,9 +41,6 @@ const schema = z
     scrapLocationId: z.number().int().positive().optional(),
     notes: z.string().max(500).optional(),
   })
-  // The same rule the API enforces, said here so the operator sees it before
-  // they submit rather than as a 400 afterwards: a reason that condemns stock
-  // can only take stock away.
   .refine((v) => !(isWriteOffReason(v.reason) && v.adjustmentType === "IN"), {
     path: ["adjustmentType"],
     message: "A write-off can only remove stock",
@@ -84,8 +81,6 @@ export function CreateAdjustmentSheet({ open, onOpenChange }: CreateAdjustmentSh
   const reason = watch("reason");
   const writeOff = isWriteOffReason(reason);
 
-  // A write-off only ever removes stock, so choosing one settles the direction
-  // rather than leaving the operator to discover the rule from a form error.
   const handleReasonChange = useCallback(
     (value: string) => {
       if (!isAdjustmentReason(value)) return;

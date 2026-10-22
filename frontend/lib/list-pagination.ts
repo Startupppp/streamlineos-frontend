@@ -1,6 +1,5 @@
 export const STANDARD_PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 
-// Satisfied by both `useSearchParams()` and a `URLSearchParams` built from a server `searchParams`.
 export interface SearchParamsReader {
   get(name: string): string | null;
 }

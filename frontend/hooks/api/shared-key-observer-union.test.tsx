@@ -4,32 +4,6 @@ import type { ReactNode } from "react";
 import { queryKeys } from "@/lib/query-keys";
 import type { AccessResponse } from "@/types/access";
 
-/**
- * The defect class: TWO observers on ONE query key, only one of them gated.
- *
- * TanStack enables a query when ANY observer enables it. So a component that
- * writes `enabled: <permission>` on a key another component already observes
- * without that condition has written a gate that never suppresses a request —
- * it reads as authorization in review and is inert at runtime.
- *
- * Neither existing gate can see this shape, and both say so about themselves in
- * different words:
- *   - `check:gated-reads` has `SCAN_DIRS = ["hooks/api"]`, so it never reads the
- *     `features/**` and `components/**` files where the two observers live.
- *   - `check:permission-binding` does read those trees, but it classifies each
- *     call site in isolation (one row per WRAPPER or ENABLED site) and holds no
- *     notion of a key observed twice.
- * A repo-wide walk over consumer call sites (3,487 of them, 2,840 distinct
- * hook+argument identities) found 20 identities observed from two or more sites
- * with differing `enabled`. Only the co-mounted ones are defects; this file
- * pins the mechanism and the two that were.
- *
- * BusinessPulseWidget and ExecutiveKpiWidget now read DIFFERENT query keys —
- * `crmPulse` vs `executive` — so the shared-observer hazard is eliminated.
- * The suite below now asserts the separation rather than the mount-gating
- * workaround that patched over the shared key.
- */
-
 jest.mock("next/link", () => ({
   __esModule: true,
   default: ({

@@ -16,23 +16,6 @@ export type BadgeTone =
   | "teal"
   | "cyan";
 
-/**
- * The union deliberately offers colour names alongside semantic ones, and the
- * two halves read different scales.
- *
- * A semantic tone means the thing it names, so it stays on `status-*`. A
- * colour-named tone means "some other kind, distinguishable from its
- * neighbours" — that is a category, so it reads `category-*`. Collapsing the
- * colour names onto the nearest status is what made eleven tones render as
- * six, and what made a case at medium priority look identical to one at high.
- *
- * `yellow` is the one pair left congruent, and on purpose: it resolves to the
- * same amber as `warning` because the only hue left in the categorical scale
- * between amber and green is `lime`, and a lime badge reads as "fine" in the
- * low → medium → high → critical ramps that are `yellow`'s only callers.
- * `warning` and `yellow` are two names for one intent; `orange` is the step
- * above, and that is the distinction those ramps actually lost.
- */
 const TONE_CLASSES: Record<BadgeTone, string> = {
   success: "bg-status-success-surface text-status-success-ink border-status-success-rule",
   info: "bg-status-info-surface text-status-info-ink border-status-info-rule",

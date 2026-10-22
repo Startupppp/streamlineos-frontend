@@ -8,7 +8,6 @@ jest.mock("@/hooks/api/hr/import-export", () => ({ useHrImportJob: (jobId: strin
 
 const failedRow = (n: number, error: string) => ({ id: `r${n}`, orgId: "org-1", jobId: "job-1", rowNumber: n, payload: {}, status: "error", error, createdRecordRef: null });
 
-/** What `GET /hr/import/jobs/:id` sends: every error row, validation and commit failures alike, unlabelled. */
 const errorRowsOf = (count: number) => Array.from({ length: count }, (_, index) => failedRow(index + 1, `Reason ${index + 1}`));
 const detailWith = (rows: ReturnType<typeof errorRowsOf>) => mockDetail.mockReturnValue({ data: { job: importJob(), errorRows: rows }, isLoading: false, isError: false, error: null });
 
@@ -73,8 +72,6 @@ describe("ImportResultSummary", () => {
   });
 
   it("counts the list as every row not imported, not as the commit failures, when validation and commit failures are both in it", () => {
-    // 30 rows: 12 written, 3 failed while being written, 15 never passed validation. The server lists all 18 error rows
-    // together; the old heading put the "3" over ten rows that were probably validation failures.
     detailWith(errorRowsOf(18));
 
     render(<ImportResultSummary job={importJob({ totalRows: 30, validRows: 12, createdRows: 12, errorRows: 3 })} entityLabel="Documents" />);
@@ -90,7 +87,6 @@ describe("ImportResultSummary", () => {
   });
 
   it("says the server sends at most 50 error rows when there are more, and how many cannot be shown", () => {
-    // 200 rows: 20 written, 5 failed while being written, 175 never passed validation, so 180 sit in error on the server.
     detailWith(errorRowsOf(SERVER_ERROR_ROW_CAP));
 
     render(<ImportResultSummary job={importJob({ totalRows: 200, validRows: 20, createdRows: 20, errorRows: 5 })} entityLabel="Documents" />);

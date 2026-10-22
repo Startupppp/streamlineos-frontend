@@ -1,19 +1,3 @@
-/**
- * `/billing/invoices/new` is a create surface that used to inherit a read gate.
- *
- * The only gate over it was `app/(authenticated)/billing/layout.tsx`'s
- * `enforceRouteAccess("/billing/invoices")`, and the registry bound that prefix
- * to `accounting:receivables:read` — a key gating the finance AR endpoints
- * (`/accounting/ar-payments`, `/accounting/customer-statements`), not this
- * page's reads, and one that no role template grants. So the read gate denied
- * every non-owner including the ACCOUNTANT holding all four `/invoices` keys,
- * while whoever did get through reached the create form with no create gate.
- *
- * Both halves are pinned here against the routes' own declarations in
- * `contracts/openapi.json`:
- *   GET  /invoices  -> accounting:read
- *   POST /invoices  -> accounting:create
- */
 import * as fs from "fs";
 import * as path from "path";
 import { resolveRouteAccess } from "../route-access";

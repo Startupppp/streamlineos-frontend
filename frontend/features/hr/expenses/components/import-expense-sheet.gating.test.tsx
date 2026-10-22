@@ -1,12 +1,3 @@
-/**
- * HRMS-E2E-016a. The Import button was live before a file was chosen. Clicking
- * it ran a handler that returned early on `!file` and did nothing at all — no
- * toast, no validation message, no state change — so the only way to learn that
- * nothing had happened was that nothing happened.
- *
- * The button now states what it is waiting for and stays disabled until there is
- * something to import.
- */
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ImportExpenseSheet } from "./import-expense-sheet";

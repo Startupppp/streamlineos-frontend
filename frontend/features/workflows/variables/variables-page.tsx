@@ -31,8 +31,6 @@ import {
   type WorkflowVariable,
 } from "@/hooks/api/workflows";
 
-// A value's type is a taxonomy — an array is not a warning. `object` and
-// `array` sit next to each other in the same list and read as one chip.
 const VALUE_TYPE_CLASS: Record<string, string> = {
   string: "bg-primary/10 text-foreground border-primary/30",
   number: "bg-category-blue-surface text-category-blue-ink border-category-blue-rule",

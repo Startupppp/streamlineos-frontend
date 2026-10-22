@@ -203,7 +203,6 @@ export const useUpdateNotificationPreferenceEvent = () => {
   });
 };
 
-/** Back to the organisation's defaults; the response is the reset preference row. */
 export const useResetNotificationPreferences = () => {
   const queryClient = useQueryClient();
   return useMutation<NotificationPreferences, Error, void>({
@@ -216,7 +215,6 @@ export const useResetNotificationPreferences = () => {
   });
 };
 
-/** COMP-003: SMS and WhatsApp route only to a destination with a GRANTED consent row. */
 export const useNotificationConsents = () => {
   const { data: session } = useSession();
   return useQuery<NotificationConsent[], Error>({

@@ -1,12 +1,5 @@
 import { z } from "zod";
 
-/**
- * The candidate's own view of their application.
- *
- * Six coarse statuses rather than the pipeline's seven. The endpoint's token
- * travels in a URL — into mail archives, browser history and referrer headers —
- * so the response carries a first name and nothing else that identifies anyone.
- */
 export const publicApplicationStatusContract = z.object({
   status: z.enum(["received", "in_review", "interview", "offer", "hired", "rejected"]),
   statusText: z.string(),
@@ -17,9 +10,7 @@ export const publicApplicationStatusContract = z.object({
   jobType: z.string().nullable(),
   organisationName: z.string(),
   candidateFirstName: z.string(),
-  /** A live self-schedule link, when there is one to act on. */
   bookingUrl: z.string().nullable(),
-  /** A live offer awaiting an answer, when there is one. */
   offerUrl: z.string().nullable(),
 });
 
@@ -46,11 +37,6 @@ export const publicJobListContract = z.object({
   ),
 });
 
-/**
- * The screening questions a careers form has to render. `knockoutAnswer` is
- * deliberately absent from the payload — publishing the passing answer would
- * tell every applicant what to say.
- */
 export const publicScreeningQuestionContract = z.object({
   id: z.string(),
   question: z.string(),
@@ -86,18 +72,11 @@ export const publicJobDetailContract = z.object({
 
 export const publicJobApplicationContract = z.object({
   trackingToken: z.string(),
-  /** True when this email had already applied; the token is the first one's. */
   duplicate: z.boolean(),
   resumeStored: z.boolean(),
   resumeReason: z.string().nullable(),
 });
 
-/**
- * The compensation breakdown, already summed and already divided into months by
- * the backend. `monthly` is null on a line that has no monthly form — a joining
- * bonus is paid once, and a per-month figure against it would state a recurring
- * payment nobody offered.
- */
 const publicCtcPreview = z.object({
   lines: z.array(
     z.object({
@@ -122,7 +101,6 @@ export const publicOfferDetailContract = z.object({
   joiningDate: z.string().nullable(),
   validUntil: z.string().nullable(),
   notes: z.string().nullable(),
-  /** Null when no breakdown was entered, or when it disagrees with the salary. */
   ctcPreview: publicCtcPreview.nullable(),
   negotiations: z.array(z.record(z.string(), z.unknown())),
 });

@@ -26,12 +26,6 @@ import { useIsMobile } from "@/hooks/common/use-mobile";
 import { useSignOut } from "@/hooks/common/auth-hooks";
 import { resolveImageUrl, cn } from "@/lib/utils";
 
-/**
- * The menu body is fetched on first open. Radix renders a menu's content only
- * while it is open, so the eleven link icons, the theme switcher, the five
- * permission reads and the sign-out mutation behind this boundary never reach a
- * cold authenticated load — the header paints the avatar and nothing else.
- */
 const UserAvatarMenuBody = dynamic(
   () =>
     import("@/components/layout/header/user-avatar-menu-body").then(

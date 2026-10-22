@@ -79,7 +79,6 @@ function CircularProgress({ value }: { value: number }) {
 interface GoalCardProps {
   goal: HrGoal;
   index: number;
-  /** Omitted when the viewer lacks `hr:performance:view` (PATCH /hr/performance/goals/:id). */
   onEditProgress?: (goal: HrGoal) => void;
 }
 

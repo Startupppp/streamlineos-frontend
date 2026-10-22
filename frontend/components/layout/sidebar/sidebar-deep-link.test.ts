@@ -9,16 +9,6 @@ import {
 import { PRODUCT_DEFINITIONS } from "./sidebar-products";
 import type { NavGroup, NavRoute, ModuleKey } from "./sidebar-nav-types";
 
-/**
- * The chain, not its links. `getProductFromPathname` and `getNavGroupsForModule`
- * are each already pinned; nothing asserted that following one into the other
- * lands a route in the sidebar it actually appears in.
- *
- * That composition is what "deep-linking activates the right product" means, and
- * it is provable here. What is NOT provable here is that the result renders,
- * fits, and highlights — those need a browser, and the ticket says so.
- */
-
 const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"];
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
@@ -30,7 +20,6 @@ function leavesOf(group: NavGroup): NavRoute[] {
   return flattenNavRoutes(group.routes).filter((route) => Boolean(route.href));
 }
 
-/** Every (group, route) the navigation model declares, with the product it claims. */
 const DECLARED_ROUTES = DECLARED_GROUPS.flatMap((group) =>
   leavesOf(group).map((route) => ({
     href: route.href as string,

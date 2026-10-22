@@ -115,7 +115,6 @@ async function batchAdmissionCheck(
   });
 }
 
-/** Server rows are numbered 1..n over the submitted payloads; attach each to its file row. */
 export function mergeServerPreview(
   rows: BulkOnboardFlowRow[],
   serverRows: BulkOnboardPreviewRow[],

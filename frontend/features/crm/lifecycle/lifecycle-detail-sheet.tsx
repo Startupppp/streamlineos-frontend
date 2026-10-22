@@ -40,13 +40,6 @@ function signalLabel(kind: string): string {
   return known ? SIGNAL_KIND_LABEL[known] : kind;
 }
 
-/**
- * One contract, its signal history, and the writes a renewals manager makes.
- *
- * Each control gates on its own key: `crm:lifecycle:manage` for signal, renew
- * and close; `crm:lifecycle-triggers:run` for "consider now", which can open an
- * opportunity and spend AI credits.
- */
 export function LifecycleDetailSheet({
   customerLifecycleId,
   partyName,

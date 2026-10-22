@@ -53,11 +53,6 @@ function VersionItem({ row, canApprove, onApprove }: VersionItemProps) {
   );
 }
 
-/**
- * The file history of a document. Uploading a new version changes nothing anyone reads. Approving it is the
- * moment the document's file changes for everyone, including anyone reading it through the Knowledge Base, which
- * is why approval needs the permission to publish and asks first.
- */
 export function DocumentVersionsPanel({ documentId }: DocumentVersionsPanelProps) {
   const canManage = useCan("hr:documents:manage");
   const canPublish = useCan("hr:documents:publish");

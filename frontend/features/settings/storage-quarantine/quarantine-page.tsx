@@ -38,7 +38,6 @@ function rowKey(row: QuarantineRecord): string {
   return row.id;
 }
 
-/** Uploads held for malware scanning: review, release, reject or delete. */
 export function QuarantinePage() {
   const layout = useTenantLayout(QUARANTINE_RECORD_LAYOUT);
   const router = useRouter();

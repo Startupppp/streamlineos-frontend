@@ -3,7 +3,6 @@ import { z } from "zod";
 export const QUARANTINE_STATUSES = ["pending_scan", "clean", "infected", "error"] as const;
 export type QuarantineStatus = (typeof QUARANTINE_STATUSES)[number];
 
-/** `quarantineRecordSchema` — the twelve-column projection. */
 const quarantineRecordContract = z.object({
   id: z.string(),
   orgId: z.string(),

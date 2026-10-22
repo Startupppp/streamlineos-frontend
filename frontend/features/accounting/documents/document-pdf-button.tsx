@@ -15,11 +15,9 @@ const READ_KEY = {
 interface DocumentPdfButtonProps {
   kind: DocumentPdfKind;
   documentId: string;
-  /** Used when the server sends no Content-Disposition filename. */
   fallbackName: string;
 }
 
-/** Saves a posted document's PDF. Only posted documents have one, so callers hide it on drafts. */
 export function DocumentPdfButton({ kind, documentId, fallbackName }: DocumentPdfButtonProps) {
   const canRead = useCan(READ_KEY[kind]);
   const download = useDownloadDocumentPdf(kind);

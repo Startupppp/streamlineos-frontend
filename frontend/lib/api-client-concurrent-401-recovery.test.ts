@@ -26,7 +26,6 @@ let apiCalls: { authorization: string | null }[] = [];
 let cacheClears = 0;
 let unregister: () => void;
 
-/** Accepts SECOND_TOKEN, 401s everything else — the shape of an expired session. */
 function installTransport(): void {
   global.fetch = jest.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
     const url = String(input);

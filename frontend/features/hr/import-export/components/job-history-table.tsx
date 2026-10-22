@@ -168,8 +168,6 @@ export function JobHistoryTable({ entity }: JobHistoryTableProps) {
     },
   ];
 
-  // FE-47: the read is disabled without hr:import:manage, which would render
-  // as "No import history yet".
   if (importAccess === "denied") {
     return <NoPermissionState permission="hr:import:manage" compact />;
   }

@@ -42,13 +42,6 @@ function KitsContent() {
 
   const components = useMemo(() => (Array.isArray(bom.data) ? bom.data : []), [bom.data]);
 
-  /*
-   * The BOM projection carries `componentVariantId` and nothing else, so this
-   * table used to print "Variant #42" at a person and expect them to know what
-   * that was (§5). The variant list is already in the cache — the component
-   * picker in the editor reads the same query — so the name is resolved at the
-   * display boundary rather than asked of the server again.
-   */
   const { data: variants } = useProductVariants({ activeOnly: false });
   const variantNames = useMemo(() => {
     const byId = new Map<number, string>();

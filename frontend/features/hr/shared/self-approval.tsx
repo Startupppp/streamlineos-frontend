@@ -7,17 +7,11 @@ import { statusToneClasses } from "@/lib/design-tokens";
 import { useMyApprover } from "@/hooks/api/hr/approvers";
 import type { ApprovalRequestKind } from "@/hooks/api/hr/approval-route-schema";
 
-/**
- * HRMS-025 / HRM-B-010 / HR-U-002. The backend refuses an own request unless the
- * caller is the only person who can approve it, and then answers 409 until the
- * approval is confirmed. These pieces are how every approvals surface says so.
- */
 export const SELF_APPROVAL_LABEL = "Self-approval (no other approver)";
 
 export const NEEDS_ANOTHER_APPROVER_EXPLANATION =
   "You can't decide your own request. Your approver decides it — ask an HR admin to assign one if nobody can.";
 
-/** Whether the route for the caller's own `kind` request sends it back to them. */
 export function useIsSoleSelfApprover(
   kind: ApprovalRequestKind,
   currentUserId: string | undefined,

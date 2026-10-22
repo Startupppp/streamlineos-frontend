@@ -5,12 +5,6 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { SPRING } from "@/features/landing/relay/lib/motion";
 
-/**
- * Nav pinned to the top while scrolling (user: always visible). At the very
- * top it is the transparent Figma nav; once it has scrolled past its own
- * height (88 / 64 / 56 per frame) it gets a blurred dark plate so it stays
- * readable over the accent Statement.
- */
 export const NavShell = ({ children }: { children: ReactNode }) => {
   const [atTop, setAtTop] = useState(true);
   const ref = useRef<HTMLDivElement>(null);

@@ -3,14 +3,6 @@ import { z } from "zod";
 import { isEndInvalidForStart, type DateBoundMode } from "@/lib/date-constraints";
 import { getTodayString } from "@/lib/date-utils";
 
-/*
-  The two zod refinements that used to live in `date-constraints`. They are the
-  only thing in that module that touched zod, and `date-picker` imports the
-  pure helpers beside them — which made zod (and its full locale table, 224 kB
-  raw / 53 kB gzip) eagerly reachable from every route that renders a date
-  field, whether or not that route validates a form. Splitting them out keeps
-  the picker's dependency to date-fns.
-*/
 
 type DateOrderKeys = {
   startKey?: string;

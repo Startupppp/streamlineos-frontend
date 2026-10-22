@@ -1,11 +1,5 @@
 import { z } from "zod";
 
-/**
- * HRM-15 reporting-line contracts. Mirrors the backend DTOs in
- * `src/modules/hr/directory/dto/reporting-lines-{shared,line,response}.schemas.ts`
- * field for field (FE-28). Where the published CONTRACT addenda and the DTO
- * disagree, the field accepts both shapes so neither side's reading throws.
- */
 
 const managerStateContract = z.enum(["active", "on-notice", "inactive", "exited"]);
 
@@ -59,10 +53,6 @@ const reportingLineEntryContract = z.object({
   managerState: managerStateContract,
 });
 
-/**
- * The PRIMARY entry. `fallbackConfirmedAt` and `changeReason` are emitted by the
- * read model but absent from the DTO's primary entry, hence optional.
- */
 const primaryEntryContract = reportingLineEntryContract.extend({
   source: reportingLineSourceContract,
   isFallback: z.boolean(),
@@ -83,7 +73,6 @@ export const reportingLineViewContract = z.object({
   upcoming: z.array(primaryEntryContract),
   history: z.array(primaryEntryContract),
   secondary: z.array(relationshipEntryContract),
-  /** Addendum 2: `reason` is null without manage/review (the DTO says string). */
   topLevel: z.object({ reason: z.string().nullable(), effectiveFrom: z.string() }).nullable(),
   primaryChangesLast24h: z.number().int(),
   changeThreshold: z.number().int(),
@@ -118,7 +107,6 @@ export const reportingManagerPolicyContract = z.object({
 });
 
 export const myReportingLineContract = z.object({
-  /** Addendum 1 Q8: always present; the DTO omits it, so absent reads as "employed". */
   hasEmployment: z.boolean().optional(),
   primary: relationshipEntryContract.nullable(),
   secondary: z.array(relationshipEntryContract),
@@ -161,7 +149,6 @@ export const managerCoverageReportContract = z.object({
       effectiveFrom: z.string(),
     }),
   ),
-  /** Addendum 1 Q3 adds `members`; the DTO still carries only `userIds`. */
   circular: z.array(
     z.object({
       userIds: z.array(z.string()),

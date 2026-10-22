@@ -4,15 +4,6 @@ import {
   moduleOwningNamespace,
 } from "../administering-module";
 
-/**
- * The Simulate screen groups each permission key by administeringModuleOf(key).
- * With the naive split (key.split(":")[0]), chat:* returns "chat".
- * The catalog-driven version must return "home" for every Home-administered
- * namespace so those permissions group under the Home module header, not under
- * stray "chat" / "mail" / "calendar" / "notifications" headers.
- *
- * These assertions are the bite: restore the naive split and every one fails.
- */
 describe("administeringModuleOf (Simulate screen grouping)", () => {
   it("groups chat namespace under home, not chat", () => {
     expect(administeringModuleOf("chat:huddles:moderate")).toBe("home");
@@ -66,7 +57,6 @@ describe("moduleOwningNamespace", () => {
   });
 });
 
-// MANIFEST-driven, so a namespace added to any module's administersNamespaces later is covered with no test edit.
 describe("no administered namespace can fall back to naive prefix grouping", () => {
   const administeredNamespaces = MANIFEST.modules.flatMap((module) =>
     module.administersNamespaces.map((namespace) => ({

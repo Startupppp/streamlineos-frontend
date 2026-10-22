@@ -36,8 +36,6 @@ export function EmployeeTimelineTab({ userId }: Props) {
   const employment = employmentQuery.data;
   const entries = timelineQuery.data?.pages.flatMap((page) => page.data) ?? [];
 
-  // Both reads are gated on hr:employees:view; a denied caller must see the
-  // refusal, not "No timeline events yet" (FE-47).
   const pageState = usePageState({
     permission: "hr:employees:view",
     isLoading: employmentQuery.isLoading || timelineQuery.isLoading,

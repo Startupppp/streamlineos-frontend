@@ -87,9 +87,7 @@ function BatchCard({ batch, canCreate, isPending, onCreate }: BatchCardProps) {
                     </span>
                   ))}
                 </td>
-                {/* C2. The engine's own number stays visible beside the one that
-                    will be ordered — struck through when a person changed it, so
-                    the two are never read as the same figure. */}
+                
                 <td
                   className={cn(
                     "py-2 text-right font-mono text-dense tabular-nums text-muted-foreground",
@@ -129,16 +127,6 @@ interface PoBatchPreviewPanelProps {
   onCreate: (batch: SupplierSiteBatch) => void;
 }
 
-/**
- * C6 — what would be created, before anything is.
- *
- * One card per (supplier, site, currency) group, which is one purchase order:
- * merging two sites onto one order sends every unit to whichever sorted first,
- * and merging two currencies produces a total in neither. The refusals are shown
- * beside the batches rather than filtered out — a proposal that vanishes with no
- * explanation reads as a bug, and the reason is what tells a buyer whether to go
- * and fix the supplier record.
- */
 export function PoBatchPreviewPanel({
   preview,
   isLoading,

@@ -10,16 +10,6 @@ if (typeof globalThis.TextEncoder === "undefined")
 
 installAbortSignalPolyfill();
 
-/**
- * Both KB document surfaces, driven from the menu item a user clicks all the way
- * down through `streamKbDocAi` -> `streamAiText` -> `authedFetch` to the wire,
- * with only `global.fetch` mocked.
- *
- * Stubbing the transport would hide the two defects this seam keeps producing:
- * a panel that still POSTs the buffered sibling while wearing a Stop button, and
- * an abort signal that type-checks in a slot nothing reads. Both are only
- * visible at the fetch boundary, so that is where the assertions are.
- */
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
@@ -42,7 +32,6 @@ function encode(text: string): Uint8Array {
   return new TextEncoder().encode(text);
 }
 
-/** Serves the given deltas, then hangs until the signal aborts. */
 function heldBody(signal: AbortSignal | null, chunks: string[]) {
   const queued = [...chunks];
   return {
@@ -197,14 +186,6 @@ describe.each(SURFACES)("$name — the KB document actions stream", (surface) =>
     expect(screen.getByText(/Partial rewrite\./)).toBeInTheDocument();
   });
 
-  /**
-   * Reopening the menu dismisses the result popover, and that dismissal is what
-   * cancels the run behind it. The invariant is not "one stream ever" but "never
-   * two paid streams live at once" — so the assertion is on the FIRST request's
-   * signal, which must already be aborted by the time the second is dispatched.
-   * Asserting only the request count would have read this correct behaviour as a
-   * double charge.
-   */
   it("cancels the running stream before it dispatches a second one", async () => {
     installFetch(held(["one "]));
     const user = userEvent.setup();

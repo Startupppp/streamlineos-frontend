@@ -46,12 +46,6 @@ interface EditLocationActionProps {
   locations: WarehouseLocation[];
 }
 
-/**
- * `PATCH /inventory/warehouses/:warehouseId/locations/:locationId` had no
- * caller, so a bin created with the wrong code, the wrong flags or in the wrong
- * aisle stayed that way, and a location taken out of use could not be closed —
- * it kept being offered as a putaway destination for the life of the warehouse.
- */
 export function EditLocationAction({
   location,
   warehouseId,

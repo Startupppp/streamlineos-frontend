@@ -4,17 +4,6 @@ import { renderWithProviders } from "@/test-utils";
 import { AuditExportPanel } from "./audit-export-panel";
 import type { AuditExportJob } from "@/hooks/api/inventory/audit-export";
 
-/**
- * `inventory:audit:export` exists because taking evidence away is a stronger
- * right than reading the trail. All five routes behind it were unreachable, so
- * it governed nothing anybody could do.
- *
- * The state that matters most here is the last one: a bundle that no longer
- * reproduces its recorded checksum has to say so in as many words. An audit
- * export whose verification quietly renders as "Ready" is worse than no export,
- * because somebody signs off against it.
- */
-
 const mockUseCan = jest.fn(() => true);
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => mockUseCan(),
@@ -151,7 +140,6 @@ describe("evidence export", () => {
       },
     );
 
-    // Nothing is verified until a reader asks — click to trigger the check.
     fireEvent.click(screen.getByRole("button", { name: /Verify/i }));
 
     expect(

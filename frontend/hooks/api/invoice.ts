@@ -11,10 +11,6 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import type { InvoicesResponse } from "@/hooks/api/invoice-schema";
 
-/**
- * Deferred: `hooks/api/index.ts` re-exports this module, so a value import of
- * `invoice-schema` charged every barrel consumer for Zod's runtime.
- */
 const oneInvoiceContract = lazyContract(() =>
   import("@/hooks/api/invoice-schema").then((m) => m.invoiceContract),
 );
@@ -50,7 +46,6 @@ interface CreateInvoiceItemInput {
   gstRate: number;
 }
 
-// The write shape the backend's createInvoiceSchema accepts — numbers, unlike the persisted row.
 interface LegacyLineItemInput {
   description: string;
   quantity: number;
@@ -168,9 +163,6 @@ export const useVoidInvoice = () => {
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.detail(id) });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.invoice.stats() });
       void queryClient.invalidateQueries({ queryKey: accountingAndSupportQueryKeys.accounting.all });
-      // A void now also releases the timesheet entries this invoice billed
-      // (invoices-lifecycle.service.ts) back to UNINVOICED, so the billing
-      // queue's cached "uninvoiced" view is stale the moment this commits.
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.billingUninvoiced() });
       void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.timesheets.entries() });
     },

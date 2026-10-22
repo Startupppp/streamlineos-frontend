@@ -91,10 +91,6 @@ describe("useSessionClaimsRefresh — what the caller is promised", () => {
   });
 
   it("PINNED: an update that never settles resolves null at 18s, and is NOT cancelled", async () => {
-    // The timeout bounds the CALLER, not the work. `update()` keeps running and
-    // still writes the NextAuth session when it eventually lands, which is why
-    // every consumer needs its own generation fence — `useSwitchOrg` has one and
-    // the other thirteen call sites do not (recorded in the identity PRD).
     jest.useFakeTimers();
     let settleUpdate: (session: Session) => void = () => undefined;
     mockUpdate.mockReturnValue(
@@ -120,7 +116,6 @@ describe("useSessionClaimsRefresh — what the caller is promised", () => {
     });
     expect(observed).toEqual([null]);
 
-    // The late completion arrives after the caller has already been told null.
     await act(async () => {
       settleUpdate(makeSession("org-late"));
       await Promise.resolve();

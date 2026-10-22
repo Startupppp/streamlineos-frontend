@@ -1,26 +1,3 @@
-/**
- * HR is the largest feature area in the app (507 .tsx files) and had no a11y
- * spec of its own. Two defects this file pins, both reproduced before it was
- * written:
- *
- * 1. THE SKILLS MATRIX WAS AN UNHEADED GRID. `<th>` carried no `scope`, the
- *    employee name sat in a `<td>` so no row header existed at all, and the
- *    only place a truncated column label or an abbreviated proficiency was
- *    spelled out was `title=` — which assistive technology is not required to
- *    announce and which no touch user ever sees. In compact mode a cell read
- *    literally "E" with a column header of "Commu…", so the table conveyed
- *    nothing without sighted hover.
- *
- * 2. FOUR HR SHEETS WERE WIDER THAN A PHONE. `SheetContent` supplies
- *    `w-full max-w-full sm:w-3/4 sm:max-w-sm`; an unconditional `w-[420px]` /
- *    `w-[480px]` in the call site's className beats it at EVERY width, so on a
- *    375px viewport the panel overflowed the viewport by 45-105px with no way
- *    to reach the far edge. The responsive form is `w-full sm:max-w-[NNNpx]`,
- *    already used by `recruitment/kanban/candidate-sheet.tsx`.
- *
- * The width check scans all of `features/hr/**`, not the four files that were
- * fixed: a scan whose corpus is its own patch cannot see the fifth instance.
- */
 import fs from "node:fs";
 import path from "node:path";
 import React from "react";
@@ -33,9 +10,6 @@ import type { SkillsMatrixData } from "@/hooks/api/hr/employees";
 const mockUseSkillsMatrix = jest.fn<unknown, unknown[]>();
 const mockUseCan = jest.fn<boolean, unknown[]>(() => true);
 
-// The page now resolves its state through usePageState, which reads session,
-// access and entitlements; resolve it as granted so the test exercises the
-// page, not the provider tree.
 jest.mock("@/hooks/api/use-page-state", () => {
   const { resolvePageState } = jest.requireActual<typeof import("@/lib/page-state/resolve-page-state")>(
     "@/lib/page-state/resolve-page-state",
@@ -181,7 +155,6 @@ describe("a11y — HR skills matrix table semantics", () => {
 });
 
 const HR_FEATURES = path.resolve(__dirname, "..", "hr");
-// Recruitment OS left features/hr on 2026-09-25; its sheets keep the same rule.
 const RECRUITMENT_FEATURES = path.resolve(__dirname, "..", "recruitment");
 
 function tsxFiles(dir: string, out: string[] = []): string[] {
@@ -193,10 +166,6 @@ function tsxFiles(dir: string, out: string[] = []): string[] {
   return out;
 }
 
-/**
- * Every `<SheetContent … className="…">` in the HR feature tree, with the
- * className flattened onto one line so a multi-line call site cannot hide.
- */
 function sheetClassNames(): { file: string; line: number; className: string }[] {
   const found: { file: string; line: number; className: string }[] = [];
   for (const file of [...tsxFiles(HR_FEATURES), ...tsxFiles(RECRUITMENT_FEATURES)]) {
@@ -216,7 +185,6 @@ function sheetClassNames(): { file: string; line: number; className: string }[] 
   return found;
 }
 
-/** `w-[420px]` with no responsive prefix. `sm:w-[420px]` and `sm:max-w-[420px]` are fine. */
 const UNCONDITIONAL_PIXEL_WIDTH = /(^|\s)w-\[\d+(?:px|rem)\]/;
 
 describe("responsive — HR sheets are not wider than a 375px viewport", () => {

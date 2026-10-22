@@ -55,7 +55,6 @@ export function PolicyVersionHistory({ policy, canManage, onActivated, unsavedCh
         },
         onError: (err) => {
           toast.error(getErrorMessage(err));
-          // FE-78: the backend answers a scope/date conflict with 409.
           if (isApiError(err) && err.status === 409) {
             setForceArmed(true);
           }

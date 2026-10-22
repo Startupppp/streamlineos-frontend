@@ -3,12 +3,6 @@ import { toast } from "sonner";
 import type { Document } from "@/types/hr";
 import { DocumentTable } from "./document-table";
 
-/**
- * HRMS-E2E-009, the bulk-download half. "Download all as ZIP" fetched each file
- * and packed whatever came back, so a zero-byte body went into the archive as
- * an empty file and the toast still said every file was packaged. When every
- * fetch failed it saved an empty ZIP anyway.
- */
 
 jest.mock("./document-columns", () => ({ createDocumentColumns: () => [] }));
 jest.mock("@/hooks/common/use-file-url", () => ({
@@ -79,9 +73,7 @@ function renderTable() {
   );
 }
 
-/** Files served by URL suffix: `ok` has bytes, `empty` has none. */
 function serve(bodies: Record<number, "ok" | "empty">) {
-  // jsdom has neither `fetch` nor `Response`; the component reads only `ok` and `blob()`.
   Object.defineProperty(globalThis, "fetch", {
     configurable: true,
     writable: true,

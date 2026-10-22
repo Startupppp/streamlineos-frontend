@@ -1,10 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { ServiceDeliveryPage } from "@/features/hr/service-delivery/service-delivery-page";
 
-/**
- * FE-47: a caller holding neither hr:cases:view nor hr:helpdesk:view has both
- * reads disabled, which used to fall through to "Nothing open".
- */
 
 const scopes: Record<string, true> = {};
 let accessLoaded = true;

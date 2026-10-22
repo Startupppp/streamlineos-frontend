@@ -3,37 +3,6 @@ import { join, relative } from "node:path";
 import { formatMoney as formatMajor, type MoneyDisplay } from "./format-utils";
 import { formatMinorMoney as formatMinor } from "./accounting/money";
 
-/**
- * TWO MONEY FORMATTERS EXIST ON PURPOSE, AND THAT IS THE HAZARD.
- *
- * This codebase stores money two ways, and both are correct for what they hold:
- *
- *   - The accounting/GL kernel uses integer minor units — `bigint("debit_minor")`,
- *     `bigint("amount_minor")`, 123 columns, every one of them NAMED `*Minor`.
- *     `lib/accounting/money.ts#formatMinorMoney(minor, currency)` renders those.
- *   - Timesheets, HR and payroll use `decimal(precision, scale: 2)` — 74 columns,
- *     already in major units. `lib/format-utils.ts#formatMoney(value, display)`
- *     renders those.
- *
- * So "unify the two money formatters" is the WRONG fix, and this file exists
- * partly to say so where someone proposing it will see it: collapsing them would
- * make one of the two families render 100x wrong. What is missing is not a merge,
- * it is a pin. Nothing asserted that the two disagree, and nothing checked that a
- * minor-unit value never reaches the major-unit formatter.
- *
- * The type system already catches the simplest mistake — the second parameter is
- * a `MoneyDisplay` object on one and a currency `string` on the other, so
- * swapping the IMPORT is a compile error. What it cannot catch is a correct
- * import fed the wrong VALUE, because both take `number` first. That is the gap
- * these tests cover.
- *
- * `features/payroll/**` is deliberately NOT censused. It has a third `formatMoney`
- * (`features/payroll/shared/payroll-format.ts`, major units) and it belongs to
- * another owner; a failing assertion of ours over their tree would block their
- * work. Their function is the genuinely dangerous one — its signature
- * `(amount, currency: string)` is shape-identical to the minor-unit one — but
- * saying so is their call to act on, not ours to enforce.
- */
 
 const REPO = join(__dirname, "..");
 const SCAN_ROOTS = ["app", "components", "features", "lib", "hooks"];
@@ -53,19 +22,12 @@ function sourceFiles(): string[] {
   return out.filter((f) => !EXCLUDED.some((e) => relative(REPO, f).startsWith(e)));
 }
 
-/**
- * Comments are blanked, not removed, so any line number we report still points
- * at the real line. This file's own prose names `debit_minor` and `amount_minor`
- * beside the word formatMoney; a raw-text scan would match this docblock and
- * report the guard itself as a violation.
- */
 function codeOnly(src: string): string {
   return src
     .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, " "))
     .replace(/\/\/[^\n]*/g, (m) => m.replace(/[^\n]/g, " "));
 }
 
-/** First argument of a call, with nesting respected — a regex cannot do this. */
 function firstArgument(src: string, openParen: number): string {
   let depth = 0;
   for (let i = openParen; i < src.length; i++) {
@@ -112,13 +74,11 @@ describe("the major and minor money formatters disagree by exactly 100x, on purp
   const INR: MoneyDisplay = { currency: "INR", locale: "en-IN" };
 
   it("renders the same number 100x apart, so a swap is never cosmetic", () => {
-    // 832500 is 8,325 rupees in the GL and eight lakh rupees on a rate card.
     expect(formatMinor(832_500, "INR")).toContain("8,325.00");
     expect(formatMajor(832_500, INR)).toContain("8,32,500");
   });
 
   it("agrees only where a currency has no minor unit", () => {
-    // JPY has scale 0, so the two coincide — the one case a swap hides.
     expect(formatMinor(1000, "JPY")).toContain("1,000");
     expect(formatMajor(1000, { currency: "JPY", locale: "ja-JP" })).toContain("1,000");
   });
@@ -127,12 +87,6 @@ describe("the major and minor money formatters disagree by exactly 100x, on purp
 describe("no minor-unit value reaches the major-unit formatter", () => {
   const calls = moneyCalls();
 
-  /*
-   * ANTI-VACUITY, and it is the point of the whole file. A census that matches
-   * nothing reports zero violations and looks identical to a clean codebase.
-   * These two cases fail if the walker, the import detection or the argument
-   * extractor breaks, so the "0 violations" below is worth something.
-   */
   it("actually reached the call sites it claims to check", () => {
     expect(calls.length).toBeGreaterThanOrEqual(15);
     expect(calls.filter((c) => c.major).length).toBeGreaterThanOrEqual(4);
@@ -140,8 +94,6 @@ describe("no minor-unit value reaches the major-unit formatter", () => {
   });
 
   it("can see a cross-unit expression when one is there", () => {
-    // The two known-correct conversions. If the extractor stops seeing these,
-    // it has also stopped being able to see an UNCONVERTED one.
     const crossing = calls.filter((c) => c.major && MINOR_VALUE.test(c.arg));
     expect(crossing.length).toBeGreaterThanOrEqual(2);
     expect(crossing.every((c) => CONVERTS_DOWN.test(c.arg))).toBe(true);
@@ -155,8 +107,6 @@ describe("no minor-unit value reaches the major-unit formatter", () => {
   });
 
   it("never lets one file import both definitions", () => {
-    // Two same-named functions in one scope is how the 100x mistake gets made
-    // without anything looking wrong at the call site.
     const both = sourceFiles().filter((f) => {
       const src = codeOnly(readFileSync(f, "utf8"));
       if (!/\bformat(?:Minor)?Money\b/.test(src)) return false;

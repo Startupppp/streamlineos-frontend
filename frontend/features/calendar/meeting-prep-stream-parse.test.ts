@@ -3,11 +3,6 @@ import {
   hasAgendaContent,
 } from "./meeting-prep-stream-parse";
 
-/**
- * The panel calls this on every token, so the contract that matters is not
- * "parses the finished answer" — it is "every prefix of the finished answer
- * parses into something renderable, and no prefix renders a lie".
- */
 const ANSWER = [
   "## Agenda",
   "- 09:00 Opening and context (5 min)",
