@@ -35,20 +35,17 @@ function findRoute(groups: NavGroup[], href: string): NavRoute | undefined {
 describe("HRMS-UX-001 — the default visible HR tree is a lean founder tree", () => {
   const visible = founderAdminGroups(false);
 
-  it("gives a founder-admin at most eight top-level HR groups", () => {
+  it("gives a founder-admin at most five top-level HR groups", () => {
     expect(visible.length).toBeGreaterThan(0);
-    expect(visible.length).toBeLessThanOrEqual(8);
+    expect(visible.length).toBeLessThanOrEqual(5);
   });
 
   it("orders the groups as the IA declares", () => {
     expect(visible.map((group) => group.label)).toEqual([
       "HR Overview",
       "HR People",
-      "Lifecycle",
-      "Time",
-      "Documents",
+      "Time Off & Attendance",
       "People Ops",
-      "Insights",
       "Settings",
     ]);
   });
@@ -115,7 +112,7 @@ describe("HRMS-UX-010 — the locked chrome kills are executed in HR nav", () =>
   });
 
   it("puts Devices and Biometric under one Time clocks parent", () => {
-    const time = founderAdminGroups(false).find((group) => group.label === "Time");
+    const time = founderAdminGroups(false).find((group) => group.label === "Time Off & Attendance");
     const timeClocks = time?.routes.find((route) => route.label === "Time clocks");
 
     expect(timeClocks?.children?.map((child) => child.href)).toEqual([
