@@ -104,7 +104,7 @@ export function SavingsCalculator() {
       </div>
 
       <div className="mt-3 rounded-2xl bg-linear-135 from-brand-from to-brand-to px-6 py-5 text-on-accent w390:px-4.75">
-        <p className="font-mono text-relay-label leading-label">Annual savings</p>
+        <p className="font-mono text-relay-label leading-label">Annual savings (INR, India list prices)</p>
         <div className="mt-1 flex flex-wrap items-end justify-between gap-3">
           <p className="text-pricing-price leading-pricing-price font-semibold tracking-title tabular-nums">
             {INR(vsAllInOne.savings)}
