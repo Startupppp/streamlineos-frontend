@@ -97,6 +97,8 @@ jest.mock("@/components/layout/mobile/mobile-module-nav-items", () => {
       path === route.href,
     shouldShowMobileModuleBottomNav: () => true,
     getMobileModuleContentPaddingClassName: () => "",
+    usesMobileGroupTabs: () => false,
+    getMobileGroupTabs: () => [],
   };
 });
 

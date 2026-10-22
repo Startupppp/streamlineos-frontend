@@ -15,7 +15,7 @@ import {
   shouldShowMobileModuleBottomNav,
   usesMobileGroupTabs,
 } from "./mobile-module-nav-items";
-import { getProductFromPathname, type NavRoute } from "../sidebar/sidebar-nav-items";
+import type { NavRoute } from "../sidebar/sidebar-nav-items";
 import {
   Drawer,
   DrawerContent,
@@ -227,12 +227,12 @@ function MoreDrawer({
 
 export function MobileModuleBottomNav({ className }: { className?: string }) {
   const pathname = usePathname() ?? "";
-  const { navGroups } = useProductSidebarVisibility();
+  const { navGroups, activeProduct } = useProductSidebarVisibility();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isChatRoute = pathname.startsWith("/chat");
   const show = shouldShowMobileModuleBottomNav(navGroups, { isChatRoute });
-  const groupTabs = usesMobileGroupTabs(getProductFromPathname(pathname), navGroups)
+  const groupTabs = activeProduct && usesMobileGroupTabs(activeProduct, navGroups)
     ? getMobileGroupTabs(navGroups, pathname)
     : null;
   const tabs = getMobileModuleBottomTabs(navGroups);
