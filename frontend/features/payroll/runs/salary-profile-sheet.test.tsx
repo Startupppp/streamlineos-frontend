@@ -46,6 +46,7 @@ const catalog = [
   { id: 2, code: "QA1015BASIC", name: "QA1015 Basic", type: "EARNING", isActive: true, profileCount: 0 },
   { id: 3, code: "HRA", name: "House Rent Allowance", type: "EARNING", isActive: true, profileCount: 0 },
 ];
+jest.mock("@/features/payroll/employees/profile-template-picker", () => ({ ProfileTemplatePicker: () => null }));
 jest.mock("@/hooks/api/payroll/components", () => ({
   usePayrollComponents: () => ({
     data: { items: catalog, pagination: { limit: 100, hasMore: false, nextCursor: null } },
