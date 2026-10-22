@@ -1,6 +1,6 @@
 # HRM-10 — Competitor Baseline and Differentiation PRD
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 ## Outcome
 
@@ -74,7 +74,10 @@ claims at prioritization time and record date/region because packaging changes.
 | Localized compliance | Global-company baseline | Country policy packs and provider boundaries; no global hard-coded tax rules |
 | Guided HR assistance | Emerging baseline | Permission-grounded answers/drafts with citations, abstention and human confirmation |
 
-- [ ] **HRM-10-001** ship manager team home.
+- [x] **HRM-10-001** ship manager team home. **Closed — source and focused test
+  2026-10-22:** `/me/team` mounts the manager home; the focused
+  `manager-home-page.test.tsx` suite passed 13/13 tests. Browser and release
+  proof remain separately open under HRM-11.
 - [ ] **HRM-10-002** ship attendance + leave calendar experiences with WFO/WFH
   distinction.
 - [ ] **HRM-10-003** ship policy acknowledgement tracking MVP.

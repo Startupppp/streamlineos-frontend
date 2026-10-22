@@ -1,6 +1,6 @@
 # HRM-02 — Page Inventory (Keep / Merge / Remove / Add) PRD
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 ## Outcome
 
@@ -102,8 +102,12 @@ keep/merge/remove/add decision table.
   under `frontend/app/(authenticated)/directory/` is exactly `[personId]`,
   `access`, `settings`, `settings/[personId]` and `workers`. There is no
   `settings/workers` directory, and `/directory/workers` exists.
-- [ ] **HRM-02-005** ADD manager team roster at `/me/team` or document that
+- [x] **HRM-02-005** ADD manager team roster at `/me/team` or document that
   manager scope is only via `/hr/employees` filters — pick one and ship it.
+  **Closed — source and focused test 2026-10-22:**
+  `frontend/app/(authenticated)/me/team/page.tsx` mounts `ManagerHomePage`;
+  `frontend/PAGES.md` records the scoped roster and approval view;
+  `manager-home-page.test.tsx` passed 13/13 tests at this revision.
 
 ## C. HR Overview and Employees
 

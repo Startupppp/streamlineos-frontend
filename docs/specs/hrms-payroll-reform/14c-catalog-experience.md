@@ -1,6 +1,6 @@
 # HRM-14c — Catalog: Experience (Comp, Docs, Assets, Performance)
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 > Parent: [14-page-catalog-readme.md](./14-page-catalog-readme.md)
 

@@ -582,8 +582,10 @@ contract parity and the relevant documentation/index update are complete.
 ### Phase D — Frontend contracts and UI
 
 - [ ] Update API hooks, query keys and Zod contracts to match backend exactly.
-- [ ] Add Reporting Manager Policy settings page/form with validation and clear
-  fallback-order explanation.
+- [x] Add Reporting Manager Policy settings page/form with validation and clear
+  fallback-order explanation. **Source and focused test 2026-10-22:**
+  `frontend/features/hr/reporting-managers/policy/` contains the page, fields,
+  schema, and version-conflict handling; its focused test passed.
 - [ ] Update individual onboarding with optional primary selector, secondary
   selectors, top-level exclusivity and fallback helper text.
 - [ ] Update template generator, parser, aliases, preview table, row errors,
@@ -594,12 +596,18 @@ contract parity and the relevant documentation/index update are complete.
   scheduled changes correctly.
 - [ ] Add employee self-service issue form/history and appropriate empty/error
   states.
-- [ ] Add HR review queue/drawer and request-decision states.
-- [ ] Add bulk reporting-change wizard with preview, threshold reason capture,
-  job confirmation and downloadable errors.
+- [x] Add HR review queue/drawer and request-decision states. **Source and
+  focused test 2026-10-22:** the request page and review sheet exist; their
+  focused tests passed, including permission denial and stale review handling.
+- [x] Add bulk reporting-change wizard with preview, threshold reason capture,
+  job confirmation and downloadable errors. **Source and focused test
+  2026-10-22:** the bulk wizard, preview, commit panel, result summary, and
+  failure download exist; the focused bulk test passed.
 - [ ] Update Manager Coverage labels/actions and profile/detail cache
   invalidation behavior.
-- [ ] Add/update `PAGES.md` for each new/moved/deleted surface.
+- [x] Add/update `PAGES.md` for each new/moved/deleted surface. **Source proof
+  2026-10-22:** `frontend/PAGES.md` records the manager policy, review queue,
+  bulk change, employee detail, and onboarding surfaces.
 
 ### Phase E — Verification and release
 
@@ -625,7 +633,7 @@ uses a dependency block so agents do not race on shared files or interfaces.
 
 ```text
 Implement HRM-15, “Reporting Manager Assignment, Onboarding, Import and Review,”
-from docs/specs/hrms-module/15-reporting-manager-onboarding-prd.md in the
+from docs/specs/hrms-payroll-reform/15-reporting-manager-onboarding-prd.md in the
 streamlineos-frontend and streamlineos-backend repositories.
 
 Read every applicable CLAUDE.md and AGENTS.md before edits. Preserve unrelated

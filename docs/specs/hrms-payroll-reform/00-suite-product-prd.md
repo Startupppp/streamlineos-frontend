@@ -11,10 +11,12 @@
 ## 1. Authority
 
 This folder is the product authority and open-work queue for HRMS and Payroll.
-The [current-product gaps](./10-current-product-gaps-prd.md) capture distinct
-implementation work inherited from the former HRMS execution pack; the
-[reporting-manager PRD](./11-reporting-manager-prd.md) retains its detailed
-policy contract and open verification. Source presence is not release proof.
+The [current-product gap map](./10-current-product-gaps-prd.md) routes to
+unfinished acceptance files inherited from the former HRMS execution pack;
+the [detailed reporting-manager PRD](./15-reporting-manager-onboarding-prd.md)
+retains its policy contract and open verification. Source presence is not
+release proof. Where older scope or route decisions conflict with this suite,
+the newer domain and page contracts control the target behavior.
 
 The normative set includes [Domain Contracts](./00a-suite-domain-contracts-prd.md), [Transitions](./00b-lifecycle-transition-contracts-prd.md), [Tier Register](./00c-requirement-tier-traceability-prd.md), [Core HR](./01-core-hr-lifecycle-prd.md),
 [Workforce](./02-workforce-management-prd.md), [Talent/Rewards](./03-talent-experience-rewards-prd.md), [Service](./04-employee-manager-service-prd.md),

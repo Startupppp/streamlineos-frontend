@@ -1,7 +1,7 @@
 # HRMS People Product Blueprint
 
 > Normative acceptance reference only. Dispatch and status live in
-> [README.md](./README.md). This document defines the product; it is not a
+> [legacy execution ledger](./legacy-execution-ledger.md). This document defines the product; it is not a
 > session-sized implementation task.
 
 ## Product Outcome

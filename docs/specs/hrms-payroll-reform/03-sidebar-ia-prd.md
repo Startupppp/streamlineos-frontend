@@ -1,6 +1,6 @@
 # HRM-03 — Sidebar Information Architecture and Component Reuse PRD
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 ## Outcome
 

@@ -1,6 +1,6 @@
 # HRM-00 — Normative Product and Architecture Decisions
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 ## Authority
 

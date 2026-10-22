@@ -1,6 +1,6 @@
 # HRM-14b — Catalog: Time, Leave, WFH/WFO
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 > Parent: [14-page-catalog-readme.md](./14-page-catalog-readme.md) · Companion: [HRM-13](./13-wfh-wfo-prd.md)
 

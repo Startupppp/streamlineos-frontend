@@ -1,6 +1,6 @@
 # HRM-09 — Visual Hierarchy, Tokens, and Accessibility PRD
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 ## Outcome
 

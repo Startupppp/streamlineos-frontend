@@ -33,19 +33,46 @@ const required = [
   "2026-10-22-market-benchmark.md",
 ];
 
+// These moved files had unfinished checkboxes at consolidation time. A file may
+// leave this list only after its remaining work is completed with evidence.
+const protectedOpenFiles = [
+  "00-product-decisions-prd.md", "01-route-navigation-prd.md",
+  "02-page-inventory-prd.md", "03-sidebar-ia-prd.md",
+  "04-discovery-filters-views-prd.md", "05-cards-bulk-actions-prd.md",
+  "06-forms-validation-prd.md", "07-data-performance-prd.md",
+  "08-architecture-prd.md", "09-visual-hierarchy-prd.md",
+  "10-competitor-parity-prd.md", "11-release-verification-prd.md",
+  "12-payroll-prd.md", "13-wfh-wfo-prd.md",
+  "14-page-catalog-readme.md", "14a-catalog-core-people.md",
+  "14b-catalog-time-leave.md", "14c-catalog-experience.md",
+  "14d-catalog-ops-governance.md", "14e-catalog-hr-settings.md",
+  "14f-catalog-payroll.md", "14g-catalog-recruitment-boundary.md",
+  "15-recheck-gap-matrix.md", "15-reporting-manager-onboarding-prd.md",
+  "agent-runbook.md", "work-packets.md",
+];
+
 const validate = ({ directory = suite, retiredDirectory = formerSuite } = {}) => {
   const failures = [];
   if (existsSync(retiredDirectory)) failures.push("former HRMS specification folder still exists");
   if (!existsSync(directory)) return [...failures, "merged People + Payroll folder is missing"];
 
   const files = readdirSync(directory).filter((name) => extname(name) === ".md");
-  for (const name of required) {
+  for (const name of [...required, ...protectedOpenFiles]) {
     if (!files.includes(name)) failures.push(`missing merged document: ${name}`);
   }
   const allText = files.map((name) => [name, readFileSync(join(directory, name), "utf8")]);
+  const seenBodies = new Map();
+  const seenOpenItems = new Map();
   for (const [name, content] of allText) {
-    if (/^\s*- \[[xX]\]/m.test(content))
-      failures.push(`${name}: completed checkbox belongs in evidence prose, not the open queue`);
+    const duplicateBody = seenBodies.get(content);
+    if (duplicateBody) failures.push(`${name}: duplicates the content of ${duplicateBody}`);
+    else seenBodies.set(content, name);
+    for (const match of content.matchAll(/^\s*- \[ \] (.+)$/gm)) {
+      const item = match[1].trim().replace(/\s+/g, " ").toLowerCase();
+      const duplicateItem = seenOpenItems.get(item);
+      if (duplicateItem) failures.push(`${name}: repeats an open item in ${duplicateItem}`);
+      else seenOpenItems.set(item, name);
+    }
     if (content.includes("docs/specs/hrms-module") || content.includes("../hrms-module/"))
       failures.push(`${name}: stale former-folder reference`);
     for (const match of content.matchAll(/\]\((\.[^\s)]+\.md)(?:#[^)]+)?\)/g)) {

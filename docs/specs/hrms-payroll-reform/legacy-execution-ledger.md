@@ -1,17 +1,17 @@
-# HRMS Execution Ledger
+# HRMS Execution Ledger (preserved reference)
 
 ## Authority
 
-This is the only mutable scheduler for the HRMS People program. The numbered
-HRM-00 through HRM-15 documents are the normative acceptance library; their
-346 open checkboxes are program-level roll-ups, not agent assignments. Never
-send one of those broad checkboxes to an implementation agent.
+The [People + Payroll suite](./README.md) owns current product scope, target
+routes, priority, and release gates. This ledger and the numbered HRM-00 through
+HRM-15 files preserve unfinished implementation and verification work from the
+earlier program. They are acceptance references; conflicting product decisions
+must be reconciled against the newer suite before implementation. Never send
+one of their broad roll-up checkboxes to an implementation agent.
 
-The old README's 34 duplicate parent/phase boxes were removed from the work
-count when it became this scheduler. The current source baseline contains 165 authenticated HR, Directory, `/me`,
-and Payroll page files plus the `/employee-onboarding` gate (166 accounted page
-files), 174 HR/Directory/Payroll controllers, and 96 schema files. Generated
-censuses supersede these snapshot counts when source changes.
+The former count of 346 open checkboxes and the route/controller/schema counts
+in this ledger were historical snapshots. Use a new source census and the
+current checklist state; do not use those numbers as completion evidence.
 
 Use the system in this order:
 

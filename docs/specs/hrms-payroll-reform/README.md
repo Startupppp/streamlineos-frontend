@@ -63,17 +63,22 @@ requirements and mixed P0/P1 subsets.
 | Task flows, UI states, copy, visual quality, accessibility | [07b Experience and content](./07b-experience-content-quality-prd.md) |
 | Capability priorities, waves, and launch claims | [08 Competitive coverage](./08-competitive-coverage-release-prd.md) |
 | Customer setup, migration, parallel runs, and cutover | [09 Implementation cockpit](./09-implementation-migration-cockpit-prd.md) |
-| Current-product migration tasks that are still open | [10 Implementation gaps](./10-current-product-gaps-prd.md) |
-| Detailed manager policy, correction, import, and remaining verification | [11 Reporting managers](./11-reporting-manager-prd.md) |
+| Where the existing open implementation tasks live | [10 Gap routing map](./10-current-product-gaps-prd.md) |
+| Reporting-manager code inventory and remaining acceptance source | [11 Manager evidence](./11-reporting-manager-prd.md) and [detailed manager PRD](./15-reporting-manager-onboarding-prd.md) |
 
 The [competitor benchmark](./08a-competitor-benchmark-prd.md) and
 [2026-10-22 primary-source research](./2026-10-22-market-benchmark.md)
 are dated discovery evidence. Vendor public claims are neither hands-on quality
 scores nor evidence that StreamlineOS has implemented a feature. This folder is
-the single People + Payroll specification and open-work queue. The former HRMS
-execution pack's distinct implementation gaps and manager contract were merged
-here; duplicate page catalogs, conflicting decisions, and agent scheduling
-instructions were retired.
+the single People + Payroll specification and open-work queue. Files from the
+earlier HRMS execution pack that still have unfinished TODOs are preserved here.
+The [gap routing map](./10-current-product-gaps-prd.md) points to those files
+without copying their checklists. The [legacy execution ledger](./legacy-execution-ledger.md)
+records its original packet process; current product scope and release gates are
+owned by the newer suite PRDs above. **Do not delete a source file while any of
+its TODOs are open.** Close items with their required evidence first; then
+retire a file only when all of its TODOs are complete and any distinct PRD
+prose has a verified successor.
 
 ## Build and release contract
 

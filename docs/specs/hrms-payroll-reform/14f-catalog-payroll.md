@@ -1,6 +1,6 @@
 # HRM-14f — Catalog: Payroll (every page)
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 > Parent: [14-page-catalog-readme.md](./14-page-catalog-readme.md) · Companion: [HRM-12](./12-payroll-prd.md)
 

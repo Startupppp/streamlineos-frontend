@@ -1,6 +1,6 @@
 # HRM-08 — Architecture and Cross-Module Boundaries PRD
 
-> Acceptance reference only. Dispatch and status live in [README.md](./README.md).
+> Acceptance reference only. Dispatch and status live in [legacy execution ledger](./legacy-execution-ledger.md).
 
 ## Outcome
 
