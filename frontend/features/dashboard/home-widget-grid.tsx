@@ -130,7 +130,8 @@ export function HomeWidgetGrid({
       {
         id: "Business pulse",
         label: "Business pulse",
-        visible: canViewExecutive,
+        // CRM data only: an HR-only executive saw a CRM "Access Restricted" card (#23).
+        visible: canViewExecutive && crmEnabled && canViewCrmLeads,
       },
       {
         id: "Today's activities",
