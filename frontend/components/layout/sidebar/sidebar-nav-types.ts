@@ -38,6 +38,7 @@ export interface NavRoute {
   /** Show the route when at least one of these products is enabled. */
   modulesAny?: ProductKey[];
   locked?: boolean;
+  hideForOwner?: boolean;
   exact?: boolean;
   /** Extra owned subpaths, used when a sibling route has a longer prefix. */
   activePrefixes?: string[];
@@ -50,7 +51,6 @@ export interface NavGroup {
   routes: NavRoute[];
   defaultCollapsed?: boolean;
   requiredPermission?: PermissionRequirement;
-  /** `product` picks the sidebar and is required; `module` gates entitlement and is not. */
   product: ProductKey;
   module?: ProductKey;
 }

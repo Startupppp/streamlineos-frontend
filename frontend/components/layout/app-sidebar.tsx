@@ -14,8 +14,6 @@ import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies"
 import {
   getNavGroupsForProduct,
   getProductFromPathname,
-  flattenNavRoutes,
-  isNavRouteActive,
   isModuleEnabled,
   MODULE_ACCENTS,
   type ModuleAccent,
@@ -27,22 +25,22 @@ import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
 import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
-import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { applyHrWeekOneNav } from "./sidebar/hr-week-one-nav";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
 import {
-  exclusiveCollapsedGroups,
   isSidebarGroupOpen,
-  resolveExclusiveOpenLabel,
+  mergeCollapsedGroups,
+  toggleCollapsedGroup,
 } from "./sidebar/sidebar-exclusive-groups";
 
-function readStoredOpenGroupLabel(): string | null {
+const SIDEBAR_GROUPS_STORAGE_KEY = "sidebar-groups-v2";
+
+function readStoredCollapsedGroups(): Record<string, boolean> | null {
   try {
-    const stored = localStorage.getItem("sidebar-groups");
+    const stored = localStorage.getItem(SIDEBAR_GROUPS_STORAGE_KEY);
     if (!stored) return null;
-    const map = JSON.parse(stored) as Record<string, boolean>;
-    return resolveExclusiveOpenLabel(Object.keys(map), map, null);
+    return JSON.parse(stored) as Record<string, boolean>;
   } catch {
     return null;
   }
@@ -163,63 +161,36 @@ export function AppSidebar({
     showAdvancedHr,
   ]);
 
-  const activeGroupLabel = useMemo(() => {
-    for (const group of navGroups) {
-      const match = flattenNavRoutes(group.routes).some((route) =>
-        isNavRouteActive(route, pathname),
-      );
-      if (match) return group.label;
-    }
-    return null;
-  }, [navGroups, pathname]);
-
   const groupLabels = useMemo(
     () => navGroups.map((group) => group.label),
     [navGroups],
   );
 
-  const [storedOpenLabel] = useState(readStoredOpenGroupLabel);
-
-  const fallbackOpenLabel = useMemo(() => {
-    if (activeGroupLabel) return activeGroupLabel;
-    if (storedOpenLabel && groupLabels.includes(storedOpenLabel)) {
-      return storedOpenLabel;
-    }
-    return (
-      navGroups.find((group) => !group.defaultCollapsed)?.label ??
-      groupLabels[0] ??
-      ""
-    );
-  }, [activeGroupLabel, storedOpenLabel, groupLabels, navGroups]);
-
-  const [openGroupLabel, setOpenGroupLabel] = useSourceOverride(
-    pathname,
-    fallbackOpenLabel,
-  );
+  const [storedCollapsedGroups] = useState(readStoredCollapsedGroups);
+  const [collapsedOverride, setCollapsedOverride] = useState<Record<
+    string,
+    boolean
+  > | null>(null);
 
   const collapsedGroups = useMemo(
     () =>
-      exclusiveCollapsedGroups(
+      mergeCollapsedGroups(
         groupLabels,
-        openGroupLabel === "" ? null : openGroupLabel,
+        collapsedOverride ?? storedCollapsedGroups,
       ),
-    [groupLabels, openGroupLabel],
+    [groupLabels, collapsedOverride, storedCollapsedGroups],
   );
 
-  function persistOpenLabel(label: string) {
-    const next = exclusiveCollapsedGroups(
-      groupLabels,
-      label === "" ? null : label,
-    );
+  function persistCollapsedGroups(next: Record<string, boolean>) {
     try {
-      localStorage.setItem("sidebar-groups", JSON.stringify(next));
+      localStorage.setItem(SIDEBAR_GROUPS_STORAGE_KEY, JSON.stringify(next));
     } catch {}
   }
 
   function toggleGroup(label: string) {
-    const next = openGroupLabel === label ? "" : label;
-    setOpenGroupLabel(next);
-    persistOpenLabel(next);
+    const next = toggleCollapsedGroup(collapsedGroups, label);
+    setCollapsedOverride(next);
+    persistCollapsedGroups(next);
   }
 
   const { data: pendingApprovalsData } = usePendingApprovals({

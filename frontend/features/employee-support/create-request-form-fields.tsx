@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
+import { Info } from "lucide-react";
 import {
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -27,6 +28,10 @@ import { useMySupportSuggest } from "@/hooks/api/employee-self-service/support";
 import { HELPDESK_CATEGORIES, HELPDESK_CATEGORY_LABELS } from "@/lib/employee-support";
 import { REQUEST_PRIORITY_LABELS } from "./support-request-badges";
 import type { CreateRequestInput } from "./create-request-schema";
+
+const CATEGORY_HINT = "The category decides which team receives the request.";
+const CONFIDENTIAL_HINT =
+  "Only members of the receiving queue and you can see a confidential request. HR and Legal requests are confidential by default.";
 
 const PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
 
@@ -78,13 +83,29 @@ export function CreateRequestFormFields({ form }: CreateRequestFormFieldsProps) 
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-3 sm:grid-cols-2">
         <FormField
           control={form.control}
           name="category"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Category</FormLabel>
+              <div className="flex items-center gap-1">
+                <FormLabel className="mb-0">Category</FormLabel>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      aria-label="About categories"
+                    >
+                      <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[16rem] text-xs leading-relaxed">
+                    {CATEGORY_HINT}
+                  </TooltipContent>
+                </Tooltip>
+              </div>
               <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
@@ -99,7 +120,6 @@ export function CreateRequestFormFields({ form }: CreateRequestFormFieldsProps) 
                   ))}
                 </SelectContent>
               </Select>
-              <FormDescription>The category decides which team receives the request.</FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -153,11 +173,22 @@ export function CreateRequestFormFields({ form }: CreateRequestFormFieldsProps) 
             <FormControl>
               <Switch checked={field.value} onCheckedChange={field.onChange} />
             </FormControl>
-            <div className="min-w-0">
-              <FormLabel className="cursor-pointer text-sm font-medium">Confidential</FormLabel>
-              <FormDescription>
-                Only members of the receiving queue and you can see a confidential request. HR and Legal requests are confidential by default.
-              </FormDescription>
+            <div className="flex min-w-0 items-center gap-1">
+              <FormLabel className="mb-0 cursor-pointer text-sm font-medium">Confidential</FormLabel>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    aria-label="About confidential requests"
+                  >
+                    <Info className="h-3.5 w-3.5" aria-hidden="true" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-[16rem] text-xs leading-relaxed">
+                  {CONFIDENTIAL_HINT}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </FormItem>
         )}

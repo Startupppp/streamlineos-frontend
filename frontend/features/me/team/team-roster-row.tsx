@@ -34,7 +34,7 @@ function PresencePill({ onLeaveToday }: { onLeaveToday: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex h-6 shrink-0 items-center rounded-full border px-2 text-micro font-medium",
+        "inline-flex h-6 shrink-0 items-center rounded-full border px-2 text-dense font-medium",
         tone.surface,
         tone.ink,
         tone.rule,
@@ -65,7 +65,7 @@ export function TeamRosterRow({ report, nextLeave, onOpen }: TeamRosterRowProps)
 
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
-        <p className="flex flex-wrap items-center gap-1 text-micro text-muted-foreground">
+        <p className="flex flex-wrap items-center gap-1 text-dense text-muted-foreground">
           {report.designation ? <span>{report.designation}</span> : null}
           {report.lifecycleStatus === "PROBATION" && report.probationEndsOn ? (
             <>

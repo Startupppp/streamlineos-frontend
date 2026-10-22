@@ -43,7 +43,6 @@ export function ManagerHomePage() {
 
   return (
     <PageWrapper
-      variant="display"
       title="My team"
       subtitle={
         hasRoster && data

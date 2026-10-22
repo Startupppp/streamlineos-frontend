@@ -156,6 +156,7 @@ function filterRoute(
   inheritedPermission?: PermissionRequirement,
   inheritedLocked = false,
 ): NavRoute[] {
+  if (isOwner && route.hideForOwner) return [];
   const lockedByPlan =
     inheritedLocked ||
     (route.module !== undefined && isPlanLocked(route.module, lockedModules));

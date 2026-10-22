@@ -81,7 +81,7 @@ export function TeamApprovalsList({ items, now = new Date(), allowQuickApprove =
                 {subjectName}
                 <span className="text-muted-foreground"> · {item.summary}</span>
               </p>
-              <p className={cn("text-micro", overdue ? danger.ink : "text-muted-foreground")}>
+              <p className={cn("text-dense", overdue ? danger.ink : "text-muted-foreground")}>
                 Requested {format(parseISO(item.requestedAt), "MMM d")}
                 {item.dueAt ? ` · ${overdue ? "overdue since" : "due"} ${format(parseISO(item.dueAt), "MMM d, h:mm a")}` : ""}
               </p>

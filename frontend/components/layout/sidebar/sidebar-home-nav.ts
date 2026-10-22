@@ -60,6 +60,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         label: "My Team",
         href: "/me/team",
         icon: Users,
+        hideForOwner: true,
       },
       {
         label: "Attendance & Time Off",
@@ -68,6 +69,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         modulesAny: ["hrms"],
         icon: Clock,
         badge: "leaves" as const,
+        hideForOwner: true,
       },
       {
         label: "Documents & Onboarding",
@@ -81,6 +83,7 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         searchTerms: ["expenses", "pay", "payslips", "reimbursements"],
         modulesAny: ["hrms", "payroll"],
         icon: Receipt,
+        hideForOwner: true,
       },
       {
         label: "Hiring & Referrals",
@@ -88,12 +91,14 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         searchTerms: ["interviews", "job openings", "recruitment", "referrals"],
         modulesAny: ["hrms"],
         icon: Briefcase,
+        hideForOwner: true,
       },
       {
         label: "Resignation",
         href: "/me/resignation",
         modulesAny: ["hrms"],
         icon: LogOut,
+        hideForOwner: true,
       },
       {
         label: "Support",

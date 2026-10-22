@@ -19,7 +19,7 @@ function LeaveStatusBadge({ status }: { status: ManagerHome["upcomingLeave"][num
   return (
     <span
       aria-label={`Leave status: ${label}`}
-      className={cn("rounded-full border px-2 py-0.5 text-micro", classes.surface, classes.ink, classes.rule)}
+      className={cn("rounded-full border px-2 py-0.5 text-dense", classes.surface, classes.ink, classes.rule)}
     >
       {label}
     </span>

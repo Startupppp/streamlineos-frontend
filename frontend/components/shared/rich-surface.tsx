@@ -223,14 +223,14 @@ export function RichSectionHeader({
           {title}
         </h2>
         {description && (
-          <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{description}</p>
+          <p className="mt-0.5 text-dense leading-relaxed text-muted-foreground">{description}</p>
         )}
       </div>
       {action &&
         (typeof action === "object" && action !== null && "href" in action ? (
           <Link
             href={action.href}
-            className="inline-flex shrink-0 items-center gap-1 text-xs font-medium text-status-info-ink hover:text-status-info-ink transition-colors self-start"
+            className="inline-flex shrink-0 items-center gap-1 text-dense font-medium text-status-info-ink transition-colors hover:text-status-info-ink self-start"
           >
             {action.label}
             <ArrowRight className="h-3 w-3" />

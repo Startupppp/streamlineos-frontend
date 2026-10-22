@@ -12,7 +12,7 @@ import {
   UserPlus,
   Wallet,
 } from "lucide-react";
-import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useHrAttendanceStatus, useHrCheckIn, useHrCheckOut } from "@/hooks/api/hr/attendance";
 import { usePayrollRuns } from "@/hooks/api/payroll/runs";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -33,6 +33,8 @@ function handleClockedOut() {
 export function useHrmsCommands(
   handleSelect: (href: string) => void,
 ): CommandPaletteCommand[] {
+  const { data: access } = useAccess();
+  const isOwner = access?.isOrgOwner === true;
   const canRequestLeave = useCan("self:leaves");
   const canClockIn = useCan("self:attendance");
   const canApproveWorkflows = useCan("hr:workflows:approve");
@@ -46,7 +48,7 @@ export function useHrmsCommands(
   const hrEnabled = useModuleEnabled("hr");
   const payrollEnabled = useModuleEnabled("payroll");
 
-  const { data: attendance } = useHrAttendanceStatus({ enabled: hrEnabled });
+  const { data: attendance } = useHrAttendanceStatus({ enabled: hrEnabled && !isOwner });
   const checkIn = useHrCheckIn({ onSuccess: handleClockedIn, onError: handlePunchError });
   const checkOut = useHrCheckOut({ onSuccess: handleClockedOut, onError: handlePunchError });
   const { data: runsPage } = usePayrollRuns({ limit: 20 });
@@ -69,7 +71,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["leave", "time off", "vacation", "holiday", "wfh", "छुट्टी", "अवकाश", "సెలవు"],
         icon: CalendarPlus,
-        isAvailable: hrEnabled && (canRequestLeave),
+        isAvailable: hrEnabled && !isOwner && canRequestLeave,
         execute: () => handleSelect("/me/workday?section=time-off&create=1"),
       },
       {
@@ -80,7 +82,7 @@ export function useHrmsCommands(
           ? ["check out", "clock out", "punch out", "attendance", "चेक आउट", "హాజరు"]
           : ["check in", "clock in", "punch in", "attendance", "हाज़िरी", "उपस्थिति", "హాజరు"],
         icon: Clock,
-        isAvailable: hrEnabled && (canClockIn && attendance !== undefined),
+        isAvailable: hrEnabled && !isOwner && canClockIn && attendance !== undefined,
         confirm: true,
         execute: handlePunch,
       },
@@ -146,7 +148,7 @@ export function useHrmsCommands(
         group: "actions",
         keywords: ["resign", "resignation", "quit", "leave company", "notice", "इस्तीफ़ा"],
         icon: DoorOpen,
-        isAvailable: hrEnabled && canResign,
+        isAvailable: hrEnabled && !isOwner && canResign,
         execute: () => handleSelect("/me/resignation"),
       },
     ],
@@ -161,6 +163,7 @@ export function useHrmsCommands(
       canPublishPayslips,
       canStartExit,
       canResign,
+      isOwner,
       hrEnabled,
       payrollEnabled,
       attendance,

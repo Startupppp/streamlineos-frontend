@@ -1,6 +1,6 @@
 import { fireEvent, render, renderHook, screen } from "@testing-library/react";
 import { Command, CommandList } from "@/components/ui/command";
-import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { useAccess, useCan, useModuleEnabled } from "@/hooks/api/access";
 import {
   useHrAttendanceStatus,
   useHrCheckIn,
@@ -11,6 +11,7 @@ import { useHrmsCommands } from "./command-palette-hrms-commands";
 import { CommandPaletteActionsGroup } from "./command-palette-actions-group";
 
 jest.mock("@/hooks/api/access", () => ({
+  useAccess: jest.fn(),
   useCan: jest.fn(),
   useModuleEnabled: jest.fn(() => true),
 }));
@@ -39,6 +40,7 @@ function availableLabels(keys: string[], onSelect = jest.fn()) {
 }
 
 beforeEach(() => {
+  (useAccess as jest.Mock).mockReturnValue({ data: { isOrgOwner: false } });
   mockedModuleEnabled.mockReturnValue(true);
   (useHrAttendanceStatus as jest.Mock).mockReturnValue({ data: { status: "NOT_CHECKED_IN" } });
   (useHrCheckIn as jest.Mock).mockReturnValue({ mutate: checkInMutate });
@@ -90,6 +92,11 @@ describe("P2-003 — palette actions are permission-filtered", () => {
 
   it("offers every employee their own resignation, never the HR exit desk (QA-2026-10-14)", () => {
     expect(availableLabels(["self:resignation"])).toEqual(["Submit my resignation"]);
+  });
+
+  it("hides employee-only shortcuts for an owner", () => {
+    (useAccess as jest.Mock).mockReturnValue({ data: { isOrgOwner: true } });
+    expect(availableLabels(["self:leaves", "self:attendance", "self:resignation", "hr:exit:manage"])).toEqual(["Start exit"]);
   });
 
   it("hides Release payslips when no run is PAID", () => {

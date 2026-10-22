@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import { format, addDays } from "date-fns";
-import { FileText, Download, CheckCircle2, LogOut } from "lucide-react";
+import { format, addDays, differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
+import { FileText, Download, CheckCircle2, LogOut, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -15,13 +15,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { HrSheet } from "@/components/shared/hr-sheet";
 import { FileUpload } from "@/components/storage/file-upload";
 import { useSubmitMyResignation } from "@/hooks/api/hr/exit";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { RESIGNATION_REASONS, RESIGNATION_REASON_OTHER } from "@/lib/constants/hr-separation";
 
-const NOTICE_PERIOD_DAYS = 60;
+const DEFAULT_NOTICE_PERIOD_DAYS = 60;
+const NOTICE_HINT =
+  "Company policy defaults to a 60-day notice period. Pick a different last working date if needed — HR may adjust it when they review.";
+
+function defaultLastWorkingDate(): string {
+  return format(addDays(new Date(), DEFAULT_NOTICE_PERIOD_DAYS), "yyyy-MM-dd");
+}
 
 interface ResignationFormSheetProps {
   open: boolean;
@@ -37,9 +44,19 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
   const [willingForExitInterview, setWillingForExitInterview] = useState(false);
   const [companyFeedback, setCompanyFeedback] = useState("");
   const [resignationLetterUrl, setResignationLetterUrl] = useState<string | null>(null);
+  const [lastWorkingDate, setLastWorkingDate] = useState(defaultLastWorkingDate);
   const [formKey, setFormKey] = useState(0);
 
-  const autoLwd = format(addDays(new Date(), NOTICE_PERIOD_DAYS), "yyyy-MM-dd");
+  const todayMin = format(new Date(), "yyyy-MM-dd");
+  let noticePeriodDays = DEFAULT_NOTICE_PERIOD_DAYS;
+  try {
+    noticePeriodDays = Math.max(
+      0,
+      differenceInCalendarDays(parseISO(lastWorkingDate), startOfDay(new Date())),
+    );
+  } catch {
+    noticePeriodDays = DEFAULT_NOTICE_PERIOD_DAYS;
+  }
 
   const resetForm = useCallback(() => {
     setReason("");
@@ -48,6 +65,7 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     setWillingForExitInterview(false);
     setCompanyFeedback("");
     setResignationLetterUrl(null);
+    setLastWorkingDate(defaultLastWorkingDate());
     setFormKey((k) => k + 1);
   }, []);
 
@@ -84,6 +102,10 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     },
     [],
   );
+
+  const handleLastWorkingDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setLastWorkingDate(e.target.value);
+  }, []);
 
   const handleDownloadTemplate = useCallback(() => {
     const content = [
@@ -146,14 +168,22 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
       toast.error("Detailed explanation must be at most 2000 characters");
       return;
     }
+    if (!lastWorkingDate) {
+      toast.error("Please choose a last working date");
+      return;
+    }
+    if (lastWorkingDate < todayMin) {
+      toast.error("Last working date cannot be in the past");
+      return;
+    }
     const resolvedCategory =
       reasonCategory === RESIGNATION_REASON_OTHER
         ? otherReasonCategory.trim()
         : reasonCategory;
     const submission = {
       reason: trimmedReason,
-      lastWorkingDate: autoLwd,
-      noticePeriodDays: NOTICE_PERIOD_DAYS,
+      lastWorkingDate,
+      noticePeriodDays,
       reasonCategory: resolvedCategory || undefined,
       willingForExitInterview,
       companyFeedback: companyFeedback.trim() || undefined,
@@ -174,7 +204,9 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     otherReasonCategory,
     willingForExitInterview,
     companyFeedback,
-    autoLwd,
+    lastWorkingDate,
+    todayMin,
+    noticePeriodDays,
     resignationLetterUrl,
     submitMyResignation,
     resetForm,
@@ -195,13 +227,43 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
       }
       isPending={submitMyResignation.isPending}
     >
-      <div className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2.5 flex items-start gap-2.5 text-xs text-foreground">
-        <FileText className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-        <span>
-          Notice period is <strong>60 days</strong> as per company policy.{" "}
-          Your last working date will be{" "}
-          <strong>{format(addDays(new Date(), NOTICE_PERIOD_DAYS), "dd MMM yyyy")}</strong>.
-        </span>
+      <div className="space-y-1.5">
+        <div className="flex items-center gap-1">
+          <label
+            htmlFor="resignation-last-working-date"
+            className="mb-0 text-sm font-semibold text-foreground"
+          >
+            Last working date <span className="text-destructive" aria-hidden="true">*</span>
+          </label>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex size-5 items-center justify-center rounded text-muted-foreground hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label="About notice period"
+              >
+                <Info className="h-3.5 w-3.5" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-[16rem] text-xs leading-relaxed">
+              {NOTICE_HINT}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <Input
+          id="resignation-last-working-date"
+          type="date"
+          value={lastWorkingDate}
+          min={todayMin}
+          onChange={handleLastWorkingDateChange}
+          required
+          aria-describedby="resignation-notice-hint"
+        />
+        <p id="resignation-notice-hint" className="text-dense text-muted-foreground">
+          {noticePeriodDays === 1
+            ? "1 day notice from today"
+            : `${noticePeriodDays} days notice from today`}
+        </p>
       </div>
 
       <div className="space-y-1.5">
@@ -284,23 +346,35 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
         />
       </div>
 
-      <div className="space-y-2">
-        <p className="text-sm font-semibold text-foreground">
-          Resignation Letter{" "}
-          <span className="text-muted-foreground font-normal">(optional)</span>
-        </p>
+      <div className="space-y-3 rounded-xl border border-border bg-card p-3">
+        <div className="flex items-start gap-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-lg border border-border bg-muted/40">
+            <FileText className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold text-foreground">
+              Resignation letter{" "}
+              <span className="font-normal text-muted-foreground">(optional)</span>
+            </p>
+            <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+              PDF, Word, or image · max 10 MB. Download the template if you need a draft.
+            </p>
+          </div>
+        </div>
+
         {resignationLetterUrl ? (
-          <div className="flex items-center gap-2 rounded-lg border border-status-success-rule bg-status-success-surface px-3 py-2 text-xs text-status-success-ink">
+          <div className="flex items-center gap-2 rounded-lg border border-status-success-rule bg-status-success-surface px-3 py-2.5 text-xs text-status-success-ink">
             <CheckCircle2 className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-            <span className="flex-1 truncate">Letter uploaded successfully</span>
-            <button
+            <span className="min-w-0 flex-1 truncate font-medium">Letter uploaded</span>
+            <Button
               type="button"
+              variant="ghost"
+              size="sm"
               onClick={handleRemoveLetterUrl}
-              className="text-status-success-ink hover:text-status-success-ink transition-colors duration-200"
-              aria-label="Remove uploaded letter"
+              className="h-7 px-2 text-xs text-status-success-ink hover:bg-status-success-surface hover:text-status-success-ink"
             >
-              ×
-            </button>
+              Remove
+            </Button>
           </div>
         ) : (
           <FileUpload
@@ -311,15 +385,20 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
             onUploadComplete={handleUploadComplete}
           />
         )}
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={handleDownloadTemplate}
-          className="h-auto gap-1.5 p-0 text-xs font-normal text-muted-foreground hover:bg-transparent hover:text-foreground"
-        >
-          <Download className="h-3 w-3" />
-          Download Template
-        </Button>
+
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/80 pt-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadTemplate}
+            className="h-8 gap-1.5 text-xs"
+          >
+            <Download className="h-3.5 w-3.5" aria-hidden="true" />
+            Download template
+          </Button>
+          <span className="text-dense text-muted-foreground">.txt starter draft</span>
+        </div>
       </div>
     </HrSheet>
   );

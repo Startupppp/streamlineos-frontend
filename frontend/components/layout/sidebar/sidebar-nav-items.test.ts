@@ -101,6 +101,21 @@ describe("Home employee navigation", () => {
     expect(hrefs).not.toContain("/build");
   });
 
+  it("keeps owner navigation focused on shared services and operational products", () => {
+    const routes = getNavGroupsForProduct(
+      "home",
+      "OWNER",
+      scopesOf(EMPLOYEE_PERMISSIONS),
+      ["hr", "payroll"],
+    ).flatMap((group) => flattenNavRoutes(group.routes));
+    const hrefs = routes.map((route) => route.href);
+
+    expect(hrefs).toEqual(expect.arrayContaining(["/dashboard", "/me/records", "/me/support"]));
+    for (const employeeRoute of ["/me/team", "/me/workday", "/me/money", "/me/career", "/me/resignation"]) {
+      expect(hrefs).not.toContain(employeeRoute);
+    }
+  });
+
   it("keeps employee self-service routes in the Home product", () => {
     expect(getProductFromPathname("/me/workday")).toBe("home");
     expect(getProductFromPathname("/me/money")).toBe("home");

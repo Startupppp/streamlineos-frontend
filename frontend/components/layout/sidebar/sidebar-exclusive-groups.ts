@@ -28,3 +28,36 @@ export function resolveExclusiveOpenLabel(
   );
   return alreadyOpen ?? labels[0] ?? null;
 }
+
+/** Every group open (collapsed = false). */
+export function allGroupsOpen(labels: string[]): Record<string, boolean> {
+  const next: Record<string, boolean> = {};
+  for (const label of labels) {
+    next[label] = false;
+  }
+  return next;
+}
+
+/** Merge stored collapse flags onto the current label set; unknown labels start open. */
+export function mergeCollapsedGroups(
+  labels: string[],
+  stored: Record<string, boolean> | null | undefined,
+): Record<string, boolean> {
+  const next = allGroupsOpen(labels);
+  if (!stored) return next;
+  for (const label of labels) {
+    if (stored[label] === true) next[label] = true;
+  }
+  return next;
+}
+
+export function toggleCollapsedGroup(
+  collapsedGroups: Record<string, boolean>,
+  label: string,
+): Record<string, boolean> {
+  const currentlyOpen = collapsedGroups[label] !== true;
+  return {
+    ...collapsedGroups,
+    [label]: currentlyOpen,
+  };
+}

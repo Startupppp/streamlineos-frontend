@@ -1,5 +1,6 @@
 import type { ChangeEvent, ReactNode } from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const toastError = jest.fn();
 jest.mock("sonner", () => ({ toast: { error: (m: string) => toastError(m), success: jest.fn() } }));
@@ -53,7 +54,11 @@ beforeEach(() => {
 
 describe("QA-2026-10-14 — an employee submits their own resignation", () => {
   it("files through the self-service endpoint without a userId", () => {
-    render(<ResignationFormSheet open onOpenChange={jest.fn()} />);
+    render(
+      <TooltipProvider>
+        <ResignationFormSheet open onOpenChange={jest.fn()} />
+      </TooltipProvider>,
+    );
     expect(screen.getByRole("heading", { name: "Submit Resignation" })).toBeInTheDocument();
 
     fillValidForm();

@@ -36,7 +36,7 @@ export function PendingDecisionsStrip({
       <div className="flex flex-wrap items-center gap-2">
         <span
           className={cn(
-            "inline-flex h-7 items-center rounded-full border px-2.5 text-micro font-semibold tabular-nums",
+            "inline-flex h-7 items-center rounded-full border px-2.5 text-dense font-semibold tabular-nums",
             tone.surface,
             tone.inkStrong,
             tone.rule,

@@ -234,7 +234,7 @@ function ExpandedItem({ route, depth, pathname, pendingLeaves, inboxCount, onNav
   const singleChild = !!route.children && route.children.length === 1;
   const containsActive = (hasChildren || singleChild) && routeContainsActive(route, pathname);
   const isActive = isNavRouteActive(route, pathname) && !containsActive && !route.locked;
-  const [expanded, setExpanded] = useState<boolean>(isActive || containsActive);
+  const [expanded, setExpanded] = useState(true);
 
   useEffect(() => {
     if (containsActive || isActive) startTransition(() => setExpanded(true));

@@ -1,7 +1,10 @@
 import {
+  allGroupsOpen,
   exclusiveCollapsedGroups,
   isSidebarGroupOpen,
+  mergeCollapsedGroups,
   resolveExclusiveOpenLabel,
+  toggleCollapsedGroup,
 } from "./sidebar-exclusive-groups";
 
 describe("sidebar exclusive groups", () => {
@@ -39,5 +42,40 @@ describe("sidebar exclusive groups", () => {
         null,
       ),
     ).toBe("Manage");
+  });
+});
+
+describe("sidebar multi-open groups", () => {
+  it("defaults every group to open", () => {
+    expect(allGroupsOpen(["Overview", "For Me"])).toEqual({
+      Overview: false,
+      "For Me": false,
+    });
+  });
+
+  it("keeps stored collapses and opens unknown labels", () => {
+    expect(
+      mergeCollapsedGroups(["Overview", "For Me", "Company"], {
+        Overview: true,
+        Stale: true,
+      }),
+    ).toEqual({
+      Overview: true,
+      "For Me": false,
+      Company: false,
+    });
+  });
+
+  it("toggles one group without closing the others", () => {
+    expect(
+      toggleCollapsedGroup(
+        { Overview: false, "For Me": false, Company: false },
+        "For Me",
+      ),
+    ).toEqual({
+      Overview: false,
+      "For Me": true,
+      Company: false,
+    });
   });
 });
