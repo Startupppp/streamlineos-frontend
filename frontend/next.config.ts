@@ -169,6 +169,12 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
     {
+      // Marketing pages link "Book a demo" here; demos are booked through contact (#6).
+      source: "/demo",
+      destination: "/contact",
+      permanent: false,
+    },
+    {
       source: "/me/leave",
       destination: "/me/time-off",
       permanent: false,

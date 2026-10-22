@@ -5,7 +5,7 @@ import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { NotFoundIllustration } from "@/components/illustrations";
-import { LayoutDashboard, HeadphonesIcon } from "lucide-react";
+import { Home, HeadphonesIcon } from "lucide-react";
 import { useMotionVariants } from "@/lib/motion-variants";
 
 export default function GlobalNotFound() {
@@ -62,9 +62,10 @@ export default function GlobalNotFound() {
             size="lg"
             className="min-w-[200px] shadow-lg shadow-primary/20"
           >
-            <Link href="/dashboard">
-              <LayoutDashboard className="mr-2 h-4 w-4" />
-              Back to Dashboard
+            {/* "/" sends signed-in users on to /dashboard; a signed-out visitor stays public (#6). */}
+            <Link href="/">
+              <Home className="mr-2 h-4 w-4" />
+              Back to home
             </Link>
           </Button>
           <Button

@@ -130,3 +130,12 @@ describe("next.config.ts redirects — leave alias", () => {
     expect(entry?.permanent).toBe(false);
   });
 });
+
+describe("next.config.ts redirects — demo", () => {
+  test("/demo redirects to /contact instead of 404ing", async () => {
+    const redirects = await getRedirects();
+    const entry = redirects.find((r) => r.source === "/demo");
+    expect(entry?.destination).toBe("/contact");
+    expect(entry?.permanent).toBe(false);
+  });
+});
