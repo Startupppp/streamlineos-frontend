@@ -167,7 +167,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 ### CHAT-006 Lifecycle and fan-out
 
 - [x] The internal calendar event stores the provider identity.
-- [ ] End and cancel update the provider event where supported; UI claims "ended" only on provider confirmation.
+- [x] End and cancel update the provider event where supported; UI claims "ended" only on provider confirmation.
 - [x] Ably publish and notifications run after commit; a test shows no publish on rollback.
 - [x] No provider call runs inside a tenant transaction.
 
@@ -186,9 +186,9 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 ### CHAT-009 Message reliability
 
-- [ ] Send retry and offline queue deliver each message exactly once after reconnect.
+- [x] Send retry and offline queue deliver each message exactly once after reconnect.
 - [x] After realtime reconnect the client refetches and shows no gap and no duplicate.
-- [ ] Read marker and unread counts agree across list, sidebar and inbox after send, receive, and reconnect.
+- [x] Read marker and unread counts agree across list, sidebar and inbox after send, receive, and reconnect.
 - [x] Typing shows only for other members, from presence, and clears on leave.
 
 ### CHAT-010 URL and history
