@@ -202,16 +202,12 @@ const orgHolidayRowSchema = z.object({
 
 export const holidaysListContract = z.array(orgHolidayRowSchema);
 
+// GET /hr/holidays/calendar merges org_holidays with the legacy table.
 const hrHolidayRowSchema = z.object({
-  id: z.number().int(),
-  orgId: z.string(),
+  id: z.string(),
   name: z.string(),
   date: z.string(),
-  message: z.string().nullable(),
-  isPublic: z.boolean(),
-  notificationSent: z.boolean(),
-  createdAt: z.string(),
-  updatedAt: z.string(),
+  source: z.enum(["canonical", "legacy"]),
 });
 
 export const hrHolidaysListContract = z.array(hrHolidayRowSchema);
