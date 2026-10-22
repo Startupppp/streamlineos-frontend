@@ -140,7 +140,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 - [x] `chat_huddles` has nullable `meeting_provider`, provider event id and integration connection id.
 - [x] A partial unique index allows one active Huddle per org and channel.
 - [x] Migration has a journal entry and rollback; legacy rows keep null provider and still load.
-- [ ] A spec proves a second active insert for the same org and channel fails.
+- [x] A spec proves a second active insert for the same org and channel fails.
 
 ### CHAT-003 Provider selection
 
@@ -204,7 +204,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [x] An endpoint returns a bounded window around a message id after checking channel membership.
 - [x] A message outside loaded pages opens and scrolls into view from a link.
-- [ ] Non-member, wrong-org and deleted-message requests return no content (403/404 per contract).
+- [x] Non-member, wrong-org and deleted-message requests return no content (403/404 per contract).
 - [x] Saved-message and search-result clicks use this path.
 
 ### CHAT-012 Unified search
