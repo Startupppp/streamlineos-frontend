@@ -13,11 +13,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import {
-  useProjectCreate,
-  TOTAL_STEPS,
-  STEP_LABELS,
-} from "./use-project-create";
+import { useProjectCreate } from "./use-project-create";
 import type { StepSharedProps } from "./use-project-create";
 import {
   useProjectProvisioning,
@@ -28,7 +24,6 @@ import { StepBasics } from "./steps/step-basics";
 import type { BasicsHandle } from "./steps/step-basics";
 import { StepType } from "./steps/step-type";
 import { StepTemplate } from "./steps/step-template";
-import { StepToggles } from "./steps/step-toggles";
 import { StepWorkflow } from "./steps/step-workflow";
 import { StepTeam } from "./steps/step-team";
 import { StepReview } from "./steps/step-review";
@@ -45,8 +40,19 @@ export function ProjectCreateWizard({
   onOpenChange,
   scope,
 }: ProjectCreateWizardProps) {
-  const { step, direction, draft, updateDraft, goNext, goBack, goToStep, reset } =
-    useProjectCreate();
+  const {
+    step,
+    stepId,
+    totalSteps,
+    currentLabel,
+    direction,
+    draft,
+    updateDraft,
+    goNext,
+    goBack,
+    goToStep,
+    reset,
+  } = useProjectCreate();
   const [keyConflictMessage, setKeyConflictMessage] = useState<string | null>(null);
 
   const isDirty = open && (step > 1 || draft.name.trim() !== "");
@@ -155,7 +161,7 @@ export function ProjectCreateWizard({
   }
 
   function handleBack(): void {
-    if (step === 7) {
+    if (stepId === "review") {
       setKeyConflictMessage(null);
     }
     goBack();
@@ -166,8 +172,6 @@ export function ProjectCreateWizard({
     pendingKeyErrorRef.current = null;
     void provision(draft);
   }
-
-  const currentLabel = STEP_LABELS[step - 1] ?? "";
 
   return (
     <>
@@ -182,16 +186,16 @@ export function ProjectCreateWizard({
       >
         <SheetHeader className="shrink-0 border-b py-4 pl-6 pr-14 text-left">
           <p className="text-xs text-muted-foreground mb-0.5">
-            Step {step} of {TOTAL_STEPS}
+            Step {step} of {totalSteps}
           </p>
           <SheetTitle className="text-lg font-medium">
             {currentLabel}
           </SheetTitle>
           <SheetDescription className="sr-only">
-            Project creation wizard — step {step} of {TOTAL_STEPS}
+            Project creation wizard — step {step} of {totalSteps}
           </SheetDescription>
-          <div className="mt-3 flex gap-1" aria-label={`Step ${step} of ${TOTAL_STEPS}`}>
-            {Array.from({ length: TOTAL_STEPS }, (_, i) => (
+          <div className="mt-3 flex gap-1" aria-label={`Step ${step} of ${totalSteps}`}>
+            {Array.from({ length: totalSteps }, (_, i) => (
               <div
                 key={i}
                 className={cn(
@@ -203,38 +207,31 @@ export function ProjectCreateWizard({
           </div>
         </SheetHeader>
 
-        <SheetBody
-          className={cn(
-            "px-6",
-            step === 4 && "flex flex-col overflow-hidden",
-          )}
-        >
+        <SheetBody className="px-6">
           <AnimatePresence mode="popLayout" initial={false} custom={direction}>
             <motion.div
-              key={step}
+              key={stepId}
               custom={direction}
               variants={stepVariants}
               initial="initial"
               animate="animate"
               exit="exit"
               transition={{ duration: 0.22, ease: "easeOut" }}
-              className={cn(step === 4 && "flex min-h-0 flex-1 flex-col")}
             >
-              {step === 1 && (
+              {stepId === "basics" && (
                 <StepBasics ref={basicsRef} {...sharedProps} onCancel={requestClose} />
               )}
-              {step === 2 && <StepType {...sharedProps} />}
-              {step === 3 && <StepTemplate {...sharedProps} />}
-              {step === 4 && <StepToggles {...sharedProps} />}
-              {step === 5 && <StepWorkflow {...sharedProps} />}
-              {step === 6 && <StepTeam {...sharedProps} />}
-              {step === 7 && <StepReview draft={draft} keyConflictMessage={keyConflictMessage} onGoToBasics={handleGoToBasicsFromConflict} />}
+              {stepId === "type" && <StepType {...sharedProps} />}
+              {stepId === "template" && <StepTemplate {...sharedProps} />}
+              {stepId === "workflow" && <StepWorkflow {...sharedProps} />}
+              {stepId === "people" && <StepTeam {...sharedProps} />}
+              {stepId === "review" && <StepReview draft={draft} keyConflictMessage={keyConflictMessage} onGoToBasics={handleGoToBasicsFromConflict} />}
             </motion.div>
           </AnimatePresence>
         </SheetBody>
 
         <ProjectCreateWizardFooter
-          step={step}
+          stepId={stepId}
           isProvisioning={isProvisioning}
           onCancel={requestClose}
           onNextFromBasics={handleNextFromBasics}

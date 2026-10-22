@@ -34,6 +34,7 @@ let currentPathname = "/build";
 
 jest.mock("next/navigation", () => ({
   usePathname: () => currentPathname,
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({
     push: jest.fn(),
     replace: jest.fn(),

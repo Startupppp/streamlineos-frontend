@@ -1,20 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useSession } from "next-auth/react";
+import { useProjectTemplates } from "@/hooks/api/build/templates";
 
-export const TOTAL_STEPS = 7;
+export type ProjectCreateStepId =
+  | "basics"
+  | "type"
+  | "template"
+  | "workflow"
+  | "people"
+  | "review";
 
-export const STEP_LABELS: readonly string[] = [
-  "Basics",
-  "Project Type",
-  "Template",
-  "Features",
-  "Workflow",
-  "Team",
-  "Review & Create",
+export interface ProjectCreateStep {
+  id: ProjectCreateStepId;
+  label: string;
+}
+
+const CORE_STEPS: readonly ProjectCreateStep[] = [
+  { id: "basics", label: "Basics" },
+  { id: "type", label: "Project Type" },
+  { id: "workflow", label: "Workflow" },
+  { id: "people", label: "People" },
+  { id: "review", label: "Review & Create" },
 ];
+
+export function resolveProjectCreateSteps(hasTemplates: boolean): readonly ProjectCreateStep[] {
+  if (!hasTemplates) return CORE_STEPS;
+  return [
+    { id: "basics", label: "Basics" },
+    { id: "type", label: "Project Type" },
+    { id: "template", label: "Template" },
+    { id: "workflow", label: "Workflow" },
+    { id: "people", label: "People" },
+    { id: "review", label: "Review & Create" },
+  ];
+}
 
 export type WizardDraft = {
   name: string;
@@ -81,9 +103,21 @@ function buildInitialDraft(creatorId: string | undefined): WizardDraft {
 export function useProjectCreate() {
   const { data: session } = useSession();
   const creatorId = session?.user?.id;
-  const [step, setStep] = useState(1);
+  const { data: templatePages } = useProjectTemplates();
+  const [stepId, setStepId] = useState<ProjectCreateStepId>("basics");
   const [direction, setDirection] = useState(1);
   const [draft, setDraft] = useSourceOverride(creatorId, buildInitialDraft(creatorId), true);
+  const hasTemplates =
+    draft.templateId !== null ||
+    (templatePages?.pages.some((page) => page.data.length > 0) ?? false);
+  const steps = useMemo(
+    () => resolveProjectCreateSteps(hasTemplates),
+    [hasTemplates],
+  );
+  const stepIndex = Math.max(0, steps.findIndex((candidate) => candidate.id === stepId));
+  const step = stepIndex + 1;
+  const totalSteps = steps.length;
+  const currentLabel = steps[stepIndex]?.label ?? "";
 
   function updateDraft(partial: Partial<WizardDraft>) {
     setDraft((prev) => ({ ...prev, ...partial }));
@@ -91,25 +125,37 @@ export function useProjectCreate() {
 
   function goNext() {
     setDirection(1);
-    setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+    setStepId(steps[Math.min(stepIndex + 1, totalSteps - 1)]?.id ?? "review");
   }
 
   function goBack() {
     setDirection(-1);
-    setStep((s) => Math.max(s - 1, 1));
+    setStepId(steps[Math.max(stepIndex - 1, 0)]?.id ?? "basics");
   }
 
   function goToStep(n: number) {
-    const target = Math.max(1, Math.min(n, TOTAL_STEPS));
-    setDirection(target < step ? -1 : 1);
-    setStep(target);
+    const targetIndex = Math.max(0, Math.min(n - 1, totalSteps - 1));
+    setDirection(targetIndex < stepIndex ? -1 : 1);
+    setStepId(steps[targetIndex]?.id ?? "basics");
   }
 
   function reset() {
-    setStep(1);
+    setStepId("basics");
     setDirection(1);
     setDraft(buildInitialDraft(creatorId));
   }
 
-  return { step, direction, draft, updateDraft, goNext, goBack, goToStep, reset };
+  return {
+    step,
+    stepId,
+    totalSteps,
+    currentLabel,
+    direction,
+    draft,
+    updateDraft,
+    goNext,
+    goBack,
+    goToStep,
+    reset,
+  };
 }

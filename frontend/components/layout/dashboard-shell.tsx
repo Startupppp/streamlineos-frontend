@@ -50,6 +50,7 @@ import { useRouteFocus } from "@/hooks/common/use-route-focus";
 import { cn } from "@/lib/utils";
 import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
 import type { ShellVariant } from "@/lib/shell-variant";
+import { useRememberProductPath } from "./use-remember-product-path";
 
 const WelcomeToast = dynamic(
   () =>
@@ -94,6 +95,7 @@ export function DashboardShell({
 
   useRouteFocus();
   usePushSubscription(userId);
+  useRememberProductPath();
 
   const [isSidebarCollapsed, setIsSidebarCollapsed] =
     useState(defaultCollapsed);

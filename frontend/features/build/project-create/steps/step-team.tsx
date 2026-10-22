@@ -1,30 +1,15 @@
-﻿"use client";
+"use client";
 
-import { useMemo, useState } from "react";
 import { User } from "lucide-react";
-import { SearchInput } from "@/components/ui/search-input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { cn } from "@/lib/utils";
+import { MemberPicker } from "@/components/members/member-picker";
 import { useCan } from "@/hooks/api/access";
-import { getUserDisplayName } from "@/lib/person-display";
 import type { StepSharedProps } from "../use-project-create";
-import { useWizardMembers, useWizardSessionUser } from "../use-wizard-members";
-import { resolveWizardMemberLabel } from "../resolve-wizard-member-label";
-import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useWizardSessionUser } from "../use-wizard-members";
 
 export function StepTeam({ draft, updateDraft }: StepSharedProps) {
   const sessionUser = useWizardSessionUser();
   const currentUserId = sessionUser?.id;
   const canManage = useCan("build:manage");
-  const [search, setSearch] = useState("");
-  const debouncedSearch = useDebouncedValue(search, 300).trim();
-  const members = useWizardMembers(100, debouncedSearch || undefined);
-
-  function handleSearch(value: string) {
-    setSearch(value);
-  }
 
   function handleToggle(userId: string) {
     if (userId === currentUserId) return;
@@ -34,19 +19,6 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
     updateDraft({ memberIds: next });
   }
 
-  const selectedLabels = useMemo(
-    () =>
-      draft.memberIds.map((id) =>
-        resolveWizardMemberLabel(
-          id,
-          members,
-          sessionUser,
-          "No members added",
-        ),
-      ),
-    [draft.memberIds, members, sessionUser],
-  );
-
   if (!canManage) {
     return (
       <div className="flex flex-col gap-2 rounded-xl border border-dashed p-6 text-center">
@@ -55,75 +27,33 @@ export function StepTeam({ draft, updateDraft }: StepSharedProps) {
           You don&apos;t have invite permissions.
         </p>
         <p className="text-xs text-muted-foreground">
-          You can add team members after the project is created.
+          You can add people after the project is created.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">Select members to add to this project.</p>
-        {selectedLabels.length > 0 && (
-          <Badge variant="secondary">
-            {[
-              ...selectedLabels.slice(0, 2),
-              ...(selectedLabels.length > 2
-                ? [`+${selectedLabels.length - 2} more`]
-                : []),
-            ].join(", ")}
-          </Badge>
-        )}
+    <div className="space-y-4">
+      <div className="rounded-xl border border-border bg-muted/30 p-4">
+        <div className="flex items-start gap-3">
+          <User className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+          <div>
+            <p className="text-sm font-medium">Add people from Build</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Only people with Build access are available. You can change the project team later.
+            </p>
+          </div>
+        </div>
       </div>
-
-        <SearchInput placeholder="Search by name or email…" value={search} onValueChange={handleSearch} />
-
-      <ScrollArea className="max-h-72">
-      <div className="space-y-1">
-        {members.length === 0 && (
-          <p className="text-sm text-center py-6 text-muted-foreground">No members found.</p>
-        )}
-        {members.map((m) => {
-          const isCreator = m.userId === currentUserId;
-          const isSelected = draft.memberIds.includes(m.userId);
-          const displayName = getUserDisplayName({ name: m.name, email: m.email });
-          return (
-            <label
-              key={m.userId}
-              htmlFor={`project-member-${m.userId}`}
-              className={cn(
-                "flex items-center gap-3 rounded-lg p-2.5 transition-colors",
-                isCreator ? "cursor-default" : "cursor-pointer",
-                isSelected ? "bg-primary/5" : !isCreator ? "hover:bg-muted" : "",
-              )}
-            >
-              <Checkbox
-                id={`project-member-${m.userId}`}
-                checked={isSelected}
-                onCheckedChange={() => handleToggle(m.userId)}
-                disabled={isCreator}
-                className="shrink-0"
-              />
-              <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-medium text-primary">
-                {displayName.charAt(0).toUpperCase() || <User className="h-3.5 w-3.5" />}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex items-center gap-1.5">
-                  <span className="min-w-0 truncate text-sm font-medium">{displayName}</span>
-                  {isCreator && (
-                    <span className="shrink-0 text-micro font-normal text-muted-foreground bg-muted rounded px-1 py-0.5">
-                      You
-                    </span>
-                  )}
-                </div>
-                <div className="text-xs text-muted-foreground truncate">{m.email}</div>
-              </div>
-            </label>
-          );
-        })}
-      </div>
-      </ScrollArea>
+      <MemberPicker
+        mode="multi"
+        directory="build"
+        values={draft.memberIds}
+        onToggle={handleToggle}
+        placeholder="Select Build members…"
+        searchLabel="Search Build members"
+      />
     </div>
   );
 }

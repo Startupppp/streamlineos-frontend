@@ -3,9 +3,10 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
+import type { ProjectCreateStepId } from "./use-project-create";
 
 interface ProjectCreateWizardFooterProps {
-  step: number;
+  stepId: ProjectCreateStepId;
   isProvisioning: boolean;
   onCancel: () => void;
   onNextFromBasics: () => void;
@@ -15,7 +16,7 @@ interface ProjectCreateWizardFooterProps {
 }
 
 export function ProjectCreateWizardFooter({
-  step,
+  stepId,
   isProvisioning,
   onCancel,
   onNextFromBasics,
@@ -25,7 +26,7 @@ export function ProjectCreateWizardFooter({
 }: ProjectCreateWizardFooterProps) {
   return (
     <div className="shrink-0 border-t px-6 py-4 flex gap-2 bg-background">
-      {step === 1 && (
+      {stepId === "basics" && (
         <>
           <Button
             type="button"
@@ -40,7 +41,7 @@ export function ProjectCreateWizardFooter({
           </Button>
         </>
       )}
-      {step === 2 && (
+      {stepId === "type" && (
         <>
           <Button
             type="button"
@@ -63,7 +64,7 @@ export function ProjectCreateWizardFooter({
           </Button>
         </>
       )}
-      {step > 2 && step < 7 && (
+      {stepId !== "basics" && stepId !== "type" && stepId !== "review" && (
         <>
           <Button
             type="button"
@@ -78,7 +79,7 @@ export function ProjectCreateWizardFooter({
           </Button>
         </>
       )}
-      {step === 7 && (
+      {stepId === "review" && (
         <>
           <Button
             type="button"

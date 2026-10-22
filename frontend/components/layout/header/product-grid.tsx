@@ -12,6 +12,15 @@ import {
 } from "../sidebar/sidebar-nav-items";
 import { ProductTile } from "./product-tile";
 import { hasAssignedProductAccess } from "@/lib/rbac/route-access/route-access";
+import {
+  orgScopedStorageKey,
+  useOrgStorageScope,
+} from "@/lib/org-scoped-storage";
+import {
+  LAST_PRODUCT_PATHS_STORAGE,
+  readLastProductPaths,
+  resolveRememberedProductHref,
+} from "../last-product-path";
 
 export interface ProductGridProps {
   activeProduct: ProductKey;
@@ -34,6 +43,12 @@ export function ProductGrid({
   onClose,
   shouldReduceMotion,
 }: ProductGridProps) {
+  const scope = useOrgStorageScope();
+  // Read on each open (this grid unmounts when the switcher closes).
+  const rememberedPaths = readLastProductPaths(
+    orgScopedStorageKey(LAST_PRODUCT_PATHS_STORAGE, scope),
+  );
+
   const visibleProducts = useMemo(() => {
     const products = PRODUCT_DEFINITIONS.flatMap((product) => {
       if (product.key === "administration") return [];
@@ -50,12 +65,19 @@ export function ProductGrid({
       const planLocked = flattenNavRoutes(
         groups.flatMap((group) => group.routes),
       ).some((route) => route.locked === true);
+      const fallbackHref = hasAccess
+        ? getAccessibleProductHref(groups, product.href)
+        : "/settings/modules";
       return [
         {
           ...product,
           href: hasAccess
-            ? getAccessibleProductHref(groups, product.href)
-            : "/settings/modules",
+            ? resolveRememberedProductHref(
+                product.key,
+                rememberedPaths[product.key],
+                fallbackHref,
+              )
+            : fallbackHref,
           planLocked,
         },
       ];
@@ -73,6 +95,7 @@ export function ProductGrid({
     enabledModules,
     lockedModules,
     canManageModules,
+    rememberedPaths,
   ]);
 
   return (

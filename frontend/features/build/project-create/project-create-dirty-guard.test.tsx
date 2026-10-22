@@ -26,6 +26,9 @@ jest.mock("@/hooks/api/build/templates", () => ({
 jest.mock("./use-project-create", () => ({
   useProjectCreate: () => ({
     step: mockStep,
+    stepId: mockStep === 1 ? "basics" : mockStep === 2 ? "type" : mockStep >= 5 ? "review" : "workflow",
+    totalSteps: 5,
+    currentLabel: mockStep >= 5 ? "Review & Create" : "Basics",
     direction: 1,
     draft: {
       name: mockDraftName,
@@ -45,18 +48,9 @@ jest.mock("./use-project-create", () => ({
     updateDraft: jest.fn(),
     goNext: jest.fn(),
     goBack: mockGoBack,
+    goToStep: jest.fn(),
     reset: mockReset,
   }),
-  TOTAL_STEPS: 7,
-  STEP_LABELS: [
-    "Basics",
-    "Project Type",
-    "Template",
-    "Features",
-    "Workflow",
-    "Team",
-    "Review & Create",
-  ],
 }));
 
 jest.mock("./steps/step-basics", () => ({
@@ -67,9 +61,6 @@ jest.mock("./steps/step-type", () => ({
 }));
 jest.mock("./steps/step-template", () => ({
   StepTemplate: () => <div data-testid="step-template" />,
-}));
-jest.mock("./steps/step-toggles", () => ({
-  StepToggles: () => <div data-testid="step-toggles" />,
 }));
 jest.mock("./steps/step-workflow", () => ({
   StepWorkflow: () => <div data-testid="step-workflow" />,

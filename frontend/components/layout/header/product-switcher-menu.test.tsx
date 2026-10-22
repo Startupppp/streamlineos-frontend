@@ -34,6 +34,7 @@ jest.mock("next/link", () => {
 const mockPrefetch = jest.fn();
 jest.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
+  useSearchParams: () => new URLSearchParams(),
   useRouter: () => ({ prefetch: mockPrefetch }),
 }));
 

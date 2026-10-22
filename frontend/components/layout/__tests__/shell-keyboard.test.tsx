@@ -169,8 +169,13 @@ jest.mock("@/components/layout/shell-offline-banner", () => ({
   ShellOfflineBanner: () => null,
 }));
 
+jest.mock("@/components/layout/use-remember-product-path", () => ({
+  useRememberProductPath: jest.fn(),
+}));
+
 jest.mock("@/components/layout/sidebar/sidebar-nav-items", () => ({
   isPortalChromelessPath: () => false,
+  getProductFromPathname: () => "home",
 }));
 
 jest.mock("@/hooks/common/use-route-focus", () => ({
