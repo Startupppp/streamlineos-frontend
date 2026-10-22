@@ -63,10 +63,7 @@ export function useTicketDetail({
     canUpdate,
     isOnline,
     queryClient,
-    refetchTicket: refetchTicket as () => Promise<{
-      data?: typeof ticket;
-      error: unknown;
-    }>,
+    refetchTicket,
     members,
     onConflict: setConflict,
     ticketUpdatedAt: ticket?.updatedAt,

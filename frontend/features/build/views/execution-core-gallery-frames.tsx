@@ -91,7 +91,7 @@ export function KanbanOverflowCase() {
 export function TicketDetailCase() {
   const [status, setStatus] = useState("IN_PROGRESS");
   const [priority, setPriority] = useState("HIGH");
-  const stubTicket = { id: 42, status, priority, type: "STORY", points: 5, epicId: null, moduleId: null, cycleId: null };
+  const stubTicket = { id: 42, status, priority, type: "STORY", estimate: 5, epicId: null, moduleId: null, cycleId: null };
 
   return (
     <GalleryCase id="ticket-detail-two-panel" title="Ticket detail — two-panel layout with real sidebar controls">

@@ -17,9 +17,8 @@ interface CompactTicketRowData {
   status: string;
   version: number;
   priority?: string | null;
-  points?: number | null;
+  estimate?: number | null;
   ticketNumber?: number | null;
-  assigneeId?: string | null;
   projectId?: number | null;
   project?: { key?: string | null } | null;
   assignee?: {

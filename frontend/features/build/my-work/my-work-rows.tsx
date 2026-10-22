@@ -43,7 +43,6 @@ interface WorkRowShape {
   type: string;
   dueDate: string | null;
   assignee?: MyWorkItem["assignee"];
-  assigneeId?: MyWorkItem["assigneeId"];
   version?: number;
   moduleId?: number | null;
   labels?: MyWorkItem["labels"];

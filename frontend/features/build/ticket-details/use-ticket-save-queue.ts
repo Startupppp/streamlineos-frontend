@@ -27,10 +27,10 @@ interface UseTicketSaveQueueInput {
   canUpdate: boolean;
   isOnline: boolean;
   queryClient: QueryClient;
-  refetchTicket: () => Promise<{ data?: Ticket | undefined; error: unknown }>;
+  refetchTicket: () => Promise<{ data?: Ticket | null; error: unknown }>;
   members: ProjectMember[];
   onConflict: (state: TicketConflictState) => void;
-  ticketUpdatedAt: string | undefined;
+  ticketUpdatedAt: string | Date | null | undefined;
   ticketVersion: number | undefined;
 }
 

@@ -5,7 +5,7 @@ import { MyWorkBoard } from "./my-work-board";
 import { DEFAULT_DISPLAY_OPTIONS } from "../views/display-options-model";
 
 function makeTicket(id: number): AllWorkTicket {
-  return { id, title: `Ticket ${id}`, status: "TODO", type: "TASK", priority: "HIGH", projectId: 1, projectKey: "AL", projectName: "Alpha", ticketNumber: id, epicId: null, assigneeId: null, points: null, estimate: null, rank: null, version: 1, startDate: null, dueDate: null, cycleId: null, createdAt: null, updatedAt: null, assignee: null, labels: [] };
+  return { id, title: `Ticket ${id}`, status: "TODO", type: "TASK", priority: "HIGH", projectId: 1, projectKey: "AL", projectName: "Alpha", ticketNumber: id, epicId: null, estimate: null, rank: null, version: 1, startDate: null, dueDate: null, cycleId: null, createdAt: null, updatedAt: null, assignee: null, labels: [] };
 }
 
 const mockNext = jest.fn();

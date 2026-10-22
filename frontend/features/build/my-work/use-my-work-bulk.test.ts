@@ -78,8 +78,6 @@ function makeTicket(id: number, projectId: number): AllWorkTicket {
     projectName: "Engineering",
     ticketNumber: id,
     epicId: null,
-    assigneeId: null,
-    points: null,
     estimate: null,
     version: 1,
     rank: null,

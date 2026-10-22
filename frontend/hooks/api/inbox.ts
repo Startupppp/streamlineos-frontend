@@ -12,9 +12,19 @@ const unifiedInboxContract = lazyContract(() =>
 const unifiedInboxCountContract = lazyContract(() =>
   import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxCountContract),
 );
-import { inboxCountQueryOptions, unifiedInboxListQueryOptions } from "@/hooks/api/inbox-read-options";
-import { INLINE_READ_ERROR, isTransientNetworkError } from "@/lib/query-error-policy";
-import type { InboxKind, UnifiedInboxCount, UnifiedInboxResponse } from "@/types/inbox";
+import {
+  inboxCountQueryOptions,
+  unifiedInboxListQueryOptions,
+} from "@/hooks/api/inbox-read-options";
+import {
+  INLINE_READ_ERROR,
+  isTransientNetworkError,
+} from "@/lib/query-error-policy";
+import type {
+  InboxKind,
+  UnifiedInboxCount,
+  UnifiedInboxResponse,
+} from "@/types/inbox";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 export interface UnifiedInboxParams {
@@ -50,7 +60,10 @@ export function inboxErrorRecoveryInterval(query: {
 }
 
 export function useUnifiedInboxCount(
-  options?: Omit<UseQueryOptions<UnifiedInboxCount, Error>, "queryKey" | "queryFn">,
+  options?: Omit<
+    UseQueryOptions<UnifiedInboxCount, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   const { data: session } = useSession();
   const orgId = session?.orgId;
@@ -114,9 +127,13 @@ export function useUnifiedInbox(
       if (eventKeys) query["eventKeys"] = eventKeys.join(",");
       if (moduleFilter) query["module"] = moduleFilter;
       if (triage) query["triage"] = triage;
-      return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
+      return apiClient.get<UnifiedInboxResponse>(
+        "/me/inbox/unified",
+        query,
+        signal,
+        unifiedInboxContract,
+      );
     },
-    getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
     refetchInterval: inboxErrorRecoveryInterval,
     refetchIntervalInBackground: false,
     enabled: !!orgId && (options?.enabled ?? true),

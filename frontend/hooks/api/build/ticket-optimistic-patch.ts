@@ -53,7 +53,6 @@ export function applyTicketPatch(
     next.parentTicketId = input.parentTicketId;
   const assigneeId = resolveAssigneeId(input);
   if (assigneeId !== undefined) {
-    next.assigneeId = assigneeId;
     next.assignee = assignee(assigneeId, members);
   }
   return next;
@@ -69,14 +68,13 @@ export function applyAllWorkTicketPatch(
   if (input.type !== undefined) next.type = input.type;
   if (input.status !== undefined) next.status = input.status;
   if (input.priority !== undefined) next.priority = input.priority;
-  if (input.points !== undefined) next.points = input.points;
+  if (input.points !== undefined) next.estimate = input.points;
   if (input.epicId !== undefined) next.epicId = input.epicId;
   if (input.cycleId !== undefined) next.cycleId = input.cycleId;
   if (input.startDate !== undefined) next.startDate = input.startDate;
   if (input.dueDate !== undefined) next.dueDate = input.dueDate;
   const assigneeId = resolveAssigneeId(input);
   if (assigneeId !== undefined) {
-    next.assigneeId = assigneeId;
     next.assignee = assignee(assigneeId, members);
   }
   return next;

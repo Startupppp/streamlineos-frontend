@@ -51,7 +51,7 @@ interface SidebarSelectFieldsProps {
     status?: string | null;
     priority?: string | null;
     type?: string | null;
-    points?: number | null;
+    estimate?: number | null;
     epicId?: number | null;
     moduleId?: number | null;
     cycleId?: number | null;

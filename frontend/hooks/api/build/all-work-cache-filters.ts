@@ -90,9 +90,9 @@ export function relevantServerPredicateChanged(
   return pairs.some(({ before, after }) =>
     Boolean(
       (filters.search && before.title !== after.title) ||
-      (filters.assigneeId && before.assigneeId !== after.assigneeId) ||
+      (filters.assigneeId && before.assignee?.id !== after.assignee?.id) ||
       (filters.cycleId && before.cycleId !== after.cycleId) ||
-      (filters.scope === "mine" && before.assigneeId !== after.assigneeId) ||
+      (filters.scope === "mine" && before.assignee?.id !== after.assignee?.id) ||
       (filters.scope === "recently-completed" &&
         before.status !== after.status),
     ),
