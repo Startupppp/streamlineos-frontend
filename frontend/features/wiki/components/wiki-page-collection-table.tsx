@@ -2,13 +2,12 @@
 
 import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 import { useSearchParams } from "next/navigation";
-import { LayoutList, LayoutGrid } from "lucide-react";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
 import type {
   KbPageCollectionItem,
   KbPageCollectionParams,
 } from "@/hooks/api/kb/page-collection";
-import { useKbSpaces } from "@/hooks/api/kb";
+import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -18,16 +17,8 @@ import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
-import { Button } from "@/components/ui/button";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { SearchInput } from "@/components/ui/search-input";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import { WIKI_PAGE_CARD_GRID_CLASS } from "@/features/wiki/components/wiki-page-card";
@@ -35,30 +26,16 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getUserDisplayName } from "@/lib/person-display";
 import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { buildColumns, buildMobileCard } from "./wiki-page-collection-columns";
+import {
+  VIEW_VALUES,
+  type CollectionView,
+  WikiPageCollectionToolbar,
+} from "./wiki-page-collection-toolbar";
 
 export const KB_PAGE_CURSOR_PARAM = "cursor";
 
-const SORT_OPTIONS = [
-  { value: "updated_desc", label: "Last updated" },
-  { value: "created_desc", label: "Newest" },
-  { value: "title_asc", label: "Title A–Z" },
-] as const;
-
-const STATUS_OPTIONS = [
-  { value: "draft", label: "Draft" },
-  { value: "in_review", label: "In review" },
-  { value: "published", label: "Published" },
-  { value: "archived", label: "Archived" },
-] as const;
-
-const KIND_OPTIONS = [
-  { value: "document", label: "Document" },
-  { value: "spreadsheet", label: "Spreadsheet" },
-] as const;
-
 const PAGE_LIMIT = 50;
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
-const VIEW_VALUES = ["list", "card"] as const;
 
 export interface WikiPageCollectionTableProps {
   fixedParams: Pick<
@@ -245,13 +222,23 @@ export function WikiPageCollectionTable({
     update({ kind: value === "all" ? null : value });
   }
 
-  function handleViewList() {
-    update({ view: null });
+  function handleViewChange(next: CollectionView) {
+    update({ view: next === "list" ? null : next });
   }
 
-  function handleViewCard() {
-    update({ view: "card" });
-  }
+  const activeFilterCount =
+    (status !== "" ? 1 : 0) +
+    (kind !== undefined ? 1 : 0) +
+    (fixedParams.owner === undefined && ownerParam !== "" ? 1 : 0) +
+    (!fixedParams.spaceId && spaceParam !== "" ? 1 : 0) +
+    (sort !== "updated_desc" ? 1 : 0);
+
+  const documentCountLabel =
+    data?.boundedCount !== undefined
+      ? data.boundedCount.isExact
+        ? `${data.boundedCount.count} ${data.boundedCount.count === 1 ? "document" : "documents"}`
+        : `${data.boundedCount.count}+ documents`
+      : null;
 
   const handleNext = useCallback(() => {
     pager.goNext(data?.pagination.nextCursor);
@@ -321,112 +308,35 @@ export function WikiPageCollectionTable({
           Offline — data may be stale
         </span>
       )}
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         {searchPlaceholder !== null && (
           <SearchInput
             value={rawSearch}
             onValueChange={handleSearchChange}
             placeholder={searchPlaceholder}
-            className="h-9 w-48 shrink-0"
+            className="h-9 min-w-0 flex-1 sm:max-w-xs sm:flex-none"
           />
         )}
-        <Select value={status || "all"} onValueChange={handleStatusChange}>
-          <SelectTrigger className="h-9 w-36 shrink-0">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All statuses</SelectItem>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <Select value={kind ?? "all"} onValueChange={handleKindChange}>
-          <SelectTrigger className="h-9 w-36 shrink-0">
-            <SelectValue placeholder="Type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All types</SelectItem>
-            {KIND_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {fixedParams.owner === undefined && (
-          <Select value={owner ?? "all"} onValueChange={handleOwnerChange}>
-            <SelectTrigger className="h-9 w-32 shrink-0">
-              <SelectValue placeholder="Owner" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Anyone</SelectItem>
-              <SelectItem value="me">Me</SelectItem>
-            </SelectContent>
-          </Select>
-        )}
-        {!fixedParams.spaceId && spaces && spaces.length > 0 && (
-          <Select value={spaceParam || "all"} onValueChange={handleSpaceChange}>
-            <SelectTrigger className="h-9 w-40 shrink-0" aria-label="Team folder">
-              <SelectValue placeholder="Team folder" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All team folders</SelectItem>
-              {spaces.map((space) => (
-                <SelectItem key={space.id} value={String(space.id)}>
-                  {space.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-        <Select value={sort} onValueChange={handleSortChange}>
-          <SelectTrigger className="h-9 w-40 shrink-0">
-            <SelectValue placeholder="Sort" />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        <div className="ml-auto flex items-center gap-2">
-          {data?.boundedCount !== undefined && (
-            <span className="text-sm text-muted-foreground tabular-nums">
-              {data.boundedCount.isExact
-                ? `${data.boundedCount.count} ${data.boundedCount.count === 1 ? "document" : "documents"}`
-                : `${data.boundedCount.count}+ documents`}
-            </span>
-          )}
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant={view === "list" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-9 w-9"
-              aria-label="List view"
-              aria-pressed={view === "list"}
-              onClick={handleViewList}
-            >
-              <LayoutList className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant={view === "card" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-9 w-9"
-              aria-label="Card view"
-              aria-pressed={view === "card"}
-              onClick={handleViewCard}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
+        <WikiPageCollectionToolbar
+          status={status}
+          kind={kind}
+          owner={owner}
+          showOwnerFilter={fixedParams.owner === undefined}
+          spaceParam={spaceParam}
+          spaces={spaces}
+          showSpaceFilter={fixedParams.spaceId === undefined}
+          sort={sort}
+          view={view}
+          documentCountLabel={documentCountLabel}
+          activeFilterCount={activeFilterCount}
+          onStatusChange={handleStatusChange}
+          onKindChange={handleKindChange}
+          onOwnerChange={handleOwnerChange}
+          onSpaceChange={handleSpaceChange}
+          onSortChange={handleSortChange}
+          onViewChange={handleViewChange}
+          onClearFilters={handleClearFilters}
+        />
       </div>
       <PageState
         resolution={pageState}

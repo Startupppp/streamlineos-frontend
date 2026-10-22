@@ -1,5 +1,10 @@
 import { Users, Video } from "lucide-react";
-import { EXTERNAL_MEETING_LABEL, huddleConnectCopy, huddleProviderPresentation } from "./huddle-provider";
+import {
+  EXTERNAL_MEETING_LABEL,
+  huddleConnectCopy,
+  huddleEndedCopy,
+  huddleProviderPresentation,
+} from "./huddle-provider";
 
 describe("huddleProviderPresentation", () => {
   it("names Google Meet so people know where the join link goes", () => {
@@ -22,5 +27,17 @@ describe("huddleProviderPresentation", () => {
     expect(huddleConnectCopy("connect", null).message).toBe("Connect Google or Microsoft calendar to start a meeting");
     expect(huddleConnectCopy("reconnect", "google_meet").message).toBe("Reconnect Google to start a meeting");
     expect(huddleConnectCopy("reconnect", "microsoft_teams").message).toBe("Reconnect Microsoft to start a meeting");
+  });
+});
+
+describe("huddleEndedCopy", () => {
+  it("returns a clean ended message when the provider confirmed the meeting was closed", () => {
+    expect(huddleEndedCopy("confirmed")).toBe("Huddle ended");
+  });
+
+  it("returns a hedged message when the provider sync failed, so users know the external meeting may still be live", () => {
+    expect(huddleEndedCopy("failed")).toBe(
+      "Huddle ended in StreamlineOS — the external meeting may still be open",
+    );
   });
 });

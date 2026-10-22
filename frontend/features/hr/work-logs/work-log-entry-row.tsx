@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useMemo, useState } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { format, isWeekend, isToday as isDateToday } from "date-fns";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -67,34 +68,29 @@ export function WorkLogEntryRow({
   lockedSaved = false,
   status,
 }: WorkLogEntryRowProps) {
-  const [content, setContent] = useState(initialContent);
-  const [links, setLinks] = useState<string[]>(() => parseLinks(initialWorkLink));
-  const previousInitialRef = useRef(initialContent);
-  const previousInitialLinkRef = useRef(initialWorkLink);
+  const initialLinks = useMemo(
+    () => parseLinks(initialWorkLink),
+    [initialWorkLink],
+  );
+  const [content, setContent] = useSourceOverride(
+    initialContent,
+    initialContent,
+    true,
+  );
+  const [links, setLinks] = useSourceOverride(
+    initialWorkLink,
+    initialLinks,
+    true,
+  );
   const [linkError, setLinkError] = useState("");
   const [expanded, setExpanded] = useState(
     Boolean(initialContent) || Boolean(initialWorkLink.trim()),
   );
 
-  useEffect(() => {
-    const previousInitial = previousInitialRef.current;
-    previousInitialRef.current = initialContent;
-    setContent((current) => current === previousInitial ? initialContent : current);
-  }, [initialContent]);
-
-  useEffect(() => {
-    const previousInitialLink = previousInitialLinkRef.current;
-    previousInitialLinkRef.current = initialWorkLink;
-    setLinks((current) =>
-      serializeLinks(current) === serializeLinks(parseLinks(previousInitialLink))
-        ? parseLinks(initialWorkLink)
-        : current,
-    );
-  }, [initialWorkLink]);
-
   const serializedLinks = serializeLinks(links);
   const initialSerialized = serializeLinks(parseLinks(initialWorkLink));
-  const hasUnsavedChanges = content !== initialContent || serializedLinks !== initialSerialized;
+  const hasUnsavedChanges =
+    content !== initialContent || serializedLinks !== initialSerialized;
   const isWeekendDay = isWeekend(date);
   const today = isDateToday(date);
   const dateLabel = format(date, "EEEE, MMMM d");
@@ -154,8 +150,14 @@ export function WorkLogEntryRow({
   const highlightMatch = (text: string) => {
     if (!searchTerm.trim() || !text) return null;
     const term = searchTerm.trim();
-    const splitRegex = new RegExp(`(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
-    const testRegex = new RegExp(`^${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i");
+    const splitRegex = new RegExp(
+      `(${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`,
+      "gi",
+    );
+    const testRegex = new RegExp(
+      `^${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+      "i",
+    );
     const parts = text.split(splitRegex);
     if (parts.length === 1) return null;
     return parts.map((part, i) =>
@@ -226,15 +228,17 @@ export function WorkLogEntryRow({
           {ticket && (
             <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
               <span className="inline-flex items-center gap-1 rounded-md border border-primary/30 bg-primary/10 px-1.5 py-0.5 font-mono text-micro font-semibold text-primary">
-                <Ticket className="h-3 w-3" />
-                #{ticket.ticketNumber}
+                <Ticket className="h-3 w-3" />#{ticket.ticketNumber}
               </span>
               {ticket.project && (
                 <span className="rounded-md border border-border bg-muted/50 px-1.5 py-0.5 text-micro font-semibold text-muted-foreground">
                   {ticket.project.key}
                 </span>
               )}
-              <TruncatedText text={ticket.title} className="text-xs font-medium text-foreground" />
+              <TruncatedText
+                text={ticket.title}
+                className="text-xs font-medium text-foreground"
+              />
             </div>
           )}
 
@@ -244,7 +248,11 @@ export function WorkLogEntryRow({
               variant="ghost"
               size="sm"
               disabled={readOnly}
-              aria-label={readOnly ? `No entry for ${dateLabel}` : `Add work log for ${dateLabel}`}
+              aria-label={
+                readOnly
+                  ? `No entry for ${dateLabel}`
+                  : `Add work log for ${dateLabel}`
+              }
               onClick={() => {
                 if (!readOnly) setExpanded(true);
               }}
@@ -290,7 +298,8 @@ export function WorkLogEntryRow({
             <div className="space-y-2">
               {lockedSaved && (
                 <div className="rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
-                  This log is saved and locked. Ask HR or a manager with attendance access to edit it.
+                  This log is saved and locked. Ask HR or a manager with
+                  attendance access to edit it.
                 </div>
               )}
               <div className="flex items-start gap-2">
@@ -333,7 +342,8 @@ export function WorkLogEntryRow({
                         }
                         className={cn(
                           "h-8 text-xs",
-                          linkError && "border-destructive focus-visible:ring-destructive",
+                          linkError &&
+                            "border-destructive focus-visible:ring-destructive",
                         )}
                         type="url"
                         value={link}
@@ -389,7 +399,10 @@ export function WorkLogEntryRow({
               )}
 
               {highlighted && !hasUnsavedChanges && (
-                <span className="line-clamp-2 px-0.5 text-xs text-muted-foreground" title={content}>
+                <span
+                  className="line-clamp-2 px-0.5 text-xs text-muted-foreground"
+                  title={content}
+                >
                   {highlighted}
                 </span>
               )}

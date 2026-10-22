@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import type { Variants } from "framer-motion";
 import { useReducedMotion } from "framer-motion";
 
@@ -58,14 +58,11 @@ const reducedStagger: Variants = {
   },
 };
 
+const subscribeNoop = () => () => {};
+
 export function useMotionVariants() {
   const prefersReduced = useReducedMotion();
-  const [motionReady, setMotionReady] = useState(false);
-
-  useEffect(() => {
-    setMotionReady(true);
-  }, []);
-
+  const motionReady = useSyncExternalStore(subscribeNoop, () => true, () => false);
   const reduce = motionReady && Boolean(prefersReduced);
   return {
     staggerContainer: reduce ? reducedStagger : staggerContainer,

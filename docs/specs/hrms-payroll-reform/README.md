@@ -61,6 +61,7 @@ requirements and mixed P0/P1 subsets.
 | Operations, availability, recovery, and evidence | [06a Release evidence](./06a-operations-release-evidence-prd.md) |
 | Navigation, route ownership, and per-page authorization | [07 Pages](./07-pages-navigation-roles-prd.md) and [07a Manifest](./07a-page-permission-manifest-prd.md) |
 | Task flows, UI states, copy, visual quality, accessibility | [07b Experience and content](./07b-experience-content-quality-prd.md) |
+| Cross-module journey failures, recovery, and edge-case acceptance | [07c Critical journeys and edge cases](./07c-critical-journeys-edge-cases-prd.md) |
 | Capability priorities, waves, and launch claims | [08 Competitive coverage](./08-competitive-coverage-release-prd.md) |
 | Customer setup, migration, parallel runs, and cutover | [09 Implementation cockpit](./09-implementation-migration-cockpit-prd.md) |
 | Where the existing open implementation tasks live | [10 Gap routing map](./10-current-product-gaps-prd.md) |

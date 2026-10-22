@@ -25,6 +25,7 @@ const required = [
   "07-pages-navigation-roles-prd.md",
   "07a-page-permission-manifest-prd.md",
   "07b-experience-content-quality-prd.md",
+  "07c-critical-journeys-edge-cases-prd.md",
   "08-competitive-coverage-release-prd.md",
   "08a-competitor-benchmark-prd.md",
   "09-implementation-migration-cockpit-prd.md",
@@ -50,6 +51,24 @@ const protectedOpenFiles = [
   "15-recheck-gap-matrix.md", "15-reporting-manager-onboarding-prd.md",
   "agent-runbook.md", "work-packets.md",
 ];
+
+// The tier register uses compact ranges (for example FR-CORE-001–006,
+// 008–009). Expand its table rows before checking individual owner IDs.
+const registeredRequirementIds = (register) => {
+  const ids = new Set();
+  for (const row of register.split(/\r?\n/)) {
+    if (!/^\|\s*0\d[a-z]?\s/.test(row)) continue;
+    const family = row.match(/FR-([A-Z]+)-\d{3}/)?.[1];
+    if (!family) continue;
+    for (const [, first, last] of row.matchAll(/(?<!\d)(\d{3})(?:[–-](\d{3}))?(?!\d)/g)) {
+      const start = Number(first);
+      const end = Number(last ?? first);
+      for (let number = start; number <= end; number++)
+        ids.add(`FR-${family}-${String(number).padStart(3, "0")}`);
+    }
+  }
+  return ids;
+};
 
 const validate = ({ directory = suite, retiredDirectory = formerSuite } = {}) => {
   const failures = [];
@@ -85,16 +104,20 @@ const validate = ({ directory = suite, retiredDirectory = formerSuite } = {}) =>
     if (!readme.includes(name)) failures.push(`README.md: missing document link ${name}`);
   }
   const tierRegister = allText.find(([name]) => name === "00c-requirement-tier-traceability-prd.md")?.[1] ?? "";
+  const registeredIds = registeredRequirementIds(tierRegister);
   for (const [name, content] of allText) {
     if (name === "00c-requirement-tier-traceability-prd.md" || name === "2026-10-22-market-benchmark.md") continue;
-    for (const id of content.matchAll(/\*\*(FR-[A-Z]+-\d+)\*\*/g)) {
-      if (!tierRegister.includes(id[1])) failures.push(`${name}: unregistered requirement ${id[1]}`);
+    for (const id of content.matchAll(/\*\*(FR-[A-Z]+-\d+):\*\*/g)) {
+      if (!registeredIds.has(id[1])) failures.push(`${name}: unregistered requirement ${id[1]}`);
     }
   }
   return failures;
 };
 
 if (process.argv.includes("--self-test")) {
+  const parsed = registeredRequirementIds("| 01 Core | FR-CORE-001–003, 005 | FR-CORE-007 | — |");
+  if (!parsed.has("FR-CORE-002") || !parsed.has("FR-CORE-005") || parsed.has("FR-CORE-004"))
+    throw new Error("tier range parser self-test failed");
   const failures = validate({ directory: join(root, "docs/specs/does-not-exist"), retiredDirectory: join(root, "docs/specs/does-not-exist-either") });
   if (failures.length !== 1 || failures[0] !== "merged People + Payroll folder is missing")
     throw new Error("merged-suite validator self-test failed");

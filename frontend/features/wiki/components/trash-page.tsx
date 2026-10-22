@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
-import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb";
+import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb/pages";
 import {
   useKbBulkRestorePages,
   useKbBulkPurgePages,

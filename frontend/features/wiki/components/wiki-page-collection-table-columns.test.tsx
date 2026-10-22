@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { WikiPageCollectionTable } from "./wiki-page-collection-table";
 import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
 
@@ -20,7 +21,7 @@ jest.mock("@/hooks/api/kb/export-page", () => ({
   useExportKbPage: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: jest.fn(() =>
     jest
       .requireActual<typeof import("@/test-utils/kb-spaces-fixture")>(
@@ -28,9 +29,15 @@ jest.mock("@/hooks/api/kb", () => ({
       )
       .kbSpacesQueryStub(),
   ),
+}));
+
+jest.mock("@/hooks/api/kb/pages", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
@@ -132,7 +139,7 @@ const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {
   usePageState: jest.Mock;
 };
 
-const { useKbSpaces } = jest.requireMock("@/hooks/api/kb") as {
+const { useKbSpaces } = jest.requireMock("@/hooks/api/kb/spaces") as {
   useKbSpaces: jest.Mock;
 };
 
@@ -239,21 +246,25 @@ describe("WikiPageCollectionTable — space filter", () => {
     useKbSpaces.mockReturnValue(kbSpacesQueryStub());
   });
 
-  it("builds its options from the cursor envelope useKbSpaces returns, so the selected space shows its name", () => {
+  it("builds its options from the cursor envelope useKbSpaces returns, so the selected space shows its name", async () => {
+    const user = userEvent.setup();
     mockSearchParams = new URLSearchParams("space=2");
 
     render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages yet" />);
 
+    await user.click(screen.getByRole("button", { name: /filters \(1 active\)/i }));
     const trigger = screen.getByRole("combobox", { name: "Team folder" });
     expect(trigger).toHaveTextContent("Product");
   });
 
-  it("renders no space filter when the viewer belongs to no space — the control is data-driven, so the positive above is not free", () => {
+  it("renders no space filter when the viewer belongs to no space — the control is data-driven, so the positive above is not free", async () => {
+    const user = userEvent.setup();
     mockSearchParams = new URLSearchParams("space=2");
     useKbSpaces.mockReturnValue(kbSpacesQueryStub([]));
 
     render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages yet" />);
 
+    await user.click(screen.getByRole("button", { name: /filters \(1 active\)/i }));
     expect(screen.queryByRole("combobox", { name: "Team folder" })).not.toBeInTheDocument();
   });
 });

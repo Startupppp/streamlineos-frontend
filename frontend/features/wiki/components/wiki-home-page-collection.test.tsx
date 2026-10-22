@@ -13,13 +13,12 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useKbPageTreeInfinite: jest.fn(),
   useKbProjectPagesTree: jest.fn(),
   useKbPagesRecent: jest.fn(),
   useKbPagesFavorites: jest.fn(),
   useCreateKbPage: jest.fn(),
-  useKbSpaces: jest.fn(),
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -27,6 +26,10 @@ jest.mock("@/hooks/api/kb", () => ({
   useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
@@ -75,8 +78,6 @@ jest.mock("./wiki-home-sections", () => ({
       {canCreate && <button type="button">New document</button>}
     </div>
   ),
-  WikiHomeActivitySection: () => null,
-  WikiHomeSharedUpdatesSection: () => null,
 }));
 
 type BuildListKeyboardOptions = Record<string, unknown>;
@@ -178,11 +179,13 @@ const {
   useKbPagesRecent,
   useKbPagesFavorites,
   useCreateKbPage,
-  useKbSpaces,
-} = jest.requireMock("@/hooks/api/kb") as {
+} = jest.requireMock("@/hooks/api/kb/pages") as {
   useKbPagesRecent: jest.Mock;
   useKbPagesFavorites: jest.Mock;
   useCreateKbPage: jest.Mock;
+};
+
+const { useKbSpaces } = jest.requireMock("@/hooks/api/kb/spaces") as {
   useKbSpaces: jest.Mock;
 };
 

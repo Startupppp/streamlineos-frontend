@@ -27,7 +27,7 @@ import {
   useKbPageChildrenLevel,
   useToggleFavoriteKbPage,
   useUpdateKbPage,
-} from "@/hooks/api/kb";
+} from "@/hooks/api/kb/pages";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
 import { KB_DOC_BASE, KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";

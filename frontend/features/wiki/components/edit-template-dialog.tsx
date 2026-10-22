@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useUpdateKbPageTemplate } from "@/hooks/api/kb";
+import { useUpdateKbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import { editTemplateSchema, type EditTemplateFormValues } from "./edit-template-schema";
 import { EditTemplateFormFields } from "./edit-template-form-fields";

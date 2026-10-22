@@ -23,10 +23,12 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireSession();
-
-  const cookieStore = await cookies();
-  const requestHeaders = await headers();
+  const [session, cookieStore, requestHeaders] = await Promise.all([
+    requireSession(),
+    cookies(),
+    headers(),
+    getServerAccessResult(),
+  ]);
   const nonce = requestHeaders.get("x-nonce") ?? undefined;
   const pathname = requestHeaders.get("x-pathname") ?? "";
 

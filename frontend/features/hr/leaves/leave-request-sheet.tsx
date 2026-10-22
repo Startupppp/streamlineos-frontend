@@ -18,7 +18,11 @@ import {
 import { useRequestLeave, useLeavePolicy } from "@/hooks/api/hr";
 import { useCan } from "@/hooks/api/access";
 import { leaveStartFloor } from "./leave-date-helpers";
-import { effectiveLeaveEnd, leaveFormSchema, type LeaveFormValues } from "./leave-request-schema";
+import {
+  effectiveLeaveEnd,
+  leaveFormSchema,
+  type LeaveFormValues,
+} from "./leave-request-schema";
 import { LeaveRequestFormFields } from "./leave-request-form-fields";
 import { useLeaveRequestValidation } from "./use-leave-request-validation";
 import type { LeaveSpan } from "./leave-overlap";
@@ -51,7 +55,8 @@ export function LeaveRequestSheet({
   existingRequests = NO_EXISTING_REQUESTS,
 }: LeaveRequestSheetProps) {
   const approverAvailable =
-    approvalRoute !== undefined && (approvalRoute.rung !== null || approvalRoute.ownerSelfApproval);
+    approvalRoute !== undefined &&
+    (approvalRoute.rung !== null || approvalRoute.ownerSelfApproval);
   const requestLeaveMutation = useRequestLeave();
   const { data: policy } = useLeavePolicy();
   const leaveMaxDays = useMemo<Record<string, number>>(
@@ -64,9 +69,10 @@ export function LeaveRequestSheet({
     [policy?.leaveTypes],
   );
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
-  // HRM-B-009: a refused submit keeps the sheet open, so the reason has to live
-  // in the sheet too; a toast alone is gone before the user looks for it.
-  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitFailure, setSubmitFailure] = useState<{
+    key: string;
+    message: string;
+  } | null>(null);
 
   const canApprove = useCan("hr:leaves:approve");
   const canManage = useCan("hr:leaves:manage");
@@ -90,7 +96,7 @@ export function LeaveRequestSheet({
     if (!open) {
       form.reset();
       setAttachmentUrl(null);
-      setSubmitError(null);
+      setSubmitFailure(null);
     }
   }, [open, form]);
 
@@ -98,10 +104,9 @@ export function LeaveRequestSheet({
   const watchedStartDate = form.watch("startDate");
   const watchedEndDate = form.watch("endDate");
   const watchedHalfDay = form.watch("halfDay");
-
-  useEffect(() => {
-    setSubmitError(null);
-  }, [watchedLeaveTypeId, watchedStartDate, watchedEndDate, watchedHalfDay]);
+  const submitFieldKey = `${watchedLeaveTypeId}|${watchedStartDate}|${watchedEndDate}|${String(watchedHalfDay)}`;
+  const submitError =
+    submitFailure?.key === submitFieldKey ? submitFailure.message : null;
 
   const startFloor = leaveStartFloor(
     parseDateOnly(joiningDate?.slice(0, 10)),
@@ -132,7 +137,11 @@ export function LeaveRequestSheet({
   const validation = useLeaveRequestValidation({
     leaveTypeId: watchedLeaveTypeId,
     startDate: watchedStartDate,
-    endDate: effectiveLeaveEnd({ halfDay: watchedHalfDay, startDate: watchedStartDate, endDate: watchedEndDate }),
+    endDate: effectiveLeaveEnd({
+      halfDay: watchedHalfDay,
+      startDate: watchedStartDate,
+      endDate: watchedEndDate,
+    }),
     halfDay: watchedHalfDay,
     leaveTypes,
     balances,
@@ -176,11 +185,18 @@ export function LeaveRequestSheet({
         onOpenChange(false);
       } catch (err: unknown) {
         const message = getErrorMessage(err);
-        setSubmitError(message);
+        setSubmitFailure({ key: submitFieldKey, message });
         toast.error(message);
       }
     },
-    [validation, attachmentUrl, form, onOpenChange, requestLeaveMutation],
+    [
+      validation,
+      attachmentUrl,
+      form,
+      onOpenChange,
+      requestLeaveMutation,
+      submitFieldKey,
+    ],
   );
 
   const guard = useSubmitGuard(onSubmit);

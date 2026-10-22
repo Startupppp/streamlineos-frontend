@@ -6,7 +6,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { useDeleteKbPageTemplate } from "@/hooks/api/kb";
+import { useDeleteKbPageTemplate } from "@/hooks/api/kb/page-templates";
 import { KbTrash2Icon, KbPencilIcon } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";

@@ -4,7 +4,7 @@ import { TemplatePreviewDialog } from "./template-preview-dialog";
 import type { KbPageTemplate } from "@/hooks/api/kb/page-templates";
 import type { StarterTemplate } from "@/features/wiki/lib/starter-templates";
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/page-templates", () => ({
   useDeleteKbPageTemplate: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 

@@ -58,8 +58,11 @@ jest.mock("@/components/ui/page-wrapper", () => ({
   ),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/page-templates", () => ({
   useKbPageTemplates: jest.fn(),
+}));
+
+jest.mock("@/hooks/api/kb/pages", () => ({
   useCreateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
@@ -100,7 +103,7 @@ jest.mock("./template-preview-dialog", () => ({
   TemplatePreviewDialog: () => null,
 }));
 
-const { useKbPageTemplates } = jest.requireMock("@/hooks/api/kb") as {
+const { useKbPageTemplates } = jest.requireMock("@/hooks/api/kb/page-templates") as {
   useKbPageTemplates: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {

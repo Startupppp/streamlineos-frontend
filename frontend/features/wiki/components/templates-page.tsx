@@ -9,6 +9,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchInput } from "@/components/ui/search-input";
+import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
   Select,
@@ -24,11 +25,8 @@ import {
   TabsTrigger,
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
-import {
-  useKbPageTemplates,
-  useCreateKbPage,
-  useUpdateKbPage,
-} from "@/hooks/api/kb";
+import { useKbPageTemplates } from "@/hooks/api/kb/page-templates";
+import { useCreateKbPage, useUpdateKbPage } from "@/hooks/api/kb/pages";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
@@ -285,26 +283,30 @@ export default function TemplatesPage() {
         onValueChange={handleTabChange}
         className="flex min-h-0 flex-1 flex-col gap-4"
       >
-        <TabsList>
-          <TabsTrigger value="starters">Starters</TabsTrigger>
-          <TabsTrigger value="saved">Saved</TabsTrigger>
-        </TabsList>
-        <SearchInput
-          placeholder="Search templates…"
-          value={searchDraft}
-          onValueChange={handleSearchChange}
-          aria-label="Search templates"
-        />
-
-        <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <PageState resolution={startersState} loading={<TemplatesSkeleton />}>
-            <div className="mb-3 flex items-center gap-2">
+        <PageTabsToolbar
+          tabs={
+            <TabsList>
+              <TabsTrigger value="starters">Starters</TabsTrigger>
+              <TabsTrigger value="saved">Saved</TabsTrigger>
+            </TabsList>
+          }
+          search={
+            <SearchInput
+              placeholder="Search templates…"
+              value={searchDraft}
+              onValueChange={handleSearchChange}
+              aria-label="Search templates"
+              fill
+            />
+          }
+          primaryFilters={
+            activeTab === "starters" ? (
               <Select
                 value={activeCategory}
                 onValueChange={handleCategoryChange}
               >
                 <SelectTrigger
-                  className="w-[220px]"
+                  className="h-9 w-full min-w-0 sm:w-56"
                   aria-label="Filter templates by category"
                 >
                   <SelectValue placeholder="All categories" />
@@ -318,7 +320,12 @@ export default function TemplatesPage() {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            ) : undefined
+          }
+        />
+
+        <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
+          <PageState resolution={startersState} loading={<TemplatesSkeleton />}>
             {filteredStarters.length === 0 && (
               <p className="text-sm text-muted-foreground">
                 No starter templates match these filters.

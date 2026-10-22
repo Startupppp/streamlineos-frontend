@@ -10,7 +10,7 @@ jest.mock("./kb-new-menu", () => ({
   KbNewMenu: () => null,
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useKbPageTreeInfinite: jest.fn(),
   useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
   useKbPageChildrenLevel: jest.fn(),
@@ -25,7 +25,7 @@ jest.mock("@/hooks/api/access", () => ({
 }));
 
 const { useKbPageTreeInfinite, useKbPageChildrenLevel } = jest.requireMock(
-  "@/hooks/api/kb",
+  "@/hooks/api/kb/pages",
 ) as {
   useKbPageTreeInfinite: jest.Mock;
   useKbPageChildrenLevel: jest.Mock;

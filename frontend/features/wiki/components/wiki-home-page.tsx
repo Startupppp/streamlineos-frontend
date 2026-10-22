@@ -8,18 +8,22 @@ import { SearchInput } from "@/components/ui/search-input";
 import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
-import { useKbPagesFavorites, useKbPagesRecent } from "@/hooks/api/kb";
-import { LoadingButton } from "@/components/ui/loading-button";
+import { useKbPagesFavorites, useKbPagesRecent } from "@/hooks/api/kb/pages";
 import { ErrorState } from "@/components/shared/error-state";
 import { KB_IMPORT, KB_SEARCH, KB_TEMPLATES, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { KbClockIcon, KbStarIcon } from "@/features/wiki/lib/kb-icons";
-import { WikiPageCard, WIKI_PAGE_CARD_GRID_CLASS } from "@/features/wiki/components/wiki-page-card";
+import { WikiPageCard } from "@/features/wiki/components/wiki-page-card";
 import { WikiPageCollectionTable, KB_PAGE_CURSOR_PARAM } from "./wiki-page-collection-table";
-import { WikiHomeHeaderActions, WikiHomeActivitySection, WikiHomeSharedUpdatesSection } from "./wiki-home-sections";
+import { WikiHomeHeaderActions } from "./wiki-home-sections";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import PageTree from "./page-tree";
+
+const HOME_SHORTCUT_LIMIT = 6;
+const HOME_SHORTCUT_STRIP_CLASS =
+  "flex gap-3 overflow-x-auto pb-1 scrollbar-hide snap-x snap-mandatory";
+const HOME_SHORTCUT_CARD_CLASS = "w-56 shrink-0 snap-start sm:w-64";
 
 interface WikiHomePageProps {
   projectId?: number;
@@ -93,19 +97,14 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     });
   }
 
-  function handleLoadMoreFavorites() {
-    void favoritesQuery.fetchNextPage();
-  }
-
   function handleRetryFavorites() {
-    if (favoritesQuery.isFetchNextPageError) {
-      void favoritesQuery.fetchNextPage();
-      return;
-    }
     void favoritesQuery.refetch();
   }
 
   const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+
+  const recentPreview = recentPages.slice(0, HOME_SHORTCUT_LIMIT);
+  const favoritePreview = favoritePages.slice(0, HOME_SHORTCUT_LIMIT);
   const handleClearSelection = useCallback(() => {}, []);
 
   const handleOpenPage = useCallback(
@@ -156,8 +155,12 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         }
         actions={headerActions}
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-6">
-          <form onSubmit={handleSearchFormSubmit} role="search">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <form
+            onSubmit={handleSearchFormSubmit}
+            role="search"
+            className="w-full max-w-md"
+          >
             <SearchInput
               ref={searchInputRef}
               value={searchValue}
@@ -168,53 +171,54 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                   ? "Filter this project's files…"
                   : "Search documents…"
               }
-              fill
             />
           </form>
 
-          {!isProjectScoped && recentPages.length > 0 && (
-            <section>
-              <div className="flex items-center gap-2 mb-3">
+          {!isProjectScoped && recentPreview.length > 0 && (
+            <section className="min-w-0">
+              <div className="mb-2 flex items-center gap-2">
                 <KbClockIcon className="h-4 w-4 text-muted-foreground" />
                 <h2 className="text-sm font-semibold text-foreground">
                   Recently visited
                 </h2>
               </div>
-              <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-                {recentPages.map((page) => (
-                  <WikiPageCard
-                    key={page.id}
-                    icon={page.icon}
-                    title={page.title}
-                    subtitle={kbTimeAgo(page.updatedAt)}
-                    href={pageHref(page.id)}
-                    coverImage={page.coverImage}
-                  />
+              <div className={HOME_SHORTCUT_STRIP_CLASS}>
+                {recentPreview.map((page) => (
+                  <div key={page.id} className={HOME_SHORTCUT_CARD_CLASS}>
+                    <WikiPageCard
+                      icon={page.icon}
+                      title={page.title}
+                      subtitle={kbTimeAgo(page.updatedAt)}
+                      href={pageHref(page.id)}
+                      coverImage={page.coverImage}
+                    />
+                  </div>
                 ))}
               </div>
             </section>
           )}
 
           {!isProjectScoped &&
-            (favoritePages.length > 0 || favoritesQuery.isError) && (
-              <section>
-                <div className="flex items-center gap-2 mb-3">
+            (favoritePreview.length > 0 || favoritesQuery.isError) && (
+              <section className="min-w-0">
+                <div className="mb-2 flex items-center gap-2">
                   <KbStarIcon className="h-4 w-4 text-muted-foreground" />
                   <h2 className="text-sm font-semibold text-foreground">
                     Starred
                   </h2>
                 </div>
-                {favoritePages.length > 0 && (
-                  <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-                    {favoritePages.map((page) => (
-                      <WikiPageCard
-                        key={page.id}
-                        icon={page.icon}
-                        title={page.title}
-                        subtitle={kbTimeAgo(page.updatedAt)}
-                        href={pageHref(page.id)}
-                        coverImage={page.coverImage}
-                      />
+                {favoritePreview.length > 0 && (
+                  <div className={HOME_SHORTCUT_STRIP_CLASS}>
+                    {favoritePreview.map((page) => (
+                      <div key={page.id} className={HOME_SHORTCUT_CARD_CLASS}>
+                        <WikiPageCard
+                          icon={page.icon}
+                          title={page.title}
+                          subtitle={kbTimeAgo(page.updatedAt)}
+                          href={pageHref(page.id)}
+                          coverImage={page.coverImage}
+                        />
+                      </div>
                     ))}
                   </div>
                 )}
@@ -224,29 +228,13 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                     error={favoritesQuery.error}
                     onRetry={handleRetryFavorites}
                     compact
-                    className="mt-3"
+                    className="mt-2"
                   />
-                )}
-                {favoritesQuery.hasNextPage && !favoritesQuery.isError && (
-                  <LoadingButton
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="mt-3"
-                    onClick={handleLoadMoreFavorites}
-                    isPending={favoritesQuery.isFetchingNextPage}
-                    loadingText="Loading favorites…"
-                  >
-                    Load more favorites
-                  </LoadingButton>
                 )}
               </section>
             )}
 
-          {!isProjectScoped && <WikiHomeActivitySection />}
-          {!isProjectScoped && <WikiHomeSharedUpdatesSection />}
-
-          <div className="flex min-h-0 flex-1 gap-4">
+          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 md:flex-row">
             {isProjectScoped && (
               <aside
                 className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
@@ -255,9 +243,9 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 <PageTree projectId={projectId} baseHref={baseHref} />
               </aside>
             )}
-            <section className="flex min-h-0 flex-1 flex-col">
+            <section className="flex min-h-0 min-w-0 flex-1 flex-col">
               {!isProjectScoped && (
-                <h2 className="text-sm font-semibold text-foreground mb-3">
+                <h2 className="mb-3 text-sm font-semibold text-foreground">
                   All documents
                 </h2>
               )}

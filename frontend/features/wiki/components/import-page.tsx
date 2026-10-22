@@ -86,9 +86,11 @@ export default function ImportPage() {
     "skip",
   );
   const [activeJobId, setActiveJobId] = useState<number | null>(null);
-  const [dryRunResult, setDryRunResult] = useState<ImportDryRunResult | null>(
-    null,
-  );
+  const [dryRun, setDryRun] = useState<{
+    items: ImportPendingItem[];
+    result: ImportDryRunResult;
+  } | null>(null);
+  const dryRunResult = dryRun?.items === items ? dryRun.result : null;
   const [completedFailedItems, setCompletedFailedItems] = useState<ImportFailedItem[]>(
     [],
   );
@@ -114,10 +116,6 @@ export default function ImportPage() {
   }, []);
 
   useEffect(() => cancelPendingReads, [cancelPendingReads]);
-
-  useEffect(() => {
-    setDryRunResult(null);
-  }, [items]);
 
   useEffect(() => {
     if (!activeJob) return;
@@ -326,7 +324,7 @@ export default function ImportPage() {
     if (value === "skip" || value === "update") setDuplicatePolicy(value);
   }
   function handleDismissDryRun() {
-    setDryRunResult(null);
+    setDryRun(null);
   }
   function handleDismissFailedTitles() {
     setCompletedFailedItems([]);
@@ -343,7 +341,7 @@ export default function ImportPage() {
         duplicatePolicy,
       },
       {
-        onSuccess: setDryRunResult,
+        onSuccess: (result) => setDryRun({ items, result }),
         onError: (err) => {
           toast.error(getErrorMessage(err));
         },

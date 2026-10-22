@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
+import { useId, useState, type ChangeEvent, type KeyboardEvent, type PointerEvent } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Input } from "@/components/ui/input";
 import { DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
@@ -36,12 +37,8 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
   const { status, statusMessage, statusExpiresAt, selectStatus, isPending } =
     usePresenceSelection();
   const messageInputId = useId();
-  const [messageDraft, setMessageDraft] = useState(statusMessage);
+  const [messageDraft, setMessageDraft] = useSourceOverride(statusMessage, statusMessage);
   const [clearAfter, setClearAfter] = useState<PresenceClearAfter>(DEFAULT_CLEAR_AFTER);
-
-  useEffect(() => {
-    setMessageDraft(statusMessage);
-  }, [statusMessage]);
 
   function commit(next: {
     status: PresenceStatus;

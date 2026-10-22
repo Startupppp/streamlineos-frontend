@@ -2,6 +2,7 @@
 
 import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { useCallback, useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,7 +10,6 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCan } from "@/hooks/api/access";
 import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-collapse-context";
 import PageTree from "./page-tree";
-import QuickFindDialog from "./quick-find-dialog";
 import WikiSidebarNav from "./wiki-sidebar-nav";
 import { WikiCollapsedSidebarChrome } from "./wiki-sidebar-chrome";
 import {
@@ -17,12 +17,15 @@ import {
   pageHref,
 } from "@/lib/knowledge-routes";
 
+const QuickFindDialog = dynamic(() => import("./quick-find-dialog"), { ssr: false });
+
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
   const canViewSpaces = useCan("kb:spaces:view");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
+  const [quickFindMounted, setQuickFindMounted] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
@@ -61,6 +64,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
   }, [searchParams, router]);
 
   const handleQuickFindOpenChange = useCallback((open: boolean) => {
+    if (open) setQuickFindMounted(true);
     setQuickFindOpen(open);
   }, []);
 
@@ -69,6 +73,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
         if (document.activeElement?.getAttribute("contenteditable") === "true") return;
         e.preventDefault();
+        setQuickFindMounted(true);
         setQuickFindOpen(true);
       }
     }
@@ -122,7 +127,9 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
           </ScrollArea>
         </div>
 
-        <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+        {quickFindMounted ? (
+          <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+        ) : null}
         <ConfirmDialog
           open={createConfirmOpen}
           onOpenChange={handleCreateConfirmOpenChange}

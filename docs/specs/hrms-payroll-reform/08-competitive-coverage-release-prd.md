@@ -250,7 +250,22 @@ its tested cohort; it cannot prove universal market superiority.
 - Native, connected, managed, partner, beta, and roadmap labels are accurate.
 - No “compliant,” “filed,” “paid,” or “AI decided” claim exceeds evidence.
 
-## 11. Release Sequence
+## 11. Definition of Done by Category
+
+| Category | What must be buildable and demonstrable | Evidence before a customer claim |
+|---|---|---|
+| P0 Base | A customer can set up, complete, correct, and reconcile the whole enabled job without a spreadsheet-only or unowned recovery step | Domain and transition fixtures, India rule sign-off, end-to-end [critical journeys](./07c-critical-journeys-edge-cases-prd.md), UX/accessibility checks, and gates A–F |
+| P1 Should have | The added depth works with existing P0 facts, permissions, exports, and corrections; setup and support ownership are explicit | P1 evidence rows, compatibility/regression checks, affected journey study, and applicable C–F gates |
+| P2 Wow | A real user completes a named task better under a predeclared measure, with explanation, human authority, and safe fallback | Pilot baseline and observed task result, adversarial permission/AI checks, and the same applicable trust gates |
+| P3 Future | A country or partner proposition has a validated buyer, delivery model, legal/operational owner, and bounded interface before commitment | Discovery decision first; signed country/partner pack and applicable A–F gates before availability claim |
+
+“Buildable” means the owning PRD names actor, inputs, states, permissions,
+screen/API, failures, recovery, and acceptance evidence. A feature card,
+navigation entry, generated file, or happy-path demo alone does not meet this
+definition. The tier register assigns exact requirement subsets; the domain
+PRD remains the single owner of each business rule.
+
+## 12. Release Sequence
 
 1. **Wave 0:** canonical data/access/event foundations and route cleanup.
 2. **Wave 1:** Core HR, ESS/manager/service, time/leave, implementation
@@ -259,7 +274,7 @@ its tested cohort; it cannot prove universal market superiority.
 4. **Wave 3:** P2 cross-work intelligence and permission-grounded assistance.
 5. **Wave 4:** P3 country packs and contracted regulated partnerships.
 
-## 12. Gate Governance
+## 13. Gate Governance
 
 Every gate is a versioned checklist tied to one frontend/backend/rule/provider
 revision and target environment. It names required Product, Engineering, QA,
@@ -276,7 +291,7 @@ Waves 2–4 require the same applicable C–F gates. The
 [Tier Register](./00c-requirement-tier-traceability-prd.md) and PRD 06a ledger
 map every P0/P1 FR and page to evidence.
 
-## 13. Acceptance Criteria
+## 14. Acceptance Criteria
 
 - [ ] Every P0 and P1 item has exactly one owning domain PRD.
 - [ ] Every competitor claim in release material is source-dated and geography-labeled.

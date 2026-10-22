@@ -11,7 +11,7 @@ import {
   CommandEmpty,
   CommandGroup,
 } from "@/components/ui/command";
-import { useKbPagesSearch } from "@/hooks/api/kb";
+import { useKbPagesSearch } from "@/hooks/api/kb/pages";
 import { KB_PAGE_SEARCH_MAX_LENGTH } from "@/hooks/api/kb/pages";
 import { pageHref, KB_SEARCH } from "@/lib/knowledge-routes";
 import { KbFileTextIcon, KbLoader2Icon } from "@/features/wiki/lib/kb-icons";

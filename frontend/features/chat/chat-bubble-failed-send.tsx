@@ -13,9 +13,9 @@ function assumeNotFailed(): boolean {
   return false;
 }
 
-export function useFailedSend(message: Message): boolean {
+export function useFailedSend(message: Message, outboxDraftKey?: string): boolean {
   const scope = useOrgStorageScope();
-  const draftKey = chatDraftKey(message.channelId, scope);
+  const draftKey = outboxDraftKey ?? chatDraftKey(message.channelId, scope);
   const clientKey = message.id < 0 ? message.clientKey : null;
   const readFailed = useCallback(
     () => (clientKey ? isOutboxEntryFailed(draftKey, clientKey) : false),
@@ -27,17 +27,19 @@ export function useFailedSend(message: Message): boolean {
 interface ChatBubbleFailedSendProps {
   channelId: number;
   clientKey: string;
+  outboxDraftKey?: string;
+  onDiscard?: (clientKey: string) => void;
 }
 
-export function ChatBubbleFailedSend({ channelId, clientKey }: ChatBubbleFailedSendProps) {
+export function ChatBubbleFailedSend({ channelId, clientKey, outboxDraftKey, onDiscard }: ChatBubbleFailedSendProps) {
   const queryClient = useQueryClient();
   const scope = useOrgStorageScope();
-  const draftKey = chatDraftKey(channelId, scope);
+  const draftKey = outboxDraftKey ?? chatDraftKey(channelId, scope);
   const handleRetry = useCallback(() => retryFailedSend(draftKey, clientKey), [draftKey, clientKey]);
-  const handleDiscard = useCallback(
-    () => discardFailedSend(queryClient, channelId, draftKey, clientKey),
-    [queryClient, channelId, draftKey, clientKey],
-  );
+  const handleDiscard = useCallback(() => {
+    if (onDiscard) onDiscard(clientKey);
+    else discardFailedSend(queryClient, channelId, draftKey, clientKey);
+  }, [onDiscard, queryClient, channelId, draftKey, clientKey]);
   return (
     <div role="status" className="mt-1 flex items-center gap-2 px-1 text-dense">
       <span className="flex items-center gap-1 font-medium text-destructive">

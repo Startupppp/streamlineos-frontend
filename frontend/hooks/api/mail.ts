@@ -53,13 +53,13 @@ import type { AiAbortInput } from "@/hooks/api/ai-abort";
 import { applyMailActionToCaches, restoreMailCaches, invalidateAfterMailSend } from "@/hooks/api/mail-action-cache";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-export function useMailAccounts() {
+export function useMailAccounts(options?: { enabled?: boolean }) {
   const can = useCan("mail:inbox:view");
   return useQuery({
     queryKey: directoryAndOwnershipQueryKeys.mail.accounts(),
     queryFn: ({ signal }) => apiClient.get<MailAccount[]>("/mail/accounts", undefined, signal, mailAccountListContract),
     staleTime: 5 * 60_000,
-    enabled: can,
+    enabled: can && (options?.enabled ?? true),
   });
 }
 

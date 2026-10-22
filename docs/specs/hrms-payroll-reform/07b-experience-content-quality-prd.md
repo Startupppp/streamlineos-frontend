@@ -148,6 +148,31 @@ domain permission or invent a second source of truth.
 
 ## 7. Journey validation and metrics
 
+### Screen anatomy by job
+
+| Screen pattern | First viewport | Decision area | Persistent context and recovery |
+|---|---|---|---|
+| Employee self-service | One current task or answer, its status, and a plain-language next step | Small form or request detail with policy/source help beside the decision | Draft state, confirmation, owner, and status timeline remain findable after leaving |
+| Manager queue | Due and blocked decisions first; team scope and deadline are visible | Evidence, policy basis, consequences, and approve/return controls share one reading path | Delegation, stale decision, and reassignment explain what changed without exposing another team's facts |
+| HR record/collection | Search, scope, active filters, count/freshness, and exceptions precede charts | Current effective facts and pending changes appear separately; bulk preview names exact selection | History, related work, audit, and failed-row export stay available through a durable record/job ID |
+| Payroll workbench | Entity, period, run version, cutoff, blockers, and six distinct money concepts are visible | Preflight → variance/source drilldown → approval/lock is a guided sequence with irreversible boundary | Payout, statutory, journal, and publication each keep their own state, owner, evidence, and recovery action |
+| Exception detail | Severity, affected population/period, source, first detection, and owner are explicit | Fix source, return for correction, reconcile, or escalate is selected according to authority | Before/after, attempts, evidence, SLA, and unresolved downstream effects stay on one timeline |
+| Implementation cockpit | Phase, signed gate, source inventory, variance, and next blocker are visible | Mapping/import or cutover preview shows affected records, totals, approvers, and rollback boundary | Decision log, partial row results, parallel-run comparisons, and stabilization handoff are durable |
+
+Within each pattern, visual hierarchy follows **context → problem → evidence →
+action → result**. Use one dominant action for the current state; secondary
+actions must remain discoverable without competing emphasis. Tables use stable
+columns, clear numeric alignment and units, row labels that survive horizontal
+scroll, and visible sort/filter state. A drawer or dialog names its parent
+record, has a clear close/cancel path, and returns focus to the invoking action.
+The interface may be dense for trained operators, but it may not bury a cutoff,
+unknown money state, denied action, or recovery instruction in decoration.
+
+The [critical-journey matrix](./07c-critical-journeys-edge-cases-prd.md) is the
+browser review set for these screen patterns. Design sign-off records annotated
+screens for entry, decision, pending, error, and recovery states, plus the
+responsive, light/dark, keyboard, and screen-reader result at a fixed revision.
+
 The design team tests the critical tasks in section 2 with representative
 employees, managers, HR, payroll, and finance users across the selected
 customer-size and workforce cohorts. The study records task completion,

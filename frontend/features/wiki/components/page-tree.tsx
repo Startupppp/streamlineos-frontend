@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { ErrorState } from "@/components/shared/error-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
-import { useKbPageTreeInfinite } from "@/hooks/api/kb";
+import { useKbPageTreeInfinite } from "@/hooks/api/kb/pages";
 import { KbPlusIcon } from "@/features/wiki/lib/kb-icons";
 import { KB_DOC_BASE } from "@/lib/knowledge-routes";
 import { KbNewMenu } from "./kb-new-menu";

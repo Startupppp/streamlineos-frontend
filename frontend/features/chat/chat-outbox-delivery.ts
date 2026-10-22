@@ -27,6 +27,13 @@ export type SendOutcome =
   | { status: "delivered" | "queued" }
   | { status: "failed" | "discarded"; error: unknown; channel: string };
 
+export interface OutboxCacheAdapter {
+  isDataLoaded: () => boolean;
+  readShownClientKeys: () => { delivered: Set<string>; pending: Set<string> };
+  showPending: (entry: OutboxEntry) => void;
+  dropOptimistic: (clientKey: string) => void;
+}
+
 export interface ChannelOutbox {
   queryClient: QueryClient;
   channelId: number;
@@ -34,13 +41,18 @@ export interface ChannelOutbox {
   isOnline: boolean;
   author: Parameters<typeof pendingSendMessage>[1];
   mutateAsync: (input: SendMessageInput) => Promise<unknown>;
+  cacheAdapter?: OutboxCacheAdapter;
 }
 
 const dispatching = new Set<string>();
-const deliveredListeners = new Set<(draftKey: string, entry: OutboxEntry) => void>();
+const deliveredListeners = new Set<
+  (draftKey: string, entry: OutboxEntry) => void
+>();
 const drainListeners = new Set<() => void>();
 
-export function onOutboxDelivered(listener: (draftKey: string, entry: OutboxEntry) => void): () => void {
+export function onOutboxDelivered(
+  listener: (draftKey: string, entry: OutboxEntry) => void,
+): () => void {
   deliveredListeners.add(listener);
   return () => {
     deliveredListeners.delete(listener);
@@ -59,10 +71,16 @@ export function retryFailedSend(draftKey: string, clientKey: string): void {
   for (const listener of drainListeners) listener();
 }
 
-export function discardFailedSend(queryClient: QueryClient, channelId: number, draftKey: string, clientKey: string): void {
+export function discardFailedSend(
+  queryClient: QueryClient,
+  channelId: number,
+  draftKey: string,
+  clientKey: string,
+): void {
   removeOutboxEntry(draftKey, clientKey);
-  queryClient.setQueryData<InfiniteData<MessagesPage>>(collaborationQueryKeys.chat.messages(channelId), (old) =>
-    removeOptimisticMessage(old, clientKey),
+  queryClient.setQueryData<InfiniteData<MessagesPage>>(
+    collaborationQueryKeys.chat.messages(channelId),
+    (old) => removeOptimisticMessage(old, clientKey),
   );
 }
 
@@ -78,47 +96,78 @@ function toSendInput(channelId: number, entry: OutboxEntry): SendMessageInput {
   };
 }
 
-function readTimeline(target: ChannelOutbox): InfiniteData<MessagesPage> | undefined {
+function readTimeline(
+  target: ChannelOutbox,
+): InfiniteData<MessagesPage> | undefined {
   return target.queryClient.getQueryData<InfiniteData<MessagesPage>>(
     collaborationQueryKeys.chat.messages(target.channelId),
   );
 }
 
-function shownClientKeys(data: InfiniteData<MessagesPage> | undefined): { delivered: Set<string>; pending: Set<string> } {
+function shownClientKeys(data: InfiniteData<MessagesPage> | undefined): {
+  delivered: Set<string>;
+  pending: Set<string>;
+} {
   const delivered = new Set<string>();
   const pending = new Set<string>();
   for (const page of data?.pages ?? [])
     for (const message of page.messages)
-      if (message.clientKey) (message.id > 0 ? delivered : pending).add(message.clientKey);
+      if (message.clientKey)
+        (message.id > 0 ? delivered : pending).add(message.clientKey);
   return { delivered, pending };
+}
+
+function readShownKeys(
+  target: ChannelOutbox,
+): { delivered: Set<string>; pending: Set<string> } | null {
+  if (target.cacheAdapter) {
+    if (!target.cacheAdapter.isDataLoaded()) return null;
+    return target.cacheAdapter.readShownClientKeys();
+  }
+  const data = readTimeline(target);
+  if (!data) return null;
+  return shownClientKeys(data);
 }
 
 function inFlightClientKeys(queryClient: QueryClient): Set<string> {
   const keys = new Set<string>();
-  for (const mutation of queryClient.getMutationCache().findAll({ mutationKey: CHAT_SEND_MUTATION_KEY, status: "pending" })) {
+  for (const mutation of queryClient
+    .getMutationCache()
+    .findAll({ mutationKey: CHAT_SEND_MUTATION_KEY, status: "pending" })) {
     const variables = mutation.state.variables;
-    if (isRecord(variables) && typeof variables.clientKey === "string") keys.add(variables.clientKey);
+    if (isRecord(variables) && typeof variables.clientKey === "string")
+      keys.add(variables.clientKey);
   }
   return keys;
 }
 
 function dropOptimisticRow(target: ChannelOutbox, clientKey: string): void {
-  target.queryClient.setQueryData<InfiniteData<MessagesPage>>(
-    collaborationQueryKeys.chat.messages(target.channelId),
-    (old) => removeOptimisticMessage(old, clientKey),
-  );
+  if (target.cacheAdapter) target.cacheAdapter.dropOptimistic(clientKey);
+  else {
+    target.queryClient.setQueryData<InfiniteData<MessagesPage>>(
+      collaborationQueryKeys.chat.messages(target.channelId),
+      (old) => removeOptimisticMessage(old, clientKey),
+    );
+  }
 }
 
 function channelLabel(target: ChannelOutbox): string {
   const channel = findChannelRow(target.queryClient, target.channelId);
   if (!channel) return "a conversation";
   if (channel.type !== "DIRECT") return `#${channel.name}`;
-  return resolveDirectPartner(channel.members, target.author?.id ?? "")?.name ?? "a conversation";
+  return (
+    resolveDirectPartner(channel.members, target.author?.id ?? "")?.name ??
+    "a conversation"
+  );
 }
 
-async function lostChannelAccess(target: ChannelOutbox, error: unknown): Promise<boolean> {
+async function lostChannelAccess(
+  target: ChannelOutbox,
+  error: unknown,
+): Promise<boolean> {
   if (readChannelJoinRequired(error)) return true;
-  if (!isApiError(error) || (error.status !== 403 && error.status !== 404)) return false;
+  if (!isApiError(error) || (error.status !== 403 && error.status !== 404))
+    return false;
   const listKey = collaborationQueryKeys.chat.myChannels();
   if (target.queryClient.getQueryData(listKey) === undefined) return false;
   await target.queryClient.refetchQueries({ queryKey: listKey, exact: true });
@@ -126,14 +175,31 @@ async function lostChannelAccess(target: ChannelOutbox, error: unknown): Promise
 }
 
 function showPending(target: ChannelOutbox, entry: OutboxEntry): void {
-  const pending = pendingSendMessage(target.queryClient, target.author, toSendInput(target.channelId, entry), entry.clientKey);
-  target.queryClient.setQueryData<InfiniteData<MessagesPage>>(
-    collaborationQueryKeys.chat.messages(target.channelId),
-    (old) => appendPendingSend(old, pending),
-  );
+  if (target.cacheAdapter) {
+    target.cacheAdapter.showPending(entry);
+  } else {
+    const pending = pendingSendMessage(
+      target.queryClient,
+      target.author,
+      toSendInput(target.channelId, entry),
+      entry.clientKey,
+    );
+    target.queryClient.setQueryData<InfiniteData<MessagesPage>>(
+      collaborationQueryKeys.chat.messages(target.channelId),
+      (old) => appendPendingSend(old, pending),
+    );
+  }
 }
 
-async function deliver(target: ChannelOutbox, entry: OutboxEntry): Promise<SendOutcome> {
+function discardEntry(target: ChannelOutbox, clientKey: string): void {
+  removeOutboxEntry(target.draftKey, clientKey);
+  dropOptimisticRow(target, clientKey);
+}
+
+async function deliver(
+  target: ChannelOutbox,
+  entry: OutboxEntry,
+): Promise<SendOutcome> {
   dispatching.add(entry.clientKey);
   const release = holdFailedSendRow(entry.clientKey);
   try {
@@ -142,14 +208,18 @@ async function deliver(target: ChannelOutbox, entry: OutboxEntry): Promise<SendO
     for (const listener of deliveredListeners) listener(target.draftKey, entry);
     return { status: "delivered" };
   } catch (error) {
-    if (shownClientKeys(readTimeline(target)).delivered.has(entry.clientKey)) {
-      discardFailedSend(target.queryClient, target.channelId, target.draftKey, entry.clientKey);
-      for (const listener of deliveredListeners) listener(target.draftKey, entry);
+    const keys =
+      target.cacheAdapter?.readShownClientKeys() ??
+      shownClientKeys(readTimeline(target));
+    if (keys.delivered.has(entry.clientKey)) {
+      discardEntry(target, entry.clientKey);
+      for (const listener of deliveredListeners)
+        listener(target.draftKey, entry);
       return { status: "delivered" };
     }
     const channel = channelLabel(target);
     if (await lostChannelAccess(target, error)) {
-      discardFailedSend(target.queryClient, target.channelId, target.draftKey, entry.clientKey);
+      discardEntry(target, entry.clientKey);
       return { status: "discarded", error, channel };
     }
     markOutboxEntryFailed(target.draftKey, entry.clientKey);
@@ -161,13 +231,18 @@ async function deliver(target: ChannelOutbox, entry: OutboxEntry): Promise<SendO
   }
 }
 
-export function drainChannelOutbox(target: ChannelOutbox): Map<string, Promise<SendOutcome>> {
-  const { delivered } = shownClientKeys(readTimeline(target));
+export function drainChannelOutbox(
+  target: ChannelOutbox,
+): Map<string, Promise<SendOutcome>> {
+  const { delivered } =
+    target.cacheAdapter?.readShownClientKeys() ??
+    shownClientKeys(readTimeline(target));
   const inFlight = inFlightClientKeys(target.queryClient);
   const started = new Map<string, Promise<SendOutcome>>();
   for (const entry of readOutbox(target.draftKey)) {
-    if (dispatching.has(entry.clientKey) || inFlight.has(entry.clientKey)) continue;
-    if (delivered.has(entry.clientKey)) discardFailedSend(target.queryClient, target.channelId, target.draftKey, entry.clientKey);
+    if (dispatching.has(entry.clientKey) || inFlight.has(entry.clientKey))
+      continue;
+    if (delivered.has(entry.clientKey)) discardEntry(target, entry.clientKey);
     else if (entry.failed || !target.isOnline) showPending(target, entry);
     else started.set(entry.clientKey, deliver(target, entry));
   }
@@ -175,19 +250,27 @@ export function drainChannelOutbox(target: ChannelOutbox): Map<string, Promise<S
 }
 
 export function restoreOutboxRows(target: ChannelOutbox): void {
-  const data = readTimeline(target);
-  if (!data) return;
-  const { delivered, pending } = shownClientKeys(data);
-  for (const clientKey of pending) if (delivered.has(clientKey)) dropOptimisticRow(target, clientKey);
+  const keys = readShownKeys(target);
+  if (!keys) return;
+  const { delivered, pending } = keys;
+  for (const clientKey of pending)
+    if (delivered.has(clientKey)) dropOptimisticRow(target, clientKey);
   for (const entry of readOutbox(target.draftKey))
-    if (delivered.has(entry.clientKey)) removeOutboxEntry(target.draftKey, entry.clientKey);
+    if (delivered.has(entry.clientKey))
+      removeOutboxEntry(target.draftKey, entry.clientKey);
     else if (!pending.has(entry.clientKey)) showPending(target, entry);
 }
 
-export async function reportSendFailure(outcome: Promise<SendOutcome>): Promise<void> {
+export async function reportSendFailure(
+  outcome: Promise<SendOutcome>,
+): Promise<void> {
   const result = await outcome;
   if (result.status === "failed")
-    toast.error(`Message to ${result.channel} not sent`, { description: getErrorMessage(result.error) });
+    toast.error(`Message to ${result.channel} not sent`, {
+      description: getErrorMessage(result.error),
+    });
   if (result.status === "discarded")
-    toast.error(`Message to ${result.channel} discarded`, { description: getErrorMessage(result.error) });
+    toast.error(`Message to ${result.channel} discarded`, {
+      description: getErrorMessage(result.error),
+    });
 }

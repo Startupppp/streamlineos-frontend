@@ -3,7 +3,7 @@ import { useGuardedCreateKbPage } from "./use-guarded-create-kb-page";
 
 const mutate = jest.fn();
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useCreateKbPage: () => ({ mutate, isPending: false }),
 }));
 

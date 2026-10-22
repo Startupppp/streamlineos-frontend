@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useMemo,
-  useCallback,
-  useEffect,
-  useState,
-  type ReactNode,
-} from "react";
+import { useMemo, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useDashboardStats, useMyIssues } from "@/hooks/api/dashboard";
@@ -35,6 +29,7 @@ import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import { QuickActions } from "@/features/dashboard/quick-actions";
 import { FocusStrip } from "@/features/dashboard/focus-strip";
 import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
@@ -84,11 +79,13 @@ export function DashboardClient({
   const accessDeadlineElapsed = useSettleDeadline(HOME_ACCESS_DEADLINE_MS);
   const { hrEnabled, canViewExecutive } = access;
 
-  const [headerClock, setHeaderClock] = useState<{
-    greeting: string;
-    todayFormatted: string;
-  } | null>(null);
-  const [mounted, setMounted] = useState(false);
+  const hydrated = useHydrated();
+  const headerClock = hydrated
+    ? {
+        greeting: getGreeting(),
+        todayFormatted: format(new Date(), "EEEE, MMMM do, yyyy"),
+      }
+    : null;
 
   const {
     data: stats,
@@ -112,14 +109,6 @@ export function DashboardClient({
     [myIssuesData],
   );
 
-  useEffect(() => {
-    setHeaderClock({
-      greeting: getGreeting(),
-      todayFormatted: format(new Date(), "EEEE, MMMM do, yyyy"),
-    });
-    setMounted(true);
-  }, []);
-
   const pageTitle = headerClock
     ? firstName
       ? `${headerClock.greeting}, ${firstName}`
@@ -134,7 +123,7 @@ export function DashboardClient({
     shouldRenderDashboardLoading({
       accessLoading: access.accessLoading,
       accessDeadlineElapsed,
-      mounted,
+      mounted: hydrated,
       setupBannersPending,
     })
   ) {

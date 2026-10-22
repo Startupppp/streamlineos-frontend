@@ -23,6 +23,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { useCrmOrganizations, useDeleteCrmOrganization } from "@/hooks/api/crm";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { CompanyRowActions, CompanySelectionBar } from "./company-list-controls";
@@ -31,6 +32,7 @@ import { CompanyMergeDialog } from "./detail/company-merge-dialog";
 import type { DuplicateOrgPair } from "@/types/crm";
 
 const PAGE_SIZE = 20;
+const INITIAL_CURSORS: (string | undefined)[] = [undefined];
 
 export function CompanyListPage() {
   const router = useRouter();
@@ -53,15 +55,9 @@ export function CompanyListPage() {
   const [search, setSearch] = useState(searchParams.get("q") ?? "");
   const debouncedSearch = useDebouncedValue(search, 300);
 
-  const [cursors, setCursors] = useState<(string | undefined)[]>([undefined]);
-  const [cursorIndex, setCursorIndex] = useState(0);
-
   const filterKey = debouncedSearch.trim();
-
-  useEffect(() => {
-    setCursors([undefined]);
-    setCursorIndex(0);
-  }, [filterKey]);
+  const [cursors, setCursors] = useSourceOverride(filterKey, INITIAL_CURSORS);
+  const [cursorIndex, setCursorIndex] = useSourceOverride(filterKey, 0);
 
   const deleteCompany = useDeleteCrmOrganization();
 

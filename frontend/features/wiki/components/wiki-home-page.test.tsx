@@ -14,13 +14,12 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useKbPageTreeInfinite: jest.fn(),
   useKbProjectPagesTree: jest.fn(),
   useKbPagesRecent: jest.fn(),
   useKbPagesFavorites: jest.fn(),
   useCreateKbPage: jest.fn(),
-  useKbSpaces: jest.fn(),
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -28,6 +27,10 @@ jest.mock("@/hooks/api/kb", () => ({
   useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: jest.fn(),
 }));
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
@@ -87,8 +90,6 @@ jest.mock("./wiki-home-sections", () => ({
       {canCreate && <button type="button">New document</button>}
     </div>
   ),
-  WikiHomeActivitySection: () => null,
-  WikiHomeSharedUpdatesSection: () => null,
 }));
 
 type BuildListKeyboardOptions = Record<string, unknown>;
@@ -190,11 +191,13 @@ const {
   useKbPagesRecent,
   useKbPagesFavorites,
   useCreateKbPage,
-  useKbSpaces,
-} = jest.requireMock("@/hooks/api/kb") as {
+} = jest.requireMock("@/hooks/api/kb/pages") as {
   useKbPagesRecent: jest.Mock;
   useKbPagesFavorites: jest.Mock;
   useCreateKbPage: jest.Mock;
+};
+
+const { useKbSpaces } = jest.requireMock("@/hooks/api/kb/spaces") as {
   useKbSpaces: jest.Mock;
 };
 
@@ -311,9 +314,8 @@ describe("WikiHomePage — favorites pagination", () => {
     expect(refetch).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps loaded favorites and retries only the failed next page", async () => {
+  it("keeps loaded favorites and retries the favorites query", async () => {
     const user = userEvent.setup();
-    const fetchNextPage = jest.fn();
     const refetch = jest.fn();
     useKbPagesFavorites.mockReturnValue({
       data: [makeItem(7)],
@@ -321,7 +323,7 @@ describe("WikiHomePage — favorites pagination", () => {
       error: new ApiError("Unavailable", 503),
       hasNextPage: true,
       isFetchNextPageError: true,
-      fetchNextPage,
+      fetchNextPage: jest.fn(),
       refetch,
     });
 
@@ -330,51 +332,23 @@ describe("WikiHomePage — favorites pagination", () => {
     expect(screen.getByText("Page 7")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Try again" }));
-    expect(fetchNextPage).toHaveBeenCalledTimes(1);
-    expect(refetch).not.toHaveBeenCalled();
+    expect(refetch).toHaveBeenCalledTimes(1);
   });
 
-  it("loads the next page of favorites without replacing visible cards", async () => {
-    const user = userEvent.setup();
-    const fetchNextPage = jest.fn();
+  it("shows a capped favorites preview without a load-more control", () => {
     useKbPagesFavorites.mockReturnValue({
-      data: [makeItem(7)],
+      data: [makeItem(7), makeItem(8), makeItem(9)],
       hasNextPage: true,
       isFetchingNextPage: false,
-      fetchNextPage,
-    });
-
-    const { rerender } = render(<WikiHomePage />);
-
-    expect(screen.getByText("Page 7")).toBeInTheDocument();
-    await user.click(screen.getByRole("button", { name: "Load more favorites" }));
-    expect(fetchNextPage).toHaveBeenCalledTimes(1);
-
-    useKbPagesFavorites.mockReturnValue({
-      data: [makeItem(7), makeItem(8)],
-      hasNextPage: false,
-      isFetchingNextPage: false,
-      fetchNextPage,
-    });
-    rerender(<WikiHomePage />);
-
-    expect(screen.getByText("Page 7")).toBeInTheDocument();
-    expect(screen.getByText("Page 8")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
-  });
-
-  it("disables the favorites action while the next page is loading", () => {
-    useKbPagesFavorites.mockReturnValue({
-      data: [makeItem(7)],
-      hasNextPage: true,
-      isFetchingNextPage: true,
       fetchNextPage: jest.fn(),
     });
 
     render(<WikiHomePage />);
 
-    expect(screen.getByRole("button", { name: "Loading favorites…" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Loading favorites…" })).toHaveAttribute("aria-busy", "true");
+    expect(screen.getByText("Page 7")).toBeInTheDocument();
+    expect(screen.getByText("Page 8")).toBeInTheDocument();
+    expect(screen.getByText("Page 9")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
   });
 
   it("does not show organization favorites in a project-scoped wiki", () => {

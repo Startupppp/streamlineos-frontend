@@ -65,6 +65,10 @@ export function chatDraftKey(channelId: number, scope: string): string {
   return orgScopedStorageKey(`chat:draft:${channelId}`, scope);
 }
 
+export function chatThreadDraftKey(channelId: number, parentMessageId: number, scope: string): string {
+  return orgScopedStorageKey(`chat:thread:${channelId}:${parentMessageId}`, scope);
+}
+
 const outboxListeners = new Set<() => void>();
 
 export function subscribeOutbox(listener: () => void): () => void {

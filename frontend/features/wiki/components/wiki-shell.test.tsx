@@ -11,7 +11,7 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useCreateKbPage: () => ({ mutate: mockMutate, isPending: false }),
 }));
 

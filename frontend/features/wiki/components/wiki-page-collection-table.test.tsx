@@ -26,7 +26,7 @@ jest.mock("@/hooks/api/kb/export-page", () => ({
   useExportKbPage: () => ({ mutate: mockExportMutate, isPending: mockExportPending }),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: jest.fn(() =>
     jest
       .requireActual<typeof import("@/test-utils/kb-spaces-fixture")>(
@@ -34,6 +34,9 @@ jest.mock("@/hooks/api/kb", () => ({
       )
       .kbSpacesQueryStub(),
   ),
+}));
+
+jest.mock("@/hooks/api/kb/pages", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -579,21 +582,27 @@ describe("WikiPageCollectionTable — owner filter", () => {
     );
   });
 
-  it("renders an Owner selector when the table's owner is not pinned by the caller", () => {
+  it("renders an Owner selector when the table's owner is not pinned by the caller", async () => {
+    const user = userEvent.setup();
     mockSearchParams = new URLSearchParams();
 
     render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
 
+    await user.click(screen.getByRole("button", { name: /^filters$/i }));
+    expect(screen.getByRole("combobox", { name: /^owner$/i })).toBeInTheDocument();
     expect(screen.getByText("Anyone")).toBeInTheDocument();
   });
 
-  it("hides the Owner selector when the caller already pins owner, e.g. a dedicated My Pages view", () => {
+  it("hides the Owner selector when the caller already pins owner, e.g. a dedicated My Pages view", async () => {
+    const user = userEvent.setup();
     mockSearchParams = new URLSearchParams();
 
     render(
       <WikiPageCollectionTable fixedParams={{ owner: "me" }} emptyTitle="No pages" />,
     );
 
+    await user.click(screen.getByRole("button", { name: /^filters$/i }));
+    expect(screen.queryByRole("combobox", { name: /^owner$/i })).not.toBeInTheDocument();
     expect(screen.queryByText("Anyone")).not.toBeInTheDocument();
   });
 });
@@ -629,19 +638,23 @@ describe("WikiPageCollectionTable — kind filter", () => {
     );
   });
 
-  it("renders the Type selector so the user can choose between document and spreadsheet", () => {
+  it("renders the Type selector so the user can choose between document and spreadsheet", async () => {
+    const user = userEvent.setup();
     mockSearchParams = new URLSearchParams();
 
     render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
 
+    await user.click(screen.getByRole("button", { name: /^filters$/i }));
     expect(screen.getByRole("combobox", { name: /type/i })).toBeInTheDocument();
   });
 
-  it("reflects the active kind in the Type selector when kind=spreadsheet is in the URL", () => {
+  it("reflects the active kind in the Type selector when kind=spreadsheet is in the URL", async () => {
+    const user = userEvent.setup();
     mockSearchParams = new URLSearchParams("kind=spreadsheet");
 
     render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
 
+    await user.click(screen.getByRole("button", { name: /filters \(1 active\)/i }));
     const trigger = screen.getByRole("combobox", { name: /type/i });
     expect(trigger).toBeInTheDocument();
     expect(trigger.textContent).toMatch(/spreadsheet/i);

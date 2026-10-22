@@ -10,11 +10,12 @@ jest.mock("@/hooks/common/use-debounce", () => ({
   useDebouncedValue: (value: string) => value,
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
+  KB_PAGE_SEARCH_MAX_LENGTH: 200,
   useKbPagesSearch: jest.fn(),
 }));
 
-const { useKbPagesSearch } = jest.requireMock<{ useKbPagesSearch: jest.Mock }>("@/hooks/api/kb");
+const { useKbPagesSearch } = jest.requireMock<{ useKbPagesSearch: jest.Mock }>("@/hooks/api/kb/pages");
 
 it("reports a failed first Quick Find read without calling it an empty result", () => {
   useKbPagesSearch.mockReturnValue({

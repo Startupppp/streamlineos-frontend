@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
@@ -40,11 +40,7 @@ function getRowKey(row: DrilldownRow): number {
 }
 
 export function DrilldownSheet({ open, onClose, metric, title, departmentId }: DrilldownSheetProps) {
-  const [page, setPage] = useState(1);
-
-  useEffect(() => {
-    setPage(1);
-  }, [metric]);
+  const [page, setPage] = useSourceOverride(metric, 1);
 
   const access = useCanState("hr:analytics:read");
   const { data, isLoading, isError, error, refetch } = useHrDrilldown(metric, page, departmentId);

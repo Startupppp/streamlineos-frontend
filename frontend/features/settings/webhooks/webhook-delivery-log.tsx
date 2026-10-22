@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback } from "react";
 import { RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -158,14 +158,6 @@ export function WebhookDeliveryLogSheet({
 
   const logs = data?.data ?? [];
   const pagination = data?.pagination;
-
-  useEffect(() => {
-    setCursorState((current) =>
-      current.key === cursorResetKey
-        ? current
-        : { key: cursorResetKey, history: [undefined] },
-    );
-  }, [cursorResetKey]);
 
   const handlePreviousPage = useCallback(() => {
     setCursorState((current) => {

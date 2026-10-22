@@ -68,6 +68,7 @@ Additional tier rules:
 | Payout/filing/journal | intent, unknown/partial/return/reject, acknowledgment, duplicate prevention, reconciliation |
 | Page | PRD 07a route permission plus loading/empty/error/denied/stale/conflict/accessibility tests |
 | Experience/content | PRD 07b task study, predeclared outcome target, copy/state review, responsive/light/dark and WCAG 2.2 AA browser evidence |
+| Critical journey and edge case | PRD 07c case ID, owning domain FR/TR, valid and negative fixtures, persisted/visible outcome, recovery, and fixed-revision browser evidence |
 | Report/metric | totals, drill-through predicate, freshness, export, cohort privacy |
 | Performance/recovery | PRD 06a fixed revision, dataset, sample protocol, RPO/RTO/restore evidence |
 | AI | PRD 06a fixed evaluation set and threshold report |

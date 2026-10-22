@@ -27,27 +27,24 @@ function shouldSendStrictTransportSecurity(): boolean {
   return true;
 }
 
-const optimizePackageImports =
-  process.env.NODE_ENV === "production"
-    ? [
-        "lucide-react",
-        "recharts",
-        "@hello-pangea/dnd",
-        "date-fns",
-        "framer-motion",
-        "@radix-ui/react-dialog",
-        "@radix-ui/react-select",
-        "@radix-ui/react-dropdown-menu",
-        "@radix-ui/react-popover",
-        "@radix-ui/react-tooltip",
-        "@radix-ui/react-tabs",
-        "@radix-ui/react-alert-dialog",
-        "@radix-ui/react-scroll-area",
-        "@radix-ui/react-checkbox",
-        "@radix-ui/react-radio-group",
-        "@radix-ui/react-avatar",
-      ]
-    : ["lucide-react"];
+const optimizePackageImports = [
+  "lucide-react",
+  "recharts",
+  "@hello-pangea/dnd",
+  "date-fns",
+  "framer-motion",
+  "@radix-ui/react-dialog",
+  "@radix-ui/react-select",
+  "@radix-ui/react-dropdown-menu",
+  "@radix-ui/react-popover",
+  "@radix-ui/react-tooltip",
+  "@radix-ui/react-tabs",
+  "@radix-ui/react-alert-dialog",
+  "@radix-ui/react-scroll-area",
+  "@radix-ui/react-checkbox",
+  "@radix-ui/react-radio-group",
+  "@radix-ui/react-avatar",
+];
 
 const nextConfig: NextConfig = {
   distDir: process.env.NEXT_DIST_DIR || ".next",
@@ -132,10 +129,6 @@ const nextConfig: NextConfig = {
       destination: "/payroll",
       permanent: false,
     },
-    // BUG-HRMS-013. Three paths the product implies but never served. The pages
-    // exist and the sidebar links them correctly; these are the addresses an
-    // operator guesses, bookmarks or reads in a training doc, and each answered
-    // "Page Not Found" instead of the page it names.
     {
       source: "/hr/skills",
       destination: "/hr/employees/skills-matrix",
@@ -146,8 +139,6 @@ const nextConfig: NextConfig = {
       destination: "/hr/onboarding/probation",
       permanent: false,
     },
-    // Singular vs plural: the sidebar says /hr/leaves, so half the product's own
-    // prose says /hr/leave.
     {
       source: "/hr/leave",
       destination: "/hr/leaves",
@@ -209,7 +200,6 @@ const nextConfig: NextConfig = {
       permanent: false,
     },
 
-    // Recruitment OS moved out of HRMS. Old links (bookmarks, sent emails) keep working.
     {
       source: "/hr/recruitment",
       destination: "/recruitment",

@@ -16,12 +16,9 @@ jest.mock("next/navigation", () => ({
   useSearchParams: jest.fn(() => new URLSearchParams()),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useKbPagesTrash: jest.fn(),
   useEmptyKbTrash: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
-}));
-
-jest.mock("@/hooks/api/kb/pages", () => ({
   useKbBulkRestorePages: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbBulkPurgePages: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbTrashPurgeImpact: jest.fn(() => ({ data: undefined })),
@@ -137,10 +134,10 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   })),
 }));
 
-const { useKbPagesTrash } = jest.requireMock("@/hooks/api/kb") as {
+const { useKbPagesTrash } = jest.requireMock("@/hooks/api/kb/pages") as {
   useKbPagesTrash: jest.Mock;
 };
-const { useEmptyKbTrash } = jest.requireMock("@/hooks/api/kb") as {
+const { useEmptyKbTrash } = jest.requireMock("@/hooks/api/kb/pages") as {
   useEmptyKbTrash: jest.Mock;
 };
 const { usePageState } = jest.requireMock("@/hooks/api/use-page-state") as {

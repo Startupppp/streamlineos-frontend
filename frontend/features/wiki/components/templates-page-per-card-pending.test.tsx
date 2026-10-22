@@ -16,9 +16,12 @@ jest.mock("next/navigation", () => ({
 }));
 
 jest.mock("sonner", () => ({ toast: { error: jest.fn(), success: jest.fn() } }));
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useCreateKbPage: () => ({ mutate: createMutate, isPending: false }),
   useUpdateKbPage: () => ({ mutate: updateMutate, isPending: false }),
+}));
+
+jest.mock("@/hooks/api/kb/page-templates", () => ({
   useKbPageTemplates: () => ({
     data: [
       { id: 11, name: "Meeting notes", description: null, icon: null },

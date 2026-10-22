@@ -61,6 +61,11 @@ const PageSpreadsheet = dynamic(() => import("./page-spreadsheet"), {
 const WIKI_DOCUMENT_COLUMN =
   "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
 
+function loadedEditorSnapshot(storedContent: unknown): string {
+  const loaded = normalizePlateValue(storedContent);
+  return `${getPlainText(loaded)}\u0000${JSON.stringify(withoutPendingUploads(loaded))}`;
+}
+
 const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
   {
@@ -125,11 +130,15 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const [reloadNonce, setReloadNonce] = useState(0);
   const [isReloading, setIsReloading] = useState(false);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
-  const [editorDraft, setEditorDraft] = useState<unknown>(null);
+  const [editorDraft, setEditorDraft] = useState<{
+    pageId: number;
+    value: unknown;
+  } | null>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const editorSnapshotRef = useRef<string | null>(null);
+  const editorSnapshotRef = useRef<{ pageId: number; snapshot: string } | null>(null);
+  const editorValue = editorDraft?.pageId === pageId ? editorDraft.value : null;
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
   const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
 
@@ -241,18 +250,22 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   function handleEditorChange(value: unknown, plainText: string) {
     const content = withoutPendingUploads(value);
     const snapshot = `${plainText}\u0000${JSON.stringify(content)}`;
-    if (editorSnapshotRef.current === null) {
-      const loaded = normalizePlateValue(storedContent);
-      editorSnapshotRef.current = `${getPlainText(loaded)}\u0000${JSON.stringify(withoutPendingUploads(loaded))}`;
+    const recorded =
+      editorSnapshotRef.current?.pageId === pageId
+        ? editorSnapshotRef.current.snapshot
+        : null;
+    const baseline = recorded ?? loadedEditorSnapshot(storedContent);
+    if (recorded === null) {
+      editorSnapshotRef.current = { pageId, snapshot: baseline };
     }
-    if (snapshot === editorSnapshotRef.current) return;
-    editorSnapshotRef.current = snapshot;
-    setEditorDraft(value);
+    if (snapshot === baseline) return;
+    editorSnapshotRef.current = { pageId, snapshot };
+    setEditorDraft({ pageId, value });
     schedule({ content, contentText: plainText });
   }
 
   function applyEditorValue(next: unknown, plainText: string) {
-    setEditorDraft(next);
+    setEditorDraft({ pageId, value: next });
     setReloadNonce(nextReload);
     schedule({ content: withoutPendingUploads(next), contentText: plainText });
     toast.success("Draft updated in the file");
@@ -264,8 +277,8 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   }
 
   const currentContentText = useMemo(
-    () => getPlainText(normalizePlateValue(editorDraft ?? storedContent)),
-    [editorDraft, storedContent],
+    () => getPlainText(normalizePlateValue(editorValue ?? storedContent)),
+    [editorValue, storedContent],
   );
 
   const handleCompareVersions = useCallback(async () => {
@@ -287,7 +300,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
 
   function handleInsertSummary(text: string) {
     const summary = plainTextToPlateValue(text);
-    const body = normalizePlateValue(editorDraft ?? storedContent);
+    const body = normalizePlateValue(editorValue ?? storedContent);
     const next = prependPlateValue(summary, body);
     applyEditorValue(next, getPlainText(next));
   }
@@ -459,7 +472,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             </div>
 
             <PageDocumentOutline
-              content={editorDraft ?? storedContent}
+              content={editorValue ?? storedContent}
               containerRef={editorContainerRef}
             />
 
@@ -468,7 +481,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               className="flex min-h-0 min-w-0 flex-1 flex-col"
             >
               <PlateDocumentEditor
-                value={editorDraft ?? storedContent ?? undefined}
+                value={editorValue ?? storedContent ?? undefined}
                 contentKey={`${pageId}:${reloadNonce}`}
                 editable={isEditable}
                 placeholder="Start writing…"

@@ -2,7 +2,6 @@
 
 import {
   useCallback,
-  useEffect,
   useMemo,
   useState,
   useTransition,
@@ -22,16 +21,26 @@ import { WifiOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChartEmptyState } from "@/components/charts/chart-empty-state";
 import { DataTableFooter } from "@/components/ui/data-table-footer";
-import { PAUSED_LABEL, PAUSED_MESSAGE } from "@/components/shared/loading-state";
+import {
+  PAUSED_LABEL,
+  PAUSED_MESSAGE,
+} from "@/components/shared/loading-state";
 import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
-import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stalled-after";
+import {
+  PANEL_STALLED_AFTER_MS,
+  useStalledAfter,
+} from "@/hooks/common/use-stalled-after";
 import { DataTableHeader } from "@/components/ui/data-table-header";
 import { SearchInput } from "@/components/ui/search-input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import type { DataTableColumn, DataTableProps } from "./data-table.types";
 import {
   createRowActivationKeyHandler,
@@ -68,7 +77,10 @@ export function DataTable<T>({
   mobileCardBreakpoint = "sm",
 }: DataTableProps<T>) {
   const isOnline = useOnlineStatus();
-  const loadingStalled = useStalledAfter(!!isLoading && isOnline && !!onStalledRetry, PANEL_STALLED_AFTER_MS);
+  const loadingStalled = useStalledAfter(
+    !!isLoading && isOnline && !!onStalledRetry,
+    PANEL_STALLED_AFTER_MS,
+  );
   const [sorting, setSorting] = useState<SortingState>([]);
   const externalSorting: SortingState = sortState?.field
     ? [{ id: sortState.field, desc: sortState.direction === "desc" }]
@@ -256,15 +268,11 @@ export function DataTable<T>({
     onRowSelectionChange: (updater) => {
       const next =
         typeof updater === "function" ? updater(rowSelection) : updater;
-      if (selection) {
+      if (selection)
         selection.onChange(new Set(Object.keys(next).filter((k) => next[k])));
-      } else {
-        setLocalRowSelection(next);
-      }
+      else setLocalRowSelection(next);
     },
     onPaginationChange: (updater) => {
-      // A cursor walk is driven by the footer's own next/previous handlers, not
-      // by a page index — there is no index to move to.
       if (cursorPag) return;
       if (serverPag) {
         const prev = {
@@ -304,9 +312,7 @@ export function DataTable<T>({
     [onRowClick],
   );
 
-  useEffect(() => {
-    if (!isRowPending) setPendingRowKey(null);
-  }, [isRowPending]);
+  const activePendingRowKey = isRowPending ? pendingRowKey : null;
 
   const currentPage =
     serverPag !== null
@@ -332,13 +338,6 @@ export function DataTable<T>({
     cursorPag?.onPageSizeChange ??
     clientPag?.onPageSizeChange
   );
-  /**
-   * A keyset page cannot say how many rows exist, so `aria-rowcount` is -1 —
-   * the ARIA value for "total unknown" — and the footer shows only what this
-   * page holds. Reporting `data.length` as the total would tell a screen
-   * reader the table ends here.
-   */
-  // An empty page reached by Next still owes the reader a way back.
   const showPagination =
     cursorPag !== null
       ? cursorPag.cursorVariant === "load-more"
@@ -403,7 +402,11 @@ export function DataTable<T>({
               </p>
             )}
             {loadingStalled && onStalledRetry ? (
-              <StalledReadNotice subject="results" onRetry={onStalledRetry} className="m-2" />
+              <StalledReadNotice
+                subject="results"
+                onRetry={onStalledRetry}
+                className="m-2"
+              />
             ) : null}
             {mobileCard ? (
               <div
@@ -449,9 +452,7 @@ export function DataTable<T>({
             </div>
           </div>
         ) : rows.length === 0 ? (
-          <div
-            className="flex flex-1 min-h-0 h-full flex-col justify-center p-2 [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none"
-          >
+          <div className="flex flex-1 min-h-0 h-full flex-col justify-center p-2 [&>*]:!border-0 [&>*]:!bg-transparent [&>*]:!shadow-none">
             {emptyState ?? (
               <ChartEmptyState message="No results found." height={260} />
             )}
@@ -470,8 +471,12 @@ export function DataTable<T>({
                     key={row.id}
                     role={onRowClick ? "button" : undefined}
                     tabIndex={onRowClick ? 0 : undefined}
-                    aria-busy={pendingRowKey === row.id ? true : undefined}
-                    data-pending={pendingRowKey === row.id ? "true" : undefined}
+                    aria-busy={
+                      activePendingRowKey === row.id ? true : undefined
+                    }
+                    data-pending={
+                      activePendingRowKey === row.id ? "true" : undefined
+                    }
                     onClick={
                       onRowClick
                         ? () => handleRowActivate(row.original, row.id)
@@ -486,7 +491,8 @@ export function DataTable<T>({
                     }
                     onContextMenu={
                       onRowContextMenu
-                        ? (event: MouseEvent) => onRowContextMenu(row.original, event)
+                        ? (event: MouseEvent) =>
+                            onRowContextMenu(row.original, event)
                         : undefined
                     }
                     className={cn(
@@ -528,9 +534,11 @@ export function DataTable<T>({
                         "data-[pending=true]:animate-pulse data-[pending=true]:bg-muted",
                         rowClassName?.(row.original, rowIndex),
                       )}
-                      aria-busy={pendingRowKey === row.id ? true : undefined}
+                      aria-busy={
+                        activePendingRowKey === row.id ? true : undefined
+                      }
                       data-pending={
-                        pendingRowKey === row.id ? "true" : undefined
+                        activePendingRowKey === row.id ? "true" : undefined
                       }
                       onClick={
                         onRowClick
@@ -546,7 +554,8 @@ export function DataTable<T>({
                       }
                       onContextMenu={
                         onRowContextMenu
-                          ? (event: MouseEvent) => onRowContextMenu(row.original, event)
+                          ? (event: MouseEvent) =>
+                              onRowContextMenu(row.original, event)
                           : undefined
                       }
                       tabIndex={onRowClick ? 0 : undefined}

@@ -51,13 +51,54 @@ async function requestWithToken<T>(
   return parseApiResponse<T>(res, contract, path, correlationId);
 }
 
+const ACCESS_SNAPSHOT_PATH = "/me/access";
+/** Repeat navigations reuse a successful snapshot. The session token is the key, so an org switch or impersonation misses. Failures are not stored. */
+const ACCESS_SNAPSHOT_FRESH_MS = 15_000;
+
+type FreshAccess = { expiresAt: number; value: unknown };
+
+const freshAccessByToken = new Map<string, FreshAccess>();
+
+function takeFreshAccess<T>(token: string): T | undefined {
+  const hit = freshAccessByToken.get(token);
+  if (hit === undefined) return undefined;
+  if (hit.expiresAt <= Date.now()) {
+    freshAccessByToken.delete(token);
+    return undefined;
+  }
+  return hit.value as T;
+}
+
+function storeFreshAccess(token: string, value: unknown): void {
+  const now = Date.now();
+  if (freshAccessByToken.size >= 32) {
+    for (const [key, entry] of freshAccessByToken) {
+      if (entry.expiresAt <= now) freshAccessByToken.delete(key);
+    }
+  }
+  if (freshAccessByToken.size >= 32) {
+    const oldest = freshAccessByToken.keys().next().value;
+    if (oldest !== undefined) freshAccessByToken.delete(oldest);
+  }
+  freshAccessByToken.set(token, {
+    expiresAt: now + ACCESS_SNAPSHOT_FRESH_MS,
+    value,
+  });
+}
+
 const serverFetch = cache(
   async <T>(
     token: string,
     path: string,
     contract?: ResponseContract<T>,
   ): Promise<T> => {
-    return requestWithToken<T>(token, path, { method: "GET" }, contract);
+    if (path === ACCESS_SNAPSHOT_PATH) {
+      const fresh = takeFreshAccess<T>(token);
+      if (fresh !== undefined) return fresh;
+    }
+    const value = await requestWithToken<T>(token, path, { method: "GET" }, contract);
+    if (path === ACCESS_SNAPSHOT_PATH) storeFreshAccess(token, value);
+    return value;
   },
 );
 

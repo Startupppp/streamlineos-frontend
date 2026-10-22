@@ -6,6 +6,7 @@ import { formatMessageTime } from "./chat-helpers";
 import { renderFormattedContent } from "./formatted-message-content";
 import type { Message } from "@/types/chat";
 import { getInitials } from "@/lib/format-utils";
+import { ChatBubbleFailedSend, useFailedSend } from "./chat-bubble-failed-send";
 
 interface ThreadMessageProps {
   message: Message;
@@ -15,10 +16,12 @@ interface ThreadMessageProps {
     userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
+  outbox?: { draftKey: string; discardFailed: (clientKey: string) => void };
 }
 
-export function ThreadMessage({ message, currentUserId, isParent, resolveUserName }: ThreadMessageProps) {
+export function ThreadMessage({ message, currentUserId, isParent, resolveUserName, outbox }: ThreadMessageProps) {
   const isOwn = message.senderId === currentUserId;
+  const isFailedSend = useFailedSend(message, outbox?.draftKey);
   const senderName = resolveUserName(message.senderId, message.sender);
   if (message.isDeleted) {
     return (
@@ -69,6 +72,14 @@ export function ThreadMessage({ message, currentUserId, isParent, resolveUserNam
               </span>
             ))}
           </div>
+        )}
+        {isFailedSend && outbox && message.clientKey && (
+          <ChatBubbleFailedSend
+            channelId={message.channelId}
+            clientKey={message.clientKey}
+            outboxDraftKey={outbox.draftKey}
+            onDiscard={outbox.discardFailed}
+          />
         )}
       </div>
     </div>

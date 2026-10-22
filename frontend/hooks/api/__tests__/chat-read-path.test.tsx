@@ -220,6 +220,102 @@ describe("inbound realtime state is patched, not refetched", () => {
   });
 });
 
+describe("unread count consistency: channel row and total agree after every event", () => {
+  const myChannelsKey = collaborationQueryKeys.chat.myChannels();
+  const totalKey = collaborationQueryKeys.chat.unreadTotal();
+
+  function seedBothSurfaces(client: QueryClient, unreadCount: number, total: number) {
+    const row: Channel = {
+      id: CHANNEL_ID,
+      name: "general",
+      type: "PUBLIC",
+      avatarUrl: null,
+      isArchived: false,
+      entityType: null,
+      entityId: null,
+      members: [],
+      memberCount: 2,
+      membersTruncated: false,
+      unreadCount,
+      lastMessage: null,
+    };
+    const data: InfiniteData<ChannelPage<Channel>> = { pages: [{ channels: [row], nextCursor: null }], pageParams: [null] };
+    client.setQueryData(myChannelsKey, data);
+    client.setQueryData(totalKey, { total });
+  }
+
+  function channelUnread(client: QueryClient): number {
+    return (
+      client.getQueryData<InfiniteData<ChannelPage<Channel>>>(myChannelsKey)?.pages[0].channels.find((c) => c.id === CHANNEL_ID)?.unreadCount ?? -1
+    );
+  }
+
+  function totalUnread(client: QueryClient): number {
+    return client.getQueryData<{ total: number }>(totalKey)?.total ?? -1;
+  }
+
+  it("own send: unread count is unchanged on both surfaces (recordInboundChannelMessage with countsAsUnread=false)", () => {
+    const client = freshClient();
+    seedBothSurfaces(client, 0, 0);
+    recordInboundChannelMessage(client, {
+      channelId: CHANNEL_ID,
+      content: "my own message",
+      senderName: "Ada",
+      createdAt: "2026-09-30T12:00:00.000Z",
+      countsAsUnread: false,
+    });
+    expect(channelUnread(client)).toBe(0);
+    expect(totalUnread(client)).toBe(0);
+  });
+
+  it("receive in background channel: both surfaces increment by 1", () => {
+    const client = freshClient();
+    seedBothSurfaces(client, 1, 1);
+    recordInboundChannelMessage(client, {
+      channelId: CHANNEL_ID,
+      content: "new",
+      senderName: "Bo",
+      createdAt: "2026-09-30T12:00:00.000Z",
+      countsAsUnread: true,
+    });
+    expect(channelUnread(client)).toBe(2);
+    expect(totalUnread(client)).toBe(2);
+  });
+
+  it("receive in open channel (viewer reading): neither surface increments", () => {
+    const client = freshClient();
+    seedBothSurfaces(client, 0, 0);
+    recordInboundChannelMessage(client, {
+      channelId: CHANNEL_ID,
+      content: "visible",
+      senderName: "Bo",
+      createdAt: "2026-09-30T12:00:00.000Z",
+      countsAsUnread: false,
+    });
+    expect(channelUnread(client)).toBe(0);
+    expect(totalUnread(client)).toBe(0);
+  });
+
+  it("mark-read: channel row zeroes and total decrements by the cleared count", async () => {
+    const { applyOptimisticRead } = await import("@/hooks/api/chat-read-cache");
+    const client = freshClient();
+    seedBothSurfaces(client, 3, 5);
+    applyOptimisticRead(client, CHANNEL_ID, "user-1");
+    expect(channelUnread(client)).toBe(0);
+    expect(totalUnread(client)).toBe(2);
+  });
+
+  it("reconnect invalidates both myChannels and unreadTotal so they refetch in sync", () => {
+    const client = freshClient();
+    seedBothSurfaces(client, 2, 4);
+    const invalidate = jest.spyOn(client, "invalidateQueries");
+    invalidateChatReconnect(client, CHANNEL_ID);
+    const keys = invalidate.mock.calls.map(([f]) => JSON.stringify((f as { queryKey: unknown }).queryKey));
+    expect(keys).toContain(JSON.stringify(myChannelsKey));
+    expect(keys).toContain(JSON.stringify(totalKey));
+  });
+});
+
 describe("mergeInboundMessage and thread replies", () => {
   it("fills in the attachments of an already-reconciled send from its realtime echo", async () => {
     const { mergeInboundMessage } = await import("@/features/chat/message-page-merge");

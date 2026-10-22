@@ -6,7 +6,7 @@ jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -41,7 +41,7 @@ jest.mock("@/components/ui/user-combobox", () => ({
 }));
 
 import { useCan } from "@/hooks/api/access";
-import { useArchiveKbPage, useUnarchiveKbPage, useUpdateKbPage } from "@/hooks/api/kb";
+import { useArchiveKbPage, useUnarchiveKbPage, useUpdateKbPage } from "@/hooks/api/kb/pages";
 
 const mockUseCan = useCan as jest.Mock;
 const mockUseArchivePage = useArchiveKbPage as jest.Mock;

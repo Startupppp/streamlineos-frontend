@@ -56,7 +56,7 @@ export function useGlobalMailComposer(): MailComposeContextValue {
 export function MailComposeProvider({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const canCompose = useCan("mail:messages:send");
-  const accountsQuery = useMailAccounts();
+  const accountsQuery = useMailAccounts({ enabled: open });
   const accounts = useMemo(
     () => (accountsQuery.data ?? []).filter((account) => account.status === "active"),
     [accountsQuery.data],
@@ -93,12 +93,7 @@ export function MailComposeProvider({ children }: { children: ReactNode }) {
       {open && accounts.length === 0 && (
         <Dialog open onOpenChange={(next) => { if (!next) closeCompose(); }}>
           <DialogContent>
-            {accountsQuery.isLoading ? (
-              <DialogHeader>
-                <DialogTitle>New message</DialogTitle>
-                <DialogDescription role="status">Loading your mail accounts…</DialogDescription>
-              </DialogHeader>
-            ) : accountsQuery.isError ? (
+            {accountsQuery.isError ? (
               <>
                 <DialogHeader>
                   <DialogTitle>Couldn&apos;t load your mail accounts</DialogTitle>
@@ -110,6 +105,11 @@ export function MailComposeProvider({ children }: { children: ReactNode }) {
                   </LoadingButton>
                 </DialogFooter>
               </>
+            ) : accountsQuery.isLoading || (accountsQuery.isPending && accountsQuery.data === undefined) ? (
+              <DialogHeader>
+                <DialogTitle>New message</DialogTitle>
+                <DialogDescription role="status">Loading your mail accounts…</DialogDescription>
+              </DialogHeader>
             ) : (
               <>
                 <DialogHeader>

@@ -115,14 +115,6 @@ export function UsersPage() {
     [searchParams, router, pathname],
   );
 
-  useEffect(() => {
-    setCursorState((current) =>
-      current.key === cursorResetKey
-        ? current
-        : { key: cursorResetKey, history: [undefined] },
-    );
-  }, [cursorResetKey]);
-
   const resetCursorHistory = useCallback(() => {
     setCursorState({ key: cursorResetKey, history: [undefined] });
   }, [cursorResetKey]);

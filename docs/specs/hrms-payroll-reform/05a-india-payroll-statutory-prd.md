@@ -274,11 +274,14 @@ These may be tabs/secondary routes under the canonical pages in PRD 07.
 ## 15. Authoritative Sources
 
 - Income Tax Department:
-  [Tax Payments FAQ](https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/tax-payments-faq)
+  [Tax Payments FAQ](https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/tax-payments-faq),
+  [TDS transition guidance](https://www.incometax.gov.in/iec/foportal/help/all-topics/e-filing-services/tds-compliance),
+  [Form 138 user manual](https://www.incometax.gov.in/iec/foportal/newformpage/forms/form138-um),
   and [ITA 2025 form mapping](https://www.incometax.gov.in/iec/foportal/sites/default/files/2026-06/Navigator%201.pdf).
 - EPFO:
-  [Contribution rates](https://www.epfindia.gov.in/site_docs/PDFs/MiscPDFs/ContributionRate.pdf)
-  and [Revamped ECR](https://www.epfindia.gov.in/site_en/revamped_ecr.php).
+  [Contribution rates](https://www.epfindia.gov.in/site_docs/PDFs/MiscPDFs/ContributionRate.pdf),
+  [Revamped ECR](https://www.epfindia.gov.in/site_en/revamped_ecr.php),
+  and [Revamped ECR FAQ](https://www.epfindia.gov.in/site_docs/PDFs/Circulars/Y2025-2026/FAQ_OnRevampedECR.pdf).
 - ESIC:
   [Contribution rates](https://esic.gov.in/contribution),
   [coverage](http://esic.gov.in/coverage), and
