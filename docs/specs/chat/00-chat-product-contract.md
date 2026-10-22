@@ -140,7 +140,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 - [x] `chat_huddles` has nullable `meeting_provider`, provider event id and integration connection id.
 - [x] A partial unique index allows one active Huddle per org and channel.
 - [x] Migration has a journal entry and rollback; legacy rows keep null provider and still load.
-- [ ] A spec proves a second active insert for the same org and channel fails.
+- [x] A spec proves a second active insert for the same org and channel fails.
 
 ### CHAT-003 Provider selection
 
@@ -167,7 +167,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 ### CHAT-006 Lifecycle and fan-out
 
 - [x] The internal calendar event stores the provider identity.
-- [ ] End and cancel update the provider event where supported; UI claims "ended" only on provider confirmation.
+- [x] End and cancel update the provider event where supported; UI claims "ended" only on provider confirmation.
 - [x] Ably publish and notifications run after commit; a test shows no publish on rollback.
 - [x] No provider call runs inside a tenant transaction.
 
@@ -186,9 +186,9 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 ### CHAT-009 Message reliability
 
-- [ ] Send retry and offline queue deliver each message exactly once after reconnect.
+- [x] Send retry and offline queue deliver each message exactly once after reconnect.
 - [x] After realtime reconnect the client refetches and shows no gap and no duplicate.
-- [ ] Read marker and unread counts agree across list, sidebar and inbox after send, receive, and reconnect.
+- [x] Read marker and unread counts agree across list, sidebar and inbox after send, receive, and reconnect.
 - [x] Typing shows only for other members, from presence, and clears on leave.
 
 ### CHAT-010 URL and history
@@ -204,7 +204,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [x] An endpoint returns a bounded window around a message id after checking channel membership.
 - [x] A message outside loaded pages opens and scrolls into view from a link.
-- [ ] Non-member, wrong-org and deleted-message requests return no content (403/404 per contract).
+- [x] Non-member, wrong-org and deleted-message requests return no content (403/404 per contract).
 - [x] Saved-message and search-result clicks use this path.
 
 ### CHAT-012 Unified search
@@ -261,7 +261,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 
 - [x] `huddle-chat-panel.tsx` is deleted with no remaining importer.
 - [x] Ably capability for huddle and notification channels is `subscribe` only; chat channels are `subscribe` + `presence`.
-- [ ] A test shows a client publish attempt on each is rejected.
+- [x] A test shows a client publish attempt on each is rejected.
 
 ### CHAT-021 Provider-aware UI
 
@@ -272,7 +272,7 @@ Rollback order is frontend first, then backend; migrations 2490/2495/2500 are ad
 ### CHAT-022 Cross-module boundaries
 
 - [x] A conversation linked to a record shows preview and snippets only when the viewer passes the record check.
-- [ ] After record access is revoked, search, notifications, AI citations and exports omit that record's metadata within the gate windows.
+- [x] After record access is revoked, search, notifications, AI citations and exports omit that record's metadata within the gate windows.
 - [x] Build embed uses the canonical Chat backend; no new module-local chat screen or table exists.
 - [x] Knowledge Ask Chat, Ask OS and live chat are not reachable from employee Chat navigation.
 

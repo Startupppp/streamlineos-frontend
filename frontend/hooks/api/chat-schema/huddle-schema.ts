@@ -2,22 +2,6 @@ import { z } from "zod";
 
 import { chatPreviewUserContract } from "./user-schema";
 
-/**
- * The huddle.
- *
- * `HUDDLE_WIRE_KEYS` and `HUDDLE_PARTICIPANT_WIRE_KEYS` in
- * `chat-huddles.service.ts` pin both key sets and a backend spec asserts them,
- * so `.strict()` here is checked on both sides of the wire.
- *
- * `userId` is NULLABLE, and that is the defect in one line. The read path
- * carried `membership` with `columns: {}` — an empty selection selects nothing —
- * so `userId` was never on the payload at all, every tile read "Unknown" and
- * `isInHuddle` was permanently false. A required-and-nullable field rejects a
- * MISSING key; an optional one would have waved the whole defect through.
- *
- * `startedBy` is the host's USER id, not a membership id — a distinction no
- * static check can make, which is why it is written down here.
- */
 const chatHuddleParticipantContract = z
   .object({
     id: z.number(),
@@ -40,10 +24,19 @@ export const chatHuddleContract = z
     startedAt: z.string(),
     endedAt: z.string().nullable(),
     startedBy: z.string().nullable(),
-    startedByUser: z.object({ id: z.string(), name: z.string().nullable() }).strict().nullable(),
+    startedByUser: z
+      .object({ id: z.string(), name: z.string().nullable() })
+      .strict()
+      .nullable(),
     participants: z.array(chatHuddleParticipantContract),
   })
   .strict();
 
-/** No active huddle is a 200 with a `null` body, not a 404. */
 export const chatActiveHuddleContract = chatHuddleContract.nullable();
+
+export const leaveHuddleResponseContract = z
+  .object({
+    ok: z.literal(true),
+    providerSyncStatus: z.enum(["pending", "skipped"]).optional(),
+  })
+  .strict();

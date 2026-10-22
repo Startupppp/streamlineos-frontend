@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { useQuery, useQueryClient, type QueryClient } from "@tanstack/react-query";
+import {
+  useQuery,
+  useQueryClient,
+  type QueryClient,
+} from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import { apiClient } from "@/lib/api-client";
@@ -11,7 +15,11 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
-import { isHuddleNotJoined, reportHuddleStartError } from "@/hooks/api/chat-huddle-errors";
+import {
+  isHuddleNotJoined,
+  reportHuddleStartError,
+} from "@/hooks/api/chat-huddle-errors";
+import { huddleEndedCopy } from "@/features/chat/huddle-provider";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import type { Huddle } from "@/types/chat";
@@ -29,6 +37,25 @@ const huddleContract = lazyContract(() =>
 const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
 );
+const leaveHuddleContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.leaveHuddleResponseContract),
+);
+
+const PROVIDER_END_WAIT_MS = 15_000;
+
+const pendingEndToastIds = new Map<number, string | number>();
+
+export function resolveHuddleEndToast(
+  channelId: number,
+  providerSyncStatus: "confirmed" | "failed",
+): void {
+  const id = pendingEndToastIds.get(channelId);
+  if (id === undefined) return;
+  pendingEndToastIds.delete(channelId);
+  if (providerSyncStatus === "confirmed")
+    toast.success(huddleEndedCopy(providerSyncStatus), { id });
+  else toast.warning(huddleEndedCopy(providerSyncStatus), { id });
+}
 
 type HuddleRollback = { previous: Huddle | null | undefined };
 
@@ -40,7 +67,8 @@ async function patchActiveHuddle(
   const queryKey = collaborationQueryKeys.chat.huddle(channelId);
   await queryClient.cancelQueries({ queryKey, exact: true });
   const previous = queryClient.getQueryData<Huddle | null>(queryKey);
-  if (previous) queryClient.setQueryData<Huddle | null>(queryKey, patch(previous));
+  if (previous)
+    queryClient.setQueryData<Huddle | null>(queryKey, patch(previous));
   return { previous };
 }
 
@@ -50,10 +78,16 @@ function restoreActiveHuddle(
   context: HuddleRollback | undefined,
 ): void {
   if (context?.previous === undefined) return;
-  queryClient.setQueryData(collaborationQueryKeys.chat.huddle(channelId), context.previous);
+  queryClient.setQueryData(
+    collaborationQueryKeys.chat.huddle(channelId),
+    context.previous,
+  );
 }
 
-function refreshActiveHuddle(queryClient: QueryClient, channelId: number): void {
+function refreshActiveHuddle(
+  queryClient: QueryClient,
+  channelId: number,
+): void {
   queryClient.invalidateQueries({
     queryKey: collaborationQueryKeys.chat.huddle(channelId),
     exact: true,
@@ -129,14 +163,22 @@ export function useJoinHuddle() {
       ),
     onMutate: ({ huddleId, channelId }) =>
       patchActiveHuddle(queryClient, channelId, (current) => {
-        if (!viewer?.id || current.participants.some((p) => p.userId === viewer.id)) return current;
+        if (
+          !viewer?.id ||
+          current.participants.some((p) => p.userId === viewer.id)
+        )
+          return current;
         const joined = {
           id: --optimisticParticipantSeq,
           huddleId,
           joinedAt: new Date().toISOString(),
           leftAt: null,
           userId: viewer.id,
-          user: { id: viewer.id, name: viewer.name ?? null, image: viewer.image ?? null },
+          user: {
+            id: viewer.id,
+            name: viewer.name ?? null,
+            image: viewer.image ?? null,
+          },
         };
         return { ...current, participants: [...current.participants, joined] };
       }),
@@ -150,30 +192,50 @@ export function useJoinHuddle() {
   });
 }
 
+type LeaveHuddleResponse = {
+  ok: true;
+  providerSyncStatus?: "pending" | "skipped";
+};
+
 export function useLeaveHuddle() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const viewerId = session?.user?.id;
   return useAuthorizedMutation<
-    { ok: boolean },
+    LeaveHuddleResponse,
     Error,
     { huddleId: number; channelId: number },
     HuddleRollback
   >("chat:channels:write", {
     mutationKey: ["chat", "huddle", "leave"],
     mutationFn: ({ huddleId }: { huddleId: number; channelId: number }) =>
-      apiClient.post<{ ok: boolean }>(
+      apiClient.post<LeaveHuddleResponse>(
         `/chat/huddles/${huddleId}/leave`,
         undefined,
         undefined,
-        chatOkContract,
+        leaveHuddleContract,
       ),
     onMutate: ({ channelId }) =>
       patchActiveHuddle(queryClient, channelId, (current) => {
-        const remaining = current.participants.filter((p) => p.userId !== viewerId);
-        return remaining.length === 0 ? null : { ...current, participants: remaining };
+        const remaining = current.participants.filter(
+          (p) => p.userId !== viewerId,
+        );
+        return remaining.length === 0
+          ? null
+          : { ...current, participants: remaining };
       }),
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
+      if (result.providerSyncStatus === "pending") {
+        const id = toast.loading("Ending huddle...");
+        pendingEndToastIds.set(variables.channelId, id);
+        setTimeout(() => {
+          if (pendingEndToastIds.get(variables.channelId) === id) {
+            resolveHuddleEndToast(variables.channelId, "failed");
+          }
+        }, PROVIDER_END_WAIT_MS);
+      } else if (result.providerSyncStatus === "skipped") {
+        toast.success("Huddle ended");
+      }
       refreshActiveHuddle(queryClient, variables.channelId);
       queryClient.invalidateQueries({
         queryKey: platformHierarchyQueryKeys.calendar.all,
@@ -186,7 +248,11 @@ export function useLeaveHuddle() {
   });
 }
 
-export function useHuddleHeartbeat(huddleId: number, channelId: number, isJoined: boolean): void {
+export function useHuddleHeartbeat(
+  huddleId: number,
+  channelId: number,
+  isJoined: boolean,
+): void {
   const queryClient = useQueryClient();
   const heartbeat = useAuthorizedMutation("chat:channels:read", {
     mutationKey: ["chat", "huddle", "heartbeat"],

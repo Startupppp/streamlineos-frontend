@@ -2,18 +2,29 @@
 
 import { useCallback, useEffect, useMemo, useRef, useSyncExternalStore, type RefObject } from "react";
 import { useSession } from "next-auth/react";
-import { hashKey, onlineManager, useQueryClient } from "@tanstack/react-query";
+import { hashKey, onlineManager, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
-import type { SendMessageInput } from "@/types/chat";
-import { appendOutboxEntry, listOutboxChannels, type OutboxEntry } from "./composer-draft";
+import { useSendThreadReply } from "@/hooks/api/chat-search";
+import { optimisticMessage } from "@/hooks/api/chat-send-policy";
+import { mapPages } from "@/hooks/api/chat-message-cache";
+import type { SendMessageInput, ThreadPage } from "@/types/chat";
+import {
+  appendOutboxEntry,
+  chatThreadDraftKey,
+  listOutboxChannels,
+  removeOutboxEntry,
+  type OutboxEntry,
+} from "./composer-draft";
+import { appendThreadReply } from "./message-page-merge";
 import {
   drainChannelOutbox,
   onOutboxDrainRequest,
   reportSendFailure,
   restoreOutboxRows,
   type ChannelOutbox,
+  type OutboxCacheAdapter,
   type SendOutcome,
 } from "./chat-outbox-delivery";
 
@@ -61,11 +72,15 @@ export function useChatOutbox({
   draftKey,
   isOnline,
   mutateAsync,
+  cacheAdapter,
+  historyQueryKey,
 }: {
   channelId: number;
   draftKey: string;
   isOnline: boolean;
   mutateAsync: (input: SendMessageInput) => Promise<unknown>;
+  cacheAdapter?: OutboxCacheAdapter;
+  historyQueryKey?: readonly unknown[];
 }) {
   const queryClient = useQueryClient();
   const author = useSendAuthor();
@@ -74,13 +89,16 @@ export function useChatOutbox({
     [queryClient],
   );
   const readHistoryReady = useCallback(
-    () => queryClient.getQueryData(collaborationQueryKeys.chat.messages(channelId)) !== undefined,
-    [queryClient, channelId],
+    () =>
+      queryClient.getQueryData(
+        historyQueryKey ?? collaborationQueryKeys.chat.messages(channelId),
+      ) !== undefined,
+    [queryClient, channelId, historyQueryKey],
   );
   const historyReady = useSyncExternalStore(subscribeToCache, readHistoryReady, assumeHistoryMissing);
 
   const outbox = useMemo(() => {
-    const target: ChannelOutbox = { queryClient, channelId, draftKey, isOnline, author, mutateAsync };
+    const target: ChannelOutbox = { queryClient, channelId, draftKey, isOnline, author, mutateAsync, cacheAdapter };
     const enqueue = (entry: OutboxEntry): Promise<SendOutcome> => {
       appendOutboxEntry(draftKey, entry);
       const started = drainChannelOutbox(target);
@@ -95,7 +113,7 @@ export function useChatOutbox({
     };
     const restore = (): void => restoreOutboxRows(target);
     return { enqueue, flush, restore };
-  }, [queryClient, channelId, draftKey, isOnline, author, mutateAsync]);
+  }, [queryClient, channelId, draftKey, isOnline, author, mutateAsync, cacheAdapter]);
 
   const outboxRef = useRef(outbox);
   useEffect(() => {
@@ -106,12 +124,13 @@ export function useChatOutbox({
   }, [historyReady, isOnline, channelId, draftKey]);
   useEffect(() => onOutboxDrainRequest(() => void outboxRef.current.flush()), []);
   useEffect(() => {
-    const messagesHash = hashKey(collaborationQueryKeys.chat.messages(channelId));
+    const keyToWatch = historyQueryKey ?? collaborationQueryKeys.chat.messages(channelId);
+    const historyHash = hashKey(keyToWatch);
     return queryClient.getQueryCache().subscribe((event) => {
-      if (event.type === "updated" && event.action.type === "success" && hashKey(event.query.queryKey) === messagesHash)
+      if (event.type === "updated" && event.action.type === "success" && hashKey(event.query.queryKey) === historyHash)
         outboxRef.current.restore();
     });
-  }, [queryClient, channelId]);
+  }, [queryClient, channelId, historyQueryKey]);
 
   return outbox;
 }
@@ -135,4 +154,84 @@ export function useChatOutboxDrain(): void {
     if (isOnline) drainRef.current();
   }, [isOnline, scope]);
   useEffect(() => onOutboxDrainRequest(() => drainRef.current()), []);
+}
+
+export function useThreadOutbox({
+  channelId,
+  parentMessageId,
+}: {
+  channelId: number;
+  parentMessageId: number;
+}) {
+  const queryClient = useQueryClient();
+  const scope = useOrgStorageScope();
+  const author = useSendAuthor();
+  const draftKey = useMemo(
+    () => chatThreadDraftKey(channelId, parentMessageId, scope),
+    [channelId, parentMessageId, scope],
+  );
+  const threadKey = useMemo(
+    () => collaborationQueryKeys.chat.thread(channelId, parentMessageId),
+    [channelId, parentMessageId],
+  );
+  const { mutateAsync: replyMutateAsync, isPending } = useSendThreadReply(channelId, parentMessageId);
+  const isOnline = useSyncExternalStore(subscribeToConnectivity, readOnline, assumeOnline);
+
+  const mutateAsync = useCallback(
+    (input: SendMessageInput) =>
+      replyMutateAsync({
+        content: input.content,
+        attachments: input.attachments,
+        clientKey: input.clientKey,
+      }),
+    [replyMutateAsync],
+  );
+
+  const cacheAdapter = useMemo<OutboxCacheAdapter>(
+    () => ({
+      isDataLoaded: () => queryClient.getQueryData(threadKey) !== undefined,
+      readShownClientKeys: () => {
+        const data = queryClient.getQueryData<InfiniteData<ThreadPage>>(threadKey);
+        const delivered = new Set<string>();
+        const pending = new Set<string>();
+        for (const page of data?.pages ?? [])
+          for (const reply of page.replies)
+            if (reply.clientKey) (reply.id > 0 ? delivered : pending).add(reply.clientKey);
+        return { delivered, pending };
+      },
+      showPending: (entry) => {
+        const optimistic = optimisticMessage({
+          channelId,
+          clientKey: entry.clientKey,
+          content: entry.content || undefined,
+          replyToId: parentMessageId,
+          attachments: entry.attachments,
+          metadata: entry.metadata,
+          author,
+        });
+        queryClient.setQueryData<InfiniteData<ThreadPage>>(threadKey, (old) =>
+          appendThreadReply(old, optimistic),
+        );
+      },
+      dropOptimistic: (clientKey) => {
+        queryClient.setQueryData<InfiniteData<ThreadPage>>(threadKey, (old) =>
+          mapPages(old, (page) => {
+            const replies = page.replies.filter((r) => !(r.id < 0 && r.clientKey === clientKey));
+            return replies.length === page.replies.length ? page : { ...page, replies };
+          }),
+        );
+      },
+    }),
+    [queryClient, threadKey, channelId, parentMessageId, author],
+  );
+
+  const outbox = useChatOutbox({ channelId, draftKey, isOnline, mutateAsync, cacheAdapter, historyQueryKey: threadKey });
+  const discardFailed = useCallback(
+    (clientKey: string) => {
+      removeOutboxEntry(draftKey, clientKey);
+      cacheAdapter.dropOptimistic(clientKey);
+    },
+    [draftKey, cacheAdapter],
+  );
+  return { ...outbox, draftKey, discardFailed, isOnline, isPending };
 }

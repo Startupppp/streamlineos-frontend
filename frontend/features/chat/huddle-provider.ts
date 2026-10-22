@@ -35,3 +35,8 @@ export function huddleConnectCopy(
   const name = PROVIDER_ACCOUNT_NAME[provider];
   return { message: `Reconnect ${name} to start a meeting`, actionLabel: `Reconnect ${name}` };
 }
+
+export function huddleEndedCopy(providerSyncStatus: "confirmed" | "failed"): string {
+  if (providerSyncStatus === "confirmed") return "Huddle ended";
+  return "Huddle ended in StreamlineOS — the external meeting may still be open";
+}

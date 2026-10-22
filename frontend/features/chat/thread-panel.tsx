@@ -7,14 +7,14 @@ import { XIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { useThreadReplies, useSendThreadReply } from "@/hooks/api/chat-search";
+import { useThreadReplies } from "@/hooks/api/chat-search";
 import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import { ThreadMessage } from "./thread-message";
 import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { useThreadOutbox } from "./use-chat-offline-queue";
 
 const MAX_HIGHLIGHT_REPLY_PAGES = 10;
 const HIGHLIGHT_NOT_FOUND_COPY = "That reply is further back in this thread. Scroll up to load older replies.";
@@ -50,7 +50,7 @@ export function ThreadPanel({
     if (viewport) viewport.scrollTop = viewport.scrollHeight;
   }, [isLoading, parentMessageId]);
 
-  const sendReply = useSendThreadReply(channelId, parentMessageId);
+  const threadOutbox = useThreadOutbox({ channelId, parentMessageId });
   const { data: orgUsers } = useChatOrgUsers();
   const chatUserMap = useMemo(() => buildChatUserMap(orgUsers), [orgUsers]);
   const resolveUserName = useCallback(
@@ -75,27 +75,19 @@ export function ThreadPanel({
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   }, []);
 
-  const pendingSendRef = useRef<{ content: string; clientKey: string } | null>(null);
-
   const handleSend = useCallback(async () => {
     const content = input.trim();
     if (!content) return;
-    const clientKey =
-      pendingSendRef.current?.content === content ? pendingSendRef.current.clientKey : crypto.randomUUID();
-    pendingSendRef.current = { content, clientKey };
+    const clientKey = crypto.randomUUID();
     setInput("");
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
     }
-    try {
-      await sendReply.mutateAsync({ content, clientKey });
-      pendingSendRef.current = null;
+    if (!threadOutbox.isOnline) toast("You're offline — reply will be sent when you reconnect");
+    const outcome = await threadOutbox.enqueue({ content, clientKey });
+    if (outcome.status === "delivered")
       viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: "smooth" });
-    } catch (error) {
-      setInput(content);
-      toast.error(getErrorMessage(error));
-    }
-  }, [input, sendReply]);
+  }, [input, threadOutbox]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -247,6 +239,7 @@ export function ThreadPanel({
                     message={reply}
                     currentUserId={currentUserId}
                     resolveUserName={resolveUserName}
+                    outbox={threadOutbox}
                   />
                 </div>
               ))}
@@ -272,7 +265,7 @@ export function ThreadPanel({
             type="button"
             onClick={handleSend}
             disabled={!input.trim()}
-            isPending={sendReply.isPending}
+            isPending={threadOutbox.isPending}
             className={cn(
               "size-7 shrink-0 rounded-lg p-0 transition-colors",
               input.trim()
@@ -281,7 +274,7 @@ export function ThreadPanel({
             )}
             aria-label="Send reply"
           >
-            {sendReply.isPending ? null : <Send className="size-3.5" />}
+            {threadOutbox.isPending ? null : <Send className="size-3.5" />}
           </LoadingButton>
         </div>
       </div>

@@ -217825,11 +217825,19 @@
                         "ok": {
                           "type": "boolean",
                           "const": true
+                        },
+                        "providerSyncStatus": {
+                          "type": "string",
+                          "enum": [
+                            "pending",
+                            "skipped"
+                          ]
                         }
                       },
                       "required": [
                         "ok"
-                      ]
+                      ],
+                      "additionalProperties": false
                     }
                   },
                   "required": [

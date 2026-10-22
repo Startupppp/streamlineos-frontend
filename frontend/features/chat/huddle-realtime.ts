@@ -1,14 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { z } from "zod";
 import { useAbly } from "ably/react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { InboundMessage } from "ably";
-import { isForgedServerFrame, safeConnect, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
+import {
+  isForgedServerFrame,
+  safeConnect,
+  safeSubscribe,
+  safeUnsubscribe,
+} from "@/lib/ably-safe-subscribe";
 import { huddleChannelName } from "@/lib/ably-channels";
+import { resolveHuddleEndToast } from "@/hooks/api/chat-huddles";
 import { useAblyConnection } from "./use-ably-connection";
 
 const HUDDLE_EVENTS = [
@@ -21,6 +28,10 @@ const HUDDLE_EVENTS = [
 
 type HuddleEvent = (typeof HUDDLE_EVENTS)[number];
 
+const providerEndSyncedPayload = z.object({
+  providerSyncStatus: z.enum(["confirmed", "failed"]),
+});
+
 export function useHuddleRealtime(channelId: number | null): {
   isConnected: boolean;
   connectionError: string | null;
@@ -29,7 +40,8 @@ export function useHuddleRealtime(channelId: number | null): {
   const { data: session, status: sessionStatus } = useSession();
   const ably = useAbly();
   const orgId = session?.orgId;
-  const { isConnected, connectionError: ablyConnectionError } = useAblyConnection();
+  const { isConnected, connectionError: ablyConnectionError } =
+    useAblyConnection();
   const [subscribeError, setSubscribeError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -49,10 +61,20 @@ export function useHuddleRealtime(channelId: number | null): {
     const channel = ably.channels.get(huddleChannelName(orgId, channelId));
     let cancelled = false;
     const subscribed: HuddleEvent[] = [];
+    let providerEndSubscribed = false;
 
     const handleHuddleEvent = (msg: InboundMessage) => {
       if (isForgedServerFrame(msg.name ?? "", msg.clientId)) return;
-      queryClient.invalidateQueries({ queryKey: collaborationQueryKeys.chat.huddle(channelId) });
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.huddle(channelId),
+      });
+    };
+
+    const handleProviderEndSynced = (msg: InboundMessage) => {
+      if (isForgedServerFrame(msg.name ?? "", msg.clientId)) return;
+      const parsed = providerEndSyncedPayload.safeParse(msg.data);
+      if (!parsed.success) return;
+      resolveHuddleEndToast(channelId, parsed.data.providerSyncStatus);
     };
 
     async function setup() {
@@ -75,6 +97,25 @@ export function useHuddleRealtime(channelId: number | null): {
           }
           if (ok) subscribed.push(event);
         }
+
+        if (cancelled) return;
+        if (ably.connection.state !== "connected") return;
+
+        const providerEndOk = await safeSubscribe(
+          channel,
+          "huddle:provider_end_synced",
+          handleProviderEndSynced,
+        );
+        if (cancelled) {
+          if (providerEndOk)
+            safeUnsubscribe(
+              channel,
+              "huddle:provider_end_synced",
+              handleProviderEndSynced,
+            );
+          return;
+        }
+        providerEndSubscribed = providerEndOk;
       } catch (err: unknown) {
         if (!cancelled) {
           setSubscribeError(getErrorMessage(err));
@@ -86,9 +127,15 @@ export function useHuddleRealtime(channelId: number | null): {
 
     return () => {
       cancelled = true;
-      for (const event of subscribed) {
+      for (const event of subscribed)
         safeUnsubscribe(channel, event, handleHuddleEvent);
-      }
+
+      if (providerEndSubscribed)
+        safeUnsubscribe(
+          channel,
+          "huddle:provider_end_synced",
+          handleProviderEndSynced,
+        );
     };
   }, [ably, channelId, orgId, queryClient, isConnected, sessionStatus]);
 
