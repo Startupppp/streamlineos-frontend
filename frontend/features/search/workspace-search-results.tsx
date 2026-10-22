@@ -12,6 +12,7 @@ import { useInfiniteManagedProducts } from "@/hooks/api/build/managed-products";
 import { useInfiniteProjects } from "@/hooks/api/build/projects";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useGuardedDocumentNavigation } from "@/hooks/common/use-guarded-document-navigation";
+import { WorkspaceSearchResultsSkeleton } from "./workspace-search-results-skeleton";
 
 const SEARCH_MIN_LENGTH = 2;
 const SEARCH_PAGE_SIZE = 18;
@@ -174,7 +175,7 @@ export function WorkspaceSearchResults({
   return (
     <PageState
       resolution={pageState}
-      loading={<div className="flex-1 animate-pulse rounded-xl border bg-card/40" />}
+      loading={<WorkspaceSearchResultsSkeleton />}
       empty={
         <EmptyState
           illustration={<Search className="size-8 text-muted-foreground" />}

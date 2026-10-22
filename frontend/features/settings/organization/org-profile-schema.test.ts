@@ -11,6 +11,10 @@ describe("organization profile form", () => {
     expect(orgGeneralSchema.safeParse(BASE).success).toBe(true);
   });
 
+  it("allows company size to be supplied after organization setup", () => {
+    expect(orgGeneralSchema.safeParse({ ...BASE, companySize: "11-50" }).success).toBe(true);
+  });
+
   it("requires a non-empty name", () => {
     expect(orgGeneralSchema.safeParse({ ...BASE, name: "" }).success).toBe(false);
   });

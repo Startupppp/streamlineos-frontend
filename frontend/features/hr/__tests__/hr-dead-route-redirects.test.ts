@@ -59,8 +59,8 @@ describe("QA 2026-10-13 guessed addresses hand off instead of answering Page Not
     ["/hr/directory", "/hr/employees"],
     ["/hr/policies", "/hr/settings/policies"],
     ["/hr/leave", "/hr/leaves"],
-    ["/pay", "/me/pay"],
-    ["/expenses", "/me/expenses"],
+    ["/pay", "/me/money?section=pay"],
+    ["/expenses", "/me/money"],
     ["/hr/people", "/hr/employees"],
     ["/hr/time-clocks", "/hr/devices"],
     ["/hr/support", "/hr/helpdesk"],
@@ -72,6 +72,6 @@ describe("QA 2026-10-13 guessed addresses hand off instead of answering Page Not
     expect(entry?.destination).toBe(destination);
     expect(entry?.permanent).toBe(false);
     expect(pageExists(source)).toBe(false);
-    expect(pageExists(destination)).toBe(true);
+    expect(pageExists(destination.split("?")[0])).toBe(true);
   });
 });

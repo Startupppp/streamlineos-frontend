@@ -296,7 +296,6 @@ export function WikiPageCollectionToolbar({
           value={view}
           options={VIEW_OPTIONS}
           onChange={onViewChange}
-          className="h-8 border-0 bg-muted/60 p-0.5"
         />
       </div>
     </>

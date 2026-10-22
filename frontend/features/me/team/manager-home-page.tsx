@@ -51,7 +51,7 @@ export function ManagerHomePage() {
           <EmptyState
             title="You are not a reporting manager"
             description="This page shows one manager's own reports. Ask HR if you should have a reporting line under you."
-            action={{ label: "Back to my day", href: "/me" }}
+            action={{ label: "Go to Home", href: "/dashboard" }}
           />
         ) : data && data.reports.length === 0 ? (
           <EmptyState

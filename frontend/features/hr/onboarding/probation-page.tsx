@@ -6,7 +6,6 @@ import { format } from "date-fns";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +19,7 @@ import { ProbationConfirmSheet } from "@/features/hr/onboarding/components/proba
 import { ProbationExtendSheet } from "@/features/hr/onboarding/components/probation-extend-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useCan } from "@/hooks/api/access";
+import { ProbationSkeleton } from "./onboarding-route-skeletons";
 
 type StatusConfig = {
   label: string;
@@ -63,16 +63,6 @@ function formatDate(dateStr: string | null): string {
   } catch {
     return dateStr;
   }
-}
-
-function ProbationSkeletons() {
-  return (
-    <div className="space-y-2 pt-2">
-      {Array.from({ length: 4 }).map((_, i) => (
-        <Skeleton key={i} className="h-18 rounded-xl" />
-      ))}
-    </div>
-  );
 }
 
 interface ProbationRowProps {
@@ -213,7 +203,7 @@ export function ProbationPage() {
       <PageState
         resolution={pageState}
         onRetry={handleRetry}
-        loading={<ProbationSkeletons />}
+        loading={<ProbationSkeleton />}
         empty={
           <EmptyState
             illustration={<EmptyPersonIllustration className="h-24 w-24" />}

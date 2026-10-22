@@ -1,6 +1,6 @@
 import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import type { StatusTone } from "@/lib/design-tokens";
-import type { RoadmapHorizon, RoadmapStatus } from "@/types/projects";
+import type { RoadmapHorizon } from "@/types/projects";
 
 export const ROADMAP_STATUS_OPTS = [
   { value: BUILD_FILTER_ALL, label: "All statuses" },
@@ -49,22 +49,6 @@ export const ROADMAP_EVIDENCE_STATE_OPTS = [
 
 export const ROADMAP_VIEW_OPTS = ["board", "timeline", "list"] as const;
 export type RoadmapViewMode = (typeof ROADMAP_VIEW_OPTS)[number];
-
-const HORIZON_VALUES: readonly string[] = ["now", "next", "later"];
-const STATUS_VALUES: readonly string[] = [
-  "planned",
-  "in_progress",
-  "completed",
-  "cancelled",
-];
-
-export function isRoadmapHorizon(v: string): v is RoadmapHorizon {
-  return HORIZON_VALUES.includes(v);
-}
-
-export function isRoadmapStatus(v: string): v is RoadmapStatus {
-  return STATUS_VALUES.includes(v);
-}
 
 export function positiveFilterId(value: string): number | undefined {
   if (!/^\d+$/.test(value)) return undefined;

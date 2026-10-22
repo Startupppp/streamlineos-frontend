@@ -338,30 +338,30 @@ export function DashboardDeferredBody({
             variants={fadeUp}
             initial="hidden"
             animate="visible"
-            className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7"
+            className="flex flex-col gap-4"
           >
-            <div className="col-span-full">
-              <HomeSectionHeader title="Business" />
-            </div>
-            <div className="min-h-0 lg:col-span-4">
-              <SectionErrorBoundary sectionLabel="My issues">
-                <MyIssuesCard
-                  tickets={sortedMyTickets}
-                  isLoading={ticketsLoading}
-                  error={ticketsError}
-                  onRetry={handleRetryTickets}
-                />
-              </SectionErrorBoundary>
-            </div>
-            <div className="min-h-0 lg:col-span-3">
-              <SectionErrorBoundary sectionLabel="Active sprint">
-                <SprintCard
-                  summary={sprintSummary ?? undefined}
-                  isLoading={sprintLoading}
-                  error={sprintError}
-                  onRetry={handleRetrySprint}
-                />
-              </SectionErrorBoundary>
+            <HomeSectionHeader title="Business" />
+            <div className="grid grid-cols-1 gap-4 md:auto-rows-[22rem] lg:grid-cols-7">
+              <div className="min-h-0 lg:col-span-4">
+                <SectionErrorBoundary sectionLabel="My issues">
+                  <MyIssuesCard
+                    tickets={sortedMyTickets}
+                    isLoading={ticketsLoading}
+                    error={ticketsError}
+                    onRetry={handleRetryTickets}
+                  />
+                </SectionErrorBoundary>
+              </div>
+              <div className="min-h-0 lg:col-span-3">
+                <SectionErrorBoundary sectionLabel="Active sprint">
+                  <SprintCard
+                    summary={sprintSummary ?? undefined}
+                    isLoading={sprintLoading}
+                    error={sprintError}
+                    onRetry={handleRetrySprint}
+                  />
+                </SectionErrorBoundary>
+              </div>
             </div>
           </motion.div>
         )}

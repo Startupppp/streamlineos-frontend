@@ -1,5 +1,3 @@
-"use client";
-
 import { Skeleton } from "@/components/ui/skeleton";
 import { PmPanel, PM_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";

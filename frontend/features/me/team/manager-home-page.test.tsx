@@ -125,7 +125,7 @@ describe("ManagerHomePage — a reporting manager's one view", () => {
     render(<ManagerHomePage />);
 
     expect(screen.getByText("You are not a reporting manager")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Back to my day" })).toHaveAttribute("href", "/me");
+    expect(screen.getByRole("link", { name: "Go to Home" })).toHaveAttribute("href", "/dashboard");
     expect(screen.queryByTestId("pending-decisions-strip")).not.toBeInTheDocument();
   });
 

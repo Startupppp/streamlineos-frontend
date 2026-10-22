@@ -137,8 +137,8 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: 
   }
 
   const triggerEl = trigger ?? (
-    <Button size="sm">
-      <KbPlusIcon className="h-4 w-4 mr-1.5" />
+    <Button size="sm" className="gap-1">
+      <KbPlusIcon className="h-4 w-4" />
       New
     </Button>
   );

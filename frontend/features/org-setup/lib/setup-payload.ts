@@ -115,10 +115,6 @@ function buildModuleAnswers(
 }
 
 export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
-  if (!data.industry.trim())
-    throw new Error("Select an industry before launching.");
-  if (!data.teamSize.trim())
-    throw new Error("Select a team size before launching.");
   const inviteError = getInviteAccessError(data);
   if (inviteError) throw new Error(inviteError);
   const enabledModules = enabledModulesFor(data);
@@ -127,10 +123,10 @@ export function buildOrgSetupPayload(data: WizardData): OrgSetupPayload {
   );
   const moduleAnswers = buildModuleAnswers(data, enabledModules);
   return {
-    industry: data.industry.trim(),
+    ...(data.industry.trim() ? { industry: data.industry.trim() } : {}),
     companyName: data.companyName.trim() || data.displayName.trim(),
     ...(data.fullName.trim() ? { fullName: data.fullName.trim() } : {}),
-    companySize: data.teamSize.trim(),
+    ...(data.teamSize.trim() ? { companySize: data.teamSize.trim() } : {}),
     ...(data.country ? { country: data.country } : {}),
     ...(data.timezone ? { timezone: data.timezone } : {}),
     phone: data.phone,

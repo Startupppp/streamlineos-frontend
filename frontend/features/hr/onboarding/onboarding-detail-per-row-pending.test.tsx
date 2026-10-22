@@ -23,8 +23,8 @@ jest.mock("@/hooks/api/hr/onboarding", () => ({
     isError: false,
     refetch: jest.fn(),
   }),
-  useOnboardingStatus: () => ({
-    data: [{ userId: "u1", userName: "Ada" }],
+  useOnboardingUserStatus: () => ({
+    data: { userId: "u1", userName: "Ada" },
     isLoading: false,
     isError: false,
     refetch: jest.fn(),

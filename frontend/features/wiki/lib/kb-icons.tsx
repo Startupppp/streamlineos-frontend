@@ -4,7 +4,6 @@ import { forwardRef } from "react";
 import type { IconHandle } from "@animateicons/react";
 import type { AnimatedNavIconComponent } from "@/components/layout/sidebar/sidebar-animated-nav";
 import {
-  BookOpenCheckIcon,
   BookOpenTextIcon,
   ChartBarIcon,
   CheckIcon,
@@ -14,7 +13,6 @@ import {
   ClipboardIcon,
   CopyIcon,
   EllipsisIcon,
-  GlobeIcon,
   InfoIcon,
   LayoutGridIcon,
   LayoutListIcon,
@@ -137,7 +135,6 @@ export const KbMoreHorizontalIcon = createAnimatedIcon(EllipsisIcon);
 export const KbLoader2Icon = createAnimatedIcon(LoaderCircleIcon);
 export const KbCheckIcon = createAnimatedIcon(CheckIcon);
 export const KbCopyIcon = createAnimatedIcon(CopyIcon);
-export const KbGlobeIcon = createAnimatedIcon(GlobeIcon);
 export const KbShare2Icon = createAnimatedIcon(ShareIcon);
 export const KbInfoIcon = createAnimatedIcon(InfoIcon);
 export const KbDownloadIcon = createAnimatedIcon(DownloadIcon);
@@ -155,7 +152,6 @@ export const KbFileTextIcon = createAnimatedIcon(BookOpenTextIcon);
 export const KbLayoutTemplateIcon = createAnimatedIcon(LayoutListIcon);
 export const KbMessageCircleIcon = createAnimatedIcon(MessageCircleIcon);
 export const KbMessageSquareIcon = createAnimatedIcon(MessageCircleIcon);
-export const KbClipboardCheckIcon = createAnimatedIcon(BookOpenCheckIcon);
 export const KbPencilIcon = createAnimatedIcon(UserPenIcon);
 export const KbEdit2Icon = createAnimatedIcon(UserPenIcon);
 

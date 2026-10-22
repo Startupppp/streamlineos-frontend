@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,10 +11,11 @@ import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { HrSheet } from "@/components/shared/hr-sheet";
+import { Button } from "@/components/ui/button";
 import { EmployeePicker } from "@/features/hr/shared/employee-picker";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useInitiateOnboarding, useOnboardingStatus } from "@/hooks/api/hr/onboarding";
+import { useInitiateOnboarding, useInitiatedOnboardingUserIds } from "@/hooks/api/hr/onboarding";
 
 const schema = z.object({
   userId: z.string().trim().min(1, "Please select an employee"),
@@ -40,12 +41,12 @@ interface OnboardingInitiateSheetProps {
 export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitiateSheetProps) {
   const form = useForm<FormValues>({ resolver: zodResolver(schema), defaultValues: { userId: "" } });
   const initiate = useInitiateOnboarding();
-  const { data: onboardingStatuses } = useOnboardingStatus();
-
-  const initiatedUserIds = useMemo(
-    () => (onboardingStatuses ?? []).map((s) => s.userId).filter((id): id is string => id !== null),
-    [onboardingStatuses],
-  );
+  const {
+    data: initiatedUserIds = [],
+    isLoading: initiatedIdsLoading,
+    isError: initiatedIdsError,
+    refetch: refetchInitiatedIds,
+  } = useInitiatedOnboardingUserIds(open);
 
   const onSubmit = useCallback(
     (data: FormValues) => {
@@ -99,6 +100,7 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
                 <EmployeePicker
                   value={field.value}
                   onChange={field.onChange}
+                  disabled={initiatedIdsLoading || initiatedIdsError}
                   placeholder="Select an employee…"
                   excludeUserIds={initiatedUserIds}
                 />
@@ -106,6 +108,14 @@ export function OnboardingInitiateSheet({ open, onOpenChange }: OnboardingInitia
               <p className="text-dense text-muted-foreground">
                 Only active employees without an existing onboarding workflow are shown.
               </p>
+              {initiatedIdsError ? (
+                <p role="alert" className="text-xs text-destructive">
+                  Could not check existing onboarding workflows.
+                  <Button type="button" variant="link" size="sm" onClick={() => void refetchInitiatedIds()}>
+                    Retry
+                  </Button>
+                </p>
+              ) : null}
               <FormMessage />
             </FormItem>
           )}

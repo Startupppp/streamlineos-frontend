@@ -80,6 +80,40 @@ const nextConfig: NextConfig = {
   },
   redirects: async () => [
     {
+      source: "/me",
+      destination: "/dashboard",
+      permanent: true,
+    },
+    { source: "/me/attendance", destination: "/me/workday", permanent: false },
+    {
+      source: "/me/time-off",
+      destination: "/me/workday?section=time-off",
+      permanent: false,
+    },
+    { source: "/me/documents", destination: "/me/records", permanent: false },
+    {
+      source: "/me/onboarding",
+      destination: "/me/records?section=onboarding",
+      permanent: false,
+    },
+    { source: "/me/expenses", destination: "/me/money", permanent: false },
+    {
+      source: "/me/pay",
+      destination: "/me/money?section=pay",
+      permanent: false,
+    },
+    { source: "/me/recruitment", destination: "/me/career", permanent: false },
+    {
+      source: "/me/job-openings",
+      destination: "/me/career?section=openings",
+      permanent: false,
+    },
+    {
+      source: "/me/referrals",
+      destination: "/me/career?section=referrals",
+      permanent: false,
+    },
+    {
       source: "/signup",
       destination: "/signin",
       permanent: true,
@@ -156,17 +190,17 @@ const nextConfig: NextConfig = {
     },
     {
       source: "/pay",
-      destination: "/me/pay",
+      destination: "/me/money?section=pay",
       permanent: false,
     },
     {
       source: "/me/leave",
-      destination: "/me/time-off",
+      destination: "/me/workday?section=time-off",
       permanent: false,
     },
     {
       source: "/expenses",
-      destination: "/me/expenses",
+      destination: "/me/money",
       permanent: false,
     },
     {

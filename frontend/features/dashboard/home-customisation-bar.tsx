@@ -1,257 +1,192 @@
 "use client";
 
-import { useState } from "react";
-import {
-  Settings2,
-  Eye,
-  EyeOff,
-  LayoutGrid,
-  AlignJustify,
-  RotateCcw,
-  ChevronUp,
-  ChevronDown,
-} from "lucide-react";
+import { useCallback, useState } from "react";
+import { Check, CircleHelp, LayoutGrid, Plus, RotateCcw, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import type { UseHomeCustomisationResult, HomeDensity } from "./use-home-customisation";
-import { applyWidgetOrder } from "./use-home-customisation";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import type { HomeDensity, UseHomeCustomisationResult } from "./use-home-customisation";
 
 export interface WidgetOption {
   id: string;
   label: string;
 }
 
-interface DensityButtonProps {
-  value: HomeDensity;
-  label: string;
-  Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>;
-  current: HomeDensity;
-  onSelect: (value: HomeDensity) => void;
+interface HomeCustomisationBarProps {
+  customisation: UseHomeCustomisationResult;
+  availableWidgets: readonly WidgetOption[];
+  editing: boolean;
+  onEditingChange: (editing: boolean) => void;
 }
 
-function DensityButton({ value, label, Icon, current, onSelect }: DensityButtonProps) {
-  function handleClick() {
-    onSelect(value);
-  }
-
+function DensityButton({
+  value,
+  label,
+  current,
+  onSelect,
+}: {
+  value: HomeDensity;
+  label: string;
+  current: HomeDensity;
+  onSelect: (value: HomeDensity) => void;
+}) {
+  const handleClick = useCallback(() => onSelect(value), [onSelect, value]);
   return (
     <Button
       type="button"
       variant={current === value ? "secondary" : "ghost"}
       size="sm"
       onClick={handleClick}
-      className="h-7 flex-1 gap-1.5 text-xs"
+      className="h-9 px-2 text-xs"
     >
-      <Icon className="h-3.5 w-3.5" aria-hidden="true" />
       {label}
     </Button>
   );
 }
 
-interface WidgetToggleRowProps {
-  option: WidgetOption;
-  isHidden: boolean;
-  onToggle: (id: string) => void;
-  onMoveUp: (id: string) => void;
-  onMoveDown: (id: string) => void;
-  isFirst: boolean;
-  isLast: boolean;
-}
-
-function WidgetToggleRow({
-  option,
-  isHidden,
-  onToggle,
-  onMoveUp,
-  onMoveDown,
-  isFirst,
-  isLast,
-}: WidgetToggleRowProps) {
-  function handleToggle() {
-    onToggle(option.id);
-  }
-  function handleMoveUp() {
-    onMoveUp(option.id);
-  }
-  function handleMoveDown() {
-    onMoveDown(option.id);
-  }
-
-  return (
-    <div className="flex items-center justify-between gap-1 py-1.5">
-      <span className="flex-1 text-sm text-foreground">{option.label}</span>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        aria-label={`Move ${option.label} up`}
-        onClick={handleMoveUp}
-        disabled={isFirst}
-        className="h-7 w-7 p-0 shrink-0"
-      >
-        <ChevronUp className="h-3.5 w-3.5" aria-hidden="true" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        aria-label={`Move ${option.label} down`}
-        onClick={handleMoveDown}
-        disabled={isLast}
-        className="h-7 w-7 p-0 shrink-0"
-      >
-        <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
-      </Button>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        aria-label={isHidden ? `Show ${option.label}` : `Hide ${option.label}`}
-        onClick={handleToggle}
-        className="h-7 w-7 p-0 shrink-0"
-      >
-        {isHidden ? (
-          <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
-        ) : (
-          <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-        )}
-      </Button>
-    </div>
-  );
-}
-
-interface HomeCustomisationBarProps {
-  customisation: UseHomeCustomisationResult;
-  availableWidgets: readonly WidgetOption[];
-}
-
 export function HomeCustomisationBar({
   customisation,
   availableWidgets,
+  editing,
+  onEditingChange,
 }: HomeCustomisationBarProps) {
-  const [open, setOpen] = useState(false);
-  const [announcement, setAnnouncement] = useState("");
-  const { state, toggleWidgetVisibility, setDensity, moveWidget, reset, isHidden } =
-    customisation;
+  const [addOpen, setAddOpen] = useState(false);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+  const { state, toggleWidgetVisibility, setDensity, reset } = customisation;
   const hiddenCount = state.hiddenWidgets.length;
+  const hidden = new Set(state.hiddenWidgets);
+  const remaining = availableWidgets.filter((widget) => hidden.has(widget.id)).length;
 
-  const allIds = availableWidgets.map((w) => w.id);
-  const widgetById = new Map(availableWidgets.map((w) => [w.id, w]));
-  const orderedWidgets: WidgetOption[] = applyWidgetOrder(allIds, state.widgetOrder)
-    .map((id) => widgetById.get(id))
-    .filter((w): w is WidgetOption => w !== undefined);
+  const handleStart = useCallback(() => onEditingChange(true), [onEditingChange]);
+  const handleDone = useCallback(() => onEditingChange(false), [onEditingChange]);
+  const handleOpenReset = useCallback(() => setConfirmResetOpen(true), []);
+  const handleAdd = useCallback(
+    (id: string) => {
+      if (!hidden.has(id)) return;
+      toggleWidgetVisibility(id);
+      setAddOpen(false);
+    },
+    [hidden, toggleWidgetVisibility],
+  );
 
-  function handleOpenChange(value: boolean) {
-    setOpen(value);
-  }
-
-  function handleReset() {
-    reset();
-  }
-
-  function handleMoveUp(widgetId: string) {
-    moveWidget(widgetId, "up", allIds);
-    const label = widgetById.get(widgetId)?.label ?? widgetId;
-    setAnnouncement(`Moved ${label} up`);
-  }
-
-  function handleMoveDown(widgetId: string) {
-    moveWidget(widgetId, "down", allIds);
-    const label = widgetById.get(widgetId)?.label ?? widgetId;
-    setAnnouncement(`Moved ${label} down`);
+  if (!editing) {
+    return (
+      <div className="flex items-center justify-end">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          aria-label="Customise Home layout"
+          className="h-9 gap-1.5"
+          onClick={handleStart}
+        >
+          <Settings2 className="h-3.5 w-3.5" aria-hidden="true" />
+          Customise
+          {hiddenCount > 0 ? (
+            <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-micro">
+              {hiddenCount}
+            </Badge>
+          ) : null}
+        </Button>
+      </div>
+    );
   }
 
   return (
-    <div className="flex items-center justify-end">
-      <div aria-live="polite" aria-atomic="true" className="sr-only">
-        {announcement}
-      </div>
-      <Popover open={open} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            aria-label="Customise Home layout"
-            className="h-8 gap-1.5 text-xs text-muted-foreground hover:text-foreground"
-          >
-            <Settings2 className="h-3.5 w-3.5" aria-hidden="true" />
-            Customise
-            {hiddenCount > 0 && (
-              <Badge variant="secondary" className="ml-0.5 h-4 min-w-4 px-1 text-micro">
-                {hiddenCount}
-              </Badge>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-72 p-3">
-          <div className="flex flex-col gap-3">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-semibold text-foreground">
-                Home layout
-              </span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleReset}
-                aria-label="Reset Home layout to defaults"
-                className="h-6 gap-1 px-2 text-xs text-muted-foreground"
-              >
-                <RotateCcw className="h-3 w-3" aria-hidden="true" />
-                Reset
-              </Button>
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <span className="text-xs text-muted-foreground">Density</span>
-              <div className="flex gap-1">
-                <DensityButton
-                  value="comfortable"
-                  label="Comfortable"
-                  Icon={LayoutGrid}
-                  current={state.density}
-                  onSelect={setDensity}
-                />
-                <DensityButton
-                  value="compact"
-                  label="Compact"
-                  Icon={AlignJustify}
-                  current={state.density}
-                  onSelect={setDensity}
-                />
-              </div>
-            </div>
-
-            {orderedWidgets.length > 0 && (
-              <div className="flex flex-col gap-0.5">
-                <span className="text-xs text-muted-foreground">
-                  Widgets — use arrows to reorder
+    <TooltipProvider delayDuration={250}>
+      <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-sm backdrop-blur-sm sm:w-auto">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button type="button" variant="ghost" size="icon-sm" aria-label="How to arrange widgets">
+              <CircleHelp className="h-4 w-4" aria-hidden="true" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" align="end" className="max-w-64 text-xs">
+            Drag a widget by its handle. On larger screens, pull an edge to resize it.
+            The other widgets move in to fill the gap.
+          </TooltipContent>
+        </Tooltip>
+        <Popover open={addOpen} onOpenChange={setAddOpen}>
+          <PopoverTrigger asChild>
+            <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5" aria-label="Add widget">
+              <Plus className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Add widget</span>
+              {remaining > 0 ? (
+                <span className="hidden rounded bg-muted px-1.5 text-micro text-muted-foreground sm:inline">
+                  {remaining}
                 </span>
-                <div className="divide-y divide-border">
-                  {orderedWidgets.map((option, index) => (
-                    <WidgetToggleRow
-                      key={option.id}
-                      option={option}
-                      isHidden={isHidden(option.id)}
-                      onToggle={toggleWidgetVisibility}
-                      onMoveUp={handleMoveUp}
-                      onMoveDown={handleMoveDown}
-                      isFirst={index === 0}
-                      isLast={index === orderedWidgets.length - 1}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
-    </div>
+              ) : null}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-72 p-1">
+            <ul className="flex flex-col" aria-label="Available widgets">
+              {availableWidgets.map((widget) => {
+                const placed = !hidden.has(widget.id);
+                return (
+                  <li key={widget.id}>
+                    <button
+                      type="button"
+                      disabled={placed}
+                      onClick={() => handleAdd(widget.id)}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-md px-2.5 py-2 text-left text-sm",
+                        "hover:bg-accent focus-visible:bg-accent focus-visible:outline-none disabled:cursor-default disabled:hover:bg-transparent",
+                      )}
+                    >
+                      <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                      <span className="min-w-0 flex-1 font-medium">{widget.label}</span>
+                      {placed ? (
+                        <span className="inline-flex items-center gap-1 text-micro text-muted-foreground">
+                          <Check className="h-3 w-3" aria-hidden="true" />
+                          Added
+                        </span>
+                      ) : (
+                        <Plus className="h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                      )}
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </PopoverContent>
+        </Popover>
+        <div className="flex items-center gap-1" role="group" aria-label="Density">
+          <DensityButton value="comfortable" label="Comfortable" current={state.density} onSelect={setDensity} />
+          <DensityButton value="compact" label="Compact" current={state.density} onSelect={setDensity} />
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-9 gap-1.5 text-muted-foreground"
+          onClick={handleOpenReset}
+          aria-label="Reset Home layout to defaults"
+        >
+          <RotateCcw className="h-3.5 w-3.5" />
+          Reset
+        </Button>
+        <Button type="button" size="sm" className="h-9 gap-1.5" onClick={handleDone} aria-label="Finish customizing">
+          <Check className="h-3.5 w-3.5" />
+          Done
+        </Button>
+        <ConfirmDialog
+          open={confirmResetOpen}
+          onOpenChange={setConfirmResetOpen}
+          title="Reset your Home layout?"
+          description="Restore the default order, sizes, and visible widgets."
+          confirmLabel="Reset layout"
+          destructive
+          onConfirm={reset}
+        />
+      </div>
+    </TooltipProvider>
   );
 }

@@ -22,11 +22,17 @@ type InviteeAccessRowProps = {
   selectedModules: readonly OrgModuleKey[];
   isPending: boolean;
   onRemove: (email: string) => void;
-  onAccessChange: (email: string, moduleKey: OrgModuleKey, standing: string) => void;
+  onAccessChange: (
+    email: string,
+    moduleKey: OrgModuleKey,
+    standing: string,
+  ) => void;
   onRemoveUnavailableAccess: (email: string) => void;
 };
 
-const ALWAYS_ENABLED_KEYS: ReadonlySet<string> = new Set(ALWAYS_ENABLED_MODULES);
+const ALWAYS_ENABLED_KEYS: ReadonlySet<string> = new Set(
+  ALWAYS_ENABLED_MODULES,
+);
 
 function moduleLabel(moduleKey: OrgModuleKey): string {
   return (
@@ -93,11 +99,19 @@ export function InviteeAccessRow({
           </summary>
           <div className="mt-2 space-y-2">
             {assignableModules.map((moduleKey) => (
-              <div key={moduleKey} className="flex items-center justify-between gap-2">
+              <div
+                key={moduleKey}
+                className="flex items-center justify-between gap-2"
+              >
                 <span>{moduleLabel(moduleKey)}</span>
                 <Select
-                  value={access.find((item) => item.moduleKey === moduleKey)?.standing ?? "NONE"}
-                  onValueChange={(value) => onAccessChange(invitee.email, moduleKey, value)}
+                  value={
+                    access.find((item) => item.moduleKey === moduleKey)
+                      ?.standing ?? "NONE"
+                  }
+                  onValueChange={(value) =>
+                    onAccessChange(invitee.email, moduleKey, value)
+                  }
                   disabled={isPending}
                 >
                   <SelectTrigger
@@ -120,7 +134,8 @@ export function InviteeAccessRow({
       {unavailable.length > 0 && (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-destructive">
           <span>
-            {unavailable.map((item) => moduleLabel(item.moduleKey)).join(", ")} no longer selected.
+            {unavailable.map((item) => moduleLabel(item.moduleKey)).join(", ")}{" "}
+            no longer selected.
           </span>
           <Button
             type="button"

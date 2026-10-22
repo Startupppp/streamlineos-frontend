@@ -19,7 +19,10 @@ import {
   useManagerApproveLoan,
   useManagerRejectLoan,
 } from "@/hooks/api/payroll/ess";
-import { formatMoney, formatMonth } from "@/features/payroll/shared/payroll-format";
+import {
+  formatMoney,
+  formatMonth,
+} from "@/features/payroll/shared/payroll-format";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type {
   ManagerTeamMember,
@@ -38,7 +41,9 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
           {row.name ?? row.email ?? "Unknown user"}
         </p>
         {row.email && (
-          <p className="text-dense text-muted-foreground truncate">{row.email}</p>
+          <p className="text-dense text-muted-foreground truncate">
+            {row.email}
+          </p>
         )}
       </div>
     ),
@@ -49,7 +54,8 @@ const MEMBER_COLUMNS: DataTableColumn<ManagerTeamMember>[] = [
     cell: (row) =>
       row.latestPayslip ? (
         <span className="text-xs tabular-nums text-muted-foreground">
-          {formatMonth(row.latestPayslip.month)} · {formatMoney(row.latestPayslip.net)}
+          {formatMonth(row.latestPayslip.month)} ·{" "}
+          {formatMoney(row.latestPayslip.net)}
         </span>
       ) : (
         <span className="text-xs text-muted-foreground">—</span>
@@ -99,7 +105,9 @@ const REWARDS_COLUMNS: DataTableColumn<TeamRewardsMember>[] = [
     key: "name",
     header: "Member",
     cell: (row) => (
-      <span className="text-xs font-medium">{row.name ?? row.email ?? "Unknown user"}</span>
+      <span className="text-xs font-medium">
+        {row.name ?? row.email ?? "Unknown user"}
+      </span>
     ),
   },
   {
@@ -135,7 +143,8 @@ const REWARDS_COLUMNS: DataTableColumn<TeamRewardsMember>[] = [
 
 export function TeamPayrollPageContent() {
   const { data, isLoading, isError, error, refetch } = useManagerInbox();
-  const { data: teamRewards, isLoading: rewardsLoading } = useManagerTeamRewards();
+  const { data: teamRewards, isLoading: rewardsLoading } =
+    useManagerTeamRewards();
   const approveReimb = useManagerApproveReimbursement();
   const rejectReimb = useManagerRejectReimbursement();
   const approveLoan = useManagerApproveLoan();
@@ -191,7 +200,10 @@ export function TeamPayrollPageContent() {
 
   if (isError) {
     return (
-      <PageWrapper title="Team payroll" subtitle="Direct reports — approval when permitted">
+      <PageWrapper
+        title="Team payroll"
+        subtitle="Direct reports — approval when permitted"
+      >
         <ErrorState
           className="flex-1"
           title="Couldn't load your team"
@@ -203,7 +215,10 @@ export function TeamPayrollPageContent() {
   }
 
   return (
-    <PageWrapper title="Team payroll" subtitle="Direct reports — approval when permitted">
+    <PageWrapper
+      title="Team payroll"
+      subtitle="Direct reports — approval when permitted"
+    >
       <div className="space-y-4">
         <div
           role="status"
@@ -252,7 +267,7 @@ export function TeamPayrollPageContent() {
           <EmptyState
             title="No direct reports"
             description="People who report to you (reporting manager) will appear here with payroll signals."
-            action={{ label: "My payroll", href: "/me/pay" }}
+            action={{ label: "My payroll", href: "/me/money?section=pay" }}
           />
         ) : (
           <>
@@ -441,11 +456,17 @@ export function TeamPayrollPageContent() {
                 Reimbursements
               </Link>
               {" · "}
-              <Link href="/payroll/loans" className="text-primary underline underline-offset-2">
+              <Link
+                href="/payroll/loans"
+                className="text-primary underline underline-offset-2"
+              >
                 Loans
               </Link>
               {" · "}
-              <Link href="/payroll/taxes" className="text-primary underline underline-offset-2">
+              <Link
+                href="/payroll/taxes"
+                className="text-primary underline underline-offset-2"
+              >
                 Tax &amp; Statutory
               </Link>
               .

@@ -14,6 +14,7 @@ export const orgGeneralSchema = z.object({
   legalName: z.string().max(200, "Legal name must be at most 200 characters").optional(),
   orgCode: z.string().max(20, "Organization code must be at most 20 characters").optional(),
   industry: z.string().optional(),
+  companySize: z.string().max(50, "Company size must be at most 50 characters").optional(),
   website: httpUrlOrEmpty,
   registrationNumber: z.string().max(100, "Registration number must be at most 100 characters").optional(),
   taxNumber: z.string().max(100, "Tax number must be at most 100 characters").optional(),

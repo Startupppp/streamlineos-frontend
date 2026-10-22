@@ -3,13 +3,6 @@ import type { CrmAccountTier } from "@/types/crm";
 
 export const BUILD_FILTER_NONE = "__none__";
 
-export const ROADMAP_COLUMNS: { status: RoadmapStatus; label: string }[] = [
-  { status: "planned", label: "Planned" },
-  { status: "in_progress", label: "In Progress" },
-  { status: "completed", label: "Completed" },
-  { status: "cancelled", label: "Cancelled" },
-];
-
 export const ROADMAP_HORIZON_COLUMNS: { horizon: RoadmapHorizon; label: string }[] = [
   { horizon: "now", label: "Now" },
   { horizon: "next", label: "Next" },

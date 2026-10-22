@@ -9,8 +9,6 @@ import type { StepId } from "../lib/constants";
 import type { SyncStatus } from "../lib/draft";
 import { toPreviewSnapshot } from "../lib/preview-snapshot";
 import type { WizardData } from "../lib/wizard-data-schema";
-import { StepRail } from "./step-rail";
-import { MobileProgressBar } from "./mobile-progress-bar";
 import { OrgSetupBrandColumn } from "./org-setup-brand-column";
 
 type OrgSetupShellProps = {
@@ -18,10 +16,8 @@ type OrgSetupShellProps = {
   currentIndex: number;
   title: string;
   direction: number;
-  saveState: "idle" | "saved";
   syncStatus?: SyncStatus;
   data: WizardData;
-  onStepSelect?: (index: number) => void;
   onRetrySave?: () => void;
   children: ReactNode;
 };
@@ -38,100 +34,66 @@ export function OrgSetupShell({
   currentIndex,
   title,
   direction,
-  saveState,
   syncStatus,
   data,
-  onStepSelect,
   onRetrySave,
   children,
 }: OrgSetupShellProps) {
   const reduceMotion = useReducedMotion();
-  const currentStepId = sequence[currentIndex] ?? "welcome";
-  const isWelcome = currentStepId === "welcome";
+  const currentStepId = sequence[currentIndex] ?? "workspace";
   const previewSnapshot = useMemo(() => toPreviewSnapshot(data), [data]);
-  const visibleSteps = useMemo((): StepId[] => sequence.filter((id) => id !== "welcome"), [sequence]);
-  const visibleIndex = visibleSteps.indexOf(currentStepId);
-  const handleVisibleStepSelect = useMemo(
-    () => (onStepSelect ? (index: number) => {
-      const stepId = visibleSteps[index];
-      if (stepId !== undefined) onStepSelect(sequence.indexOf(stepId));
-    } : undefined),
-    [onStepSelect, sequence, visibleSteps],
-  );
 
   return (
     <WizardSplitShell
       direction={direction}
       stepKey={currentIndex}
       brandColumn={
-        <OrgSetupBrandColumn
-          snapshot={previewSnapshot}
-          stepId={currentStepId}
-        />
+        <OrgSetupBrandColumn snapshot={previewSnapshot} />
       }
       header={
-        <>
-          {!isWelcome && (
-            <>
-              <StepRail
-                sequence={visibleSteps}
-                currentIndex={visibleIndex}
-                saveState={saveState}
-                onStepSelect={handleVisibleStepSelect}
-              />
-              <MobileProgressBar sequence={visibleSteps} currentIndex={visibleIndex} />
-            </>
-          )}
-
-          {!isWelcome ? (
-            <div className="mb-2 hidden min-w-0 space-y-0.5 md:block">
-              <div className="flex min-w-0 items-baseline gap-3">
-                <AnimatePresence mode="wait">
-                  <motion.h1
-                    key={title}
-                    initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
-                    transition={{ duration: reduceMotion ? 0 : 0.15 }}
-                    className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
-                  >
-                    {title}
-                  </motion.h1>
-                </AnimatePresence>
-                {syncStatus === "error" && onRetrySave ? (
-                  <span
-                    role="alert"
-                    className="flex items-center gap-1 text-xs text-destructive"
-                  >
-                    Couldn&apos;t save —
-                    <Button
-                      type="button"
-                      variant="link"
-                      onClick={onRetrySave}
-                      className="h-auto p-0 text-xs text-destructive"
-                    >
-                      Retry
-                    </Button>
-                  </span>
-                ) : syncStatus && syncStatus !== "synced" && (
-                  <span
-                    aria-live="polite"
-                    className={
-                      syncStatus === "error"
-                        ? "text-xs text-destructive"
-                        : "text-xs text-muted-foreground"
-                    }
-                  >
-                    {SYNC_STATUS_LABEL[syncStatus]}
-                  </span>
-                )}
-              </div>
-              <p className="text-sm leading-5 text-muted-foreground text-pretty">
-                {STEP_SUBTITLES[currentStepId]}
-              </p>
-            </div>
-          ) : null}
-        </>
+        <div className="mb-2 min-w-0 space-y-0.5">
+          <div className="flex min-w-0 items-baseline gap-3">
+            <AnimatePresence mode="wait">
+              <motion.h1
+                key={title}
+                initial={{ opacity: 0, y: reduceMotion ? 0 : -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: reduceMotion ? 0 : 6 }}
+                transition={{ duration: reduceMotion ? 0 : 0.15 }}
+                className="font-display text-xl font-extrabold tracking-[-0.02em] text-foreground text-balance sm:text-2xl"
+              >
+                {title}
+              </motion.h1>
+            </AnimatePresence>
+            {syncStatus === "error" && onRetrySave ? (
+              <span role="alert" className="flex items-center gap-1 text-xs text-destructive">
+                Couldn&apos;t save —
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={onRetrySave}
+                  className="h-auto p-0 text-xs text-destructive"
+                >
+                  Retry
+                </Button>
+              </span>
+            ) : syncStatus && syncStatus !== "synced" && (
+              <span
+                aria-live="polite"
+                className={
+                  syncStatus === "error"
+                    ? "text-xs text-destructive"
+                    : "text-xs text-muted-foreground"
+                }
+              >
+                {SYNC_STATUS_LABEL[syncStatus]}
+              </span>
+            )}
+          </div>
+          <p className="text-sm leading-5 text-muted-foreground text-pretty">
+            {STEP_SUBTITLES[currentStepId]}
+          </p>
+        </div>
       }
     >
       {children}

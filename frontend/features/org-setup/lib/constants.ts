@@ -1,24 +1,11 @@
-import type { OrgModuleKey, WizardData } from "./wizard-data-schema";
+import { ORG_MODULE_KEYS, type OrgModuleKey, type WizardData } from "./wizard-data-schema";
 
 export const DRAFT_KEY = "org-setup-draft";
 
-export type StepId = "welcome" | "basics" | "workspace" | "products" | "invite";
+export type StepId = "workspace" | "invite";
 
 export function getStepSequence(): StepId[] {
-  return ["workspace", "products", "invite"];
-}
-
-export function resolveStepIndex(
-  stepId: string | null | undefined,
-  sequence: StepId[],
-): number {
-  if (!stepId) return 0;
-  if (stepId === "setup") {
-    const inviteIdx = sequence.indexOf("invite");
-    return inviteIdx >= 0 ? inviteIdx + 1 : 0;
-  }
-  const idx = sequence.findIndex((id) => id === stepId);
-  return idx >= 0 ? idx + 1 : 0;
+  return ["workspace", "invite"];
 }
 
 export const GOALS = [
@@ -34,14 +21,6 @@ export const GOALS = [
 
 export const ALWAYS_ENABLED_MODULES = ["kb"] as const satisfies readonly OrgModuleKey[];
 
-export const TEAM_SIZES = [
-  { value: "1-10", label: "1–10 employees" },
-  { value: "11-50", label: "11–50 employees" },
-  { value: "51-200", label: "51–200 employees" },
-  { value: "201-500", label: "201–500 employees" },
-  { value: "500+", label: "500+ employees" },
-] as const;
-
 export const GENERATION_STEPS: readonly string[] = [
   "Creating organization",
   "Applying industry template",
@@ -51,28 +30,9 @@ export const GENERATION_STEPS: readonly string[] = [
   "Sending invites",
 ];
 
-export const STEP_TITLES: Record<StepId, string> = {
-  welcome: "Welcome",
-  basics: "Basics",
-  workspace: "Workspace",
-  products: "Modules",
-  invite: "People",
-};
-
 export const STEP_SUBTITLES: Record<StepId, string> = {
-  welcome: "Let's get your organization ready to run your business.",
-  basics: "Goals unlock modules. Add industry and company, then launch.",
-  workspace: "Name your workspace and set your preferences.",
-  products: "Pick the modules your team will use.",
+  workspace: "Add your workspace name and contact details.",
   invite: "Invite your team — or skip and do it later.",
-};
-
-export const ESTIMATED_MINUTES_REMAINING: Record<StepId, number> = {
-  welcome: 2,
-  basics: 2,
-  workspace: 2,
-  products: 1,
-  invite: 1,
 };
 
 export const MODULE_CATALOG: Record<OrgModuleKey, { label: string; description: string; setupTasks: string[] }> = {
@@ -89,73 +49,6 @@ export const MODULE_CATALOG: Record<OrgModuleKey, { label: string; description: 
   sign: { label: "Sign", description: "e-Signatures for documents", setupTasks: ["Upload first document template"] },
 };
 
-export type ModuleQuestion =
-  | { key: string; label: string; type: "select"; options: readonly string[] }
-  | { key: string; label: string; type: "text"; maxLength: number };
-
-export const MODULE_QUESTIONS: Partial<Record<OrgModuleKey, ModuleQuestion[]>> = {
-  hr: [
-    { key: "employeeCount", label: "How many people will you manage?", type: "select", options: ["1-10", "11-50", "51-200", "200+"] as const },
-    { key: "firstFocus", label: "What should we set up first?", type: "select", options: ["Employee records", "Leave & attendance", "Hiring & onboarding"] as const },
-  ],
-  payroll: [
-    { key: "payFrequency", label: "How often do you run payroll?", type: "select", options: ["Monthly", "Semi-monthly", "Bi-weekly", "Weekly"] as const },
-  ],
-  timesheets: [
-    { key: "trackingMode", label: "How do you track time?", type: "select", options: ["By project", "By client", "Attendance only"] as const },
-  ],
-  crm: [
-    { key: "salesModel", label: "Who do you sell to?", type: "select", options: ["B2B", "B2C", "Both"] as const },
-    { key: "leadSource", label: "Where do most leads come from?", type: "select", options: ["Website", "Referrals", "Outbound", "Events"] as const },
-  ],
-  support: [
-    { key: "supportChannel", label: "Where do customers reach you?", type: "select", options: ["Email", "Live chat", "Customer portal"] as const },
-  ],
-  accounting: [
-    { key: "fiscalYearStart", label: "When does your fiscal year start?", type: "select", options: ["January", "April", "July", "October"] as const },
-  ],
-  inventory: [
-    { key: "stockLocations", label: "How many locations hold stock?", type: "select", options: ["1", "2-5", "6+"] as const },
-  ],
-  build: [
-    { key: "workType", label: "What will your team deliver?", type: "select", options: ["Software", "Client projects", "Internal operations", "Marketing"] as const },
-    { key: "firstProjectName", label: "Name your first project", type: "text", maxLength: 80 },
-  ],
-  surveys: [
-    { key: "audience", label: "Who will you survey?", type: "select", options: ["Employees", "Customers", "Both"] as const },
-  ],
-  sign: [
-    { key: "documentType", label: "What will you send for signature?", type: "select", options: ["Offer letters", "Contracts", "NDAs", "Other"] as const },
-  ],
-};
-
-export const MODULE_GROUPS: { heading: string; keys: OrgModuleKey[] }[] = [
-  { heading: "People", keys: ["hr", "payroll", "timesheets"] },
-  { heading: "Customers & money", keys: ["crm", "support", "accounting", "inventory"] },
-  { heading: "Work", keys: ["build", "sign", "surveys"] },
-];
-
-export function selectOnboardingQuestions(
-  selectedModules: readonly OrgModuleKey[],
-  totalLimit = 2,
-): Partial<Record<OrgModuleKey, readonly ModuleQuestion[]>> {
-  const selected = new Set(selectedModules);
-  const result: Partial<Record<OrgModuleKey, readonly ModuleQuestion[]>> = {};
-  let remaining = Math.max(0, totalLimit);
-
-  for (const group of MODULE_GROUPS) {
-    for (const moduleKey of group.keys) {
-      if (!selected.has(moduleKey) || remaining === 0) continue;
-      const firstQuestion = MODULE_QUESTIONS[moduleKey]?.[0];
-      if (!firstQuestion) continue;
-      result[moduleKey] = [firstQuestion];
-      remaining -= 1;
-    }
-  }
-
-  return result;
-}
-
 export const DEFAULT_DATA: WizardData = {
   goals: [],
   industry: "",
@@ -165,7 +58,7 @@ export const DEFAULT_DATA: WizardData = {
   teamSize: "",
   phone: "",
   installedApps: [],
-  modules: [...ALWAYS_ENABLED_MODULES],
+  modules: [...ORG_MODULE_KEYS],
   invitees: [],
   moduleAnswers: {},
 };

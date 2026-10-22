@@ -43,6 +43,7 @@ function toProfileValues(org: OrgSettings): OrgGeneralValues {
     legalName: org.legalName ?? "",
     orgCode: org.orgCode ?? "",
     industry: org.industry ?? "",
+    companySize: org.companySize ?? "",
     website: org.website ?? "",
     registrationNumber: org.registrationNumber ?? "",
     taxNumber: org.taxNumber ?? "",
@@ -69,6 +70,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
         legalName: values.legalName || null,
         orgCode: values.orgCode || null,
         industry: values.industry || null,
+        companySize: values.companySize || null,
         website: values.website || null,
         registrationNumber: values.registrationNumber || null,
         taxNumber: values.taxNumber || null,
@@ -93,6 +95,7 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
           <SettingsField label="Legal name" value={org.legalName} />
           <SettingsField label="Organization code" value={org.orgCode} />
           <SettingsField label="Industry" value={org.industry} />
+          <SettingsField label="Company size" value={org.companySize} />
           <SettingsField label="Website" value={org.website} />
           <SettingsField label="Registration number" value={org.registrationNumber} />
           <SettingsField label="Tax / GST number" value={org.taxNumber} />
@@ -170,6 +173,32 @@ export function OrgProfileSection({ org, canEdit }: OrgProfileSectionProps) {
                           <SelectItem value={field.value}>{field.value}</SelectItem>
                         ) : null}
                         {INDUSTRIES.map((i) => <SelectItem key={i} value={i}>{i}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="companySize"
+                render={({ field }) => (
+                  <FormItem className="gap-1.5">
+                    <FormLabel className="text-xs">Company size</FormLabel>
+                    <Select
+                      value={field.value || "unset"}
+                      onValueChange={(value) => field.onChange(value === "unset" ? "" : value)}
+                    >
+                      <FormControl>
+                        <SelectTrigger><SelectValue placeholder="Select company size" /></SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="unset">Not set</SelectItem>
+                        <SelectItem value="1-10">1–10 employees</SelectItem>
+                        <SelectItem value="11-50">11–50 employees</SelectItem>
+                        <SelectItem value="51-200">51–200 employees</SelectItem>
+                        <SelectItem value="201-500">201–500 employees</SelectItem>
+                        <SelectItem value="500+">500+ employees</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />

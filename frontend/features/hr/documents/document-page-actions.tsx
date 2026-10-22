@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { ViewToggle } from "@/components/ui/view-toggle";
 
 interface DocumentPageActionsProps {
   viewMode: "list" | "grid";
@@ -37,36 +37,14 @@ export function DocumentPageActions({
   // below that they are icon buttons named by aria-label. The primary keeps text.
   return (
     <div className="flex items-center gap-2">
-      <div className="rounded-lg border border-border p-1 flex items-center gap-0.5">
-        <button
-          type="button"
-          onClick={onViewList}
-          className={cn(
-            "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            viewMode === "list"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="List view"
-          aria-pressed={viewMode === "list"}
-        >
-          <List className="h-3.5 w-3.5" />
-        </button>
-        <button
-          type="button"
-          onClick={onViewGrid}
-          className={cn(
-            "h-7 w-7 rounded-md flex items-center justify-center transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-            viewMode === "grid"
-              ? "bg-primary text-primary-foreground"
-              : "text-muted-foreground hover:text-foreground",
-          )}
-          aria-label="Grid view"
-          aria-pressed={viewMode === "grid"}
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-        </button>
-      </div>
+      <ViewToggle
+        value={viewMode}
+        options={[
+          { value: "list", icon: List, label: "List view" },
+          { value: "grid", icon: LayoutGrid, label: "Grid view" },
+        ]}
+        onChange={(next) => (next === "list" ? onViewList() : onViewGrid())}
+      />
 
       {canManageDocs && (
         <Button variant="outline" size="sm" className="gap-1.5" onClick={onOpenLetterGen} aria-label="Generate Letter">

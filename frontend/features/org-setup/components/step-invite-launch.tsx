@@ -178,7 +178,7 @@ export function StepInviteLaunch({
   }, [phase]);
 
   if (phase === "generating") {
-    return <StepGeneration data={data} onBackToProducts={onBack} />;
+    return <StepGeneration data={data} onBackToProducts={() => setPhase("form")} />;
   }
 
   const isPending = phase === "pending";
@@ -251,7 +251,7 @@ export function StepInviteLaunch({
       </div>
 
       <p className="text-xs text-muted-foreground">
-        Members get access to every module you selected. Org Admins can access all
+        Members get access to every available module. Org Admins can access all
         enabled modules and manage organization settings — assign that role deliberately.
         You can adjust per-person access below.
       </p>

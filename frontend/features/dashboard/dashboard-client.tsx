@@ -30,16 +30,11 @@ import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { useHydrated } from "@/hooks/common/use-hydrated";
-import { QuickActions } from "@/features/dashboard/quick-actions";
 import { FocusStrip } from "@/features/dashboard/focus-strip";
-import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
-import {
-  ModuleSetupBanners,
-  useModuleSetupBannersPending,
-} from "@/features/dashboard/module-setup-banners";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
 import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
 import { DashboardDeferredBody } from "./dashboard-deferred-body";
+import { DashboardPageSkeleton } from "./dashboard-page-skeleton";
 import {
   HOME_ACCESS_DEADLINE_MS,
   shouldRenderAccessUnavailable,
@@ -75,7 +70,6 @@ export function DashboardClient({
   const { data: session } = useSession();
   const firstName = getFirstName(session);
   const access = useDashboardAccess();
-  const setupBannersPending = useModuleSetupBannersPending();
   const accessDeadlineElapsed = useSettleDeadline(HOME_ACCESS_DEADLINE_MS);
   const { hrEnabled, canViewExecutive } = access;
 
@@ -124,26 +118,9 @@ export function DashboardClient({
       accessLoading: access.accessLoading,
       accessDeadlineElapsed,
       mounted: hydrated,
-      setupBannersPending,
     })
   ) {
-    return (
-      <PageWrapper title={pageTitle} subtitle="Loading your organization…">
-        <div
-          className="flex flex-1 min-h-0 flex-col gap-4"
-          role="status"
-          aria-live="polite"
-          aria-label="Loading dashboard"
-        >
-          <StatCardGridSkeleton cols={4} />
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <WidgetSkeleton rows={4} />
-            <WidgetSkeleton rows={3} />
-            <WidgetSkeleton rows={4} />
-          </div>
-        </div>
-      </PageWrapper>
-    );
+    return <DashboardPageSkeleton title={pageTitle} />;
   }
 
   if (
@@ -215,14 +192,6 @@ export function DashboardClient({
                     />
                   ))}
                 </StatCardGrid>
-                {/*
-                A stats section can degrade on its own — `settleSection` hands
-                back `null` for a query that rejected OR merely blew the 2.5 s
-                deadline — while the request itself is a perfectly good 200. That
-                lands in neither the `error` nor the `!stats` branch above, so
-                without this strip a failed section is silent and there is
-                nothing to retry with.
-              */}
                 {statCards.some((stat) => stat.unavailable) && (
                   <div
                     role="status"
@@ -253,13 +222,7 @@ export function DashboardClient({
             ) : null}
           </PageState>
 
-          <motion.div variants={fadeUp} initial="hidden" animate="visible">
-            <QuickActions />
-          </motion.div>
-
           <FocusStrip access={access} />
-
-          <ModuleSetupBanners />
 
           {canViewExecutive && (
             <motion.div variants={fadeUp} initial="hidden" animate="visible">

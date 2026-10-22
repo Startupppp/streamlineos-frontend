@@ -10,8 +10,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
 import { DensityToggle } from "@/components/renderer/density-toggle";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import type { DensityMode } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
@@ -33,13 +37,6 @@ export interface DealsFilterBarProps {
   onExport: () => void;
 }
 
-/**
- * The filters the deals surface has, which is not something a layout can say.
- *
- * Density sits here rather than inside the list because the toggle belongs in
- * the toolbar with the other display controls, and it is offered only for the
- * table: a board has rows of its own making.
- */
 export function DealsFilterBar({
   search,
   onSearchChange,
@@ -67,7 +64,10 @@ export function DealsFilterBar({
       />
 
       <Select value={stage} onValueChange={onStageChange}>
-        <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")} aria-label="Stage">
+        <SelectTrigger
+          className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}
+          aria-label="Stage"
+        >
           <SelectValue placeholder="All stages" />
         </SelectTrigger>
         <SelectContent>
@@ -82,7 +82,10 @@ export function DealsFilterBar({
 
       {assigneeOptions.length > 0 ? (
         <Select value={assignee} onValueChange={onAssigneeChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")} aria-label="Owner">
+          <SelectTrigger
+            className={cn(FILTER_SELECT_TRIGGER, "w-[140px]")}
+            aria-label="Owner"
+          >
             <SelectValue placeholder="All assignees" />
           </SelectTrigger>
           <SelectContent>
@@ -96,28 +99,19 @@ export function DealsFilterBar({
         </Select>
       ) : null}
 
-      {view === "table" ? <DensityToggle density={density} onChange={onDensityChange} /> : null}
+      {view === "table" ? (
+        <DensityToggle density={density} onChange={onDensityChange} />
+      ) : null}
 
-      <div className="ml-auto flex shrink-0 items-center gap-px rounded-md border border-border">
-        <Button
-          variant={view === "table" ? "secondary" : "ghost"}
-          size="icon"
-          className="h-9 w-9 rounded-r-none border-r border-border"
-          onClick={onViewTable}
-          aria-label="Table view"
-        >
-          <TableIcon className="h-3.5 w-3.5" />
-        </Button>
-        <Button
-          variant={view === "kanban" ? "secondary" : "ghost"}
-          size="icon"
-          className="h-9 w-9 rounded-l-none"
-          onClick={onViewKanban}
-          aria-label="Kanban view"
-        >
-          <LayoutGrid className="h-3.5 w-3.5" />
-        </Button>
-      </div>
+      <ViewToggle
+        value={view}
+        options={[
+          { value: "table", icon: TableIcon, label: "Table view" },
+          { value: "kanban", icon: LayoutGrid, label: "Kanban view" },
+        ]}
+        onChange={(next) => (next === "table" ? onViewTable() : onViewKanban())}
+        className="ml-auto"
+      />
 
       <Button
         variant="outline"

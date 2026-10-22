@@ -30,6 +30,7 @@ import {
 } from "@/hooks/api/kb/spaces";
 import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
 import { LayoutGrid, LayoutList } from "lucide-react";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import {
   KbLayoutGridIcon,
   KbPlusIcon,
@@ -48,6 +49,10 @@ const ARCHIVED_FILTER_VALUES = ["all", "active", "archived"] as const;
 type ArchivedFilter = (typeof ARCHIVED_FILTER_VALUES)[number];
 
 const VIEW_VALUES = ["card", "list"] as const;
+const SPACE_VIEW_OPTIONS = [
+  { value: "card", icon: LayoutGrid, label: "Card view" },
+  { value: "list", icon: LayoutList, label: "List view" },
+] as const;
 
 const LIST_LIMIT = 30;
 
@@ -256,12 +261,8 @@ export default function SpacesPage() {
     });
   }
 
-  function handleViewCard() {
-    updateFilters({ view: null, cursor: cursor ?? null });
-  }
-
-  function handleViewList() {
-    updateFilters({ view: "list", cursor: cursor ?? null });
+  function handleViewChange(next: (typeof VIEW_VALUES)[number]) {
+    updateFilters({ view: next === "card" ? null : "list", cursor: cursor ?? null });
   }
 
   const hasActiveFilters =
@@ -332,30 +333,12 @@ export default function SpacesPage() {
             </SelectContent>
           </Select>
 
-          <div className="ml-auto flex items-center gap-1">
-            <Button
-              type="button"
-              variant={view === "card" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-9 w-9"
-              aria-label="Card view"
-              aria-pressed={view === "card"}
-              onClick={handleViewCard}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </Button>
-            <Button
-              type="button"
-              variant={view === "list" ? "secondary" : "ghost"}
-              size="icon"
-              className="h-9 w-9"
-              aria-label="List view"
-              aria-pressed={view === "list"}
-              onClick={handleViewList}
-            >
-              <LayoutList className="h-4 w-4" />
-            </Button>
-          </div>
+          <ViewToggle
+            value={view}
+            options={[...SPACE_VIEW_OPTIONS]}
+            onChange={handleViewChange}
+            className="ml-auto"
+          />
         </div>
 
         <PageState

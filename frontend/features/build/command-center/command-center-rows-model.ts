@@ -3,11 +3,9 @@ import { cn } from "@/lib/utils";
 import { isPast, isToday, parseISO } from "date-fns";
 import type { MyWorkItem } from "@/types/projects/my-work";
 import type { ProjectListItem } from "@/types/projects";
-import { PROJECT_HEALTH_LABEL as SHARED_HEALTH_LABEL, projectHealthLabel } from "@/lib/project-health";
+import { PROJECT_HEALTH_LABEL as SHARED_HEALTH_LABEL } from "@/lib/project-health";
 
 export const PROJECT_HEALTH_LABEL = SHARED_HEALTH_LABEL;
-export { projectHealthLabel };
-
 
 const PROJECT_HEALTH_TONE: Record<ProjectListItem["health"], StatusTone> = {
   on_track: "success",

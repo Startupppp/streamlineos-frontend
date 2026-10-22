@@ -155,6 +155,6 @@ describe("every Home widget is individually contained", () => {
     expect(payrollWidget).not.toContain("useCommandCenter");
     expect(payrollWidget).not.toContain("/payroll/runs");
     expect(payrollWidget).toContain("PayrollSelfCard");
-    expect(payrollWidget).toContain("/me/pay");
+    expect(payrollWidget).toContain("/me/money?section=pay");
   });
 });

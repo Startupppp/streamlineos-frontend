@@ -1,15 +1,24 @@
 import { z } from "zod";
 
-export const onboardingStatusListContract = z.array(
-  z.object({
-    userId: z.string().nullable(),
-    userName: z.string(),
-    totalTasks: z.number().int(),
-    completedTasks: z.number().int(),
-    percentComplete: z.number().int(),
-    lastCompletedAt: z.string().nullable(),
+const onboardingStatusContract = z.object({
+  userId: z.string().nullable(),
+  userName: z.string(),
+  totalTasks: z.number().int(),
+  completedTasks: z.number().int(),
+  percentComplete: z.number().int(),
+  lastCompletedAt: z.string().nullable(),
+});
+
+export const onboardingUserStatusContract = onboardingStatusContract.nullable();
+export const initiatedOnboardingUserIdsContract = z.array(z.string());
+export const onboardingStatusPageContract = z.object({
+  data: z.array(onboardingStatusContract),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
   }),
-);
+});
 
 const onboardingTaskRowSchema = z.object({
   id: z.number().int(),
@@ -35,7 +44,9 @@ const onboardingTaskRowSchema = z.object({
 
 export const onboardingTaskListContract = z.array(onboardingTaskRowSchema);
 
-export const completeOnboardingTaskContract = z.object({ success: z.literal(true) });
+export const completeOnboardingTaskContract = z.object({
+  success: z.literal(true),
+});
 
 export const initiateOnboardingContract = z.object({
   success: z.literal(true),
@@ -72,7 +83,9 @@ const onboardingTemplateRowSchema = z.object({
   steps: z.array(onboardingTemplateStepSchema),
 });
 
-export const onboardingTemplateListContract = z.array(onboardingTemplateRowSchema);
+export const onboardingTemplateListContract = z.array(
+  onboardingTemplateRowSchema,
+);
 
 export const createOnboardingTemplateContract = z.object({
   success: z.literal(true),
@@ -91,7 +104,13 @@ const onboardingDocListItemSchema = z.object({
   fileSize: z.number().int().nullable(),
   mimeType: z.string().nullable(),
   version: z.number().int(),
-  status: z.enum(["PENDING", "SUBMITTED", "APPROVED", "REJECTED", "RE_UPLOAD_REQUESTED"]),
+  status: z.enum([
+    "PENDING",
+    "SUBMITTED",
+    "APPROVED",
+    "REJECTED",
+    "RE_UPLOAD_REQUESTED",
+  ]),
   reviewedBy: z.string().nullable(),
   reviewedAt: z.string().nullable(),
   remarks: z.string().nullable(),

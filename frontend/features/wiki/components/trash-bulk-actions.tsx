@@ -122,11 +122,10 @@ export function TrashBulkActions({
           {canPurge && (
             <Button
               type="button"
-              variant="outline"
+              variant="destructive"
               size="sm"
               disabled={purging}
               onClick={onPurge}
-              className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
             >
               <KbTrash2Icon className="mr-1.5 h-3.5 w-3.5" />
               Purge {selectedCount}
@@ -140,11 +139,10 @@ export function TrashBulkActions({
         selectedCount === 0 && (
           <Button
             type="button"
-            variant="outline"
+            variant="destructive"
             size="sm"
             onClick={onEmpty}
             disabled={emptying}
-            className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive"
           >
             Empty Trash
           </Button>

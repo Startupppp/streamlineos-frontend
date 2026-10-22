@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -19,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { OnboardingInitiateSheet } from "./onboarding-initiate-sheet";
 import { ResendInviteButton } from "@/components/hr/resend-invite-button";
 import { CopyInviteLinkButton } from "@/components/hr/copy-invite-link-button";
-import { useOnboardingStatus, type OnboardingStatus } from "@/hooks/api/hr/onboarding";
+import { useOnboardingStatusPage, type OnboardingStatus } from "@/hooks/api/hr/onboarding";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
 
@@ -40,7 +41,8 @@ function getRowStatus(row: OnboardingStatus): RowStatus {
 }
 
 export function OnboardingList() {
-  const { data, isLoading, isError, error, refetch } = useOnboardingStatus();
+  const pager = useCursorPager();
+  const { data, isLoading, isFetching, isError, error, refetch } = useOnboardingStatusPage(pager.cursor);
   const [initiateOpen, setInitiateOpen] = useState(false);
   const canManage = useCan("hr:onboarding:manage");
   const pageState = usePageState({ permission: "hr:onboarding:manage", isLoading, isError, error });
@@ -53,7 +55,7 @@ export function OnboardingList() {
     setInitiateOpen(true);
   }
 
-  const rows = data ?? [];
+  const rows = data?.data ?? [];
 
   return (
     <PageState
@@ -85,8 +87,11 @@ export function OnboardingList() {
       {rows.length === 0 ? (
         <EmptyState
           illustration={<EmptyPersonIllustration className="h-24 w-24" />}
-          title="No onboardings in progress"
-          description="Use the button above to start onboarding for a new hire."
+          title={pager.hasPrevious ? "No onboardings on this page" : "No onboardings in progress"}
+          description={pager.hasPrevious
+            ? "The onboarding list may have changed. Go back to continue browsing."
+            : "Use the button above to start onboarding for a new hire."}
+          action={pager.hasPrevious ? { label: "Previous page", onClick: pager.goPrevious } : undefined}
           compact
         />
       ) : (
@@ -199,6 +204,19 @@ export function OnboardingList() {
           })}
         </div>
       )}
+
+      {rows.length > 0 ? (
+        <TablePagination
+          mode="cursor"
+          rowCount={rows.length}
+          pageNumber={pager.pageNumber}
+          hasPrevious={pager.hasPrevious}
+          hasMore={data?.pagination.hasMore ?? false}
+          onPrevious={pager.goPrevious}
+          onNext={() => pager.goNext(data?.pagination.nextCursor)}
+          disabled={isFetching}
+        />
+      ) : null}
 
       <OnboardingInitiateSheet open={initiateOpen} onOpenChange={setInitiateOpen} />
     </div>

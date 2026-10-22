@@ -18,7 +18,7 @@ jest.mock("sonner", () => ({
 jest.mock("./step-generation", () => ({
   StepGeneration: ({ onBackToProducts }: { onBackToProducts: () => void }) => (
     <div data-testid="generation">
-      <button onClick={onBackToProducts}>Return to products</button>
+      <button onClick={onBackToProducts}>Return to invitations</button>
     </div>
   ),
 }));
@@ -220,7 +220,7 @@ describe("People step product access", () => {
     expect(screen.getByText("Access: all enabled products as Org Admin")).toBeInTheDocument();
   });
 
-  it("returns from a rejected launch to product choices without changing invitees", async () => {
+  it("returns from a rejected launch to invitations without changing invitees", async () => {
     const onBack = jest.fn();
     const onChangeInvitees = jest.fn();
     const invitees: Invitee[] = [
@@ -240,9 +240,10 @@ describe("People step product access", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Build my organization" }));
     await waitFor(() => expect(screen.getByTestId("generation")).toBeInTheDocument());
-    fireEvent.click(screen.getByRole("button", { name: "Return to products" }));
+    fireEvent.click(screen.getByRole("button", { name: "Return to invitations" }));
 
-    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(onBack).not.toHaveBeenCalled();
+    expect(screen.getByPlaceholderText("teammate@company.com")).toBeInTheDocument();
     expect(onChangeInvitees).not.toHaveBeenCalled();
   });
 

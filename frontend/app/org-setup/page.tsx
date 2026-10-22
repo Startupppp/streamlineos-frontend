@@ -2,10 +2,9 @@
 
 export const dynamic = "force-dynamic";
 
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -16,19 +15,13 @@ import {
   useOrgSetupDraftSaveMutation,
 } from "@/hooks/api/org-setup";
 import {
-  STEP_TITLES,
   DEFAULT_DATA,
   getStepSequence,
-  resolveStepIndex,
   type StepId,
 } from "@/features/org-setup/lib/constants";
 import {
   loadDraft,
   saveDraft,
-  loadStep,
-  saveStep,
-  clampStep,
-  reachableStep,
   hasCompletionMarker,
   getCompletionDestination,
   type SyncStatus,
@@ -39,8 +32,9 @@ import {
 } from "@/features/org-setup/lib/wizard-data-schema";
 import { OrgSetupShell } from "@/features/org-setup/components/org-setup-shell";
 import { StepWorkspace } from "@/features/org-setup/components/step-workspace";
-import { StepProducts } from "@/features/org-setup/components/step-products";
 import { StepInviteLaunch } from "@/features/org-setup/components/step-invite-launch";
+import { OrgSetupLoading } from "@/features/org-setup/components/org-setup-loading";
+import { ORG_MODULE_KEYS } from "@/hooks/api/org-setup-schema";
 import { ArchivedOrgsRestore } from "@/components/organization/archived-orgs-restore";
 import {
   useMyPendingInvitations,
@@ -109,25 +103,30 @@ function PendingInvitationsNotice({ items }: { items: PendingInvitationItem[] })
   );
 }
 
+const sequence = getStepSequence();
+
+function prepareDraftForSimplifiedSetup(draft: WizardData): WizardData {
+  return {
+    ...draft,
+    companyName: "",
+    goals: [],
+    installedApps: [],
+    region: undefined,
+    modules: [...ORG_MODULE_KEYS],
+    // The invitation step remains available, so keep saved invitees for review.
+    moduleAnswers: {},
+  };
+}
+
 export default function OrgSetupPage() {
   const { data: session } = useSession();
   const userId = session?.user?.id ?? "";
 
-  const [step, setStep] = useState(1);
+  const [stepIndex, setStepIndex] = useState(0);
+  const currentStepId: StepId = sequence[stepIndex] ?? "workspace";
   const [mounted, setMounted] = useState(false);
   const [createOwnOrg, setCreateOwnOrg] = useState(false);
-  const [direction, setDirection] = useState(1);
   const [data, setData] = useState<WizardData>({ ...DEFAULT_DATA });
-
-  useEffect(() => {
-    if (!mounted) return;
-    const sessionName = session?.user?.name?.trim();
-    if (!sessionName) return;
-    setData((current) =>
-      current.fullName.trim() ? current : { ...current, fullName: sessionName },
-    );
-  }, [mounted, session?.user?.name]);
-  const [saveState, setSaveState] = useState<"idle" | "saved">("idle");
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("synced");
   const mountedOnceRef = useRef(false);
   const draftRevisionRef = useRef(0);
@@ -135,7 +134,6 @@ export default function OrgSetupPage() {
   const draftSaveChainRef = useRef<Promise<void>>(Promise.resolve());
   const latestDraftRef = useRef<{ data: WizardData; stepId: StepId } | null>(null);
   const savedDraftRef = useRef<{ data: WizardData; stepId: StepId } | null>(null);
-  const navigationRef = useRef(0);
 
   const { data: pendingInvitations, isPending: isInvitationsPending } =
     useMyPendingInvitations(Boolean(userId));
@@ -145,14 +143,6 @@ export default function OrgSetupPage() {
   const { data: serverDraft, isFetched: isServerDraftFetched } =
     useOrgSetupDraftQuery(Boolean(userId));
   const { mutateAsync: saveOrgSetupDraft } = useOrgSetupDraftSaveMutation();
-
-  const sequence = useMemo(() => getStepSequence(), []);
-  const totalSteps = sequence.length;
-  const currentStepId: StepId = sequence[step - 1] ?? "welcome";
-
-  const markDraftSaved = useCallback(() => {
-    setSaveState("saved");
-  }, []);
 
   const persistLatestDraft = useCallback((): Promise<void> => {
     const target = latestDraftRef.current;
@@ -189,18 +179,6 @@ export default function OrgSetupPage() {
     return save;
   }, [saveOrgSetupDraft, userId]);
 
-  const saveServerDraft = useCallback(
-    (nextData: WizardData, nextStepId: StepId): Promise<void> => {
-      if (draftSaveTimerRef.current) {
-        clearTimeout(draftSaveTimerRef.current);
-        draftSaveTimerRef.current = null;
-      }
-      latestDraftRef.current = { data: nextData, stepId: nextStepId };
-      return persistLatestDraft();
-    },
-    [persistLatestDraft],
-  );
-
   const retryDraftSave = useCallback(() => {
     if (draftSaveTimerRef.current) {
       clearTimeout(draftSaveTimerRef.current);
@@ -230,55 +208,8 @@ export default function OrgSetupPage() {
         scheduleServerDraftSave(next, currentStepId);
         return next;
       });
-      markDraftSaved();
     },
-    [currentStepId, markDraftSaved, scheduleServerDraftSave, userId],
-  );
-
-  const goNext = useCallback(async () => {
-    const nextStep = Math.min(step + 1, totalSteps);
-    const nextStepId = sequence[nextStep - 1] ?? currentStepId;
-    navigationRef.current += 1;
-    const navigation = navigationRef.current;
-    try {
-      await saveServerDraft(data, nextStepId);
-    } catch (error) {
-      if (navigation === navigationRef.current)
-        toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`);
-      return;
-    }
-    if (navigation !== navigationRef.current) return;
-    setDirection(1);
-    setStep(nextStep);
-    markDraftSaved();
-  }, [currentStepId, data, markDraftSaved, saveServerDraft, sequence, step, totalSteps]);
-
-  const leaveToStep = useCallback(
-    (nextStep: number) => {
-      const nextStepId = sequence[nextStep - 1] ?? currentStepId;
-      navigationRef.current += 1;
-      const nav = navigationRef.current;
-      setDirection(-1);
-      setStep(nextStep);
-      saveServerDraft(data, nextStepId).catch((error: unknown) => {
-        if (nav !== navigationRef.current) return;
-        toast.error(`We couldn't save your setup. ${getErrorMessage(error)}`, {
-          action: { label: "Retry", onClick: retryDraftSave },
-        });
-      });
-    },
-    [currentStepId, data, retryDraftSave, saveServerDraft, sequence],
-  );
-
-  const goBack = useCallback(() => {
-    leaveToStep(Math.max(step - 1, 1));
-  }, [leaveToStep, step]);
-
-  const handleStepSelect = useCallback(
-    (index: number) => {
-      leaveToStep(index + 1);
-    },
-    [leaveToStep],
+    [currentStepId, scheduleServerDraftSave, userId],
   );
 
   useEffect(() => {
@@ -318,26 +249,14 @@ export default function OrgSetupPage() {
     const authoritativeDraft = parsedServerDraft ?? legacyServerDraft;
     const sessionName = session?.user?.name?.trim();
     const baseDraft = authoritativeDraft ?? savedDraft;
-    const hydrated =
+    const hydrated = prepareDraftForSimplifiedSetup(
       sessionName && !baseDraft.fullName.trim()
         ? { ...baseDraft, fullName: sessionName }
-        : baseDraft;
-    const savedSequence = getStepSequence();
-    const serverStepId =
-      rawServerData && typeof rawServerData.__currentStep === "string"
-        ? rawServerData.__currentStep
-        : serverSession?.currentStep;
-    const serverStep = resolveStepIndex(serverStepId, savedSequence);
-    const restoredStep = reachableStep(
-      clampStep(serverStep || loadStep(userId), savedSequence.length),
-      hydrated,
-      savedSequence,
+        : baseDraft,
     );
     draftRevisionRef.current = serverDraft?.revision ?? 0;
     setData(hydrated);
     saveDraft(hydrated, userId);
-    setStep(restoredStep);
-    saveStep(restoredStep, userId);
     setMounted(true);
   }, [
     isServerDraftFetched,
@@ -355,17 +274,6 @@ export default function OrgSetupPage() {
     },
     [],
   );
-
-  useEffect(() => {
-    if (!mounted) return;
-    saveStep(step, userId);
-  }, [step, mounted, userId]);
-
-  useEffect(() => {
-    if (saveState !== "saved") return;
-    const timeout = setTimeout(() => setSaveState("idle"), 4000);
-    return () => clearTimeout(timeout);
-  }, [saveState]);
 
   const handleCreateOwnOrg = useCallback(() => setCreateOwnOrg(true), []);
   const signOutMutation = useSignOut();
@@ -403,45 +311,26 @@ export default function OrgSetupPage() {
   }
 
   if (!mounted)
-    return (
-      <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden">
-        <div className="mx-auto flex w-full min-w-0 max-w-lg flex-1 flex-col gap-4 px-4 py-6 sm:px-8 md:max-w-none md:w-1/2 md:px-8">
-          <Skeleton className="h-8 w-full md:hidden" />
-          <Skeleton className="hidden h-6 w-48 md:block" />
-          <Skeleton className="h-8 w-56" />
-          <Skeleton className="h-4 w-72 max-w-full" />
-          <Skeleton className="h-64 w-full rounded-xl" />
-        </div>
-        <div className="hidden h-full w-1/2 shrink-0 flex-col gap-6 border-l border-border/60 p-8 md:flex lg:p-10">
-          <Skeleton className="h-8 w-40" />
-          <Skeleton className="h-10 w-72" />
-          <Skeleton className="h-4 w-64" />
-          <Skeleton className="mt-4 h-72 w-full max-w-[440px] rounded-2xl" />
-        </div>
-      </div>
-    );
-
-  const stepTitle = STEP_TITLES[currentStepId];
+    return <OrgSetupLoading />;
 
   return (
     <OrgSetupShell
       sequence={sequence}
-      currentIndex={step - 1}
-      title={stepTitle}
-      direction={direction}
-      saveState={saveState}
+      currentIndex={stepIndex}
+      title={stepIndex === 0 ? "Workspace" : "Invite your team"}
+      direction={1}
       syncStatus={syncStatus}
       data={data}
-      onStepSelect={handleStepSelect}
       onRetrySave={retryDraftSave}
     >
-      {currentStepId === "workspace" && (
+      {stepIndex === 0 ? (
         <StepWorkspace
           data={data}
           patch={patch}
-          onBack={goBack}
-          onNext={goNext}
-          isFirstStep
+          onNext={() => {
+            setStepIndex(1);
+            scheduleServerDraftSave(data, "invite");
+          }}
           restoreSlot={
             <>
               <ArchivedOrgsRestore />
@@ -449,19 +338,13 @@ export default function OrgSetupPage() {
             </>
           }
         />
-      )}
-      {currentStepId === "products" && (
-        <StepProducts
-          data={data}
-          patch={patch}
-          onBack={goBack}
-          onNext={goNext}
-        />
-      )}
-      {currentStepId === "invite" && (
+      ) : (
         <StepInviteLaunch
           data={data}
-          onBack={goBack}
+          onBack={() => {
+            setStepIndex(0);
+            scheduleServerDraftSave(data, "workspace");
+          }}
           onChangeInvitees={(invitees) => patch({ invitees })}
         />
       )}

@@ -159,6 +159,32 @@ describe("useHomeCustomisation — persistence", () => {
     expect(result.current.isHidden("Payroll")).toBe(false);
   });
 
+  it("persists a resized layout and keeps wide sizes when the screen is stacked", () => {
+    const { result } = renderHook(() => useHomeCustomisation());
+    act(() => {
+      result.current.applyLayout(
+        [
+          { id: "Payroll", x: 0, y: 0, w: 8, h: 5 },
+          { id: "Alerts", x: 8, y: 0, w: 4, h: 5 },
+        ],
+        false,
+      );
+    });
+    expect(result.current.state.widgetOrder.slice(0, 2)).toEqual(["Payroll", "Alerts"]);
+    expect(result.current.state.placements).toEqual([
+      { id: "Payroll", w: 8, h: 5 },
+      { id: "Alerts", w: 4, h: 5 },
+    ]);
+    act(() => {
+      result.current.applyLayout([{ id: "Alerts", x: 0, y: 0, w: 1, h: 5 }], true);
+    });
+    expect(result.current.state.widgetOrder[0]).toBe("Alerts");
+    expect(result.current.state.placements).toEqual([
+      { id: "Payroll", w: 8, h: 5 },
+      { id: "Alerts", w: 4, h: 5 },
+    ]);
+  });
+
   it("reset restores the default state and clears stored state", () => {
     const { result } = renderHook(() => useHomeCustomisation());
     act(() => {

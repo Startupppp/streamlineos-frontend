@@ -4,6 +4,7 @@ import { DashboardClient } from "@/features/dashboard/dashboard-client";
 import { prefetchDashboardStats } from "@/lib/prefetch/dashboard";
 import { ExpensesWidget } from "@/features/hr/expenses/expenses-widget";
 import { PublicDocumentsCard } from "@/features/hr/document-review/public-documents-card";
+import DashboardLoading from "./loading";
 
 async function DashboardHydrated() {
   const state = await prefetchDashboardStats();
@@ -19,7 +20,7 @@ async function DashboardHydrated() {
 
 export default function DashboardPage() {
   return (
-    <Suspense>
+    <Suspense fallback={<DashboardLoading />}>
       <DashboardHydrated />
     </Suspense>
   );

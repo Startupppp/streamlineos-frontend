@@ -1,6 +1,5 @@
 import {
   HOME_ACCESS_DEADLINE_MS,
-  isSetupBannerSlotPending,
   shouldRenderAccessUnavailable,
   shouldRenderDashboardLoading,
 } from "./dashboard-hydration";
@@ -12,7 +11,6 @@ describe("shouldRenderDashboardLoading", () => {
         accessLoading: false,
         accessDeadlineElapsed: false,
         mounted: false,
-        setupBannersPending: false,
       }),
     ).toBe(true);
   });
@@ -23,7 +21,6 @@ describe("shouldRenderDashboardLoading", () => {
         accessLoading: false,
         accessDeadlineElapsed: false,
         mounted: true,
-        setupBannersPending: false,
       }),
     ).toBe(false);
   });
@@ -34,18 +31,6 @@ describe("shouldRenderDashboardLoading", () => {
         accessLoading: true,
         accessDeadlineElapsed: false,
         mounted: true,
-        setupBannersPending: false,
-      }),
-    ).toBe(true);
-  });
-
-  it("waits for the setup banners, which are inserted above the widget grid", () => {
-    expect(
-      shouldRenderDashboardLoading({
-        accessLoading: false,
-        accessDeadlineElapsed: false,
-        mounted: true,
-        setupBannersPending: true,
       }),
     ).toBe(true);
   });
@@ -56,7 +41,6 @@ describe("shouldRenderDashboardLoading", () => {
         accessLoading: true,
         accessDeadlineElapsed: false,
         mounted: true,
-        setupBannersPending: false,
       }),
     ).toBe(true);
   });
@@ -67,7 +51,6 @@ describe("shouldRenderDashboardLoading", () => {
         accessLoading: true,
         accessDeadlineElapsed: true,
         mounted: true,
-        setupBannersPending: false,
       }),
     ).toBe(false);
   });
@@ -78,7 +61,6 @@ describe("shouldRenderDashboardLoading", () => {
         accessLoading: true,
         accessDeadlineElapsed: true,
         mounted: false,
-        setupBannersPending: false,
       }),
     ).toBe(true);
   });
@@ -125,48 +107,6 @@ describe("shouldRenderAccessUnavailable", () => {
         accessLoading: false,
         accessResolved: false,
         accessDeadlineElapsed: true,
-      }),
-    ).toBe(false);
-  });
-});
-
-describe("isSetupBannerSlotPending", () => {
-  it("holds the page while the checklist read is in flight", () => {
-    expect(
-      isSetupBannerSlotPending({
-        denied: false,
-        isLoading: true,
-        deadlineElapsed: false,
-      }),
-    ).toBe(true);
-  });
-
-  it("releases the page once the read answers", () => {
-    expect(
-      isSetupBannerSlotPending({
-        denied: false,
-        isLoading: false,
-        deadlineElapsed: false,
-      }),
-    ).toBe(false);
-  });
-
-  it("never holds the page on a read the viewer cannot make", () => {
-    expect(
-      isSetupBannerSlotPending({
-        denied: true,
-        isLoading: true,
-        deadlineElapsed: false,
-      }),
-    ).toBe(false);
-  });
-
-  it("hands the page back when the deadline passes, so a hung read cannot hold it", () => {
-    expect(
-      isSetupBannerSlotPending({
-        denied: false,
-        isLoading: true,
-        deadlineElapsed: true,
       }),
     ).toBe(false);
   });

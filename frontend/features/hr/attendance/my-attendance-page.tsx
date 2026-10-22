@@ -24,7 +24,7 @@ import { useT } from "@/lib/i18n/i18n";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 const MY_ATTENDANCE_TABS = ["today", "history"] as const;
-const WFH_REQUEST_HREF = "/me/time-off?tab=wfh&wfh=1";
+const WFH_REQUEST_HREF = "/me/workday?section=time-off&tab=wfh&wfh=1";
 
 export function MyAttendancePage() {
   const t = useT();

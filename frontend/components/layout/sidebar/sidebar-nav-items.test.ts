@@ -39,9 +39,9 @@ describe("Home employee navigation", () => {
     ).flatMap((group) => flattenNavRoutes(group.routes));
 
     expect(homeRoutes.map((route) => route.href)).toContain("/dashboard");
-    expect(homeRoutes.map((route) => route.href)).toContain("/me/documents");
-    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/onboarding");
-    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/time-off");
+    expect(homeRoutes.map((route) => route.href)).toContain("/me/records");
+    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/workday");
+    expect(homeRoutes.map((route) => route.href)).not.toContain("/me/money");
     expect(homeRoutes.map((route) => route.href)).not.toContain("/directory/workers");
     expect(knowledgeRoutes.map((route) => route.href)).toEqual(
       expect.arrayContaining(["/knowledge/chat", "/knowledge/wiki"]),
@@ -64,7 +64,7 @@ describe("Home employee navigation", () => {
 
     expect(hrefs).toEqual(
       expect.arrayContaining([
-        "/me/documents",
+        "/me/records",
         "/dashboard",
       ]),
     );
@@ -75,7 +75,7 @@ describe("Home employee navigation", () => {
     expect(hrefs).not.toContain("/me/onboarding");
     expect(hrefs).not.toContain("/me/recruitment");
     expect(hrefs).not.toContain("/hr/announcements");
-    expect(routes.find((route) => route.href === "/me/documents")?.module).toBeUndefined();
+    expect(routes.find((route) => route.href === "/me/records")?.module).toBeUndefined();
   });
 
   it("shows HR and payroll self-service in Home when those modules are enabled", () => {
@@ -90,13 +90,10 @@ describe("Home employee navigation", () => {
 
     expect(hrefs).toEqual(
       expect.arrayContaining([
-        "/me/time-off",
-        "/me/attendance",
-        "/me/expenses",
-        "/me/pay",
-        "/me/documents",
-        "/me/onboarding",
-        "/me/recruitment",
+        "/me/workday",
+        "/me/money",
+        "/me/records",
+        "/me/career",
       ]),
     );
     expect(hrefs).not.toContain("/recruitment/interviews");
@@ -105,13 +102,10 @@ describe("Home employee navigation", () => {
   });
 
   it("keeps employee self-service routes in the Home product", () => {
-    expect(getProductFromPathname("/me/time-off")).toBe("home");
-    expect(getProductFromPathname("/me/attendance")).toBe("home");
-    expect(getProductFromPathname("/me/expenses")).toBe("home");
-    expect(getProductFromPathname("/me/pay")).toBe("home");
-    expect(getProductFromPathname("/me/documents")).toBe("home");
-    expect(getProductFromPathname("/me/onboarding")).toBe("home");
-    expect(getProductFromPathname("/me/recruitment")).toBe("home");
+    expect(getProductFromPathname("/me/workday")).toBe("home");
+    expect(getProductFromPathname("/me/money")).toBe("home");
+    expect(getProductFromPathname("/me/records")).toBe("home");
+    expect(getProductFromPathname("/me/career")).toBe("home");
     expect(getProductFromPathname("/directory")).toBe("home");
     expect(getProductFromPathname("/directory/person-1")).toBe("home");
     expect(getProductFromPathname("/directory/workers")).toBe("home");

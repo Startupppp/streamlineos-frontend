@@ -24,7 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
+import { WikiTableRowsSkeleton } from "./wiki-collection-skeletons";
 import { useCan } from "@/hooks/api/access";
 import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb/pages";
 import {
@@ -57,16 +57,6 @@ function dateFilterDisplay(value: string | null): string {
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const date = parseISO(value);
   return isValid(date) ? format(date, "yyyy-MM-dd") : "";
-}
-
-function TrashSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full rounded-md" />
-      ))}
-    </div>
-  );
 }
 
 export default function TrashPage() {
@@ -363,7 +353,7 @@ export default function TrashPage() {
 
           <PageState
             resolution={pageState}
-            loading={<TrashSkeleton />}
+            loading={<WikiTableRowsSkeleton />}
             empty={
               cursorState.hasPrevious ? (
                 <EmptyState

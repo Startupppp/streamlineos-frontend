@@ -7,7 +7,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { Skeleton } from "@/components/ui/skeleton";
+import { WikiTemplatesGridSkeleton } from "./wiki-collection-skeletons";
 import { SearchInput } from "@/components/ui/search-input";
 import { PageTabsToolbar } from "@/components/ui/page-tabs-toolbar";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
@@ -58,19 +58,6 @@ function savedTemplateKey(templateId: number): string {
 
 function starterTemplateKey(template: StarterTemplate): string {
   return `starter:${template.key}`;
-}
-
-function TemplatesSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {Array.from({ length: 12 }).map((_, i) => (
-        <Skeleton
-          key={i}
-          className="h-20 w-full rounded-lg border border-border bg-card"
-        />
-      ))}
-    </div>
-  );
 }
 
 export default function TemplatesPage() {
@@ -325,7 +312,7 @@ export default function TemplatesPage() {
         />
 
         <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <PageState resolution={startersState} loading={<TemplatesSkeleton />}>
+          <PageState resolution={startersState} loading={<WikiTemplatesGridSkeleton />}>
             {filteredStarters.length === 0 && (
               <p className="text-sm text-muted-foreground">
                 No starter templates match these filters.
@@ -356,7 +343,7 @@ export default function TemplatesPage() {
           <PageState
             resolution={savedTemplatesState}
             onRetry={handleRetryTemplates}
-            loading={<TemplatesSkeleton />}
+            loading={<WikiTemplatesGridSkeleton />}
             empty={
               q ? (
                 <EmptyState

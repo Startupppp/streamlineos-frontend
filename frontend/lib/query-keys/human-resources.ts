@@ -16,10 +16,23 @@ export const humanResourcesQueryKeys = {
     attendanceStatus: () => [...base, "hr", "attendanceStatus"] as const,
     attendanceHistory: (params: { cursor?: string; limit: number }) =>
       [...base, "hr", "attendanceHistory", params] as const,
-    leaves: (orgId: string | null | undefined = "", userId: string | null | undefined = "", accessVersion: number | null | undefined = 0, params?: QueryKeyParams) =>
+    leaves: (
+      orgId: string | null | undefined = "",
+      userId: string | null | undefined = "",
+      accessVersion: number | null | undefined = 0,
+      params?: QueryKeyParams,
+    ) =>
       params === undefined
         ? ([...base, "hr", orgId, userId, accessVersion, "leaves"] as const)
-        : ([...base, "hr", orgId, userId, accessVersion, "leaves", params] as const),
+        : ([
+            ...base,
+            "hr",
+            orgId,
+            userId,
+            accessVersion,
+            "leaves",
+            params,
+          ] as const),
     expenses: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "expenses"] as const)
@@ -137,26 +150,33 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "candidateDocuments", candidateId] as const,
     rolloutDocuments: (candidateId: number) =>
       [...base, "hr", "rolloutDocuments", candidateId] as const,
-    leavesTeam: (
-      orgId: string,
-      userId: string,
-      accessVersion: number,
-    ) => [...base, "hr", orgId, userId, accessVersion, "leaves", "team"] as const,
-    leavesThisWeek: (
-      orgId: string,
-      userId: string,
-      accessVersion: number,
-    ) => [...base, "hr", orgId, userId, accessVersion, "leavesThisWeek"] as const,
-    leavesMyRequests: (
-      orgId: string,
-      userId: string,
-      accessVersion: number,
-    ) => [...base, "hr", orgId, userId, accessVersion, "leavesMyRequests"] as const,
+    leavesTeam: (orgId: string, userId: string, accessVersion: number) =>
+      [...base, "hr", orgId, userId, accessVersion, "leaves", "team"] as const,
+    leavesThisWeek: (orgId: string, userId: string, accessVersion: number) =>
+      [...base, "hr", orgId, userId, accessVersion, "leavesThisWeek"] as const,
+    leavesMyRequests: (orgId: string, userId: string, accessVersion: number) =>
+      [
+        ...base,
+        "hr",
+        orgId,
+        userId,
+        accessVersion,
+        "leavesMyRequests",
+      ] as const,
     leavesMyRequestsPages: (
       orgId: string,
       userId: string,
       accessVersion: number,
-    ) => [...base, "hr", orgId, userId, accessVersion, "leavesMyRequests", "pages"] as const,
+    ) =>
+      [
+        ...base,
+        "hr",
+        orgId,
+        userId,
+        accessVersion,
+        "leavesMyRequests",
+        "pages",
+      ] as const,
     leaveAnalytics: (year: number) =>
       [...base, "hr", "leaveAnalytics", year] as const,
     headcount: (groupBy: string) =>
@@ -164,6 +184,20 @@ export const humanResourcesQueryKeys = {
     directory: () => [...base, "hr", "directory"] as const,
     onboardingAll: [...base, "hr", "onboarding"] as const,
     onboardingStatus: () => [...base, "hr", "onboarding", "status"] as const,
+    onboardingInitiatedUserIds: () =>
+      [...base, "hr", "onboarding", "status", "initiatedUserIds"] as const,
+    onboardingStatusPage: (cursor: string | undefined, limit: number) =>
+      [
+        ...base,
+        "hr",
+        "onboarding",
+        "status",
+        "page",
+        cursor ?? null,
+        limit,
+      ] as const,
+    onboardingUserStatus: (userId: string) =>
+      [...base, "hr", "onboarding", "status", "user", userId] as const,
     onboardingUser: (userId: string) =>
       [...base, "hr", "onboarding", "user", userId] as const,
     onboardingTemplates: () =>
@@ -174,15 +208,6 @@ export const humanResourcesQueryKeys = {
     interviewSlas: () => [...base, "hr", "interviewSlas"] as const,
     slaReport: () => [...base, "hr", "slaReport"] as const,
     hiringFlows: () => [...base, "hr", "hiringFlows"] as const,
-    /**
-     * The reusable job-template library. `params === undefined` yields the bare
-     * prefix so a write can invalidate every filtered page at once — a key that
-     * always carried its filters would leave the unfiltered picker stale.
-     *
-     * Named `jobTemplates`, not `hrTemplates`: that segment already belongs to
-     * the HR document-template domain, and sharing it would make one domain's
-     * invalidation silently refetch the other's.
-     */
     jobTemplates: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "jobTemplates"] as const)
@@ -202,7 +227,14 @@ export const humanResourcesQueryKeys = {
     candidateVoiceScreens: (candidateId: number) =>
       [...base, "hr", "candidate", candidateId, "voiceScreens"] as const,
     candidateIdentity: (candidateId: number) =>
-      [...base, "hr", "recruitment", "candidates", candidateId, "identity"] as const,
+      [
+        ...base,
+        "hr",
+        "recruitment",
+        "candidates",
+        candidateId,
+        "identity",
+      ] as const,
     candidateWhatsapp: (candidateId: number) =>
       [...base, "hr", "candidate", candidateId, "whatsapp"] as const,
     pipelineAutomations: () => [...base, "hr", "pipelineAutomations"] as const,
@@ -259,12 +291,21 @@ export const humanResourcesQueryKeys = {
     reportingLinesAll: () => [...base, "hr", "reportingLine"] as const,
     reportingLine: (userId: string) =>
       [...base, "hr", "reportingLine", userId] as const,
-    managerCoverage: () => [...base, "hr", "reportingLines", "coverage"] as const,
-    reportingManagerPolicy: () => [...base, "hr", "reportingManagerPolicy"] as const,
+    managerCoverage: () =>
+      [...base, "hr", "reportingLines", "coverage"] as const,
+    reportingManagerPolicy: () =>
+      [...base, "hr", "reportingManagerPolicy"] as const,
     managerCandidates: (q: string, excludeUserId?: string) =>
       excludeUserId === undefined
         ? ([...base, "hr", "reportingLines", "managerCandidates", q] as const)
-        : ([...base, "hr", "reportingLines", "managerCandidates", q, excludeUserId] as const),
+        : ([
+            ...base,
+            "hr",
+            "reportingLines",
+            "managerCandidates",
+            q,
+            excludeUserId,
+          ] as const),
     reportingManagerRequests: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "reportingManagerRequests"] as const)
@@ -278,10 +319,25 @@ export const humanResourcesQueryKeys = {
     reportingLineBulkJob: (jobId: string, rowCursor?: string) =>
       rowCursor === undefined
         ? ([...base, "hr", "reportingLines", "bulkJob", jobId] as const)
-        : ([...base, "hr", "reportingLines", "bulkJob", jobId, rowCursor] as const),
+        : ([
+            ...base,
+            "hr",
+            "reportingLines",
+            "bulkJob",
+            jobId,
+            rowCursor,
+          ] as const),
     myReportingLine: () => [...base, "me", "reportingLine"] as const,
-    myReportingManagerRequests: () => [...base, "me", "reportingManagerRequests"] as const,
-    myManagerCandidates: (q: string) => [...base, "me", "reportingManagerRequests", "managerCandidates", q] as const,
+    myReportingManagerRequests: () =>
+      [...base, "me", "reportingManagerRequests"] as const,
+    myManagerCandidates: (q: string) =>
+      [
+        ...base,
+        "me",
+        "reportingManagerRequests",
+        "managerCandidates",
+        q,
+      ] as const,
     myApprovers: () => [...base, "me", "approvers"] as const,
     myApprover: (kind: string) => [...base, "me", "approvers", kind] as const,
     myTeam: () => [...base, "me", "team"] as const,
@@ -298,11 +354,23 @@ export const humanResourcesQueryKeys = {
         ? ([...base, "hr", "global", "workAuthorizations"] as const)
         : ([...base, "hr", "global", "workAuthorizations", params] as const),
     workAuthorization: (workAuthorizationId: number) =>
-      [...base, "hr", "global", "workAuthorization", workAuthorizationId] as const,
+      [
+        ...base,
+        "hr",
+        "global",
+        "workAuthorization",
+        workAuthorizationId,
+      ] as const,
     complianceRequirements: (params?: QueryKeyParams) =>
       params === undefined
         ? ([...base, "hr", "global", "complianceRequirements"] as const)
-        : ([...base, "hr", "global", "complianceRequirements", params] as const),
+        : ([
+            ...base,
+            "hr",
+            "global",
+            "complianceRequirements",
+            params,
+          ] as const),
     complianceRequirement: (complianceRequirementId: number) =>
       [
         ...base,
@@ -330,7 +398,8 @@ export const humanResourcesQueryKeys = {
     travelMine: () => [...base, "hr", "travel", "mine"] as const,
     travelApprovals: () => [...base, "hr", "travel", "approvals"] as const,
     leavePolicies: () => [...base, "hr", "leave-policies"] as const,
-    leavePolicyTemplates: () => [...base, "hr", "leave-policy-templates"] as const,
+    leavePolicyTemplates: () =>
+      [...base, "hr", "leave-policy-templates"] as const,
     leavePolicy: () => [...base, "hr", "leave-policy"] as const,
     requisitions: (status?: string) =>
       status === undefined
@@ -340,7 +409,12 @@ export const humanResourcesQueryKeys = {
       [...base, "hr", "salary-structure-templates"] as const,
     settingsHubRules: (params: QueryKeyParams | null) =>
       [...base, "hr", "settings-hub", "effective-rules", params] as const,
-    settingsHubVersionsAll: [...base, "hr", "settings-hub", "versions"] as const,
+    settingsHubVersionsAll: [
+      ...base,
+      "hr",
+      "settings-hub",
+      "versions",
+    ] as const,
     settingsHubVersions: (entity: string, entityId: number | null) =>
       [...base, "hr", "settings-hub", "versions", entity, entityId] as const,
     holidays: () => [...base, "hr", "holidays"] as const,
@@ -380,7 +454,14 @@ export const humanResourcesQueryKeys = {
         ? ([...base, "hr", "benefits", "claims"] as const)
         : ([...base, "hr", "benefits", "claims", params] as const),
     internshipCertificate: (contractId: number) =>
-      [...base, "hr", "global", "contracts", contractId, "certificate"] as const,
+      [
+        ...base,
+        "hr",
+        "global",
+        "contracts",
+        contractId,
+        "certificate",
+      ] as const,
     hrPoliciesAll: [...base, "hr", "policies"] as const,
     hrPoliciesList: (params?: QueryKeyParams) =>
       params === undefined
@@ -395,16 +476,48 @@ export const humanResourcesQueryKeys = {
         ? ([...base, "hr", "access-requests"] as const)
         : ([...base, "hr", "access-requests", params] as const),
     hrLaborAgreementsExpiring: (days: number) =>
-      [...base, "hr", "governance", "labor", "agreements", "expiring", days] as const,
+      [
+        ...base,
+        "hr",
+        "governance",
+        "labor",
+        "agreements",
+        "expiring",
+        days,
+      ] as const,
     hrDelegationsAll: [...base, "hr", "governance", "delegations"] as const,
-    hrLaborMembershipsAll: [...base, "hr", "governance", "labor", "memberships"] as const,
-    hrLaborAgreementsAll: [...base, "hr", "governance", "labor", "agreements"] as const,
+    hrLaborMembershipsAll: [
+      ...base,
+      "hr",
+      "governance",
+      "labor",
+      "memberships",
+    ] as const,
+    hrLaborAgreementsAll: [
+      ...base,
+      "hr",
+      "governance",
+      "labor",
+      "agreements",
+    ] as const,
     hrLaborCasesAll: [...base, "hr", "governance", "labor", "cases"] as const,
     hrLegalHoldsBase: [...base, "hr", "governance", "legal-holds"] as const,
     hrPositionsAll: [...base, "hr", "governance", "positions"] as const,
     hrScenariosAll: [...base, "hr", "governance", "scenarios"] as const,
-    hrRetentionPoliciesAll: [...base, "hr", "governance", "retention", "policies"] as const,
-    hrRetentionRequestsAll: [...base, "hr", "governance", "retention", "requests"] as const,
+    hrRetentionPoliciesAll: [
+      ...base,
+      "hr",
+      "governance",
+      "retention",
+      "policies",
+    ] as const,
+    hrRetentionRequestsAll: [
+      ...base,
+      "hr",
+      "governance",
+      "retention",
+      "requests",
+    ] as const,
     hrWorkflowsAll: [...base, "hr", "workflows"] as const,
     hrWorkflowInstancesAll: [...base, "hr", "workflow-instances"] as const,
     hrWorkflowDelegationsAll: [...base, "hr", "workflow-delegations"] as const,
@@ -413,24 +526,103 @@ export const humanResourcesQueryKeys = {
     hrTalentPoolMembersAll: (poolId: number) =>
       [...base, "hr", "talentPools", poolId, "members"] as const,
     hrInternalJobs: [...base, "hr", "recruitment", "internal-jobs"] as const,
-    internalMyApplications: [...base, "hr", "recruitment", "internal-mobility", "mine"] as const,
-    internalApprovals: [...base, "hr", "recruitment", "internal-mobility", "approvals"] as const,
-    internalApprovalDecision: [...base, "hr", "recruitment", "internal-mobility", "decide"] as const,
-    atsSandboxEvents: [...base, "hr", "recruitment", "developer", "events"] as const,
-    atsDirectorySync: [...base, "hr", "recruitment", "developer", "directory-sync"] as const,
-    atsSandboxDeliveries: [...base, "hr", "recruitment", "developer", "deliveries"] as const,
-    atsSandboxReplay: [...base, "hr", "recruitment", "developer", "replay"] as const,
+    internalMyApplications: [
+      ...base,
+      "hr",
+      "recruitment",
+      "internal-mobility",
+      "mine",
+    ] as const,
+    internalApprovals: [
+      ...base,
+      "hr",
+      "recruitment",
+      "internal-mobility",
+      "approvals",
+    ] as const,
+    internalApprovalDecision: [
+      ...base,
+      "hr",
+      "recruitment",
+      "internal-mobility",
+      "decide",
+    ] as const,
+    atsSandboxEvents: [
+      ...base,
+      "hr",
+      "recruitment",
+      "developer",
+      "events",
+    ] as const,
+    atsDirectorySync: [
+      ...base,
+      "hr",
+      "recruitment",
+      "developer",
+      "directory-sync",
+    ] as const,
+    atsSandboxDeliveries: [
+      ...base,
+      "hr",
+      "recruitment",
+      "developer",
+      "deliveries",
+    ] as const,
+    atsSandboxReplay: [
+      ...base,
+      "hr",
+      "recruitment",
+      "developer",
+      "replay",
+    ] as const,
     hrAssignedInterviews: (page: number) =>
       [...base, "hr", "me", "assigned-interviews", page] as const,
     hrDevicesAll: [...base, "hr", "enterprise", "comp", "devices"] as const,
-    hrEnterpriseSyncLogsAll: [...base, "hr", "enterprise", "comp", "syncLogs"] as const,
-    hrEnterpriseCompCyclesAll: [...base, "hr", "enterprise", "comp", "cycles"] as const,
-    hrEnterpriseCompRecsAll: [...base, "hr", "enterprise", "comp", "recommendations"] as const,
-    hrEnterpriseCompBudgetAll: [...base, "hr", "enterprise", "comp", "budgetPools"] as const,
-    hrEnterpriseEquityGrantsAll: [...base, "hr", "enterprise", "comp", "equityGrants"] as const,
-    hrEnterpriseCostingAll: [...base, "hr", "enterprise", "comp", "costing"] as const,
+    hrEnterpriseSyncLogsAll: [
+      ...base,
+      "hr",
+      "enterprise",
+      "comp",
+      "syncLogs",
+    ] as const,
+    hrEnterpriseCompCyclesAll: [
+      ...base,
+      "hr",
+      "enterprise",
+      "comp",
+      "cycles",
+    ] as const,
+    hrEnterpriseCompRecsAll: [
+      ...base,
+      "hr",
+      "enterprise",
+      "comp",
+      "recommendations",
+    ] as const,
+    hrEnterpriseCompBudgetAll: [
+      ...base,
+      "hr",
+      "enterprise",
+      "comp",
+      "budgetPools",
+    ] as const,
+    hrEnterpriseEquityGrantsAll: [
+      ...base,
+      "hr",
+      "enterprise",
+      "comp",
+      "equityGrants",
+    ] as const,
+    hrEnterpriseCostingAll: [
+      ...base,
+      "hr",
+      "enterprise",
+      "comp",
+      "costing",
+    ] as const,
     hrIdentityAll: [...base, "hr-identity"] as const,
-    emailTemplatesList: () => [...base, "hr", "email-templates", "list"] as const,
+    emailTemplatesList: () =>
+      [...base, "hr", "email-templates", "list"] as const,
     fnfList: () => [...base, "hr", "fnf", "list"] as const,
     assetReturnsList: () => [...base, "hr", "asset-returns", "list"] as const,
   },

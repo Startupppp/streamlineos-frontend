@@ -108,7 +108,7 @@ describe("P2-003 — palette actions are permission-filtered", () => {
       void result.current.find((c) => c.id === id)?.execute();
 
     expect(onSelect.mock.calls).toEqual([
-      ["/me/time-off?create=1"],
+      ["/me/workday?section=time-off&create=1"],
       ["/payroll/runs/11"],
       ["/hr/exit"],
       ["/me/resignation"],

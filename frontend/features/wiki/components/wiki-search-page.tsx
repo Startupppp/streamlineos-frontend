@@ -4,13 +4,13 @@ import { useState, useCallback, useRef, useEffect, useId } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { LayoutList, LayoutGrid, X } from "lucide-react";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -60,6 +60,10 @@ const TYPE_OPTIONS = [
 
 const VIEW_VALUES = ["list", "card"] as const;
 type ViewMode = (typeof VIEW_VALUES)[number];
+const SEARCH_VIEW_OPTIONS: { value: ViewMode; icon: typeof LayoutList; label: string }[] = [
+  { value: "list", icon: LayoutList, label: "List view" },
+  { value: "card", icon: LayoutGrid, label: "Card view" },
+];
 
 function SearchSkeleton() {
   return <DataTableSkeleton columns={3} rows={6} />;
@@ -426,36 +430,11 @@ export default function WikiSearchPage() {
                 </SelectContent>
               </Select>
             )}
-            <div className="flex rounded-md border border-border">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="List view"
-                aria-pressed={view === "list"}
-                className={cn(
-                  "h-9 w-9 rounded-r-none",
-                  view === "list" && "bg-muted",
-                )}
-                onClick={() => handleViewChange("list")}
-              >
-                <LayoutList className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label="Card view"
-                aria-pressed={view === "card"}
-                className={cn(
-                  "h-9 w-9 rounded-l-none border-l",
-                  view === "card" && "bg-muted",
-                )}
-                onClick={() => handleViewChange("card")}
-              >
-                <LayoutGrid className="size-4" />
-              </Button>
-            </div>
+            <ViewToggle
+              value={view}
+              options={SEARCH_VIEW_OPTIONS}
+              onChange={handleViewChange}
+            />
           </div>
         </div>
 

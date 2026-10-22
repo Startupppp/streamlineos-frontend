@@ -6,6 +6,11 @@ import {
   useOrgStorageScope,
 } from "@/lib/org-scoped-storage";
 import type { DashboardAccess } from "./use-dashboard-access";
+import {
+  normalizeHomeWidgetSize,
+  type HomeLayoutCommit,
+  type HomeWidgetSize,
+} from "./home-widget-layout";
 
 export type HomeDensity = "compact" | "comfortable";
 
@@ -15,12 +20,14 @@ export interface HomeCustomisationState {
   hiddenWidgets: readonly string[];
   density: HomeDensity;
   widgetOrder: readonly string[];
+  placements: readonly HomeWidgetSize[];
 }
 
 export const HOME_CUSTOMISATION_DEFAULT: HomeCustomisationState = {
   hiddenWidgets: [],
   density: "comfortable",
   widgetOrder: [],
+  placements: [],
 };
 
 export const ROLE_DEFAULT_WIDGET_ORDER: Record<string, readonly string[]> = {
@@ -118,10 +125,24 @@ function readState(storageKey: string): HomeCustomisationState {
     const widgetOrder = Array.isArray(parsed.widgetOrder)
       ? parsed.widgetOrder.filter((s): s is string => typeof s === "string")
       : [];
-    return { hiddenWidgets, density, widgetOrder };
+    const placements = readPlacements(parsed.placements);
+    return { hiddenWidgets, density, widgetOrder, placements };
   } catch {
     return HOME_CUSTOMISATION_DEFAULT;
   }
+}
+
+function readPlacements(value: unknown): HomeWidgetSize[] {
+  if (!Array.isArray(value)) return [];
+  const placements: HomeWidgetSize[] = [];
+  for (const entry of value) {
+    if (!isPlainObject(entry)) continue;
+    if (typeof entry.id !== "string") continue;
+    if (typeof entry.w !== "number" || typeof entry.h !== "number") continue;
+    if (!Number.isFinite(entry.w) || !Number.isFinite(entry.h)) continue;
+    placements.push(normalizeHomeWidgetSize({ id: entry.id, w: entry.w, h: entry.h }));
+  }
+  return placements;
 }
 
 function writeState(storageKey: string, state: HomeCustomisationState): void {
@@ -141,6 +162,7 @@ export interface UseHomeCustomisationResult {
     direction: "up" | "down",
     allIds: readonly string[],
   ) => void;
+  applyLayout: (items: readonly HomeLayoutCommit[], stacked: boolean) => void;
   reset: () => void;
   isHidden: (widgetId: string) => boolean;
 }
@@ -213,6 +235,28 @@ export function useHomeCustomisation(): UseHomeCustomisationResult {
     [state, update],
   );
 
+  const applyLayout = useCallback(
+    (items: readonly HomeLayoutCommit[], stacked: boolean) => {
+      const ordered = [...items].sort((a, b) => a.y - b.y || a.x - b.x);
+      const ids = ordered.map((item) => item.id);
+      const hiddenKept = state.widgetOrder.filter((id) => !ids.includes(id));
+      const widgetOrder = [...ids, ...hiddenKept];
+      if (stacked) {
+        update({ ...state, widgetOrder });
+        return;
+      }
+      const incoming = new Map(
+        ordered.map((item) => [item.id, normalizeHomeWidgetSize(item)]),
+      );
+      const placements = [
+        ...ordered.map((item) => incoming.get(item.id)!),
+        ...state.placements.filter((item) => !incoming.has(item.id)),
+      ];
+      update({ ...state, widgetOrder, placements });
+    },
+    [state, update],
+  );
+
   const reset = useCallback(() => {
     update(HOME_CUSTOMISATION_DEFAULT);
   }, [update]);
@@ -227,6 +271,7 @@ export function useHomeCustomisation(): UseHomeCustomisationResult {
     toggleWidgetVisibility,
     setDensity,
     moveWidget,
+    applyLayout,
     reset,
     isHidden,
   };

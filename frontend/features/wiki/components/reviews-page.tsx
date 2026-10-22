@@ -8,7 +8,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn, DataTableSortState } from "@/components/ui/data-table.types";
-import { Skeleton } from "@/components/ui/skeleton";
+import { WikiTableRowsSkeleton } from "./wiki-collection-skeletons";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
@@ -47,16 +47,6 @@ type BulkState =
   | { kind: "idle" }
   | { kind: "deciding"; ids: number[] }
   | { kind: "results"; succeeded: number; failures: BulkFailureWithTitle[] };
-
-function ReviewsSkeleton() {
-  return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Skeleton key={i} className="h-12 w-full rounded-md" />
-      ))}
-    </div>
-  );
-}
 
 export default function ReviewsPage() {
   const searchParams = useSearchParams();
@@ -408,7 +398,7 @@ export default function ReviewsPage() {
       <PageWrapper title="Reviews" filters={filters}>
         <PageState
           resolution={pageState}
-          loading={<ReviewsSkeleton />}
+          loading={<WikiTableRowsSkeleton />}
           empty={emptyNode}
           onRetry={refetch}
           className="flex-1 min-h-0"

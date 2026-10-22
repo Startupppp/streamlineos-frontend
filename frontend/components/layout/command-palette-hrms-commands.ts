@@ -70,7 +70,7 @@ export function useHrmsCommands(
         keywords: ["leave", "time off", "vacation", "holiday", "wfh", "छुट्टी", "अवकाश", "సెలవు"],
         icon: CalendarPlus,
         isAvailable: hrEnabled && (canRequestLeave),
-        execute: () => handleSelect("/me/time-off?create=1"),
+        execute: () => handleSelect("/me/workday?section=time-off&create=1"),
       },
       {
         id: "hrms-punch",

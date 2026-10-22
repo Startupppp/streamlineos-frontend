@@ -122,11 +122,31 @@ describe("next.config.ts redirects — PM Workspace is removed, and every deep l
 });
 
 describe("next.config.ts redirects — leave alias", () => {
-  test("/me/leave redirects to /me/time-off", async () => {
+  test("/me/leave redirects to the time-off section", async () => {
     const redirects = await getRedirects();
     const entry = redirects.find((r) => r.source === "/me/leave");
     expect(entry).toBeDefined();
-    expect(entry?.destination).toBe("/me/time-off");
+    expect(entry?.destination).toBe("/me/workday?section=time-off");
     expect(entry?.permanent).toBe(false);
+  });
+});
+
+describe("self-service page consolidation", () => {
+  const moves = [
+    ["/me/attendance", "/me/workday"],
+    ["/me/time-off", "/me/workday?section=time-off"],
+    ["/me/documents", "/me/records"],
+    ["/me/onboarding", "/me/records?section=onboarding"],
+    ["/me/expenses", "/me/money"],
+    ["/me/pay", "/me/money?section=pay"],
+    ["/me/recruitment", "/me/career"],
+    ["/me/job-openings", "/me/career?section=openings"],
+    ["/me/referrals", "/me/career?section=referrals"],
+  ] as const;
+
+  test.each(moves)("%s redirects to %s", async (source, destination) => {
+    const redirects = await getRedirects();
+    expect(redirects.find((entry) => entry.source === source)?.destination).toBe(destination);
+    expect(existsSync(join(process.cwd(), "app", "(authenticated)", source.slice(1), "page.tsx"))).toBe(false);
   });
 });

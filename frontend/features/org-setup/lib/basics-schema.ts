@@ -1,11 +1,11 @@
-import { isValidPhoneNumber } from "react-phone-number-input";
 import { z } from "zod";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import { isImplausiblePhone } from "@/lib/implausible-phone";
+import { COUNTRY_OPTIONS, timezonesForCountry } from "@/lib/location/org-locale-options";
 import type { WizardData } from "./wizard-data-schema";
 
 export const DISPLAY_NAME_MAX_LENGTH = 100;
-export const COMPANY_NAME_MAX_LENGTH = 200;
-export const FULL_NAME_MAX_LENGTH = 120;
-export const INDUSTRY_MAX_LENGTH = 100;
+const COUNTRY_CODES = new Set<string>(COUNTRY_OPTIONS.map(({ value }) => value));
 
 export const workspaceStepSchema = z.object({
   displayName: z
@@ -16,55 +16,36 @@ export const workspaceStepSchema = z.object({
       DISPLAY_NAME_MAX_LENGTH,
       `Workspace name must be ${DISPLAY_NAME_MAX_LENGTH} characters or fewer.`,
     ),
-  teamSize: z.string().trim().min(1, "Team size is required."),
-  timezone: z.string().optional(),
-  region: z.string().optional(),
-  companyName: z
-    .string()
-    .trim()
-    .max(
-      COMPANY_NAME_MAX_LENGTH,
-      `Company name must be ${COMPANY_NAME_MAX_LENGTH} characters or fewer.`,
-    )
-    .optional(),
-  industry: z
-    .string()
-    .trim()
-    .min(1, "Industry is required.")
-    .max(
-      INDUSTRY_MAX_LENGTH,
-      `Industry must be ${INDUSTRY_MAX_LENGTH} characters or fewer.`,
-    ),
   phone: z
     .string()
     .trim()
-    .refine(
-      (value) => !value || isValidPhoneNumber(value),
-      "Enter a valid phone number with its country code, such as +91 98765 43210.",
-    )
-    .optional(),
-  goals: z.array(z.string()).optional(),
+    .min(1, "Enter a contact phone number.")
+    .max(30, "Phone number must be 30 characters or fewer.")
+    .refine(isValidPhoneNumber, "Enter a valid phone number with country code.")
+    .refine((value) => !isImplausiblePhone(value), "Enter a real contact phone number."),
+  country: z
+    .string()
+    .trim()
+    .min(1, "Select a country.")
+    .refine((value) => !value || COUNTRY_CODES.has(value), "Select a valid country."),
+  timezone: z.string().trim().min(1, "Select a time zone."),
+}).superRefine(({ country, timezone }, ctx) => {
+  if (COUNTRY_CODES.has(country) && timezone && !timezonesForCountry(country).includes(timezone)) {
+    ctx.addIssue({
+      code: "custom",
+      path: ["timezone"],
+      message: "Select a time zone for this country.",
+    });
+  }
 });
-
-export type WorkspaceStepValues = z.infer<typeof workspaceStepSchema>;
 
 export function parseWorkspaceStep(data: WizardData) {
   return workspaceStepSchema.safeParse({
     displayName: data.displayName,
-    teamSize: data.teamSize,
-    timezone: data.timezone || undefined,
-    region: data.region || undefined,
-    companyName: data.companyName || undefined,
-    industry: data.industry,
-    phone: data.phone || undefined,
-    goals: data.goals.length > 0 ? data.goals : undefined,
+    phone: data.phone,
+    country: data.country ?? "",
+    timezone: data.timezone ?? "",
   });
 }
 
-export const WORKSPACE_VISIBLE_FIELDS = [
-  "displayName",
-  "teamSize",
-  "industry",
-  "timezone",
-  "region",
-] as const;
+export const WORKSPACE_VISIBLE_FIELDS = ["displayName", "phone", "country", "timezone"] as const;

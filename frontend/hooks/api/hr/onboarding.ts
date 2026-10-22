@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -9,8 +9,14 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 
-const onboardingStatusListC = lazyContract(() =>
-  import("@/hooks/api/hr/onboarding-schema").then((m) => m.onboardingStatusListContract),
+const initiatedOnboardingUserIdsC = lazyContract(() =>
+  import("@/hooks/api/hr/onboarding-schema").then((m) => m.initiatedOnboardingUserIdsContract),
+);
+const onboardingStatusPageC = lazyContract(() =>
+  import("@/hooks/api/hr/onboarding-schema").then((m) => m.onboardingStatusPageContract),
+);
+const onboardingUserStatusC = lazyContract(() =>
+  import("@/hooks/api/hr/onboarding-schema").then((m) => m.onboardingUserStatusContract),
 );
 const onboardingTaskListC = lazyContract(() =>
   import("@/hooks/api/hr/onboarding-schema").then((m) => m.onboardingTaskListContract),
@@ -46,6 +52,11 @@ export interface OnboardingStatus {
   lastCompletedAt: string | null;
 }
 
+export interface OnboardingStatusPage {
+  data: OnboardingStatus[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+}
+
 export interface OnboardingTask {
   id: number;
   userId: string;
@@ -63,13 +74,40 @@ export interface OnboardingTask {
   canComplete: boolean;
 }
 
-export function useOnboardingStatus() {
+export function useInitiatedOnboardingUserIds(enabled: boolean) {
   const canManage = useCan("hr:onboarding:manage");
-  return useQuery<OnboardingStatus[]>({
-    queryKey: humanResourcesQueryKeys.hr.onboardingStatus(),
-    queryFn: ({ signal }) => apiClient.get<OnboardingStatus[]>("/onboarding", undefined, signal, onboardingStatusListC),
+  return useQuery<string[]>({
+    queryKey: humanResourcesQueryKeys.hr.onboardingInitiatedUserIds(),
+    queryFn: ({ signal }) => apiClient.get<string[]>(
+      "/onboarding/initiated-user-ids", undefined, signal, initiatedOnboardingUserIdsC,
+    ),
+    staleTime: 2 * 60_000,
+    enabled: canManage && enabled,
+  });
+}
+
+export function useOnboardingStatusPage(cursor: string | undefined, limit = 25) {
+  const canManage = useCan("hr:onboarding:manage");
+  return useQuery<OnboardingStatusPage>({
+    queryKey: humanResourcesQueryKeys.hr.onboardingStatusPage(cursor, limit),
+    queryFn: ({ signal }) => apiClient.get<OnboardingStatusPage>(
+      "/onboarding/progress", { cursor, limit }, signal, onboardingStatusPageC,
+    ),
+    placeholderData: keepPreviousData,
     staleTime: 2 * 60_000,
     enabled: canManage,
+  });
+}
+
+export function useOnboardingUserStatus(userId: string) {
+  const canManage = useCan("hr:onboarding:manage");
+  return useQuery<OnboardingStatus | null>({
+    queryKey: humanResourcesQueryKeys.hr.onboardingUserStatus(userId),
+    queryFn: ({ signal }) => apiClient.get<OnboardingStatus | null>(
+      `/onboarding/progress/${encodeURIComponent(userId)}`, undefined, signal, onboardingUserStatusC,
+    ),
+    staleTime: 2 * 60_000,
+    enabled: canManage && !!userId,
   });
 }
 

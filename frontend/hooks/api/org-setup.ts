@@ -5,7 +5,10 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import type { OrgSetupInvitee, OrgSetupStatus } from "@/hooks/api/org-setup-schema";
+import type {
+  OrgSetupInvitee,
+  OrgSetupStatus,
+} from "@/hooks/api/org-setup-schema";
 
 const orgSetupSessionContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupSessionContract),
@@ -14,15 +17,16 @@ const orgSetupStatusContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupStatusContract),
 );
 const orgSetupCompleteContract = lazyContract(() =>
-  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupCompleteContract),
+  import("@/hooks/api/org-setup-schema").then(
+    (m) => m.orgSetupCompleteContract,
+  ),
 );
 
 export type OrgSetupPayload = {
-  industry: string;
+  industry?: string;
   companyName?: string;
-  /** HRMS-E2E-025. The owner's own name, collected on Basics. Optional, mirroring the backend. */
   fullName?: string;
-  companySize: string;
+  companySize?: string;
   country?: string;
   timezone?: string;
   phone?: string;
@@ -31,8 +35,14 @@ export type OrgSetupPayload = {
   moduleAnswers?: Partial<Record<string, Record<string, string>>>;
 };
 
-export type OrgSetupResponse = { success: boolean; orgId: string; autoLoginToken?: string };
-export type OrgSetupCompleteResponse = OrgSetupResponse & { destination: string };
+export type OrgSetupResponse = {
+  success: boolean;
+  orgId: string;
+  autoLoginToken?: string;
+};
+export type OrgSetupCompleteResponse = OrgSetupResponse & {
+  destination: string;
+};
 
 export type OrgSetupSession = {
   id: number;
@@ -47,7 +57,13 @@ export type OrgSetupSession = {
 export function useOrgSetupSessionQuery(enabled = true) {
   return useQuery({
     queryKey: platformCoreQueryKeys.orgSetup.session(),
-    queryFn: ({ signal }) => apiClient.get<OrgSetupSession>("/org/setup/session", undefined, signal, orgSetupSessionContract),
+    queryFn: ({ signal }) =>
+      apiClient.get<OrgSetupSession>(
+        "/org/setup/session",
+        undefined,
+        signal,
+        orgSetupSessionContract,
+      ),
     staleTime: 30_000,
     retry: false,
     enabled,
@@ -55,7 +71,10 @@ export function useOrgSetupSessionQuery(enabled = true) {
 }
 
 export function useOrgSetupStatusQuery(
-  options?: Omit<UseQueryOptions<OrgSetupStatus, Error>, "queryKey" | "queryFn">,
+  options?: Omit<
+    UseQueryOptions<OrgSetupStatus, Error>,
+    "queryKey" | "queryFn"
+  >,
 ) {
   return useQuery({
     queryKey: platformCoreQueryKeys.orgSetup.status(),
@@ -76,14 +95,20 @@ export function useCompleteOrgSetupMutation() {
   return useMutation({
     mutationKey: ["org", "setup", "complete"],
     mutationFn: (payload: OrgSetupPayload) =>
-      apiClient.post<OrgSetupCompleteResponse>("/org/setup/complete", payload, { timeoutMs: 5 * 60_000 }, orgSetupCompleteContract),
+      apiClient.post<OrgSetupCompleteResponse>(
+        "/org/setup/complete",
+        payload,
+        { timeoutMs: 5 * 60_000 },
+        orgSetupCompleteContract,
+      ),
     retry: false,
   });
 }
 
-
 const orgSetupDraftSaveContract = lazyContract(() =>
-  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupDraftSaveContract),
+  import("@/hooks/api/org-setup-schema").then(
+    (m) => m.orgSetupDraftSaveContract,
+  ),
 );
 const orgSetupDraftContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupDraftContract),
@@ -92,7 +117,9 @@ const orgSetupPreviewContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupPreviewContract),
 );
 const orgSetupActivateContract = lazyContract(() =>
-  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupActivateContract),
+  import("@/hooks/api/org-setup-schema").then(
+    (m) => m.orgSetupActivateContract,
+  ),
 );
 
 export type OrgSetupDraftSavePayload = {
@@ -112,7 +139,12 @@ export type OrgSetupActivatePayload = {
 };
 
 function putOrgSetupDraft(payload: OrgSetupDraftSavePayload) {
-  return apiClient.put("/org/setup/draft", payload, undefined, orgSetupDraftSaveContract);
+  return apiClient.put(
+    "/org/setup/draft",
+    payload,
+    undefined,
+    orgSetupDraftSaveContract,
+  );
 }
 
 export function useOrgSetupDraftSaveMutation() {
@@ -130,7 +162,10 @@ export function useOrgSetupDraftSaveMutation() {
           undefined,
           orgSetupDraftContract,
         );
-        return putOrgSetupDraft({ ...payload, revision: current?.revision ?? 0 });
+        return putOrgSetupDraft({
+          ...payload,
+          revision: current?.revision ?? 0,
+        });
       }
     },
     onSuccess: (result, payload) => {
@@ -148,7 +183,12 @@ export function useOrgSetupDraftQuery(enabled = true) {
   return useQuery({
     queryKey: platformCoreQueryKeys.orgSetup.draft(),
     queryFn: ({ signal }) =>
-      apiClient.get("/org/setup/draft", undefined, signal, orgSetupDraftContract),
+      apiClient.get(
+        "/org/setup/draft",
+        undefined,
+        signal,
+        orgSetupDraftContract,
+      ),
     staleTime: 60_000,
     retry: false,
     enabled,
@@ -159,7 +199,12 @@ export function useOrgSetupPreviewMutation() {
   return useMutation({
     mutationKey: ["org", "setup", "preview"],
     mutationFn: (payload: OrgSetupPreviewPayload) =>
-      apiClient.post("/org/setup/selection/preview", payload, { timeoutMs: 10_000 }, orgSetupPreviewContract),
+      apiClient.post(
+        "/org/setup/selection/preview",
+        payload,
+        { timeoutMs: 10_000 },
+        orgSetupPreviewContract,
+      ),
     retry: false,
   });
 }
@@ -168,7 +213,12 @@ export function useOrgSetupActivateMutation() {
   return useMutation({
     mutationKey: ["org", "setup", "activate"],
     mutationFn: (payload: OrgSetupActivatePayload) =>
-      apiClient.post("/org/setup/activate", payload, { timeoutMs: 5 * 60_000 }, orgSetupActivateContract),
+      apiClient.post(
+        "/org/setup/activate",
+        payload,
+        { timeoutMs: 5 * 60_000 },
+        orgSetupActivateContract,
+      ),
     retry: false,
   });
 }

@@ -8,39 +8,18 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyTasksIllustration } from "@/components/illustrations";
 import { AlertCircle, CheckCheck, ListTodo, Timer } from "lucide-react";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 
 import {
   useUserOnboarding,
   useCompleteOnboardingTask,
-  useOnboardingStatus,
+  useOnboardingUserStatus,
 } from "@/hooks/api/hr/onboarding";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { OnboardingTaskCard } from "@/features/hr/onboarding/onboarding-task-card";
-
-function LoadingSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="space-y-2">
-        <Skeleton className="h-4 w-40" />
-        <Skeleton className="h-3 w-full" />
-      </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {Array.from({ length: 10 }).map((_, i) => (
-          <Skeleton key={i} className="h-16" />
-        ))}
-      </div>
-      <div className="space-y-2">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-20" />
-        ))}
-      </div>
-    </div>
-  );
-}
+import { OnboardingDetailSkeleton } from "./onboarding-route-skeletons";
 
 interface OnboardingDetailPageProps {
   userId: string;
@@ -57,12 +36,12 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
   } = useUserOnboarding(userId);
 
   const {
-    data: statuses,
+    data: employeeStatus,
     isLoading: statusLoading,
     isError: statusError,
     error: statusErrorValue,
     refetch: refetchStatus,
-  } = useOnboardingStatus();
+  } = useOnboardingUserStatus(userId);
 
   const completeTask = useCompleteOnboardingTask();
   const [togglingTaskIds, setTogglingTaskIds] = useState<Set<number>>(new Set());
@@ -104,7 +83,6 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
     isEmpty: (tasks ?? []).length === 0,
   });
 
-  const employeeStatus = statuses?.find((s) => s.userId === userId);
   const employeeName = employeeStatus?.userName ?? "Employee";
 
   const taskList = tasks ?? [];
@@ -133,7 +111,7 @@ export function OnboardingDetailPage({ userId }: OnboardingDetailPageProps) {
         resolution={pageState}
         onRetry={handleRetry}
         className="flex-1"
-        loading={<LoadingSkeleton />}
+        loading={<OnboardingDetailSkeleton />}
         empty={
           <EmptyState
             illustration={<EmptyTasksIllustration className="h-24 w-24" />}

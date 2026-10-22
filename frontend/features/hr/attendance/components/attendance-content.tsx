@@ -9,7 +9,7 @@ import { TeamAttendanceCard } from "@/features/hr/attendance/team-attendance-car
 import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attendance-regularization-dialog";
 import { RegularizationQueueCard } from "@/features/hr/attendance/regularization-queue-card";
 
-const WFH_REQUEST_HREF = "/me/time-off?tab=wfh&wfh=1";
+const WFH_REQUEST_HREF = "/me/workday?section=time-off&tab=wfh&wfh=1";
 
 interface AttendanceContentProps {
   isAdmin?: boolean;

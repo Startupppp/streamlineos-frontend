@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { FILTER_SELECT_TRIGGER, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { cn } from "@/lib/utils";
+import { ViewToggle } from "@/components/ui/view-toggle";
 import { useCrmOptions } from "@/hooks/api/crm/metadata";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type { DataScope } from "@/types/access";
@@ -52,9 +53,6 @@ export function LeadsToolbar({
   }, [searchQuery, inputValue]);
 
   const handleSearchChange = useCallback((value: string) => setInputValue(value), []);
-  const handleViewTable = useCallback(() => onViewChange("table"), [onViewChange]);
-  const handleViewKanban = useCallback(() => onViewChange("kanban"), [onViewChange]);
-  const handleViewFunnel = useCallback(() => onViewChange("funnel"), [onViewChange]);
   const handleStatusFilter = useCallback((v: string) => onStatusFilterChange(v === "all" ? undefined : v), [onStatusFilterChange]);
   const handlePriorityFilter = useCallback((v: string) => onPriorityFilterChange(v === "all" ? undefined : v), [onPriorityFilterChange]);
   const handleSourceFilter = useCallback((v: string) => onSourceFilterChange(v === "all" ? undefined : v), [onSourceFilterChange]);
@@ -65,29 +63,15 @@ export function LeadsToolbar({
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput placeholder="Search leads..." value={inputValue} onValueChange={handleSearchChange} />
 
-      <div className="flex h-9 items-center rounded-md border border-input bg-card">
-        <Button variant={view === "table" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-r-none h-9 px-2.5")}
-          onClick={handleViewTable}
-          aria-label="Table view"
-          aria-pressed={view === "table"}>
-          <TableIcon className="h-3.5 w-3.5" aria-hidden="true" />
-        </Button>
-        <Button variant={view === "kanban" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-none h-9 px-2.5 border-x border-input")}
-          onClick={handleViewKanban}
-          aria-label="Kanban view"
-          aria-pressed={view === "kanban"}>
-          <LayoutGrid className="h-3.5 w-3.5" aria-hidden="true" />
-        </Button>
-        <Button variant={view === "funnel" ? "default" : "ghost"} size="sm"
-          className={cn("rounded-l-none h-9 px-2.5")}
-          onClick={handleViewFunnel}
-          aria-label="Funnel view"
-          aria-pressed={view === "funnel"}>
-          <GitBranch className="h-3.5 w-3.5" aria-hidden="true" />
-        </Button>
-      </div>
+      <ViewToggle
+        value={view}
+        options={[
+          { value: "table", icon: TableIcon, label: "Table view" },
+          { value: "kanban", icon: LayoutGrid, label: "Kanban view" },
+          { value: "funnel", icon: GitBranch, label: "Funnel view" },
+        ]}
+        onChange={onViewChange}
+      />
 
       <Select value={statusFilter || "all"} onValueChange={handleStatusFilter}>
         <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[110px]")}><SelectValue placeholder="Status" /></SelectTrigger>

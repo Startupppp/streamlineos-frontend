@@ -8,8 +8,6 @@ export const BUILD_CURSOR_STACK_PARAM = "cursors";
 
 export const PRODUCT_WIDGET_CURSORS_PARAM = "widgetCursors";
 
-export const PRODUCT_PROJECT_CURSORS_PARAM = "projectCursors";
-
 export const PRODUCT_MEMBER_CURSORS_PARAM = "memberCursors";
 
 function decodeStack(raw: string | null): (string | undefined)[] {

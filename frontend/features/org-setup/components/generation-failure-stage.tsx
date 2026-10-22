@@ -264,7 +264,7 @@ export function GenerationFailureStage({
               disabled={isNavigating}
               className="h-11 min-h-11 w-full sm:h-10 sm:min-h-10"
             >
-              Back to Modules
+        Back to invitations
             </Button>
           ) : (
             <LoadingButton

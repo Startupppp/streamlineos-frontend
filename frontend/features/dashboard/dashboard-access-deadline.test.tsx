@@ -82,17 +82,8 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined, isLoading: false }),
 }));
 
-jest.mock("./module-setup-banners", () => ({
-  ModuleSetupBanners: () => null,
-  useModuleSetupBannersPending: () => false,
-}));
-
 jest.mock("./dashboard-deferred-body", () => ({
   DashboardDeferredBody: () => <div data-testid="home-sections" />,
-}));
-
-jest.mock("@/features/dashboard/quick-actions", () => ({
-  QuickActions: () => null,
 }));
 
 import { DashboardClient } from "./dashboard-client";

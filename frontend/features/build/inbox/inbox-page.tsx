@@ -45,6 +45,7 @@ import {
   ResizablePanelGroup,
 } from "@/components/ui/resizable";
 import { useIsBelowLg } from "@/hooks/common/use-mobile";
+import { InboxPaneSkeleton } from "./inbox-page-skeleton";
 
 const InboxPreviewPane = dynamic(
   () =>
@@ -55,7 +56,7 @@ const InboxPreviewPane = dynamic(
 );
 const InboxList = dynamic(
   () => import("./inbox-list").then((m) => ({ default: m.InboxList })),
-  { loading: () => null },
+  { loading: () => <InboxPaneSkeleton /> },
 );
 export function InboxPage() {
   const isSinglePane = useIsBelowLg();

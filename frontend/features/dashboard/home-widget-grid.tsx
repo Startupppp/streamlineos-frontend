@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, Fragment, type ReactNode } from "react";
+import { useCallback, useMemo, useState, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
@@ -11,6 +11,7 @@ import {
   HomeCustomisationBar,
   type WidgetOption,
 } from "./home-customisation-bar";
+import { HomeWidgetBoard } from "./home-widget-board";
 import {
   useHomeCustomisation,
   applyWidgetOrder,
@@ -170,6 +171,14 @@ export function HomeWidgetGrid({
     allAccessibleIds,
     effectiveWidgetOrder,
   ).filter((id) => !isHidden(id));
+  const [editing, setEditing] = useState(false);
+  const handleEditingChange = useCallback((next: boolean) => {
+    setEditing(next);
+  }, []);
+  const labels = useMemo(
+    () => Object.fromEntries(availableWidgets.map((widget) => [widget.id, widget.label])),
+    [availableWidgets],
+  );
 
   const widgetNodes: Record<string, ReactNode> = {
     "My tasks": (
@@ -228,27 +237,38 @@ export function HomeWidgetGrid({
       </SectionErrorBoundary>
     ) : null,
   };
+  const renderedIds = orderedVisibleIds.filter((id) => widgetNodes[id]);
 
   return (
     <>
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <HomeSectionHeader title="My day" />
         <HomeCustomisationBar
           customisation={customisation}
           availableWidgets={availableWidgets}
+          editing={editing}
+          onEditingChange={handleEditingChange}
         />
       </div>
       <motion.div
         variants={fadeUp}
         initial="hidden"
         animate="visible"
-        className={`grid grid-cols-1 ${gapClass} md:grid-cols-2 xl:grid-cols-3`}
+        className={`grid min-w-0 ${gapClass}`}
       >
-        {orderedVisibleIds.map((id) => {
-          const node = widgetNodes[id];
-          if (!node) return null;
-          return <Fragment key={id}>{node}</Fragment>;
-        })}
+        <HomeWidgetBoard
+          orderedIds={renderedIds}
+          placements={state.placements}
+          density={state.density}
+          editing={editing}
+          content={widgetNodes}
+          labels={labels}
+          onLayoutCommit={customisation.applyLayout}
+          onRemove={customisation.toggleWidgetVisibility}
+          onMove={(id, offset) =>
+            customisation.moveWidget(id, offset === -1 ? "up" : "down", renderedIds)
+          }
+        />
       </motion.div>
     </>
   );

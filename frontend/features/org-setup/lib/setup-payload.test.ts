@@ -256,22 +256,31 @@ describe("buildOrgSetupPayload — moduleAnswers", () => {
   });
 });
 
-describe("buildOrgSetupPayload — required workspace fields", () => {
-  it("throws when industry is empty", () => {
-    expect(() =>
-      buildOrgSetupPayload({ ...wizard([]), industry: "" }),
-    ).toThrow("Select an industry before launching.");
+describe("buildOrgSetupPayload — deferred workspace details", () => {
+  it("omits industry and company size when the owner has not supplied them", () => {
+    const payload = buildOrgSetupPayload({
+      ...wizard([]),
+      displayName: "Acme",
+      industry: "",
+      teamSize: "",
+    });
+    expect(payload.companyName).toBe("Acme");
+    expect(payload.industry).toBeUndefined();
+    expect(payload.companySize).toBeUndefined();
   });
 
-  it("throws when teamSize is empty", () => {
-    expect(() =>
-      buildOrgSetupPayload({ ...wizard([]), teamSize: "" }),
-    ).toThrow("Select a team size before launching.");
-  });
-
-  it("succeeds when both required fields are present", () => {
-    expect(() =>
-      buildOrgSetupPayload({ ...wizard([]), industry: "Technology", teamSize: "1-10" }),
-    ).not.toThrow();
+  it("includes the contact phone, country, and time zone collected during setup", () => {
+    const payload = buildOrgSetupPayload({
+      ...wizard([]),
+      displayName: "Acme",
+      phone: "+919876543210",
+      country: "IN",
+      timezone: "Asia/Kolkata",
+    });
+    expect(payload).toMatchObject({
+      phone: "+919876543210",
+      country: "IN",
+      timezone: "Asia/Kolkata",
+    });
   });
 });
