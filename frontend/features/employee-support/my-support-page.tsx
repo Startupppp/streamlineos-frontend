@@ -16,7 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/content-fill-panel";
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
@@ -113,7 +113,7 @@ export function MySupportPage() {
       action={canRaise ? { label: "Create request", onClick: handleCreateOpen } : undefined}
       filtersActive={filtersActive}
       onClearFilters={handleClearFilters}
-      className="flex-1 min-h-[40vh]"
+      className={PAGE_BODY_EMPTY_CLASS}
     />
   );
 

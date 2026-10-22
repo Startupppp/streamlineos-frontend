@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useApplyToJobOpening,
@@ -113,6 +113,7 @@ export function MyJobOpeningsPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
           illustrationPreset="search"
           title="No internal openings right now"
           description="Roles opened to internal applicants will appear here."
+          className={PAGE_BODY_EMPTY_CLASS}
         />
       }
     >

@@ -7,6 +7,7 @@ import { CheckCircle2, ExternalLink, MessageSquareText } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,6 +36,7 @@ function safeMeetingLink(value: string | null): string | null {
 
 export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const [page, setPage] = useState(1);
+  const [referenceNow] = useState(() => Date.now());
   const [feedbackInterview, setFeedbackInterview] =
     useState<AssignedInterview | null>(null);
   const interviews = useAssignedInterviews(page);
@@ -52,9 +54,9 @@ export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
       data?.items.filter(
         (interview) =>
           interview.result === "PENDING" &&
-          new Date(interview.scheduledAt).getTime() >= Date.now(),
+          new Date(interview.scheduledAt).getTime() >= referenceNow,
       ).length ?? 0,
-    [data?.items],
+    [data?.items, referenceNow],
   );
 
   const handleSheetChange = useCallback((open: boolean) => {
@@ -70,24 +72,27 @@ export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
       title={hubChrome?.title ?? "My Recruitment"}
       subtitle={hubChrome?.subtitle ?? "Your assigned interviews and hiring feedback actions."}
       filters={hubChrome?.tabs}
-      state={pageState}
-      onRetry={interviews.refetch}
-      loading={
-        <div className={PAGE_BODY_SKELETON_CLASS}>
-          {Array.from({ length: 6 }, (_, index) => (
-            <Skeleton key={index} className="h-20 rounded-lg" />
-          ))}
-        </div>
-      }
-      empty={
-        <EmptyState
-          illustrationPreset="calendar"
-          title="No assigned interviews"
-          description="Interviews assigned to you will appear here."
-          className={PAGE_BODY_EMPTY_CLASS}
-        />
-      }
     >
+      <PageState
+        resolution={pageState}
+        onRetry={interviews.refetch}
+        className="flex-1"
+        loading={
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <Skeleton key={index} className="h-20 rounded-lg" />
+            ))}
+          </div>
+        }
+        empty={
+          <EmptyState
+            illustrationPreset="calendar"
+            title="No assigned interviews"
+            description="Interviews assigned to you will appear here."
+            className={PAGE_BODY_EMPTY_CLASS}
+          />
+        }
+      >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
       {data && data.items.length > 0 ? (
         <div className="space-y-3">
@@ -172,6 +177,7 @@ export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
         </div>
       ) : null}
       </div>
+      </PageState>
 
       {feedbackInterview && (
         <FeedbackSheet

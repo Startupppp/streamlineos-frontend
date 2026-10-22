@@ -12,6 +12,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { useMyResignations, useWithdrawMyResignation, type Resignation } from "@/hooks/api/hr/exit";
@@ -100,10 +101,23 @@ export function MyResignationPage() {
     ) : undefined;
 
   return (
-    <PageWrapper title="Resignation" subtitle="Submit, follow and withdraw your resignation" actions={action}>
+    <PageWrapper
+      title="Resignation"
+      subtitle="Submit, follow and withdraw your resignation"
+      actions={action}
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
+    >
       <PageState
         resolution={pageState}
-        loading={<Skeleton className="h-24 rounded-xl" />}
+        className="flex min-h-0 flex-1 flex-col"
+        loading={
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            {Array.from({ length: 4 }, (_, index) => (
+              <Skeleton key={index} className="h-16 w-full rounded-lg" />
+            ))}
+          </div>
+        }
         onRetry={handleRetry}
       >
         {resignations.length === 0 ? (
@@ -111,7 +125,7 @@ export function MyResignationPage() {
             title="No resignation on record"
             description="If you decide to leave, submit your resignation here. HR reviews it before your exit begins."
             action={canResign ? { label: "Submit resignation", onClick: handleOpenSheet } : undefined}
-            compact
+            className={PAGE_BODY_EMPTY_CLASS}
           />
         ) : (
           <ul className="flex flex-col gap-2">

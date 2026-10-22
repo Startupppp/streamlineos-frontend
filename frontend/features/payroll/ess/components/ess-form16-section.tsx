@@ -6,9 +6,8 @@ import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { EmptyPayroll } from "@/components/illustrations";
-import { PageState } from "@/components/shared/page-state";
-import { usePageState } from "@/hooks/api/use-page-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
+import { ErrorState } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { downloadOwnForm16, useEssForm16 } from "@/hooks/api/payroll/form16";
@@ -53,29 +52,61 @@ function Form16DownloadRow({ financialYear, releasedAt }: Form16RowProps) {
 
 export function EssForm16Section() {
   const { data, isLoading, isError, error, refetch } = useEssForm16();
-  const pageState = usePageState({ permission: "self:payslips", isLoading, isError, error });
   const documents = data?.documents ?? [];
 
   function handleRetry() {
     void refetch();
   }
 
-  return (
-    <PageState resolution={pageState} loading={<Skeleton className="h-32 rounded-xl" />} onRetry={handleRetry} className="flex-1">
-      {documents.length === 0 ? (
-        <EmptyState
-          illustration={<EmptyPayroll />}
-          title="No Form 16 yet"
-          description="Your Form 16 appears here once your employer releases it."
-          compact
-        />
-      ) : (
-        <div className="rounded-xl border border-border bg-card">
-          {documents.map((doc) => (
-            <Form16DownloadRow key={doc.financialYear} financialYear={doc.financialYear} releasedAt={doc.releasedAt} />
+  if (isLoading) {
+    return (
+      <section id="form16" className="flex min-h-0 w-full flex-1 flex-col">
+        <div className={PAGE_BODY_SKELETON_CLASS}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <Skeleton key={i} className="h-16 w-full rounded-lg" />
           ))}
         </div>
-      )}
-    </PageState>
+      </section>
+    );
+  }
+
+  if (isError) {
+    return (
+      <section id="form16" className="flex min-h-0 w-full flex-1 flex-col">
+        <ErrorState
+          className={PAGE_BODY_EMPTY_CLASS}
+          title="Unable to load Form 16"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+        />
+      </section>
+    );
+  }
+
+  if (documents.length === 0) {
+    return (
+      <section id="form16" className="flex min-h-0 w-full flex-1 flex-col">
+        <EmptyState
+          illustrationPreset="payroll"
+          title="No Form 16 yet"
+          description="Your Form 16 appears here once your employer releases it."
+          className={PAGE_BODY_EMPTY_CLASS}
+        />
+      </section>
+    );
+  }
+
+  return (
+    <section id="form16" className="flex min-h-0 w-full flex-1 flex-col">
+      <div className="min-h-0 w-full flex-1 overflow-y-auto rounded-xl border border-border bg-card">
+        {documents.map((doc) => (
+          <Form16DownloadRow
+            key={doc.financialYear}
+            financialYear={doc.financialYear}
+            releasedAt={doc.releasedAt}
+          />
+        ))}
+      </div>
+    </section>
   );
 }

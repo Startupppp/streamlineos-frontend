@@ -4,6 +4,7 @@ import { useCallback } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { RichPageContent, RichPanel, RichSectionHeader } from "@/components/shared/rich-surface";
@@ -16,9 +17,13 @@ import { TeamRoster } from "./team-roster";
 function ManagerHomeSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <Skeleton className="h-24 rounded-2xl" />
-      <Skeleton className="h-64 rounded-2xl" />
       <StatCardGridSkeleton cols={3} count={3} />
+      <div className={PAGE_BODY_SKELETON_CLASS}>
+        <Skeleton className="h-10 w-48 max-w-full rounded-lg" />
+        {Array.from({ length: 5 }, (_, index) => (
+          <Skeleton key={index} className="h-14 w-full rounded-lg" />
+        ))}
+      </div>
     </div>
   );
 }
@@ -45,18 +50,27 @@ export function ManagerHomePage() {
           ? `${data.reports.length} direct ${data.reports.length === 1 ? "report" : "reports"}`
           : undefined
       }
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
     >
-      <PageState resolution={pageState} loading={<ManagerHomeSkeleton />} onRetry={handleRetry} className="flex-1">
+      <PageState
+        resolution={pageState}
+        loading={<ManagerHomeSkeleton />}
+        onRetry={handleRetry}
+        className="flex min-h-0 flex-1 flex-col"
+      >
         {data && !data.isManager ? (
           <EmptyState
             title="You are not a reporting manager"
             description="This page shows one manager's own reports. Ask HR if you should have a reporting line under you."
             action={{ label: "Go to Home", href: "/dashboard" }}
+            className={PAGE_BODY_EMPTY_CLASS}
           />
         ) : data && data.reports.length === 0 ? (
           <EmptyState
             title="No direct reports assigned"
             description="Ask HR to set your reporting line."
+            className={PAGE_BODY_EMPTY_CLASS}
           />
         ) : data ? (
           <RichPageContent>
@@ -106,6 +120,7 @@ export function ManagerHomePage() {
           <EmptyState
             title="No one reports to you yet"
             description="Your team shows up here once HR sets a reporting line under you."
+            className={PAGE_BODY_EMPTY_CLASS}
           />
         )}
       </PageState>

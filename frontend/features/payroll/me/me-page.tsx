@@ -27,7 +27,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Tabs,
   TabsContent,
@@ -219,6 +220,13 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
         contentClassName="flex min-h-0 flex-1 flex-col max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
         state={pageState}
         onRetry={handleRetryOverview}
+        loading={
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <Skeleton key={index} className="h-16 w-full rounded-lg" />
+            ))}
+          </div>
+        }
         extraActions={
           payNotSetUp || hasTeam ? (
             <>
@@ -239,7 +247,11 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
         filters={
           <>
-            {hubChrome?.tabs}
+            {hubChrome ? (
+              <div className="flex w-full min-w-0 shrink-0 items-center">
+                {hubChrome.tabs}
+              </div>
+            ) : null}
             {payNotSetUp ? null : (
             <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} stackOnMobile>
               <StatCard

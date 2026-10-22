@@ -13,6 +13,7 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCan } from "@/hooks/api/access";
@@ -123,6 +124,8 @@ export function MyOnboardingTasksPage({ hubChrome }: { hubChrome?: SelfServiceHu
       title={hubChrome?.title ?? "My Onboarding"}
       subtitle={hubChrome?.subtitle ?? "Complete these tasks to finish your onboarding journey"}
       filters={hubChrome?.tabs}
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         canManageOnboarding ? (
           <Button variant="ghost" size="sm" asChild>
@@ -134,17 +137,16 @@ export function MyOnboardingTasksPage({ hubChrome }: { hubChrome?: SelfServiceHu
       <PageState
         resolution={pageState}
         onRetry={handleRetry}
+        className="flex min-h-0 flex-1 flex-col"
         loading={
-          <div className="space-y-4">
-            <div className="flex flex-col items-center gap-3 py-4">
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            <div className="flex flex-col items-center gap-3 py-2">
               <Skeleton className="h-32 w-32 rounded-full" />
               <Skeleton className="h-4 w-40" />
             </div>
-            <div className="space-y-2">
-              {Array.from({ length: 10 }).map((_, skeletonIndex) => (
-                <Skeleton key={skeletonIndex} className="h-16" />
-              ))}
-            </div>
+            {Array.from({ length: 6 }).map((_, skeletonIndex) => (
+              <Skeleton key={skeletonIndex} className="h-16 w-full rounded-lg" />
+            ))}
           </div>
         }
         empty={
@@ -152,6 +154,7 @@ export function MyOnboardingTasksPage({ hubChrome }: { hubChrome?: SelfServiceHu
             illustration={<EmptyTasksIllustration className="h-40 w-40" />}
             title="No onboarding tasks yet"
             description="Your HR team hasn't set up any tasks for you. Check back soon."
+            className={PAGE_BODY_EMPTY_CLASS}
           />
         }
       >

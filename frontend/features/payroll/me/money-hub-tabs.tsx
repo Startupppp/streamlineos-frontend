@@ -48,7 +48,7 @@ export function MoneyHubTabs() {
   useEffect(() => {
     selectedTabRef.current?.scrollIntoView({
       block: "nearest",
-      inline: "nearest",
+      inline: "start",
     });
   }, [active]);
 

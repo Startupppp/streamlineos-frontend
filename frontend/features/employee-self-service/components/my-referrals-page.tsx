@@ -21,7 +21,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
-import { PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
+import { PAGE_BODY_EMPTY_CLASS, PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
   useSelfReferrals,
@@ -163,6 +163,7 @@ export function MyReferralsPage({ hubChrome }: { hubChrome?: SelfServiceHubChrom
           illustrationPreset="team"
           title="No referrals yet"
           description="Refer someone you would work with again and track their progress here."
+          className={PAGE_BODY_EMPTY_CLASS}
         />
       }
     >

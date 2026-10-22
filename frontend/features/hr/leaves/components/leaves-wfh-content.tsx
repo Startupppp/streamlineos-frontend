@@ -13,6 +13,7 @@ import {
   TABS_CONTENT_PAGE_BODY_CLASS,
 } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PAGE_BODY_SKELETON_CLASS } from "@/components/ui/content-fill-panel";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -148,7 +149,11 @@ export function LeavesWfhContent({
       >
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           <StatCardGridSkeleton cols={3} count={3} />
-          <Skeleton className="min-h-0 w-full flex-1 rounded-xl" />
+          <div className={PAGE_BODY_SKELETON_CLASS}>
+            {Array.from({ length: 6 }, (_, index) => (
+              <Skeleton key={index} className="h-16 w-full rounded-lg" />
+            ))}
+          </div>
         </div>
         {requestSheets}
       </PageWrapper>
