@@ -6,12 +6,15 @@ import type { Message } from "@/types/chat";
 const PANEL_RENDER_PAGE_SIZE = 25;
 
 const useThreadReplies = jest.fn();
-const useSendThreadReply = jest.fn();
+const useThreadOutbox = jest.fn();
 const useChatOrgUsers = jest.fn();
 
 jest.mock("@/hooks/api/chat-search", () => ({
   useThreadReplies: (channelId: number, messageId: number) => useThreadReplies(channelId, messageId),
-  useSendThreadReply: () => useSendThreadReply(),
+}));
+
+jest.mock("./use-chat-offline-queue", () => ({
+  useThreadOutbox: () => useThreadOutbox(),
 }));
 
 jest.mock("@/hooks/api/chat-core-read", () => ({
@@ -72,7 +75,13 @@ function makeMessage(index: number): Message {
 beforeEach(() => {
   jest.clearAllMocks();
   useChatOrgUsers.mockReturnValue({ data: [] });
-  useSendThreadReply.mockReturnValue({ mutateAsync: jest.fn(), isPending: false });
+  useThreadOutbox.mockReturnValue({
+    enqueue: jest.fn(),
+    isOnline: true,
+    isPending: false,
+    draftKey: "unscoped::chat:thread:7:42",
+    discardFailed: jest.fn(),
+  });
 });
 
 describe("ThreadPanel — older replies load by scrolling, not by a visible button", () => {

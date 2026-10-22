@@ -57,9 +57,7 @@ const PageSpreadsheet = dynamic(() => import("./page-spreadsheet"), {
   loading: () => <Skeleton className="h-full w-full" />,
 });
 
-/** Centered reading column — wider than a narrow article, not full-bleed. */
-const WIKI_DOCUMENT_COLUMN =
-  "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
+const WIKI_DOCUMENT_COLUMN = "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
 
 function loadedEditorSnapshot(storedContent: unknown): string {
   const loaded = normalizePlateValue(storedContent);
@@ -71,7 +69,7 @@ const PlateDocumentEditor = dynamic(
   {
     ssr: false,
     loading: () => <Skeleton className="h-64 w-full rounded-lg" />,
-  }
+  },
 );
 
 async function fetchMentionUsers(query: string) {
@@ -81,7 +79,7 @@ async function fetchMentionUsers(query: string) {
   const lower = query.toLowerCase();
   const filtered = query
     ? users.filter((u) =>
-        (u.name ?? u.email ?? "").toLowerCase().includes(lower)
+        (u.name ?? u.email ?? "").toLowerCase().includes(lower),
       )
     : users;
   return filtered
@@ -91,7 +89,12 @@ async function fetchMentionUsers(query: string) {
 
 async function fetchPageLinks(query: string) {
   const page = await apiClient.get<{
-    items: Array<{ id: number; title: string; icon: string | null; snippet: string }>;
+    items: Array<{
+      id: number;
+      title: string;
+      icon: string | null;
+      snippet: string;
+    }>;
     hasMore: boolean;
     limit: number;
   }>("/kb/pages/search", { q: query }, undefined, kbPageSearchContract);
@@ -108,13 +111,17 @@ function nextReload(current: number): number {
   return current + 1;
 }
 
-export default function PageDocument({ pageId, onNavigateToPage, projectId }: PageDocumentProps) {
+export default function PageDocument({
+  pageId,
+  onNavigateToPage,
+  projectId,
+}: PageDocumentProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
-  // Pages imported before content was written on import carry only
-  // contentText; show it as plain paragraphs instead of an empty document.
   const storedContent = useMemo(
-    () => page?.content ?? (page?.contentText ? plainTextToPlateValue(page.contentText) : null),
+    () =>
+      page?.content ??
+      (page?.contentText ? plainTextToPlateValue(page.contentText) : null),
     [page?.content, page?.contentText],
   );
   const updatePage = useUpdateKbPage();
@@ -137,14 +144,20 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const editorContainerRef = useRef<HTMLDivElement>(null);
-  const editorSnapshotRef = useRef<{ pageId: number; snapshot: string } | null>(null);
+  const editorSnapshotRef = useRef<{ pageId: number; snapshot: string } | null>(
+    null,
+  );
   const editorValue = editorDraft?.pageId === pageId ? editorDraft.value : null;
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
   const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
 
   const handleSavePage = useCallback(
-    (payload: PageAutosavePatch & { pageId: number; expectedContentRevision: number }) =>
-      updatePage.mutateAsync(payload),
+    (
+      payload: PageAutosavePatch & {
+        pageId: number;
+        expectedContentRevision: number;
+      },
+    ) => updatePage.mutateAsync(payload),
     [updatePage],
   );
   const handleConflict = useCallback((detail: KbPageEditConflict) => {
@@ -156,7 +169,17 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     toast.error("Failed to save file", { description: getErrorMessage(error) });
   }, []);
 
-  const { saveState, conflict, savedAt, isOffline, pendingFields, schedule, retry, discardLocalEdits, keepLocalEdits } = usePageAutosave({
+  const {
+    saveState,
+    conflict,
+    savedAt,
+    isOffline,
+    pendingFields,
+    schedule,
+    retry,
+    discardLocalEdits,
+    keepLocalEdits,
+  } = usePageAutosave({
     pageId,
     contentRevision: page?.contentRevision,
     save: handleSavePage,
@@ -170,7 +193,13 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     handleIconChange,
     handleRetryPresentation,
     discardPresentation,
-  } = usePagePresentationUpdate({ pageId, page, canManage, updatePage, refetch });
+  } = usePagePresentationUpdate({
+    pageId,
+    page,
+    canManage,
+    updatePage,
+    refetch,
+  });
 
   const localTitle =
     titleDraft?.pageId === pageId ? titleDraft.value : (page?.title ?? "");
@@ -201,37 +230,44 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
         router.push(pageHref(targetPageId));
       }
     },
-    [router, onNavigateToPage]
+    [router, onNavigateToPage],
   );
 
   const handleDiscardMine = useCallback(() => {
     setIsReloading(true);
     void refetch()
-      .then((result) => {
-        if (
-          !result.isSuccess ||
-          !result.data ||
-          (conflict?.currentContentRevision !== null &&
-            conflict?.currentContentRevision !== undefined &&
-            result.data.contentRevision < conflict.currentContentRevision)
-        ) {
-          toast.error("Couldn't load the latest file version. Your edits are still here.");
-          return;
-        }
-        discardLocalEdits();
-        setTitleDraft(null);
-        setEditorDraft(null);
-        editorSnapshotRef.current = null;
-        setReloadNonce(nextReload);
-      }, () => {
-        toast.error("Couldn't load the latest file version. Your edits are still here.");
-      })
+      .then(
+        (result) => {
+          if (
+            !result.isSuccess ||
+            !result.data ||
+            (conflict?.currentContentRevision !== null &&
+              conflict?.currentContentRevision !== undefined &&
+              result.data.contentRevision < conflict.currentContentRevision)
+          ) {
+            toast.error(
+              "Couldn't load the latest file version. Your edits are still here.",
+            );
+            return;
+          }
+          discardLocalEdits();
+          setTitleDraft(null);
+          setEditorDraft(null);
+          editorSnapshotRef.current = null;
+          setReloadNonce(nextReload);
+        },
+        () => {
+          toast.error(
+            "Couldn't load the latest file version. Your edits are still here.",
+          );
+        },
+      )
       .finally(() => setIsReloading(false));
   }, [conflict?.currentContentRevision, discardLocalEdits, refetch]);
 
   const handleUploadFile = useCallback(
     (file: File) => uploadKbMedia(file, pageId),
-    [pageId]
+    [pageId],
   );
 
   function handleTitleMouseDown(e: React.MouseEvent<HTMLTextAreaElement>) {
@@ -335,17 +371,13 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     return <KbPageNotFound error={error} onRetry={refetch} />;
   }
 
-  if (page.kind === "spreadsheet") {
-    return (
-      <PageSpreadsheet pageId={pageId} onNavigateToPage={onNavigateToPage} projectId={projectId} />
-    );
-  }
+  if (page.kind === "spreadsheet")
+    return <PageSpreadsheet {...{ pageId, onNavigateToPage, projectId }} />;
 
-  if (page.kind === "file") {
-    return <KbFileViewer pageId={pageId} />;
-  }
+  if (page.kind === "file") return <KbFileViewer pageId={pageId} />;
 
-  const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
+  const isEditable =
+    canUpdate && page.can.edit === true && (!page.isLocked || canManage);
   const wordCount = (page.contentText ?? "")
     .split(/\s+/)
     .filter(Boolean).length;
@@ -390,10 +422,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
               <div
                 ref={handleToolbarHost}
                 data-slot="wiki-document-toolbar"
-                className={cn(
-                  WIKI_DOCUMENT_COLUMN,
-                  "border-t border-border",
-                )}
+                className={cn(WIKI_DOCUMENT_COLUMN, "border-t border-border")}
               />
             ) : null}
           </div>
@@ -405,14 +434,30 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             )}
           >
             {pendingPresentation && (
-              <div role="alert" className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
+              <div
+                role="alert"
+                className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink"
+              >
                 <span className="min-w-0 flex-1">
-                  The page changed before your {pendingPresentation.field === "icon" ? "icon" : "cover"} change was saved. Your choice is ready to retry.
+                  The page changed before your{" "}
+                  {pendingPresentation.field === "icon" ? "icon" : "cover"}{" "}
+                  change was saved. Your choice is ready to retry.
                 </span>
-                <Button size="sm" onClick={handleRetryPresentation} disabled={isRetryingPresentation || !isEditable}>
-                  {isRetryingPresentation ? "Retrying…" : `Retry ${pendingPresentation.field === "icon" ? "icon" : "cover"} change`}
+                <Button
+                  size="sm"
+                  onClick={handleRetryPresentation}
+                  disabled={isRetryingPresentation || !isEditable}
+                >
+                  {isRetryingPresentation
+                    ? "Retrying…"
+                    : `Retry ${pendingPresentation.field === "icon" ? "icon" : "cover"} change`}
                 </Button>
-                <Button size="sm" variant="outline" onClick={discardPresentation} disabled={isRetryingPresentation}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={discardPresentation}
+                  disabled={isRetryingPresentation}
+                >
                   Discard choice
                 </Button>
               </div>
