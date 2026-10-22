@@ -256,6 +256,10 @@ export interface SignOutOutcome {
   serverRevocationCompleted: boolean;
 }
 
+// The UI waits on this call before leaving, so a slow API must not hold the
+// click for the full request timeout.
+const SIGN_OUT_REVOKE_TIMEOUT_MS = 4000;
+
 const SERVER_REVOCATION_FAILED_MESSAGE =
   "Signed out on this device. Server session could not be revoked, so other devices may still be signed in — sign out from them directly.";
 
@@ -265,12 +269,15 @@ export function useSignOut() {
   return useMutation({
     mutationKey: ["auth", "sign-out"],
     mutationFn: async (): Promise<SignOutOutcome> => {
+      // A 401 from the logout call (or a query still in flight) would run
+      // endSession() and land on "session expired" instead of /signin (#47).
+      setAutoSignOutSuppressed(true);
       let serverRevocationCompleted = false;
       try {
         await apiClient.post(
           "/auth/logout",
           undefined,
-          undefined,
+          { timeoutMs: SIGN_OUT_REVOKE_TIMEOUT_MS },
           logoutContract,
         );
         serverRevocationCompleted = true;
@@ -292,6 +299,9 @@ export function useSignOut() {
         toast.error(SERVER_REVOCATION_FAILED_MESSAGE);
       router.push("/signin");
       router.refresh();
+    },
+    onSettled: () => {
+      window.setTimeout(() => setAutoSignOutSuppressed(false), 4000);
     },
   });
 }

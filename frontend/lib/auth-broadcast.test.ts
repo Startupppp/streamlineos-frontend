@@ -76,3 +76,55 @@ describe("publishLogout — does not throw in a browser-like environment", () =>
     expect(() => publishLogout()).not.toThrow();
   });
 });
+
+describe("subscribeLogout / publishLogout — BroadcastChannel path", () => {
+  type Listener = (event: MessageEvent<unknown>) => void;
+  const channels = new Set<FakeChannel>();
+  class FakeChannel {
+    listeners = new Set<Listener>();
+    constructor(readonly name: string) {
+      channels.add(this);
+    }
+    addEventListener(_type: string, listener: Listener) {
+      this.listeners.add(listener);
+    }
+    removeEventListener(_type: string, listener: Listener) {
+      this.listeners.delete(listener);
+    }
+    // Real BroadcastChannel delivers to every other object with the same name, same tab included.
+    postMessage(data: unknown) {
+      for (const other of channels)
+        if (other !== this && other.name === this.name)
+          for (const listener of other.listeners) listener({ data } as MessageEvent<unknown>);
+    }
+    close() {
+      channels.delete(this);
+    }
+  }
+  const original = globalThis.BroadcastChannel;
+  beforeAll(() => {
+    globalThis.BroadcastChannel = FakeChannel as unknown as typeof BroadcastChannel;
+  });
+  afterAll(() => {
+    globalThis.BroadcastChannel = original;
+  });
+
+  it("ignores the tab's own sign-out so it is not reported as an expired session", () => {
+    const onLogout = jest.fn();
+    const cleanup = subscribeLogout(onLogout);
+    publishLogout();
+    expect(onLogout).not.toHaveBeenCalled();
+    cleanup();
+  });
+
+  it("still ends the session when another tab signs out", () => {
+    const onLogout = jest.fn();
+    const cleanup = subscribeLogout(onLogout);
+    const otherTab = new FakeChannel(CHANNEL_NAME);
+    otherTab.postMessage({ type: LOGOUT_VALUE, from: "another-tab" });
+    otherTab.postMessage(LOGOUT_VALUE);
+    expect(onLogout).toHaveBeenCalledTimes(2);
+    otherTab.close();
+    cleanup();
+  });
+});
