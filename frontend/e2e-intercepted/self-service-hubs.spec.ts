@@ -159,7 +159,7 @@ async function installBrowserFixtures(page: Page) {
 const HUBS = [
   { path: "/me/workday", heading: "Attendance & Time Off", section: "My leaves", query: "section=time-off" },
   { path: "/me/records", heading: "Documents & Onboarding", section: "Onboarding", query: "section=onboarding" },
-  { path: "/me/money", heading: "Expenses & Pay", section: "Pay", query: "section=pay" },
+  { path: "/me/money", heading: "Expenses & Pay", section: "Payslips", query: "section=pay&tab=payslips" },
   { path: "/me/career", heading: "Hiring & Referrals", section: "Job openings", query: "section=openings" },
 ] as const;
 
@@ -178,7 +178,7 @@ for (const viewport of VIEWPORTS) {
 
       await page.goto(path, { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { name: heading })).toBeVisible({ timeout: 60_000 });
-      const tabs = page.getByRole("navigation", { name: `${heading} sections` });
+      const tabs = page.getByRole("navigation", { name: path === "/me/money" ? "Expenses and pay sections" : `${heading} sections` });
       await expect(tabs).toBeVisible();
       if (path === "/me/workday") {
         await expect(tabs.getByRole("link", { name: "Today" })).toBeVisible();
@@ -189,7 +189,14 @@ for (const viewport of VIEWPORTS) {
       await expect(sectionLink).toBeVisible();
       await sectionLink.click();
       await expect(page).toHaveURL(new RegExp(query), { timeout: 60_000 });
-      await expect(page.getByRole("navigation", { name: `${heading} sections` }).getByRole("link", { name: section })).toHaveAttribute("aria-current", "page");
+      await expect(tabs.getByRole("link", { name: section })).toHaveAttribute("aria-current", "page");
+      if (path === "/me/money") {
+        await expect(tabs.getByRole("link", { name: "Claims" })).toBeVisible();
+        await expect(tabs.getByRole("tablist")).toHaveCount(0);
+        await tabs.getByRole("link", { name: "Form 16" }).click();
+        await expect(page).toHaveURL(/section=pay&tab=form16/);
+        await expect(tabs.getByRole("link", { name: "Form 16" })).toHaveAttribute("aria-current", "page");
+      }
       if (path === "/me/workday") {
         await expect(page.getByRole("button", { name: "Request leave" })).toBeVisible();
         await tabs.getByRole("link", { name: "WFH" }).click();

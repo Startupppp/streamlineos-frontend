@@ -186,7 +186,7 @@ export function LeavesWfhContent({
           noInternalScroll
           actionsInline={selfService}
           contentClassName="flex min-h-0 flex-1 flex-col"
-          filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
+          filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*:not([data-slot=tabs-navigation])]:w-full"
           filters={
             <>
               {hubChrome?.tabs}

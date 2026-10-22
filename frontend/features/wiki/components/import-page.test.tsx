@@ -62,31 +62,19 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: () => ({ data: { data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } } }),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/import-export", () => ({
   useImportKbPages: () => ({ mutate: mockImportMutate, isPending: false }),
   useKbImportJob: (jobId: number | null) => mockUseKbImportJob(jobId),
   useCancelImportJob: () => ({ mutate: mockCancelMutate, isPending: false }),
   useRetryImportJob: () => ({ mutate: jest.fn(), isPending: false }),
   useDryRunImport: () => ({ mutate: jest.fn(), isPending: false, data: undefined, reset: jest.fn() }),
   useKbImportJobs: () => ({
-    data: [],
-    isLoading: false,
-    isError: false,
-    error: null,
-    refetch: jest.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
+    data: [], isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn(),
   }),
   useKbExportJobs: () => ({
-    data: [],
-    isLoading: false,
-    isError: false,
-    error: null,
-    refetch: jest.fn(),
-    hasNextPage: false,
-    isFetchingNextPage: false,
-    fetchNextPage: jest.fn(),
+    data: [], isLoading: false, isError: false, error: null, refetch: jest.fn(),
+    hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn(),
   }),
 }));
 

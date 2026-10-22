@@ -30,7 +30,7 @@ import {
   useArchiveKbPage,
   useUnarchiveKbPage,
   useUpdateKbPage,
-} from "@/hooks/api/kb";
+} from "@/hooks/api/kb/pages";
 import { useExportKbPage } from "@/hooks/api/kb/export-page";
 import { useCreateKbShortcut } from "@/hooks/api/kb/shortcuts";
 import { useCan } from "@/hooks/api/access";

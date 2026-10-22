@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { EmptyMailIllustration } from "./empty-mail-illustration";
 import { IllustrationImage, type IllustrationName } from "./illustration-image";
 
 export type StateIllustrationPreset =
@@ -91,7 +92,11 @@ export function StateIllustration({
 }) {
   return (
     <div className={cn(className)}>
-      <IllustrationImage name={PRESET_TO_ILLUSTRATION[preset]} />
+      {preset === "mail" ? (
+        <EmptyMailIllustration />
+      ) : (
+        <IllustrationImage name={PRESET_TO_ILLUSTRATION[preset]} />
+      )}
     </div>
   );
 }

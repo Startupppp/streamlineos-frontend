@@ -19,7 +19,7 @@ import { PageState } from "@/components/shared/page-state";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { usePageState } from "@/hooks/api/use-page-state";
-import { useKbPageVersionsInfinite, useKbPageVersionDetail } from "@/hooks/api/kb";
+import { useKbPageVersionsInfinite, useKbPageVersionDetail } from "@/hooks/api/kb/page-versions";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
 import { pageHistoryHref } from "@/lib/knowledge-routes";
 import { isApiError } from "@/lib/api-envelope";

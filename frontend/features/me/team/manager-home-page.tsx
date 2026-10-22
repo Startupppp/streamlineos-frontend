@@ -60,20 +60,6 @@ export function ManagerHomePage() {
           />
         ) : data ? (
           <RichPageContent>
-            <PendingDecisionsStrip
-              pendingTotal={pendingTotal}
-              items={data.approvals.items}
-              unsettledTimesheets={unsettledTotal}
-            />
-
-            <RichPanel>
-              <RichSectionHeader
-                title="Direct reports"
-                description="Who is out today, whose timesheets are behind, and whose probation is ending"
-              />
-              <TeamRoster reports={data.reports} upcomingLeave={data.upcomingLeave} />
-            </RichPanel>
-
             <StatCardGrid cols={3}>
               <StatCard
                 label="On leave today"
@@ -90,6 +76,25 @@ export function ManagerHomePage() {
                 tone={data.probationDue.length > 0 ? "amber" : "default"}
               />
             </StatCardGrid>
+
+            <PendingDecisionsStrip
+              pendingTotal={pendingTotal}
+              items={data.approvals.items}
+              unsettledTimesheets={unsettledTotal}
+            />
+
+            <RichPanel padded={false} className="overflow-hidden">
+              <div className="border-b border-border/60 px-4 py-3 sm:px-5 sm:py-4">
+                <RichSectionHeader
+                  className="mb-0"
+                  title="Direct reports"
+                  description="Who is out today, whose timesheets are behind, and whose probation is ending"
+                />
+              </div>
+              <div className="px-4 sm:px-5">
+                <TeamRoster reports={data.reports} upcomingLeave={data.upcomingLeave} />
+              </div>
+            </RichPanel>
 
             <TeamCoveragePanels
               upcomingLeave={data.upcomingLeave}

@@ -14,7 +14,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/page-comments", () => ({
   useKbPageComments: jest.fn(() => ({ data: [], isLoading: false })),
   useCreateKbPageComment: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useUpdateKbPageComment: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
@@ -25,7 +25,7 @@ jest.mock("@/hooks/api/kb", () => ({
 const { useCreateKbPageComment, useKbPageComments } = jest.requireMock<{
   useCreateKbPageComment: jest.Mock;
   useKbPageComments: jest.Mock;
-}>("@/hooks/api/kb");
+}>("@/hooks/api/kb/page-comments");
 
 const PAGE_CONTENT = [
   { type: "h1", children: [{ text: "Refund policy" }] },

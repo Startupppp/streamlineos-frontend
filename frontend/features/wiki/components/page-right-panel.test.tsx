@@ -12,7 +12,7 @@ jest.mock("@/hooks/api/use-page-state", () => ({
     isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : isEmpty ? { kind: "empty" } : { kind: "ready" },
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useKbPageBacklinks: jest.fn(),
 }));
 
@@ -28,7 +28,7 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
 }));
 
-import { useKbPageBacklinks } from "@/hooks/api/kb";
+import { useKbPageBacklinks } from "@/hooks/api/kb/pages";
 import { useKbPageActivity } from "@/hooks/api/kb/activity";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";

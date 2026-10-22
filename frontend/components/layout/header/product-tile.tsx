@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import { MODULE_ACCENTS, PRODUCT_DESCRIPTIONS, type ProductKey } from "../sidebar/sidebar-nav-items";
 import { NavLockBadge } from "../nav-lock-badge";
+import { useNavIntentPrefetch } from "../nav-intent-prefetch";
 import { cn } from "@/lib/utils";
 
 export const ICON_STROKE = 1.75;
@@ -41,6 +42,11 @@ export function ProductTile({
   const accent = MODULE_ACCENTS[productKey];
   const description = PRODUCT_DESCRIPTIONS[productKey];
   const effectivelyEnabled = isEnabled && !planLocked;
+  const prefetchOnIntent = useNavIntentPrefetch();
+  const destination = planLocked
+    ? "/settings/billing"
+    : isEnabled ? href : "/settings/modules";
+  const handleIntent = () => prefetchOnIntent(destination);
 
   const card = (
     <motion.div
@@ -118,6 +124,10 @@ export function ProductTile({
         <TooltipTrigger asChild>
           <Link
             href="/settings/billing"
+            prefetch={false}
+            onMouseEnter={handleIntent}
+            onFocus={handleIntent}
+            onTouchStart={handleIntent}
             onClick={onClose}
             className="flex"
             aria-label={`${label} — upgrade plan`}
@@ -153,6 +163,10 @@ export function ProductTile({
         <TooltipTrigger asChild>
           <Link
             href="/settings/modules"
+            prefetch={false}
+            onMouseEnter={handleIntent}
+            onFocus={handleIntent}
+            onTouchStart={handleIntent}
             onClick={onClose}
             className="flex"
             aria-label={`${label} — not enabled`}
@@ -168,7 +182,16 @@ export function ProductTile({
   }
 
   return (
-    <Link href={href} onClick={onClose} className="flex" aria-label={label}>
+    <Link
+      href={href}
+      prefetch={false}
+      onMouseEnter={handleIntent}
+      onFocus={handleIntent}
+      onTouchStart={handleIntent}
+      onClick={onClose}
+      className="flex"
+      aria-label={label}
+    >
       {card}
     </Link>
   );

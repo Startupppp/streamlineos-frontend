@@ -6,7 +6,7 @@ import { useWorkbookAutosave } from "./use-workbook-autosave";
 
 const mockPatch = jest.fn();
 const mockPut = jest.fn();
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/workbook", () => ({
   useUpdateKbWorkbook: () => ({ mutateAsync: mockPatch }),
   useReplaceKbWorkbook: () => ({ mutateAsync: mockPut }),
 }));

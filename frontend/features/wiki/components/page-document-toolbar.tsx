@@ -25,7 +25,7 @@ import {
   useDuplicateKbPage,
   useLockKbPage,
   useKbPageBacklinks,
-} from "@/hooks/api/kb";
+} from "@/hooks/api/kb/pages";
 import { useExportKbPage } from "@/hooks/api/kb/export-page";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";

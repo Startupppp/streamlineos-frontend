@@ -21,6 +21,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 import { GET } from "./route";
+import { ApiError } from "@/lib/api-envelope";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -92,5 +93,16 @@ describe("BugsSubmissionRedirectPage", () => {
     expect(mockServerGet).not.toHaveBeenCalled();
     expect(mockRedirect).not.toHaveBeenCalled();
     expect(mockNotFound).not.toHaveBeenCalled();
+  });
+
+  it("keeps a project access denial from resolving an intake item", async () => {
+    mockServerGet.mockRejectedValueOnce(new ApiError("Forbidden", 403, "PROJECTS_FORBIDDEN_PROJECT"));
+
+    await expect(
+      GET({} as Request, { params: Promise.resolve({ projectId: "10", submissionId: "42" }) }),
+    ).rejects.toThrow("not-found");
+
+    expect(mockNotFound).toHaveBeenCalledTimes(1);
+    expect(mockRedirect).not.toHaveBeenCalled();
   });
 });

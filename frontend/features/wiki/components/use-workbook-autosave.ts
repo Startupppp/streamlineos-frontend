@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useReplaceKbWorkbook, useUpdateKbWorkbook } from "@/hooks/api/kb";
+import { useReplaceKbWorkbook, useUpdateKbWorkbook } from "@/hooks/api/kb/workbook";
 import type { KbWorkbookSheet } from "@/hooks/api/kb/kb-pages-schema";
 import {
   kbPageEditConflictContract,

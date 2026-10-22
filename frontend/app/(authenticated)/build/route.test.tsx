@@ -35,6 +35,12 @@ describe("Build entry route", () => {
     ).rejects.toThrow("NEXT_REDIRECT:/build/projects?create=1");
   });
 
+  it("preserves legacy project filters when sending an entry URL to Projects", async () => {
+    await expect(
+      GET({ url: "http://localhost/build?q=launch&view=list" } as Request),
+    ).rejects.toThrow("NEXT_REDIRECT:/build/projects?q=launch&view=list");
+  });
+
   it("does not redirect when Build access is denied", async () => {
     mockEnforceRouteAccess.mockRejectedValue(new Error("denied"));
     await expect(GET({ url: "http://localhost/build" } as Request)).rejects.toThrow(

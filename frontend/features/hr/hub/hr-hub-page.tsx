@@ -10,19 +10,11 @@ import { StalledReadNotice } from "@/components/shared/stalled-read-notice";
 import { PANEL_STALLED_AFTER_MS, useStalledAfter } from "@/hooks/common/use-stalled-after";
 import { useHrHubSnapshot } from "@/hooks/api/hr/hub";
 import { EMPTY_HR_HUB_ACCESS } from "@/hooks/api/hr/hub-types";
-import {
-  HrStartHereChecklist,
-  hrSetupIsEmpty,
-  useHrSetupSignals,
-  useHrStartHereDismissed,
-} from "@/features/hr/setup";
 import { HrHubQueues } from "./hr-hub-queues";
 import { HrHubMetrics } from "./hr-hub-metrics";
 import { HrHubToday } from "./hr-hub-today";
 import { HrHubActivity } from "./hr-hub-activity";
 
-// The hub snapshot still reports hiring capabilities, but no HR hub panel reads
-// them: recruitment lives in Recruitment OS. They must not count as a panel.
 const RECRUITMENT_CAPABILITIES = new Set([
   "canInterviews",
   "canOffers",
@@ -32,12 +24,6 @@ const RECRUITMENT_CAPABILITIES = new Set([
 
 export function HrHubPage() {
   const hub = useHrHubSnapshot();
-  const setupSignals = useHrSetupSignals();
-  // The hub hides its panels behind "Start here" while setup is empty. Once
-  // that checklist is dismissed it renders nothing, so the panels must come
-  // back or the page is a title over a blank body (BUG-HRMS-012).
-  const checklistDismissed = useHrStartHereDismissed();
-  const setupEmpty = hrSetupIsEmpty(setupSignals) && !checklistDismissed;
   const access = hub.data?.capabilities ?? EMPTY_HR_HUB_ACCESS;
   const handleRetry = () => {
     void hub.refetch();
@@ -55,7 +41,7 @@ export function HrHubPage() {
       subtitle="People operations hub — manage your team, track time, and run the full employee lifecycle"
       variant="display"
       actions={
-        !setupEmpty && (access.canOnboarding || access.canWorkflowsApprove || access.canAnnouncements) ? (
+        access.canOnboarding || access.canWorkflowsApprove || access.canAnnouncements ? (
           <div className="flex flex-wrap items-center gap-2">
             {access.canAnnouncements ? (
               <Button size="sm" variant="outline" asChild>
@@ -78,8 +64,6 @@ export function HrHubPage() {
     >
       <div className="flex flex-1 min-h-0 flex-col">
         <HrPageContent>
-          <HrStartHereChecklist signals={setupSignals} />
-
           {hub.isError ? (
             <div
               role="alert"
@@ -100,11 +84,11 @@ export function HrHubPage() {
             </div>
           ) : null}
 
-          {hubStalled && !setupEmpty ? (
+          {hubStalled ? (
             <StalledReadNotice subject="the HR overview" onRetry={handleRetry} />
           ) : null}
 
-          {!setupEmpty && !hubLoading && !hub.isError && !hasAnyPanel ? (
+          {!hubLoading && !hub.isError && !hasAnyPanel ? (
             <EmptyState
               className="flex-1"
               illustrationPreset="team"
@@ -113,8 +97,6 @@ export function HrHubPage() {
             />
           ) : null}
 
-          {!setupEmpty ? (
-            <>
           <HrHubQueues
             access={access}
             snapshot={hub.data}
@@ -139,8 +121,6 @@ export function HrHubPage() {
             isLoading={hubLoading}
             onRetry={handleRetry}
           />
-            </>
-          ) : null}
         </HrPageContent>
       </div>
     </PageWrapper>

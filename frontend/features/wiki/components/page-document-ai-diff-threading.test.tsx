@@ -9,7 +9,7 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useToggleFavoriteKbPage: () => ({ mutate: jest.fn() }),
   useDuplicateKbPage: () => ({ mutate: jest.fn() }),
   useLockKbPage: () => ({ mutate: jest.fn() }),

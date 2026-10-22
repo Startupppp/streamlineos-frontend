@@ -7,6 +7,7 @@ import { CalendarDays, FilePen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tabs,
   TabsContent,
@@ -107,13 +108,14 @@ export function MyAttendancePage({
         >
           <div className="flex h-full min-h-0 flex-1 flex-col">
             <TabsContent value="today" className={TAB_PANEL_CLASS}>
-              <div
+              <ScrollArea
+                fill
                 className={cn(
                   CONTENT_FILL_PANEL,
-                  "min-h-0 overflow-y-auto overscroll-contain rounded-xl border border-border bg-card px-4 py-8 sm:px-6",
+                  "min-h-0 rounded-xl border border-border bg-card",
                 )}
               >
-                <div className="m-auto w-full max-w-sm space-y-3">
+                <div className="m-auto flex min-h-full w-full max-w-sm flex-col justify-center space-y-3 overscroll-contain px-4 py-8 sm:px-6">
                   <TimerCard
                     chrome={false}
                     today
@@ -124,7 +126,7 @@ export function MyAttendancePage({
                     {t("attendance.locationDisclosure")}
                   </p>
                 </div>
-              </div>
+              </ScrollArea>
             </TabsContent>
 
             <TabsContent value="history" className={TAB_PANEL_CLASS}>

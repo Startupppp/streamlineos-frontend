@@ -1,10 +1,10 @@
 import React from "react";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PageCommentThread } from "./page-comment-thread";
-import { useDeleteKbPageComment } from "@/hooks/api/kb";
+import { useDeleteKbPageComment } from "@/hooks/api/kb/page-comments";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/page-comments", () => ({
   useUpdateKbPageComment: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useDeleteKbPageComment: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useResolveKbPageComment: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),

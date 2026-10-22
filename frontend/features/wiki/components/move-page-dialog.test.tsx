@@ -4,9 +4,12 @@ import MovePageDialog from "./move-page-dialog";
 
 const mockMove = jest.fn();
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useKbPagesSearch: jest.fn(),
   useMoveKbPage: jest.fn(() => ({ mutate: mockMove, isPending: false })),
+}));
+
+jest.mock("@/hooks/api/kb/spaces", () => ({
   useKbSpaces: jest.fn(() => ({
     data: {
       data: [{ id: 4, name: "Operations", icon: "🛠" }, { id: 5, name: "Legal", icon: "" }],
@@ -15,7 +18,7 @@ jest.mock("@/hooks/api/kb", () => ({
   })),
 }));
 
-const { useKbPagesSearch } = jest.requireMock<{ useKbPagesSearch: jest.Mock }>("@/hooks/api/kb");
+const { useKbPagesSearch } = jest.requireMock<{ useKbPagesSearch: jest.Mock }>("@/hooks/api/kb/pages");
 
 beforeEach(() => {
   jest.clearAllMocks();

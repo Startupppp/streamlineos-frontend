@@ -20,8 +20,9 @@ jest.mock("next/link", () => {
   return function Link({
     children,
     href,
+    prefetch: _prefetch,
     ...props
-  }: PropsWithChildren<AnchorHTMLAttributes<HTMLAnchorElement>>) {
+  }: PropsWithChildren<AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }>) {
     return (
       <a href={href} {...props}>
         {children}
@@ -30,8 +31,10 @@ jest.mock("next/link", () => {
   };
 });
 
+const mockPrefetch = jest.fn();
 jest.mock("next/navigation", () => ({
   usePathname: () => "/dashboard",
+  useRouter: () => ({ prefetch: mockPrefetch }),
 }));
 
 jest.mock("@/hooks/common/use-mobile", () => ({
@@ -85,6 +88,7 @@ jest.mock("framer-motion", () => {
 
 describe("ProductSwitcherMenu", () => {
   beforeEach(() => {
+    mockPrefetch.mockClear();
     accessResult = { data: { isOrgOwner: false, scopes: {}, modules: {} }, error: null };
   });
 
@@ -117,5 +121,16 @@ describe("ProductSwitcherMenu", () => {
 
     await waitFor(() => expect(screen.getByLabelText("Selected module")).toBeInTheDocument());
     expect(screen.getAllByRole("button")).toHaveLength(1);
+  });
+
+  it("prefetches only the module the user points at", async () => {
+    render(<ProductSwitcherMenu />);
+    fireEvent.mouseEnter(screen.getByRole("button", { name: "Switch module" }));
+    const home = await screen.findByRole("link", { name: "Home OS" });
+    expect(mockPrefetch).not.toHaveBeenCalled();
+    fireEvent.mouseEnter(home);
+    expect(mockPrefetch).toHaveBeenCalledWith("/dashboard");
+    fireEvent.mouseEnter(home);
+    expect(mockPrefetch).toHaveBeenCalledTimes(1);
   });
 });

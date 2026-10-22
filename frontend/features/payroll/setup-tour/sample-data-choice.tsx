@@ -46,7 +46,7 @@ export function SampleDataChoice({ onStartEmpty }: { onStartEmpty: () => void })
           <FileX className="h-4 w-4 text-muted-foreground" aria-hidden />
           <p className="text-sm font-medium">Start empty</p>
           <p className="text-xs text-muted-foreground">
-            Add your real people from the directory and follow the setup guide.
+            Add your real people from the directory and assign salaries when ready.
           </p>
           <Button size="sm" variant="outline" className="mt-auto self-start" onClick={onStartEmpty}>
             Start empty

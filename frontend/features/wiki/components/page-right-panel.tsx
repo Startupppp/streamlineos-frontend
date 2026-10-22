@@ -23,9 +23,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import {
-  useKbPageBacklinks,
-} from "@/hooks/api/kb";
+import { useKbPageBacklinks } from "@/hooks/api/kb/pages";
 import { useKbPageActivity } from "@/hooks/api/kb/activity";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";

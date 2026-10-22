@@ -36,7 +36,6 @@ import { useDeals, useDealStats, useContacts, useWinLossAnalysis } from "@/hooks
 import { useTasks } from "@/hooks/api/tasks";
 import { CrmPipelineMini } from "@/features/crm/shared/crm-pipeline-mini";
 import { CrmRecentActivity } from "@/features/crm/shared/crm-recent-activity";
-import { ActivationChecklist } from "@/features/onboarding/activation-checklist";
 
 const NAV_CARDS = [
   { title: "Leads", description: "Pipeline tracking", href: "/crm/leads", icon: UserPlus },
@@ -167,10 +166,6 @@ export default function CrmHubPage() {
         initial="hidden"
         animate="visible"
       >
-        <motion.div variants={fadeUp}>
-          <ActivationChecklist />
-        </motion.div>
-
         <motion.div variants={fadeUp}>
           <StatCardGrid cols={4}>
             <StatCard

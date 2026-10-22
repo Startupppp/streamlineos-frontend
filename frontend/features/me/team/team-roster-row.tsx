@@ -29,7 +29,8 @@ interface TeamRosterRowProps {
 }
 
 function PresencePill({ onLeaveToday }: { onLeaveToday: boolean }) {
-  const tone = statusToneClasses(onLeaveToday ? "warning" : "neutral");
+  if (!onLeaveToday) return null;
+  const tone = statusToneClasses("warning");
   return (
     <span
       className={cn(
@@ -38,9 +39,8 @@ function PresencePill({ onLeaveToday }: { onLeaveToday: boolean }) {
         tone.ink,
         tone.rule,
       )}
-      title={onLeaveToday ? undefined : "No manager-scoped attendance read exists yet"}
     >
-      {onLeaveToday ? "On leave" : "Not measured"}
+      On leave
     </span>
   );
 }
@@ -84,9 +84,11 @@ export function TeamRosterRow({ report, nextLeave, onOpen }: TeamRosterRowProps)
 
       <PresencePill onLeaveToday={report.onLeaveToday} />
 
-      <span className="hidden w-32 shrink-0 text-dense text-muted-foreground tabular-nums sm:inline">
-        {nextLeave ? `Leave from ${format(parseISO(nextLeave.startDate), "MMM d")}` : "—"}
-      </span>
+      {nextLeave ? (
+        <span className="hidden shrink-0 text-dense text-muted-foreground tabular-nums sm:inline">
+          Leave from {format(parseISO(nextLeave.startDate), "MMM d")}
+        </span>
+      ) : null}
 
       <Button size="sm" variant="outline" className="h-8 shrink-0 text-xs" onClick={handleOpen}>
         Open

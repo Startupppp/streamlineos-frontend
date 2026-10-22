@@ -32,7 +32,7 @@ import {
   useKbPage,
   useUpdateKbPage,
   useRecordKbPageVisit,
-} from "@/hooks/api/kb";
+} from "@/hooks/api/kb/pages";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { pageHref } from "@/lib/knowledge-routes";
@@ -217,11 +217,6 @@ export default function PageDocument({
     visitedRef.current = pageId;
     recordVisit.mutate(pageId);
   }, [pageId, recordVisit]);
-
-  useEffect(() => {
-    setEditorDraft(null);
-    editorSnapshotRef.current = null;
-  }, [pageId]);
 
   const handleNavigateToPage = useCallback(
     (targetPageId: number) => {

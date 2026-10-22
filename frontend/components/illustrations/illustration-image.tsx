@@ -95,7 +95,7 @@ export const EmptySearchIllustration = createIllustration("empty-search");
 export const EmptyActivityIllustration = createIllustration("empty-activity");
 export const EmptyCalendarIllustration = createIllustration("empty-calendar");
 export const EmptySprintIllustration = createIllustration("empty-sprint");
-export const EmptyMailIllustration = createIllustration("empty-mail");
+export { EmptyMailIllustration } from "./empty-mail-illustration";
 export const EmptyPersonIllustration = createIllustration("empty-person");
 export const EmptyWfhIllustration = createIllustration("empty-wfh");
 export const EmptyApprovalIllustration = createIllustration("empty-approval");

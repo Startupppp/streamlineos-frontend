@@ -33,7 +33,7 @@ function intersect(index = 0) {
   observer.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
 }
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/import-export", () => ({
   useKbExportJobs: jest.fn(),
 }));
 
@@ -46,7 +46,7 @@ jest.mock("@/features/wiki/lib/kb-icons", () => ({
   KbFileTextIcon: ({ className }: { className?: string }) => <span className={className} />,
 }));
 
-const { useKbExportJobs } = jest.requireMock("@/hooks/api/kb") as {
+const { useKbExportJobs } = jest.requireMock("@/hooks/api/kb/import-export") as {
   useKbExportJobs: jest.Mock;
 };
 const { usePermissionGate } = jest.requireMock("@/hooks/api/access") as { usePermissionGate: jest.Mock };

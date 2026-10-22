@@ -33,7 +33,7 @@ function intersect(index = 0) {
   observer.callback([{ isIntersecting: true } as IntersectionObserverEntry]);
 }
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/import-export", () => ({
   useKbImportJobs: jest.fn(),
   useRetryImportJob: jest.fn(),
 }));
@@ -50,7 +50,7 @@ jest.mock("@/lib/knowledge-routes", () => ({
   KNOWLEDGE_BASE: "/wiki",
 }));
 
-const { useKbImportJobs, useRetryImportJob } = jest.requireMock("@/hooks/api/kb") as {
+const { useKbImportJobs, useRetryImportJob } = jest.requireMock("@/hooks/api/kb/import-export") as {
   useKbImportJobs: jest.Mock;
   useRetryImportJob: jest.Mock;
 };

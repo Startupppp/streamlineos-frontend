@@ -67,7 +67,7 @@ export function SelfServiceHubTabs() {
     : active;
 
   return (
-    <TabsNavigation aria-label={`${HUB_TITLES[hub]} sections`} className="w-full shrink-0 md:w-fit">
+    <TabsNavigation aria-label={`${HUB_TITLES[hub]} sections`} className="w-fit max-w-full shrink-0">
       {tabs.map(({ value, label, href }) => (
         <TabsNavigationLink key={value} active={value === activeTab}>
           <a
@@ -115,7 +115,7 @@ export function SelfServiceHub({ hub, content }: { hub: Hub; content: Record<str
   return (
     <PageState
       resolution={pageState}
-      loading={<SelfServiceHubSkeleton title={HUB_TITLES[hub]} tabCount={hub === "workday" ? 4 : hub === "career" ? 3 : 2} />}
+      loading={<SelfServiceHubSkeleton title={HUB_TITLES[hub]} tabCount={hub === "workday" || hub === "money" ? 4 : hub === "career" ? 3 : 2} />}
       onRetry={handleRetry}
     >
       {!active || !available.some((section) => section.value === active.value) ? (

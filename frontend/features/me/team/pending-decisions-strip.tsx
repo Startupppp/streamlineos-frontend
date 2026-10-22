@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { CutoffChip } from "@/components/shared/cutoff-chip";
 import { usePayrollCutoff } from "@/hooks/api/payroll/payroll-cutoff";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
@@ -32,7 +31,7 @@ export function PendingDecisionsStrip({
     <section
       data-testid="pending-decisions-strip"
       aria-label="Pending decisions"
-      className="max-md:sticky max-md:top-0 max-md:z-20 rounded-2xl border border-border bg-background p-3 sm:p-4"
+      className="max-md:sticky max-md:top-0 max-md:z-20 rounded-xl border border-border bg-card p-3 sm:p-4"
     >
       <div className="flex flex-wrap items-center gap-2">
         <span
@@ -45,8 +44,7 @@ export function PendingDecisionsStrip({
         >
           {pendingTotal} awaiting my decision
         </span>
-        {cutoff ? <CutoffChip cutoff={cutoff} /> : null}
-        <Button size="sm" variant="outline" className="ml-auto min-h-11 gap-1.5 sm:min-h-8" asChild>
+        <Button size="sm" variant="outline" className="ml-auto h-8 gap-1.5" asChild>
           <Link href="/hr/approvals">
             Open Action Center
             <ArrowRight className="h-3.5 w-3.5" aria-hidden />

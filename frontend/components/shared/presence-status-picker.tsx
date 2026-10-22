@@ -36,7 +36,16 @@ const MANUAL_STATUSES = PRESENCE_STATUSES.filter(
 const PICKER_STATUSES: PresenceStatus[] = [AUTO_STATUS, ...MANUAL_STATUSES];
 
 const CHIP_ROW =
-  "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-1 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x";
+  "flex w-full min-w-0 max-w-full flex-nowrap items-center gap-0.5 overflow-x-auto overscroll-x-contain scrollbar-hide touch-pan-x";
+
+const STATUS_CHIP_MENU =
+  "h-6 w-auto shrink-0 gap-1 rounded-md border border-border bg-card py-0 pl-1.5 pr-1.5 text-micro font-medium whitespace-nowrap text-muted-foreground shadow-none focus:bg-muted focus:text-foreground data-[state=checked]:border-primary/30 data-[state=checked]:bg-primary/10 data-[state=checked]:text-foreground [&>span:first-child]:hidden";
+
+const STATUS_CHIP_LIST =
+  "inline-flex h-6 w-auto shrink-0 items-center gap-1 rounded-md border px-1.5 text-micro font-medium whitespace-nowrap transition-colors";
+
+const DURATION_CHIP_MENU =
+  "h-5 w-auto shrink-0 rounded-md border-0 bg-transparent py-0 pl-1.5 pr-1.5 text-micro font-medium whitespace-nowrap text-muted-foreground shadow-none focus:bg-muted focus:text-foreground data-[state=checked]:bg-muted data-[state=checked]:text-foreground [&>span:first-child]:hidden";
 
 function revealChip(event: FocusEvent<HTMLElement>) {
   const row = event.currentTarget.parentElement;
@@ -143,9 +152,9 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
               disabled={isPending}
               onSelect={keepMenuOpen}
               onFocus={revealChip}
-              className="h-7 w-auto shrink-0 gap-1.5 rounded-md py-0 pr-2 pl-7 text-dense font-medium whitespace-nowrap"
+              className={STATUS_CHIP_MENU}
             >
-              <span className={cn("size-1.5 shrink-0 rounded-full", presenceDotClass(option))} />
+              <span className={cn("size-1 shrink-0 rounded-full", presenceDotClass(option))} />
               {PRESENCE_LABELS[option]}
             </DropdownMenuRadioItem>
           ))}
@@ -191,7 +200,7 @@ export function PresenceStatusPicker({ layout, className }: PresenceStatusPicker
               disabled={isPending}
               onSelect={keepMenuOpen}
               onFocus={revealChip}
-              className="h-6 w-auto shrink-0 rounded-md py-0 pr-1.5 pl-6 text-micro font-medium whitespace-nowrap"
+              className={DURATION_CHIP_MENU}
             >
               {PRESENCE_CLEAR_AFTER_LABELS[option]}
             </DropdownMenuRadioItem>
@@ -252,13 +261,13 @@ function PresenceStatusChip({
       aria-pressed={isCurrent}
       aria-label={PRESENCE_LABELS[status]}
       className={cn(
-        "inline-flex h-7 w-auto shrink-0 items-center gap-1.5 rounded-md border px-2 text-dense font-medium whitespace-nowrap transition-colors",
+        STATUS_CHIP_LIST,
         isCurrent
           ? "border-primary/30 bg-primary/10 text-foreground"
           : "border-border bg-card text-muted-foreground hover:bg-muted hover:text-foreground",
       )}
     >
-      <span className={cn("size-1.5 shrink-0 rounded-full", presenceDotClass(status))} />
+      <span className={cn("size-1 shrink-0 rounded-full", presenceDotClass(status))} />
       {PRESENCE_LABELS[status]}
     </button>
   );
@@ -291,7 +300,7 @@ function PresenceDurationChip({
       disabled={disabled}
       aria-pressed={isCurrent}
       className={cn(
-        "inline-flex h-6 shrink-0 items-center rounded-md px-1.5 text-micro font-medium whitespace-nowrap transition-colors",
+        "inline-flex h-5 shrink-0 items-center rounded-md px-1.5 text-micro font-medium whitespace-nowrap transition-colors",
         isCurrent
           ? "bg-muted text-foreground"
           : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",

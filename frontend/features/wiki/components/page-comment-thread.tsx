@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useUpdateKbPageComment, useDeleteKbPageComment, useResolveKbPageComment } from "@/hooks/api/kb";
+import { useUpdateKbPageComment, useDeleteKbPageComment, useResolveKbPageComment } from "@/hooks/api/kb/page-comments";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
 

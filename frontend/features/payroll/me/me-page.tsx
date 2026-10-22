@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import {
   Wallet,
   TrendingUp,
@@ -63,6 +64,7 @@ import { cn } from "@/lib/utils";
 import { useModuleEnabled } from "@/hooks/api/access";
 import type { EssSectionNavItem } from "@/features/payroll/ess/components/ess-section-nav";
 import { PayNotSetUpNotice } from "@/features/payroll/me/pay-not-set-up-notice";
+import { getPaySectionIds } from "@/features/payroll/me/pay-section-ids";
 import { useT } from "@/lib/i18n/i18n";
 
 const TAB_PANEL_CLASS = cn(
@@ -81,6 +83,7 @@ function getYear(month: string): string {
 
 export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const t = useT();
+  const searchParams = useSearchParams();
   const payrollModuleEnabled = useModuleEnabled("payroll");
   const { data: fnf, isError: fnfFailed } = useEssFnf();
   const { data: payslips } = useEssPayslips();
@@ -104,7 +107,7 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
     void refetchOverview();
   }
 
-  const [activeTab, setActiveTab] = useState("payslips");
+  const [localActiveTab, setLocalActiveTab] = useState("payslips");
   const [yearFilter, setYearFilter] = useState("all");
   const [bankSheetOpen, setBankSheetOpen] = useState(false);
   const [reimbSheetOpen, setReimbSheetOpen] = useState(false);
@@ -128,29 +131,26 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
   const hasTeam = (managerInbox?.reportCount ?? 0) > 0;
 
   const sections = useMemo<EssSectionNavItem[]>(() => {
-    const items: EssSectionNavItem[] = [
-      { id: "payslips", label: t("pay.tabPayslips") },
-      { id: "total-rewards", label: t("pay.tabTotalRewards") },
-      { id: "disciplinary", label: t("pay.tabNotices") },
-      { id: "form16", label: "Form 16" },
-    ];
-    if (toggles?.essShowSalaryStructure)
-      items.push({ id: "salary", label: t("pay.tabSalary") });
-    if (toggles?.essAllowReimbursements)
-      items.push({ id: "reimbursements", label: t("pay.tabReimbursements") });
-    if (toggles?.essAllowTaxDeclarations)
-      items.push({ id: "tax", label: t("pay.tabTax") });
-    if (
-      toggles?.essAllowLoanRequests ||
-      parseFloat(overview?.activeLoanBalance ?? "0") > 0
-    ) {
-      items.push({ id: "loans", label: t("pay.tabLoans") });
-    }
-    if (toggles?.essAllowBankUpdate)
-      items.push({ id: "bank", label: t("pay.tabBank") });
-    if (fnf || fnfFailed) items.push({ id: "fnf", label: t("pay.tabFnf") });
-    return items;
+    const labels = {
+      payslips: t("pay.tabPayslips"), "total-rewards": t("pay.tabTotalRewards"),
+      disciplinary: t("pay.tabNotices"), form16: "Form 16", salary: t("pay.tabSalary"),
+      reimbursements: t("pay.tabReimbursements"), tax: t("pay.tabTax"),
+      loans: t("pay.tabLoans"), bank: t("pay.tabBank"), fnf: t("pay.tabFnf"),
+    };
+    return getPaySectionIds({
+      showSalary: toggles?.essShowSalaryStructure,
+      allowReimbursements: toggles?.essAllowReimbursements,
+      allowTax: toggles?.essAllowTaxDeclarations,
+      showLoans: toggles?.essAllowLoanRequests || parseFloat(overview?.activeLoanBalance ?? "0") > 0,
+      allowBank: toggles?.essAllowBankUpdate,
+      showFnf: Boolean(fnf || fnfFailed),
+    }).map((id) => ({ id, label: labels[id] }));
   }, [t, toggles, overview?.activeLoanBalance, fnf, fnfFailed]);
+
+  const requestedTab = searchParams.get("tab");
+  const activeTab = hubChrome
+    ? sections.find((section) => section.id === requestedTab)?.id ?? "payslips"
+    : localActiveTab;
 
   const showLoans =
     toggles?.essAllowLoanRequests ||
@@ -174,7 +174,7 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
   const taxWindowOpen = taxData?.windowStatus === "OPEN";
 
   const handleTabChange = useCallback((value: string) => {
-    setActiveTab(value);
+    setLocalActiveTab(value);
   }, []);
 
   const handleOpenBankSheet = useCallback(() => {
@@ -298,14 +298,8 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
             </StatCardGrid>
             )}
 
-            {/*
-              The tab strip wraps onto as many rows as it needs, at every width,
-              instead of scrolling. There are up to nine sections and the scroll
-              was hidden: "Salary Structure" was half a label at 390, and with
-              the sidebar open the last four tabs sat past the edge at 1024.
-            */}
             <div className="flex min-w-0 flex-wrap items-stretch gap-2">
-              <TabsList className="h-auto min-h-9 shrink-0 flex-wrap justify-start overflow-visible">
+              {!hubChrome && <TabsList className="h-auto min-h-9 shrink-0 flex-wrap justify-start overflow-visible">
                 {sections.map((section) => (
                   <TabsTrigger
                     key={section.id}
@@ -315,7 +309,7 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
                     {section.label}
                   </TabsTrigger>
                 ))}
-              </TabsList>
+              </TabsList>}
 
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 {activeTab === "payslips" && years.length > 0 ? (

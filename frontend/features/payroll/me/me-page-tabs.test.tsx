@@ -7,6 +7,10 @@ jest.mock("next/link", () => ({
   default: ({ children, href }: { children: React.ReactNode; href: string }) => <a href={href}>{children}</a>,
 }));
 
+jest.mock("next/navigation", () => ({
+  useSearchParams: () => new URLSearchParams(),
+}));
+
 jest.mock("@/components/ui/page-wrapper", () => ({
   PageWrapper: ({
     children,

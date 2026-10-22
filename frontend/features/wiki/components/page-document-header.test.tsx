@@ -9,8 +9,10 @@ const mockCreateTemplate = jest.fn();
 
 jest.mock("next/navigation", () => ({ useRouter: () => ({ push: jest.fn() }) }));
 jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }));
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useDeleteKbPage: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+jest.mock("@/hooks/api/kb/page-templates", () => ({
   useCreateKbPageTemplate: () => ({ mutate: mockCreateTemplate, isPending: false }),
 }));
 jest.mock("./page-comments-sheet", () => () => null);

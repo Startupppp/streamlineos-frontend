@@ -29,13 +29,16 @@ jest.mock("@/hooks/api/access", () => ({
 const mockRefetch = jest.fn().mockResolvedValue({ isSuccess: true, data: null });
 const mockKbPage = jest.fn();
 const mockKbWorkbook = jest.fn();
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/pages", () => ({
   useKbPage: (id: number) => mockKbPage(id),
-  useKbWorkbook: (id: number) => mockKbWorkbook(id),
   useUpdateKbPage: () => ({ mutateAsync: jest.fn() }),
+  useRecordKbPageVisit: () => ({ mutate: jest.fn() }),
+}));
+
+jest.mock("@/hooks/api/kb/workbook", () => ({
+  useKbWorkbook: (id: number) => mockKbWorkbook(id),
   useUpdateKbWorkbook: () => ({ mutateAsync: jest.fn() }),
   useReplaceKbWorkbook: () => ({ mutateAsync: jest.fn() }),
-  useRecordKbPageVisit: () => ({ mutate: jest.fn() }),
 }));
 
 jest.mock("@/components/shared/error-state", () => ({

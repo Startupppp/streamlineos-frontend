@@ -85,7 +85,7 @@ export function TeamRoster({ reports, upcomingLeave }: TeamRosterProps) {
                   <div className="divide-y divide-border">
                     <RosterFact label="Email" value={selected.email ?? "—"} />
                     <RosterFact label="Designation" value={selected.designation ?? "—"} />
-                    <RosterFact label="Today" value={selected.onLeaveToday ? "On leave" : "Not measured"} />
+                    <RosterFact label="Today" value={selected.onLeaveToday ? "On leave" : "Working"} />
                   </div>
                 ),
                 employment: (

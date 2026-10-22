@@ -25,7 +25,7 @@ import {
   useCancelImportJob,
   useDryRunImport,
   type ImportDryRunResult,
-} from "@/hooks/api/kb";
+} from "@/hooks/api/kb/import-export";
 import { useKbPageTreeInfinite } from "@/hooks/api/kb/pages";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { getErrorMessage } from "@/lib/get-error-message";

@@ -19,19 +19,7 @@ jest.mock("@/hooks/api/hr/hub", () => ({
   }),
 }));
 
-let mockSetupEmpty = false;
-let mockDismissed = false;
-
-jest.mock("@/features/hr/setup", () => ({
-  HrStartHereChecklist: () => null,
-  useHrSetupSignals: () => ({}),
-  hrSetupIsEmpty: () => mockSetupEmpty,
-  useHrStartHereDismissed: () => mockDismissed,
-}));
-
 beforeEach(() => {
-  mockSetupEmpty = false;
-  mockDismissed = false;
   mockIsLoading = false;
   mockAwaitingSession = false;
 });
@@ -94,24 +82,5 @@ describe("HR hub loading state (BUG-HRMS-016)", () => {
     } finally {
       jest.useRealTimers();
     }
-  });
-});
-
-describe("HR hub on an org with nothing set up (BUG-HRMS-012)", () => {
-  it("leaves the body to the Start here checklist while it is showing", () => {
-    mockSetupEmpty = true;
-    mockCapabilities = { ...EMPTY_HR_HUB_ACCESS, canLeaveCalendar: true };
-    render(<HrHubPage />);
-
-    expect(screen.queryByText("Today")).not.toBeInTheDocument();
-  });
-
-  it("brings the panels back once the checklist is dismissed, instead of a blank body", () => {
-    mockSetupEmpty = true;
-    mockDismissed = true;
-    mockCapabilities = { ...EMPTY_HR_HUB_ACCESS, canLeaveCalendar: true };
-    render(<HrHubPage />);
-
-    expect(screen.getByText("Today")).toBeInTheDocument();
   });
 });

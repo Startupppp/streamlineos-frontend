@@ -14,7 +14,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
-import { useKbImportJobs, useRetryImportJob } from "@/hooks/api/kb";
+import { useKbImportJobs, useRetryImportJob } from "@/hooks/api/kb/import-export";
 import { usePermissionGate } from "@/hooks/api/access";
 import { KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";

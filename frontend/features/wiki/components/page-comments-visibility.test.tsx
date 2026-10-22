@@ -11,7 +11,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/page-comments", () => ({
   useKbPageComments: jest.fn(() => ({
     data: [
       {
@@ -40,7 +40,7 @@ const { useCan } = jest.requireMock<{ useCan: jest.Mock }>("@/hooks/api/access")
 const { useKbPageComments, useCreateKbPageComment } = jest.requireMock<{
   useKbPageComments: jest.Mock;
   useCreateKbPageComment: jest.Mock;
-}>("@/hooks/api/kb");
+}>("@/hooks/api/kb/page-comments");
 
 beforeEach(() => {
   jest.clearAllMocks();

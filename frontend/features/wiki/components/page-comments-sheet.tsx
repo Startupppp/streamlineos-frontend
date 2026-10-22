@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   useKbPageComments,
   useCreateKbPageComment,
-} from "@/hooks/api/kb";
+} from "@/hooks/api/kb/page-comments";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageComment } from "@/hooks/api/kb/page-comments";
 import {

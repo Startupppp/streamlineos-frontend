@@ -48,7 +48,7 @@ const emptyJobList = {
   fetchNextPage: jest.fn(),
 };
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/import-export", () => ({
   useImportKbPages: () => ({ mutate: jest.fn(), isPending: false }),
   useKbImportJob: () => ({ data: undefined }),
   useCancelImportJob: () => ({ mutate: jest.fn(), isPending: false }),

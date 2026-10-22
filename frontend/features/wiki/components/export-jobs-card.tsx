@@ -6,7 +6,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
-import { useKbExportJobs } from "@/hooks/api/kb";
+import { useKbExportJobs } from "@/hooks/api/kb/import-export";
 import { usePermissionGate } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";

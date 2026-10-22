@@ -26,7 +26,7 @@ import { join, dirname, relative } from "node:path";
  *   * **accessibility** — mounted and axe'd next door; what is held here is the
  *     count, so the suite cannot quietly go back to covering nothing.
  *
- * Auditing that by eye across 85 routes is a thing you do once and never again.
+ * Auditing that by eye across dozens of routes is a thing you do once and never again.
  * This does it on every run, which is the only version that keeps being true.
  *
  * **What it can and cannot see.** It follows a route's `page.tsx` into the
@@ -146,7 +146,7 @@ const OWN_ERROR_BOUNDARY: ReadonlyArray<{ route: string; reason: string }> = [
  *
  * `frontend/test-utils/axe.ts` had eleven users and not one was inventory, which
  * is the least defensible gap in the module: the harness was already wired, the
- * RF screens already mounted under jsdom, and 86 routes had no accessibility
+ * RF screens already mounted under jsdom, and the inventory routes had no accessibility
  * assertion of any kind.
  *
  * What this holds is the *count*, not the assertions — those live next door in
