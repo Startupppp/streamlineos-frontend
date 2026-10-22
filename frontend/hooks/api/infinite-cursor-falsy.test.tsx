@@ -126,10 +126,10 @@ const CASES: Case[] = [
       expect(paramsOf(calls)[1]).toEqual(expect.objectContaining({ cursor: "" })),
   },
   {
-    name: "useKbSources sends empty-string cursor",
-    module: "./kb/sources",
-    run: (m) => (m["useKbSources"] as () => unknown)(),
-    firstPage: { data: [], pagination: { limit: 20, nextCursor: "", hasMore: true } },
+    name: "useInfiniteKbPageCollection sends empty-string cursor",
+    module: "./kb/page-collection",
+    run: (m) => (m["useInfiniteKbPageCollection"] as (p: object) => unknown)({ kind: "file" }),
+    firstPage: { data: [], pagination: { limit: 50, nextCursor: "", hasMore: true } },
     expectCursor: (calls) =>
       expect(paramsOf(calls)[1]).toEqual(expect.objectContaining({ cursor: "" })),
   },

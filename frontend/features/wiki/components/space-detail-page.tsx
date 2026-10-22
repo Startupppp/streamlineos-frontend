@@ -374,6 +374,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       <SpaceMembersSheet
         spaceId={spaceId}
         spaceName={visibleSpace?.name ?? ""}
+        canManageFolder={visibleSpace?.viewerAccess?.level === "manage"}
         open={membersOpen && Boolean(visibleSpace)}
         onOpenChange={handleMembersOpenChange}
       />

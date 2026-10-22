@@ -143,6 +143,7 @@ export type CreateKbPageInput = {
   parentPageId?: number | null;
   spaceId?: number | null;
   title?: string;
+  initialText?: string;
   templateId?: number | null;
   projectId?: number | null;
   kind?: KbPageKind;

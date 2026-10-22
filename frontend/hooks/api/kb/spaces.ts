@@ -198,7 +198,7 @@ export interface AddKbSpaceMemberInput {
 
 export function useAddKbSpaceMember() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("kb:spaces:manage", {
+  return useAuthorizedMutation("kb:spaces:view", {
     mutationKey: ["kb", "spaces", "members", "add"],
     mutationFn: ({ spaceId, ...body }: AddKbSpaceMemberInput) =>
       apiClient.post(
@@ -223,7 +223,7 @@ export interface UpdateKbSpaceMemberInput {
 
 export function useUpdateKbSpaceMemberRole() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("kb:spaces:manage", {
+  return useAuthorizedMutation("kb:spaces:view", {
     mutationKey: ["kb", "spaces", "members", "update"],
     mutationFn: ({ spaceId, memberId, spaceRole }: UpdateKbSpaceMemberInput) =>
       apiClient.patch(
@@ -242,7 +242,7 @@ export function useUpdateKbSpaceMemberRole() {
 
 export function useRemoveKbSpaceMember() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("kb:spaces:manage", {
+  return useAuthorizedMutation("kb:spaces:view", {
     mutationKey: ["kb", "spaces", "members", "remove"],
     mutationFn: ({ spaceId, memberId }: { spaceId: number; memberId: number }) =>
       apiClient.delete(
@@ -263,21 +263,21 @@ export function useKbSpaceMembers(
   spaceId: number,
   options?: { enabled?: boolean },
 ) {
-  const canManage = useCan("kb:spaces:manage");
+  const canView = useCan("kb:spaces:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
     queryFn: ({ pageParam, signal }) =>
       apiClient.get(
         `/kb/spaces/${spaceId}/members`,
-        pageParam ? { cursor: pageParam } : undefined,
+        pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : undefined,
         signal,
         kbSpaceMemberListContract,
       ),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     select: (data) => data.pages.flatMap((page) => page.data),
-    enabled: canManage && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
+    enabled: canView && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
     staleTime: 60_000,
   });
 }

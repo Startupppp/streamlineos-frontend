@@ -469,6 +469,7 @@ export default function SpacesPage() {
       <SpaceMembersSheet
         spaceId={membersTarget?.id ?? 0}
         spaceName={membersTarget?.name ?? ""}
+        canManageFolder={canManage}
         open={membersTarget !== null}
         onOpenChange={handleMembersOpenChange}
       />

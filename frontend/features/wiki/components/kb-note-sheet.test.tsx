@@ -5,8 +5,9 @@ import { KbNoteSheet } from "./kb-note-sheet";
 const mockMutate = jest.fn();
 let mockPending = false;
 
-jest.mock("@/hooks/api/kb/sources", () => ({
-  useCreateKbSourceNote: () => ({ mutate: mockMutate, isPending: mockPending }),
+jest.mock("@/hooks/api/kb/pages", () => ({
+  ...jest.requireActual("@/hooks/api/kb/pages"),
+  useCreateKbPage: () => ({ mutate: mockMutate, isPending: mockPending }),
 }));
 
 jest.mock("@/components/shared/app-sheet", () => ({

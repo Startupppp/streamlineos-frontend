@@ -19,10 +19,8 @@ import {
   useDeleteKbConversation,
   useKbConversationMessages,
 } from "@/hooks/api/kb/chat-history";
-import {
-  useKbSources,
-  useDeleteKbSource,
-} from "@/hooks/api/kb/sources";
+import { useInfiniteKbPageCollection } from "@/hooks/api/kb/page-collection";
+import { useDeleteKbPage } from "@/hooks/api/kb/pages";
 import { useUploadKbFile } from "@/hooks/api/kb/files";
 import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
 import { KbSourcesSheet } from "@/features/wiki/components/kb-sources-sheet";
@@ -82,9 +80,9 @@ export default function KnowledgeBasePage() {
   const renameConversation = useRenameKbConversation();
   const deleteConversation = useDeleteKbConversation();
 
-  const sourcesQuery = useKbSources();
+  const sourcesQuery = useInfiniteKbPageCollection({ kind: "file" });
   const uploadFile = useUploadKbFile();
-  const deleteSource = useDeleteKbSource();
+  const deleteSource = useDeleteKbPage();
 
   const scope = useKbScopeFilter({
     currentUserId,
@@ -169,7 +167,7 @@ export default function KnowledgeBasePage() {
     () => (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data),
     [sourcesQuery.data],
   );
-  const readyCount = sources.filter((s) => s.status === "ready").length;
+  const readyCount = sources.filter((s) => s.status === "published").length;
 
   const allConversations = useMemo(
     () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
@@ -641,8 +639,6 @@ export default function KnowledgeBasePage() {
           verifiedOnly={scope.pendingVerifiedOnly}
           onVerifiedOnlyChange={scope.handleScopeVerifiedOnlyChange}
           currentUserId={currentUserId ?? undefined}
-          kindFilter={scope.scopeKindFilter}
-          onKindFilterChange={scope.setScopeKindFilter}
           ownerFilter={scope.scopeOwnerFilter}
           onOwnerFilterChange={scope.setScopeOwnerFilter}
           spaceIdFilter={scope.pendingSpaceId}

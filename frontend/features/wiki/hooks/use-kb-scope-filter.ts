@@ -1,19 +1,21 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
-import { useKbSources } from "@/hooks/api/kb/sources";
+import {
+  useInfiniteKbPageCollection,
+  type KbPageCollectionItem,
+  type KbPageCollectionParams,
+} from "@/hooks/api/kb/page-collection";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { useKbAskPageOwners } from "@/hooks/api/kb/ask";
 import { useKbPagesSearch } from "@/hooks/api/kb/pages";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import type {
-  SourceKindFilter,
   OwnerFilter,
   SpaceIdFilter,
   OwnerMembershipFilter,
   StatusScopeFilter,
 } from "@/features/wiki/components/kb-sources-sheet";
-import type { KbSourcesParams } from "@/hooks/api/kb/sources";
 import type { KbAskScopedInput } from "@/hooks/api/kb/ask";
 
 interface UseKbScopeFilterParams {
@@ -23,7 +25,7 @@ interface UseKbScopeFilterParams {
 
 export type KbScopePayload = Pick<
   KbAskScopedInput,
-  "sourceIds" | "pageIds" | "verifiedOnly" | "spaceId" | "ownerMembershipId" | "status"
+  "pageIds" | "verifiedOnly" | "spaceId" | "ownerMembershipId" | "status"
 >;
 
 export function useKbScopeFilter({ currentUserId, scopeSheetOpen }: UseKbScopeFilterParams) {
@@ -41,28 +43,26 @@ export function useKbScopeFilter({ currentUserId, scopeSheetOpen }: UseKbScopeFi
   const [pendingStatus, setPendingStatus] = useState<StatusScopeFilter>(null);
   const [ownerSearch, setOwnerSearch] = useState("");
   const [pageSearchQuery, setPageSearchQuery] = useState("");
-  const [scopeKindFilter, setScopeKindFilter] = useState<SourceKindFilter>("all");
   const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
 
-  const sourcesQuery = useKbSources();
+  const sourcesQuery = useInfiniteKbPageCollection({ kind: "file" });
   const sources = useMemo(
     () => (sourcesQuery.data?.pages ?? []).flatMap((p) => p.data),
     [sourcesQuery.data],
   );
 
-  const scopeFilters: KbSourcesParams = useMemo(
+  const scopeFilters: Pick<KbPageCollectionParams, "owner"> = useMemo(
     () => ({
-      kind: scopeKindFilter !== "all" ? scopeKindFilter : undefined,
-      createdById:
-        scopeOwnerFilter === "mine" && currentUserId ? currentUserId : undefined,
+      owner: scopeOwnerFilter === "mine" ? "me" : undefined,
     }),
-    [scopeKindFilter, scopeOwnerFilter, currentUserId],
+    [scopeOwnerFilter],
   );
 
-  const hasScopeFilters =
-    scopeFilters.kind !== undefined || scopeFilters.createdById !== undefined;
+  const hasScopeFilters = scopeFilters.owner !== undefined;
 
-  const scopeSourcesQuery = useKbSources(hasScopeFilters ? scopeFilters : undefined);
+  const scopeSourcesQuery = useInfiniteKbPageCollection(
+    hasScopeFilters ? { kind: "file", ...scopeFilters } : { kind: "file" },
+  );
   const scopeSources = useMemo(
     () => (scopeSourcesQuery.data?.pages ?? []).flatMap((p) => p.data),
     [scopeSourcesQuery.data],
@@ -93,16 +93,15 @@ export function useKbScopeFilter({ currentUserId, scopeSheetOpen }: UseKbScopeFi
 
   const clientFilteredSources = useMemo(
     () =>
-      sources.filter((source) => {
-        if (scopeFilters.kind !== undefined && source.kind !== scopeFilters.kind) return false;
+      sources.filter((source: KbPageCollectionItem) => {
         if (
-          scopeFilters.createdById !== undefined &&
-          source.createdById !== scopeFilters.createdById
+          scopeFilters.owner === "me" &&
+          source.createdById !== currentUserId
         )
           return false;
         return true;
       }),
-    [sources, scopeFilters],
+    [sources, scopeFilters, currentUserId],
   );
 
   const baseDisplaySources = useMemo(
@@ -140,14 +139,16 @@ export function useKbScopeFilter({ currentUserId, scopeSheetOpen }: UseKbScopeFi
       : "Filtered";
 
   const scopePayload = useMemo(
-    (): KbScopePayload => ({
-      ...(scopeSourceIds.length > 0 ? { sourceIds: scopeSourceIds } : {}),
-      ...(scopePageIds.length > 0 ? { pageIds: scopePageIds } : {}),
-      ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
-      ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}),
-      ...(scopeOwnerMembershipId !== null ? { ownerMembershipId: scopeOwnerMembershipId } : {}),
-      ...(scopeStatus !== null ? { status: scopeStatus } : {}),
-    }),
+    (): KbScopePayload => {
+      const allPageIds = [...scopeSourceIds, ...scopePageIds];
+      return {
+        ...(allPageIds.length > 0 ? { pageIds: allPageIds } : {}),
+        ...(scopeVerifiedOnly ? { verifiedOnly: true } : {}),
+        ...(scopeSpaceId !== null ? { spaceId: scopeSpaceId } : {}),
+        ...(scopeOwnerMembershipId !== null ? { ownerMembershipId: scopeOwnerMembershipId } : {}),
+        ...(scopeStatus !== null ? { status: scopeStatus } : {}),
+      };
+    },
     [
       scopeSourceIds,
       scopePageIds,
@@ -229,8 +230,6 @@ export function useKbScopeFilter({ currentUserId, scopeSheetOpen }: UseKbScopeFi
     setPendingOwnerMembershipId,
     pendingStatus,
     setPendingStatus,
-    scopeKindFilter,
-    setScopeKindFilter,
     scopeOwnerFilter,
     setScopeOwnerFilter,
     setPendingPageIds,

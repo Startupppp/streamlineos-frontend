@@ -271,6 +271,7 @@ function AddMemberForm({ spaceId }: AddMemberFormProps) {
 interface SpaceMembersSheetProps {
   spaceId: number;
   spaceName: string;
+  canManageFolder: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -323,7 +324,7 @@ function MembersRead({
     fetchNextPage,
   } = useKbSpaceMembers(spaceId, { enabled: open });
   const membersState = usePageState({
-    permission: "kb:spaces:manage",
+    permission: "kb:spaces:view",
     isLoading,
     isError,
     error,
@@ -384,10 +385,11 @@ function MembersRead({
 export function SpaceMembersSheet({
   spaceId,
   spaceName,
+  canManageFolder,
   open,
   onOpenChange,
 }: SpaceMembersSheetProps) {
-  const canManage = useCan("kb:spaces:manage");
+  const canManage = useCan("kb:spaces:view") && canManageFolder;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>

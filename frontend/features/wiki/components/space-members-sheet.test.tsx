@@ -86,11 +86,12 @@ const accessDenied = {
   isLoading: false,
 };
 
-function renderSheet() {
+function renderSheet(canManageFolder = true) {
   return render(
     <SpaceMembersSheet
       spaceId={10}
       spaceName="Engineering"
+      canManageFolder={canManageFolder}
       open
       onOpenChange={jest.fn()}
     />,
@@ -122,8 +123,8 @@ describe("SpaceMembersSheet — accessible name and description", () => {
 });
 
 describe("SpaceMembersSheet — permission gating", () => {
-  it("shows the Add member form and Remove buttons for a user with kb:spaces:manage", () => {
-    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+  it("shows the Add member form and Remove buttons for a folder manager holding kb:spaces:view", () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:view");
 
     renderSheet();
 
@@ -131,7 +132,16 @@ describe("SpaceMembersSheet — permission gating", () => {
     expect(screen.getByRole("button", { name: /remove alice smith/i })).toBeInTheDocument();
   });
 
-  it("hides the Add member form and Remove buttons for a user without kb:spaces:manage", () => {
+  it("hides the Add member form and Remove buttons for a kb:spaces:view holder who does not manage this folder", () => {
+    mockCan.mockImplementation((key) => key === "kb:spaces:view");
+
+    renderSheet(false);
+
+    expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /remove alice smith/i })).not.toBeInTheDocument();
+  });
+
+  it("hides the Add member form and Remove buttons for a user without kb:spaces:view", () => {
     mockCan.mockReturnValue(false);
 
     renderSheet();
@@ -142,7 +152,7 @@ describe("SpaceMembersSheet — permission gating", () => {
 });
 
 describe("SpaceMembersSheet — denial is not emptiness", () => {
-  it("renders the denied state — not No members yet — when the user is denied kb:spaces:manage", () => {
+  it("renders the denied state — not No members yet — when the user is denied kb:spaces:view", () => {
     mockAccess.mockReturnValue(accessDenied);
     mockCan.mockReturnValue(false);
     mockKbSpaceMembers.mockReturnValue({
@@ -181,7 +191,7 @@ describe("SpaceMembersSheet — member read failure", () => {
     expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
 
     mockKbSpaceMembers.mockReturnValue(membersQuery({ data: undefined, isError: true, error: new Error("offline"), refetch }));
-    view.rerender(<SpaceMembersSheet spaceId={10} spaceName="Engineering" open onOpenChange={jest.fn()} />);
+    view.rerender(<SpaceMembersSheet spaceId={10} spaceName="Engineering" canManageFolder open onOpenChange={jest.fn()} />);
 
     expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /add member/i })).not.toBeInTheDocument();
@@ -209,7 +219,7 @@ describe("SpaceMembersSheet — member read failure", () => {
     render(
       <>
         <div>Spaces route content</div>
-        <SpaceMembersSheet spaceId={10} spaceName="Engineering" open onOpenChange={jest.fn()} />
+        <SpaceMembersSheet spaceId={10} spaceName="Engineering" canManageFolder open onOpenChange={jest.fn()} />
       </>,
     );
 
@@ -228,7 +238,7 @@ describe("SpaceMembersSheet — member read failure", () => {
 
 describe("SpaceMembersSheet — add member", () => {
   beforeEach(() => {
-    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockCan.mockImplementation((key) => key === "kb:spaces:view");
   });
 
   it("calls useAddKbSpaceMember with userId and spaceRole when only userId is filled", async () => {
@@ -280,7 +290,7 @@ describe("SpaceMembersSheet — add member", () => {
 
 describe("SpaceMembersSheet — remove member", () => {
   beforeEach(() => {
-    mockCan.mockImplementation((key) => key === "kb:spaces:manage");
+    mockCan.mockImplementation((key) => key === "kb:spaces:view");
   });
 
   it("calls useRemoveKbSpaceMember with the correct spaceId and memberId when Remove is clicked", async () => {

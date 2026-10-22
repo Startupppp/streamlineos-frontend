@@ -51,23 +51,15 @@ jest.mock("@/hooks/api/kb/chat-history", () => ({
 }));
 
 const FILE_SOURCE = {
-  id: 1, kind: "file", title: "Spec Doc", spaceId: null, status: "ready",
-  chunkCount: 3, mimeType: null, fileSize: null, fileUrl: null, errorMessage: null,
+  id: 1, kind: "file", title: "Spec Doc", spaceId: null, status: "published",
   createdById: "user-1", createdAt: "2026-09-01T00:00:00.000Z",
 };
 
-const NOTE_SOURCE = {
-  id: 2, kind: "note", title: "My Meeting Notes", spaceId: null, status: "ready",
-  chunkCount: 2, mimeType: null, fileSize: null, fileUrl: null, errorMessage: null,
-  createdById: "user-1", createdAt: "2026-09-01T00:00:00.000Z",
-};
+const mockUseInfiniteKbPageCollection = jest.fn();
 
-const mockUseKbSources = jest.fn();
-
-jest.mock("@/hooks/api/kb/sources", () => ({
-  useKbSources: (...args: unknown[]) => mockUseKbSources(...args),
-  useDeleteKbSource: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
-  useCreateKbSourceNote: () => ({ mutate: jest.fn(), isPending: false }),
+jest.mock("@/hooks/api/kb/page-collection", () => ({
+  ...jest.requireActual("@/hooks/api/kb/page-collection"),
+  useInfiniteKbPageCollection: (...args: unknown[]) => mockUseInfiniteKbPageCollection(...args),
 }));
 
 jest.mock("@/hooks/api/kb/files", () => ({
@@ -82,20 +74,11 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 }));
 
 jest.mock("@/hooks/api/kb/pages", () => ({
+  ...jest.requireActual("@/hooks/api/kb/pages"),
   useKbPagesSearch: () => ({ data: { items: [] }, isLoading: false }),
 }));
 
 import KnowledgeBasePage from "./knowledge-base-page";
-
-function notesOnlyPage() {
-  return {
-    data: {
-      pages: [{ data: [NOTE_SOURCE], pagination: { limit: 50, nextCursor: null, hasMore: false } }],
-    },
-    isLoading: false,
-    isError: false,
-  };
-}
 
 function fileOnlyPage() {
   return {
@@ -104,6 +87,11 @@ function fileOnlyPage() {
     },
     isLoading: false,
     isError: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
+    error: null,
   };
 }
 
@@ -112,15 +100,16 @@ function emptyPage() {
     data: { pages: [{ data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
     isLoading: false,
     isError: false,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
+    error: null,
   };
 }
 
-function renderWithNotesOnly() {
-  mockUseKbSources.mockImplementation((filters?: { kind?: string }) => {
-    if (filters?.kind === "file") return emptyPage();
-    if (filters?.kind === "note") return notesOnlyPage();
-    return notesOnlyPage();
-  });
+function renderWithNoFiles() {
+  mockUseInfiniteKbPageCollection.mockImplementation(() => emptyPage());
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -133,11 +122,7 @@ function renderWithNotesOnly() {
 }
 
 function renderWithFilesOnly() {
-  mockUseKbSources.mockImplementation((filters?: { kind?: string }) => {
-    if (filters?.kind === "note") return emptyPage();
-    if (filters?.kind === "file") return fileOnlyPage();
-    return fileOnlyPage();
-  });
+  mockUseInfiniteKbPageCollection.mockImplementation(() => fileOnlyPage());
   const qc = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
@@ -151,18 +136,17 @@ function renderWithFilesOnly() {
 
 beforeEach(() => {
   mockAskMutate.mockReset();
-  mockUseKbSources.mockReset();
+  mockUseInfiniteKbPageCollection.mockReset();
 });
 
 describe("KnowledgeBasePage source pagination wiring", () => {
   it("requests the next source page from the active scope query", async () => {
     const fetchNextPage = jest.fn();
-    mockUseKbSources.mockImplementation(() => ({
-      ...notesOnlyPage(),
+    mockUseInfiniteKbPageCollection.mockImplementation(() => ({
+      ...emptyPage(),
       hasNextPage: true,
       isFetchingNextPage: false,
       fetchNextPage,
-      refetch: jest.fn(),
     }));
     const qc = new QueryClient({
       defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -180,14 +164,12 @@ describe("KnowledgeBasePage source pagination wiring", () => {
   });
 });
 
-describe("KnowledgeBasePage — kind filter with empty results does not send an empty sourceIds array (FE-183)", () => {
-  it("omits sourceIds entirely when the user switches to the Files kind filter with no file sources, confirms, then sends — an empty sourceIds array would be rejected with 400 by the backend askSchema min(1) constraint", async () => {
-    const user = renderWithNotesOnly();
+describe("KnowledgeBasePage — kind filter with empty results does not send an empty pageIds array (FE-183)", () => {
+  it("omits pageIds entirely when there are no file pages, the user confirms, then sends — an empty pageIds array would be rejected with 400 by the backend askSchema min(1) constraint", async () => {
+    const user = renderWithNoFiles();
 
     await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
     await screen.findByRole("button", { name: /search all sources and files/i });
-
-    await user.click(screen.getByRole("button", { name: "Files" }));
 
     await user.click(screen.getByRole("button", { name: /search all sources and files/i }));
 
@@ -199,16 +181,14 @@ describe("KnowledgeBasePage — kind filter with empty results does not send an 
 
     await waitFor(() => expect(mockAskMutate).toHaveBeenCalled());
     const body = mockAskMutate.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(Object.keys(body)).not.toContain("sourceIds");
+    expect(Object.keys(body)).not.toContain("pageIds");
   });
 
-  it("omits sourceIds entirely when the user switches to the Notes kind filter with no note sources, confirms, then sends — an empty sourceIds array would be rejected with 400 by the backend askSchema min(1) constraint (CONTROL: this test is the positive counterpart that proves the negative above is not vacuous)", async () => {
+  it("omits pageIds entirely when the user confirms without selecting any file, then sends (CONTROL: confirms the previous test is not vacuous)", async () => {
     const user = renderWithFilesOnly();
 
     await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
     await screen.findByRole("button", { name: /search all sources and files/i });
-
-    await user.click(screen.getByRole("button", { name: "Notes" }));
 
     await user.click(screen.getByRole("button", { name: /search all sources and files/i }));
 
@@ -220,16 +200,14 @@ describe("KnowledgeBasePage — kind filter with empty results does not send an 
 
     await waitFor(() => expect(mockAskMutate).toHaveBeenCalled());
     const body = mockAskMutate.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(Object.keys(body)).not.toContain("sourceIds");
+    expect(Object.keys(body)).not.toContain("pageIds");
   });
 
-  it("does send sourceIds when the user switches to the Files kind filter that has a file, selects it, confirms, and sends — proves the negative tests above are not vacuously passing because the selection path is reachable", async () => {
+  it("does send pageIds when a file page is selected, confirmed, and sent — proves the negative tests above are not vacuously passing because the selection path is reachable", async () => {
     const user = renderWithFilesOnly();
 
     await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
     await screen.findByRole("button", { name: /search all sources and files/i });
-
-    await user.click(screen.getByRole("button", { name: "Files" }));
 
     await user.click(screen.getByRole("checkbox", { name: /include spec doc in search/i }));
 
@@ -243,6 +221,6 @@ describe("KnowledgeBasePage — kind filter with empty results does not send an 
 
     await waitFor(() => expect(mockAskMutate).toHaveBeenCalled());
     const body = mockAskMutate.mock.calls[0]?.[0] as Record<string, unknown>;
-    expect(body).toHaveProperty("sourceIds", [1]);
+    expect(body).toHaveProperty("pageIds", [1]);
   });
 });
