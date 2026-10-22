@@ -3,7 +3,7 @@ import type { WizardGate } from "@/lib/wizard-gate";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 
-export type InvitationLanding = "/employee-onboarding" | "/build" | "/dashboard";
+export type InvitationLanding = "/employee-onboarding" | "/build/command-center" | "/dashboard";
 
 function hasEffectivePermission(access: AccessResponse, permission: PermissionKey): boolean {
   return grantsPermission(access, permission) &&
@@ -26,7 +26,7 @@ export function resolveInvitationLanding(
     access.modules.build === true &&
     hasEffectivePermission(access, "build:view")
   ) {
-    return "/build";
+    return "/build/command-center";
   }
 
   return "/dashboard";

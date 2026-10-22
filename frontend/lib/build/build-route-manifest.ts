@@ -16,11 +16,9 @@ const BuildRouteManifestEntrySchema = z.union([
 type BuildRouteManifestEntry = z.infer<typeof BuildRouteManifestEntrySchema>;
 
 const BUILD_ROUTE_MANIFEST: readonly BuildRouteManifestEntry[] = [
-  { route: "/build", decision: "KEEP", target: null },
   { route: "/build/[projectId]", decision: "KEEP", target: null },
   { route: "/build/[projectId]/approvals", decision: "KEEP", target: null },
   { route: "/build/[projectId]/backlog", decision: "KEEP", target: null },
-  { route: "/build/[projectId]/bugs/[submissionId]", decision: "CONSOLIDATE", target: "/build/[projectId]/intake" },
   { route: "/build/[projectId]/budget", decision: "KEEP", target: null },
   { route: "/build/[projectId]/change-requests", decision: "KEEP", target: null },
   { route: "/build/[projectId]/chat", decision: "KEEP", target: null },

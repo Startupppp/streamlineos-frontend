@@ -157,7 +157,7 @@ const CalendarScenarioWorkspace = dynamic(
 const NO_CALENDAR_EVENTS: CalendarListItem[] = [];
 const NO_CALENDAR_SEARCH_PAGES: CalendarSearchResponse[] = [];
 
-export function CalendarView() {
+export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprovals?: () => void } = {}) {
   const [bookingPagesOpen, setBookingPagesOpen] = useState(false);
   const online = useOnlineStatus();
   const calendarAccess = usePermissionGate("calendar:read");
@@ -1066,6 +1066,7 @@ export function CalendarView() {
           onToday={handleToday}
           onViewChange={handleGridViewChange}
           onViewModeChange={setViewMode}
+          onOpenResourceApprovals={onOpenResourceApprovals}
           onOpenCreate={handleOpenCreate}
           onToggleHrEvents={toggleHrEvents}
           onToggleCrmEvents={toggleCrmEvents}

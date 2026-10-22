@@ -25,7 +25,7 @@ import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";
 import { useSupportQueues, useSupportQueueTickets } from "@/hooks/api/hr/helpdesk";
-import type { HelpdeskQueueSummary, HelpdeskTicket, TicketStatus } from "@/hooks/api/hr/helpdesk-schema";
+import type { HelpdeskTicket, TicketStatus } from "@/hooks/api/hr/helpdesk-schema";
 import {
   SUPPORT_QUEUES,
   SUPPORT_QUEUE_LABELS,
@@ -59,29 +59,14 @@ function defaultQueue(membership: Record<SupportQueue, boolean>): SupportQueue {
 
 export function QueueTabLabel({
   queue,
-  summary,
   isMember,
 }: {
   queue: SupportQueue;
-  summary: HelpdeskQueueSummary | undefined;
   isMember: boolean;
 }) {
-  const open = summary?.openCount ?? null;
-  const overdue = summary?.overdueCount ?? null;
   return (
     <span className="flex items-center gap-1.5">
       <span>{SUPPORT_QUEUE_LABELS[queue]}</span>
-      {isMember && open !== null ? (
-        <span className="rounded-full bg-primary/10 px-1.5 text-micro font-medium tabular-nums">{open}</span>
-      ) : null}
-      {isMember && overdue !== null && overdue > 0 ? (
-        <span
-          className="rounded-full bg-status-danger-surface px-1.5 text-micro font-medium tabular-nums text-status-danger-ink"
-          aria-label={`${overdue} overdue`}
-        >
-          {overdue}
-        </span>
-      ) : null}
       {!isMember ? <span className="text-micro text-muted-foreground">read only</span> : null}
     </span>
   );
@@ -119,7 +104,6 @@ export function SupportQueuesPage() {
     q: debouncedSearch.length > 0 ? debouncedSearch : undefined,
   });
   const queues = useSupportQueues();
-  const summaries = new Map((queues.data ?? []).map((summary) => [summary.queue, summary]));
   const rows: HelpdeskTicket[] = query.data?.data ?? [];
   const filtersActive = status !== undefined || debouncedSearch.length > 0;
 
@@ -235,7 +219,7 @@ export function SupportQueuesPage() {
               <TabsList aria-label="Support queues">
                 {SUPPORT_QUEUES.map((candidate) => (
                   <TabsTrigger key={candidate} value={candidate}>
-                    <QueueTabLabel queue={candidate} summary={summaries.get(candidate)} isMember={membership[candidate]} />
+                    <QueueTabLabel queue={candidate} isMember={membership[candidate]} />
                   </TabsTrigger>
                 ))}
               </TabsList>

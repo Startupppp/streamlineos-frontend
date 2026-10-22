@@ -82,11 +82,9 @@ describe("Build direct-route deny — every guarded URL resolves to a permission
 
 describe("Build route-access permission posture is pinned for every manifested page", () => {
   const EXPECTED_ACCESS: ReadonlyArray<readonly [string, string]> = [
-    ["/build", "module:build + build:view"],
     ["/build/[projectId]", "module:build + build:view"],
     ["/build/[projectId]/approvals", "module:build + build:approvals:view"],
     ["/build/[projectId]/backlog", "module:build + build:tickets:view"],
-    ["/build/[projectId]/bugs/[submissionId]", "module:build + build:view"],
     ["/build/[projectId]/budget", "module:build + build:manage"],
     ["/build/[projectId]/change-requests", "module:build + build:changerequests:view"],
     ["/build/[projectId]/chat", "module:build + chat:channels:read"],
@@ -165,7 +163,7 @@ describe("Build route-access permission posture is pinned for every manifested p
     ["/build/templates", "module:build + build:create"],
   ];
 
-  it("pins all 80 manifest routes so this table cannot drift out of step with the manifest", () => {
+  it("pins all manifested pages so this table cannot drift out of step with the manifest", () => {
     expect(EXPECTED_ACCESS).toHaveLength(BUILD_ROUTE_MANIFEST.length);
     expect(EXPECTED_ACCESS.map(([route]) => route).sort()).toEqual(
       BUILD_ROUTE_MANIFEST.map((entry) => entry.route).sort(),

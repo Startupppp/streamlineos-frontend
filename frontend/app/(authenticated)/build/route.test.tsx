@@ -11,7 +11,7 @@ jest.mock("next/navigation", () => ({
   redirect: (destination: string) => mockRedirect(destination),
 }));
 
-import BuildRoute from "./page";
+import { GET } from "./route";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -20,7 +20,7 @@ beforeEach(() => {
 
 describe("Build entry route", () => {
   it("authorizes entry before redirecting to Command Center", async () => {
-    await expect(BuildRoute({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+    await expect(GET({ url: "http://localhost/build" } as Request)).rejects.toThrow(
       "NEXT_REDIRECT:/build/command-center",
     );
     expect(mockEnforceRouteAccess).toHaveBeenCalledWith("/build");
@@ -31,13 +31,13 @@ describe("Build entry route", () => {
 
   it("keeps a legacy Projects creation link on the Projects page", async () => {
     await expect(
-      BuildRoute({ searchParams: Promise.resolve({ create: "1" }) }),
+      GET({ url: "http://localhost/build?create=1" } as Request),
     ).rejects.toThrow("NEXT_REDIRECT:/build/projects?create=1");
   });
 
   it("does not redirect when Build access is denied", async () => {
     mockEnforceRouteAccess.mockRejectedValue(new Error("denied"));
-    await expect(BuildRoute({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+    await expect(GET({ url: "http://localhost/build" } as Request)).rejects.toThrow(
       "denied",
     );
     expect(mockRedirect).not.toHaveBeenCalled();
@@ -45,7 +45,7 @@ describe("Build entry route", () => {
 
   it("BT-b0a694952421 — access-needed: enforceRouteAccess is called with /build so the layout handles the module-not-enabled state", async () => {
     mockEnforceRouteAccess.mockResolvedValue(undefined);
-    await expect(BuildRoute({ searchParams: Promise.resolve({}) })).rejects.toThrow(
+    await expect(GET({ url: "http://localhost/build" } as Request)).rejects.toThrow(
       "NEXT_REDIRECT:",
     );
     expect(mockEnforceRouteAccess).toHaveBeenCalledWith("/build");

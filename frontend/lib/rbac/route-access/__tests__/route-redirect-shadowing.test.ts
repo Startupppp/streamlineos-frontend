@@ -59,9 +59,8 @@ function shadowedRoutes(
 describe("route-level redirect pages are not shadowed by next.config.ts (S20)", () => {
   it("finds both the redirect table and the redirect pages, so an empty scan cannot pass this suite vacuously", () => {
     expect(declaredRedirectSources(CONFIG_SOURCE).length).toBeGreaterThan(10);
-    expect(routesServedByARedirectPage()).toEqual(
-      expect.arrayContaining(["/build", "/post-invite"]),
-    );
+    expect(routesServedByARedirectPage()).toContain("/post-invite");
+    expect(routesServedByARedirectPage()).not.toContain("/build");
   });
 
   it("BITE: the detector reports a route whose page redirects and whose path is also a config redirect source", () => {
@@ -82,12 +81,12 @@ describe("route-level redirect pages are not shadowed by next.config.ts (S20)", 
   it("static aliases are served by next.config.ts, not by redirect-only page files", () => {
     const sources = declaredRedirectSources(CONFIG_SOURCE);
     expect(sources).toEqual(
-      expect.arrayContaining(["/announcements", "/chat/settings", "/docs", "/kb", "/ask"]),
+      expect.arrayContaining(["/announcements", "/chat/settings", "/docs", "/kb", "/ask", "/inventory/pick-lists"]),
     );
     const pages = routesServedByARedirectPage();
-    for (const alias of ["/announcements", "/chat/settings", "/docs", "/kb"]) {
+    for (const alias of ["/announcements", "/chat/settings", "/docs", "/kb", "/inventory/pick-lists"]) {
       expect(pages).not.toContain(alias);
     }
-    expect(pages).toContain("/knowledge");
+    expect(pages).not.toContain("/knowledge");
   });
 });

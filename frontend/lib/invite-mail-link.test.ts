@@ -42,7 +42,7 @@ describe("invite create → captured mail → accept → role landing", () => {
     );
   });
 
-  it("lands a Build Member on /build after accept (happy path)", () => {
+  it("lands a Build Member on the Command Center after accept (happy path)", () => {
     expect(
       resolveInvitationLanding(
         access({
@@ -51,6 +51,6 @@ describe("invite create → captured mail → accept → role landing", () => {
         }),
         null,
       ),
-    ).toBe("/build");
+    ).toBe("/build/command-center");
   });
 });

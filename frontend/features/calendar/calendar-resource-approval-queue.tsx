@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { EmptyState } from "@/components/ui/empty-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useCursorPager } from "@/components/ui/table-pagination";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -139,7 +140,20 @@ export function CalendarResourceApprovalQueue({ onBack }: { onBack?: () => void 
         resolution={resolution}
         onRetry={() => void pending.refetch()}
         className="min-h-0 flex-1"
-        loading={<p role="status">Loading resource approvals…</p>}
+        loading={
+          <div className="space-y-2" role="status" aria-label="Loading resource approvals">
+            {Array.from({ length: 3 }, (_, index) => (
+              <div key={index} className="space-y-3 rounded-md border p-3">
+                <Skeleton className="h-5 w-1/2" />
+                <Skeleton className="h-4 w-1/3" />
+                <div className="flex gap-2">
+                  <Skeleton className="h-8 w-20" />
+                  <Skeleton className="h-8 w-20" />
+                </div>
+              </div>
+            ))}
+          </div>
+        }
         empty={
           <EmptyState
             className={SURFACE_EMPTY}

@@ -45,7 +45,10 @@ interface LeavesWfhContentProps {
   hubChrome?: SelfServiceHubChrome;
 }
 
-export function LeavesWfhContent({ selfService = false, hubChrome }: LeavesWfhContentProps) {
+export function LeavesWfhContent({
+  selfService = false,
+  hubChrome,
+}: LeavesWfhContentProps) {
   const t = useT();
   const { data: session } = useSession();
   const data = useLeavesWfhData(selfService);
@@ -69,7 +72,10 @@ export function LeavesWfhContent({ selfService = false, hubChrome }: LeavesWfhCo
     setOpen: openWfhSheet,
   } = useQueryParamOpen("wfh");
 
-  const handleOpenLeaveSheet = useCallback(() => openLeaveSheet(), [openLeaveSheet]);
+  const handleOpenLeaveSheet = useCallback(
+    () => openLeaveSheet(),
+    [openLeaveSheet],
+  );
   const handleOpenWfhSheet = useCallback(() => openWfhSheet(), [openWfhSheet]);
 
   const exportView = leaveExportViewFor(
@@ -114,9 +120,11 @@ export function LeavesWfhContent({ selfService = false, hubChrome }: LeavesWfhCo
   );
   const headerActions = (
     <LeavesWfhActions
-      compact={selfService}
-      canRequestLeave={data.canRequestLeave}
-      canRequestWfh={data.canRequestWfh}
+      compact={selfService && !hubChrome}
+      canRequestLeave={
+        data.canRequestLeave && (!hubChrome || activeTab === "my-leaves")
+      }
+      canRequestWfh={data.canRequestWfh && (!hubChrome || activeTab === "wfh")}
       onRequestLeave={handleOpenLeaveSheet}
       onRequestWfh={handleOpenWfhSheet}
     />
@@ -183,6 +191,8 @@ export function LeavesWfhContent({ selfService = false, hubChrome }: LeavesWfhCo
             <>
               {hubChrome?.tabs}
               <LeavesWfhToolbar
+                showTabs={!hubChrome}
+                showSummary={!hubChrome || activeTab === "my-leaves"}
                 isAdmin={data.isAdmin}
                 totalAvailable={data.totalAvailable}
                 availableHint={data.availableHint}
@@ -208,24 +218,24 @@ export function LeavesWfhContent({ selfService = false, hubChrome }: LeavesWfhCo
 
             <TabsContent value="my-leaves" className={TAB_PANEL_CLASS}>
               <PageState resolution={myLeavesState} loading={null}>
-              {data.noPolicyConfigured ? (
-                <LeavesNoPolicyEmptyState />
-              ) : (
-                <LeavesTabContent
-                  balances={data.balances}
-                  myLeaveRequests={data.myLeaveRequests}
-                  approvedLeavesThisWeek={
-                    selfService ? [] : data.approvedLeavesThisWeek
-                  }
-                  compact={selfService}
-                  onRequestLeave={
-                    data.canRequestLeave ? handleOpenLeaveSheet : undefined
-                  }
-                  hasMore={data.hasMoreMyRequests}
-                  isLoadingMore={data.isLoadingMoreMyRequests}
-                  onLoadMore={data.onLoadMoreMyRequests}
-                />
-              )}
+                {data.noPolicyConfigured ? (
+                  <LeavesNoPolicyEmptyState />
+                ) : (
+                  <LeavesTabContent
+                    balances={data.balances}
+                    myLeaveRequests={data.myLeaveRequests}
+                    approvedLeavesThisWeek={
+                      selfService ? [] : data.approvedLeavesThisWeek
+                    }
+                    compact={selfService}
+                    onRequestLeave={
+                      data.canRequestLeave ? handleOpenLeaveSheet : undefined
+                    }
+                    hasMore={data.hasMoreMyRequests}
+                    isLoadingMore={data.isLoadingMoreMyRequests}
+                    onLoadMore={data.onLoadMoreMyRequests}
+                  />
+                )}
               </PageState>
             </TabsContent>
 
@@ -233,7 +243,9 @@ export function LeavesWfhContent({ selfService = false, hubChrome }: LeavesWfhCo
               <WfhTabContent
                 compact={selfService}
                 statusFilter={wfhStatusFilter}
-                onRequestWfh={data.canRequestWfh ? handleOpenWfhSheet : undefined}
+                onRequestWfh={
+                  data.canRequestWfh ? handleOpenWfhSheet : undefined
+                }
               />
             </TabsContent>
 

@@ -61,7 +61,7 @@
       "planGated": true,
       "productKey": "build",
       "publicExposure": true,
-      "route": "/build",
+      "route": "/build/command-center",
       "schemaFolder": "build"
     },
     {

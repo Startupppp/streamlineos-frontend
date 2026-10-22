@@ -10,11 +10,10 @@ const intakeFeedbucketLookupContract = z.object({
 
 const positiveInt = z.coerce.number().int().positive();
 
-export default async function BugsSubmissionRedirectPage({
-  params,
-}: {
-  params: Promise<{ projectId: string; submissionId: string }>;
-}) {
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ projectId: string; submissionId: string }> },
+) {
   await enforceRouteAccess("/build/[projectId]/bugs/[submissionId]");
   const { projectId, submissionId } = await params;
 
@@ -36,8 +35,7 @@ export default async function BugsSubmissionRedirectPage({
     throw error;
   }
 
-  if (result.intakeId !== null) {
-    redirect(`/build/${pid}/intake?item=${result.intakeId}`);
-  }
-  redirect(`/build/${pid}/intake`);
+  redirect(result.intakeId === null
+    ? `/build/${pid}/intake`
+    : `/build/${pid}/intake?item=${result.intakeId}`);
 }

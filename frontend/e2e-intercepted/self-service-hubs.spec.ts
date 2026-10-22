@@ -69,6 +69,8 @@ async function installBrowserFixtures(page: Page) {
           "self:recruitment": "own",
           "self:job-openings": "own",
           "self:referrals": "own",
+          "calendar:read": "own",
+          "calendar:admin:manage": "all",
         },
         isOrgOwner: false,
         canManageOrganizationMembership: false,
@@ -103,6 +105,27 @@ async function installBrowserFixtures(page: Page) {
       body = { language: "en" };
     } else if (path === "/organization") {
       body = [{ id: "self-service-org", name: "Example Organization", slug: "example", role: "MEMBER", joinedAt: null }];
+    } else if (path === "/onboarding/me") {
+      body = [];
+    } else if (path === "/me/time-off") {
+      body = {
+        balances: [], types: [], joiningDate: null, approvers: [], noPolicyConfigured: true,
+        approvalRoute: {
+          kind: "leave", subjectUserId: "self-service-user", permission: "hr:leaves:approve",
+          resolvedAt: "2026-10-22T00:00:00.000Z", rung: null, assignedTo: null,
+          approver: null, delegation: null, queue: null, skipped: [], slaHours: 24,
+          dueAt: "2026-10-23T00:00:00.000Z", escalation: null,
+          ownerSelfApproval: false, explanation: "No approver configured",
+        },
+      };
+    } else if (path === "/me/time-off/requests") {
+      body = { data: [], pageInfo: { limit: 25, hasMore: false, nextCursor: null } };
+    } else if (path === "/calendar/resources/pending-allocation-pages") {
+      body = { items: [], nextCursor: null };
+    } else if (path === "/hr/recruitment/me/job-openings") {
+      body = [];
+    } else if (path === "/me/recruitment") {
+      body = { items: [], total: 0, page: 1, pageSize: 20, totalPages: 0 };
     } else if (path === "/me/inbox/unified/count") {
       body = { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true, approvalExact: true };
     } else if (path === "/me/org-display") {
@@ -133,24 +156,26 @@ async function installBrowserFixtures(page: Page) {
   });
 }
 
-for (const viewport of VIEWPORTS) {
-  test(`merged self-service navigation fits ${viewport.width}px`, async ({ context, page, baseURL }, testInfo) => {
-    test.setTimeout(600_000);
-    await signIn(context, baseURL as string);
-    const serverSession = await context.request.get(`${baseURL}/api/auth/session`);
-    expect(await serverSession.json()).toMatchObject({
-      orgId: "self-service-org",
-      user: { id: "self-service-user" },
-    });
-    await installBrowserFixtures(page);
-    await page.setViewportSize(viewport);
+const HUBS = [
+  { path: "/me/workday", heading: "Attendance & Time Off", section: "My leaves", query: "section=time-off" },
+  { path: "/me/records", heading: "Documents & Onboarding", section: "Onboarding", query: "section=onboarding" },
+  { path: "/me/money", heading: "Expenses & Pay", section: "Pay", query: "section=pay" },
+  { path: "/me/career", heading: "Hiring & Referrals", section: "Job openings", query: "section=openings" },
+] as const;
 
-    for (const [path, heading, section] of [
-      ["/me/workday", "Attendance & Time Off", "Time off"],
-      ["/me/records", "Documents & Onboarding", "Onboarding"],
-      ["/me/money", "Expenses & Pay", "Pay"],
-      ["/me/career", "Hiring & Referrals", "Job openings"],
-    ] as const) {
+for (const viewport of VIEWPORTS) {
+  for (const { path, heading, section, query } of HUBS) {
+    test(`${heading} navigation fits ${viewport.width}px`, async ({ context, page, baseURL }, testInfo) => {
+      test.setTimeout(240_000);
+      await signIn(context, baseURL as string);
+      const serverSession = await context.request.get(`${baseURL}/api/auth/session`);
+      expect(await serverSession.json()).toMatchObject({
+        orgId: "self-service-org",
+        user: { id: "self-service-user" },
+      });
+      await installBrowserFixtures(page);
+      await page.setViewportSize(viewport);
+
       await page.goto(path, { waitUntil: "domcontentloaded" });
       await expect(page.getByRole("heading", { name: heading })).toBeVisible({ timeout: 60_000 });
       const tabs = page.getByRole("navigation", { name: `${heading} sections` });
@@ -158,15 +183,37 @@ for (const viewport of VIEWPORTS) {
       if (path === "/me/workday") {
         await expect(tabs.getByRole("link", { name: "Today" })).toBeVisible();
         await expect(tabs.getByRole("link", { name: "History" })).toBeVisible();
+        await expect(tabs.getByRole("link", { name: "WFH" })).toBeVisible();
       }
       const sectionLink = tabs.getByRole("link", { name: section });
       await expect(sectionLink).toBeVisible();
       await sectionLink.click();
-      await expect(page).toHaveURL(/section=/, { timeout: 60_000 });
+      await expect(page).toHaveURL(new RegExp(query), { timeout: 60_000 });
       await expect(page.getByRole("navigation", { name: `${heading} sections` }).getByRole("link", { name: section })).toHaveAttribute("aria-current", "page");
+      if (path === "/me/workday") {
+        await expect(page.getByRole("button", { name: "Request leave" })).toBeVisible();
+        await tabs.getByRole("link", { name: "WFH" }).click();
+        await expect(page).toHaveURL(/section=time-off&tab=wfh/);
+        await expect(tabs.getByRole("link", { name: "WFH" })).toHaveAttribute("aria-current", "page");
+        await expect(page.getByRole("button", { name: "Request WFH" })).toBeVisible();
+      }
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(1);
       await page.screenshot({ path: testInfo.outputPath(`${path.slice(4)}-${viewport.width}.png`) });
-    }
+    });
+  }
+}
+
+for (const viewport of VIEWPORTS) {
+  test(`Calendar approvals use the existing modes at ${viewport.width}px`, async ({ context, page, baseURL }) => {
+    test.setTimeout(240_000);
+    await signIn(context, baseURL as string);
+    await installBrowserFixtures(page);
+    await page.setViewportSize(viewport);
+    await page.goto("/calendar?section=approvals", { waitUntil: "domcontentloaded" });
+    await expect(page.getByRole("heading", { name: "Calendar & resource approvals" })).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByRole("tablist", { name: "Calendar modes" }).getByRole("tab", { name: "Resource approvals" })).toHaveAttribute("data-state", "active");
+    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+    expect(overflow).toBeLessThanOrEqual(1);
   });
 }

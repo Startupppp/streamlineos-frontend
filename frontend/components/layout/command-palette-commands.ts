@@ -141,7 +141,7 @@ export function useCommandRegistry({
         keywords: ["all", "projects", "overview"],
         icon: LayoutDashboard,
         isAvailable: true,
-        execute: () => handleSelect("/build"),
+        execute: () => handleSelect("/build/projects"),
       },
       {
         id: "nav-my-work",

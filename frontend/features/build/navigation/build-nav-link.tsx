@@ -4,7 +4,7 @@ import { useCallback, type MouseEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+import { useHasUnsavedWork, useNavigationLeave } from "@/components/shared/dirty-state-context";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { loadIssuesFilterQuery } from "@/features/build/views/use-issues-query-store";
 import {
@@ -46,6 +46,7 @@ export function BuildNavLink({
 }: BuildNavLinkProps) {
   const prefetchOnIntent = useNavIntentPrefetch();
   const requestLeave = useNavigationLeave();
+  const hasUnsavedWork = useHasUnsavedWork();
   const router = useRouter();
   const scope = useOrgStorageScope();
   const Icon = destination.icon;
@@ -62,22 +63,25 @@ export function BuildNavLink({
       if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
         return;
       if (event.button !== 0) return;
+      const issuesMatch = destination.href.match(/^\/build\/(\d+)\/issues(?:\/|$|\?)/);
+      const stored = issuesMatch
+        ? loadIssuesFilterQuery(Number(issuesMatch[1]), scope)
+        : null;
+      if (!hasUnsavedWork && !stored) {
+        onNavigate?.();
+        return;
+      }
       event.preventDefault();
       requestLeave(() => {
         onNavigate?.();
-        const issuesMatch = destination.href.match(/^\/build\/(\d+)\/issues(?:\/|$|\?)/);
-        if (issuesMatch) {
-          const projectId = Number(issuesMatch[1]);
-          const stored = loadIssuesFilterQuery(projectId, scope);
-          if (stored) {
-            router.push(`${destination.href}?${stored}`);
-            return;
-          }
+        if (stored) {
+          router.push(`${destination.href}?${stored}`);
+          return;
         }
         router.push(destination.href);
       });
     },
-    [requestLeave, onNavigate, router, destination.href, scope],
+    [hasUnsavedWork, requestLeave, onNavigate, router, destination.href, scope],
   );
 
   const link = (

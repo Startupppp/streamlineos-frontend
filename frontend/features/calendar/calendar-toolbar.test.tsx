@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { CalendarToolbar, CalendarToolbarPrimaryActions } from "./calendar-toolbar";
 
 jest.mock("@/hooks/common/use-mobile", () => ({
@@ -62,6 +62,38 @@ describe("CalendarToolbarPrimaryActions", () => {
     expect(screen.queryByText("Email calendar")).toBeNull();
     expect(screen.queryByText("Embed calendar")).toBeNull();
   });
+});
+
+it("places resource approvals in the existing Calendar modes when authorized", () => {
+  const onOpenResourceApprovals = jest.fn();
+  render(
+    <CalendarToolbar
+      view="month"
+      viewMode="calendar"
+      hrEventsVisible
+      crmEventsVisible
+      attendanceEventsVisible={false}
+      isHrEnabled
+      isCrmEnabled
+      isAttendanceEnabled
+      onPrev={jest.fn()}
+      onNext={jest.fn()}
+      onToday={jest.fn()}
+      onViewChange={jest.fn()}
+      onViewModeChange={jest.fn()}
+      onOpenResourceApprovals={onOpenResourceApprovals}
+      onOpenCreate={jest.fn()}
+      onToggleHrEvents={jest.fn()}
+      onToggleCrmEvents={jest.fn()}
+      onToggleAttendanceEvents={jest.fn()}
+      hidePrimaryActions
+    />,
+  );
+
+  const modeTabs = screen.getByRole("tablist", { name: "Calendar modes" });
+  const approvalTab = within(modeTabs).getByRole("tab", { name: "Resource approvals" });
+  fireEvent.mouseDown(approvalTab, { button: 0 });
+  expect(onOpenResourceApprovals).toHaveBeenCalledTimes(1);
 });
 
 function renderToolbar(

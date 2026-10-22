@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 export default function CycleNotFound() {
   const params = useParams();
   const projectId = params?.projectId as string | undefined;
-  const cyclesHref = projectId ? `/build/${projectId}/cycles` : "/build";
+  const cyclesHref = projectId ? `/build/${projectId}/cycles` : "/build/projects";
 
   return (
     <div className="flex flex-1 flex-col items-center justify-center py-16 px-6 text-center min-h-[40dvh] gap-4">

@@ -54,7 +54,7 @@ export function SelfServiceHubTabs() {
         { value: "today", label: t("attendance.tabToday"), href: "/me/workday" },
         { value: "history", label: t("attendance.tabHistory"), href: "/me/workday?tab=history" },
         { value: "my-leaves", label: t("timeOff.tabMyLeaves"), href: "/me/workday?section=time-off" },
-        { value: "wfh", label: t("timeOff.tabWfh"), href: "/me/workday?section=time-off&tab=wfh" },
+        { value: "wfh", label: t("timeOff.shortWfh"), href: "/me/workday?section=time-off&tab=wfh" },
       ]
     : available.map(({ value, label }) => ({
         value,

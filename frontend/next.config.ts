@@ -80,6 +80,11 @@ const nextConfig: NextConfig = {
   },
   redirects: async () => [
     {
+      source: "/inventory/pick-lists",
+      destination: "/inventory/operations/picking",
+      permanent: false,
+    },
+    {
       source: "/me",
       destination: "/dashboard",
       permanent: true,

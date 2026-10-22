@@ -74,11 +74,6 @@ const NO_DATA_ROUTES = new Set<string>([
   // error and denied, because deciding which cards to show is itself a read of
   // `/me/access`.
   "inventory/reports",
-  // T09. `/inventory/pick-lists` is an alias, not a screen: its whole body is a
-  // `redirect()` to `/inventory/operations/picking`, which `inventory.md:1358`
-  // names as the pick-list surface. It renders nothing, so it has no state to
-  // show; giving it four would be four branches that can never execute.
-  "inventory/pick-lists",
   // A settings form has no collection, so it has no empty state — the same
   // argument as a `/new` route. It still owes loading, error and denied.
   "inventory/settings",
@@ -133,30 +128,6 @@ const OWN_ERROR_BOUNDARY: ReadonlyArray<{ route: string; reason: string }> = [
   {
     route: "inventory/rf",
     reason: "A handheld cannot recover through a desktop page shell; RF keeps its own one-column, one-action surface.",
-  },
-];
-
-/**
- * Routes allowed to ship without a segment `loading.tsx`.
- *
- * One entry, and meant to stay near zero. It exists because the alternative to a
- * named exemption is an unnamed one: this column drifted to eight missing files
- * precisely because the ratchet *read* `loading.tsx` when it happened to be
- * there and never required it, so the in-component `isLoading` marker answered
- * for the segment fallback — which it cannot, being a different mechanism. A
- * route with no `loading.tsx` has no Suspense boundary for the segment, so a
- * slow server render shows the previous screen rather than a skeleton.
- *
- * Anything added here carries a written reason, the way `NO_DATA_ROUTES` does.
- * "It was easier" is not one. The bar the single entry below clears: the route
- * cannot render at all, so a `loading.tsx` beside it is not a thin skeleton but
- * a fallback for a screen that does not exist.
- */
-const LOADING_EXEMPT_ROUTES: ReadonlyArray<{ route: string; reason: string }> = [
-  {
-    route: "inventory/pick-lists",
-    reason:
-      "The route's whole body is redirect() to /inventory/operations/picking, so it never renders. A segment fallback here could only flash the skeleton of a screen that does not exist, which is a file added to satisfy a checker rather than a reader.",
   },
 ];
 
@@ -578,27 +549,13 @@ describe("G8 — inventory routes answer the states PRD §12.7 requires", () => 
     // missing files, which is indistinguishable from a complete column.
     expect(routes.length).toBeGreaterThan(40);
 
-    const exempt = new Set(LOADING_EXEMPT_ROUTES.map(({ route }) => route));
     const missing = routes
       .map(routePath)
-      .filter((rel) => !exempt.has(rel))
       .filter((rel) =>
         !existsSync(join(FRONTEND_ROOT, "app", "(authenticated)", rel, "loading.tsx")),
       );
 
     expect(missing).toEqual([]);
-  });
-
-  it("keeps the loading exemptions pointing at routes that still exist", () => {
-    // An exemption for a route that has been deleted or renamed is a hole
-    // nobody can see: it silences nothing today and silences the wrong thing
-    // tomorrow, when a new route happens to take the name.
-    const known = new Set(routes.map(routePath));
-    const stale = LOADING_EXEMPT_ROUTES.filter(({ route }) => !known.has(route)).map(
-      ({ route, reason }) => `${route} — ${reason}`,
-    );
-
-    expect(stale).toEqual([]);
   });
 
   it("keeps each named segment owning its own boundary", () => {

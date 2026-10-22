@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative, resolve, sep } from "node:path";
 import { BUILD_ROUTE_MANIFEST, BuildRouteManifestEntrySchema } from "./build-route-manifest";
 import { BUILD_COMPAT_REDIRECTS } from "./build-compat-redirects";
@@ -31,9 +31,9 @@ const diskRoutes = new Set(
   collectPageFilePaths(APP_BUILD_DIR).map(absolutePathToRoute),
 );
 
-describe("BLD-001 — build route manifest covers all 81 authenticated build pages bidirectionally", () => {
-  it("manifest has 81 entries so the coverage check cannot pass vacuously with an empty or truncated list", () => {
-    expect(BUILD_ROUTE_MANIFEST).toHaveLength(81);
+describe("BLD-001 — build route manifest covers all authenticated Build pages bidirectionally", () => {
+  it("manifest has 79 pages so the coverage check cannot pass vacuously with an empty or truncated list", () => {
+    expect(BUILD_ROUTE_MANIFEST).toHaveLength(79);
   });
 
   it("no longer tracks the twenty-seven routes whose next.config.ts redirect now serves the URL, because a manifest entry without a page is a phantom disposition", () => {
@@ -264,22 +264,11 @@ describe("BLD-001 — target field invariant enforced by schema", () => {
   });
 });
 
-describe("ARCH-16 — legacy deep links: every CONSOLIDATE target is itself a KEEP route", () => {
-  const keptRoutes = new Set(
-    BUILD_ROUTE_MANIFEST.filter((e) => e.decision === "KEEP").map((e) => e.route),
-  );
-
-  it("has at least one CONSOLIDATE entry so the invariant cannot pass vacuously on an empty list", () => {
-    const consolidations = BUILD_ROUTE_MANIFEST.filter(
-      (e) => e.decision === "CONSOLIDATE",
-    );
-    expect(consolidations.length).toBeGreaterThan(0);
-  });
-
-  it("every CONSOLIDATE entry's target route is a KEEP entry so the legacy deep link resolves to a live page", () => {
-    const danglingConsolidations = BUILD_ROUTE_MANIFEST.filter(
-      (e) => e.decision === "CONSOLIDATE",
-    ).filter((e) => !keptRoutes.has(e.target!));
-    expect(danglingConsolidations).toEqual([]);
+describe("ARCH-16 — legacy bug deep links bypass redirect-only pages", () => {
+  it("keeps the deep link as a route handler and its destination as a page", () => {
+    expect(BUILD_ROUTE_MANIFEST.every((entry) => entry.decision === "KEEP")).toBe(true);
+    expect(BUILD_ROUTE_MANIFEST.some((entry) => entry.route === "/build/[projectId]/intake")).toBe(true);
+    expect(existsSync(join(APP_BUILD_DIR, "[projectId]", "bugs", "[submissionId]", "page.tsx"))).toBe(false);
+    expect(existsSync(join(APP_BUILD_DIR, "[projectId]", "bugs", "[submissionId]", "route.ts"))).toBe(true);
   });
 });

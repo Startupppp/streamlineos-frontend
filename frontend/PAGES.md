@@ -213,12 +213,12 @@ Build no longer renders the generic sidebar groups or the old project nav tree. 
 The Build catalog's two groups are `Build` (Overview · Projects · Products · Portfolios · Programs · Teams · Inbox · Assigned to me · Drafts · Browse all Build) and `Build settings` (Roadmap · Goals · Approvals · Customers · Templates · Client access · Members · Build access · Build settings) — `Workspaces` is removed from both groups. `EXPECTED_NAVIGATION_INVENTORY_DIGEST` must be regenerated for this change, not hand-copied from the pre-removal value.
 
 ### Hub & cross-project views
-- `/build` · **Build** · hooks: `enforceRouteAccess`, `→ features/build/project-list`
+- `/build` · **Build entry** · guarded route handler sends legacy entry URLs to Command Center or Projects; in-app links use the destination directly.
 - `/build/all` · **Build** · [RETIRED app/(authenticated)/build/all/page.tsx] — byte-equivalent duplicate of `/build` (same `ProjectsPage`, zero props); 17 inbound links repointed to `/build`, its tailored loading skeleton moved to `build/loading.tsx`
 - `/build/all-work` · **Build** · hooks: `→ features/build/all-work`
 - `/build/my-work` · **Build** · hooks: `→ features/build`
 - `/build/inbox` · **Build** · hooks: `→ features/build`
-- `/build/drafts` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/drafts/page.tsx] — redirect-only page; the redirect moved into `next.config.ts` and the sidebar Drafts entry now points straight at `/build/inbox?view=drafts`
+- `/build/drafts` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/drafts/page.tsx] — compatibility redirect in `next.config.ts`; the Drafts entry opens `/build/my-work?section=drafts` directly.
 - `/build/command-center` · **Build** · hooks: `→ features/build`
 - `/build/approvals` · **Build** · hooks: `→ features/build`
 - `/build/members` · **Build** · [RETIRED 2026-09-22 app/(authenticated)/build/members/page.tsx + error.tsx] — redirect-only page shadowed by the `next.config.ts:132` redirect to `/build/settings/access`, which fires before the filesystem, so the page never executed; the URL still redirects
@@ -767,7 +767,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/inventory/kits` · **Inventory** · hooks: `→ features/inventory` — kit / bundle management
 - `/inventory/labor` · **Inventory** · hooks: `→ features/inventory` — warehouse labor tracking
 - `/inventory/landed-cost` · **Inventory** · hooks: `→ features/inventory` — landed cost allocation; `LandedCostClient`
-- `/inventory/pick-lists` · **Inventory** · hooks: none — redirect to `/inventory/operations/picking`; alias so bookmarks and nav labels ("Pick lists") resolve to the picking workbench
+- `/inventory/pick-lists` · **Inventory** · compatibility redirect in `next.config.ts` to `/inventory/operations/picking`; no page component.
 - `/inventory/projects` · **Inventory** · hooks: `→ features/inventory` — inventory projects (manufacturing/production orders); `ProjectsClient`
 - `/inventory/projects/[projectId]` · **Inventory** · hooks: `→ features/inventory` — project detail; `ProjectDetailClient`
 - `/inventory/quick-commerce` · **Inventory** · hooks: `→ features/inventory` — quick-commerce order fulfillment

@@ -27,7 +27,9 @@ const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-f
 const MY_ATTENDANCE_TABS = ["today", "history"] as const;
 const WFH_REQUEST_HREF = "/me/workday?section=time-off&tab=wfh&wfh=1";
 
-export function MyAttendancePage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
+export function MyAttendancePage({
+  hubChrome,
+}: { hubChrome?: SelfServiceHubChrome } = {}) {
   const t = useT();
   const router = useRouter();
   const { activeTab, onTabChange } = useUrlTab(MY_ATTENDANCE_TABS, "today");
@@ -39,6 +41,38 @@ export function MyAttendancePage({ hubChrome }: { hubChrome?: SelfServiceHubChro
   const handleRequestWfh = useCallback(() => {
     router.push(WFH_REQUEST_HREF);
   }, [router]);
+
+  const pageActions = (
+    <div className="flex shrink-0 items-center gap-2">
+      <Button
+        asChild
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8 gap-1.5"
+      >
+        <Link href="/calendar" aria-label={t("attendance.openCalendar")}>
+          <CalendarDays className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">
+            {t("attendance.openCalendar")}
+          </span>
+        </Link>
+      </Button>
+      {activeTab === "today" ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5"
+          onClick={handleOpenCorrection}
+        >
+          <FilePen className="h-3.5 w-3.5" />
+          {t("attendance.requestCorrection")}
+        </Button>
+      ) : null}
+      {activeTab === "history" ? <AttendanceEmailDialog toolbar /> : null}
+    </div>
+  );
 
   return (
     <>
@@ -53,6 +87,7 @@ export function MyAttendancePage({ hubChrome }: { hubChrome?: SelfServiceHubChro
           noInternalScroll
           contentClassName="flex min-h-0 flex-1 flex-col"
           filtersClassName="justify-between"
+          actions={hubChrome ? pageActions : undefined}
           filters={
             <>
               {hubChrome?.tabs ?? (
@@ -66,35 +101,7 @@ export function MyAttendancePage({ hubChrome }: { hubChrome?: SelfServiceHubChro
                 </TabsList>
               )}
 
-              <div className="ml-auto flex shrink-0 items-center gap-2">
-                <Button
-                  asChild
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1.5"
-                >
-                  <Link href="/calendar" aria-label={t("attendance.openCalendar")}>
-                    <CalendarDays className="h-3.5 w-3.5" />
-                    <span className="hidden sm:inline">{t("attendance.openCalendar")}</span>
-                  </Link>
-                </Button>
-
-                {activeTab === "today" ? (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-8 gap-1.5"
-                    onClick={handleOpenCorrection}
-                  >
-                    <FilePen className="h-3.5 w-3.5" />
-                    {t("attendance.requestCorrection")}
-                  </Button>
-                ) : null}
-
-                {activeTab === "history" ? <AttendanceEmailDialog toolbar /> : null}
-              </div>
+              {!hubChrome ? <div className="ml-auto">{pageActions}</div> : null}
             </>
           }
         >
@@ -103,10 +110,10 @@ export function MyAttendancePage({ hubChrome }: { hubChrome?: SelfServiceHubChro
               <div
                 className={cn(
                   CONTENT_FILL_PANEL,
-                  "min-h-0 items-center justify-center rounded-xl border border-border bg-card px-4 py-8 sm:px-6",
+                  "min-h-0 overflow-y-auto overscroll-contain rounded-xl border border-border bg-card px-4 py-8 sm:px-6",
                 )}
               >
-                <div className="w-full max-w-sm space-y-3">
+                <div className="m-auto w-full max-w-sm space-y-3">
                   <TimerCard
                     chrome={false}
                     today

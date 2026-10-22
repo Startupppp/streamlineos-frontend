@@ -1,4 +1,5 @@
 import { render, screen, fireEvent } from "@testing-library/react";
+import type { MouseEvent, PropsWithChildren } from "react";
 import { FolderIcon } from "lucide-react";
 import { BuildNavLink } from "./build-nav-link";
 import {
@@ -12,6 +13,39 @@ const push = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push }),
+}));
+
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: ({
+    children,
+    href,
+    onClick,
+    prefetch: _prefetch,
+    ...props
+  }: PropsWithChildren<{
+    href: string;
+    onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
+    prefetch?: boolean;
+  }>) => (
+    <a
+      href={href}
+      {...props}
+      onClick={(event) => {
+        onClick?.(event);
+        if (
+          !event.defaultPrevented &&
+          !event.metaKey &&
+          !event.ctrlKey &&
+          !event.shiftKey &&
+          !event.altKey &&
+          event.button === 0
+        ) push(href);
+      }}
+    >
+      {children}
+    </a>
+  ),
 }));
 
 jest.mock("@/components/layout/nav-intent-prefetch", () => ({
@@ -63,8 +97,9 @@ describe("BuildNavLink — BSN-04-014 sidebar links honour the unsaved-work guar
   it("navigates immediately when no Build surface holds unsaved work", () => {
     renderLink(false);
 
-    fireEvent.click(screen.getByRole("link", { name: /issues/i }));
+    const followsLink = fireEvent.click(screen.getByRole("link", { name: /issues/i }));
 
+    expect(followsLink).toBe(true);
     expect(push).toHaveBeenCalledWith("/build/42/issues");
   });
 

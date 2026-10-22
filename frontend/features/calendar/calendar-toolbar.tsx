@@ -12,6 +12,7 @@ import {
   Handshake,
   Clock3,
   ListTodo,
+  ListChecks,
 } from "lucide-react";
 import {
   ChevronLeftIcon,
@@ -44,7 +45,7 @@ import {
   SourceFailureBanner,
 } from "./calendar-source-panel";
 
-type ViewMode = "calendar" | "list" | "history" | "my-day";
+export type ViewMode = "calendar" | "list" | "history" | "my-day";
 
 const VIEW_PERIOD_LABEL: Record<View, string> = {
   day: "day",
@@ -69,6 +70,56 @@ function parseViewMode(value: string): ViewMode {
   return (
     VIEW_MODE_OPTIONS.find((option) => option.value === value)?.value ??
     "calendar"
+  );
+}
+
+export function CalendarModeTabs({
+  value,
+  onValueChange,
+  showResourceApprovals = false,
+  showCalendarModes = true,
+}: {
+  value: ViewMode | "resource-approvals";
+  onValueChange: (value: ViewMode | "resource-approvals") => void;
+  showResourceApprovals?: boolean;
+  showCalendarModes?: boolean;
+}) {
+  return (
+    <Tabs
+      value={value}
+      onValueChange={(next) =>
+        onValueChange(next === "resource-approvals" ? next : parseViewMode(next))
+      }
+      className="min-w-0 gap-0"
+    >
+      <TabsList aria-label="Calendar modes">
+        {showCalendarModes
+          ? VIEW_MODE_OPTIONS.map((option) => {
+              const Icon = option.icon;
+              return (
+                <TabsTrigger
+                  key={option.value}
+                  value={option.value}
+                  aria-controls={undefined}
+                >
+                  <Icon className="h-4 w-4" aria-hidden />
+                  <span className="sr-only">{option.label}</span>
+                </TabsTrigger>
+              );
+            })
+          : null}
+        {showResourceApprovals ? (
+          <TabsTrigger
+            value="resource-approvals"
+            aria-controls={undefined}
+            title="Resource approvals"
+          >
+            <ListChecks className="h-4 w-4" aria-hidden />
+            <span className="sr-only">Resource approvals</span>
+          </TabsTrigger>
+        ) : null}
+      </TabsList>
+    </Tabs>
   );
 }
 
@@ -150,6 +201,7 @@ interface CalendarToolbarProps {
   onToday: () => void;
   onViewChange: (v: View) => void;
   onViewModeChange: (v: ViewMode) => void;
+  onOpenResourceApprovals?: () => void;
   onOpenCreate: () => void;
   onToggleHrEvents: () => void;
   onToggleCrmEvents: () => void;
@@ -178,6 +230,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   onToday,
   onViewChange,
   onViewModeChange,
+  onOpenResourceApprovals,
   onOpenCreate,
   onToggleHrEvents,
   onToggleCrmEvents,
@@ -195,8 +248,11 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     [onViewChange],
   );
   const handleViewModeValueChange = useCallback(
-    (value: string) => onViewModeChange(parseViewMode(value)),
-    [onViewModeChange],
+    (value: ViewMode | "resource-approvals") => {
+      if (value === "resource-approvals") onOpenResourceApprovals?.();
+      else onViewModeChange(value);
+    },
+    [onOpenResourceApprovals, onViewModeChange],
   );
   const reduceMotion = useReducedMotion() === true;
   const showDateNav = viewMode === "calendar";
@@ -208,27 +264,11 @@ export const CalendarToolbar = memo(function CalendarToolbar({
     <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
       <div className="flex min-w-0 select-none flex-col gap-2 border-b border-border pb-2">
         <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
-          <Tabs
+          <CalendarModeTabs
             value={viewMode}
             onValueChange={handleViewModeValueChange}
-            className="min-w-0 gap-0"
-          >
-            <TabsList aria-label="Calendar modes">
-              {VIEW_MODE_OPTIONS.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <TabsTrigger
-                    key={option.value}
-                    value={option.value}
-                    aria-controls={undefined}
-                  >
-                    <Icon className="h-4 w-4" aria-hidden />
-                    <span className="sr-only">{option.label}</span>
-                  </TabsTrigger>
-                );
-              })}
-            </TabsList>
-          </Tabs>
+            showResourceApprovals={Boolean(onOpenResourceApprovals)}
+          />
           <div className="flex min-w-0 flex-wrap items-center justify-end gap-1.5 sm:gap-2">
             {showCapacity ? (
               <Button

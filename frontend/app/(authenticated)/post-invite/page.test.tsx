@@ -44,7 +44,7 @@ beforeEach(() => {
 describe("post-invite destination", () => {
   it("loads effective access for the signed-in invited organization and renders the Build transition", async () => {
     const result = await PostInvitePage();
-    expect(destinationOf(result)).toBe("/build");
+    expect(destinationOf(result)).toBe("/build/command-center");
     expect(mockSession).toHaveBeenCalledTimes(1);
     expect(mockAccess).toHaveBeenCalledTimes(1);
     expect(mockWizardGate).toHaveBeenCalledTimes(1);
@@ -102,7 +102,7 @@ describe("post-invite destination", () => {
     });
 
     const result = await PostInvitePage();
-    expect(destinationOf(result)).toBe("/build");
+    expect(destinationOf(result)).toBe("/build/command-center");
   });
 
   it("shows a retryable error boundary instead of inventing a landing when access cannot be read", async () => {

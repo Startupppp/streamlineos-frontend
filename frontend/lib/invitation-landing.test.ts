@@ -16,7 +16,7 @@ describe("resolveInvitationLanding", () => {
     expect(resolveInvitationLanding(access({
       modules: { build: true },
       scopes: { "build:view": "own" },
-    }), null)).toBe("/build");
+    }), null)).toBe("/build/command-center");
   });
 
   it("does not enter Build when the org has disabled it", () => {
@@ -42,7 +42,7 @@ describe("resolveInvitationLanding", () => {
     expect(resolveInvitationLanding(access({
       isOrgOwner: true,
       modules: { build: true },
-    }), null)).toBe("/build");
+    }), null)).toBe("/build/command-center");
   });
 
   it("prioritizes required HR onboarding for a member with effective HR access", () => {
@@ -56,14 +56,14 @@ describe("resolveInvitationLanding", () => {
     expect(resolveInvitationLanding(access({
       modules: { hr: true, build: true },
       scopes: { "build:view": "all" },
-    }), "/employee-onboarding")).toBe("/build");
+    }), "/employee-onboarding")).toBe("/build/command-center");
   });
 
   it("does not force a completed HR joiner back into onboarding", () => {
     expect(resolveInvitationLanding(access({
       modules: { hr: true, build: true },
       scopes: { "hr:access:view": "all", "build:view": "all" },
-    }), null)).toBe("/build");
+    }), null)).toBe("/build/command-center");
   });
 
   it("lands a member without Build in the cross-module dashboard", () => {

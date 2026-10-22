@@ -20,7 +20,7 @@ jest.mock("next/navigation", () => ({
   notFound: () => mockNotFound(),
 }));
 
-import BugsSubmissionRedirectPage from "./page";
+import { GET } from "./route";
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -32,9 +32,7 @@ describe("BugsSubmissionRedirectPage", () => {
     mockServerGet.mockResolvedValue({ intakeId: 77 });
 
     await expect(
-      BugsSubmissionRedirectPage({
-        params: Promise.resolve({ projectId: "10", submissionId: "42" }),
-      }),
+      GET({} as Request, { params: Promise.resolve({ projectId: "10", submissionId: "42" }) }),
     ).rejects.toThrow("redirect:/build/10/intake?item=77");
 
     expect(mockEnforceRouteAccess).toHaveBeenCalledWith(
@@ -51,9 +49,7 @@ describe("BugsSubmissionRedirectPage", () => {
     mockServerGet.mockResolvedValue({ intakeId: null });
 
     await expect(
-      BugsSubmissionRedirectPage({
-        params: Promise.resolve({ projectId: "10", submissionId: "99" }),
-      }),
+      GET({} as Request, { params: Promise.resolve({ projectId: "10", submissionId: "99" }) }),
     ).rejects.toThrow("redirect:/build/10/intake");
 
     expect(mockRedirect).toHaveBeenCalledWith("/build/10/intake");
@@ -61,9 +57,7 @@ describe("BugsSubmissionRedirectPage", () => {
 
   it("calls notFound when projectId is not a positive integer", async () => {
     await expect(
-      BugsSubmissionRedirectPage({
-        params: Promise.resolve({ projectId: "abc", submissionId: "42" }),
-      }),
+      GET({} as Request, { params: Promise.resolve({ projectId: "abc", submissionId: "42" }) }),
     ).rejects.toThrow("not-found");
 
     expect(mockNotFound).toHaveBeenCalledTimes(1);
@@ -72,9 +66,7 @@ describe("BugsSubmissionRedirectPage", () => {
 
   it("calls notFound when submissionId is not a positive integer", async () => {
     await expect(
-      BugsSubmissionRedirectPage({
-        params: Promise.resolve({ projectId: "10", submissionId: "0" }),
-      }),
+      GET({} as Request, { params: Promise.resolve({ projectId: "10", submissionId: "0" }) }),
     ).rejects.toThrow("not-found");
 
     expect(mockNotFound).toHaveBeenCalledTimes(1);
@@ -83,9 +75,7 @@ describe("BugsSubmissionRedirectPage", () => {
 
   it("calls notFound when submissionId is negative", async () => {
     await expect(
-      BugsSubmissionRedirectPage({
-        params: Promise.resolve({ projectId: "10", submissionId: "-5" }),
-      }),
+      GET({} as Request, { params: Promise.resolve({ projectId: "10", submissionId: "-5" }) }),
     ).rejects.toThrow("not-found");
 
     expect(mockNotFound).toHaveBeenCalledTimes(1);
@@ -96,9 +86,7 @@ describe("BugsSubmissionRedirectPage", () => {
     mockEnforceRouteAccess.mockRejectedValueOnce(new Error("denied"));
 
     await expect(
-      BugsSubmissionRedirectPage({
-        params: Promise.resolve({ projectId: "10", submissionId: "42" }),
-      }),
+      GET({} as Request, { params: Promise.resolve({ projectId: "10", submissionId: "42" }) }),
     ).rejects.toThrow("denied");
 
     expect(mockServerGet).not.toHaveBeenCalled();

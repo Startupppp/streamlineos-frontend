@@ -6,7 +6,6 @@ import {
   FileText,
   Contact2,
   MessageSquareText,
-  ListChecks,
   Receipt,
   Inbox,
   Megaphone,
@@ -44,17 +43,6 @@ export const HOME_NAV_GROUPS: NavGroup[] = [
         icon: CalendarDays,
         inactivePrefixes: [
           "/calendar/settings",
-          "/calendar/resource-approvals",
-        ],
-      },
-      {
-        label: "Calendar resource approvals",
-        href: "/calendar/resource-approvals",
-        icon: ListChecks,
-        requiredPermission: [
-          "calendar:admin:manage",
-          "hr:assets:manage",
-          "inventory:warehouses:manage",
         ],
       },
       {

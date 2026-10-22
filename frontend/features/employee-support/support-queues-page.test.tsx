@@ -138,7 +138,7 @@ describe("SupportQueuesPage — one company-wide surface, HR as one queue", () =
     expect(screen.getByRole("tab", { name: /^HR/ })).toHaveAttribute("aria-selected", "true");
   });
 
-  it("shows open and overdue counts on the tabs of member queues only", () => {
+  it("shows queue names on tabs without open or overdue counts", () => {
     mockUseSupportQueues.mockReturnValue(
       queryOf({
         isSuccess: true,
@@ -151,9 +151,7 @@ describe("SupportQueuesPage — one company-wide surface, HR as one queue", () =
 
     render(<SupportQueuesPage />);
 
-    const itTab = screen.getByRole("tab", { name: /^IT/ });
-    expect(itTab).toHaveTextContent("7");
-    expect(within(itTab).getByLabelText("2 overdue")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /^IT$/ })).not.toHaveTextContent(/\d/);
     expect(screen.getByRole("tab", { name: /^HR/ })).not.toHaveTextContent(/\d/);
   });
 
