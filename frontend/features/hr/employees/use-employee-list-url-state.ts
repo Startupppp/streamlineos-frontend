@@ -4,7 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   applyEmployeeUrlUpdates,
-  employeeFiltersToUrlUpdates,
   parseEmployeeListFilters,
   type EmployeeListFilters,
   type EmployeeStatusFilter,
@@ -15,7 +14,6 @@ export interface EmployeeListUrlState {
   search: string;
   updateSearch: (value: string) => void;
   updateParams: (updates: Record<string, string | null>) => void;
-  statusHref: (status: Exclude<EmployeeStatusFilter, "all">) => string;
   clearFilters: () => void;
 }
 
@@ -53,21 +51,10 @@ export function useEmployeeListUrlState(pageSize: number): EmployeeListUrlState 
     [searchParams, router, pathname],
   );
 
-  const statusHref = useCallback(
-    (status: Exclude<EmployeeStatusFilter, "all">) => {
-      const params = applyEmployeeUrlUpdates(
-        searchParams,
-        employeeFiltersToUrlUpdates({ status }, defaults),
-      );
-      return `${pathname}?${params.toString()}`;
-    },
-    [searchParams, pathname, defaults],
-  );
-
   const clearFilters = useCallback(() => {
     updateSearch("");
     updateParams({ q: null, dept: null, status: null, role: null, page: null });
   }, [updateParams, updateSearch]);
 
-  return { filters, search, updateSearch, updateParams, statusHref, clearFilters };
+  return { filters, search, updateSearch, updateParams, clearFilters };
 }

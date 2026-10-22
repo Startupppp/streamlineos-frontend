@@ -9,6 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages } from "@/lib/api/select-flat-pages";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { invalidateKbPageChange } from "./page-invalidation";
 
 export type KbPageGrant = {
   id: number;
@@ -19,6 +20,8 @@ export type KbPageGrant = {
   grantedByMembershipId: number | null;
   createdAt: string;
   revokedAt: string | null;
+  expiresAt: string | null;
+  isExpired: boolean;
   granteeName: string | null;
   granteeEmail: string | null;
   granteeImage: string | null;
@@ -46,8 +49,8 @@ export type KbPageGrantCandidatesPage = {
 };
 
 export type CreateKbPageGrantInput =
-  | { membershipId: number; role?: never; access: KbPageGrant["access"] }
-  | { role: string; membershipId?: never; access: KbPageGrant["access"] };
+  | { membershipId: number; role?: never; access: KbPageGrant["access"]; expiresAt?: string }
+  | { role: string; membershipId?: never; access: KbPageGrant["access"]; expiresAt?: string };
 
 const kbPageGrantListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantListContract),
@@ -118,9 +121,7 @@ export function useCreateKbPageGrant() {
         kbPageGrantContract,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrants(variables.pageId),
-      });
+      invalidateKbPageChange(qc, "acl-changed", variables.pageId);
     },
   });
 }
@@ -137,9 +138,7 @@ export function useRevokeKbPageGrant() {
         noContentC,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageGrants(variables.pageId),
-      });
+      invalidateKbPageChange(qc, "acl-changed", variables.pageId);
     },
   });
 }

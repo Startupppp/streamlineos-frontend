@@ -106,8 +106,8 @@ export function KbPageAiActions({
     },
     {
       key: "ask",
-      label: "Ask about this page",
-      description: "Answers grounded in this page only",
+      label: "Ask about this file",
+      description: "Answers grounded in this file only",
       icon: MessageSquareText,
       run: runAsk,
     },
@@ -124,7 +124,7 @@ export function KbPageAiActions({
     {
       key: "suggest-related",
       label: "Suggest related topics",
-      description: "Ideas that extend this page",
+      description: "Ideas that extend this file",
       icon: Lightbulb,
       run: streamAction("suggest-related"),
       expectsCitations: true,
@@ -147,8 +147,8 @@ export function KbPageAiActions({
         docId={pageId}
         open={askOpen}
         onOpenChange={setAskOpen}
-        title="Ask about this page"
-        description="Ask a question — the answer is scoped to this page only."
+        title="Ask about this file"
+        description="Ask a question — the answer is scoped to this file only."
       />
       <KbPageImproveDiffDialog
         open={pendingChange !== null}

@@ -5,14 +5,11 @@ import { useSession } from "next-auth/react";
 import {
   Dialog,
   DialogContent,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { useChatOrgUsers, useChatOnlineUsers } from "@/hooks/api/chat-core-read";
 import { useCreateDMChannel } from "@/hooks/api/chat-core-mutations-b";
@@ -22,6 +19,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
 import { getInitials } from "@/lib/format-utils";
 import { ChatDialogHeader } from "./chat-dialog-header";
+import { useDialogReturnFocus } from "./use-dialog-return-focus";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 
@@ -97,16 +95,13 @@ function DMUserItem({
 }
 
 export function NewDMDialog({
-  open,
   onOpenChange,
   onCreated,
-  hideTrigger,
 }: {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (channelId: number) => void;
-  hideTrigger?: boolean;
 }) {
+  const handleCloseAutoFocus = useDialogReturnFocus("new");
   const {
     data: orgUsers,
     error: usersError,
@@ -137,13 +132,11 @@ export function NewDMDialog({
       try {
         const channel = await createDM.mutateAsync({ targetUserId: userId });
         onCreated(channel.id);
-        onOpenChange(false);
-        setSearch("");
       } catch (error) {
         toast.error(getErrorMessage(error));
       }
     },
-    [createDM, onCreated, onOpenChange],
+    [createDM, onCreated],
   );
 
   const filteredUsers = useMemo(() => {
@@ -176,21 +169,8 @@ export function NewDMDialog({
   );
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {!hideTrigger && (
-        <DialogTrigger asChild>
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={14}
-            variant="ghost"
-            size="icon"
-            className="w-7 rounded-lg"
-            title="New Direct Message"
-            aria-label="New Direct Message"
-          />
-        </DialogTrigger>
-      )}
-      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden">
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-md p-0 gap-0 overflow-hidden" onCloseAutoFocus={handleCloseAutoFocus}>
         <ChatDialogHeader
           title="New direct message"
           description="Search for a teammate and start a private conversation."

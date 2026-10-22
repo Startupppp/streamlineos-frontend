@@ -21,6 +21,7 @@ const WIRE_FIXTURE = {
   coverImage: null,
   status: "published",
   contentType: "rich-text",
+  kind: "document",
   trustState: "verified",
   visibility: "org",
   publicToken: null,
@@ -50,6 +51,8 @@ const WIRE_FIXTURE = {
   ancestors: [{ id: 9, title: "Handbook" }],
   isFavorite: false,
   canEdit: true,
+  can: { view: true, comment: true, edit: true, manage: false, restore: false },
+  access: { via: "organization", grantExpiresAt: null },
 };
 
 describe("kbPageWithAncestorsContract — server/client schema parity for wiki page detail (FE-28)", () => {
@@ -95,6 +98,16 @@ describe("kbPageWithAncestorsContract — server/client schema parity for wiki p
     const { canEdit: _canEdit, ...withoutCanEdit } = WIRE_FIXTURE;
     const parsed = kbPageWithAncestorsContract.safeParse(withoutCanEdit);
     expect(parsed.success).toBe(true);
+  });
+
+  it("parses the can capabilities object so the toolbar can show the correct action set without a second request", () => {
+    const parsed = kbPageWithAncestorsContract.parse(WIRE_FIXTURE);
+    expect(parsed.can).toEqual({ view: true, comment: true, edit: true, manage: false, restore: false });
+  });
+
+  it("rejects a payload missing can so a backend regression that omits the capabilities block is caught at the contract boundary", () => {
+    const { can: _can, ...withoutCan } = WIRE_FIXTURE;
+    expect(kbPageWithAncestorsContract.safeParse(withoutCan).success).toBe(false);
   });
 
   it("accepts array-shaped content from a template-created page so pages created from block-array templates render without a contract error", () => {
@@ -152,6 +165,7 @@ const KB_PAGE_LIST_ITEM_FIXTURE = {
   coverImage: null,
   status: "draft",
   contentType: "note",
+  kind: "document",
   trustState: "unverified",
   visibility: "org",
   publicToken: null,
@@ -261,5 +275,17 @@ describe("kbPageContract — server/client schema parity for the create and upda
       contentText: "Template paragraph",
     };
     expect(kbPageContract.safeParse(templatePage).success).toBe(true);
+  });
+});
+
+describe("kbPageWithAncestorsContract — kind during a frontend-first rollout", () => {
+  it("reads a page from a backend that predates kind as a document, so Docs keeps loading", () => {
+    const { kind: _omitted, ...withoutKind } = WIRE_FIXTURE;
+    expect(kbPageWithAncestorsContract.parse(withoutKind).kind).toBe("document");
+  });
+
+  it("keeps a spreadsheet kind the backend sends and rejects an unknown kind", () => {
+    expect(kbPageWithAncestorsContract.parse({ ...WIRE_FIXTURE, kind: "spreadsheet" }).kind).toBe("spreadsheet");
+    expect(kbPageWithAncestorsContract.safeParse({ ...WIRE_FIXTURE, kind: "slides" }).success).toBe(false);
   });
 });

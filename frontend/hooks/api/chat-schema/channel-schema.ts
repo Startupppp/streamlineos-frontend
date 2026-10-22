@@ -45,7 +45,7 @@ export const chatChannelMemberContract = z
   .object({ ...channelMemberBase, user: chatMemberUserContract.nullable() })
   .strict();
 
-export const chatLastMessageContract = z
+const chatLastMessageContract = z
   .object({
     content: z.string().nullable(),
     senderName: z.string().nullable(),
@@ -122,6 +122,4 @@ export function chatChannelPageContract<T extends z.ZodTypeAny>(row: T) {
   });
 }
 
-export type ChatChannelWire = z.infer<typeof chatChannelContract>;
 export type ChatChannelMemberWire = z.infer<typeof chatChannelMemberContract>;
-export type ChatPublicChannelWire = z.infer<typeof chatPublicChannelContract>;

@@ -216,7 +216,7 @@ describe("ProductInsightsPage — score override fields (BT-ae32e865907e)", () =
   });
 });
 
-describe("ProductInsightsPage — feedback submission drill-down links (BT-6733af0a3e35 item 5)", () => {
+describe("ProductInsightsPage — insight counts (BT-6733af0a3e35 item 5)", () => {
   const insightsData = {
     linkedProjectCount: 1,
     projectsByStatus: { active: 1, completed: 0, archived: 0 },
@@ -242,33 +242,14 @@ describe("ProductInsightsPage — feedback submission drill-down links (BT-6733a
     });
   });
 
-  it.each<[string, string]>([
-    ["Open", "/build/managed-products/7/feedback?status=open"],
-    ["In progress", "/build/managed-products/7/feedback?status=in_progress"],
-    ["Resolved", "/build/managed-products/7/feedback?status=resolved"],
-    ["Archived", "/build/managed-products/7/feedback?status=archived"],
-  ])(
-    "the %s feedback stat card links to %s so the actor lands on exactly the matching source rows",
-    (label, expectedHref) => {
-      mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=feedback"));
-      render(<ProductInsightsPage managedProductId={7} />);
-      const link = screen
-        .getAllByTestId("stat-card-link")
-        .find((el) => el.getAttribute("data-label") === label);
-      expect(link).toBeDefined();
-      expect(link).toHaveAttribute("href", expectedHref);
-    },
-  );
-
-  it("each status drill-down link uses a distinct predicate so no two stat cards share the same filtered URL", () => {
+  it("shows feedback status counts without linking the cards", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=feedback"));
     render(<ProductInsightsPage managedProductId={7} />);
-    const statusLabels = new Set(["Open", "In progress", "Resolved", "Archived"]);
-    const links = screen.getAllByTestId("stat-card-link")
-      .filter((el) => statusLabels.has(el.getAttribute("data-label") ?? ""))
-      .map((el) => el.getAttribute("href"));
-    const unique = new Set(links);
-    expect(unique.size).toBe(links.length);
+    expect(screen.getByText("Open: 5")).toBeInTheDocument();
+    expect(screen.getByText("In progress: 2")).toBeInTheDocument();
+    expect(screen.getByText("Resolved: 8")).toBeInTheDocument();
+    expect(screen.getByText("Archived: 1")).toBeInTheDocument();
+    expect(screen.queryByTestId("stat-card-link")).not.toBeInTheDocument();
   });
 
   it("puts the range selector in the page header and keeps the insights body scrollable", () => {
@@ -279,82 +260,14 @@ describe("ProductInsightsPage — feedback submission drill-down links (BT-6733a
     expect(screen.getByTestId("pm-page-shell")).toHaveClass("overflow-visible");
   });
 
-  it.each<[string, string, string]>([
-    ["Needs triage", "/build/managed-products/7/feedback?status=open", ""],
-    ["Linked projects", "/build/managed-products/7/projects", "tab=delivery"],
-    ["Active", "/build/managed-products/7/projects?pp_status=ACTIVE", "tab=delivery"],
-    ["Completed", "/build/managed-products/7/projects?pp_status=COMPLETED", "tab=delivery"],
-    ["Roadmap items", "/build/managed-products/7/roadmap", "tab=delivery"],
-    ["Completed items", "/build/managed-products/7/roadmap?status=completed", "tab=delivery"],
-    ["Linked feedback", "/build/managed-products/7/roadmap", "tab=delivery"],
-    ["Feedback votes", "/build/managed-products/7/roadmap", "tab=delivery"],
-  ])("the %s insight opens its relevant source", (label, href, query) => {
-    mockUseSearchParams.mockReturnValue(new URLSearchParams(query));
-    render(<ProductInsightsPage managedProductId={7} />);
-    const link = screen.getAllByTestId("stat-card-link").find((el) => el.getAttribute("data-label") === label);
-    expect(link).toHaveAttribute("href", href);
-  });
-});
-
-describe("ProductInsightsPage — linked-projects status drill-down hrefs (BT-pp-status-roundtrip)", () => {
-  const insightsData = {
-    linkedProjectCount: 3,
-    projectsByStatus: { active: 2, completed: 1, archived: 0 },
-    submissionsByStatus: { open: 0, in_progress: 0, resolved: 0, archived: 0 },
-    roadmapItemCount: 0,
-    roadmapItemsByStatus: { planned: 0, in_progress: 0, completed: 0, cancelled: 0 },
-    feedbackByStatus: { open: 0, planned: 0, in_progress: 0, completed: 0, declined: 0 },
-    linkedFeedbackVoteCount: 0,
-    ageDays: 3,
-    confidenceScore: null,
-    overrideReason: null,
-    overriddenBy: null,
-    overriddenAt: null,
-  };
-
-  beforeEach(() => {
-    useManagedProductInsights.mockReturnValue({
-      data: insightsData,
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch: jest.fn(),
-    });
+  it("shows delivery counts without linking the cards", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams("tab=delivery"));
-  });
-
-  it("Active stat card uses pp_status=ACTIVE so the projects page parser receives the correct param name", () => {
-    render(<ProductInsightsPage managedProductId={42} />);
-    const link = screen
-      .getAllByTestId("stat-card-link")
-      .find((el) => el.getAttribute("data-label") === "Active");
-    expect(link).toHaveAttribute("href", "/build/managed-products/42/projects?pp_status=ACTIVE");
-  });
-
-  it("Completed stat card uses pp_status=COMPLETED so the projects page parser receives the correct param name", () => {
-    render(<ProductInsightsPage managedProductId={42} />);
-    const link = screen
-      .getAllByTestId("stat-card-link")
-      .find((el) => el.getAttribute("data-label") === "Completed");
-    expect(link).toHaveAttribute("href", "/build/managed-products/42/projects?pp_status=COMPLETED");
-  });
-
-  it("Active and Completed drill-down hrefs use the same param name pp_status with distinct values so the parser can distinguish them", () => {
-    render(<ProductInsightsPage managedProductId={42} />);
-    const activeLink = screen
-      .getAllByTestId("stat-card-link")
-      .find((el) => el.getAttribute("data-label") === "Active");
-    const completedLink = screen
-      .getAllByTestId("stat-card-link")
-      .find((el) => el.getAttribute("data-label") === "Completed");
-    const activeHref = activeLink?.getAttribute("href") ?? "";
-    const completedHref = completedLink?.getAttribute("href") ?? "";
-    const activeParams = new URLSearchParams(activeHref.split("?")[1]);
-    const completedParams = new URLSearchParams(completedHref.split("?")[1]);
-    expect(activeParams.get("pp_status")).toBe("ACTIVE");
-    expect(completedParams.get("pp_status")).toBe("COMPLETED");
-    expect(activeParams.get("filterStatus")).toBeNull();
-    expect(completedParams.get("filterStatus")).toBeNull();
+    render(<ProductInsightsPage managedProductId={7} />);
+    expect(screen.getByText("Linked projects: 1")).toBeInTheDocument();
+    expect(screen.getByText("Active: 1")).toBeInTheDocument();
+    expect(screen.getByText("Completed: 0")).toBeInTheDocument();
+    expect(screen.getByText("Roadmap items: 3")).toBeInTheDocument();
+    expect(screen.queryByTestId("stat-card-link")).not.toBeInTheDocument();
   });
 });
 

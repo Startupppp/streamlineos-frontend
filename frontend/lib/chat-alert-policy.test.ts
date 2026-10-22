@@ -140,6 +140,8 @@ describe("viewerChannelState", () => {
       entityType: null,
       entityId: null,
       members,
+      memberCount: members.length,
+      membersTruncated: false,
       unreadCount: 0,
       lastMessage: null,
     };

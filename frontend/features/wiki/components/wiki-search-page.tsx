@@ -323,12 +323,12 @@ export default function WikiSearchPage() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <label htmlFor={searchInputId} className="sr-only">
-              Search pages
+              Search files
             </label>
             <Input
               id={searchInputId}
               type="search"
-              placeholder="Search pages…"
+              placeholder="Search files…"
               value={inputValue}
               onChange={handleInputChange}
               maxLength={KB_PAGE_SEARCH_MAX_LENGTH}
@@ -409,10 +409,10 @@ export default function WikiSearchPage() {
                 onValueChange={handleSpaceChange}
               >
                 <SelectTrigger className="h-9 w-40">
-                  <SelectValue placeholder="Any space" />
+                  <SelectValue placeholder="Any team folder" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Any space</SelectItem>
+                  <SelectItem value="all">Any team folder</SelectItem>
                   {facetSpaceCounts.map((f) => {
                     const sid = f.spaceId;
                     if (sid === null) return null;
@@ -493,9 +493,9 @@ export default function WikiSearchPage() {
                 type="button"
                 onClick={handleClearSpace}
                 className="flex items-center gap-0.5 rounded-full bg-muted px-2 py-0.5 text-xs hover:bg-muted/80"
-                aria-label={`Remove space filter: ${spacesById.get(spaceId) ?? spaceId}`}
+                aria-label={`Remove team folder filter: ${spacesById.get(spaceId) ?? spaceId}`}
               >
-                {spacesById.get(spaceId) ?? `Space ${spaceId}`}
+                {spacesById.get(spaceId) ?? `Team folder ${spaceId}`}
                 <X className="size-3" />
               </button>
             )}
@@ -510,17 +510,17 @@ export default function WikiSearchPage() {
               title={
                 queryActive
                   ? hrDocumentSearch
-                    ? "No pages found"
+                    ? "No files found"
                     : "No results"
-                  : "Search pages"
+                  : "Search files"
               }
               description={
                 queryActive
                   ? "Try a different query or clear your filters."
-                  : "Enter a query above to find pages."
+                  : "Enter a query above to find files."
               }
               filtersActive={queryActive && hasFilters}
-              filteredTitle="No pages match your filters"
+              filteredTitle="No files match your filters"
               onClearFilters={handleClearFilters}
             />
           }
@@ -528,8 +528,8 @@ export default function WikiSearchPage() {
         >
           {!queryActive ? (
             <EmptyState
-              title="Search pages"
-              description="Enter a query above to find pages across the knowledge base."
+              title="Search files"
+              description="Enter a query above to find files across the knowledge base."
             />
           ) : (
             <div

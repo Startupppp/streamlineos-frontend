@@ -1,36 +1,5 @@
 import { z } from "zod";
 
-/**
- * The message timeline — the route behind the worst of the seven defects.
- *
- * `chat_messages` has no `sender_id` column: the identity arrives through
- * `sender_membership_id -> organization_members -> users`, and every read path
- * shipped that join verbatim as `senderMembership`. So `Message.senderId` was
- * emitted by NO read path at all. `message-list.tsx:273` computes
- * `isOwn = msg.senderId === currentUserId`, so **every message a user sent
- * rendered as somebody else's** — other-person styling, and the Edit and Delete
- * controls never appeared, both being `{isOwn && …}`. `:276` groups by
- * `prevMsg?.senderId === msg.senderId`, and `undefined === undefined` is true,
- * so consecutive messages from DIFFERENT people collapsed under one header. The
- * Ably broadcast and the optimistic insert both carried `senderId`, which is why
- * a message looked right as it was sent and flipped the instant the list
- * refetched.
- *
- * `senderId` is nullable (`sender_membership_id` is `ON DELETE SET NULL`), and
- * `sender` is the opposite: `senderFromIdentity` ALWAYS returns the three-key
- * object, with all three fields null when the identity is missing. So `sender`
- * is required-and-non-nullable while `sender.id` is nullable — the inverse of
- * every other person object in this file, and exactly the kind of asymmetry a
- * shared "user" schema would erase.
- *
- * NOT `.strict()`, unlike the channel shapes above. The timeline selects no
- * `columns:` on `chat_messages`, so the row is "every column of the table" — a
- * set that legitimately grows with a migration, not a projection somebody chose.
- * `.strict()` on an unenumerated set would turn the next column addition into an
- * outage on the highest-traffic surface in the product. The identity fields are
- * still required, which is what catches the defect.
- */
-
 const chatEntityCardContract = z.object({
   type: z.string(),
   id: z.string(),
@@ -40,53 +9,61 @@ const chatEntityCardContract = z.object({
   href: z.string(),
 });
 
-/**
- * Mirrors `sendMessageSchema.metadata.entities` in `chat/dto/chat.schemas.ts`,
- * which is the only writer, plus the `card` the read path resolves onto each
- * reference. `projectId` is optional on a ticket reference because
- * `chat-actions.controller.ts:63` writes one without it.
- */
+const linkedRecordTypeContract = z.enum([
+  "task",
+  "project",
+  "cycle",
+  "release",
+  "incident",
+  "client",
+  "deal",
+  "lead",
+  "employee",
+  "doc_page",
+  "calendar_event",
+  "support_ticket",
+]);
+
 const chatEntityRefContract = z.discriminatedUnion("type", [
   z.object({
     type: z.literal("ticket"),
     id: z.string(),
     card: chatEntityCardContract.nullable().optional(),
-    projectId: z.number().optional(),
-    ticketNumber: z.number().optional(),
-    projectKey: z.string().optional(),
-    title: z.string().optional(),
-    status: z.string().optional(),
-    priority: z.string().optional(),
   }),
   z.object({
-    type: z.literal("comment"),
+    type: linkedRecordTypeContract,
     id: z.string(),
-    ticketId: z.number(),
-    projectId: z.number(),
+    card: chatEntityCardContract.nullable().optional(),
   }),
 ]);
 
+const resolvedReferenceTypeContract = z.enum(["ticket", ...linkedRecordTypeContract.options]);
+
+export const chatResolvedReferencesContract = z.object({
+  references: z.array(
+    z.object({
+      type: resolvedReferenceTypeContract,
+      id: z.string(),
+      card: chatEntityCardContract.extend({ type: resolvedReferenceTypeContract }).nullable(),
+    }),
+  ),
+});
+
+const chatEntityRefsContract = z.array(z.unknown()).transform((entries) =>
+  entries.flatMap((entry) => {
+    const parsed = chatEntityRefContract.safeParse(entry);
+    return parsed.success ? [parsed.data] : [];
+  }),
+);
+
 /** `metadata` is free-form jsonb; only the two keys the client reads are modelled. */
-const chatMessageMetadataContract = z
+export const chatMessageMetadataContract = z
   .object({
-    entities: z.array(chatEntityRefContract).optional(),
+    entities: chatEntityRefsContract.optional(),
     forwardCount: z.number().optional(),
   })
   .nullable();
 
-/**
- * `fileUrl` is in this list because it was missing from the projection and a
- * live flow read it: forwarding a message re-posts its attachments, and
- * `POST /chat/channels/:id/messages` requires `fileUrl: z.string()`. The
- * timeline selected five columns and not that one, so every forward of a
- * message with an attachment posted `fileUrl: undefined` and came back 400.
- * `MessageAttachment` declared it all along — the cast made both sides compile.
- *
- * NOT `.strict()` as of CHAT-002 fix: the backend may send additional
- * attachment metadata fields (timestamps, upload context) that the client
- * doesn't need to read. Like messages, attachments are selected from the full
- * row rather than an enumerated projection, so extra fields are legitimate.
- */
 export const chatMessageAttachmentContract = z.object({
   id: z.number(),
   fileName: z.string(),
@@ -114,19 +91,13 @@ const chatMessageCore = {
   messageType: z.enum(["text", "lead_submission", "system"]),
   metadata: chatMessageMetadataContract,
   actionStatus: z.string().nullable(),
-  // `emoji -> userId[]`, folded by the backend's `foldReactions` on every message read.
-  // Omitting it here let the non-strict parse strip it, so reactions vanished on refetch.
   reactions: z.record(z.string(), z.array(z.string())).default({}),
+  clientKey: z.string().nullable().optional(),
+  channelPosition: z.number().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
 };
 
-/**
- * `replyTo` is a PARTIAL message: the relation is requested one level deep, so
- * it carries the columns plus `senderId`/`sender` and NO `attachments` and no
- * nested `replyTo`. A schema that reused the full message here would reject
- * every reply.
- */
 const chatMessageReplyToContract = z.object({
   id: z.number(),
   content: z.string().nullable(),
@@ -139,12 +110,6 @@ export const chatMessageContract = z.object({
   replyTo: chatMessageReplyToContract.nullable(),
 });
 
-/**
- * The POST /chat/channels/:id/messages response — matches `chatRawMessageSchema`
- * on the backend. Unlike the timeline read, the send endpoint does NOT join
- * `sender`, `attachments`, or `replyTo`, so parsing through `chatMessageContract`
- * always fails because `sender` is required-and-non-nullable there.
- */
 export const chatSendResponseContract = z.object({
   id: z.number(),
   orgId: z.string(),
@@ -170,7 +135,15 @@ export const chatMessagesPageContract = z.object({
   nextCursor: z.number().nullable(),
 });
 
-/** The poll route answers the same rows plus an explicit `hasMore`. */
+export const chatMessageContextContract = z.object({
+  messages: z.array(chatMessageContract),
+  targetMessageId: z.number(),
+  olderCursor: z.number().nullable(),
+  hasNewer: z.boolean(),
+});
+
+export type ChatMessageContext = z.infer<typeof chatMessageContextContract>;
+
 export const chatPollPageContract = z.object({
   messages: z.array(chatMessageContract),
   nextCursor: z.number().nullable(),

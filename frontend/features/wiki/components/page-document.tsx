@@ -49,7 +49,13 @@ import {
   plainTextToPlateValue,
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
+import { KbFileViewer } from "./files";
 import "../wiki-document.css";
+
+const PageSpreadsheet = dynamic(() => import("./page-spreadsheet"), {
+  ssr: false,
+  loading: () => <Skeleton className="h-full w-full" />,
+});
 
 /** Centered reading column — wider than a narrow article, not full-bleed. */
 const WIKI_DOCUMENT_COLUMN =
@@ -133,12 +139,12 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     [updatePage],
   );
   const handleConflict = useCallback((detail: KbPageEditConflict) => {
-    toast.error("This page changed while you were editing", {
+    toast.error("This file changed while you were editing", {
       description: `${detail.lastEditedByName ?? "Someone else"} saved a newer version. Your edits are kept — choose which version wins.`,
     });
   }, []);
   const handleSaveFailure = useCallback((error: unknown) => {
-    toast.error("Failed to save page", { description: getErrorMessage(error) });
+    toast.error("Failed to save file", { description: getErrorMessage(error) });
   }, []);
 
   const { saveState, conflict, savedAt, isOffline, pendingFields, schedule, retry, discardLocalEdits, keepLocalEdits } = usePageAutosave({
@@ -200,7 +206,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             conflict?.currentContentRevision !== undefined &&
             result.data.contentRevision < conflict.currentContentRevision)
         ) {
-          toast.error("Couldn't load the latest page version. Your edits are still here.");
+          toast.error("Couldn't load the latest file version. Your edits are still here.");
           return;
         }
         discardLocalEdits();
@@ -209,7 +215,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
         editorSnapshotRef.current = null;
         setReloadNonce(nextReload);
       }, () => {
-        toast.error("Couldn't load the latest page version. Your edits are still here.");
+        toast.error("Couldn't load the latest file version. Your edits are still here.");
       })
       .finally(() => setIsReloading(false));
   }, [conflict?.currentContentRevision, discardLocalEdits, refetch]);
@@ -249,7 +255,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     setEditorDraft(next);
     setReloadNonce(nextReload);
     schedule({ content: withoutPendingUploads(next), contentText: plainText });
-    toast.success("Draft updated in the page");
+    toast.success("Draft updated in the file");
   }
 
   function handleApplyImprovement(text: string) {
@@ -316,7 +322,17 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
     return <KbPageNotFound error={error} onRetry={refetch} />;
   }
 
-  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
+  if (page.kind === "spreadsheet") {
+    return (
+      <PageSpreadsheet pageId={pageId} onNavigateToPage={onNavigateToPage} projectId={projectId} />
+    );
+  }
+
+  if (page.kind === "file") {
+    return <KbFileViewer pageId={pageId} />;
+  }
+
+  const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
   const wordCount = (page.contentText ?? "")
     .split(/\s+/)
     .filter(Boolean).length;
@@ -407,7 +423,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
             {page.isLocked && !canManage ? (
               <div className="mb-5 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
                 <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
-                <span>This page is locked and is read-only.</span>
+                <span>This file is locked and is read-only.</span>
               </div>
             ) : null}
 
@@ -431,7 +447,7 @@ export default function PageDocument({ pageId, onNavigateToPage, projectId }: Pa
                 rows={1}
                 style={{ height: "auto" }}
                 readOnly={!isEditable}
-                aria-label="Page title"
+                aria-label="File title"
               />
               <PageDocumentPropertyActions
                 icon={page.icon}

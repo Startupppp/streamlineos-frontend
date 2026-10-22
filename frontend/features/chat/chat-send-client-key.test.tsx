@@ -1,8 +1,16 @@
 import { act, renderHook } from "@testing-library/react";
+import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { z } from "zod";
 
 import { useMessageComposer } from "./use-message-composer";
+import { readOutbox } from "./composer-draft";
+import { retryFailedSend } from "./chat-outbox-delivery";
 import type { SendMessageInput } from "@/types/chat";
+
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { user: { id: "me", name: "Me", image: null } }, status: "authenticated" }),
+}));
 
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn(), info: jest.fn(), warning: jest.fn() },
@@ -11,6 +19,15 @@ jest.mock("sonner", () => ({
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
 }));
+
+jest.mock("@/hooks/api/access", () => ({
+  ...jest.requireActual("@/hooks/api/access"),
+  useCan: () => true,
+}));
+
+function QueryWrapper({ children }: { children: ReactNode }) {
+  return <QueryClientProvider client={new QueryClient()}>{children}</QueryClientProvider>;
+}
 
 /**
  * The backend built `clientKey` end to end — the column, the partial unique
@@ -47,13 +64,16 @@ beforeAll(() => {
   });
 });
 
-function harness(over: { failFirst?: boolean; isOnline?: boolean } = {}) {
+afterEach(() => localStorage.clear());
+
+function harness(over: { failFirst?: boolean; isOnline?: boolean; hang?: boolean } = {}) {
   const sent: SendMessageInput[] = [];
   let calls = 0;
   const sendMessage = {
     mutateAsync: jest.fn(async (input: SendMessageInput) => {
       sent.push(input);
       calls += 1;
+      if (over.hang) return new Promise<never>(() => undefined);
       if (over.failFirst && calls === 1) throw new Error("network timeout");
       return { id: calls };
     }),
@@ -68,8 +88,10 @@ function harness(over: { failFirst?: boolean; isOnline?: boolean } = {}) {
       markRead: { mutate: jest.fn() },
       scrollToBottom: () => undefined,
       publishTyping: () => undefined,
-      filteredMentions: [],
+      channel: undefined,
+      currentUserId: "me",
     }),
+    { wrapper: QueryWrapper },
   );
   return { hook, sent, sendMessage };
 }
@@ -108,23 +130,23 @@ describe("chat send idempotency key", () => {
     expect(sent[0]!.clientKey).not.toBe(sent[1]!.clientKey);
   });
 
-  it("reuses the key when the SAME send is retried after a failure", async () => {
+  it("reuses the key when the failed send is retried", async () => {
     const { hook, sent } = harness({ failFirst: true });
     await type(hook, "did this go through?");
     await act(async () => {
       await hook.result.current.handleSend();
     });
-    // The composer restores the draft on failure; sending it again is the same
-    // logical message, and the row may already be committed on the server.
+    const [failed] = readOutbox("chat:draft:7");
+    expect(failed?.failed).toBe(true);
     await act(async () => {
-      await hook.result.current.handleSend();
+      retryFailedSend("chat:draft:7", failed!.clientKey);
     });
 
     expect(sent).toHaveLength(2);
     expect(sent[1]!.clientKey).toBe(sent[0]!.clientKey);
   });
 
-  it("mints a NEW key when the failed draft is edited before retrying", async () => {
+  it("mints a NEW key for a new message written after a failure", async () => {
     const { hook, sent } = harness({ failFirst: true });
     await type(hook, "did this go through?");
     await act(async () => {
@@ -140,13 +162,13 @@ describe("chat send idempotency key", () => {
   });
 
   it("carries the key into the offline queue so a replay cannot duplicate", async () => {
-    const { hook } = harness({ isOnline: false });
+    const { hook } = harness({ isOnline: false, hang: true });
     await type(hook, "queued while offline");
     await act(async () => {
-      await hook.result.current.handleSend();
+      void hook.result.current.handleSend();
     });
 
-    const queued = hook.result.current.messageQueue.current;
+    const queued = readOutbox("chat:draft:7");
     expect(queued).toHaveLength(1);
     expect(typeof queued[0]!.clientKey).toBe("string");
     expect(queued[0]!.clientKey!.length).toBeGreaterThan(0);

@@ -158,6 +158,9 @@ export const directoryAndOwnershipQueryKeys = {
         : ([...base, "portal", "projects", params] as const),
     projectOverview: (projectId: number) =>
       [...base, "portal", "projects", projectId, "overview"] as const,
+    docs: () => [...base, "portal", "docs"] as const,
+    docDetail: (pageId: number) =>
+      [...base, "portal", "docs", pageId] as const,
   },
 
   hrSimulations: {

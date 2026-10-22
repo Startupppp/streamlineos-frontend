@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import {
   Children,
   Fragment,
@@ -22,7 +21,10 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { statusToneClasses } from "@/lib/design-tokens";
-import { OVERFLOW_EDGE_FADE_CLASS, useHorizontalOverflow } from "@/hooks/common/use-horizontal-overflow";
+import {
+  OVERFLOW_EDGE_FADE_CLASS,
+  useHorizontalOverflow,
+} from "@/hooks/common/use-horizontal-overflow";
 
 function countGridChildren(node: ReactNode): number {
   let count = 0;
@@ -133,7 +135,6 @@ export interface StatCardProps {
   hint?: string;
   /** Wrap the hint instead of truncating it (a hint that carries data, not decoration). */
   wrapHint?: boolean;
-  href?: string;
   isLoading?: boolean;
   featured?: boolean;
   className?: string;
@@ -148,18 +149,6 @@ export interface StatCardGridProps {
   children: ReactNode;
   cols?: 2 | 3 | 4 | 5 | 6;
   className?: string;
-  /**
-   * Stack the cards in one column below `sm` instead of scrolling them.
-   *
-   * The row scrolls at every width by default (see below), which on a 390px
-   * screen puts the third card off screen behind a hidden scrollbar. Opt in
-   * where the cards are the page's headline numbers and none of them may be
-   * missed — a scroll a reader does not know to make is a card they never see.
-   *
-   * Pass `2` for a row of five, where one column is 370px of stat cards above
-   * the table the page is actually for. Two-up shows every label in half the
-   * height.
-   */
   stackOnMobile?: boolean | 2;
 }
 
@@ -170,26 +159,6 @@ export interface StatCardGridSkeletonProps {
   stackOnMobile?: boolean | 2;
 }
 
-/**
- * The stats row scrolls horizontally at every breakpoint by design, and a
- * `StatCard` with no `href` renders nothing focusable — so a keyboard user
- * could not scroll it at all and never saw the cards past the fold. That is
- * WCAG 2.1.1, and axe reported `scrollable-region-focusable` on it across five
- * routes.
- *
- * The fix axe asks for is a bare `tabIndex={0}`, and taken literally it puts a
- * tab stop on nearly every list page in the product whether or not the row
- * overflows — a cost paid on every page for a problem that only exists on some
- * of them. So the tab stop follows the actual overflow: measured on mount and
- * on every resize, the row is tabbable exactly when there is something off
- * screen to reach, and disappears from the tab order when all the cards fit.
- * A row that carries links is already reachable through them and stays out of
- * the tab order either way.
- *
- * The stop is a labelled `group` rather than an anonymous `div`, because
- * landing on an unnamed tab stop tells a screen-reader user nothing about why
- * focus stopped there.
- */
 export function StatCardGrid({
   children,
   cols = 4,
@@ -205,7 +174,11 @@ export function StatCardGrid({
   useEffect(() => {
     const element = ref.current;
     if (!element) return;
-    setHasFocusableChild(element.querySelector("a[href], button, input, select, textarea, [tabindex]") !== null);
+    setHasFocusableChild(
+      element.querySelector(
+        "a[href], button, input, select, textarea, [tabindex]",
+      ) !== null,
+    );
   }, [children]);
 
   const scrollableWithoutFocus = overflow.scrolls && !hasFocusableChild;
@@ -277,7 +250,11 @@ export function StatCardGridSkeleton({
 }: StatCardGridSkeletonProps) {
   const itemCount = count ?? cols;
   return (
-    <StatCardGrid cols={cols} className={className} stackOnMobile={stackOnMobile}>
+    <StatCardGrid
+      cols={cols}
+      className={className}
+      stackOnMobile={stackOnMobile}
+    >
       {Array.from({ length: itemCount }).map((_, i) => (
         <StatCardSkeleton key={i} />
       ))}
@@ -315,7 +292,6 @@ export const StatCard = memo(function StatCard({
   delta,
   hint,
   wrapHint = false,
-  href,
   isLoading,
   featured,
   className,
@@ -339,15 +315,13 @@ export const StatCard = memo(function StatCard({
         }
       : undefined);
 
-  const body = (
+  return (
     <div
       data-slot="stat-card"
       data-featured={featured ? "true" : undefined}
       className={cn(
-        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm transition-[border-color,box-shadow,background-color] duration-200 motion-reduce:transition-none hover:border-foreground/20 hover:shadow-md",
+        "flex h-full items-start gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm",
         featured && "border-primary bg-primary text-primary-foreground",
-        href && "hover:bg-muted/30 cursor-pointer",
-        featured && href && "hover:bg-primary/90",
         className,
       )}
     >
@@ -415,7 +389,4 @@ export const StatCard = memo(function StatCard({
       ) : null}
     </div>
   );
-
-  if (href) return <Link href={href}>{body}</Link>;
-  return body;
 });

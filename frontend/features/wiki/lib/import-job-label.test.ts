@@ -39,7 +39,7 @@ describe("importJobDisplayName", () => {
         sourceType: "markdown",
         errorReport: null,
       }),
-    ).toBe("3 pages");
+    ).toBe("3 files");
   });
 });
 

@@ -57,6 +57,13 @@ export const kbSpaceFullContract = z.object({
     .enum(["viewer", "commenter", "editor", "publisher", "admin"])
     .nullable()
     .optional(),
+  viewerAccess: z
+    .object({
+      level: z.enum(["view", "comment", "edit", "manage"]),
+      via: z.enum(["admin", "team_folder", "team_folder_admin", "organization"]),
+    })
+    .nullable()
+    .optional(),
 });
 
 export const kbSpaceSuccessContract = z.object({ success: z.boolean() });

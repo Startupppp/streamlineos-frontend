@@ -132,7 +132,7 @@ describe("PageCommentsSheet — comment action visibility", () => {
     it("describes the discussion and names the compose, reply and editing fields", async () => {
       useCan.mockImplementation((permission: string) => permission === "kb:pages:update");
       const view = render(<PageCommentsSheet pageId={1} open onOpenChange={jest.fn()} />);
-      expect(view.getByRole("dialog")).toHaveAccessibleDescription("Discuss this page and resolve feedback with your team.");
+      expect(view.getByRole("dialog")).toHaveAccessibleDescription("Discuss this file and resolve feedback with your team.");
       expect(view.getByRole("textbox", { name: "Write a comment" })).toBeInTheDocument();
       fireEvent.click(view.getByRole("button", { name: "Reply" }));
       expect(view.getByRole("textbox", { name: "Reply to comment" })).toBeInTheDocument();

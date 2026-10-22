@@ -109,9 +109,8 @@ describe("channel discovery — bounded, not drained", () => {
 
   it("past the 20-page ceiling it reports isTruncated instead of a silent short array", async () => {
     mockedGet.mockImplementation(endlessPages());
-    const { useChatChannels, MAX_CHANNEL_PAGES } = await import(
-      "@/hooks/api/chat-core-read"
-    );
+    const MAX_CHANNEL_PAGES = 20;
+    const { useChatChannels } = await import("@/hooks/api/chat-core-read");
     const { result } = renderHook(() => useChatChannels(), {
       wrapper: makeWrapper(freshClient()),
     });

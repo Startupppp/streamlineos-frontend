@@ -59,6 +59,6 @@ describe("KbPageNotFound — the wiki page detail error state exposes a request 
       />,
     );
     expect(screen.queryByRole("button", { name: "Try again" })).not.toBeInTheDocument();
-    expect(screen.getByText("Page not found")).toBeInTheDocument();
+    expect(screen.getByText("File not found")).toBeInTheDocument();
   });
 });

@@ -76,6 +76,7 @@ export {
   useRetryEventSync,
   useTakeProviderEventVersion,
 } from "./calendar-event-detail";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 // ---- Member lookup hook ----
 
@@ -240,11 +241,11 @@ export function useCalendarHistory(before: string, enabled = true) {
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarHistoryResponse>(
         "/calendar/history",
-        pageParam ? { cursor: pageParam } : { before },
+        pageParam !== NULL_CURSOR_YET ? { cursor: pageParam } : { before },
         signal,
         calendarHistoryResponseContract,
       ),
-    initialPageParam: null as string | null,
+    initialPageParam: NULL_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor,
     staleTime: 2 * 60 * 1000,
     enabled: Boolean(orgId && userId && before) && canView && enabled,

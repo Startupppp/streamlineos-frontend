@@ -31,6 +31,7 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
 }));
 
 jest.mock("@/hooks/api/cursor-page-schema", () => ({
+  ...jest.requireActual("@/hooks/api/cursor-page-schema"),
   noContentContract: { parse: jest.fn((v: unknown) => v) },
 }));
 
@@ -46,6 +47,7 @@ const TEMPLATE = {
   name: "Meeting notes",
   icon: null,
   description: "Standard meeting template",
+  kind: "document",
   content: null,
   createdById: "user-1",
   createdByName: "Alice",

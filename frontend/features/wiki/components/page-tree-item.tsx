@@ -1,7 +1,6 @@
 "use client";
 
-import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
-import { memo, useRef, useState } from "react";
+import { Fragment, memo, useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, usePathname } from "next/navigation";
 import { toast } from "sonner";
@@ -31,14 +30,23 @@ import {
 } from "@/hooks/api/kb";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageTreeNode } from "@/hooks/api/kb/page-types";
-import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
+import { KB_DOC_BASE, KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
+import {
+  resolveKbPageActions,
+  groupKbPageActions,
+  toKbPageActionId,
+  type KbPageActionCapabilities,
+  type KbPageActionSubject,
+} from "@/features/wiki/lib/page-action-descriptors";
 import {
   KbChevronRightIcon,
   KbChevronDownIcon,
-  KbPlusIcon,
-  KbMoreHorizontalIcon,
   KbFileTextIcon,
+  KbMoreHorizontalIcon,
+  KbPlusIcon,
+  KbSpreadsheetIcon,
 } from "@/features/wiki/lib/kb-icons";
+import { KbNewMenu } from "./kb-new-menu";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
@@ -47,6 +55,8 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 interface PageTreeItemProps {
   node: KbPageTreeNode;
   depth: number;
+  ariaSetSize?: number;
+  ariaPosInSet?: number;
   onCloseMobile?: () => void;
   spaceId?: number;
   projectId?: number;
@@ -60,9 +70,20 @@ export function resolvePageTreeExpanded(
   return manuallyExpanded || hasActiveDescendant;
 }
 
+const TREE_ITEM_ACTION_IDS = new Set(["favorite", "duplicate", "delete"]);
+
+const TREE_ITEM_SUBJECT: KbPageActionSubject = {
+  isFavorite: false,
+  isLocked: false,
+  hasCover: false,
+  isArchived: false,
+};
+
 const PageTreeItem = memo(function PageTreeItemInner({
   node,
   depth,
+  ariaSetSize,
+  ariaPosInSet,
   onCloseMobile,
   spaceId,
   projectId,
@@ -80,10 +101,32 @@ const PageTreeItem = memo(function PageTreeItemInner({
   const isActive = pathname === nodeHref || pathname.startsWith(`${nodeHref}/`);
   const canCreate = useCan("kb:pages:create");
   const canDelete = useCan("kb:pages:delete");
-  const createPage = useGuardedCreateKbPage((page) => {
+
+  const treeCapabilities: KbPageActionCapabilities = {
+    canCreate,
+    canUpdate: false,
+    canManage: false,
+    canDelete,
+    canExport: false,
+    canManageTemplates: false,
+    isEditable: false,
+  };
+  const treeActions = resolveKbPageActions(
+    TREE_ITEM_SUBJECT,
+    treeCapabilities,
+  ).filter((a) => TREE_ITEM_ACTION_IDS.has(a.id));
+  const treeActionGroups = groupKbPageActions(treeActions);
+  const childScope = useMemo(
+    () => ({
+      parentPageId: node.id,
+      ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
+      ...(node.projectId !== null ? { projectId: node.projectId } : {}),
+    }),
+    [node.id, node.spaceId, node.projectId],
+  );
+  const handleChildCreated = useCallback(() => {
     setExpanded(true);
-    router.push(baseHref ? `${baseHref}/${page.id}` : pageHref(page.id));
-  });
+  }, []);
   const deletePage = useDeleteKbPage();
   const duplicatePage = useDuplicateKbPage();
   const toggleFavorite = useToggleFavoriteKbPage();
@@ -95,25 +138,27 @@ const PageTreeItem = memo(function PageTreeItemInner({
 
   const {
     data: childrenData,
-    isLoading: childrenLoading,
     isError: childrenError,
-    isFetchNextPageError: childrenFetchNextPageError,
     error: childrenReadError,
     refetch: refetchChildren,
+    isLoading: childrenLoading,
     hasNextPage: childrenHasNextPage,
-    isFetchingNextPage: childrenFetchingNext,
     fetchNextPage: fetchChildrenNextPage,
+    isFetchingNextPage: childrenFetchingNext,
+    isFetchNextPageError: childrenFetchNextPageError,
   } = useKbPageChildrenLevel(node.id, isExpanded, spaceId, projectId);
 
-  const children: KbPageTreeNode[] = childrenData?.pages.flatMap((p) => p.data) ?? [];
-  const childrenAccessLost = childrenError && isApiError(childrenReadError) && (childrenReadError.status === 401 || childrenReadError.status === 403 || childrenReadError.status === 404);
+  const children: KbPageTreeNode[] =
+    childrenData?.pages.flatMap((p) => p.data) ?? [];
+  const childrenAccessLost =
+    childrenError &&
+    isApiError(childrenReadError) &&
+    (childrenReadError.status === 401 ||
+      childrenReadError.status === 403 ||
+      childrenReadError.status === 404);
   const visibleChildren = childrenAccessLost ? [] : children;
 
   const showChevron = node.hasChildren || visibleChildren.length > 0;
-
-  function handleNavigate() {
-    onCloseMobile?.();
-  }
 
   function handleRetryChildren() {
     if (childrenFetchNextPageError && !childrenAccessLost) {
@@ -128,53 +173,39 @@ const PageTreeItem = memo(function PageTreeItemInner({
     setExpanded((prev) => !prev);
   }
 
-  function handleAddChild(e: React.MouseEvent) {
-    e.stopPropagation();
-    if (!canCreate) return;
-    void createPage.submit({
-      parentPageId: node.id,
-      ...(node.spaceId !== null ? { spaceId: node.spaceId } : {}),
-      ...(node.projectId !== null ? { projectId: node.projectId } : {}),
-    });
-  }
-
-  function handleDuplicate() {
-    duplicatePage.mutate(node.id, {
-      onSuccess: () => toast.success("Page duplicated"),
-      onError: () => toast.error("Failed to duplicate page"),
-    });
-  }
-
-  function handleAddToFavorites() {
-    toggleFavorite.mutate(
-      { pageId: node.id, isFavorite: false },
-      {
-        onError: () => toast.error("Failed to add to favorites"),
-      }
-    );
-  }
-
-  function handleDeleteClick() {
-    setMenuOpen(false);
-    setDeleteDialogOpen(true);
+  function handleMenuSelect(event: Event) {
+    const target = event.currentTarget;
+    if (!(target instanceof HTMLElement)) return;
+    const actionId = toKbPageActionId(target.dataset.actionId);
+    if (!actionId) return;
+    if (actionId === "duplicate") {
+      duplicatePage.mutate(node.id, {
+        onSuccess: () => toast.success("File duplicated"),
+        onError: () => toast.error("Failed to duplicate file"),
+      });
+    } else if (actionId === "favorite") {
+      toggleFavorite.mutate(
+        { pageId: node.id, isFavorite: false },
+        { onError: () => toast.error("Failed to add to favorites") },
+      );
+    } else if (actionId === "delete") {
+      setMenuOpen(false);
+      setDeleteDialogOpen(true);
+    }
   }
 
   function handleConfirmDelete() {
     deletePage.mutate(node.id, {
       onSuccess: () => {
-        toast.success("Page moved to trash");
+        toast.success("File moved to trash");
         if (isActive) router.push(baseHref ?? KNOWLEDGE_BASE);
       },
-      onError: () => toast.error("Failed to delete page"),
+      onError: () => toast.error("Failed to delete file"),
     });
   }
 
   function handleDeleteDialogOpenChange(open: boolean) {
     setDeleteDialogOpen(open);
-  }
-
-  function handleMoreClick(e: React.MouseEvent) {
-    e.stopPropagation();
   }
 
   function handleStartRename() {
@@ -191,14 +222,18 @@ const PageTreeItem = memo(function PageTreeItemInner({
       return;
     }
     updatePage.mutate(
-      { pageId: node.id, title: trimmed, expectedContentRevision: node.contentRevision },
+      {
+        pageId: node.id,
+        title: trimmed,
+        expectedContentRevision: node.contentRevision,
+      },
       {
         onSuccess: () => setRenaming(false),
         onError: () => {
-          toast.error("Failed to rename page");
+          toast.error("Failed to rename file");
           setRenaming(false);
         },
-      }
+      },
     );
   }
 
@@ -220,14 +255,16 @@ const PageTreeItem = memo(function PageTreeItemInner({
     setRenameValue(e.target.value);
   }
 
-  function handleRenameInputClick(e: React.MouseEvent) {
-    e.stopPropagation();
-  }
-
   return (
     <>
       <div className="min-w-0 overflow-hidden">
         <div
+          role="treeitem"
+          aria-level={depth + 1}
+          aria-expanded={showChevron ? isExpanded : undefined}
+          aria-selected={isActive}
+          aria-setsize={ariaSetSize}
+          aria-posinset={ariaPosInSet}
           className={cn(
             "group relative flex min-w-0 items-center gap-1 overflow-hidden py-1 rounded-md text-sm transition-colors select-none",
             isActive
@@ -271,7 +308,11 @@ const PageTreeItem = memo(function PageTreeItemInner({
                   node.icon
                 ) : (
                   <SidebarAnimatedNavIcon
-                    icon={KbFileTextIcon}
+                    icon={
+                      node.kind === "spreadsheet"
+                        ? KbSpreadsheetIcon
+                        : KbFileTextIcon
+                    }
                     iconRef={iconRef}
                     className="h-3.5 w-3.5 text-muted-foreground"
                   />
@@ -283,7 +324,6 @@ const PageTreeItem = memo(function PageTreeItemInner({
                 onChange={handleRenameInputChange}
                 onKeyDown={handleRenameKeyDown}
                 onBlur={handleRenameCommit}
-                onClick={handleRenameInputClick}
                 className="flex-1 h-6 text-sm py-0 px-1 min-w-0"
               />
             </>
@@ -292,20 +332,27 @@ const PageTreeItem = memo(function PageTreeItemInner({
               href={nodeHref}
               aria-current={isActive ? "page" : undefined}
               className="flex min-w-0 flex-1 items-center gap-1 cursor-pointer text-left"
-              onClick={handleNavigate}
+              onClick={onCloseMobile}
             >
               <span className="shrink-0 text-base leading-none">
                 {node.icon ? (
                   node.icon
                 ) : (
                   <SidebarAnimatedNavIcon
-                    icon={KbFileTextIcon}
+                    icon={
+                      node.kind === "spreadsheet"
+                        ? KbSpreadsheetIcon
+                        : KbFileTextIcon
+                    }
                     iconRef={iconRef}
                     className="h-3.5 w-3.5 text-muted-foreground"
                   />
                 )}
               </span>
-              <TruncatedText text={node.title || "Untitled"} className="flex-1" />
+              <TruncatedText
+                text={node.title || "Untitled"}
+                className="flex-1"
+              />
             </Link>
           )}
 
@@ -313,43 +360,55 @@ const PageTreeItem = memo(function PageTreeItemInner({
             <span
               className={`${menuOpen ? "flex" : "flex lg:hidden lg:group-hover:flex lg:group-focus-within:flex"} items-center gap-0.5 shrink-0`}
             >
-              {canCreate && (
-                <button
-                  type="button"
-                  className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                  onClick={handleAddChild}
-                  aria-label="Add child page"
-                >
-                  <KbPlusIcon className="h-3 w-3" />
-                </button>
-              )}
+              <KbNewMenu
+                scope={childScope}
+                allowFolder={false}
+                onCreated={handleChildCreated}
+                baseHref={baseHref ?? KB_DOC_BASE}
+                trigger={
+                  <button
+                    type="button"
+                    className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
+                    aria-label="Add child file"
+                  >
+                    <KbPlusIcon className="h-3 w-3" />
+                  </button>
+                }
+              />
               <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
                     className="h-8 w-8 lg:h-6 lg:w-6 flex items-center justify-center rounded text-muted-foreground hover:text-foreground hover:bg-muted"
-                    onClick={handleMoreClick}
-                    aria-label="Page options"
+                    aria-label="File options"
                   >
                     <KbMoreHorizontalIcon className="h-3 w-3" />
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" side="right">
-                  <DropdownMenuItem onSelect={handleStartRename}>Rename</DropdownMenuItem>
-                  {canCreate && (
-                    <DropdownMenuItem onSelect={handleDuplicate}>Duplicate</DropdownMenuItem>
-                  )}
-                  <DropdownMenuItem onSelect={handleAddToFavorites}>
-                    Add to favorites
+                  <DropdownMenuItem onSelect={handleStartRename}>
+                    Rename
                   </DropdownMenuItem>
-                  {canDelete && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem variant="destructive" onSelect={handleDeleteClick}>
-                        Delete
-                      </DropdownMenuItem>
-                    </>
-                  )}
+                  {treeActionGroups.map((group) => (
+                    <Fragment key={group[0]?.group}>
+                      {group[0]?.group === "danger" ? (
+                        <DropdownMenuSeparator />
+                      ) : null}
+                      {group.map((action) => (
+                        <DropdownMenuItem
+                          key={action.id}
+                          data-action-id={action.id}
+                          variant={
+                            action.destructive ? "destructive" : "default"
+                          }
+                          onSelect={handleMenuSelect}
+                        >
+                          <action.icon className="h-3.5 w-3.5" />
+                          {action.label}
+                        </DropdownMenuItem>
+                      ))}
+                    </Fragment>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </span>
@@ -357,52 +416,82 @@ const PageTreeItem = memo(function PageTreeItemInner({
         </div>
 
         <AnimatePresence initial={false}>
-          {isExpanded && (visibleChildren.length > 0 || childrenHasNextPage || childrenLoading || childrenError) && (
-            <motion.div
-              className="min-w-0 overflow-hidden"
-              initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
-              transition={{ duration: shouldReduceMotion ? 0 : 0.15, ease: "easeOut" }}
-            >
-              {childrenLoading && visibleChildren.length === 0 && (
-                <p role="status" className="px-2 py-2 text-xs text-muted-foreground" style={{ paddingLeft: (depth + 1) * 16 }}>
-                  Loading child pages…
-                </p>
-              )}
-              {childrenError && (
-                <div role="alert" className="space-y-2 px-2 py-2 text-xs" style={{ paddingLeft: (depth + 1) * 16 }}>
-                  <p className="text-muted-foreground">{getErrorMessage(childrenReadError)}</p>
-                  <ErrorReference error={childrenReadError} className="justify-start" />
-                  <Button type="button" size="sm" variant="outline" onClick={handleRetryChildren}>Retry child pages</Button>
-                </div>
-              )}
-              {visibleChildren.map((child) => (
-                <PageTreeItem
-                  key={child.id}
-                  node={child}
-                  depth={depth + 1}
-                  onCloseMobile={onCloseMobile}
-                  spaceId={spaceId}
-                  projectId={projectId}
-                  baseHref={baseHref}
+          {isExpanded &&
+            (visibleChildren.length > 0 ||
+              childrenHasNextPage ||
+              childrenLoading ||
+              childrenError) && (
+              <motion.div
+                role="group"
+                className="min-w-0 overflow-hidden"
+                initial={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: shouldReduceMotion ? 0 : -4 }}
+                transition={{
+                  duration: shouldReduceMotion ? 0 : 0.15,
+                  ease: "easeOut",
+                }}
+              >
+                {childrenLoading && visibleChildren.length === 0 && (
+                  <p
+                    role="status"
+                    className="px-2 py-2 text-xs text-muted-foreground"
+                    style={{ paddingLeft: (depth + 1) * 16 }}
+                  >
+                    Loading child files…
+                  </p>
+                )}
+                {childrenError && (
+                  <div
+                    role="alert"
+                    className="space-y-2 px-2 py-2 text-xs"
+                    style={{ paddingLeft: (depth + 1) * 16 }}
+                  >
+                    <p className="text-muted-foreground">
+                      {getErrorMessage(childrenReadError)}
+                    </p>
+                    <ErrorReference
+                      error={childrenReadError}
+                      className="justify-start"
+                    />
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRetryChildren}
+                    >
+                      Retry child files
+                    </Button>
+                  </div>
+                )}
+                {visibleChildren.map((child, index) => (
+                  <PageTreeItem
+                    key={child.id}
+                    node={child}
+                    depth={depth + 1}
+                    ariaSetSize={visibleChildren.length}
+                    ariaPosInSet={index + 1}
+                    onCloseMobile={onCloseMobile}
+                    spaceId={spaceId}
+                    projectId={projectId}
+                    baseHref={baseHref}
+                  />
+                ))}
+                <InfiniteScrollSentinel
+                  hasNextPage={Boolean(childrenHasNextPage) && !childrenError}
+                  isFetchingNextPage={childrenFetchingNext}
+                  onLoadMore={fetchChildrenNextPage}
+                  label="Load more child files"
                 />
-              ))}
-              <InfiniteScrollSentinel
-                hasNextPage={Boolean(childrenHasNextPage) && !childrenError}
-                isFetchingNextPage={childrenFetchingNext}
-                onLoadMore={fetchChildrenNextPage}
-                label="Load more child pages"
-              />
-            </motion.div>
-          )}
+              </motion.div>
+            )}
         </AnimatePresence>
       </div>
 
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={handleDeleteDialogOpenChange}
-        title="Move page to trash?"
+        title="Move file to trash?"
         description={`“${node.title || "Untitled"}” will be moved to the Recycle Bin. You can restore it from the Recycle Bin.`}
         destructive
         confirmLabel="Move to trash"

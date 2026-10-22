@@ -1,6 +1,6 @@
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
 import type { KbAskCitationWithParts } from "@/hooks/api/kb/ask-result-schema";
-import { companyDocumentHref } from "@/lib/knowledge-routes";
+import { companyDocumentHref, pageHref } from "@/lib/knowledge-routes";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { cn } from "@/lib/utils";
 
@@ -13,7 +13,7 @@ function buildCitations(citations: KbAskCitationWithParts[]): Citation[] {
       return { id: `a-${citation.articleId}`, title: citation.title, href: `/support/kb/${citation.articleId}`, freshness };
     }
     if (citation.kind === "page") {
-      return { id: `p-${citation.pageId}`, title: citation.title, freshness };
+      return { id: `p-${citation.pageId}`, title: citation.title, href: pageHref(citation.pageId), snippet: citation.passage, freshness };
     }
     if (citation.kind === "document") {
       return { id: `d-${citation.linkedDocumentId}`, title: citation.title, href: companyDocumentHref(citation.linkedDocumentId), freshness };

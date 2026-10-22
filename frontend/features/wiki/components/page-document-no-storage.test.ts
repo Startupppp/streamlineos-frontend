@@ -106,8 +106,8 @@ describe("Wiki page body must not reach Web Storage", () => {
   });
 
   const STORAGE_ACCESS_PATTERN =
-    /(?:localStorage|sessionStorage)\s*\.\s*(?:setItem|getItem|removeItem)\s*\(\s*([A-Za-z_$][\w$]*|['"`][^'"`]*['"`])/g;
-  const ALLOWED_STORAGE_KEYS = ["wiki-nav-groups", "wiki-right-panel-collapsed"];
+    /(?:(?:localStorage|sessionStorage)\s*\.\s*(?:setItem|getItem|removeItem)|useStoredFlag)\s*\(\s*([A-Za-z_$][\w$]*|['"`][^'"`]*['"`])/g;
+  const ALLOWED_STORAGE_KEYS = ["wiki-right-panel-collapsed"];
 
   function collectStorageKeys(): string[] {
     const keys = new Set<string>();
@@ -132,7 +132,7 @@ describe("Wiki page body must not reach Web Storage", () => {
     expect(collectStorageKeys()).toEqual(ALLOWED_STORAGE_KEYS);
   });
 
-  it("(h) control: the extractor resolves both allowlisted keys to their literals, so the equality above cannot pass by finding nothing at all", () => {
+  it("(h) control: the extractor resolves the allowlisted key to its literal, so the equality above cannot pass by finding nothing at all", () => {
     const keys = collectStorageKeys();
     expect(keys).toHaveLength(ALLOWED_STORAGE_KEYS.length);
     expect(keys.every((key) => key.startsWith("wiki-"))).toBe(true);

@@ -46,14 +46,22 @@ jest.mock("@/hooks/api/kb/chat-history", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/kb/sources", () => ({
-  useKbSources: () => ({
+jest.mock("@/hooks/api/kb/page-collection", () => ({
+  ...jest.requireActual("@/hooks/api/kb/page-collection"),
+  useInfiniteKbPageCollection: () => ({
     data: { pages: [{ data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
     isLoading: false,
+    isError: false,
+    error: null,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
   }),
-  useUploadKbSource: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteKbSource: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
-  useCreateKbSourceNote: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/kb/files", () => ({
+  useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/kb/spaces", () => ({
@@ -64,6 +72,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 }));
 
 jest.mock("@/hooks/api/kb/pages", () => ({
+  ...jest.requireActual("@/hooks/api/kb/pages"),
   useKbPagesSearch: (q: string) => mockPageSearch(q),
 }));
 
@@ -93,7 +102,7 @@ describe("KnowledgeBasePage — page picker in scope sheet", () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /choose sources to search/i }));
 
-    expect(await screen.findByRole("textbox", { name: /search pages/i })).toBeInTheDocument();
+    expect(await screen.findByRole("textbox", { name: /search files/i })).toBeInTheDocument();
   });
 
   it("shows page search results when the hook returns items", async () => {
@@ -110,7 +119,7 @@ describe("KnowledgeBasePage — page picker in scope sheet", () => {
 
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("textbox", { name: /search pages/i });
+    await screen.findByRole("textbox", { name: /search files/i });
 
     expect(screen.getByText("Onboarding Guide")).toBeInTheDocument();
   });
@@ -123,7 +132,7 @@ describe("KnowledgeBasePage — page picker in scope sheet", () => {
 
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("textbox", { name: /search pages/i });
+    await screen.findByRole("textbox", { name: /search files/i });
 
     expect(screen.queryByText("Onboarding Guide")).not.toBeInTheDocument();
   });

@@ -37,6 +37,7 @@ interface MockChannel {
   subscribe: jest.Mock;
   unsubscribe: jest.Mock;
   publish: jest.Mock;
+  presence: { subscribe: jest.Mock; unsubscribe: jest.Mock; update: jest.Mock; leave: jest.Mock };
 }
 
 function makeAblyMock(options: { subscribeRejects?: boolean } = {}) {
@@ -61,6 +62,12 @@ function makeAblyMock(options: { subscribeRejects?: boolean } = {}) {
         ),
       unsubscribe: jest.fn(),
       publish: jest.fn().mockResolvedValue(undefined),
+      presence: {
+        subscribe: jest.fn().mockResolvedValue(undefined),
+        unsubscribe: jest.fn(),
+        update: jest.fn().mockResolvedValue(undefined),
+        leave: jest.fn().mockResolvedValue(undefined),
+      },
     };
     channels.set(name, channel);
     return channel;

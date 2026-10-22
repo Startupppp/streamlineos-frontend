@@ -10,10 +10,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { SharedFilesPanel } from "./shared-files-panel";
 import { SavedMessagesPanel } from "./saved-messages-panel";
-import { ThreadPanel } from "./thread-panel";
-import { PANEL_RENDER_PAGE_SIZE } from "./panel-render-window";
-import type { ChannelFile } from "@/hooks/api/chat-personal-b";
-import type { Message, SavedMessage } from "@/types/chat";
+import type { z } from "zod";
+import type { chatChannelFilesContract } from "@/hooks/api/chat-schema/file-schema";
+import type { SavedMessage } from "@/types/chat";
+
+const PANEL_RENDER_PAGE_SIZE = 25;
+type ChannelFile = z.infer<typeof chatChannelFilesContract>["files"][number];
 
 const useChannelFiles = jest.fn();
 const useSavedMessages = jest.fn();
@@ -45,6 +47,23 @@ jest.mock("./chat-attachment", () => ({
   ChatAttachment: ({ fileName }: { fileName: string }) => <span>{fileName}</span>,
 }));
 
+jest.mock("sonner", () => ({
+  toast: Object.assign(jest.fn(), { error: jest.fn(), success: jest.fn(), dismiss: jest.fn() }),
+}));
+
+const mockPush = jest.fn();
+
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({ push: mockPush }),
+}));
+
+jest.mock("@/hooks/common/use-animated-icon", () => ({
+  useAnimatedIcon: () => ({
+    iconRef: { current: null },
+    hoverHandlers: { onMouseEnter: jest.fn(), onMouseLeave: jest.fn() },
+  }),
+}));
+
 const fetchNextPage = jest.fn();
 
 function infiniteResult(pages: unknown[], hasNextPage: boolean) {
@@ -70,26 +89,6 @@ function makeFiles(count: number): ChannelFile[] {
     mimeType: "application/pdf",
     createdAt: "2026-01-01T00:00:00.000Z",
   }));
-}
-
-function makeMessage(index: number): Message {
-  return {
-    id: index,
-    channelId: 1,
-    senderId: "user-1",
-    content: `reply-${index}`,
-    replyToId: null,
-    isEdited: false,
-    isDeleted: false,
-    messageType: "text",
-    metadata: null,
-    actionStatus: null,
-    createdAt: "2026-01-01T00:00:00.000Z",
-    updatedAt: null,
-    sender: { id: "user-1", name: "Ada", image: null },
-    attachments: [],
-    replyTo: null,
-  };
 }
 
 function makeSaved(count: number): SavedMessage[] {
@@ -135,7 +134,7 @@ describe("SharedFilesPanel — the mounted row count is bounded", () => {
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(total), nextCursor: undefined }], hasNextPage),
     );
-    return render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    return render(<SharedFilesPanel channelId={1} />);
   }
 
   it("mounts one page of rows for 500 accumulated files, not 500", () => {
@@ -180,10 +179,10 @@ describe("SharedFilesPanel — the mounted row count is bounded", () => {
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(500), nextCursor: undefined }], false),
     );
-    const { rerender } = render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    const { rerender } = render(<SharedFilesPanel channelId={1} />);
     await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE * 2);
-    rerender(<SharedFilesPanel channelId={2} onClose={noop} />);
+    rerender(<SharedFilesPanel channelId={2} />);
     expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE);
   });
 
@@ -199,7 +198,7 @@ describe("SharedFilesPanel — revealing held rows is not a cursor request", () 
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(500), nextCursor: 500 }], true),
     );
-    render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    render(<SharedFilesPanel channelId={1} />);
     await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(fetchNextPage).not.toHaveBeenCalled();
   });
@@ -209,7 +208,7 @@ describe("SharedFilesPanel — revealing held rows is not a cursor request", () 
     useChannelFiles.mockReturnValue(
       infiniteResult([{ files: makeFiles(10), nextCursor: 10 }], true),
     );
-    render(<SharedFilesPanel channelId={1} onClose={noop} />);
+    render(<SharedFilesPanel channelId={1} />);
     await user.click(screen.getByRole("button", { name: /next page/i }));
     expect(fetchNextPage).toHaveBeenCalledTimes(1);
   });
@@ -220,7 +219,7 @@ describe("SavedMessagesPanel — the mounted row count is bounded", () => {
     useSavedMessages.mockReturnValue(
       infiniteResult([{ items: makeSaved(total), nextCursor: undefined }], hasNextPage),
     );
-    return render(<SavedMessagesPanel onClose={noop} onJumpToChannel={noop} />);
+    return render(<SavedMessagesPanel onClose={noop} onJumped={noop} />);
   }
 
   it("mounts one page of cards for 500 saved messages, not 500", () => {
@@ -244,65 +243,19 @@ describe("SavedMessagesPanel — the mounted row count is bounded", () => {
   });
 });
 
-describe("ThreadPanel — the reply window is a tail and is bounded", () => {
-  function renderPanel(total: number, hasNextPage = false) {
-    useThreadReplies.mockReturnValue(
-      infiniteResult(
-        [
-          {
-            parentMessage: makeMessage(0),
-            replies: Array.from({ length: total }, (_, i) => makeMessage(i + 1)),
-            nextCursor: undefined,
-          },
-        ],
-        hasNextPage,
-      ),
-    );
-    return render(
-      <ThreadPanel channelId={1} parentMessageId={7} currentUserId="user-1" onClose={noop} />,
-    );
-  }
-
-  it("mounts one page of replies for a 500-reply thread, not 500", () => {
-    renderPanel(500);
-    expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE);
-  });
-
-  it("keeps the newest replies and holds the older ones back", () => {
-    renderPanel(500);
-    expect(screen.getByText("reply-500")).toBeInTheDocument();
-    expect(screen.queryByText("reply-475")).toBeNull();
-  });
-
-  it("numbers a windowed reply by its position in the whole thread", () => {
-    renderPanel(500);
-    const rows = screen.getAllByRole("listitem");
-    expect(rows[0]).toHaveAttribute("aria-posinset", "476");
-    expect(rows[0]).toHaveAttribute("aria-setsize", "500");
-  });
-
-  it("reveals older replies without skipping any", async () => {
+describe("SavedMessagesPanel — saved items are user-global and jump to the exact message", () => {
+  it("opens the saved message itself, not just its channel", async () => {
     const user = userEvent.setup();
-    renderPanel(500);
-    await user.click(screen.getByRole("button", { name: /show 25 more \(25 of 500\)/i }));
-    expect(screen.getByText("reply-475")).toBeInTheDocument();
-    expect(screen.getByText("reply-476")).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE * 2);
-  });
-
-  it("goes back to the newest page when the reader opens a different thread", async () => {
-    const user = userEvent.setup();
-    const { rerender } = renderPanel(500);
-    await user.click(screen.getByRole("button", { name: /show 25 more/i }));
-    expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE * 2);
-    rerender(
-      <ThreadPanel channelId={1} parentMessageId={8} currentUserId="user-1" onClose={noop} />,
-    );
-    expect(screen.getAllByRole("listitem")).toHaveLength(PANEL_RENDER_PAGE_SIZE);
-  });
-
-  it("still counts the whole thread in its reply summary", () => {
-    renderPanel(500);
-    expect(screen.getByText("500 replies")).toBeInTheDocument();
+    const saved = makeSaved(1).map((item) => ({
+      ...item,
+      messageId: 77,
+      message: { ...item.message, id: 77, channelId: 12, channel: { id: 12, name: "launch", type: "PUBLIC" } },
+    }));
+    useSavedMessages.mockReturnValue(infiniteResult([{ items: saved, nextCursor: undefined }], false));
+    const onJumped = jest.fn();
+    render(<SavedMessagesPanel onClose={noop} onJumped={onJumped} />);
+    await user.click(screen.getByRole("button", { name: "Open saved message in launch" }));
+    expect(mockPush).toHaveBeenCalledWith("/chat?channel=12&message=77");
+    expect(onJumped).toHaveBeenCalledTimes(1);
   });
 });

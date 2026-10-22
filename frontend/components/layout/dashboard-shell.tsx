@@ -51,14 +51,6 @@ import { cn } from "@/lib/utils";
 import { WELCOME_POP_KEY } from "@/lib/welcome-pop";
 import type { ShellVariant } from "@/lib/shell-variant";
 
-const SuccessChecklist = dynamic(
-  () =>
-    import("@/components/workspace-onboarding/success-checklist").then(
-      (m) => m.SuccessChecklist,
-    ),
-  { ssr: false },
-);
-
 const WelcomeToast = dynamic(
   () =>
     import("@/components/workspace-onboarding/welcome-toast").then(
@@ -107,7 +99,6 @@ export function DashboardShell({
     useState(defaultCollapsed);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [orgSwitcherOpen, setOrgSwitcherOpen] = useState(false);
-  const [enhancementsReady, setEnhancementsReady] = useState(false);
   const [welcomeToastActive, setWelcomeToastActive] = useState(false);
   const [productSwitcherOpen, setProductSwitcherOpen] = useState(false);
   const [isChatConversationOpen, setIsChatConversationOpen] = useState(false);
@@ -237,21 +228,6 @@ export function DashboardShell({
     };
   }, [showAboveBottomNav]);
 
-  useEffect(() => {
-    if (access?.isOrgOwner !== true) return;
-
-    if (typeof window.requestIdleCallback === "function") {
-      const idleId = window.requestIdleCallback(
-        () => setEnhancementsReady(true),
-        { timeout: 1500 },
-      );
-      return () => window.cancelIdleCallback(idleId);
-    }
-
-    const timeoutId = window.setTimeout(() => setEnhancementsReady(true), 250);
-    return () => window.clearTimeout(timeoutId);
-  }, [access?.isOrgOwner]);
-
   if ((accessLoading && !access) || (accessError && !access))
     return (
       <div className="flex h-dvh flex-col overflow-hidden">
@@ -365,7 +341,6 @@ export function DashboardShell({
                         </ShellVariantProvider>
                       </div>
                       {welcomeToastActive && <WelcomeToast />}
-                      {enhancementsReady ? <SuccessChecklist /> : null}
                     </div>
                   </main>
                 </div>

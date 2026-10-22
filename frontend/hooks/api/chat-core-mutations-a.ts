@@ -9,13 +9,49 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import {
-  invalidateChatChannelRead,
-  invalidateChatMessageDeleted,
-  invalidateChatMessageEdited,
-  invalidateChatMessageSent,
-} from "@/lib/chat-read-state";
-import type { Message, MessagesPage, SendMessageInput, EditMessageInput } from "@/types/chat";
+  cancelChatMessageQueries,
+  cancelLoadedQueries,
+  patchChatMessage,
+  type ChatCacheRollback,
+} from "@/hooks/api/chat-message-cache";
+import {
+  removeOptimisticMessage,
+  replaceOptimisticMessage,
+} from "@/features/chat/message-page-merge";
+import {
+  cancelChatChannelQueries,
+  findChannelRow,
+  moveChannelRowToTop,
+} from "@/hooks/api/chat-channel-cache";
+import {
+  applyOptimisticRead,
+  reconcileUnreadAfterRead,
+} from "@/hooks/api/chat-read-cache";
+import {
+  appendPendingSend,
+  awaitSendTurn,
+  CHAT_SEND_MUTATION_KEY,
+  claimSendTurn,
+  chatSendRetry,
+  clearTransientSendFailures,
+  countTransientSendFailure,
+  keepsFailedSendRow,
+  pendingSendMessage,
+  reconcileSentMessage,
+  releaseSendTurn,
+  sendClientKey,
+} from "@/hooks/api/chat-send-policy";
+import type {
+  EditMessageInput,
+  MessagesPage,
+  SendMessageInput,
+} from "@/types/chat";
 import type { ChatSendResponse } from "@/hooks/api/chat-schema";
+import {
+  abandonChatSend,
+  beginChatSend,
+  chatSendVisible,
+} from "@/hooks/api/chat-telemetry";
 
 const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
@@ -25,142 +61,215 @@ const chatSendResponseContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
 );
 
-const chatReactionsContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatReactionsContract),
-);
+interface RollbackContext {
+  rollback: ChatCacheRollback;
+}
+
+interface ReadContext extends RollbackContext {
+  rowWasLoaded: boolean;
+}
 
 export function useSendMessage() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
-  return useAuthorizedMutation("chat:messages:write", {
-    mutationKey: ["chat", "messages", "send"],
-    mutationFn: ({ channelId, ...body }: SendMessageInput) =>
-      apiClient.post<ChatSendResponse>(
-        `/chat/channels/${channelId}/messages`,
-        body,
-        undefined,
-        chatSendResponseContract,
-      ),
+  const user = session?.user;
+  return useAuthorizedMutation<
+    ChatSendResponse,
+    Error,
+    SendMessageInput,
+    RollbackContext
+  >("chat:messages:write", {
+    ...chatSendRetry,
+    mutationKey: CHAT_SEND_MUTATION_KEY,
+    mutationFn: async (variables) => {
+      const { channelId, ...body } = variables;
+      await awaitSendTurn(sendClientKey(variables));
+      return apiClient
+        .post<ChatSendResponse>(
+          `/chat/channels/${channelId}/messages`,
+          { ...body, clientKey: sendClientKey(variables) },
+          undefined,
+          chatSendResponseContract,
+        )
+        .catch((error: unknown) => {
+          countTransientSendFailure(sendClientKey(variables), error);
+          throw error;
+        });
+    },
     onMutate: async (variables) => {
-      await queryClient.cancelQueries({
-        queryKey: collaborationQueryKeys.chat.messages(variables.channelId),
-      });
-
-      const previousData = queryClient.getQueryData<InfiniteData<MessagesPage>>(
-        collaborationQueryKeys.chat.messages(variables.channelId),
+      const clientKey = sendClientKey(variables);
+      const { channelId } = variables;
+      claimSendTurn(queryClient, channelId, clientKey);
+      await Promise.all([
+        cancelChatMessageQueries(queryClient, channelId),
+        cancelLoadedQueries(queryClient, [
+          collaborationQueryKeys.chat.myChannels(),
+        ]),
+      ]);
+      beginChatSend(clientKey);
+      const optimistic = pendingSendMessage(
+        queryClient,
+        user,
+        variables,
+        clientKey,
       );
-
-      const optimisticMsg: Message = {
-        id: -Date.now(),
-        channelId: variables.channelId,
-        senderId: session?.user?.id ?? null,
-        content: variables.content ?? null,
-        replyToId: variables.replyToId ?? null,
-        isEdited: false,
-        isDeleted: false,
-        messageType: "text",
-        metadata: variables.metadata ?? null,
-        actionStatus: null,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        sender: {
-          id: session?.user?.id ?? null,
-          name: session?.user?.name ?? null,
-          image: session?.user?.image ?? null,
-        },
-        attachments: [],
-        replyTo: null,
-        clientKey: variables.clientKey ?? null,
-      };
-
-      if (previousData) {
-        const pages = previousData.pages.map((page, i) =>
-          i === 0
-            ? { ...page, messages: [...page.messages, optimisticMsg] }
-            : page,
-        );
+      queryClient.setQueryData<InfiniteData<MessagesPage>>(
+        collaborationQueryKeys.chat.messages(channelId),
+        (old) => appendPendingSend(old, optimistic),
+      );
+      const undoRow = moveChannelRowToTop(
+        queryClient,
+        channelId,
+        (channel) => ({
+          ...channel,
+          lastMessage: {
+            content: optimistic.content,
+            senderName: user?.name ?? null,
+            createdAt: optimistic.createdAt,
+          },
+        }),
+      );
+      return { rollback: undoRow };
+    },
+    onError: (_error, variables, context) => {
+      abandonChatSend(sendClientKey(variables));
+      if (!keepsFailedSendRow(sendClientKey(variables)))
         queryClient.setQueryData<InfiniteData<MessagesPage>>(
           collaborationQueryKeys.chat.messages(variables.channelId),
-          { ...previousData, pages },
+          (old) => removeOptimisticMessage(old, sendClientKey(variables)),
         );
-      }
-
-      return { previousData };
+      context?.rollback();
     },
-    onError: (_, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(
-          collaborationQueryKeys.chat.messages(variables.channelId),
-          context.previousData,
-        );
-      }
-    },
-    onSuccess: (_, variables) => {
-      invalidateChatMessageSent(
-        queryClient,
-        variables.channelId,
-        (variables.attachments?.length ?? 0) > 0,
+    onSuccess: (row, variables) => {
+      queryClient.setQueryData<InfiniteData<MessagesPage>>(
+        collaborationQueryKeys.chat.messages(variables.channelId),
+        (old) =>
+          replaceOptimisticMessage(
+            old,
+            sendClientKey(variables),
+            (optimistic) => reconcileSentMessage(optimistic, row),
+          ),
       );
+      chatSendVisible(sendClientKey(variables));
+      if ((variables.attachments?.length ?? 0) > 0)
+        void queryClient.invalidateQueries({
+          queryKey: collaborationQueryKeys.chat.channelFiles(
+            variables.channelId,
+          ),
+          exact: true,
+          refetchType: "none",
+        });
+    },
+    onSettled: (_data, _error, variables) => {
+      clearTransientSendFailures(sendClientKey(variables));
+      releaseSendTurn(sendClientKey(variables));
     },
   });
 }
 
 export function useEditMessage() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:messages:write", {
+  return useAuthorizedMutation<
+    { ok: boolean },
+    Error,
+    EditMessageInput & { channelId: number },
+    RollbackContext
+  >("chat:messages:write", {
     mutationKey: ["chat", "messages", "edit"],
-    mutationFn: ({
-      channelId,
-      messageId,
-      content,
-    }: EditMessageInput & { channelId: number }) =>
+    mutationFn: ({ channelId, messageId, content }) =>
       apiClient.patch<{ ok: boolean }>(
         `/chat/channels/${channelId}/messages/${messageId}`,
         { content },
         undefined,
         chatOkContract,
       ),
-    onSuccess: (_, { channelId }) => {
-      invalidateChatMessageEdited(queryClient, channelId);
+    onMutate: async ({ channelId, messageId, content }) => {
+      await cancelChatMessageQueries(queryClient, channelId);
+      return {
+        rollback: patchChatMessage(queryClient, channelId, messageId, {
+          content,
+          isEdited: true,
+        }),
+      };
+    },
+    onError: (_error, _variables, context) => context?.rollback(),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.myChannels(),
+        exact: true,
+        refetchType: "none",
+      });
     },
   });
 }
 
 export function useDeleteMessage() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:messages:write", {
+  return useAuthorizedMutation<
+    { ok: boolean },
+    Error,
+    { channelId: number; messageId: number },
+    RollbackContext
+  >("chat:messages:write", {
     mutationKey: ["chat", "messages", "delete"],
-    mutationFn: ({
-      channelId,
-      messageId,
-    }: {
-      channelId: number;
-      messageId: number;
-    }) =>
+    mutationFn: ({ channelId, messageId }) =>
       apiClient.delete<{ ok: boolean }>(
         `/chat/channels/${channelId}/messages/${messageId}`,
         undefined,
         undefined,
         chatOkContract,
       ),
-    onSuccess: (_, { channelId }) => {
-      invalidateChatMessageDeleted(queryClient, channelId);
+    onMutate: async ({ channelId, messageId }) => {
+      await cancelChatMessageQueries(queryClient, channelId);
+      return {
+        rollback: patchChatMessage(queryClient, channelId, messageId, {
+          isDeleted: true,
+          content: null,
+        }),
+      };
     },
-    onError: (err) => {
+    onError: (err, _variables, context) => {
+      context?.rollback();
       toast.error(getErrorMessage(err));
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.myChannels(),
+        exact: true,
+        refetchType: "none",
+      });
     },
   });
 }
 
 export function useMarkChannelRead() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("chat:messages:read", {
+  const { data: session } = useSession();
+  const userId = session?.user?.id;
+  return useAuthorizedMutation<
+    { ok: boolean },
+    Error,
+    { channelId: number },
+    ReadContext
+  >("chat:messages:read", {
     mutationKey: ["chat", "channels", "mark-read"],
-    mutationFn: ({ channelId }: { channelId: number }) =>
-      apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/read`, undefined, undefined, chatOkContract),
-    onSuccess: (_, { channelId }) => {
-      invalidateChatChannelRead(queryClient, channelId);
+    mutationFn: ({ channelId }) =>
+      apiClient.post<{ ok: boolean }>(
+        `/chat/channels/${channelId}/read`,
+        undefined,
+        undefined,
+        chatOkContract,
+      ),
+    onMutate: async ({ channelId }) => {
+      await cancelChatChannelQueries(queryClient, channelId);
+      return {
+        rowWasLoaded: findChannelRow(queryClient, channelId) !== undefined,
+        rollback: applyOptimisticRead(queryClient, channelId, userId),
+      };
+    },
+    onError: (_error, _variables, context) => context?.rollback(),
+    onSuccess: (_data, _variables, context) => {
+      reconcileUnreadAfterRead(queryClient, context?.rowWasLoaded ?? false);
     },
   });
 }
-

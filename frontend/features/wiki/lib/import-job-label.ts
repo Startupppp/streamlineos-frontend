@@ -21,8 +21,8 @@ export function importJobDisplayName(
   if (titles.length === 2) return `${titles[0]}, ${titles[1]}`;
   if (titles.length > 2)
     return `${titles[0]}, ${titles[1]} +${titles.length - 2} more`;
-  if (job.totalItems === 1) return "1 page";
-  if (job.totalItems > 1) return `${job.totalItems} pages`;
+  if (job.totalItems === 1) return "1 file";
+  if (job.totalItems > 1) return `${job.totalItems} files`;
 
 
   const sourceLabel =

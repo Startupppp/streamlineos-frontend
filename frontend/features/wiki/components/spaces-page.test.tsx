@@ -121,7 +121,7 @@ describe("SpacesPage", () => {
     renderPage();
 
     expect(screen.getByText("Engineering")).toBeInTheDocument();
-    expect(screen.getByText(/12 pages/)).toBeInTheDocument();
+    expect(screen.getByText(/12 files/)).toBeInTheDocument();
     expect(screen.getByText(/5 members/)).toBeInTheDocument();
   });
 
@@ -239,7 +239,7 @@ describe("SpacesPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Delete permanently" }));
     const dialog = screen.getByRole("alertdialog");
-    expect(within(dialog).getByText(/4 pages will move to Trash/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/4 files will move to Trash/)).toBeInTheDocument();
     expect(within(dialog).getByText(/restored from Trash to the Docs root/)).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Delete permanently" }));
@@ -376,7 +376,7 @@ describe("SpacesPage", () => {
     mockCan.mockImplementation((key) => key === "kb:spaces:manage");
 
     const { rerenderPage } = renderPage();
-    expect(screen.getByText(/3 pages overdue for review/)).toBeInTheDocument();
+    expect(screen.getByText(/3 files overdue for review/)).toBeInTheDocument();
 
     mockCan.mockReturnValue(false);
     rerenderPage();

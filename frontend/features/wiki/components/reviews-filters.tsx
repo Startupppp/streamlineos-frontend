@@ -152,7 +152,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
         </ResponsivePopoverTrigger>
         <ResponsivePopoverContent className="w-[280px] space-y-3 p-3" align="end">
           <div className="space-y-1.5">
-            <Label className="text-xs">Space</Label>
+            <Label className="text-xs">Team folder</Label>
             <Combobox
               value={values.spaceId || REVIEWS_ALL_VALUE}
               onChange={handleSpaceChange}
@@ -161,7 +161,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
               aria-label="Team folder"
               placeholder="All team folders"
               searchPlaceholder="Search team folders…"
-              emptyText="No matching spaces"
+              emptyText="No matching team folders"
             />
           </div>
           <div className="space-y-1.5">

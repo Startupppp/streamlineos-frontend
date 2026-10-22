@@ -14,6 +14,7 @@ const BACKEND_FIXTURE_FIELDS = [
   "status",
   "verified",
   "deleted",
+  "kind",
   "sort",
   "cursor",
   "limit",
@@ -33,6 +34,7 @@ const WIRE_FIXTURE = {
       status: "published",
       visibility: "org",
       contentType: "rich-text",
+      kind: "document",
       trustState: "verified",
       ownerMembershipId: 1,
       ownerUserId: "user-1",
@@ -70,7 +72,7 @@ describe("KB page collection — response contract parity (FE-28)", () => {
     const item = parsed.data[0];
     const backendProjectedFields = [
       "id", "title", "icon", "coverImage", "spaceId", "projectId",
-      "parentPageId", "status", "visibility", "contentType", "trustState",
+      "parentPageId", "status", "visibility", "contentType", "kind", "trustState",
       "ownerMembershipId", "ownerUserId", "createdById", "createdByMembershipId",
       "lastEditedById", "lastEditedByMembershipId", "createdAt", "updatedAt",
       "deletedAt", "nextReviewAt", "verifiedUntil", "contentRevision", "aclRevision",
@@ -132,6 +134,7 @@ describe("KB_PAGE_COLLECTION_QUERY_FIELDS — the cross-repo half of the collect
       status: "published",
       verified: true,
       deleted: false,
+      kind: "spreadsheet",
       sort: "updated_desc",
       cursor: "abc",
       limit: 25,

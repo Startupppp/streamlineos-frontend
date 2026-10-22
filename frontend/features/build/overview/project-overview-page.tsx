@@ -108,7 +108,6 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               icon={LayoutGrid}
               tone="blue"
               isLoading={isAnalyticsLoading}
-              href={`${basePath}/issues`}
             />
             <StatCard
               label="Progress"
@@ -129,7 +128,6 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               icon={AlertTriangle}
               tone={overdueCount !== null && overdueCount > 0 ? "amber" : "default"}
               isLoading={isAnalyticsLoading}
-              href={overdueCount !== null && overdueCount > 0 ? `${basePath}/issues` : undefined}
             />
             <StatCard
               label="Active cycle"
@@ -137,7 +135,6 @@ export function ProjectOverviewPage({ projectId }: ProjectOverviewPageProps) {
               icon={Zap}
               tone="violet"
               isLoading={isCyclesLoading}
-              href={activeCycle ? `${basePath}/cycles` : undefined}
             />
             <StatCard
               label="Health"

@@ -31,7 +31,7 @@ import { useAddChannelMember } from "@/hooks/api/chat-core-mutations-b";
 import {
   useChannelInviteLink,
   useRegenerateInviteLink,
-} from "@/hooks/api/chat-personal-b";
+} from "@/hooks/api/chat-invite-links";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { ChatUserVirtualList } from "./chat-user-virtual-list";
 import type { OrgUser } from "@/types/chat";

@@ -18,7 +18,7 @@ import { chatPreviewUserContract } from "./user-schema";
  * `startedBy` is the host's USER id, not a membership id — a distinction no
  * static check can make, which is why it is written down here.
  */
-export const chatHuddleParticipantContract = z
+const chatHuddleParticipantContract = z
   .object({
     id: z.number(),
     huddleId: z.number(),
@@ -35,6 +35,7 @@ export const chatHuddleContract = z
     channelId: z.number(),
     status: z.enum(["active", "ended"]),
     calendarEventId: z.number().nullable(),
+    meetingProvider: z.enum(["google_meet", "microsoft_teams"]).nullable(),
     meetingUrl: z.string().url().nullable(),
     startedAt: z.string(),
     endedAt: z.string().nullable(),
@@ -46,5 +47,3 @@ export const chatHuddleContract = z
 
 /** No active huddle is a 200 with a `null` body, not a 404. */
 export const chatActiveHuddleContract = chatHuddleContract.nullable();
-
-export type ChatHuddleWire = z.infer<typeof chatHuddleContract>;

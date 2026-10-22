@@ -118,6 +118,11 @@ const nextConfig: NextConfig = {
       permanent: true,
     },
     {
+      source: "/chat/channels",
+      destination: "/chat?search=channels",
+      permanent: false,
+    },
+    {
       source: "/payroll/workers",
       destination: "/payroll/employees",
       permanent: false,

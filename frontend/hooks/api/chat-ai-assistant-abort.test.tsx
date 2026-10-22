@@ -1,7 +1,9 @@
 import { TextDecoder as NodeTextDecoder, TextEncoder as NodeTextEncoder } from "node:util";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
-import { useAskAI, type AskAiStreamOutcome } from "./chat-ai-assistant";
+import { useAskAI } from "./chat-ai-assistant";
+
+type AskAiStreamOutcome = Awaited<ReturnType<ReturnType<typeof useAskAI>["sendMessage"]>>;
 
 if (typeof globalThis.TextEncoder === "undefined")
   Object.assign(globalThis, { TextEncoder: NodeTextEncoder, TextDecoder: NodeTextDecoder });

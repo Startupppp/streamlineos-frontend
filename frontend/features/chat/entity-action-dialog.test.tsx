@@ -1,4 +1,5 @@
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
+import { renderWithProviders } from "@/test-utils/render";
 import { EntityActionDialog } from "./entity-action-dialog";
 import type { EntityAction } from "@/hooks/api/chat-entities";
 
@@ -18,7 +19,7 @@ jest.mock("@/hooks/api/organization", () => ({
   useOrgMembers: () => ({ data: undefined }),
   useOrgMembersByIds: () => ({ data: undefined }),
 }));
-jest.mock("@/hooks/api/build/projects", () => ({
+jest.mock("@/hooks/api/build/project-members", () => ({
   useProjectMembers: () => ({ data: [] }),
 }));
 jest.mock("@/hooks/api/build/build-members", () => ({
@@ -31,7 +32,7 @@ jest.mock("@/hooks/api/module-access", () => ({
 const REFERENCE = { type: "ticket", id: "1" };
 
 function renderAction(action: EntityAction) {
-  return render(
+  return renderWithProviders(
     <EntityActionDialog
       open
       onOpenChange={jest.fn()}

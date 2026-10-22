@@ -15,8 +15,6 @@ const ticketDetailLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketDetailContract),
 );
 
-export type { CommentPermalinkData, TicketPermalinkData };
-
 export function useCommentPermalink(
   projectId: number,
   ticketId: number,

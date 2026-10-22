@@ -8,8 +8,6 @@ import {
   BookOpenTextIcon,
 } from "@animateicons/react/lucide";
 import {
-  StickyNote,
-  Loader2,
   Check,
   ShieldCheck,
   UserIcon,
@@ -27,15 +25,10 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { Combobox } from "@/components/ui/combobox";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { cn } from "@/lib/utils";
-import type { KbSource } from "@/hooks/api/kb/sources";
+import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 import type { KbPageSearchResult } from "@/hooks/api/kb/page-types";
 import { KB_ASK_STATUS_SCOPES, type KbAskStatusScope } from "@/hooks/api/kb/ask";
 
@@ -43,7 +36,7 @@ interface KbSourcesSheetManageProps {
   mode: "manage";
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sources: KbSource[];
+  sources: KbPageCollectionItem[];
   isLoading: boolean;
   sourceError: unknown;
   sourceHasMore: boolean;
@@ -69,7 +62,7 @@ interface KbSourcesSheetScopeProps {
   mode: "scope";
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  sources: KbSource[];
+  sources: KbPageCollectionItem[];
   isLoading: boolean;
   sourceError: unknown;
   sourceHasMore: boolean;
@@ -81,8 +74,6 @@ interface KbSourcesSheetScopeProps {
   verifiedOnly: boolean;
   onVerifiedOnlyChange: (verifiedOnly: boolean) => void;
   currentUserId?: string;
-  kindFilter: SourceKindFilter;
-  onKindFilterChange: (kind: SourceKindFilter) => void;
   ownerFilter: OwnerFilter;
   onOwnerFilterChange: (owner: OwnerFilter) => void;
   spaceIdFilter: SpaceIdFilter;
@@ -144,7 +135,7 @@ function KbSourcesManageSheet({
 }: Omit<KbSourcesSheetManageProps, "mode">) {
   const description =
     sources.length > 0
-      ? `${readyCount} of ${sources.length} sources ready for AI answers`
+      ? `${readyCount} of ${sources.length} files indexed for AI answers`
       : "Upload files or add notes to ground answers on your content.";
 
   return (
@@ -177,6 +168,9 @@ function KbSourcesManageSheet({
             Note
           </Button>
         </div>
+        <p className="text-xs text-muted-foreground">
+          PDF, DOCX, XLSX, TXT, MD, or CSV — up to 25 MB.
+        </p>
 
         {sourceError && sources.length === 0 ? (
           <SourceReadError error={sourceError} onRetry={onSourceRetry} />
@@ -198,43 +192,6 @@ function KbSourcesManageSheet({
         />
       </div>
     </AppSheet>
-  );
-}
-
-const SOURCE_KINDS = ["all", "file", "note"] as const;
-export type SourceKindFilter = (typeof SOURCE_KINDS)[number];
-
-const KIND_LABELS: Record<SourceKindFilter, string> = {
-  all: "All",
-  file: "Files",
-  note: "Notes",
-};
-
-function KindFilterButton({
-  kind,
-  active,
-  onSelect,
-}: {
-  kind: SourceKindFilter;
-  active: boolean;
-  onSelect: (kind: SourceKindFilter) => void;
-}) {
-  function handleClick() {
-    onSelect(kind);
-  }
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-        active
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {KIND_LABELS[kind]}
-    </button>
   );
 }
 
@@ -410,7 +367,7 @@ function OwnerMembershipSelect({
         searchPlaceholder="Search members…"
         emptyText={ownersAreLoading ? "Loading members…" : ownersError ? "Use Retry members below." : "No members found."}
         onSearchChange={onOwnerSearchChange}
-        aria-label="Restrict answer to pages owned by a member"
+        aria-label="Restrict answer to files owned by a member"
         footer={ownersError ? (
           <div className="p-2 text-center text-sm" role="alert">
             <span>Could not load members.</span>
@@ -444,8 +401,6 @@ function KbSourcesScopeSheet({
   verifiedOnly,
   onVerifiedOnlyChange,
   currentUserId,
-  kindFilter,
-  onKindFilterChange,
   ownerFilter,
   onOwnerFilterChange,
   spaceIdFilter,
@@ -472,23 +427,22 @@ function KbSourcesScopeSheet({
   selectedPageIds,
   onPageSelectionChange,
 }: Omit<KbSourcesSheetScopeProps, "mode">) {
-  const readyVisible = sources.filter((s) => s.status === "ready");
+  const readyVisible = sources.filter((s) => s.status !== "archived");
   const allSelected =
     readyVisible.length > 0 &&
     readyVisible.every((s) => selectedIds.includes(s.id));
   const totalSelected = selectedIds.length + selectedPageIds.length;
   const noneSelected = totalSelected === 0;
-  const hasSourceFilter = kindFilter !== "all" || ownerFilter !== "all";
+  const hasSourceFilter = ownerFilter !== "all";
   const pageOnlyScope = verifiedOnly || ownerMembershipId !== null || statusScope !== null;
   const sourceSelectionConflicts = pageOnlyScope && selectedIds.length > 0;
 
   function handleClearSourceFilter() {
-    onKindFilterChange("all");
     onOwnerFilterChange("all");
   }
 
   const description = sourceSelectionConflicts
-    ? "Selected files and notes are excluded by page owner, page status or verification. Deselect them or choose pages to search."
+    ? "Selected files and notes are excluded by file owner, file status or verification. Deselect them or choose files to search."
     : noneSelected
       ? pageOnlyScope
         ? "Only eligible pages and articles will be searched. Files and notes are excluded."
@@ -526,16 +480,6 @@ function KbSourcesScopeSheet({
     >
       <div className="flex flex-col gap-4">
         <div className="flex gap-2">
-          <div className="flex flex-1 items-center gap-1 rounded-md border border-border bg-muted p-1">
-            {SOURCE_KINDS.map((kind) => (
-              <KindFilterButton
-                key={kind}
-                kind={kind}
-                active={kindFilter === kind}
-                onSelect={onKindFilterChange}
-              />
-            ))}
-          </div>
           {currentUserId !== undefined && (
             <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
               <UserIcon className="ml-1 h-3 w-3 shrink-0 text-muted-foreground" />
@@ -629,7 +573,7 @@ function KbSourcesScopeSheet({
             <span className="text-xs text-muted-foreground">
               {selectedIds.length === 0
                 ? "No sources selected"
-                : `${selectedIds.length} of ${sources.filter((s) => s.status === "ready").length} sources selected`}
+                : `${selectedIds.length} of ${sources.filter((s) => s.status !== "archived").length} sources selected`}
             </span>
             <Button
               variant="ghost"
@@ -663,13 +607,13 @@ function KbSourcesScopeSheet({
         />
 
         <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Pages</p>
+          <p className="text-xs font-medium text-muted-foreground">Files</p>
           <Input
             value={pageSearchQuery}
             onChange={(e) => onPageSearchQueryChange(e.target.value)}
-            placeholder="Search pages…"
+            placeholder="Search files…"
             className="h-8 text-xs"
-            aria-label="Search pages"
+            aria-label="Search files"
           />
           {pageSearchIsLoading ? (
             <div className="space-y-1">
@@ -689,9 +633,9 @@ function KbSourcesScopeSheet({
               ))}
             </ul>
           ) : pageSearchQuery.length > 0 ? (
-            <p className="text-xs text-muted-foreground">No pages found</p>
+            <p className="text-xs text-muted-foreground">No files found</p>
           ) : (
-            <p className="text-xs text-muted-foreground">Type to search pages</p>
+            <p className="text-xs text-muted-foreground">Type to search files</p>
           )}
         </div>
 
@@ -702,9 +646,9 @@ function KbSourcesScopeSheet({
         >
           <Check className="h-4 w-4" />
           {sourceSelectionConflicts
-            ? `Search ${selectedPageIds.length} page${selectedPageIds.length === 1 ? "" : "s"}`
+            ? `Search ${selectedPageIds.length} file${selectedPageIds.length === 1 ? "" : "s"}`
             : noneSelected
-              ? pageOnlyScope ? "Apply page scope" : "Search all sources and pages"
+              ? pageOnlyScope ? "Apply file scope" : "Search all sources and files"
               : `Search ${totalSelected} item${totalSelected === 1 ? "" : "s"}`}
         </Button>
       </div>
@@ -714,7 +658,7 @@ function KbSourcesScopeSheet({
 
 interface SourcesListProps {
   isLoading: boolean;
-  sources: KbSource[];
+  sources: KbPageCollectionItem[];
   makeDeleteHandler: (id: number) => () => void;
   deletingId: number | undefined;
   isDeleting: boolean;
@@ -806,7 +750,7 @@ function SourcesList({
 
 interface ScopeSourcesListProps {
   isLoading: boolean;
-  sources: KbSource[];
+  sources: KbPageCollectionItem[];
   selectedIds: number[];
   onToggle: (id: number) => void;
   filtersActive: boolean;
@@ -862,11 +806,11 @@ function ScopeSourceRow({
   selectedIds,
   onToggle,
 }: {
-  source: KbSource;
+  source: KbPageCollectionItem;
   selectedIds: number[];
   onToggle: (id: number) => void;
 }) {
-  const isReady = source.status === "ready";
+  const isReady = source.status !== "archived";
   const isChecked = selectedIds.includes(source.id);
   function handleCheckedChange() {
     if (isReady) onToggle(source.id);
@@ -886,11 +830,7 @@ function ScopeSourceRow({
         aria-label={`Include ${source.title ?? "source"} in search`}
       />
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-        {source.kind === "file" ? (
-          <BookOpenTextIcon size={16} className="text-muted-foreground" />
-        ) : (
-          <StickyNote className="h-4 w-4 text-muted-foreground" />
-        )}
+        <BookOpenTextIcon size={16} className="text-muted-foreground" />
       </div>
       <label
         htmlFor={`scope-source-${source.id}`}
@@ -900,9 +840,6 @@ function ScopeSourceRow({
           text={source.title ?? ""}
           className="text-sm font-medium text-foreground"
         />
-        <p className="text-xs text-muted-foreground">
-          {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
-        </p>
       </label>
       <SourceStatusBadge source={source} />
     </li>
@@ -949,18 +886,14 @@ function SourceRow({
   onDelete,
   isDeleting,
 }: {
-  source: KbSource;
+  source: KbPageCollectionItem;
   onDelete: () => void;
   isDeleting: boolean;
 }) {
   return (
     <li className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
       <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
-        {source.kind === "file" ? (
-          <BookOpenTextIcon size={16} className="text-muted-foreground" />
-        ) : (
-          <StickyNote className="h-4 w-4 text-muted-foreground" />
-        )}
+        <BookOpenTextIcon size={16} className="text-muted-foreground" />
       </div>
 
       <div className="min-w-0 flex-1">
@@ -968,9 +901,6 @@ function SourceRow({
           text={source.title ?? ""}
           className="text-sm font-medium text-foreground"
         />
-        <p className="text-xs text-muted-foreground">
-          {source.chunkCount > 0 ? `${source.chunkCount} chunks` : "—"}
-        </p>
       </div>
 
       <SourceStatusBadge source={source} />
@@ -989,32 +919,31 @@ function SourceRow({
   );
 }
 
-function SourceStatusBadge({ source }: { source: KbSource }) {
-  if (source.status === "processing") {
+function SourceStatusBadge({ source }: { source: KbPageCollectionItem }) {
+  if (source.status === "published") {
     return (
-      <Badge variant="secondary" className="shrink-0 gap-1">
-        <Loader2 className="h-3 w-3 animate-spin" />
-        Processing
+      <Badge variant="default" className="shrink-0">
+        Published
       </Badge>
     );
   }
-  if (source.status === "failed") {
+  if (source.status === "archived") {
     return (
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Badge variant="destructive" className="shrink-0 cursor-default">
-            Failed
-          </Badge>
-        </TooltipTrigger>
-        {source.errorMessage ? (
-          <TooltipContent>{source.errorMessage}</TooltipContent>
-        ) : null}
-      </Tooltip>
+      <Badge variant="secondary" className="shrink-0">
+        Archived
+      </Badge>
+    );
+  }
+  if (source.status === "in_review") {
+    return (
+      <Badge variant="secondary" className="shrink-0">
+        In review
+      </Badge>
     );
   }
   return (
-    <Badge variant="default" className="shrink-0">
-      Ready
+    <Badge variant="secondary" className="shrink-0">
+      Draft
     </Badge>
   );
 }

@@ -40,6 +40,7 @@ import { PageRecordLinks } from "./page-record-links";
 import { RequestReviewDialog } from "./reviews-decision-dialogs";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
+import { AccessReasonBanner } from "./page-access-reason-banner";
 
 const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "archived"; label: string }> = [
   { value: "draft", label: "Draft" },
@@ -53,6 +54,7 @@ const ACTION_BTN_BASE = "h-9 w-full text-label";
 const ACTION_BTN_NEUTRAL = `${ACTION_BTN_BASE} bg-card border border-input shadow-xs hover:bg-muted/50`;
 const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive`;
 const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink`;
+
 
 const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "note", label: "Note" },
@@ -87,7 +89,7 @@ export default function PageMetadataSheet({
   const canUpdate = useCan("kb:pages:update");
   const canManage = useCan("kb:pages:manage");
   const canManageReviews = useCan("kb:reviews:manage");
-  const isEditable = canUpdate && page.canEdit === true && (!page.isLocked || canManage);
+  const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
   const canChangeOwner = isEditable && canManage;
   const [intervalDays, setIntervalDays] = useState<string>("");
   const [verifyFormOpen, setVerifyFormOpen] = useState(false);
@@ -119,7 +121,7 @@ export default function PageMetadataSheet({
           if (isApiError(error) && error.status === 409) {
             const details = kbPageEditConflictContract.safeParse(error.details);
             setPendingScope({ ...change, pageId, minimumRevision: details.success ? details.data.currentContentRevision : null });
-            toast.error("Page changed before this setting was saved");
+            toast.error("File changed before this setting was saved");
             return;
           }
           toast.error(`Failed to update ${change.field === "spaceId" ? "team folder" : "owner"}`);
@@ -158,7 +160,7 @@ export default function PageMetadataSheet({
     setIsRetryingScope(true);
     try {
       const latest = await refetch();
-      if (!latest.isSuccess || !latest.data || latest.data.canEdit !== true ||
+      if (!latest.isSuccess || !latest.data || latest.data.can?.edit !== true ||
         (latest.data.isLocked && !canManage) ||
         (pending.minimumRevision !== null && latest.data.contentRevision < pending.minimumRevision))
         throw new Error("Current page version is unavailable");
@@ -179,24 +181,24 @@ export default function PageMetadataSheet({
   function handlePublish() {
     if (!isEditable) return;
     publishPage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
-      onSuccess: () => toast.success("Page published"),
-      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before publication. Refresh before trying again." : "Failed to publish page"),
+      onSuccess: () => toast.success("File published"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "File changed before publication. Refresh before trying again." : "Failed to publish file"),
     });
   }
 
   function handleArchive() {
     if (!isEditable) return;
     archivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
-      onSuccess: () => toast.success("Page archived"),
-      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before archiving. Refresh before trying again." : "Failed to archive page"),
+      onSuccess: () => toast.success("File archived"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "File changed before archiving. Refresh before trying again." : "Failed to archive file"),
     });
   }
 
   function handleUnarchive() {
     if (!isEditable) return;
     unarchivePage.mutate({ pageId, expectedContentRevision: page.contentRevision }, {
-      onSuccess: () => toast.success("Page unarchived"),
-      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "Page changed before unarchiving. Refresh before trying again." : "Failed to unarchive page"),
+      onSuccess: () => toast.success("File unarchived"),
+      onError: (error) => toast.error(isApiError(error) && error.status === 409 ? "File changed before unarchiving. Refresh before trying again." : "Failed to unarchive file"),
     });
   }
 
@@ -216,11 +218,11 @@ export default function PageMetadataSheet({
       { pageId, intervalDays: days },
       {
         onSuccess: () => {
-          toast.success("Page verified");
+          toast.success("File verified");
           setVerifyFormOpen(false);
           setIntervalDays("");
         },
-        onError: () => toast.error("Failed to verify page"),
+        onError: () => toast.error("Failed to verify file"),
       }
     );
   }
@@ -228,8 +230,8 @@ export default function PageMetadataSheet({
   function handleMarkStale() {
     if (!isEditable) return;
     markStalePage.mutate(pageId, {
-      onSuccess: () => toast.success("Page marked as stale"),
-      onError: () => toast.error("Failed to mark page as stale"),
+      onSuccess: () => toast.success("File marked as stale"),
+      onError: () => toast.error("Failed to mark file as stale"),
     });
   }
 
@@ -256,14 +258,15 @@ export default function PageMetadataSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
         <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
-          <SheetTitle className="text-sm">Page settings</SheetTitle>
+          <SheetTitle className="text-sm">File settings</SheetTitle>
           <SheetDescription className="text-xs mt-0.5">
-            Visibility, review schedule and other properties of this page.
+            Visibility, review schedule and other properties of this file.
           </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="flex-1 min-h-0">
           <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
+            <AccessReasonBanner access={page.access} />
             {pendingScope?.pageId === pageId && (
               <div role="alert" className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
                 <p>The page changed before your {pendingScope.field === "spaceId" ? "team folder" : "owner"} choice was saved. Your choice is ready to retry.</p>

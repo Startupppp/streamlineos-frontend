@@ -1,45 +1,61 @@
 "use client";
 
-import { useCallback } from "react";
+import { memo, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { FileText, Loader2, Reply, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { FileText, Loader2, Reply, UserPlus, X } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/get-error-message";
+import { useCan } from "@/hooks/api/access";
+import { useAddChannelMember } from "@/hooks/api/chat-core-mutations-b";
 import { getFileColor, getFileExt } from "./chat-helpers";
 import { formatFileSize, getInitials } from "@/lib/format-utils";
-import type { PendingAttachment, OrgUser } from "./message-input-types";
-import type { Message } from "./chat-types";
+import type { PendingAttachment } from "./message-input-types";
+import type { MentionCandidate } from "./use-chat-mentions";
+import type { MentionPrompt } from "./use-message-composer";
+import type { Message } from "@/types/chat";
 
 interface MentionItemProps {
-  user: OrgUser;
-  idx: number;
-  mentionIndex: number;
-  onInsert: (name: string, userId: string) => void;
+  candidate: MentionCandidate;
+  isActive: boolean;
+  flagNonMember: boolean;
+  onInsert: (candidate: MentionCandidate) => void;
 }
 
-export function MentionItem({ user, idx, mentionIndex, onInsert }: MentionItemProps) {
-  const handleClick = useCallback(
-    () => onInsert(user.name ?? "", user.id),
-    [user.name, user.id, onInsert],
-  );
+const MentionItem = memo(function MentionItem({ candidate, isActive, flagNonMember, onInsert }: MentionItemProps) {
+  const handleClick = useCallback(() => onInsert(candidate), [candidate, onInsert]);
+  const handleMouseDown = useCallback((event: React.MouseEvent) => event.preventDefault(), []);
   return (
     <button
+      type="button"
+      role="option"
+      aria-selected={isActive}
+      onMouseDown={handleMouseDown}
       onClick={handleClick}
       className={cn(
         "w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-muted/40 transition-colors",
-        idx === mentionIndex && "bg-status-info-surface",
+        isActive && "bg-status-info-surface",
       )}
     >
       <Avatar className="h-6 w-6">
-        <AvatarImage src={resolveImageUrl(user.image)} />
-        <AvatarFallback className="text-micro">{getInitials(user.name)}</AvatarFallback>
+        <AvatarImage src={resolveImageUrl(candidate.image)} />
+        <AvatarFallback className="text-micro">
+          {getInitials(candidate.name)}
+        </AvatarFallback>
       </Avatar>
-      <span className="text-label font-medium">{user.name}</span>
-      <span className="text-dense text-muted-foreground ml-auto">{user.role}</span>
+      <span className="text-label font-medium">{candidate.name}</span>
+      {flagNonMember && !candidate.isMember && (
+        <span className="text-dense text-muted-foreground ml-auto">
+          Not in conversation
+        </span>
+      )}
     </button>
   );
-}
+});
 
 interface PendingAttachmentItemProps {
   att: PendingAttachment;
@@ -47,7 +63,11 @@ interface PendingAttachmentItemProps {
   onRemove: (idx: number) => void;
 }
 
-export function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentItemProps) {
+function PendingAttachmentItem({
+  att,
+  idx,
+  onRemove,
+}: PendingAttachmentItemProps) {
   const handleRemove = useCallback(() => onRemove(idx), [idx, onRemove]);
   const colors = getFileColor(att.fileName);
   return (
@@ -62,21 +82,34 @@ export function PendingAttachmentItem({ att, idx, onRemove }: PendingAttachmentI
           className="h-11 w-11 rounded-lg object-cover border border-border/30"
         />
       ) : (
-        <div className={cn("h-11 w-11 rounded-lg flex flex-col items-center justify-center relative", colors.bg)}>
+        <div
+          className={cn(
+            "h-11 w-11 rounded-lg flex flex-col items-center justify-center relative",
+            colors.bg,
+          )}
+        >
           <FileText className={cn("h-5 w-5", colors.text)} />
-          <span className={cn("text-micro font-bold text-white px-1 rounded mt-0.5", colors.badge)}>
+          <span
+            className={cn(
+              "text-micro font-bold text-white px-1 rounded mt-0.5",
+              colors.badge,
+            )}
+          >
             {getFileExt(att.fileName)}
           </span>
         </div>
       )}
       <div className="min-w-0 max-w-[140px]">
         <p className="text-xs font-medium truncate">{att.fileName}</p>
-        <p className="text-micro text-muted-foreground">{formatFileSize(att.fileSize)}</p>
+        <p className="text-micro text-muted-foreground">
+          {formatFileSize(att.fileSize)}
+        </p>
       </div>
       <button
+        type="button"
         onClick={handleRemove}
         aria-label="Remove attachment"
-        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-status-danger-fill text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+        className="absolute -top-1.5 -right-1.5 h-5 w-5 rounded-full bg-status-danger-fill text-white flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 [@media(hover:none)]:opacity-100 transition-opacity shadow-sm"
       >
         <X className="h-3 w-3" />
       </button>
@@ -112,6 +145,7 @@ export function ChatReplyPreview({ replyTo, onCancel }: ChatReplyPreviewProps) {
               </p>
             </div>
             <button
+              type="button"
               onClick={onCancel}
               className="p-1 hover:bg-muted rounded-md"
               aria-label="Cancel reply"
@@ -127,13 +161,15 @@ export function ChatReplyPreview({ replyTo, onCancel }: ChatReplyPreviewProps) {
 
 interface ChatMentionSuggestionsOverlayProps {
   showMentions: boolean;
-  filteredMentions: OrgUser[];
+  flagNonMembers: boolean;
+  filteredMentions: MentionCandidate[];
   mentionIndex: number;
-  insertMention: (name: string, userId: string) => void;
+  insertMention: (candidate: MentionCandidate) => void;
 }
 
 export function ChatMentionSuggestionsOverlay({
   showMentions,
+  flagNonMembers,
   filteredMentions,
   mentionIndex,
   insertMention,
@@ -150,17 +186,19 @@ export function ChatMentionSuggestionsOverlay({
           <div className="max-w-[800px] mx-auto">
             <div className="bg-background border border-border/60 rounded-xl shadow-lg overflow-hidden max-h-[200px] overflow-y-auto">
               <div className="px-3 py-1.5 text-micro font-semibold text-muted-foreground uppercase tracking-wider border-b border-border/30">
-                Members
+                People
               </div>
-              {filteredMentions.slice(0, 8).map((user, idx) => (
-                <MentionItem
-                  key={user.id}
-                  user={user}
-                  idx={idx}
-                  mentionIndex={mentionIndex}
-                  onInsert={insertMention}
-                />
-              ))}
+              <div role="listbox" aria-label="People">
+                {filteredMentions.map((candidate, idx) => (
+                  <MentionItem
+                    key={candidate.id}
+                    candidate={candidate}
+                    isActive={idx === mentionIndex}
+                    flagNonMember={flagNonMembers}
+                    onInsert={insertMention}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </motion.div>
@@ -175,7 +213,11 @@ interface ChatAttachmentsRowProps {
   uploading: boolean;
 }
 
-export function ChatAttachmentsRow({ pendingAttachments, onRemove, uploading }: ChatAttachmentsRowProps) {
+export function ChatAttachmentsRow({
+  pendingAttachments,
+  onRemove,
+  uploading,
+}: ChatAttachmentsRowProps) {
   if (pendingAttachments.length === 0) return null;
   return (
     <div className="flex flex-wrap gap-2 mb-2">
@@ -193,6 +235,48 @@ export function ChatAttachmentsRow({ pendingAttachments, onRemove, uploading }: 
           <span className="text-dense text-muted-foreground">Uploading...</span>
         </div>
       )}
+    </div>
+  );
+}
+
+interface ChatMentionMembershipPromptProps {
+  channelId: number;
+  prompt: MentionPrompt;
+  onDismiss: () => void;
+}
+
+export function ChatMentionMembershipPrompt({ channelId, prompt, onDismiss }: ChatMentionMembershipPromptProps) {
+  const canAdd = useCan("chat:channels:write");
+  const addMember = useAddChannelMember();
+  const { mutate } = addMember;
+  const handleAdd = useCallback(() => {
+    mutate(
+      { channelId, userId: prompt.userId },
+      {
+        onSuccess: () => {
+          toast.success(`Added ${prompt.name} to the conversation`);
+          onDismiss();
+        },
+        onError: (error) => toast.error(getErrorMessage(error)),
+      },
+    );
+  }, [mutate, channelId, prompt.userId, prompt.name, onDismiss]);
+
+  return (
+    <div
+      role="status"
+      className="mb-2 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-muted px-3 py-2 text-xs"
+    >
+      <UserPlus className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden />
+      <span className="min-w-0 flex-1 text-foreground">{prompt.name} isn&apos;t in this conversation</span>
+      {canAdd && (
+        <LoadingButton type="button" size="sm" variant="outline" isPending={addMember.isPending} onClick={handleAdd}>
+          Add them
+        </LoadingButton>
+      )}
+      <Button type="button" size="sm" variant="ghost" onClick={onDismiss}>
+        Mention anyway
+      </Button>
     </div>
   );
 }

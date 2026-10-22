@@ -38,6 +38,12 @@ function makeAblyMock() {
       }),
       unsubscribe: jest.fn(),
       publish: jest.fn().mockResolvedValue(undefined),
+      presence: {
+        subscribe: jest.fn().mockResolvedValue(undefined),
+        unsubscribe: jest.fn(),
+        update: jest.fn().mockResolvedValue(undefined),
+        leave: jest.fn().mockResolvedValue(undefined),
+      },
     };
   }
 
@@ -94,7 +100,7 @@ function member(overrides: Partial<ChannelMember>): ChannelMember {
 }
 
 function channelWith(options: {
-  mutedUntil?: Date | string | null;
+  mutedUntil?: string | null;
   notificationPreference?: ChatNotificationPreference;
 }): Channel {
   return {
@@ -111,6 +117,8 @@ function channelWith(options: {
         notificationPreference: options.notificationPreference ?? "DEFAULT",
       }),
     ],
+    memberCount: 1,
+    membersTruncated: false,
     unreadCount: 0,
     lastMessage: null,
   };

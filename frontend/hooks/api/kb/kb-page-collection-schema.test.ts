@@ -16,6 +16,7 @@ function wireItem(overrides: Record<string, unknown> = {}) {
     status: "published",
     visibility: "org",
     contentType: "rich-text",
+    kind: "document",
     trustState: "verified",
     ownerMembershipId: 42,
     ownerUserId: "11111111-2222-3333-4444-555555555555",
@@ -60,6 +61,69 @@ describe("kbPageCollectionItemSchema — the owner identity the Owner column ren
   it("rejects a numeric ownerUserId rather than coercing it, because a coerced id would render as a visible identifier in the Owner column", () => {
     expect(() =>
       kbPageCollectionItemSchema.parse(wireItem({ ownerUserId: 42 })),
+    ).toThrow(ZodError);
+  });
+});
+
+describe("kbPageCollectionItemSchema — sharedBy.userId", () => {
+  it("parses sharedBy.userId as a string when the granting member is known", () => {
+    const parsed = kbPageCollectionItemSchema.parse(
+      wireItem({
+        sharedBy: {
+          membershipId: 88,
+          userId: "user-granter",
+          at: "2026-09-11T00:00:00.000Z",
+          access: "edit",
+          expiresAt: null,
+        },
+      }),
+    );
+
+    expect(parsed.sharedBy?.userId).toBe("user-granter");
+  });
+
+  it("parses sharedBy.userId as null when no granting member could be resolved", () => {
+    const parsed = kbPageCollectionItemSchema.parse(
+      wireItem({
+        sharedBy: {
+          membershipId: null,
+          userId: null,
+          at: "2026-09-11T00:00:00.000Z",
+          access: "view",
+          expiresAt: null,
+        },
+      }),
+    );
+
+    expect(parsed.sharedBy?.userId).toBeNull();
+  });
+
+  it("reads a sharedBy object from a backend that predates userId as an unknown sharer, so Docs keeps loading while the frontend deploys ahead of the backend", () => {
+    const parsed = kbPageCollectionItemSchema.parse(
+      wireItem({
+        sharedBy: {
+          membershipId: 88,
+          at: "2026-09-11T00:00:00.000Z",
+          access: "edit",
+        },
+      }),
+    );
+    expect(parsed.sharedBy).toEqual({
+      membershipId: 88,
+      userId: null,
+      at: "2026-09-11T00:00:00.000Z",
+      access: "edit",
+      expiresAt: null,
+    });
+  });
+
+  it("still rejects a sharedBy object whose access is not a grant level", () => {
+    expect(() =>
+      kbPageCollectionItemSchema.parse(
+        wireItem({
+          sharedBy: { membershipId: 88, userId: null, at: "2026-09-11T00:00:00.000Z", access: "owner", expiresAt: null },
+        }),
+      ),
     ).toThrow(ZodError);
   });
 });

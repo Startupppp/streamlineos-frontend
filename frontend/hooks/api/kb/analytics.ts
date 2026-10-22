@@ -258,7 +258,7 @@ const kbAnalyticsGapActionContract = lazyContract(() =>
 
 export function useAssignGap() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("kb:analytics:view", {
+  return useAuthorizedMutation("kb:analytics:manage", {
     mutationKey: ["knowledge", "kb", "gaps", "assign"],
     mutationFn: (body: { query: string; assigneeUserId: string }) =>
       apiClient.post("/kb/analytics/gaps/assign", body, undefined, kbAnalyticsGapActionContract),
@@ -272,7 +272,7 @@ export function useAssignGap() {
 
 export function useDismissGap() {
   const queryClient = useQueryClient();
-  return useAuthorizedMutation("kb:analytics:view", {
+  return useAuthorizedMutation("kb:analytics:manage", {
     mutationKey: ["knowledge", "kb", "gaps", "dismiss"],
     mutationFn: (body: { query: string; reason: string }) =>
       apiClient.post("/kb/analytics/gaps/dismiss", body, undefined, kbAnalyticsGapActionContract),

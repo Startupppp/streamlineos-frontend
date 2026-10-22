@@ -2,7 +2,12 @@
 
 import { Suspense } from "react";
 import { useRouter } from "next/navigation";
-import { ClipboardCheck, ShieldAlert, AlertTriangle, Package } from "lucide-react";
+import {
+  ClipboardCheck,
+  ShieldAlert,
+  AlertTriangle,
+  Package,
+} from "lucide-react";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Badge } from "@/components/ui/badge";
@@ -10,9 +15,16 @@ import { Button } from "@/components/ui/button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { InventoryEmptyState } from "@/features/inventory/components/inventory-empty-state";
 import { EmptyOrdersIllustration } from "@/components/illustrations";
-import { useQualityInspections, useQualityHolds, useRecalls } from "@/hooks/api/inventory/quality";
+import {
+  useQualityInspections,
+  useQualityHolds,
+  useRecalls,
+} from "@/hooks/api/inventory/quality";
 import type { Inspection } from "@/hooks/api/inventory/quality";
-import { INSPECTION_STATUS_BADGE, INSPECTION_STATUS_LABEL } from "@/features/inventory/lib";
+import {
+  INSPECTION_STATUS_BADGE,
+  INSPECTION_STATUS_LABEL,
+} from "@/features/inventory/lib";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { useCan } from "@/hooks/api/access";
@@ -25,21 +37,26 @@ function QualityHubInner() {
   const router = useRouter();
 
   const pendingQuery = useQualityInspections({ status: "PENDING", limit: 1 });
-  const inProgressQuery = useQualityInspections({ status: "IN_PROGRESS", limit: 1 });
+  const inProgressQuery = useQualityInspections({
+    status: "IN_PROGRESS",
+    limit: 1,
+  });
   const holdsQuery = useQualityHolds({ status: "ACTIVE", limit: 1 });
   const recallsQuery = useRecalls({ limit: 100 });
   const recentQuery = useQualityInspections({ limit: 5 });
 
-  const openRecalls = (recallsQuery.data?.items ?? []).filter((r) => r.status !== "CLOSED").length;
+  const openRecalls = (recallsQuery.data?.items ?? []).filter(
+    (r) => r.status !== "CLOSED",
+  ).length;
   const recentInspections = recentQuery.data?.items ?? [];
 
-  // G8. Every tile below reads `data?.total ?? 0`, so a failed request rendered
-  // a confident zero — "no open recalls" when the truth was "we could not ask".
-  // On a quality hub that is the worst possible substitution, so a failure is
-  // shown as one rather than averaged into the numbers.
-  const failed = [pendingQuery, inProgressQuery, holdsQuery, recallsQuery, recentQuery].find(
-    (query) => query.isError,
-  );
+  const failed = [
+    pendingQuery,
+    inProgressQuery,
+    holdsQuery,
+    recallsQuery,
+    recentQuery,
+  ].find((query) => query.isError);
 
   function handleRetryQuality(): void {
     void pendingQuery.refetch();
@@ -72,7 +89,10 @@ function QualityHubInner() {
       cell: (r) => (
         <Badge
           variant="outline"
-          className={cn("h-4 text-micro px-1.5 py-0 border", INSPECTION_STATUS_BADGE[r.status])}
+          className={cn(
+            "h-4 text-micro px-1.5 py-0 border",
+            INSPECTION_STATUS_BADGE[r.status],
+          )}
         >
           {INSPECTION_STATUS_LABEL[r.status]}
         </Badge>
@@ -106,7 +126,10 @@ function QualityHubInner() {
         title="Quality Hub"
         subtitle="Overview of inspections, holds, and recalls"
       >
-        <NoPermissionState permission="inventory:quality:read" className="flex-1" />
+        <NoPermissionState
+          permission="inventory:quality:read"
+          className="flex-1"
+        />
       </PageWrapper>
     );
 
@@ -135,7 +158,6 @@ function QualityHubInner() {
             value={pendingQuery.data?.total ?? 0}
             icon={ClipboardCheck}
             tone="blue"
-            href="/inventory/quality/inspections?status=PENDING"
             isLoading={pendingQuery.isLoading}
           />
           <StatCard
@@ -143,7 +165,6 @@ function QualityHubInner() {
             value={inProgressQuery.data?.total ?? 0}
             icon={Package}
             tone="amber"
-            href="/inventory/quality/inspections?status=IN_PROGRESS"
             isLoading={inProgressQuery.isLoading}
           />
           <StatCard
@@ -151,7 +172,6 @@ function QualityHubInner() {
             value={holdsQuery.data?.total ?? 0}
             icon={ShieldAlert}
             tone="red"
-            href="/inventory/quality/holds?status=ACTIVE"
             isLoading={holdsQuery.isLoading}
           />
           <StatCard
@@ -159,7 +179,6 @@ function QualityHubInner() {
             value={openRecalls}
             icon={AlertTriangle}
             tone="amber"
-            href="/inventory/quality/recalls"
             isLoading={recallsQuery.isLoading}
           />
         </StatCardGrid>

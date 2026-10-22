@@ -303,7 +303,7 @@ describe("ContentHealthPage — bulk repair dialog", () => {
     const trigger = screen.getByRole("button", { name: "Bulk repair (1)" });
     await user.click(trigger);
 
-    const dialog = screen.getByRole("dialog", { name: "Bulk repair — 1 page" });
+    const dialog = screen.getByRole("dialog", { name: "Bulk repair — 1 file" });
     expect(dialog).toHaveAccessibleDescription(
       "Assign a person to resolve the selected issues.",
     );
@@ -325,7 +325,7 @@ describe("ContentHealthPage — bulk repair dialog", () => {
     await user.click(screen.getByRole("checkbox", { name: "Select Policy Draft" }));
     await user.click(screen.getByRole("button", { name: "Bulk repair (1)" }));
 
-    const dialog = screen.getByRole("dialog", { name: "Bulk repair — 1 page" });
+    const dialog = screen.getByRole("dialog", { name: "Bulk repair — 1 file" });
     const confirm = within(dialog).getByRole("button", { name: "Confirm" });
     expect(confirm).toBeDisabled();
     expect(within(dialog).queryByRole("button", { name: "Request review" })).not.toBeInTheDocument();

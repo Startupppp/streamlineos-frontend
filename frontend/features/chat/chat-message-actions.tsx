@@ -1,28 +1,66 @@
 "use client";
 
-import React from "react";
-import { CalendarClock, Forward, Link, ListPlus, MessageSquare, Pencil, Pin, Smile } from "lucide-react";
-import { ReplyIcon, BookmarkCheckIcon, BookmarkPlusIcon, CopyIcon, Trash2Icon, UserPlusIcon } from "@animateicons/react/lucide";
+import { useState } from "react";
+import { CalendarClock, Forward, Link, ListPlus, Pencil, Pin, Quote, SmilePlus } from "lucide-react";
+import {
+  BookmarkCheckIcon,
+  BookmarkPlusIcon,
+  CopyIcon,
+  EllipsisIcon,
+  ReplyIcon,
+  Trash2Icon,
+  UserPlusIcon,
+} from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const QUICK_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "🔥"];
 
-function IconButton({ children, className, ...props }: React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  return <button className={className} {...props}>{children}</button>;
+const ACTION_BUTTON_CLASS = "size-8 rounded-md p-0 text-muted-foreground hover:text-foreground";
+
+const ROVING_KEYS: Record<string, (index: number, count: number) => number> = {
+  ArrowRight: (index, count) => (index + 1) % count,
+  ArrowLeft: (index, count) => (index - 1 + count) % count,
+  Home: () => 0,
+  End: (_index, count) => count - 1,
+};
+
+function handleToolbarKeyDown(event: React.KeyboardEvent<HTMLDivElement>) {
+  const move = ROVING_KEYS[event.key];
+  if (!move) return;
+  const buttons = Array.from(event.currentTarget.querySelectorAll<HTMLButtonElement>(":scope > button"));
+  const index = buttons.findIndex((button) => button === document.activeElement);
+  if (index < 0) return;
+  event.preventDefault();
+  buttons[move(index, buttons.length)]?.focus();
 }
 
 export function MessageActions({
   isOwn,
   isPinned,
   isSaved,
-  messageContent,
-  showReactionPicker,
-  onReply,
+  hasContent,
+  canEdit,
+  canDelete,
+  canWrite,
+  canPin,
   onOpenThread,
+  onQuoteReply,
   onSave,
   onUnsave,
-  onPinToggle,
-  onToggleReactionPicker,
+  onPin,
+  onUnpin,
+  onReact,
   onCopy,
   onCopyLink,
   onForward,
@@ -34,19 +72,23 @@ export function MessageActions({
   onSetDueDate,
   onStartEdit,
   onDelete,
-  onQuickReact,
+  deleteTitle,
 }: {
   isOwn: boolean;
   isPinned?: boolean;
   isSaved?: boolean;
-  messageContent: string | null;
-  showReactionPicker: boolean;
-  onReply: () => void;
+  hasContent: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
+  canWrite: boolean;
+  canPin: boolean;
   onOpenThread: () => void;
+  onQuoteReply: () => void;
   onSave?: () => void;
   onUnsave?: () => void;
-  onPinToggle: () => void;
-  onToggleReactionPicker: () => void;
+  onPin: () => void;
+  onUnpin: () => void;
+  onReact: (emoji: string) => void;
   onCopy: () => void;
   onCopyLink: () => void;
   onForward?: () => void;
@@ -58,31 +100,184 @@ export function MessageActions({
   onSetDueDate: () => void;
   onStartEdit: () => void;
   onDelete: () => void;
-  onQuickReact: (emoji: string) => void;
+  deleteTitle: string;
 }) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reactionsOpen, setReactionsOpen] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [confirmUnpinOpen, setConfirmUnpinOpen] = useState(false);
+  const keepVisible = menuOpen || reactionsOpen || confirmDeleteOpen || confirmUnpinOpen;
+  const hasEntityActions = canConvertToTask || canAssignTicket || canSetDueDate;
+  const saveHandler = isSaved ? onUnsave : onSave;
+
+  function quickReactHandler(emoji: string): () => void {
+    return function handleQuickReact(): void {
+      onReact(emoji);
+      setReactionsOpen(false);
+    };
+  }
+
+  function handleRequestDelete() {
+    setConfirmDeleteOpen(true);
+  }
+
+  function handleRequestUnpin() {
+    setConfirmUnpinOpen(true);
+  }
+
   return (
-    // `focus-within` beside `group-hover` is CHAT-S01. The row was reachable only by
-    // putting the pointer on it, so these controls had no keyboard route at all
-    // (FE-120) and anything floating over that corner of the viewport — the in-app
-    // feedback launcher at 1280x720, a cookie bar, a toast — took Reply, Edit and React
-    // with it. Tabbing to a control now reveals the group it is in.
-    <div className={cn("absolute -top-3 opacity-0 transition-all z-50 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto", isOwn ? "right-0" : "left-0")}>
-      <div className="relative flex items-center bg-background border border-border/60 rounded-lg shadow-md overflow-visible pointer-events-auto">
-        <IconButton onClick={onReply} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Reply" aria-label="Reply"><ReplyIcon size={14} /></IconButton>
-        <button onClick={onOpenThread} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Open thread" aria-label="Open thread"><MessageSquare className="h-3.5 w-3.5" /></button>
-        {onSave && <IconButton onClick={isSaved ? onUnsave : onSave} className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isSaved ? "text-status-warning-ink" : "text-muted-foreground")} title={isSaved ? "Unsave" : "Save message"} aria-label={isSaved ? "Unsave message" : "Save message"}>{isSaved ? <BookmarkCheckIcon size={14} className="fill-amber-500" /> : <BookmarkPlusIcon size={14} />}</IconButton>}
-        <button onClick={onPinToggle} className={cn("p-1.5 hover:bg-muted/50 hover:text-foreground", isPinned ? "text-status-warning-ink" : "text-muted-foreground")} title={isPinned ? "Unpin" : "Pin"} aria-label={isPinned ? "Unpin message" : "Pin message"}><Pin className={cn("h-3.5 w-3.5", isPinned && "fill-amber-500")} /></button>
-        <button onClick={onToggleReactionPicker} className={cn("p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground", showReactionPicker && "bg-muted/50 text-foreground")} title="React" aria-label="Add reaction"><Smile className="h-3.5 w-3.5" /></button>
-        {messageContent && <IconButton onClick={onCopy} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Copy" aria-label="Copy"><CopyIcon size={14} /></IconButton>}
-        <button onClick={onCopyLink} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Copy link" aria-label="Copy message link"><Link className="h-3.5 w-3.5" /></button>
-        {onForward && <button onClick={onForward} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Forward" aria-label="Forward message"><Forward className="h-3.5 w-3.5" /></button>}
-        {canConvertToTask && <button onClick={onConvertToTask} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Convert to task" aria-label="Convert to task"><ListPlus className="h-3.5 w-3.5" /></button>}
-        {canAssignTicket && <IconButton onClick={onAssignTicket} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Assign ticket" aria-label="Assign ticket"><UserPlusIcon size={14} /></IconButton>}
-        {canSetDueDate && <button onClick={onSetDueDate} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Set due date" aria-label="Set due date"><CalendarClock className="h-3.5 w-3.5" /></button>}
-        {isOwn && <button onClick={onStartEdit} className="p-1.5 hover:bg-muted/50 text-muted-foreground hover:text-foreground" title="Edit" aria-label="Edit"><Pencil className="h-3.5 w-3.5" /></button>}
-        {isOwn && <div className="relative group/delete"><IconButton className="p-1.5 hover:bg-status-danger-surface text-muted-foreground hover:text-status-danger-ink" title="Delete" aria-label="Delete"><Trash2Icon size={14} /></IconButton><div className="absolute right-0 top-full mt-1 hidden group-hover/delete:flex flex-col bg-background border border-border rounded-lg shadow-lg overflow-hidden z-50 min-w-[160px]"><button type="button" onClick={onDelete} className="px-3 py-2 text-dense text-left hover:bg-status-danger-surface text-status-danger-ink font-medium whitespace-nowrap">Delete for Everyone</button></div></div>}
-        {showReactionPicker && <div className={cn("absolute top-full mt-1 z-50 bg-background border border-border/60 rounded-xl shadow-lg p-1.5 flex gap-1", isOwn ? "right-0" : "left-0")}>{QUICK_REACTIONS.map((emoji) => <button key={emoji} onClick={() => onQuickReact(emoji)} className="w-7 flex items-center justify-center rounded-lg hover:bg-muted/60 text-base transition-colors" aria-label={`React with ${emoji}`}>{emoji}</button>)}</div>}
+    <div
+      className={cn(
+        "absolute -top-3 z-50 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto [@media(hover:none)]:static [@media(hover:none)]:mt-1 [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto",
+        isOwn ? "right-0" : "left-0",
+        keepVisible && "opacity-100 pointer-events-auto",
+      )}
+    >
+      <div
+        role="toolbar"
+        aria-label="Message actions"
+        onKeyDown={handleToolbarKeyDown}
+        className="flex items-center gap-0.5 rounded-lg border border-border/60 bg-background p-0.5 shadow-md"
+      >
+        <AnimatedIconButton
+          type="button"
+          icon={ReplyIcon}
+          iconSize={14}
+          variant="ghost"
+          className={ACTION_BUTTON_CLASS}
+          onClick={onOpenThread}
+          aria-label="Reply in thread"
+        />
+        <Popover open={reactionsOpen} onOpenChange={setReactionsOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="ghost"
+              className={cn(ACTION_BUTTON_CLASS, reactionsOpen && "bg-muted text-foreground")}
+              tabIndex={-1}
+              aria-label="Add reaction"
+            >
+              <SmilePlus className="size-3.5" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent align={isOwn ? "end" : "start"} className="flex w-auto gap-1 p-1.5">
+            {QUICK_REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                onClick={quickReactHandler(emoji)}
+                className="flex size-9 items-center justify-center rounded-lg text-base transition-colors hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`React with ${emoji}`}
+              >
+                {emoji}
+              </button>
+            ))}
+          </PopoverContent>
+        </Popover>
+        <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
+          <DropdownMenuTrigger asChild>
+            <AnimatedIconButton
+              type="button"
+              icon={EllipsisIcon}
+              iconSize={14}
+              variant="ghost"
+              className={cn(ACTION_BUTTON_CLASS, menuOpen && "bg-muted text-foreground")}
+              tabIndex={-1}
+              aria-label="More message actions"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align={isOwn ? "end" : "start"} className="w-52">
+            {saveHandler ? (
+              <DropdownMenuItem onSelect={saveHandler}>
+                {isSaved ? <BookmarkCheckIcon size={16} /> : <BookmarkPlusIcon size={16} />}
+                {isSaved ? "Remove from saved" : "Save message"}
+              </DropdownMenuItem>
+            ) : null}
+            {canPin ? (
+              <DropdownMenuItem onSelect={isPinned ? handleRequestUnpin : onPin}>
+                <Pin />
+                {isPinned ? "Unpin message" : "Pin message"}
+              </DropdownMenuItem>
+            ) : null}
+            {hasContent ? (
+              <DropdownMenuItem onSelect={onCopy}>
+                <CopyIcon size={16} />
+                Copy text
+              </DropdownMenuItem>
+            ) : null}
+            <DropdownMenuItem onSelect={onCopyLink}>
+              <Link />
+              Copy link
+            </DropdownMenuItem>
+            {canWrite && onForward ? (
+              <DropdownMenuItem onSelect={onForward}>
+                <Forward />
+                Forward
+              </DropdownMenuItem>
+            ) : null}
+            {canWrite ? (
+              <DropdownMenuItem onSelect={onQuoteReply}>
+                <Quote />
+                Quote reply
+              </DropdownMenuItem>
+            ) : null}
+            {hasEntityActions ? <DropdownMenuSeparator /> : null}
+            {canConvertToTask ? (
+              <DropdownMenuItem onSelect={onConvertToTask}>
+                <ListPlus />
+                Convert to task
+              </DropdownMenuItem>
+            ) : null}
+            {canAssignTicket ? (
+              <DropdownMenuItem onSelect={onAssignTicket}>
+                <UserPlusIcon size={16} />
+                Assign ticket
+              </DropdownMenuItem>
+            ) : null}
+            {canSetDueDate ? (
+              <DropdownMenuItem onSelect={onSetDueDate}>
+                <CalendarClock />
+                Set due date
+              </DropdownMenuItem>
+            ) : null}
+            {canEdit || canDelete ? <DropdownMenuSeparator /> : null}
+            {canEdit ? (
+              <DropdownMenuItem onSelect={onStartEdit}>
+                <Pencil />
+                Edit
+              </DropdownMenuItem>
+            ) : null}
+            {canDelete ? (
+              <DropdownMenuItem variant="destructive" onSelect={handleRequestDelete}>
+                <Trash2Icon size={16} />
+                Delete
+              </DropdownMenuItem>
+            ) : null}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+      {canPin && isPinned ? (
+        <ConfirmDialog
+          open={confirmUnpinOpen}
+          onOpenChange={setConfirmUnpinOpen}
+          title="Unpin this message?"
+          description="It is removed from the pinned list for everyone in the conversation."
+          confirmLabel="Unpin"
+          destructive
+          onConfirm={onUnpin}
+        />
+      ) : null}
+      {canDelete ? (
+        <ConfirmDialog
+          open={confirmDeleteOpen}
+          onOpenChange={setConfirmDeleteOpen}
+          title={deleteTitle}
+          description="It is removed for everyone in the conversation. This cannot be undone."
+          confirmLabel="Delete message"
+          destructive
+          onConfirm={onDelete}
+        />
+      ) : null}
     </div>
   );
 }

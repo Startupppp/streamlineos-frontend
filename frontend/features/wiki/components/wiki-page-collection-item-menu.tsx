@@ -1,9 +1,11 @@
 "use client";
 
 import { Fragment, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,9 +13,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { useDeleteKbPage, useDuplicateKbPage, useToggleFavoriteKbPage } from "@/hooks/api/kb";
+import { UserCombobox } from "@/components/ui/user-combobox";
+import {
+  useDeleteKbPage,
+  useDuplicateKbPage,
+  useToggleFavoriteKbPage,
+  useArchiveKbPage,
+  useUnarchiveKbPage,
+  useUpdateKbPage,
+} from "@/hooks/api/kb";
 import { useExportKbPage } from "@/hooks/api/kb/export-page";
+import { useCreateKbShortcut } from "@/hooks/api/kb/shortcuts";
 import { useCan } from "@/hooks/api/access";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -25,13 +44,19 @@ import {
   type KbPageActionSubject,
   toKbPageActionId,
 } from "@/features/wiki/lib/page-action-descriptors";
-import { KbMoreHorizontalIcon } from "@/features/wiki/lib/kb-icons";
+import { KbMoreHorizontalIcon, KbPencilIcon } from "@/features/wiki/lib/kb-icons";
+
+const PageGrantsSheet = dynamic(() => import("./page-grants-sheet"));
 
 interface CollectionItemMenuProps {
   page: KbPageCollectionItem;
+  resolveHref?: (id: number) => string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
-export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
+export function CollectionItemMenu({ page, resolveHref, open, onOpenChange }: CollectionItemMenuProps) {
+  const href = resolveHref ?? pageHref;
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
   const canUpdate = useCan("kb:pages:update");
@@ -43,8 +68,15 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
   const duplicatePage = useDuplicateKbPage();
   const deletePage = useDeleteKbPage();
   const exportPage = useExportKbPage();
+  const archivePage = useArchiveKbPage();
+  const unarchivePage = useUnarchiveKbPage();
+  const updatePage = useUpdateKbPage();
+  const createShortcut = useCreateKbShortcut();
   const exportInFlightRef = useRef(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [grantsOpen, setGrantsOpen] = useState(false);
+  const [ownerTransferOpen, setOwnerTransferOpen] = useState(false);
+  const [pendingOwner, setPendingOwner] = useState("");
 
   const capabilities: KbPageActionCapabilities = {
     canCreate,
@@ -60,13 +92,14 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
     isFavorite: false,
     isLocked: false,
     hasCover: page.coverImage !== null,
+    isArchived: page.status === "archived",
   };
 
-  const actions = resolveKbPageActions(subject, capabilities);
+  const actions = resolveKbPageActions(subject, capabilities, { collection: true });
   const groups = groupKbPageActions(actions);
 
-  function handleDeleteOpenChange(open: boolean) {
-    setDeleteOpen(open);
+  function handleDeleteOpenChange(nextOpen: boolean) {
+    setDeleteOpen(nextOpen);
   }
 
   function handleDeleteConfirm() {
@@ -78,7 +111,7 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
   }
 
   function handleCopyLink() {
-    const url = new URL(pageHref(page.id), window.location.origin).toString();
+    const url = new URL(href(page.id), window.location.origin).toString();
     navigator.clipboard.writeText(url).then(
       () => toast.success("Link copied"),
       () => toast.error("Failed to copy"),
@@ -100,12 +133,67 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
     );
   }
 
+  function handleArchive() {
+    if (page.status === "archived") {
+      unarchivePage.mutate(
+        { pageId: page.id, expectedContentRevision: page.contentRevision },
+        {
+          onSuccess: () => toast.success("Page unarchived"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    } else {
+      archivePage.mutate(
+        { pageId: page.id, expectedContentRevision: page.contentRevision },
+        {
+          onSuccess: () => toast.success("Page archived"),
+          onError: (err) => toast.error(getErrorMessage(err)),
+        },
+      );
+    }
+  }
+
+  function handleOwnerTransferOpen() {
+    setPendingOwner(page.ownerUserId ?? "");
+    setOwnerTransferOpen(true);
+  }
+
+  function handleOwnerTransferChange(value: string) {
+    setPendingOwner(value);
+  }
+
+  function handleOwnerTransferSave() {
+    updatePage.mutate(
+      { pageId: page.id, ownerUserId: pendingOwner || null, expectedContentRevision: page.contentRevision },
+      {
+        onSuccess: () => {
+          toast.success("Ownership transferred");
+          setOwnerTransferOpen(false);
+        },
+        onError: (err) => toast.error(getErrorMessage(err)),
+      },
+    );
+  }
+
+  function handleOwnerTransferDialogChange(nextOpen: boolean) {
+    setOwnerTransferOpen(nextOpen);
+  }
+
   function handleSelect(event: Event) {
     const target = event.currentTarget;
     if (!(target instanceof HTMLElement)) return;
     const actionId = toKbPageActionId(target.dataset.actionId);
     if (!actionId) return;
-    if (actionId === "favorite") {
+    if (actionId === "addShortcut") {
+      createShortcut.mutate(page.id, {
+        onSuccess: () => toast.success("Added to My files"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+      });
+    } else if (actionId === "share") {
+      setGrantsOpen(true);
+    } else if (actionId === "archive") {
+      handleArchive();
+    } else if (actionId === "favorite") {
       toggleFavorite.mutate(
         { pageId: page.id, isFavorite: false },
         { onError: (err) => toast.error(getErrorMessage(err)) },
@@ -114,7 +202,7 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
       duplicatePage.mutate(page.id, {
         onSuccess: (dup) => {
           toast.success("Page duplicated");
-          router.push(pageHref(dup.id));
+          router.push(href(dup.id));
         },
         onError: (err) => toast.error(getErrorMessage(err)),
       });
@@ -127,7 +215,7 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
     } else if (actionId === "export") {
       handleExport();
     } else {
-      router.push(pageHref(page.id));
+      router.push(href(page.id));
     }
   }
 
@@ -143,7 +231,32 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
         onOpenChange={handleDeleteOpenChange}
         onConfirm={handleDeleteConfirm}
       />
-      <DropdownMenu>
+      <PageGrantsSheet
+        pageId={page.id}
+        open={grantsOpen}
+        onOpenChange={setGrantsOpen}
+      />
+      <Dialog open={ownerTransferOpen} onOpenChange={handleOwnerTransferDialogChange}>
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Transfer ownership</DialogTitle>
+            <DialogDescription>Choose a new owner for this file.</DialogDescription>
+          </DialogHeader>
+          <UserCombobox
+            id="kb-collection-transfer-owner"
+            value={pendingOwner}
+            onChange={handleOwnerTransferChange}
+            placeholder="Select new owner…"
+            allowUnassigned={false}
+          />
+          <DialogFooter>
+            <LoadingButton isPending={updatePage.isPending} onClick={handleOwnerTransferSave}>
+              Transfer
+            </LoadingButton>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <DropdownMenu open={open} onOpenChange={onOpenChange}>
         <DropdownMenuTrigger asChild>
           <Button type="button" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Page actions">
             <KbMoreHorizontalIcon className="h-4 w-4" />
@@ -169,6 +282,15 @@ export function CollectionItemMenu({ page }: CollectionItemMenuProps) {
               ))}
             </Fragment>
           ))}
+          {canManage && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleOwnerTransferOpen}>
+                <KbPencilIcon className="h-4 w-4" />
+                Transfer ownership
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

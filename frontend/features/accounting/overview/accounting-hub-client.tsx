@@ -116,28 +116,24 @@ export function AccountingHubClient() {
                 value={formatMinorMoneyCompact(cashFlow.data?.closingCashMinor ?? 0, currency)}
                 icon={Banknote}
                 tone="emerald"
-                href="/accounting/cash-flow"
               />
               <StatCard
                 label="What customers owe us"
                 value={formatMinorMoneyCompact(receivable.data?.totalOpenMinor ?? 0, currency)}
                 icon={Users}
                 tone="blue"
-                href="/accounting/reports/aging?side=ar"
               />
               <StatCard
                 label="What we owe"
                 value={formatMinorMoneyCompact(payable.data?.totalOpenMinor ?? 0, currency)}
                 icon={Receipt}
                 tone="amber"
-                href="/accounting/reports/aging?side=ap"
               />
               <StatCard
                 label="Profit so far this month"
                 value={formatMinorMoneyCompact(profitLoss.data?.netProfitMinor ?? 0, currency)}
                 icon={TrendingUp}
                 tone={(profitLoss.data?.netProfitMinor ?? 0) >= 0 ? "emerald" : "red"}
-                href="/accounting/profit-loss"
               />
             </StatCardGrid>
           )}

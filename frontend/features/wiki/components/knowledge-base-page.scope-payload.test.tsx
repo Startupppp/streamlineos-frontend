@@ -55,19 +55,26 @@ jest.mock("@/hooks/api/kb/chat-history", () => ({
 }));
 
 const READY_SOURCE = {
-  id: 1, kind: "file", title: "Engineering Spec", spaceId: 10, status: "ready",
-  chunkCount: 4, mimeType: null, fileSize: null, fileUrl: null, errorMessage: null,
+  id: 1, kind: "file", title: "Engineering Spec", spaceId: 10, status: "published",
   createdById: "user-1", createdAt: "2026-09-01T00:00:00.000Z",
 };
 
-jest.mock("@/hooks/api/kb/sources", () => ({
-  useKbSources: () => ({
+jest.mock("@/hooks/api/kb/page-collection", () => ({
+  ...jest.requireActual("@/hooks/api/kb/page-collection"),
+  useInfiniteKbPageCollection: () => ({
     data: { pages: [{ data: [READY_SOURCE], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
     isLoading: false,
+    isError: false,
+    error: null,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
   }),
-  useUploadKbSource: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteKbSource: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
-  useCreateKbSourceNote: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/kb/files", () => ({
+  useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/kb/spaces", () => ({
@@ -81,6 +88,7 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 }));
 
 jest.mock("@/hooks/api/kb/pages", () => ({
+  ...jest.requireActual("@/hooks/api/kb/pages"),
   useKbPagesSearch: () => ({
     data: { items: [{ id: 5, title: "Onboarding Guide" }] },
     isLoading: false,
@@ -107,11 +115,11 @@ async function sentBody(): Promise<Record<string, unknown>> {
 
 async function openScopeSheet(user: ReturnType<typeof userEvent.setup>) {
   await user.click(screen.getByRole("button", { name: /choose sources to search/i }));
-  await screen.findByRole("button", { name: /search all sources and pages|^Search \d+ item/i });
+  await screen.findByRole("button", { name: /search all sources and files|^Search \d+ item/i });
 }
 
 async function confirmAndAsk(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole("button", { name: /search all sources and pages|apply page scope|^Search \d+ (item|page)/i }));
+  await user.click(screen.getByRole("button", { name: /search all sources and files|apply file scope|^Search \d+ (item|file)/i }));
   await user.type(screen.getByPlaceholderText(/ask anything/i), "What is the policy?");
   await user.click(screen.getByRole("button", { name: "Send" }));
 }
@@ -153,7 +161,7 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     const user = renderPage();
     await openScopeSheet(user);
 
-    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }));
     await user.click(await screen.findByText("Grace Hopper"));
     await confirmAndAsk(user);
 
@@ -221,14 +229,14 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     expect(Object.keys(await sentBody())).not.toContain("verifiedOnly");
   });
 
-  it("sends sourceIds for a file or note ticked in the sources list", async () => {
+  it("sends pageIds for a file page ticked in the sources list", async () => {
     const user = renderPage();
     await openScopeSheet(user);
 
     await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
     await confirmAndAsk(user);
 
-    expect(await sentBody()).toHaveProperty("sourceIds", [1]);
+    expect(await sentBody()).toHaveProperty("pageIds", [1]);
   });
 
   it("sends pageIds for a wiki page ticked in the page picker", async () => {
@@ -241,13 +249,12 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     expect(await sentBody()).toHaveProperty("pageIds", [5]);
   });
 
-  it("omits sourceIds and pageIds when nothing is ticked", async () => {
+  it("omits pageIds when nothing is ticked", async () => {
     const user = renderPage();
     await openScopeSheet(user);
     await confirmAndAsk(user);
 
     const keys = Object.keys(await sentBody());
-    expect(keys).not.toContain("sourceIds");
     expect(keys).not.toContain("pageIds");
   });
 
@@ -259,10 +266,10 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     await user.click(screen.getByRole("button", { name: "Draft" }));
 
     expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Search 0 pages" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Search 0 files" })).toBeDisabled();
 
     await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
-    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Search 1 file" })).toBeEnabled();
   });
 
   it("carries all six dimensions together in one request, so no dimension overwrites another on the way to the body", async () => {
@@ -274,21 +281,22 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     await user.click(screen.getByRole("switch", { name: /verified pages and articles only/i }));
     await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
     await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
-    await user.click(screen.getByRole("combobox", { name: /restrict answer to pages owned by a member/i }));
+    await user.click(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }));
     await user.click(await screen.findByText("Ada Lovelace"));
     expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Search 1 page" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Search 1 file" })).toBeEnabled();
     await confirmAndAsk(user);
 
-    expect(await sentBody()).toMatchObject({
+    const body = await sentBody();
+    expect(body).toMatchObject({
       question: "What is the policy?",
       status: "published",
       spaceId: 10,
       verifiedOnly: true,
-      sourceIds: [1],
-      pageIds: [5],
       ownerMembershipId: 77,
     });
+    expect(body["pageIds"]).toEqual(expect.arrayContaining([1, 5]));
+    expect(Array.isArray(body["pageIds"]) && (body["pageIds"] as unknown[]).length).toBe(2);
   });
 });
 

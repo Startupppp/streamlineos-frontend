@@ -3,7 +3,7 @@
 import { Archive, ArrowLeft } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 import { ChannelSectionList } from "./channel-section-list";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 

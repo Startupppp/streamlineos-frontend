@@ -11,7 +11,7 @@ jest.mock("next-auth/react", () => ({
 }));
 
 jest.mock("@/hooks/api/access", () => ({
-  useCan: jest.fn(() => false),
+  useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => false),
 }));
 
@@ -24,19 +24,28 @@ jest.mock("@/hooks/api/cursor-page-param", () => ({
   NULL_CURSOR_YET: null,
 }));
 
-import { z } from "zod";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { reportError } from "@/lib/observability/error-reporter";
-import { fetchChannelPage } from "@/hooks/api/chat-core-read";
+import { usePublicChannels } from "@/hooks/api/chat-core-read";
+import { freshClient, wrapperFor } from "@/hooks/api/chat-cache-test-harness";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
 const mockGet = apiClient.get as jest.MockedFunction<typeof apiClient.get>;
 const mockReportError = reportError as jest.MockedFunction<typeof reportError>;
 
-const channelPageContract = z.object({
-  channels: z.array(z.unknown()),
-  nextCursor: z.string().nullable(),
-});
+async function loadPageAfter(cursor: string | undefined, page: { channels: readonly unknown[]; nextCursor: string | null }) {
+  if (cursor === undefined) mockGet.mockResolvedValueOnce(page);
+  else mockGet.mockResolvedValueOnce({ channels: [], nextCursor: cursor }).mockResolvedValueOnce(page);
+  const { result } = renderHook(() => usePublicChannels(true), { wrapper: wrapperFor(freshClient()) });
+  await waitFor(() => expect(result.current.isLoading).toBe(false));
+  if (cursor !== undefined) {
+    act(() => result.current.loadMore());
+    await waitFor(() => expect(mockGet).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(result.current.isFetchingNextPage).toBe(false));
+  }
+  return result.current;
+}
 
 const STUB_CHANNELS = [{ id: 1, name: "general", type: "PUBLIC" }] as const;
 
@@ -44,50 +53,44 @@ function isPrefixOf(prefix: readonly unknown[], key: readonly unknown[]): boolea
   return prefix.length <= key.length && prefix.every((part, i) => part === key[i]);
 }
 
-describe("fetchChannelPage — stale cursor guard", () => {
+describe("channel paging — stale cursor guard", () => {
   beforeEach(() => {
     mockGet.mockReset();
     mockReportError.mockReset();
   });
 
   it("passes the page through without modification when the server returns a different nextCursor", async () => {
-    mockGet.mockResolvedValue({ channels: STUB_CHANNELS, nextCursor: "cursor-b" });
-    const result = await fetchChannelPage<unknown>("/chat/channels", new AbortController().signal, channelPageContract, "cursor-a");
-    expect(result.nextCursor).toBe("cursor-b");
+    const result = await loadPageAfter("cursor-a", { channels: STUB_CHANNELS, nextCursor: "cursor-b" });
+    expect(result.hasMore).toBe(true);
     expect(mockReportError).not.toHaveBeenCalled();
   });
 
   it("caps nextCursor to null when the server echoes the requested cursor back, preventing an infinite pagination loop", async () => {
-    mockGet.mockResolvedValue({ channels: STUB_CHANNELS, nextCursor: "cursor-a" });
-    const result = await fetchChannelPage<unknown>("/chat/channels", new AbortController().signal, channelPageContract, "cursor-a");
-    expect(result.nextCursor).toBeNull();
+    const result = await loadPageAfter("cursor-a", { channels: STUB_CHANNELS, nextCursor: "cursor-a" });
+    expect(result.hasMore).toBe(false);
   });
 
   it("calls reportError when the cursor repeats so the anomaly is visible in observability", async () => {
-    mockGet.mockResolvedValue({ channels: STUB_CHANNELS, nextCursor: "cursor-x" });
-    await fetchChannelPage<unknown>("/chat/channels", new AbortController().signal, channelPageContract, "cursor-x");
+    await loadPageAfter("cursor-x", { channels: STUB_CHANNELS, nextCursor: "cursor-x" });
     expect(mockReportError).toHaveBeenCalledTimes(1);
     const [err] = mockReportError.mock.calls[0] as [unknown, ...unknown[]];
     expect(err).toBeInstanceOf(Error);
   });
 
   it("preserves the channels array when capping the cursor so no messages are silently dropped", async () => {
-    mockGet.mockResolvedValue({ channels: STUB_CHANNELS, nextCursor: "cursor-a" });
-    const result = await fetchChannelPage<unknown>("/chat/channels", new AbortController().signal, channelPageContract, "cursor-a");
+    const result = await loadPageAfter("cursor-a", { channels: STUB_CHANNELS, nextCursor: "cursor-a" });
     expect(result.channels).toEqual(STUB_CHANNELS);
   });
 
   it("does not trigger the guard when nextCursor is null because null marks the last page not a repeated cursor", async () => {
-    mockGet.mockResolvedValue({ channels: STUB_CHANNELS, nextCursor: null });
-    const result = await fetchChannelPage<unknown>("/chat/channels", new AbortController().signal, channelPageContract, "cursor-a");
-    expect(result.nextCursor).toBeNull();
+    const result = await loadPageAfter("cursor-a", { channels: STUB_CHANNELS, nextCursor: null });
+    expect(result.hasMore).toBe(false);
     expect(mockReportError).not.toHaveBeenCalled();
   });
 
   it("handles the first page correctly when cursor is undefined and does not falsely trigger the guard", async () => {
-    mockGet.mockResolvedValue({ channels: STUB_CHANNELS, nextCursor: "cursor-1" });
-    const result = await fetchChannelPage<unknown>("/chat/channels", new AbortController().signal, channelPageContract, undefined);
-    expect(result.nextCursor).toBe("cursor-1");
+    const result = await loadPageAfter(undefined, { channels: STUB_CHANNELS, nextCursor: "cursor-1" });
+    expect(result.hasMore).toBe(true);
     expect(mockReportError).not.toHaveBeenCalled();
   });
 });

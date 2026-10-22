@@ -169,6 +169,12 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     reason: "Content Health reports unowned, stale and overexposed pages across the whole org, so it is an administrative surface. Key matches kb-content-health.controller.ts.",
   },
   {
+    prefix: "/knowledge/wiki/manage/sharing",
+    product: "administration",
+    permission: "kb:settings:manage",
+    reason: "External sharing settings and the org-wide sharing inventory are tenant policy. Key matches kb-sharing-policy.controller.ts and kb-sharing-inventory.controller.ts.",
+  },
+  {
     prefix: "/directory",
     descendantsOnly: true,
     permission: "directory:people:view",

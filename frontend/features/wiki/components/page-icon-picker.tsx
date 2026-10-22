@@ -75,7 +75,7 @@ export default function PageIconPicker({
         "flex h-9 min-w-9 items-center justify-center rounded-md border border-input bg-background px-2 text-xl leading-none transition-colors hover:bg-accent/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
         !icon && "text-muted-foreground",
       )}
-      aria-label={icon ? "Change page icon" : "Pick page icon"}
+      aria-label={icon ? "Change file icon" : "Pick file icon"}
     >
       {icon ?? "📄"}
     </button>
@@ -96,7 +96,7 @@ export default function PageIconPicker({
         "leading-none shrink-0 transition-opacity hover:opacity-80",
         isHero ? "text-5xl" : "text-3xl",
       )}
-      aria-label="Change page icon"
+      aria-label="Change file icon"
     >
       {icon}
     </button>

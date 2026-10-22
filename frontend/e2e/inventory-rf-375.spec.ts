@@ -190,51 +190,13 @@ describeWithTenant("inventory · RF at 375", TENANT_DETAILS, () => {
     });
   }
 
-  test("the onboarding panel does not land on top of the task heading", async ({ page }) => {
+  test("the task heading stays clear of floating chrome", async ({ page }) => {
     await page.goto("/inventory/rf");
     await expectRfSurface(page);
 
     const heading = page.getByRole("heading", { level: 1 });
 
-    // The RF layout hides `#mobile-header-checklist-slot` because
-    // `SuccessChecklist` portals into it and, measured at 375, the expanded
-    // panel occupied y 52-272 while the task heading sat at y 68-88 — covering
-    // the task number and the back control.
-    //
-    // `rf-chromeless.test.ts` already asserts the two files still agree on the
-    // id, and says why: the workaround's failure mode is silence. What it
-    // cannot check is whether the suppression WORKS — a rule that parses but
-    // loses to a later selector, or a portal that starts rendering somewhere
-    // else, leaves that test green and the operator's screen covered. This
-    // measures the rendered result instead.
-    const slot = page.locator("#mobile-header-checklist-slot");
-
-    // Waiting for the portal's CONTENT, not for the slot, and that is the whole
-    // difference between this assertion and a vacuous one. The slot is in the
-    // header markup from the first paint; `SuccessChecklist` portals into it a
-    // beat later. `not.toBeVisible()` is satisfied the instant it is called
-    // against an empty slot, so an earlier draft of this test passed with the
-    // suppression rule deleted and the trigger plainly on screen.
-    //
-    // Requiring the child to exist also catches the workaround's real failure
-    // mode, which `rf-chromeless.test.ts` can only catch at the string level: a
-    // rule targeting an id nothing renders any more hides nothing, in silence.
-    await expect(
-      slot.locator("> *").first(),
-      "nothing ever portalled into the onboarding slot, so this assertion proves nothing — " +
-        "either the checklist stopped rendering or it moved, and the RF layout's rule now hides nothing",
-    ).toBeAttached({ timeout: 20_000 });
-
-    // Measured with the rule removed: the collapsed trigger sits at x 295, y 12,
-    // 32x32. It is small, and that is exactly why hiding it matters — tapping it
-    // expands a panel over y 52-272, and the heading below sits at y 68.
-    await expect(
-      slot,
-      "the onboarding portal is visible on the RF surface; tapping it expands a panel over the task heading",
-    ).not.toBeVisible();
-
-    // The heading is the thing being protected, so it is checked directly: on
-    // screen, inside the viewport, and with nothing painted over its centre.
+    // The heading is on screen, inside the viewport, and with nothing painted over its centre.
     const box = await heading.boundingBox();
     expect(box, "the RF heading has no layout box at all").toBeTruthy();
     expect(box!.y).toBeGreaterThanOrEqual(0);

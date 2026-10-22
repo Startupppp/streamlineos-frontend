@@ -542,6 +542,7 @@ export type PermissionKey =
   | "inventory:warehouses:scope-all"
   | "inventory:webhooks:manage"
   | "kb:ai:generate"
+  | "kb:analytics:manage"
   | "kb:analytics:view"
   | "kb:articles:create"
   | "kb:articles:delete"
@@ -1328,6 +1329,7 @@ export const PERMISSION_METADATA: Readonly<Record<PermissionKey, PermissionMetad
   "inventory:warehouses:scope-all": { resource: "inventory:warehouses", action: "scope-all", description: "See and transact in every warehouse, bypassing warehouse assignment" },
   "inventory:webhooks:manage": { resource: "inventory:webhooks", action: "manage", description: "Manage inventory webhooks" },
   "kb:ai:generate": { resource: "kb:ai", action: "generate", description: "Generate AI answers from the knowledge base" },
+  "kb:analytics:manage": { resource: "kb:analytics", action: "manage", description: "Manage knowledge base analytics gap actions (assign, dismiss, create fix)" },
   "kb:analytics:view": { resource: "kb:analytics", action: "view", description: "View knowledge base analytics" },
   "kb:articles:create": { resource: "kb:articles", action: "create", description: "Create knowledge base articles" },
   "kb:articles:delete": { resource: "kb:articles", action: "delete", description: "Delete knowledge base articles" },

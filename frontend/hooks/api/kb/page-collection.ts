@@ -1,11 +1,12 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { KbPageCollectionResponse } from "./kb-page-collection-schema";
 
 export type { KbPageCollectionItem } from "./kb-page-collection-schema";
@@ -21,6 +22,7 @@ export const KB_PAGE_COLLECTION_QUERY_FIELDS = [
   "status",
   "verified",
   "deleted",
+  "kind",
   "sort",
   "cursor",
   "limit",
@@ -37,6 +39,7 @@ export interface KbPageCollectionParams {
   status?: string;
   verified?: boolean;
   deleted?: boolean;
+  kind?: "document" | "spreadsheet" | "file";
   sort?: "updated_desc" | "created_desc" | "title_asc";
   cursor?: string;
   limit?: number;
@@ -63,8 +66,9 @@ export function buildKbPageCollectionQueryParams(
   if (params.status) queryParams.status = params.status;
   if (params.verified !== undefined) queryParams.verified = params.verified;
   if (params.deleted !== undefined) queryParams.deleted = params.deleted;
+  if (params.kind !== undefined) queryParams.kind = params.kind;
   if (params.sort) queryParams.sort = params.sort;
-  if (params.cursor) queryParams.cursor = params.cursor;
+  if (params.cursor !== undefined) queryParams.cursor = params.cursor;
   if (params.limit !== undefined) queryParams.limit = params.limit;
   if (params.facets !== undefined) queryParams.facets = params.facets;
   return queryParams;
@@ -89,6 +93,33 @@ export function useKbPageCollection(
         kbPageCollectionContract,
       ),
     staleTime: 30_000,
+    enabled: canView && (options?.enabled ?? true),
+  });
+}
+
+export function useInfiniteKbPageCollection(
+  params: KbPageCollectionParams,
+  options?: { enabled?: boolean },
+) {
+  const canView = useCan("kb:pages:view");
+
+  return useInfiniteQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(params),
+    queryFn: ({ pageParam, signal }) => {
+      const queryParams = buildKbPageCollectionQueryParams(
+        pageParam !== NO_CURSOR_YET ? { ...params, cursor: pageParam } : params,
+      );
+      return apiClient.get<KbPageCollectionResponse>(
+        "/kb/pages",
+        queryParams,
+        signal,
+        kbPageCollectionContract,
+      );
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
+    staleTime: 15_000,
     enabled: canView && (options?.enabled ?? true),
   });
 }

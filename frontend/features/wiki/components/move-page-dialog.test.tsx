@@ -30,9 +30,9 @@ beforeEach(() => {
 it("shows an empty result only after a successful parent-page search", () => {
   const view = render(<MovePageDialog pageId={1} currentParentId={null} open onOpenChange={jest.fn()} />);
 
-  fireEvent.change(view.getByPlaceholderText("Search pages…"), { target: { value: "missing" } });
+  fireEvent.change(view.getByPlaceholderText("Search files…"), { target: { value: "missing" } });
 
-  expect(view.getByText("No pages found")).toBeInTheDocument();
+  expect(view.getByText("No files found")).toBeInTheDocument();
   expect(view.queryByRole("alert")).not.toBeInTheDocument();
 });
 
@@ -47,9 +47,9 @@ it("shows a failed search with its request reference and retry instead of an emp
   });
   const view = render(<MovePageDialog pageId={1} currentParentId={null} open onOpenChange={jest.fn()} />);
 
-  fireEvent.change(view.getByPlaceholderText("Search pages…"), { target: { value: "parent" } });
+  fireEvent.change(view.getByPlaceholderText("Search files…"), { target: { value: "parent" } });
 
-  expect(view.queryByText("No pages found")).not.toBeInTheDocument();
+  expect(view.queryByText("No files found")).not.toBeInTheDocument();
   expect(view.queryByText("Former parent")).not.toBeInTheDocument();
   expect(view.getByRole("alert")).toHaveTextContent("Access denied");
   expect(view.getByText("req-move-search")).toBeInTheDocument();
@@ -80,7 +80,7 @@ it("keeps the page's space when moved to the workspace root, and sends no space 
   fireEvent.click(view.getByRole("button", { name: "Move here" }));
   expect(mockMove).toHaveBeenLastCalledWith({ pageId: 1, parentPageId: null, index: 0 }, expect.anything());
 
-  fireEvent.change(view.getByPlaceholderText("Search pages…"), { target: { value: "parent" } });
+  fireEvent.change(view.getByPlaceholderText("Search files…"), { target: { value: "parent" } });
   fireEvent.click(view.getByRole("button", { name: /Top of Legal/ }));
   fireEvent.click(view.getByRole("button", { name: /Parent page/ }));
   fireEvent.click(view.getByRole("button", { name: "Move here" }));

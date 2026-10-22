@@ -16,6 +16,10 @@ jest.mock("@/hooks/api/kb", () => ({
   useKbPageBacklinks: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/kb/activity", () => ({
+  useKbPageActivity: jest.fn(),
+}));
+
 jest.mock("@/hooks/api/kb/record-links", () => ({
   useKbPageRecordLinks: jest.fn(),
 }));
@@ -25,10 +29,12 @@ jest.mock("@/hooks/api/organization", () => ({
 }));
 
 import { useKbPageBacklinks } from "@/hooks/api/kb";
+import { useKbPageActivity } from "@/hooks/api/kb/activity";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 
 const mockUseKbPageBacklinks = useKbPageBacklinks as jest.Mock;
+const mockUseKbPageActivity = useKbPageActivity as jest.Mock;
 const mockUseKbPageRecordLinks = useKbPageRecordLinks as jest.Mock;
 const mockUseOrgMembersByIds = useOrgMembersByIds as jest.Mock;
 
@@ -36,6 +42,7 @@ beforeEach(() => {
   mockUseKbPageBacklinks.mockReturnValue({ data: [], isLoading: false, isError: false, error: null, refetch: jest.fn() });
   mockUseKbPageRecordLinks.mockReturnValue({ data: [] });
   mockUseOrgMembersByIds.mockReturnValue({ data: undefined });
+  mockUseKbPageActivity.mockReturnValue({ data: [], isLoading: false, isError: false });
 });
 
 const basePage = {
@@ -151,7 +158,7 @@ describe("PageRightPanel — backlinks section", () => {
     await user.click(screen.getByRole("button", { name: "Open details panel" }));
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
   });
 
   it("shows a first-read failure with retry rather than no backlinks", async () => {
@@ -162,7 +169,7 @@ describe("PageRightPanel — backlinks section", () => {
     await user.click(screen.getByRole("button", { name: "Open details panel" }));
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
     expect(within(dialog).getByText("kb-backlinks-1")).toBeInTheDocument();
     await user.click(within(dialog).getByRole("button", { name: "Try again" }));
     expect(refetch).toHaveBeenCalledTimes(1);
@@ -189,7 +196,7 @@ describe("PageRightPanel — backlinks section", () => {
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).queryByRole("button", { name: /Private runbook/ })).not.toBeInTheDocument();
-    expect(within(dialog).queryByText("No pages link here.")).not.toBeInTheDocument();
+    expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
   });
 
   it("shows backlinks section heading inside the sheet", async () => {
@@ -209,7 +216,7 @@ describe("PageRightPanel — backlinks section", () => {
     await user.click(screen.getByRole("button", { name: "Open details panel" }));
 
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("No pages link here.")).toBeInTheDocument();
+    expect(within(dialog).getByText("No files link here.")).toBeInTheDocument();
   });
 });
 
@@ -385,5 +392,53 @@ describe("PageRightPanel — owner fact visible so a future deletion fails inste
     const dialog = await openDetailsDialog();
     expect(within(dialog).getByText("Owner")).toBeInTheDocument();
     expect(within(dialog).getByText("Unassigned")).toBeInTheDocument();
+  });
+});
+
+describe("PageRightPanel — Activity section", () => {
+  function activityEntry(overrides: Record<string, unknown> = {}) {
+    return { id: 1, action: "kb.page.updated", at: "2026-09-05T10:00:00Z", actorKind: "member", actor: { membershipId: 1, name: "Alice" }, metadata: null, ...overrides };
+  }
+
+  it("shows the Activity heading inside the panel", async () => {
+    renderPanel();
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText("Activity")).toBeInTheDocument();
+  });
+
+  it("shows empty activity message when the page has no recorded activity", async () => {
+    renderPanel();
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText("No recent activity.")).toBeInTheDocument();
+  });
+
+  it("names the audited action in words with the actor, not the raw audit key", async () => {
+    mockUseKbPageActivity.mockReturnValue({ data: [activityEntry({ action: "kb.page.version_restored" })], isLoading: false, isError: false });
+
+    renderPanel();
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText(/Version restored · Alice/)).toBeInTheDocument();
+    expect(within(dialog).queryByText(/kb\.page/)).not.toBeInTheDocument();
+  });
+
+  it("labels a sharing change as an access change", async () => {
+    mockUseKbPageActivity.mockReturnValue({ data: [activityEntry({ action: "kb.page_grant.revoked", actor: null })], isLoading: false, isError: false });
+
+    renderPanel();
+    const dialog = await openDetailsDialog();
+    expect(within(dialog).getByText("Access revoked")).toBeInTheDocument();
+  });
+
+  it("keeps the server's newest-first order", async () => {
+    mockUseKbPageActivity.mockReturnValue({
+      data: [activityEntry({ id: 2, action: "kb.page.published" }), activityEntry({ id: 1, action: "kb.page.created" })],
+      isLoading: false,
+      isError: false,
+    });
+
+    renderPanel();
+    const dialog = await openDetailsDialog();
+    const items = within(dialog).getAllByRole("listitem").filter((el) => el.closest("ul") !== null);
+    expect(items[0]?.textContent ?? "").toContain("Published");
   });
 });

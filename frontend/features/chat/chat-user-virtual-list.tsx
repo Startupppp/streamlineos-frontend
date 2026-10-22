@@ -31,7 +31,7 @@ function ChatUserRow({
   );
 }
 
-export interface ChatUserVirtualListProps {
+interface ChatUserVirtualListProps {
   users: OrgUser[];
   rowHeight: number;
   listHeight: number;

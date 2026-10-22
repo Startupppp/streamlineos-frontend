@@ -5,7 +5,7 @@ import type {
   messageCallback,
 } from "ably";
 
-export type AblyMessageListener = messageCallback<InboundMessage>;
+type AblyMessageListener = messageCallback<InboundMessage>;
 
 function isCapabilityError(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
@@ -13,13 +13,6 @@ function isCapabilityError(error: unknown): boolean {
   return error.statusCode === 401 || error.statusCode === 403;
 }
 
-/**
- * Events only the SERVER may author. A chat token grants `publish` on the caller's
- * chat and huddle channels (the browser publishes `typing` and `huddle:chat`), so any
- * member could otherwise publish a forged `message`, `reaction:updated` or huddle
- * frame. The backend publishes over REST with the API key and no `clientId`; Ably
- * stamps every browser publish with the token's `clientId`, which cannot be forged.
- */
 const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
   "message",
   "message:updated",
@@ -30,7 +23,6 @@ const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
   "huddle:user_left",
   "huddle:ended",
   "huddle:state_updated",
-  "huddle:kicked",
   "notification:message",
   "notification:mention",
 ]);
@@ -40,7 +32,11 @@ export function isForgedServerFrame(
   event: string,
   clientId: string | null | undefined,
 ): boolean {
-  return SERVER_AUTHORED_EVENTS.has(event) && clientId !== undefined && clientId !== null;
+  return (
+    SERVER_AUTHORED_EVENTS.has(event) &&
+    clientId !== undefined &&
+    clientId !== null
+  );
 }
 
 export async function safeSubscribe(

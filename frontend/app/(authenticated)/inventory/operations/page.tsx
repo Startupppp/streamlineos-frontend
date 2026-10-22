@@ -208,7 +208,6 @@ export default function OperationsHubPage() {
                   label="POs to Receive"
                   value={poToReceive.data?.total ?? 0}
                   tone="amber"
-                  href="/inventory/operations/receipts"
                 />
               ) : null}
               {canReadSo ? (
@@ -216,7 +215,6 @@ export default function OperationsHubPage() {
                   label="SOs to Fulfil"
                   value={soToFulfilTotal}
                   tone="blue"
-                  href="/inventory/operations/picking"
                 />
               ) : null}
               {canReadSo ? (
@@ -224,7 +222,6 @@ export default function OperationsHubPage() {
                   label="Orders to Ship"
                   value={soToShipTotal}
                   tone="emerald"
-                  href="/inventory/operations/shipping"
                 />
               ) : null}
               {showReturnsTile ? (
@@ -232,7 +229,6 @@ export default function OperationsHubPage() {
                   label="Open Returns"
                   value={returnsTotal}
                   tone="red"
-                  href="/inventory/operations/returns"
                 />
               ) : null}
             </StatCardGrid>

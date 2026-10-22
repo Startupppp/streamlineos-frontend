@@ -1,7 +1,6 @@
 import type { InfiniteData } from "@tanstack/react-query";
 import type { ChannelMember, Message, MessagesPage } from "@/types/chat";
 import { orgScopedStorageKey, UNSCOPED } from "@/lib/org-scoped-storage";
-import { reconnectShouldResync } from "@/hooks/api/chat-realtime";
 import {
   flattenMessagePages,
   mergeInboundMessage,
@@ -23,6 +22,7 @@ function makeMsg(id: number, createdAt: string): Message {
     messageType: "text",
     metadata: null,
     actionStatus: null,
+    reactions: {},
     createdAt,
     updatedAt: createdAt,
     sender: { id: "u1", name: "Alice", image: null },
@@ -200,25 +200,6 @@ describe("ITEM C — read cursor tracking", () => {
         "u1",
       ),
     ).toBe(-1);
-  });
-});
-
-describe("ITEM C — reconnect behavior", () => {
-  it("a reconnect from disconnected resyncs the history", () => {
-    expect(reconnectShouldResync("disconnected")).toBe(true);
-  });
-
-  it("a reconnect from suspended also resyncs", () => {
-    expect(reconnectShouldResync("suspended")).toBe(true);
-  });
-
-  it("a connected-to-connected transition does not resync, so a refocus is not a refetch", () => {
-    expect(reconnectShouldResync("connected")).toBe(false);
-  });
-
-  it("the initialising and connecting states do not resync either", () => {
-    expect(reconnectShouldResync("initialized")).toBe(false);
-    expect(reconnectShouldResync("connecting")).toBe(false);
   });
 });
 

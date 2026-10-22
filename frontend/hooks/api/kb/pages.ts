@@ -16,6 +16,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useKbSpaces } from "./spaces";
 import { kbPageTreeLevelContract } from "./kb-page-tree-schema";
+import { invalidateKbPageChange } from "./page-invalidation";
 import type { KbSpaceListPage } from "./spaces";
 import type { KbPageTrashPurgeImpact } from "./kb-pages-schema";
 import type {
@@ -117,6 +118,7 @@ const kbPagePermanentDeleteContract = lazyContract(() =>
 export function useKbProjectPagesTree(projectId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeByProject(projectId),
     queryFn: async ({ signal }) => {
       const page = await apiClient.get<KbPageTreeLevel>(
@@ -430,23 +432,27 @@ export function useCreateKbPage() {
   const qc = useQueryClient();
   return useAuthorizedMutation("kb:pages:create", {
     mutationKey: ["kb", "pages", "create"],
-    mutationFn: (input: CreateKbPageInput) =>
-      apiClient.post<KbPage>("/kb/pages", input, undefined, kbPageContract),
+    mutationFn: ({ kind, ...input }: CreateKbPageInput) =>
+      apiClient.post<KbPage>(
+        "/kb/pages",
+        kind === "spreadsheet" ? { ...input, kind } : input,
+        undefined,
+        kbPageContract,
+      ),
     onSuccess: (created, variables) => {
       qc.setQueryData<KbPageDetail>(
         knowledgeAndSurveysQueryKeys.kb.page(created.id),
-        { ...created, ancestors: [], isFavorite: false, canEdit: true },
+        {
+          ...created,
+          ancestors: [],
+          isFavorite: false,
+          canEdit: true,
+          can: { view: true, comment: true, edit: true, manage: true, restore: false },
+          access: { via: "creator", grantExpiresAt: null },
+        },
         { updatedAt: 0 },
       );
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages(),
-      });
+      invalidateKbPageChange(qc, "created", created.id);
       if (variables.projectId) {
         qc.invalidateQueries({
           queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTreeByProject(
@@ -494,18 +500,7 @@ export function useUpdateKbPage() {
         applyUpdatedKbPage(updated),
       );
       if (!touchesKbPageListings(variables)) return;
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
-      });
+      invalidateKbPageChange(qc, "updated-listing", variables.pageId);
     },
   });
 }
@@ -521,16 +516,8 @@ export function useDeleteKbPage() {
         undefined,
         kbPageSoftDeleteContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages(),
-      });
+    onSuccess: (_, pageId) => {
+      invalidateKbPageChange(qc, "trashed", pageId);
     },
   });
 }
@@ -546,16 +533,8 @@ export function useRestoreKbPage() {
         undefined,
         kbPageSuccessContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages(),
-      });
+    onSuccess: (_, pageId) => {
+      invalidateKbPageChange(qc, "restored", pageId);
     },
   });
 }
@@ -571,10 +550,8 @@ export function useHardDeleteKbPage() {
         undefined,
         kbPagePermanentDeleteContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(),
-      });
+    onSuccess: (_, pageId) => {
+      invalidateKbPageChange(qc, "purged", pageId);
     },
   });
 }
@@ -614,16 +591,8 @@ export function useDuplicateKbPage() {
         undefined,
         kbPageContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
-      });
+    onSuccess: (created) => {
+      invalidateKbPageChange(qc, "created", created.id);
     },
   });
 }
@@ -640,15 +609,7 @@ export function useMoveKbPage() {
         kbPageSuccessContract,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(),
-      });
+      invalidateKbPageChange(qc, "moved", variables.pageId);
     },
   });
 }
@@ -665,9 +626,7 @@ export function useLockKbPage() {
         kbPageContract,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
+      invalidateKbPageChange(qc, "locked", variables.pageId);
     },
   });
 }
@@ -719,12 +678,7 @@ export function useToggleFavoriteKbPage() {
       );
     },
     onSettled: (_, _err, { pageId }) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
-      });
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
-      });
+      invalidateKbPageChange(qc, "favorited", pageId);
     },
   });
 }
@@ -740,10 +694,8 @@ export function useRecordKbPageVisit() {
         undefined,
         kbPageSuccessContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
-      });
+    onSuccess: (_, pageId) => {
+      invalidateKbPageChange(qc, "visited", pageId);
     },
   });
 }
@@ -758,7 +710,7 @@ export function useSetKbPageVisibility() {
       expectedContentRevision,
     }: {
       pageId: number;
-      visibility: "private" | "org" | "public";
+      visibility: "private" | "org";
       expectedContentRevision: number;
     }) =>
       apiClient.patch<KbPage>(
@@ -772,6 +724,7 @@ export function useSetKbPageVisibility() {
         knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
         applyUpdatedKbPage(updated),
       );
+      invalidateKbPageChange(qc, "acl-changed", variables.pageId);
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
       });
@@ -865,9 +818,7 @@ export function useVerifyKbPage() {
         kbPageContract,
       ),
     onSuccess: (_, variables) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(variables.pageId),
-      });
+      invalidateKbPageChange(qc, "reviewed", variables.pageId);
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
       });
@@ -887,9 +838,7 @@ export function useMarkStaleKbPage() {
         kbPageContract,
       ),
     onSuccess: (_, pageId) => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
-      });
+      invalidateKbPageChange(qc, "reviewed", pageId);
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTree(),
       });

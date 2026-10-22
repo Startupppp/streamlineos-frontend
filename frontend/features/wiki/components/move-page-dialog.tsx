@@ -19,6 +19,7 @@ import { ErrorState } from "@/components/shared";
 import { useKbPagesSearch, useKbSpaces, useMoveKbPage } from "@/hooks/api/kb";
 import type { KbPageSearchResult, MoveKbPageInput } from "@/hooks/api/kb/page-types";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import {
   KbMoveRightIcon,
   KbFileTextIcon,
@@ -45,6 +46,7 @@ export default function MovePageDialog({
   const movePage = useMoveKbPage();
   const [target, setTarget] = useState<MoveTarget>({ parentPageId: currentParentId });
   const [searchQuery, setSearchQuery] = useState("");
+  const [accessChangeConfirmNeeded, setAccessChangeConfirmNeeded] = useState(false);
   const { data: spacePage } = useKbSpaces({ limit: SPACE_OPTION_LIMIT });
   const spaces = spacePage?.data ?? [];
 
@@ -55,36 +57,49 @@ export default function MovePageDialog({
     searchResults?.items.filter((r) => r.id !== pageId) ?? [];
 
   function handleConfirm() {
-    movePage.mutate(
-      { pageId, ...target, index: 0 },
-      {
-        onSuccess: () => {
-          toast.success("Page moved");
-          onOpenChange(false);
-        },
-        onError: (error) => toast.error(getErrorMessage(error)),
+    const input: MoveKbPageInput & { pageId: number } = {
+      pageId,
+      ...target,
+      index: 0,
+      ...(accessChangeConfirmNeeded ? { confirmAccessChange: true } : {}),
+    };
+    movePage.mutate(input, {
+      onSuccess: () => {
+        toast.success("File moved");
+        onOpenChange(false);
       },
-    );
+      onError: (error) => {
+        if (isApiError(error) && error.status === 409) {
+          setAccessChangeConfirmNeeded(true);
+          return;
+        }
+        toast.error(getErrorMessage(error));
+      },
+    });
   }
 
   function handleSelectRoot() {
     setTarget({ parentPageId: null });
+    setAccessChangeConfirmNeeded(false);
   }
 
   function handleSpaceButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
     const id = e.currentTarget.dataset.spaceId;
     if (!id) return;
     setTarget({ parentPageId: null, spaceId: Number(id) });
+    setAccessChangeConfirmNeeded(false);
   }
 
   function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
     setSearchQuery(e.target.value);
+    setAccessChangeConfirmNeeded(false);
   }
 
   function handleNodeButtonClick(e: React.MouseEvent<HTMLButtonElement>) {
     const id = e.currentTarget.dataset.nodeId;
     if (!id) return;
     setTarget({ parentPageId: Number(id) });
+    setAccessChangeConfirmNeeded(false);
   }
 
   function handleCancel() {
@@ -101,16 +116,16 @@ export default function MovePageDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <KbMoveRightIcon className="h-4 w-4" />
-            Move page
+            Move file
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Choose a space to move the page to its top level, or search for the page that should become the new parent.
+            Choose a team folder to move the file to its top level, or search for the file that should become the new parent.
           </DialogDescription>
         </DialogHeader>
         <div className="relative">
           <KbSearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
           <Input
-            placeholder="Search pages…"
+            placeholder="Search files…"
             value={searchQuery}
             onChange={handleSearchChange}
             className="pl-8 text-sm"
@@ -154,7 +169,7 @@ export default function MovePageDialog({
             )}
             {!searching && searchError && searchQuery.length > 0 && (
               <ErrorState
-                title="Couldn't search pages"
+                title="Couldn't search files"
                 description={getErrorMessage(error)}
                 error={error}
                 onRetry={handleRetrySearch}
@@ -163,7 +178,7 @@ export default function MovePageDialog({
             )}
             {!searching && !searchError && searchQuery.length > 0 && results.length === 0 && (
               <div className="px-3 py-2 text-sm text-muted-foreground">
-                No pages found
+                No files found
               </div>
             )}
             {!searching && !searchError &&
@@ -186,6 +201,11 @@ export default function MovePageDialog({
               ))}
           </div>
         </ScrollArea>
+        {accessChangeConfirmNeeded && (
+          <p className="text-xs text-status-warning-ink bg-status-warning-surface border border-status-warning-rule rounded-md px-3 py-2">
+            Moving here will change who can see this file. Confirm to proceed.
+          </p>
+        )}
         <DialogFooter>
           <Button variant="outline" size="sm" onClick={handleCancel}>
             Cancel
@@ -196,7 +216,7 @@ export default function MovePageDialog({
             isPending={movePage.isPending}
             loadingText="Moving…"
           >
-            Move here
+            {accessChangeConfirmNeeded ? "Confirm move" : "Move here"}
           </LoadingButton>
         </DialogFooter>
       </DialogContent>

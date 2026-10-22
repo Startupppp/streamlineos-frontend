@@ -119,7 +119,7 @@ beforeEach(() => {
 
 describe("NewGroupDialog — BUG-009 member picker reads the chat directory", () => {
   function openMembersStep() {
-    render(<NewGroupDialog open onOpenChange={jest.fn()} onCreated={jest.fn()} hideTrigger />);
+    render(<NewGroupDialog onOpenChange={jest.fn()} onCreated={jest.fn()} />);
     fireEvent.change(screen.getByPlaceholderText("e.g. design-team"), { target: { value: "dev-team" } });
     fireEvent.click(screen.getByText("Next: Add Members"));
   }
@@ -131,7 +131,7 @@ describe("NewGroupDialog — BUG-009 member picker reads the chat directory", ()
       isError: false,
       error: null,
     };
-    render(<NewGroupDialog open onOpenChange={jest.fn()} onCreated={jest.fn()} hideTrigger />);
+    render(<NewGroupDialog onOpenChange={jest.fn()} onCreated={jest.fn()} />);
     expect(mockUseChatOrgUsers).toHaveBeenLastCalledWith(false);
     fireEvent.change(screen.getByPlaceholderText("e.g. design-team"), { target: { value: "dev-team" } });
     fireEvent.click(screen.getByText("Next: Add Members"));
@@ -156,10 +156,8 @@ describe("NewGroupDialog — STRE-142 success toast on create", () => {
   it("fires toast.success after the channel is created so the user knows the action completed", async () => {
     render(
       <NewGroupDialog
-        open
         onOpenChange={jest.fn()}
         onCreated={jest.fn()}
-        hideTrigger
       />,
     );
 
@@ -182,10 +180,8 @@ describe("NewGroupDialog — STRE-142 success toast on create", () => {
 
     render(
       <NewGroupDialog
-        open
         onOpenChange={jest.fn()}
         onCreated={jest.fn()}
-        hideTrigger
       />,
     );
 
@@ -209,10 +205,8 @@ describe("NewGroupDialog — CHAT-005 whitespace-only channel name", () => {
   function renderDialog() {
     render(
       <NewGroupDialog
-        open
         onOpenChange={jest.fn()}
         onCreated={jest.fn()}
-        hideTrigger
       />,
     );
     return screen.getByPlaceholderText("e.g. design-team");
@@ -259,10 +253,8 @@ describe("NewGroupDialog — CHAT-S03 channel type selection state", () => {
   it("reports the selected channel type to assistive technology", () => {
     render(
       <NewGroupDialog
-        open
         onOpenChange={jest.fn()}
         onCreated={jest.fn()}
-        hideTrigger
       />,
     );
 

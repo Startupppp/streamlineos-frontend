@@ -46,6 +46,10 @@ describe("Home employee navigation", () => {
     expect(knowledgeRoutes.map((route) => route.href)).toEqual(
       expect.arrayContaining(["/knowledge/chat", "/knowledge/wiki"]),
     );
+    expect(knowledgeRoutes[0]?.href).toBe("/knowledge/wiki");
+    expect(knowledgeRoutes.map((route) => route.href)).not.toContain(
+      "/knowledge/research-briefs",
+    );
   });
 
   it("hides HR and payroll self-service in Home when those modules are off", () => {

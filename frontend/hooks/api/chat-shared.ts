@@ -20,7 +20,7 @@ export function refreshRealtimeCapability(): void {
   void import("@/lib/ably").then((module) => module.reauthorizeAblyClients());
 }
 
-export interface ChatAttachmentUrl {
+interface ChatAttachmentUrl {
   url: string;
 }
 
@@ -38,6 +38,6 @@ export function useAttachmentUrl(channelId: number, attachmentId: number) {
     staleTime: 55 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
     retry: 1,
-    enabled: canRead,
+    enabled: canRead && attachmentId > 0,
   });
 }

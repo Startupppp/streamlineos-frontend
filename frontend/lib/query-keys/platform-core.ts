@@ -181,7 +181,10 @@ export const platformCoreQueryKeys = {
 
   globalSearch: {
     all: [...base, "globalSearch"] as const,
-    query: (q: string) => [...base, "globalSearch", q] as const,
+    query: (q: string, types?: string) =>
+      types === undefined
+        ? ([...base, "globalSearch", q] as const)
+        : ([...base, "globalSearch", q, types] as const),
   },
 
   attachmentSignedUrl: (fileUrl: string) =>

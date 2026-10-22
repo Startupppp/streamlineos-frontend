@@ -2,7 +2,6 @@ import { getChatMobileBottomNavClassName } from "@/components/layout/mobile/chat
 import {
   getChatConversationListPaneClassName,
   getChatMessagePaneClassName,
-  getChatSidebarClassName,
 } from "./chat-shell-layout";
 
 const BREAKPOINTS: Record<string, number> = {
@@ -54,17 +53,6 @@ function isVisibleAt(className: string, width: number): boolean {
 }
 
 const WIDTHS = [320, 360, 375, 414, 480, 600, 639, 640, 700, 767, 768, 1024, 1280];
-
-describe("getChatSidebarClassName", () => {
-  it("hides desktop chat chrome below the lg breakpoint", () => {
-    expect(getChatSidebarClassName(false)).toContain("hidden lg:flex");
-  });
-
-  it("keeps the collapsed rail desktop-only", () => {
-    expect(getChatSidebarClassName(true)).toContain("lg:w-[3.5rem]");
-    expect(getChatSidebarClassName(true)).not.toContain("w-14");
-  });
-});
 
 describe("getChatConversationListPaneClassName", () => {
   it("fills the width when the mobile conversation list is the active view", () => {
@@ -129,7 +117,7 @@ describe("chat navigation reachability — the nav and the pane that hosts it ca
   const navClassName = getChatMobileBottomNavClassName();
   const panes: Array<[string, string]> = [
     ["conversation pane (/chat)", getChatConversationListPaneClassName(false, false)],
-    ["sidebar (/chat/channels)", getChatSidebarClassName(false)],
+    ["conversation list (/chat)", getChatConversationListPaneClassName(false, true)],
   ];
 
   for (const [paneName, paneClassName] of panes) {

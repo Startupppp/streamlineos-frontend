@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useStoredFlag } from "@/hooks/common/use-stored-flag";
 import {
   KbFileTextIcon,
   KbPanelRightCloseIcon,
@@ -22,7 +23,10 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { useKbPageBacklinks } from "@/hooks/api/kb";
+import {
+  useKbPageBacklinks,
+} from "@/hooks/api/kb";
+import { useKbPageActivity } from "@/hooks/api/kb/activity";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
@@ -48,9 +52,8 @@ const VISIBILITY_LABELS: Record<string, string> = {
 interface PageRightPanelProps {
   pageId: number;
   page: KbPageDetail;
-  wordCount: number;
+  wordCount?: number;
   onNavigate: (pageId: number) => void;
-  /** When set with onMobileOpenChange, the mobile sheet is controlled by the parent (header trigger). */
   mobileOpen?: boolean;
   onMobileOpenChange?: (open: boolean) => void;
 }
@@ -58,7 +61,7 @@ interface PageRightPanelProps {
 interface PanelContentProps {
   pageId: number;
   page: KbPageDetail;
-  wordCount: number;
+  wordCount?: number;
   onNavigate: (pageId: number) => void;
 }
 
@@ -95,10 +98,41 @@ function Stat({
   );
 }
 
-function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps) {
-  const { data: backlinks = [], isLoading: backlinksLoading, isError: backlinksError, error: backlinksReadError, refetch: refetchBacklinks } = useKbPageBacklinks(pageId);
-  const { data: recordLinks = [], hasNextPage: hasMoreRecordLinks } = useKbPageRecordLinks(pageId);
-  const backlinksAccessLost = isApiError(backlinksReadError) && (backlinksReadError.status === 401 || backlinksReadError.status === 403 || backlinksReadError.status === 404);
+const GRANT_ACTION_PREFIX = "kb.page_grant.";
+
+function activityLabel(action: string): string {
+  const isGrant = action.startsWith(GRANT_ACTION_PREFIX);
+  const verb = action.slice(action.lastIndexOf(".") + 1).replaceAll("_", " ");
+  const label = isGrant ? `access ${verb}` : verb;
+  return label.charAt(0).toUpperCase() + label.slice(1);
+}
+
+function PanelContent({
+  pageId,
+  page,
+  wordCount,
+  onNavigate,
+}: PanelContentProps) {
+  const {
+    data: backlinks = [],
+    isLoading: backlinksLoading,
+    isError: backlinksError,
+    error: backlinksReadError,
+    refetch: refetchBacklinks,
+  } = useKbPageBacklinks(pageId);
+  const { data: recordLinks = [], hasNextPage: hasMoreRecordLinks } =
+    useKbPageRecordLinks(pageId);
+  const {
+    data: activityEntries = [],
+    isLoading: activityLoading,
+    isError: activityError,
+  } = useKbPageActivity(pageId);
+
+  const backlinksAccessLost =
+    isApiError(backlinksReadError) &&
+    (backlinksReadError.status === 401 ||
+      backlinksReadError.status === 403 ||
+      backlinksReadError.status === 404);
   const backlinksState = usePageState({
     permission: "kb:pages:view",
     isLoading: backlinksLoading,
@@ -151,12 +185,20 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
           <p className="text-xs text-muted-foreground">Status</p>
           <div className="mt-1 flex flex-wrap items-center gap-1.5">
             <StatusBadge status={page.status} />
-            {page.trustState ? <TrustBadge trustState={page.trustState} /> : null}
+            {page.trustState ? (
+              <TrustBadge trustState={page.trustState} />
+            ) : null}
           </div>
         </div>
         <Stat label="Visibility" value={visibilityValue} />
-        <Stat label="Words" value={wordCount.toLocaleString()} />
-        <Stat label="Created" value={kbTimeAgo(page.createdAt)} suppressHydrationWarning />
+        {wordCount === undefined ? null : (
+          <Stat label="Words" value={wordCount.toLocaleString()} />
+        )}
+        <Stat
+          label="Created"
+          value={kbTimeAgo(page.createdAt)}
+          suppressHydrationWarning
+        />
         <Stat label="Edited" value={editedValue} suppressHydrationWarning />
         <Stat label="Owner" value={ownerValue} />
         <Stat
@@ -169,8 +211,11 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
       <section className="border-t border-border/70 pt-4">
         <div className="mb-2 flex items-baseline justify-between gap-2">
           <h3 className="text-sm font-medium text-foreground">Backlinks</h3>
-          {(backlinksState.kind === "ready" || backlinksState.kind === "empty") && (
-            <span className="text-xs tabular-nums text-muted-foreground">{backlinks.length}</span>
+          {(backlinksState.kind === "ready" ||
+            backlinksState.kind === "empty") && (
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {backlinks.length}
+            </span>
           )}
         </div>
         <PageState
@@ -178,7 +223,9 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
           compact
           onRetry={handleRetryBacklinks}
           loading={<Skeleton className="h-12 w-full" />}
-          empty={<p className="text-xs text-muted-foreground">No pages link here.</p>}
+          empty={
+            <p className="text-xs text-muted-foreground">No files link here.</p>
+          }
         >
           <>
             <ul className="flex flex-col">
@@ -191,7 +238,9 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
                     onClick={handleBacklinkClick}
                   >
                     <span className="shrink-0 text-sm leading-none">
-                      {bl.icon ?? <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground" />}
+                      {bl.icon ?? (
+                        <KbFileTextIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                      )}
                     </span>
                     <TruncatedText text={bl.title || "Untitled"} />
                   </button>
@@ -207,7 +256,14 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
               <div role="alert" className="space-y-2 text-xs text-destructive">
                 <p>Could not refresh backlinks.</p>
                 <ErrorReference error={backlinksReadError} />
-                <Button type="button" variant="outline" size="sm" onClick={handleRetryBacklinks}>Retry backlinks</Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRetryBacklinks}
+                >
+                  Retry backlinks
+                </Button>
               </div>
             )}
           </>
@@ -216,8 +272,13 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
 
       <section className="border-t border-border/70 pt-4">
         <div className="mb-2 flex items-baseline justify-between gap-2">
-          <h3 className="text-sm font-medium text-foreground">Linked records</h3>
-          <span className="text-xs tabular-nums text-muted-foreground">{recordLinks.length}{hasMoreRecordLinks ? "+" : ""}</span>
+          <h3 className="text-sm font-medium text-foreground">
+            Linked records
+          </h3>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            {recordLinks.length}
+            {hasMoreRecordLinks ? "+" : ""}
+          </span>
         </div>
         {recordLinks.length === 0 ? (
           <p className="text-xs text-muted-foreground">No linked records.</p>
@@ -226,16 +287,48 @@ function PanelContent({ pageId, page, wordCount, onNavigate }: PanelContentProps
             <ul className="flex flex-col gap-1">
               {recordLinks.slice(0, RECORD_LINK_DISPLAY_LIMIT).map((rl) => (
                 <li key={rl.id} className="px-1.5 py-1 text-sm text-foreground">
-                  <TruncatedText text={rl.label ?? rl.targetType} className="capitalize" />
+                  <TruncatedText
+                    text={rl.label ?? rl.targetType}
+                    className="capitalize"
+                  />
                 </li>
               ))}
             </ul>
             {recordLinks.length > RECORD_LINK_DISPLAY_LIMIT ? (
               <p className="mt-1 px-1.5 text-xs text-muted-foreground">
-                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT}{hasMoreRecordLinks ? "+" : ""} more
+                +{recordLinks.length - RECORD_LINK_DISPLAY_LIMIT}
+                {hasMoreRecordLinks ? "+" : ""} more
               </p>
             ) : null}
           </>
+        )}
+      </section>
+
+      <section className="border-t border-border/70 pt-4">
+        <h3 className="mb-2 text-sm font-medium text-foreground">Activity</h3>
+        {activityLoading ? (
+          <Skeleton className="h-16 w-full" />
+        ) : activityError ? (
+          <p className="text-xs text-destructive">Could not load activity.</p>
+        ) : activityEntries.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No recent activity.</p>
+        ) : (
+          <ul className="flex flex-col gap-1.5">
+            {activityEntries.map((entry) => (
+              <li
+                key={entry.id}
+                className="flex flex-col gap-0.5 rounded-md px-1.5 py-1 text-xs hover:bg-muted"
+              >
+                <span className="font-medium text-foreground">
+                  {activityLabel(entry.action)}
+                  {entry.actor ? ` · ${entry.actor.name}` : ""}
+                </span>
+                <span className="tabular-nums text-muted-foreground">
+                  {kbTimeAgo(entry.at)}
+                </span>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </div>
@@ -250,7 +343,7 @@ export default function PageRightPanel({
   mobileOpen,
   onMobileOpenChange,
 }: PageRightPanelProps) {
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useStoredFlag(STORAGE_KEY);
   const [uncontrolledMobileOpen, setUncontrolledMobileOpen] = useState(false);
   const title = page.title || "Untitled";
   const isMobileControlled = onMobileOpenChange !== undefined;
@@ -258,16 +351,8 @@ export default function PageRightPanel({
     ? Boolean(mobileOpen)
     : uncontrolledMobileOpen;
 
-  useEffect(() => {
-    setCollapsed(localStorage.getItem(STORAGE_KEY) === "true");
-  }, []);
-
   function handleToggle() {
-    setCollapsed((prev) => {
-      const next = !prev;
-      localStorage.setItem(STORAGE_KEY, String(next));
-      return next;
-    });
+    setCollapsed(!collapsed);
   }
 
   function handleMobileSheetChange(open: boolean) {
@@ -280,8 +365,12 @@ export default function PageRightPanel({
       <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
         <SheetContent side="right" className="gap-0 p-0 xl:hidden sm:max-w-sm">
           <SheetHeader className="border-b border-border px-4 py-3 pr-12">
-            <SheetDescription className="text-xs">Page details</SheetDescription>
-            <SheetTitle className="truncate text-base leading-tight">{title}</SheetTitle>
+            <SheetDescription className="text-xs">
+              Page details
+            </SheetDescription>
+            <SheetTitle className="truncate text-base leading-tight">
+              {title}
+            </SheetTitle>
           </SheetHeader>
           <SheetBody>
             <PanelContent
@@ -298,7 +387,9 @@ export default function PageRightPanel({
         {!collapsed ? (
           <div className="flex w-64 flex-col border-l border-border">
             <div className="flex items-center justify-between gap-2 border-b border-border px-3 py-2">
-              <p className="truncate text-sm font-medium text-foreground">{title}</p>
+              <p className="truncate text-sm font-medium text-foreground">
+                {title}
+              </p>
               <Button
                 type="button"
                 variant="ghost"

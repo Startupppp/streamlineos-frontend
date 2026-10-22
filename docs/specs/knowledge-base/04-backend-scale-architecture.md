@@ -182,6 +182,20 @@ When a single database or blast radius becomes unacceptable, place tenants into 
 
 Extract only a module with proven independent pressure, such as indexing/embedding or public publishing. The module keeps the existing interface and outbox contract. Do not split content and authorization across unreliable synchronous calls.
 
+### Conditional-stage activation status — 2026-10-21
+
+Stages B, C, D and external search are **intentionally unactivated**. No partitioning migration, no cell-move service, no external search integration and no service-extraction boundary exist in `backend/src/modules/kb/`. This is not "not yet triggered" — no measurement was taken, because taking it requires a loaded environment that does not exist. The triggers below are proposed starting thresholds, not approved decisions; each needs a measurement run and sign-off before it can activate a stage (see "Architecture decisions still requiring measurement").
+
+| Conditional stage | What activates it |
+|---|---|
+| **Stage B: table partitioning** | Any single append-heavy table (audit\_logs, kb\_page\_chunks, kb\_page\_versions, outbox) exceeds 50 M rows per tenant bucket or the primary write IOPS stays above 80 % for 30 consecutive minutes under production-representative load. Measure with `EXPLAIN (ANALYZE, BUFFERS)` as `streamline_app` under RLS and production cardinality. |
+| **Stage B: read replicas** | Primary CPU exceeds 70 % sustained under read-heavy load and replica-safe projections (stale-tolerant list/search, no permission/revocation paths) account for ≥ 40 % of that load, confirmed by query-level sampling. |
+| **Stage C: tenant placement cells** | A single blast-radius database event would affect tenants in different contractual tiers, or p99 write latency for the largest tenant exceeds 200 ms for 5 consecutive minutes under real traffic. |
+| **Stage D: service extraction** | A specific subsystem (e.g. indexing/embedding) has its own scaling axis distinct from the monolith (CPU-bound GPU inference vs I/O-bound request serving), and extracting it would not require splitting authorization or content writes across an unreliable synchronous call. |
+| **External search engine** | PostgreSQL full-text search p95 latency exceeds 500 ms for the median tenant at production load, OR vector recall on a minority tenant drops below 80 % when measured by offline A/B against ground truth, AND operating the external engine costs less in total (infra + sync + ops) than the PostgreSQL cost increase. |
+
+Until a trigger fires and is recorded with a pointer to the measurement run and the production traffic profile, these stages remain unactivated and no code should be added to implement them.
+
 ## Database and connection strategy
 
 - Connection budget is a hard capacity. Use a pooler and set per-replica/per-worker limits; background lanes cannot exhaust interactive connections.

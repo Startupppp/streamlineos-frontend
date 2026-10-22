@@ -27,19 +27,19 @@ function resolveVariant(error: unknown): "not-found" | "access-denied" | "error"
 
 const VARIANTS = {
   "not-found": {
-    title: "Page not found",
+    title: "File not found",
     description:
-      "This page may have been deleted, moved, or the link may be incorrect. Check the trash if you think it was recently removed.",
+      "This file may have been deleted, moved, or the link may be incorrect. Check the trash if you think it was recently removed.",
   },
   "access-denied": {
     title: "You don't have access",
     description:
-      "You don't have permission to view this page. Contact the page owner or an organization admin to request access.",
+      "You don't have permission to view this file. Contact the file owner or an organization admin to request access.",
   },
   error: {
-    title: "Couldn't load this page",
+    title: "Couldn't load this file",
     description:
-      "Something went wrong while loading this page. This is usually temporary — try refreshing or go back to the knowledge base.",
+      "Something went wrong while loading this file. This is usually temporary — try refreshing or go back to the knowledge base.",
   },
 };
 

@@ -8,26 +8,15 @@ import { SearchInput } from "@/components/ui/search-input";
 import { useFlushableDebouncedValue } from "@/hooks/common/use-debounce";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { useCan } from "@/hooks/api/access";
-import {
-  useKbPagesFavorites,
-  useKbPagesRecent,
-} from "@/hooks/api/kb";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { useKbPagesFavorites, useKbPagesRecent } from "@/hooks/api/kb";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ErrorState } from "@/components/shared/error-state";
-import { KB_SEARCH, pageHref, projectPageHref } from "@/lib/knowledge-routes";
+import { KB_IMPORT, KB_SEARCH, KB_TEMPLATES, pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
-import {
-  KbClockIcon,
-  KbPlusIcon,
-  KbStarIcon,
-} from "@/features/wiki/lib/kb-icons";
-import {
-  WikiPageCard,
-  WIKI_PAGE_CARD_GRID_CLASS,
-} from "@/features/wiki/components/wiki-page-card";
-import { WikiHomeAllPages, KB_PAGE_CURSOR_PARAM } from "./wiki-home-all-pages";
-import { WikiCompanyDocumentsStrip } from "./wiki-company-documents-strip";
+import { KbClockIcon, KbStarIcon } from "@/features/wiki/lib/kb-icons";
+import { WikiPageCard, WIKI_PAGE_CARD_GRID_CLASS } from "@/features/wiki/components/wiki-page-card";
+import { WikiPageCollectionTable, KB_PAGE_CURSOR_PARAM } from "./wiki-page-collection-table";
+import { WikiHomeHeaderActions, WikiHomeActivitySection, WikiHomeSharedUpdatesSection } from "./wiki-home-sections";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
 import PageTree from "./page-tree";
@@ -69,6 +58,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const favoritesQuery = useKbPagesFavorites();
   const favoritePages = favoritesQuery.data ?? [];
   const canCreate = useCan("kb:pages:create");
+  const canImport = useCan("kb:pages:import");
 
   const resolveHref = useCallback(
     (pageId: number): string =>
@@ -77,7 +67,9 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         : pageHref(pageId),
     [projectId],
   );
-  const createPage = useGuardedCreateKbPage((page) => router.push(resolveHref(page.id)));
+  const createPage = useGuardedCreateKbPage((page) =>
+    router.push(resolveHref(page.id)),
+  );
 
   function handleSearchSubmit() {
     if (isProjectScoped) {
@@ -96,7 +88,9 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   }
 
   function handleNewPage() {
-    void createPage.submit({ projectId: isProjectScoped ? projectId : undefined });
+    void createPage.submit({
+      projectId: isProjectScoped ? projectId : undefined,
+    });
   }
 
   function handleLoadMoreFavorites() {
@@ -141,20 +135,13 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     searchInputRef: searchInputRef,
   });
 
-  const newPageAction = canCreate ? (
-    <AnimatedIconButton
-      type="button"
-      icon={KbPlusIcon}
-      iconSize={16}
-      iconClassName="mr-1.5"
-      size="sm"
-      onClick={handleNewPage}
-      disabled={createPage.isSubmitting}
-      suppressHydrationWarning
-    >
-      New page
-    </AnimatedIconButton>
-  ) : undefined;
+  const headerActions = (
+    <WikiHomeHeaderActions
+      canCreate={canCreate}
+      isProjectScoped={isProjectScoped}
+      projectId={projectId}
+    />
+  );
 
   const baseHref = isProjectScoped ? `/build/${projectId}/wiki` : undefined;
 
@@ -165,9 +152,9 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         subtitle={
           isProjectScoped
             ? "Docs and decisions for this project"
-            : "Your team knowledge base"
+            : "Files, documents and decisions for your team"
         }
-        actions={newPageAction}
+        actions={headerActions}
       >
         <div className="flex min-h-0 flex-1 flex-col gap-6">
           <form onSubmit={handleSearchFormSubmit} role="search">
@@ -178,8 +165,8 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               onSubmitSearch={handleSearchSubmit}
               placeholder={
                 isProjectScoped
-                  ? "Filter this project's pages…"
-                  : "Search docs…"
+                  ? "Filter this project's files…"
+                  : "Search documents…"
               }
               fill
             />
@@ -214,7 +201,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 <div className="flex items-center gap-2 mb-3">
                   <KbStarIcon className="h-4 w-4 text-muted-foreground" />
                   <h2 className="text-sm font-semibold text-foreground">
-                    Favorites
+                    Starred
                   </h2>
                 </div>
                 {favoritePages.length > 0 && (
@@ -256,7 +243,8 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               </section>
             )}
 
-          {!isProjectScoped && <WikiCompanyDocumentsStrip />}
+          {!isProjectScoped && <WikiHomeActivitySection />}
+          {!isProjectScoped && <WikiHomeSharedUpdatesSection />}
 
           <div className="flex min-h-0 flex-1 gap-4">
             {isProjectScoped && (
@@ -270,11 +258,30 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             <section className="flex min-h-0 flex-1 flex-col">
               {!isProjectScoped && (
                 <h2 className="text-sm font-semibold text-foreground mb-3">
-                  All pages
+                  All documents
                 </h2>
               )}
-              <WikiHomeAllPages
-                projectId={isProjectScoped ? projectId : undefined}
+              <WikiPageCollectionTable
+                fixedParams={{
+                  projectId: isProjectScoped ? projectId : undefined,
+                }}
+                searchPlaceholder={null}
+                emptyTitle="Your Docs workspace starts here"
+                emptyDescription="Create your first document to give your team one place for current knowledge."
+                emptyAction={
+                  canCreate
+                    ? { label: "Create a document", onClick: handleNewPage }
+                    : undefined
+                }
+                emptySecondaryAction={{
+                  label: "Browse templates",
+                  href: KB_TEMPLATES,
+                }}
+                emptyTertiaryAction={
+                  canImport
+                    ? { label: "Import documents", href: KB_IMPORT }
+                    : undefined
+                }
                 onItemCountChange={handleItemCountChange}
                 onRowsChange={handleRowsChange}
               />

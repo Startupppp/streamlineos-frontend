@@ -1,7 +1,12 @@
 import { z } from "zod";
 
 /** `chatInviteLinkTokenSchema` */
-export const chatInviteLinkContract = z.object({ token: z.string() });
+export const chatInviteLinkContract = z.object({
+  token: z.string(),
+  expiresAt: z.string().nullable(),
+  maxUses: z.number().nullable(),
+  useCount: z.number(),
+});
 
 /** `chatInviteLinkJoinSchema` */
 export const chatJoinViaInviteContract = z.object({

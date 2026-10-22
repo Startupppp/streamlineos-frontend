@@ -154,7 +154,7 @@ function buildColumns(
     },
     {
       key: "pageCount",
-      header: "Pages",
+      header: "Files",
       cell: (row) => (
         <span className="tabular-nums text-sm text-muted-foreground">
           {row.pageCount}

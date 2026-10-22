@@ -51,7 +51,6 @@ import {
   KbThumbsUpIcon,
   KbEyeIcon,
   KbClockIcon,
-  KbCheckCircleIcon,
   KbLink2Icon,
 } from "@/features/wiki/lib/kb-icons";
 
@@ -96,6 +95,7 @@ export default function KnowledgeAnalyticsPage() {
     undefined,
   );
   const canCreatePage = useCan("kb:pages:create");
+  const canManageAnalytics = useCan("kb:analytics:manage");
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data ?? [];
@@ -318,7 +318,7 @@ export default function KnowledgeAnalyticsPage() {
         </div>
 
         {overview ? (
-          <StatCardGrid cols={5} className="mb-4">
+          <StatCardGrid cols={4} className="mb-4">
             <StatCard
               label="Article views"
               value={overviewValue(overview.totalViews, overview.suppressionReasons.totalViews)}
@@ -346,13 +346,6 @@ export default function KnowledgeAnalyticsPage() {
               hint={overviewHint(overview.suppressionReasons.searchSuccessRate)}
               icon={KbBarChart2Icon}
               tone="amber"
-            />
-            <StatCard
-              label="Tickets deflected"
-              value={overviewValue(overview.ticketsDeflected, overview.suppressionReasons.ticketsDeflected)}
-              hint={overviewHint(overview.suppressionReasons.ticketsDeflected)}
-              icon={KbCheckCircleIcon}
-              tone="emerald"
             />
           </StatCardGrid>
         ) : null}
@@ -430,6 +423,7 @@ export default function KnowledgeAnalyticsPage() {
           handleCreateGapFix={handleCreateGapFix}
           createGapFixPending={createGapFix.isPending}
           canCreatePage={canCreatePage}
+          canManageAnalytics={canManageAnalytics}
           relatedPages={relatedPages}
           relatedPagesLoading={relatedPagesLoading}
           relatedPagesError={relatedPagesError}

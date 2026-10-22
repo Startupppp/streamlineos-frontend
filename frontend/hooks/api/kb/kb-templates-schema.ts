@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { kbPageKindSchema } from "./kb-pages-schema";
 
 const kbPageTemplateContract = z.object({
   id: z.number().int(),
@@ -6,6 +7,7 @@ const kbPageTemplateContract = z.object({
   name: z.string(),
   icon: z.string().nullable(),
   description: z.string().nullable(),
+  kind: kbPageKindSchema.default("document"),
   content: z
     .union([
       z.array(z.record(z.string(), z.unknown())),

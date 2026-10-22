@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { invalidateKbPageChange } from "./page-invalidation";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -151,10 +152,8 @@ export function useApprovePageReview() {
         undefined,
         kbPageReviewContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(),
-      });
+    onSuccess: (data) => {
+      invalidateKbPageChange(qc, "reviewed", data.pageId);
     },
   });
 }
@@ -173,10 +172,8 @@ export function useRejectPageReview() {
         undefined,
         kbPageReviewContract,
       ),
-    onSuccess: () => {
-      qc.invalidateQueries({
-        queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(),
-      });
+    onSuccess: (data) => {
+      invalidateKbPageChange(qc, "reviewed", data.pageId);
     },
   });
 }

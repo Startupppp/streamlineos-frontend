@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useChatChannels } from "@/hooks/api/chat-core-read";
 import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
-import type { Channel, MessageMetadata } from "@/types/chat";
+import type { Channel, EntityRef, MessageMetadata } from "@/types/chat";
 import { getForwardedDisplay } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
@@ -120,6 +120,9 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
     const sourceCount = message.metadata?.forwardCount ?? (label ? 1 : 0);
     const forwardCount = sourceCount > 0 ? sourceCount + 1 : 1;
     const forwardedBody = body ?? (message.attachments?.length ? "[attachment]" : "");
+    const entities = (message.metadata?.entities ?? [])
+      .slice(0, 10)
+      .map(({ type, id }): EntityRef => ({ type, id }));
 
     const content = comment.trim()
       ? `${comment.trim()}\n\n${forwardedBody}`
@@ -129,7 +132,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
       await sendMessage.mutateAsync({
         channelId: selectedChannelId,
         content: content || undefined,
-        metadata: { forwardCount },
+        metadata: entities.length ? { forwardCount, entities } : { forwardCount },
         attachments: message.attachments?.map((a) => ({
           fileName: a.fileName,
           fileUrl: a.fileUrl,

@@ -30,7 +30,7 @@ beforeEach(() => {
 
 it("shows the full archive impact when the read succeeds", () => {
   render(<SpaceArchiveImpact spaceId={10} />);
-  expect(screen.getByText("This affects 2 pages · 1 public link · 3 record links · indexed for Ask.")).toBeInTheDocument();
+  expect(screen.getByText("This affects 2 files · 1 public link · 3 record links · indexed for Ask.")).toBeInTheDocument();
   expect(usePageState).toHaveBeenCalledWith(expect.objectContaining({ permission: "kb:spaces:manage" }));
 });
 

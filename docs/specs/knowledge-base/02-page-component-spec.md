@@ -1,5 +1,7 @@
 # Step 2 — Page-by-Page Product and Component Specification
 
+> **Supporting route specification:** [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns final scope, navigation, and removals. Compatibility routes named below are not automatically primary navigation.
+
 ## Shared page contract
 
 Every retained or added page uses the same state model:
@@ -12,13 +14,15 @@ Every retained or added page uses the same state model:
 - **Denied:** no record-existence leak; route-level denial explains the missing capability.
 - **Offline/conflict:** only where drafting or editing is possible; never claim a save that the server has not accepted.
 
-Every collection uses cursor pagination unless it is explicitly bounded: recents 20, favorites 50, Quick find 20. Response-shaping filters live in the URL. Selection, draft text, menus, and dialogs do not.
+Every collection uses a stable cursor contract unless it is explicitly bounded: recents 20, favorites 50, Quick find 20. Paginated screens expose explicit Previous/Next or equivalent accessible controls; cursor presence does not justify unbounded tree loads or automatic infinite loading. Response-shaping filters live in the URL. Selection, draft text, menus, and dialogs do not.
 
-## 1. Ask KB — `/knowledge/chat`
+## 1. Contextual Ask Docs — `/knowledge/chat` (compatibility route)
 
 **Customer job:** receive a grounded answer from authorized organizational knowledge.
 
-**Keep:** page purpose, prompt suggestions, Conversations, Sources, composer.
+**Placement:** launch from Docs or a selected file/folder. Do not make this route the default Docs landing page.
+
+**Keep:** page purpose, prompt suggestions, conversations, sources, composer.
 
 **Add:**
 
@@ -33,15 +37,15 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** no answer text is sent to the model until retrieval candidates pass current ACL; every displayed citation is checked again before disclosure; unsupported answers are explicit.
 
-## 2. Wiki Home — `/knowledge/wiki`
+## 2. Docs Home — `/knowledge/wiki`
 
-**Customer job:** resume recent work and browse owned/shared root knowledge.
+**Customer job:** resume recent work and browse the document collection.
 
-**Keep:** recents, favorites, All pages, New page.
+**Keep:** recents, favorites, all documents, New document.
 
 **Add:**
 
-- compact search field linked to full results;
+- compact Quick find field linked to full results;
 - URL-backed `status`, `spaceId`, owner, and view controls;
 - card/list toggle, total/result count, cursor for All pages;
 - page-card menu: favorite, copy link, share, duplicate, move, archive/delete where allowed;
@@ -52,31 +56,39 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** home remains responsive with 100,000 tenant pages and does not download the tree to count or filter them.
 
-## 3. My Pages — `/knowledge/wiki/private`
+## 3. My Files — `/knowledge/wiki/private` (compatibility route)
 
-**Customer job:** find pages the current membership owns.
+**Customer job:** find documents and files the current member owns.
 
-**Rename:** “Private” → “My pages.” Privacy is an access property, not a library.
+**Current:** native pages use the server-side owner filter. Uploaded `kb_sources` are a separate ingestion/indexing collection and do not yet appear as first-class owned files.
 
-**Add:** server filter `ownerMembershipId=me`, search, status/space filters, list/card view, cursor, page actions, owner-transfer action where allowed.
+**Add:** one page/file collection using `ownerMembershipId=me`, search, status/folder/type filters, list/card view, cursor, file actions, and owner-transfer action where allowed.
 
-**Remove:** browser filtering by `visibility=private` and copy that teaches users to change access just to make a page appear here.
-
-**Acceptance:** ownership transfer changes this list without altering visibility; private pages owned by another authorized administrator do not appear as “mine.”
+**Acceptance:** ownership transfer changes this list without altering visibility; private pages owned by another authorized administrator do not appear as “mine”; an owned uploaded file appears once with its canonical identity and lifecycle.
 
 ## 4. Shared With Me — `/knowledge/wiki/shared`
 
-**Customer job:** find pages explicitly shared with the current membership or one of its groups.
+**Customer job:** find documents and files explicitly shared with the current member or one of their roles/groups.
 
-**Add:** explicit grants; columns/cards for shared by, shared at, access level, source group, expiry when introduced; search; status/access filters; cursor; revoke/access-lost state.
+**Current:** native pages use explicit membership/role grants. Uploaded sources do not yet share the same file-list and grant lifecycle.
 
-**Remove:** `createdById !== myId` inference. Organization-visible pages are not “shared with me.”
+**Add:** page/file parity; columns/cards for shared by display identity, shared at, access level, access reason, source role/group, expiry, and location; search; status/access filters; cursor; revoke/access-lost state.
 
-**Acceptance:** creating, changing, or revoking a grant updates list, detail, search, Ask, citations, and cache state within the revocation budget.
+**Acceptance:** creating, changing, expiring, or revoking a grant updates list, detail, preview/download, search, Ask, citations, notifications, and cache state within the revocation budget. Organization-visible items are not misclassified as explicit shares.
 
-## 5. Spaces — `/knowledge/wiki/spaces`
+## Target Drive object contract — no dedicated route yet
 
-**Customer job:** find a domain of knowledge and administer its lifecycle.
+The collection must represent native documents, uploaded files, folders, spreadsheet assets, and shortcuts through one canonical identity/location/access model. A source uploaded only for Ask is not automatically a library file.
+
+**Required states:** uploading, scanning, processing, ready, unsupported, quarantined, failed, trashed, held, and purging.
+
+**Required actions:** create/upload, preview/open, rename, move/copy, shortcut, replace/new version, share/revoke, link to record, download/export, trash, restore, and retention-aware purge.
+
+**Acceptance:** originals are immutable and recoverable; retries finalize once; cross-folder moves recalculate access atomically; a shortcut never grants target access; page/file/search/Ask/public/export surfaces use the same authorization result.
+
+## 5. Team Folders — `/knowledge/wiki/spaces` (compatibility route)
+
+**Customer job:** find an organization-owned shared workspace and administer its lifecycle.
 
 **Keep:** cards, create/edit sheet, audience.
 
@@ -86,9 +98,9 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** archive preview reports pages, public links, Ask index impact, and record links; restore is idempotent.
 
-## 6. Space Detail — `/knowledge/wiki/spaces/[spaceId]`
+## 6. Team Folder Detail — `/knowledge/wiki/spaces/[spaceId]` (compatibility route)
 
-**Customer job:** browse and maintain pages within one authorized space.
+**Customer job:** browse and maintain documents within one authorized Team folder.
 
 **Add:** breadcrumb, audience/access badge, in-space search, status/owner filters, create-in-space, lazy hierarchy, card/list option, members sheet, review policy summary, archive, inaccessible/not-found recovery.
 
@@ -108,7 +120,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** using a template creates a page through the same page-create command and returns an editable page; starter use does not require template-manage permission.
 
-## 8. Reviews — `/knowledge/wiki/reviews`
+## 8. Reviews Administration — `/knowledge/wiki/reviews`
 
 **Customer job:** decide approval/freshness work before it becomes risky.
 
@@ -118,7 +130,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** list and decision both use page visibility; a user cannot infer a hidden page from review metadata; bulk is partial-success and retry-safe.
 
-## 9. Import & Export — `/knowledge/wiki/import`
+## 9. Import & Export — `/knowledge/wiki/import` (contextual/admin)
 
 **Customer job:** migrate knowledge safely and obtain a portable copy.
 
@@ -128,7 +140,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** uploads are scanned; jobs are idempotent; a partial import reports created/skipped/failed items and can resume without duplicates.
 
-## 10. Analytics — `/knowledge/wiki/analytics`
+## 10. Analytics Administration — `/knowledge/wiki/analytics`
 
 **Customer job:** decide what knowledge to improve.
 
@@ -178,7 +190,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** restore creates a new append-only version, never rewrites history, increments revision, and reindexes asynchronously.
 
-## 14. Full Search — `/knowledge/wiki/search` (new P0)
+## 14. Quick Find and Full Search — `/knowledge/wiki/search`
 
 **Customer job:** inspect all authorized matches and refine the query.
 
@@ -188,7 +200,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** p95 server response < 500 ms at the planning envelope; no result contains title, snippet, count, or facet derived from unauthorized content.
 
-## 15. Content Health — `/knowledge/wiki/manage` (new P1)
+## 15. Content Health Administration — `/knowledge/wiki/manage`
 
 **Customer job:** repair the most harmful knowledge debt efficiently.
 
@@ -198,17 +210,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** every item links to evidence and a repair action; dismissals expire or record a durable exception; no automated fix publishes without a human.
 
-## 16. Research Briefs — list/detail (move P1)
-
-**Customer job:** run and review a durable research task with citations.
-
-**Add:** question, scope, status, owner, provider/model metadata, citations, source snapshot, cost, retry/cancel, rate limit, approval, convert-to-page.
-
-**Remove:** Support-owned duplicate route after callers migrate.
-
-**Acceptance:** cited records are rechecked on open; losing access redacts the citation; completion is durable even if the browser closes.
-
-## 17. Public Page — `/wiki/[shareToken]`
+## 16. Public Page — `/wiki/[shareToken]`
 
 **Customer job:** read one explicitly shared page.
 
@@ -218,27 +220,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** token rotation/revocation purges CDN/cache; page and attachment access are bound to the same public grant.
 
-## 18. Company Documents — `/knowledge/wiki/company-documents`
-
-**Customer job:** find HR documents that are currently available through the Knowledge Base link.
-
-**Components:** link-enabled state, status filter, source and status badges, document category, effective date, version, published date, and cursor-paginated table.
-
-**Rules:** ordinary readers see active documents only; the withdrawn, source-removed, and all-status filters require `hr:documents:publish`. The backend must recheck the linked source and current actor before returning a title or preview. The status filter is URL-backed; cursor and status must travel together.
-
-**Acceptance:** disabled linking, denied access, first empty, filtered empty, loading, and failed reads remain distinct. No withdrawn or source-removed document appears to an ordinary reader through this list, search, Ask, or a retained citation.
-
-## 19. Company Document Detail — `/knowledge/wiki/company-documents/[linkedDocumentId]`
-
-**Customer job:** inspect one linked HR document without losing its source and access context.
-
-**Components:** source identity, current status, document metadata, safe preview or download, and recovery for a removed source.
-
-**Rules:** reject a malformed id before data access. Resolve the current link, source status, tenant, and actor on each request; an inaccessible source resolves as not found. A cached passage or old citation never grants access to the file.
-
-**Acceptance:** active, withdrawn, source-removed, denied, and not-found paths are exercised through the detail request and the file retrieval path. Source removal or permission revocation removes the content from the page, search, Ask, and citation replay.
-
-## 20. Support Knowledge Gaps — `/support/knowledge-gaps`
+## 17. Support Knowledge Gaps — `/support/knowledge-gaps`
 
 **Customer job:** turn repeated unresolved support questions into reviewed Knowledge Base work.
 
@@ -248,25 +230,15 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** duplicate detection or retry creates no duplicate gap or draft; a dismissed gap stays out of active work until a documented resurfacing event; the proposed-page link is shown only to an actor who may open it. The collection stays bounded as new gaps arrive.
 
-## 21. Research Briefs — `/knowledge/research-briefs` and `/knowledge/research-briefs/[briefId]`
+## 18. Docs Entry and Redirect Aliases — `/knowledge`, `/ask`, `/docs`, `/kb`, and `/knowledge/wiki/pages/[pageId]`
 
-**Customer job:** start a bounded research job, return later, and inspect its cited result.
+**Customer job:** reach Docs from one stable entry route.
 
-**Components:** question and scope form, cursor-fed brief list, status and owner, detail with source snapshot and citations, retry or cancel, approval, and convert-to-page.
-
-**Rules:** these are the shipped Knowledge routes; no parallel `/knowledge/wiki/research-briefs` route is implied. The job and result survive browser closure. Every citation is rechecked for the viewer on detail open and a lost source is redacted.
-
-**Acceptance:** queued, running, completed, failed, denied, and source-revoked states have an explicit recovery path. Reopening a queued or running brief resumes status polling; repeated retry or conversion does not duplicate work or pages.
-
-## 22. Knowledge Entry and Redirect Aliases — `/knowledge`, `/ask`, `/docs`, `/kb`, and `/knowledge/wiki/pages/[pageId]`
-
-**Customer job:** reach the Knowledge product from one stable entry route.
-
-**Rules:** `/knowledge` and `/ask` redirect to `/knowledge/chat`; `/docs` and `/kb` redirect to `/knowledge/wiki`; the legacy `/knowledge/wiki/pages/[pageId]` and `/history` paths redirect to the canonical document and history routes. The destination enforces the current session, entitlement, and object access. Record redirect use without disclosing the tenant or access state in the redirect response.
+**Rules:** `/knowledge`, `/docs`, and `/kb` redirect to `/knowledge/wiki`; `/ask` may retain `/knowledge/chat` as a contextual compatibility route. The legacy `/knowledge/wiki/pages/[pageId]` and `/history` paths redirect to the canonical document and history routes. The destination enforces the current session, entitlement, and object access. Record redirect use without disclosing the tenant or access state in the redirect response.
 
 **Acceptance:** permitted and unentitled actors land in their correct destination state, and the redirect is visible in live telemetry.
 
-## 23. Project Wiki Adapters — `/build/[projectId]/wiki`, `/build/[projectId]/wiki/[pageId]`, and `/build/[projectId]/wiki/[pageId]/history`
+## 19. Project Docs Adapters — `/build/[projectId]/wiki`, `/build/[projectId]/wiki/[pageId]`, and `/build/[projectId]/wiki/[pageId]/history`
 
 **Customer job:** browse, edit, and inspect the history of project knowledge without leaving the project context.
 
@@ -274,7 +246,7 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** a member of another project cannot learn a page title, history, count, or attachment URL through an adapter. The three routes retain the shared loading, denied, error, empty, and edit-conflict behavior.
 
-## 24. Support Knowledge Management — `/support/kb` and `/support/kb/[articleId]`
+## 20. Support Knowledge Management — `/support/kb` and `/support/kb/[articleId]`
 
 **Customer job:** maintain help content during the documented page cutover.
 
@@ -282,13 +254,29 @@ Every collection uses cursor pagination unless it is explicitly bounded: recents
 
 **Acceptance:** list and detail routes preserve authorized creation, editing, and publication during cutover. Remove a route only after caller, redirect, data, and rollback evidence in `06-code-removal-and-reuse.md` is complete.
 
-## 25. Public Help — `/help/[orgId]` and `/help/[orgId]/[articleSlug]`
+## 21. Public Help — `/help/[orgId]` and `/help/[orgId]/[articleSlug]`
 
 **Customer job:** find and read deliberately published help content without an authenticated session.
 
 **Rules:** project only public, published content for the requested organization. Public cache policy and rate limits are separate from authenticated Knowledge reads. A private title, count, snippet, attachment, or citation cannot be inferred through public search or an old slug.
 
 **Acceptance:** valid content, unknown slug, withdrawn content, and revoked public access have distinct safe outcomes; retained redirects resolve without exposing another tenant's content.
+
+## 22. External Sharing Administration — `/knowledge/wiki/manage/sharing`
+
+**Customer job:** decide how content may leave the organization and see everything that already has.
+
+**Rules:** gated by `kb:settings:manage`. The tenant mode is the ceiling and a team folder can only narrow it. Public links are off by default; when enabled they carry an expiry and an optional download policy. The inventory lists every live link and guest grant with a cursor and supports bulk revoke.
+
+**Acceptance:** turning links off stops every existing link resolving; bulk revoke removes rows from the inventory without a reload; a non-admin gets a denied state, never an empty one.
+
+## 23. Portal Shared Documents — `/shared-docs` and `/shared-docs/[pageId]`
+
+**Customer job:** a portal guest reads the documents named for them.
+
+**Rules:** only pages with a live named-guest grant to that guest appear; a file downloads only when the grant allows it; revoked or expired grants answer not-found.
+
+**Acceptance:** list, detail, download-allowed and download-denied, and revoked states each render distinctly for a real portal guest.
 
 ## Shared module inventory
 

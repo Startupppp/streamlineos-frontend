@@ -44,6 +44,7 @@ import {
   useKbSpaceMembers,
   useAddKbSpaceMember,
   useRemoveKbSpaceMember,
+  useUpdateKbSpaceMemberRole,
 } from "@/hooks/api/kb/spaces";
 import type { KbSpaceMember } from "@/hooks/api/kb/spaces";
 import { useCan } from "@/hooks/api/access";
@@ -70,6 +71,8 @@ interface MemberRowProps {
   spaceId: number;
 }
 
+const ROLE_VALUES = ["viewer", "commenter", "editor", "publisher", "admin"] as const;
+
 function MemberRow({ member, canManage, spaceId }: MemberRowProps) {
   const name = getUserDisplayName({
     name: member.userName,
@@ -80,10 +83,20 @@ function MemberRow({ member, canManage, spaceId }: MemberRowProps) {
     email: member.userEmail,
   });
   const remove = useRemoveKbSpaceMember();
+  const updateRole = useUpdateKbSpaceMemberRole();
 
   function handleRemove() {
     remove.mutate(
       { spaceId, memberId: member.id },
+      { onError: (e) => toast.error(getErrorMessage(e)) },
+    );
+  }
+
+  function handleRoleChange(value: string) {
+    const spaceRole = ROLE_VALUES.find((r) => r === value);
+    if (!spaceRole) return;
+    updateRole.mutate(
+      { spaceId, memberId: member.id, spaceRole },
       { onError: (e) => toast.error(getErrorMessage(e)) },
     );
   }
@@ -102,9 +115,24 @@ function MemberRow({ member, canManage, spaceId }: MemberRowProps) {
           </p>
         )}
       </div>
-      <Badge variant="outline" className="text-micro h-5 px-2 shrink-0">
-        {ROLE_LABEL[member.spaceRole] ?? member.spaceRole}
-      </Badge>
+      {canManage ? (
+        <Select value={member.spaceRole} onValueChange={handleRoleChange} disabled={updateRole.isPending}>
+          <SelectTrigger className="h-7 w-28 text-xs shrink-0">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {ROLE_VALUES.map((r) => (
+              <SelectItem key={r} value={r} className="text-xs">
+                {ROLE_LABEL[r] ?? r}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : (
+        <Badge variant="outline" className="text-micro h-5 px-2 shrink-0">
+          {ROLE_LABEL[member.spaceRole] ?? member.spaceRole}
+        </Badge>
+      )}
       {canManage && (
         <LoadingButton
           type="button"
@@ -207,7 +235,7 @@ function AddMemberForm({ spaceId }: AddMemberFormProps) {
           name="spaceRole"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-xs">Space role</FormLabel>
+              <FormLabel className="text-xs">Team folder role</FormLabel>
               <FormControl>
                 <Select value={field.value} onValueChange={field.onChange}>
                   <SelectTrigger className="h-9 text-sm">
@@ -243,6 +271,7 @@ function AddMemberForm({ spaceId }: AddMemberFormProps) {
 interface SpaceMembersSheetProps {
   spaceId: number;
   spaceName: string;
+  canManageFolder: boolean;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -295,7 +324,7 @@ function MembersRead({
     fetchNextPage,
   } = useKbSpaceMembers(spaceId, { enabled: open });
   const membersState = usePageState({
-    permission: "kb:spaces:manage",
+    permission: "kb:spaces:view",
     isLoading,
     isError,
     error,
@@ -328,7 +357,7 @@ function MembersRead({
           <EmptyState
             illustration={<KbUsersIcon className="w-8 text-muted-foreground" />}
             title="No members yet"
-            description="Add members to this space to control who can access it."
+            description="Add members to this team folder to control who can access it."
           />
         }
       >
@@ -356,10 +385,11 @@ function MembersRead({
 export function SpaceMembersSheet({
   spaceId,
   spaceName,
+  canManageFolder,
   open,
   onOpenChange,
 }: SpaceMembersSheetProps) {
-  const canManage = useCan("kb:spaces:manage");
+  const canManage = useCan("kb:spaces:view") && canManageFolder;
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -367,7 +397,7 @@ export function SpaceMembersSheet({
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Members — {spaceName}</SheetTitle>
           <SheetDescription className="text-xs mt-0.5">
-            People who can read or edit pages in this space.
+            People who can read or edit files in this team folder.
           </SheetDescription>
         </SheetHeader>
         <SheetBody className="px-6 py-4 flex-1 overflow-y-auto space-y-4">

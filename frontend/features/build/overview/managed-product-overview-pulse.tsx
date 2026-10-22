@@ -12,15 +12,10 @@ import type { ManagedProductSummary } from "@/hooks/api/build/managed-product-su
 import { openOpportunityCount, percentOf } from "./overview-signals";
 
 interface PulseProps {
-  managedProductId: number;
   summary: ManagedProductSummary;
 }
 
-export function ManagedProductOverviewPulse({
-  managedProductId,
-  summary,
-}: PulseProps) {
-  const base = `/build/managed-products/${managedProductId}`;
+export function ManagedProductOverviewPulse({ summary }: PulseProps) {
   const { evidence, delivery, outcomes } = summary;
   const openOpportunities = openOpportunityCount(evidence.opportunitiesByState);
   const ticketPct = percentOf(
@@ -46,7 +41,6 @@ export function ManagedProductOverviewPulse({
           hint={`Last 30 days · ${evidence.feedbackCount} total`}
           icon={MessageSquare}
           tone="blue"
-          href={`${base}/feedback`}
           wrapHint
         />
         <StatCard
@@ -55,7 +49,6 @@ export function ManagedProductOverviewPulse({
           hint={`Open · ${evidence.opportunityCount} total`}
           icon={Lightbulb}
           tone="amber"
-          href={`${base}/insights`}
           wrapHint
         />
         <StatCard
@@ -63,7 +56,6 @@ export function ManagedProductOverviewPulse({
           value={inFlight}
           hint={`Now + Next · ${delivery.roadmapByHorizon.later} later`}
           icon={Navigation}
-          href={`${base}/roadmap`}
           wrapHint
         />
         <StatCard
@@ -76,7 +68,6 @@ export function ManagedProductOverviewPulse({
           }
           icon={CheckCircle2}
           tone="emerald"
-          href={`${base}/projects`}
           wrapHint
         />
         <StatCard
@@ -88,7 +79,6 @@ export function ManagedProductOverviewPulse({
               : `${outcomes.outcomeReviews.met} of ${outcomes.outcomeReviews.completed} reviews`
           }
           icon={Target}
-          href={`${base}/insights`}
           wrapHint
         />
       </StatCardGrid>

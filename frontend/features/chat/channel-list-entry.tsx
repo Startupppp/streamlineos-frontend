@@ -2,9 +2,9 @@
 
 import { memo, useCallback } from "react";
 import { ChannelItem } from "./channel-item";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 
-export interface ChannelListEntryProps {
+interface ChannelListEntryProps {
   channel: Channel;
   activeChannelId: number | null;
   currentUserId: string;

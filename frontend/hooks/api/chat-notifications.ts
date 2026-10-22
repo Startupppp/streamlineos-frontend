@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useAbly } from "ably/react";
 import type { InboundMessage } from "ably";
 import { useQueryClient } from "@tanstack/react-query";
@@ -12,30 +12,29 @@ import { reauthorizeAblyClients } from "@/lib/ably";
 import type { Channel } from "@/types/chat";
 import { isRecord } from "@/lib/is-record";
 import {
+  forgetChannelUnread,
+  readChatNotification,
+  rememberMessage,
+  rememberUnread,
+  viewerIsReading,
+} from "@/hooks/api/chat-notification-tracking";
+import {
   chatAlertDecision,
   chatAlertIsRaised,
   viewerChannelState,
 } from "@/lib/chat-alert-policy";
-import { invalidateChatUnreadState } from "@/lib/chat-read-state";
+import {
+  applyDeletedUnread,
+  decrementChannelUnread,
+  markChannelTimelineStale,
+  patchUnreadTotal,
+  recordInboundChannelMessage,
+} from "@/hooks/api/chat-read-cache";
+import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-cache";
+import { messageDeletedPayloadSchema } from "@/hooks/api/chat-realtime-schema";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
-/**
- * An Ably message body is `any`, so asserting it into a payload interface
- * checked nothing. Read the four fields the handler uses and verify each.
- */
-function readChatNotification(data: unknown): {
-  id: number;
-  senderId: unknown;
-  senderName: string | null;
-  content: string | null;
-} | null {
-  if (!isRecord(data) || typeof data.id !== "number" || !data.id) return null;
-  return {
-    id: data.id,
-    senderId: data.senderId,
-    senderName: typeof data.senderName === "string" ? data.senderName : null,
-    content: typeof data.content === "string" ? data.content : null,
-  };
-}
+type BackgroundChannelEvent = "message" | "message:deleted" | "message:updated" | "reaction:updated";
 
 export function useChatGlobalNotifications(
   channels: Channel[] | undefined,
@@ -58,6 +57,9 @@ export function useChatGlobalNotifications(
   const channelsRef = useRef(channels);
   // eslint-disable-next-line react-hooks/refs
   channelsRef.current = channels;
+
+  const [seen] = useState(() => new Set<number>());
+  const [countedUnread] = useState(() => new Map<number, number>());
 
   const channelIdSignature = useMemo(
     () =>
@@ -83,6 +85,7 @@ export function useChatGlobalNotifications(
     let cancelled = false;
     const subs: Array<{
       ch: ReturnType<typeof ably.channels.get>;
+      event: BackgroundChannelEvent;
       h: (msg: InboundMessage) => void;
     }> = [];
 
@@ -95,13 +98,24 @@ export function useChatGlobalNotifications(
         const handler = (msg: InboundMessage) => {
           if (isForgedServerFrame("message", msg.clientId)) return;
           const payload = readChatNotification(msg.data);
-          if (!payload || payload.senderId === currentUserIdRef.current) return;
+          if (!payload) return;
+          if (channelId !== activeChannelIdRef.current) markChannelTimelineStale(queryClient, channelId);
+          if (payload.senderId === currentUserIdRef.current) return;
+          if (!rememberMessage(seen, payload.id)) return;
 
           const current = channelsRef.current?.find((c) => c.id === channelId);
           const channelType = current?.type;
           const channelDisplayName = current?.name;
 
-          invalidateChatUnreadState(queryClient);
+          const countsAsUnread = !viewerIsReading(channelId, activeChannelIdRef.current);
+          if (countsAsUnread) rememberUnread(countedUnread, payload.id, channelId);
+          recordInboundChannelMessage(queryClient, {
+            channelId,
+            content: payload.content,
+            senderName: payload.senderName,
+            createdAt: payload.createdAt,
+            countsAsUnread,
+          });
 
           const decision = chatAlertDecision({
             kind: "message",
@@ -131,12 +145,45 @@ export function useChatGlobalNotifications(
           }
         };
 
-        const ok = await safeSubscribe(ablyChannel, "message", handler);
-        if (cancelled) {
-          if (ok) safeUnsubscribe(ablyChannel, "message", handler);
-          return;
+        const deletedHandler = (msg: InboundMessage) => {
+          if (isForgedServerFrame("message:deleted", msg.clientId)) return;
+          if (channelId === activeChannelIdRef.current) return;
+          const parsed = messageDeletedPayloadSchema.safeParse(msg.data);
+          if (!parsed.success) return;
+          markChannelTimelineStale(queryClient, channelId);
+          const messageId = parsed.data.id;
+          if (countedUnread.get(messageId) === channelId) {
+            countedUnread.delete(messageId);
+            decrementChannelUnread(queryClient, channelId);
+          } else {
+            applyDeletedUnread(
+              queryClient,
+              findCachedMessage(queryClient, channelId, messageId),
+              currentUserIdRef.current,
+            );
+          }
+          patchChatMessage(queryClient, channelId, messageId, { isDeleted: true, content: null });
+        };
+
+        const changedHandler = (event: "message:updated" | "reaction:updated") => (msg: InboundMessage) => {
+          if (isForgedServerFrame(event, msg.clientId)) return;
+          if (channelId === activeChannelIdRef.current) return;
+          markChannelTimelineStale(queryClient, channelId);
+        };
+
+        for (const [event, h] of [
+          ["message", handler],
+          ["message:deleted", deletedHandler],
+          ["message:updated", changedHandler("message:updated")],
+          ["reaction:updated", changedHandler("reaction:updated")],
+        ] as const) {
+          const ok = await safeSubscribe(ablyChannel, event, h);
+          if (cancelled) {
+            if (ok) safeUnsubscribe(ablyChannel, event, h);
+            return;
+          }
+          if (ok) subs.push({ ch: ablyChannel, event, h });
         }
-        if (ok) subs.push({ ch: ablyChannel, h: handler });
       }
     }
 
@@ -144,11 +191,23 @@ export function useChatGlobalNotifications(
 
     return () => {
       cancelled = true;
-      for (const { ch, h } of subs) {
-        safeUnsubscribe(ch, "message", h);
+      for (const { ch, event, h } of subs) {
+        safeUnsubscribe(ch, event, h);
       }
     };
-  }, [orgId, channelIdSignature, ably, queryClient]);
+  }, [orgId, channelIdSignature, ably, queryClient, seen, countedUnread]);
+
+  useEffect(() => {
+    if (activeChannelId !== null) forgetChannelUnread(countedUnread, activeChannelId);
+  }, [activeChannelId, countedUnread]);
+
+  useEffect(() => {
+    if (countedUnread.size === 0) return;
+    for (const channelId of new Set(countedUnread.values())) {
+      if (channels?.find((c) => c.id === channelId)?.unreadCount === 0)
+        forgetChannelUnread(countedUnread, channelId);
+    }
+  }, [channels, countedUnread]);
 
   useEffect(() => {
     if (!orgId || !currentUserId) return;
@@ -171,7 +230,14 @@ export function useChatGlobalNotifications(
       const channelId = data.channelId;
       const loaded = channelsRef.current?.find((c) => c.id === channelId);
       if (loaded !== undefined) return;
-      invalidateChatUnreadState(queryClient);
+      const firstSighting = typeof data.messageId !== "number" || rememberMessage(seen, data.messageId);
+      if (firstSighting) {
+        patchUnreadTotal(queryClient, (total) => total + 1);
+        void queryClient.invalidateQueries({
+          queryKey: collaborationQueryKeys.chat.myChannels(),
+          exact: true,
+        });
+      }
       const decision = chatAlertDecision({
         kind: event === "notification:mention" ? "mention" : "message",
         channelId,
@@ -211,5 +277,5 @@ export function useChatGlobalNotifications(
       cancelled = true;
       for (const [event, handler] of subscribed) safeUnsubscribe(notifChannel, event, handler);
     };
-  }, [orgId, currentUserId, ably, queryClient]);
+  }, [orgId, currentUserId, ably, queryClient, seen]);
 }

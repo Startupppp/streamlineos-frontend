@@ -1,5 +1,7 @@
 # Step 1 — Product Strategy and Customer Needs
 
+> **Supporting specification:** [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns scope and priority. This file supplies detailed jobs and metrics only.
+
 ## The customer problem
 
 Customers do not need “more documents.” They need reliable answers and durable decisions without searching across tools, asking the same people again, or trusting stale content. The product must reduce the cost of creating, finding, validating, and maintaining knowledge.
@@ -16,11 +18,15 @@ Customers do not need “more documents.” They need reliable answers and durab
 | Share safely | The correct people get the intended access and revoked users lose it quickly | Grant success, revocation propagation, zero-leak tests |
 | Recover from mistakes | Edits, deletion, imports, and automation are reversible | Restore success, conflict recovery, purge exceptions |
 | Publish externally | Customers can expose selected help content without exposing internal context | Public-page availability, deflection, no private metadata leaks |
+| Work with business files | A user can upload, organize, preview, search, share, and export common office files without losing access control | File task success, preview success, search recall, version recovery |
+| Analyze operating data | An operator can use a read-only list, pivot, chart, or metric over authorized StreamlineOS records without repeated CSV copy/paste | Live-block use, refresh success, fewer manual exports, decision time |
 
 ## Personas
 
 - **Reader:** searches, asks, follows citations, and needs fast trustworthy answers.
 - **Contributor:** creates and updates pages during daily work.
+- **File collaborator:** organizes folders, uploads office files, shares them, and recovers versions.
+- **Operator or analyst:** imports XLSX/CSV and consumes refreshable, permission-aware business data.
 - **Knowledge owner:** verifies, reviews, organizes, and responds to gaps.
 - **Space manager:** controls membership, structure, archive, and templates for a domain.
 - **Organization administrator:** sets retention, audits access, handles export/purge, and monitors health.
@@ -38,6 +44,7 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 6. **Human accountability for AI.** AI can draft and explain; a named human owns publishing and verification.
 7. **Progressive disclosure.** Readers get a quiet page. Editors and admins reveal tools when needed.
 8. **Measure value, not activity.** Page count and AI message count are not success metrics.
+9. **Compatibility before cloning.** Make common office files safe and useful first; build native editing only for workflows where StreamlineOS data creates a clear advantage.
 
 ## North-star and guardrail metrics
 
@@ -66,54 +73,7 @@ Each page must serve one primary persona. Admin controls may coexist only when t
 
 ## Feature priority
 
-### P0 — Trustworthy core
-
-- Correct My pages and Shared with me.
-- Canonical page/space/project/share authorization on every read and mutation.
-- Full search with snippets, facets, URL state, cursor paging, and Quick find handoff.
-- Bounded page/space/review/template/trash/source/job collections.
-- Page card/row action consistency.
-- Space archive/restore and members visibility.
-- Searchable trash with bulk restore/purge.
-- Reliable page history, conflict resolution, and offline-safe drafts.
-- Mobile Wiki navigation and page metadata/comments access.
-- Visible owner, freshness, verification, and access state on result and page surfaces.
-- Honest error/denied/empty states with request ids and retry.
-
-### P1 — Governance and quality loop
-
-- Content Health page with presets: stale, unowned, unverified, empty, broken links, overexposed, overdue review.
-- Assignable Ask gaps: unanswered query → owner → draft/update → verification → resolved.
-- Bulk owner, review, verify, archive, move, and access repair.
-- Space roles and review policies.
-- Permission-safe analytics for search, Ask, reuse, gaps, freshness, and public deflection.
-- Research briefs with durable citations and a review owner.
-- Notifications for direct shares, review assignments, mentions, and ownership only; avoid noisy activity feeds.
-
-### P2 — Differentiated intelligence with measured demand
-
-1. **Evidence Trail:** every important claim in an AI answer can expand to the exact page version, source passage, owner, verification state, and access-safe change history. This improves trust rather than adding an AI gimmick.
-2. **Answer-to-Fix Loop:** when Ask cannot support an answer, the user can create a gap. The system proposes the smallest page change, routes it to the owner, preserves the original query, and measures whether the fix later resolves similar questions.
-3. **Knowledge Packets:** an incident, launch, onboarding, customer escalation, or decision can expose a curated, live packet of linked records and pages. The packet references source records rather than copying them.
-4. **Freshness Budgets:** different knowledge classes carry different review expectations. A runbook may require 30-day review; a principle may allow 365 days. Budgets are policy plus alerts, not an opaque AI score.
-5. **Contradiction Queue:** retrieval detects materially conflicting claims across current pages and presents both with owners and versions for human resolution. It never auto-rewrites either page.
-6. **Change Impact Preview:** before archiving, moving, or restricting a page, show affected backlinks, Ask citations, public links, packets, and automations.
-
-These features are “ahead” because they close the trust-and-maintenance loop inside the operating system. They are not P0 because they depend on correct ownership, versioning, links, ACLs, and telemetry.
-
-## Features deliberately not built now
-
-| Feature | Reason |
-|---|---|
-| Arbitrary relational databases inside pages | High complexity, duplicates Build/CRM data, weakens a clear page model |
-| Board/calendar/timeline views of pages | No strong knowledge job; filters and health presets cover current needs |
-| Template marketplace | Starters and organization templates solve the job without moderation/billing/discovery overhead |
-| Autonomous AI publishing or access changes | Unsafe, hard to audit, and removes human ownership |
-| Separate project-wiki backend | Duplicates content, search, ACL, history, and indexing |
-| Always-on multiplayer cursors | Costly and not required for the current autosave/conflict job; revisit from measured concurrent-edit demand |
-| Social reactions, follower counts, or gamification | Activity is not knowledge quality |
-| A second generic dashboard | Content Health and Analytics must drive actions, not display vanity totals |
-| Per-feature search infrastructure | One retrieval/indexing module should serve Wiki, Ask, public help, and contextual lookup through projections |
+The complete Must/Basic/Good/WOW classification, exclusions, edge-case checklist, current implementation baseline, and phased release order live only in [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md). This strategy file owns customer jobs, personas, principles, metrics, content requirements, and the decision test below; it does not maintain a second roadmap.
 
 ## Content design requirements
 

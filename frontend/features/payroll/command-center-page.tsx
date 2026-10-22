@@ -266,11 +266,6 @@ export function PayrollCommandCenterPage() {
                   value={excCount}
                   tone={excCount > 0 ? "red" : "emerald"}
                   icon={AlertTriangle}
-                  href={
-                    excCount > 0 && runId
-                      ? `/payroll/runs/${runId}?tab=exceptions`
-                      : undefined
-                  }
                 />
               </StatCardGrid>
 

@@ -3,12 +3,14 @@
 import { useEffect, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { useChatPoll, type ChatPollPosition } from "@/hooks/api/chat-core-read";
+import { useChatPoll, type ChatPollPosition } from "@/hooks/api/chat-message-windows";
+import { recordChatArrival } from "./chat-arrivals";
+import { newestConfirmedMessageId } from "./message-page-merge";
 
-export const EPOCH_POLL_SINCE = new Date(0).toISOString();
-export const OFFLINE_HISTORY_RECONCILE_INTERVAL_MS = 120_000;
+const EPOCH_POLL_SINCE = new Date(0).toISOString();
+const OFFLINE_HISTORY_RECONCILE_INTERVAL_MS = 120_000;
 
-export function openingPollPosition(
+function openingPollPosition(
   newestLoadedAt: Date | string | null,
 ): ChatPollPosition {
   return {
@@ -24,6 +26,7 @@ interface ChatPollReconciliationOptions {
   newestLoadedAt: Date | string | null;
   isRealtimeConnected: boolean;
   isHistoryLoading: boolean;
+  canReadChannel: boolean;
   refetchHistory: () => Promise<{ isError: boolean }>;
 }
 
@@ -32,6 +35,7 @@ export function useChatPollReconciliation({
   newestLoadedAt,
   isRealtimeConnected,
   isHistoryLoading,
+  canReadChannel,
   refetchHistory,
 }: ChatPollReconciliationOptions): {
   position: ChatPollPosition;
@@ -50,7 +54,7 @@ export function useChatPollReconciliation({
   const { data: pollResult } = useChatPoll(
     channelId,
     effectivePosition,
-    !isRealtimeConnected && !isHistoryLoading,
+    canReadChannel && !isRealtimeConnected && !isHistoryLoading,
   );
 
   useEffect(() => {
@@ -59,10 +63,15 @@ export function useChatPollReconciliation({
     let cancelled = false;
 
     void (async () => {
+      const messagesKey = collaborationQueryKeys.chat.messages(channelId);
+      const newestBefore = newestConfirmedMessageId(queryClient.getQueryData(messagesKey));
       const result = await refetchHistory();
       if (cancelled || result.isError) return;
-      queryClient.invalidateQueries({
+      const newestAfter = newestConfirmedMessageId(queryClient.getQueryData(messagesKey));
+      if (newestBefore > 0 && newestAfter > newestBefore) recordChatArrival(channelId);
+      void queryClient.invalidateQueries({
         queryKey: collaborationQueryKeys.chat.myChannels(),
+        exact: true,
       });
       if (nextPosition !== null)
         setPositionState({
@@ -77,12 +86,12 @@ export function useChatPollReconciliation({
   }, [channelId, pollResult, queryClient, refetchHistory]);
 
   useEffect(() => {
-    if (isRealtimeConnected || channelId <= 0) return;
+    if (!canReadChannel || isRealtimeConnected || channelId <= 0) return;
     const timer = setInterval(() => {
       void refetchHistory();
     }, OFFLINE_HISTORY_RECONCILE_INTERVAL_MS);
     return () => clearInterval(timer);
-  }, [isRealtimeConnected, channelId, refetchHistory]);
+  }, [canReadChannel, isRealtimeConnected, channelId, refetchHistory]);
 
   return { position: effectivePosition };
 }

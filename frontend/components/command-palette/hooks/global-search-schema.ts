@@ -1,8 +1,18 @@
 import { z } from "zod";
 
 const globalSearchResultSchema = z.object({
-  id: z.number().int(),
-  type: z.enum(["lead", "deal", "contact", "client", "ticket"]),
+  id: z.union([z.number().int(), z.string()]),
+  type: z.enum([
+    "lead",
+    "deal",
+    "contact",
+    "client",
+    "ticket",
+    "employee",
+    "doc_page",
+    "calendar_event",
+    "support_ticket",
+  ]),
   title: z.string(),
   subtitle: z.string(),
   href: z.string(),
@@ -11,5 +21,5 @@ const globalSearchResultSchema = z.object({
 
 export const globalSearchContract = z.object({
   results: z.array(globalSearchResultSchema),
-  total: z.number().int().optional(),
+  total: z.number().int(),
 });

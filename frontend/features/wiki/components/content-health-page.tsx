@@ -84,15 +84,18 @@ const SIGNAL_LABELS: Record<ContentHealthSignalType, string> = {
 };
 
 const SIGNAL_DESCRIPTIONS: Record<ContentHealthSignalType, string> = {
-  unowned: "Pages with no assigned owner",
-  stale: "Pages not updated in 90 or more days",
-  unverified: "Pages in an unverified or expired trust state",
-  empty: "Pages with no content body",
-  overdue_review: "Pages with a pending review that is past its due date",
-  broken_link: "Pages that contain links to deleted or missing pages",
-  overexposed: "Pages marked public while their space is not a public help centre",
-  duplicate_candidate: "Pages whose content is identical to another page in this org",
-  contradictory_claim: "Pages that make claims conflicting with another page on the same topic",
+  unowned: "Files with no assigned owner",
+  stale: "Files not updated in 90 or more days",
+  unverified: "Files in an unverified or expired trust state",
+  empty: "Files with no content body",
+  overdue_review: "Files with a pending review that is past its due date",
+  broken_link: "Files that contain links to deleted or missing files",
+  overexposed:
+    "Files marked public while their team folder is not a public help centre",
+  duplicate_candidate:
+    "Files whose content is identical to another file in this org",
+  contradictory_claim:
+    "Files that make claims conflicting with another file on the same topic",
 };
 
 interface CountChipProps {
@@ -201,18 +204,25 @@ function HealthTrendWidget() {
   return (
     <div className="rounded-xl border border-border bg-card/60 px-4 py-3 flex items-center gap-4">
       <div className="flex flex-col">
-        <span className="text-xs text-muted-foreground">Open 30 days ago (all signals)</span>
-        <span className="text-lg font-semibold tabular-nums text-foreground">{data.beforeCount}</span>
+        <span className="text-xs text-muted-foreground">
+          Open 30 days ago (all signals)
+        </span>
+        <span className="text-lg font-semibold tabular-nums text-foreground">
+          {data.beforeCount}
+        </span>
       </div>
       <span className="text-muted-foreground text-sm">→</span>
       <div className="flex flex-col">
-        <span className="text-xs text-muted-foreground">Open now (all signals)</span>
+        <span className="text-xs text-muted-foreground">
+          Open now (all signals)
+        </span>
         <span className="text-lg font-semibold tabular-nums text-foreground">
           {data.afterCount}
         </span>
       </div>
       <p className="text-xs text-muted-foreground ml-auto text-right">
-        {netChange > 0 ? "+" : ""}{netChange} net change in visible open issues
+        {netChange > 0 ? "+" : ""}
+        {netChange} net change in visible open issues
       </p>
     </div>
   );
@@ -225,12 +235,16 @@ interface BulkRepairDialogProps {
   onSuccess: () => void;
 }
 
-function BulkRepairDialog({ selectedIds, activeSignal, onClose, onSuccess }: BulkRepairDialogProps) {
+function BulkRepairDialog({
+  selectedIds,
+  activeSignal,
+  onClose,
+  onSuccess,
+}: BulkRepairDialogProps) {
   const bulkRepair = useBulkRepairHealthItems();
   const [selectedUserId, setSelectedUserId] = useState("");
-  const { data: selectedMemberData, isLoading: memberLoading } = useOrgMembersByIds(
-    selectedUserId ? [selectedUserId] : [],
-  );
+  const { data: selectedMemberData, isLoading: memberLoading } =
+    useOrgMembersByIds(selectedUserId ? [selectedUserId] : []);
   const assigneeMembershipId = selectedMemberData?.data.find(
     (member) => member.userId === selectedUserId,
   )?.membershipId;
@@ -238,10 +252,17 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose, onSuccess }: Bul
   function handleConfirm() {
     if (!assigneeMembershipId) return;
     bulkRepair.mutate(
-      { pageIds: selectedIds, kind: activeSignal, repairAction: "assign_owner", assigneeMembershipId },
+      {
+        pageIds: selectedIds,
+        kind: activeSignal,
+        repairAction: "assign_owner",
+        assigneeMembershipId,
+      },
       {
         onSuccess: (result) => {
-          const count = result.results.filter((r) => r.outcome === "applied").length;
+          const count = result.results.filter(
+            (r) => r.outcome === "applied",
+          ).length;
           toast.success(`Assigned ${count} issues`);
           onSuccess();
         },
@@ -261,7 +282,8 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose, onSuccess }: Bul
       <DialogContent className="md:max-w-sm">
         <DialogHeader>
           <DialogTitle>
-            Bulk repair — {selectedIds.length} {selectedIds.length === 1 ? "page" : "pages"}
+            Bulk repair — {selectedIds.length}{" "}
+            {selectedIds.length === 1 ? "file" : "files"}
           </DialogTitle>
           <DialogDescription>
             Assign a person to resolve the selected issues.
@@ -273,7 +295,13 @@ function BulkRepairDialog({ selectedIds, activeSignal, onClose, onSuccess }: Bul
           placeholder="Select member…"
         />
         <DialogFooter>
-          <Button type="button" variant="outline" size="sm" className="text-xs h-7" onClick={onClose}>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="text-xs h-7"
+            onClick={onClose}
+          >
             Cancel
           </Button>
           <LoadingButton
@@ -304,9 +332,8 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
   const [dueAt, setDueAt] = useState("");
   const assign = useAssignHealthItem();
 
-  const { data: selectedMemberData, isLoading: memberLoading } = useOrgMembersByIds(
-    selectedUserId ? [selectedUserId] : [],
-  );
+  const { data: selectedMemberData, isLoading: memberLoading } =
+    useOrgMembersByIds(selectedUserId ? [selectedUserId] : []);
   const resolvedMembershipId = selectedMemberData?.data.find(
     (m) => m.userId === selectedUserId,
   )?.membershipId;
@@ -322,7 +349,12 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
   function handleAssign() {
     if (!resolvedMembershipId) return;
     assign.mutate(
-      { pageId, kind, assigneeMembershipId: resolvedMembershipId, dueAt: dueAt || undefined },
+      {
+        pageId,
+        kind,
+        assigneeMembershipId: resolvedMembershipId,
+        dueAt: dueAt || undefined,
+      },
       {
         onSuccess: () => {
           toast.success("Assigned");
@@ -343,7 +375,7 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
           variant="ghost"
           size="sm"
           className="text-xs h-7 w-16 shrink-0"
-          aria-label="Assign this page"
+          aria-label="Assign this file"
         >
           Assign
         </Button>
@@ -382,7 +414,11 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
 
 export default function ContentHealthPage() {
   const searchParams = useSearchParams();
-  const { data: accessData, isError: accessReadError, refetch: refetchAccess } = useAccess();
+  const {
+    data: accessData,
+    isError: accessReadError,
+    refetch: refetchAccess,
+  } = useAccess();
   const { update: updateFilters } = useUrlFilters({ pageParam: "cursor" });
   const { state: dismissState, openDismiss, closeDialog } = useDismissDialog();
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
@@ -396,7 +432,9 @@ export default function ContentHealthPage() {
 
   const rawCursor = searchParams.get("cursor");
   const afterId =
-    rawCursor && /^[1-9]\d*$/.test(rawCursor) && Number.isSafeInteger(Number(rawCursor))
+    rawCursor &&
+    /^[1-9]\d*$/.test(rawCursor) &&
+    Number.isSafeInteger(Number(rawCursor))
       ? Number(rawCursor)
       : undefined;
   const cursor = afterId?.toString();
@@ -404,7 +442,12 @@ export default function ContentHealthPage() {
   const cursorTrail =
     cursor &&
     trailEntries[0] === "~" &&
-    trailEntries.slice(1).every((entry) => /^[1-9]\d*$/.test(entry) && Number.isSafeInteger(Number(entry)))
+    trailEntries
+      .slice(1)
+      .every(
+        (entry) =>
+          /^[1-9]\d*$/.test(entry) && Number.isSafeInteger(Number(entry)),
+      )
       ? trailEntries
       : cursor
         ? ["~"]
@@ -444,7 +487,10 @@ export default function ContentHealthPage() {
     const next = signalsData?.nextCursor;
     if (next == null) return;
     setSelectedIds(new Set());
-    updateFilters({ cursor: String(next), cursorTrail: [...cursorTrail, cursor ?? "~"].join(".") });
+    updateFilters({
+      cursor: String(next),
+      cursorTrail: [...cursorTrail, cursor ?? "~"].join("."),
+    });
   }
 
   function handlePrevious() {
@@ -453,7 +499,8 @@ export default function ContentHealthPage() {
     const previousCursor = cursorTrail[cursorTrail.length - 1];
     updateFilters({
       cursor: previousCursor === "~" ? null : previousCursor,
-      cursorTrail: cursorTrail.length > 1 ? cursorTrail.slice(0, -1).join(".") : null,
+      cursorTrail:
+        cursorTrail.length > 1 ? cursorTrail.slice(0, -1).join(".") : null,
     });
   }
 
@@ -511,7 +558,8 @@ export default function ContentHealthPage() {
     (countsData?.counts ?? []).map((c) => [c.signalType, c.count]),
   );
 
-  const allSelected = rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
+  const allSelected =
+    rows.length > 0 && rows.every((r) => selectedIds.has(r.id));
   const someSelected = selectedIds.size > 0;
 
   return (
@@ -527,7 +575,7 @@ export default function ContentHealthPage() {
               <KbFileTextIcon className="h-8 w-8 text-muted-foreground" />
             }
             title="No content health issues"
-            description="All pages pass every signal check."
+            description="All files pass every signal check."
           />
         }
       >
@@ -612,7 +660,7 @@ export default function ContentHealthPage() {
                   <KbFileTextIcon className="h-6 w-6 text-muted-foreground" />
                 }
                 title={`No ${SIGNAL_LABELS[activeSignal].toLowerCase()} pages`}
-                description="No pages match this signal."
+                description="No files match this signal."
                 compact
               />
             ) : (
@@ -643,7 +691,9 @@ export default function ContentHealthPage() {
                     >
                       <Checkbox
                         checked={selectedIds.has(row.id)}
-                        onCheckedChange={(checked) => handleRowSelect(row.id, !!checked)}
+                        onCheckedChange={(checked) =>
+                          handleRowSelect(row.id, !!checked)
+                        }
                         aria-label={`Select ${row.title || "Untitled"}`}
                         className="shrink-0"
                       />
@@ -667,7 +717,13 @@ export default function ContentHealthPage() {
                           variant="ghost"
                           size="sm"
                           className="text-xs h-7 w-16 shrink-0"
-                          onClick={() => openDismiss(row.id, row.title || "Untitled", activeSignal)}
+                          onClick={() =>
+                            openDismiss(
+                              row.id,
+                              row.title || "Untitled",
+                              activeSignal,
+                            )
+                          }
                         >
                           Dismiss
                         </Button>

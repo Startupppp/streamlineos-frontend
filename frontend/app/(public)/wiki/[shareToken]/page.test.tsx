@@ -15,6 +15,17 @@ jest.mock("@/features/wiki/components/public-page-content-loader", () => ({
   },
 }));
 
+jest.mock(
+  "@/features/wiki/components/public-file-download-button",
+  () => ({
+    PublicFileDownloadButton: () => (
+      <button type="button" aria-label="Download file">
+        Download
+      </button>
+    ),
+  }),
+);
+
 import PublicWikiPage from "@/app/(public)/wiki/[shareToken]/page";
 
 const COVER_KEY = "org-1/kb-media/org-1/cover.webp";
@@ -25,8 +36,11 @@ interface PublicPageData {
   title: string;
   icon: string | null;
   coverImage: string | null;
+  kind: "document" | "spreadsheet" | "file";
   content: Record<string, unknown> | Record<string, unknown>[] | null;
   updatedAt: string | null;
+  allowDownload: boolean;
+  file: { fileName: string; mimeType: string; byteSize: number } | null;
 }
 
 function pageData(overrides: Partial<PublicPageData> = {}): PublicPageData {
@@ -34,8 +48,11 @@ function pageData(overrides: Partial<PublicPageData> = {}): PublicPageData {
     title: "Handbook",
     icon: null,
     coverImage: null,
+    kind: "document",
     content: null,
     updatedAt: null,
+    allowDownload: false,
+    file: null,
     ...overrides,
   };
 }
@@ -171,5 +188,58 @@ describe("public wiki share page — no raw object reference reaches the viewer"
         poster: publicMediaBrokerUrl("tok-content-3", CONTENT_KEY),
       },
     ]);
+  });
+});
+
+describe("public wiki share page — file kind rendering", () => {
+  it("renders the file name and mime type for a file page, not the content loader", async () => {
+    const { getByText, queryByTestId } = await renderRoute(
+      "tok-file-1",
+      pageData({
+        kind: "file",
+        allowDownload: false,
+        file: { fileName: "report.pdf", mimeType: "application/pdf", byteSize: 204800 },
+      }),
+    );
+
+    expect(getByText("report.pdf")).toBeTruthy();
+    expect(getByText(/application\/pdf/)).toBeTruthy();
+    expect(queryByTestId("public-content")).toBeNull();
+  });
+
+  it("renders the download button when allowDownload is true", async () => {
+    const { getByRole } = await renderRoute(
+      "tok-file-2",
+      pageData({
+        kind: "file",
+        allowDownload: true,
+        file: { fileName: "report.pdf", mimeType: "application/pdf", byteSize: 204800 },
+      }),
+    );
+
+    expect(getByRole("button", { name: /download/i })).toBeTruthy();
+  });
+
+  it("does not render a download button when allowDownload is false", async () => {
+    const { queryByRole } = await renderRoute(
+      "tok-file-3",
+      pageData({
+        kind: "file",
+        allowDownload: false,
+        file: { fileName: "report.pdf", mimeType: "application/pdf", byteSize: 1024 },
+      }),
+    );
+
+    expect(queryByRole("button", { name: /download/i })).toBeNull();
+  });
+
+  it("renders the content loader for a document page, not the file card", async () => {
+    const { getByTestId, queryByText } = await renderRoute(
+      "tok-doc-1",
+      pageData({ kind: "document" }),
+    );
+
+    expect(getByTestId("public-content")).toBeTruthy();
+    expect(queryByText(/application\/pdf/)).toBeNull();
   });
 });

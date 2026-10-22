@@ -198,7 +198,7 @@ export default function PageHistoryPage({
     return (
       <PageWrapper title="File history" backHref={backHref}>
         <div className="flex flex-col items-center justify-center flex-1 min-h-[40dvh] gap-3">
-          <p className="text-sm text-muted-foreground">Failed to load page.</p>
+          <p className="text-sm text-muted-foreground">Failed to load file.</p>
           <Button variant="outline" size="sm" onClick={() => router.refresh()}>
             Retry
           </Button>
@@ -435,14 +435,19 @@ export default function PageHistoryPage({
                     ) : (
                       <div className="px-6 py-4 space-y-4">
                         {versionADetail && (
-                          <BlockDiffView
-                            heading="Block diff vs current"
-                            identicalLabel="Identical to the current page."
-                            beforeContent={versionADetail.content}
-                            afterContent={currentPage.content}
-                            beforeTitle={versionADetail.title}
-                            afterTitle={currentPage.title}
-                          />
+                          Array.isArray(versionADetail.content) &&
+                          typeof (versionADetail.content[0] as Record<string, unknown> | undefined)?.celldata !== "undefined" ? (
+                            <p className="text-sm text-muted-foreground px-1">Spreadsheet — block diff not available. Restore to view the full content.</p>
+                          ) : (
+                            <BlockDiffView
+                              heading="Block diff vs current"
+                              identicalLabel="Identical to the current page."
+                              beforeContent={versionADetail.content}
+                              afterContent={currentPage.content}
+                              beforeTitle={versionADetail.title}
+                              afterTitle={currentPage.title}
+                            />
+                          )
                         )}
                       </div>
                     )}
@@ -469,7 +474,7 @@ export default function PageHistoryPage({
         content={
           versionADetail ? (
             <BlockDiffView
-              heading={`Preview: how this page changes when version ${selectedA} is restored`}
+              heading={`Preview: how this file changes when version ${selectedA} is restored`}
               identicalLabel="Restoring changes nothing — this version matches the current page."
               beforeContent={currentPage.content}
               afterContent={versionADetail.content}

@@ -1,6 +1,14 @@
 import { render, screen } from "@testing-library/react";
 import PrivatePage from "./private-page";
 
+jest.mock("./library/shortcuts-section", () => ({
+  ShortcutsSection: () => null,
+}));
+
+jest.mock("./kb-new-menu", () => ({
+  KbNewMenu: () => null,
+}));
+
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/knowledge/wiki/private",
@@ -23,6 +31,14 @@ jest.mock("@/hooks/api/kb", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+}));
+
+jest.mock("@/hooks/api/organization", () => ({
+  useOrgMembersByIds: jest.fn(() => ({ data: undefined })),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
 }));
 
 jest.mock("@/hooks/api/use-page-state", () => ({
@@ -75,6 +91,7 @@ function makeItem(overrides: Partial<Record<string, unknown>> = {}) {
     projectId: null,
     parentPageId: null,
     status: "draft",
+    kind: "document",
     visibility: "private",
     contentType: "rich-text",
     trustState: "unverified",

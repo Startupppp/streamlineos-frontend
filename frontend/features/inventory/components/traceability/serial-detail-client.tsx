@@ -106,7 +106,6 @@ export function SerialDetailClient({ serialId }: SerialDetailClientProps) {
           <StatCard
             label="Lot #"
             value={lotNumber ?? "—"}
-            href={serial.lotId !== null ? `/inventory/lots/${String(serial.lotId)}` : undefined}
           />
         </StatCardGrid>
 

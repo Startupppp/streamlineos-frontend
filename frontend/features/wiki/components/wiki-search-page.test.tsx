@@ -261,7 +261,7 @@ describe("WikiSearchPage — company documents group", () => {
     expect(screen.getByTestId("company-documents-group")).toHaveTextContent("leave");
   });
 
-  it("says 'No pages found', not 'No results', when company documents are searched too, so a group below is not contradicted", () => {
+  it("says 'No files found', not 'No results', when company documents are searched too, so a group below is not contradicted", () => {
     mockConfig.mockReturnValue({ data: { link: true, search: true, ai: false }, isLoading: false, isError: false });
     mockUseSearchParams.mockReturnValue(new URLSearchParams("q=leave"));
     setupSearch([]);
@@ -269,7 +269,7 @@ describe("WikiSearchPage — company documents group", () => {
 
     render(<WikiSearchPage />);
 
-    expect(screen.getByTestId("empty-title")).toHaveTextContent("No pages found");
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No files found");
   });
 
   it("keeps saying 'No results' while company documents are not searched, exactly as before", () => {
@@ -290,7 +290,7 @@ describe("WikiSearchPage — company documents group", () => {
 
     render(<WikiSearchPage />);
 
-    expect(screen.getByTestId("empty-title")).toHaveTextContent("No pages found");
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No files found");
   });
 
   it("limits the empty claim to pages when company document settings failed", () => {
@@ -301,21 +301,21 @@ describe("WikiSearchPage — company documents group", () => {
 
     render(<WikiSearchPage />);
 
-    expect(screen.getByTestId("empty-title")).toHaveTextContent("No pages found");
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("No files found");
   });
 });
 
 describe("WikiSearchPage — first-empty vs filtered-empty", () => {
-  it("shows 'Search pages' invite when no query has been entered", () => {
+  it("shows 'Search files' invite when no query has been entered", () => {
     mockUseSearchParams.mockReturnValue(new URLSearchParams(""));
     setupSearch([]);
     usePageState.mockReturnValue({ kind: "ready" });
 
     render(<WikiSearchPage />);
 
-    expect(screen.getByTestId("empty-title")).toHaveTextContent("Search pages");
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("Search files");
     expect(screen.getByTestId("empty-description")).toHaveTextContent(
-      "Enter a query above to find pages",
+      "Enter a query above to find files",
     );
   });
 
@@ -333,7 +333,7 @@ describe("WikiSearchPage — first-empty vs filtered-empty", () => {
   });
 
   it("the first-empty title and filtered-empty title are distinct strings", () => {
-    expect("Search pages").not.toBe("No results");
+    expect("Search files").not.toBe("No results");
   });
 });
 
@@ -368,12 +368,12 @@ describe("WikiSearchPage — URL filter state", () => {
     usePageState.mockReturnValue({ kind: "ready" });
 
     const { rerender } = render(<WikiSearchPage />);
-    expect(screen.getByRole("searchbox", { name: "Search pages" })).toHaveValue("onboarding");
+    expect(screen.getByRole("searchbox", { name: "Search files" })).toHaveValue("onboarding");
 
     mockUseSearchParams.mockReturnValue(new URLSearchParams("q=runbook"));
     rerender(<WikiSearchPage />);
 
-    expect(screen.getByRole("searchbox", { name: "Search pages" })).toHaveValue("runbook");
+    expect(screen.getByRole("searchbox", { name: "Search files" })).toHaveValue("runbook");
     expect(useKbPageFullSearch).toHaveBeenLastCalledWith(
       expect.objectContaining({ q: "runbook" }),
       expect.anything(),
@@ -388,7 +388,7 @@ describe("WikiSearchPage — URL filter state", () => {
       usePageState.mockReturnValue({ kind: "ready" });
 
       const { rerender } = render(<WikiSearchPage />);
-      fireEvent.change(screen.getByRole("searchbox", { name: "Search pages" }), {
+      fireEvent.change(screen.getByRole("searchbox", { name: "Search files" }), {
         target: { value: "unfinished" },
       });
 
@@ -396,7 +396,7 @@ describe("WikiSearchPage — URL filter state", () => {
       rerender(<WikiSearchPage />);
       act(() => jest.advanceTimersByTime(300));
 
-      expect(screen.getByRole("searchbox", { name: "Search pages" })).toHaveValue("runbook");
+      expect(screen.getByRole("searchbox", { name: "Search files" })).toHaveValue("runbook");
       expect(mockUpdate).not.toHaveBeenCalled();
     } finally {
       jest.useRealTimers();
@@ -557,7 +557,7 @@ describe("WikiSearchPage — quick-find handoff", () => {
 
     render(<WikiSearchPage />);
 
-    expect(screen.getByTestId("empty-title")).toHaveTextContent("Search pages");
+    expect(screen.getByTestId("empty-title")).toHaveTextContent("Search files");
     expect(screen.queryByRole("alert")).toBeNull();
   });
 });
@@ -854,7 +854,7 @@ describe("WikiSearchPage — space facet filter (S05)", () => {
 
     render(<WikiSearchPage />);
 
-    const removeButton = screen.getByRole("button", { name: /Remove space filter/i });
+    const removeButton = screen.getByRole("button", { name: /Remove team folder filter/i });
     fireEvent.click(removeButton);
     expect(mockUpdate).toHaveBeenCalledWith({ space: null });
   });
@@ -972,7 +972,7 @@ describe("WikiSearchPage — accessibility invariants (Box 3, jsdom-provable sub
 
     render(<WikiSearchPage />);
 
-    const input = screen.getByRole("searchbox", { name: /search pages/i });
+    const input = screen.getByRole("searchbox", { name: /search files/i });
     expect(input).toBeInTheDocument();
   });
 

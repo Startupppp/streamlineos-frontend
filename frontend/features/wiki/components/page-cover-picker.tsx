@@ -91,7 +91,7 @@ export function PageCoverPickerDialog({
         <DialogHeader>
           <DialogTitle>Page cover</DialogTitle>
           <DialogDescription className="text-xs">
-            Upload an image or choose a colour for the top of this page.
+            Upload an image or choose a colour for the top of this file.
           </DialogDescription>
         </DialogHeader>
         <input

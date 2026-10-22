@@ -4,7 +4,7 @@ import { renderWithProviders } from "@/test-utils/render";
 import { expectNoAxeViolations } from "@/test-utils/axe";
 import { ChatBubble, type ChatMessage } from "@/components/kb/kb-chat-bubble";
 import { KbSourcesSheet } from "../kb-sources-sheet";
-import type { KbSource } from "@/hooks/api/kb/sources";
+import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 
 jest.mock("@/components/markdown/markdown-content", () => ({
   MarkdownContent: ({ content }: { content: string }) => <p>{content}</p>,
@@ -16,19 +16,34 @@ const CITATIONS: NonNullable<ChatMessage["citations"]> = [
   { kind: "article", articleId: 3, title: "Leave policy FAQ", slug: "leave-policy-faq", spaceId: 1, updatedAt: "2026-09-01T10:00:00.000Z" },
 ];
 
-function source(overrides: Partial<KbSource>): KbSource {
+function source(overrides: Partial<KbPageCollectionItem>): KbPageCollectionItem {
   return {
     id: 1,
     kind: "file",
     title: "Quarterly report.pdf",
-    mimeType: "application/pdf",
-    fileSize: 2048,
-    fileUrl: null,
-    status: "ready",
-    chunkCount: 12,
-    errorMessage: null,
+    icon: null,
+    coverImage: null,
     spaceId: 1,
+    projectId: null,
+    parentPageId: null,
+    status: "published",
+    visibility: "org",
+    contentType: "file",
+    trustState: "unverified",
+    ownerMembershipId: null,
+    ownerUserId: null,
+    createdById: null,
+    createdByMembershipId: null,
+    lastEditedById: null,
+    lastEditedByMembershipId: null,
     createdAt: "2026-09-01T10:00:00.000Z",
+    updatedAt: "2026-09-01T10:00:00.000Z",
+    deletedAt: null,
+    nextReviewAt: null,
+    verifiedUntil: null,
+    contentRevision: 0,
+    aclRevision: 0,
+    sharedBy: null,
     ...overrides,
   };
 }
@@ -85,7 +100,7 @@ describe("KB chat citations — accessibility", () => {
 });
 
 describe("KB ingestion-state sources sheet — accessibility", () => {
-  function renderSheet(sources: KbSource[]) {
+  function renderSheet(sources: KbPageCollectionItem[]) {
     return renderWithProviders(
       <KbSourcesSheet
         mode="manage"
@@ -98,7 +113,7 @@ describe("KB ingestion-state sources sheet — accessibility", () => {
         sourceIsFetchingMore={false}
         onSourceLoadMore={jest.fn()}
         onSourceRetry={jest.fn()}
-        readyCount={sources.filter((s) => s.status === "ready").length}
+        readyCount={sources.filter((s) => s.status === "published").length}
         onUploadClick={jest.fn()}
         uploadPending={false}
         onAddNoteClick={jest.fn()}
@@ -109,11 +124,11 @@ describe("KB ingestion-state sources sheet — accessibility", () => {
     );
   }
 
-  it("has no axe violations with sources in processing, failed and ready states", async () => {
+  it("has no axe violations with sources in draft, in_review and published states", async () => {
     const { baseElement } = renderSheet([
-      source({ id: 1, title: "Processing doc.pdf", status: "processing", chunkCount: 0 }),
-      source({ id: 2, title: "Broken doc.pdf", status: "failed", chunkCount: 0, errorMessage: "Extraction failed" }),
-      source({ id: 3, title: "Ready doc.pdf", status: "ready", chunkCount: 8 }),
+      source({ id: 1, title: "Draft doc.pdf", status: "draft" }),
+      source({ id: 2, title: "Review doc.pdf", status: "in_review" }),
+      source({ id: 3, title: "Published doc.pdf", status: "published" }),
     ]);
     await expectNoAxeViolations(baseElement);
   });
@@ -125,10 +140,10 @@ describe("KB ingestion-state sources sheet — accessibility", () => {
 
   it("exposes each source title as accessible text so the ingestion list is readable", () => {
     renderSheet([
-      source({ id: 1, title: "Processing doc.pdf", status: "processing", chunkCount: 0 }),
-      source({ id: 2, title: "Broken doc.pdf", status: "failed", chunkCount: 0, errorMessage: "Extraction failed" }),
+      source({ id: 1, title: "Draft doc.pdf", status: "draft" }),
+      source({ id: 2, title: "Review doc.pdf", status: "in_review" }),
     ]);
-    expect(screen.getByText("Processing doc.pdf")).toBeInTheDocument();
-    expect(screen.getByText("Broken doc.pdf")).toBeInTheDocument();
+    expect(screen.getByText("Draft doc.pdf")).toBeInTheDocument();
+    expect(screen.getByText("Review doc.pdf")).toBeInTheDocument();
   });
 });

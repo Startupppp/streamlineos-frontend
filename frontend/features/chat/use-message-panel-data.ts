@@ -1,41 +1,37 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo, useCallback } from "react";
-import { toast } from "sonner";
+import { useEffect, useRef, useMemo, useCallback } from "react";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useChatChannel, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
+  useChatChannel, useChatChannels, useChatMessages, useChatOnlineUsers, useChatOrgUsers,
 } from "@/hooks/api/chat-core-read";
 import {
   useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead,
 } from "@/hooks/api/chat-core-mutations-a";
-import { useToggleReaction } from "@/hooks/api/chat-core-mutations-b";
+import { useToggleReaction } from "@/hooks/api/chat-reaction-mutation";
 import { useChatPins, usePinMessage, useUnpinMessage } from "@/hooks/api/chat-search";
-import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
 import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";
-import { orgScopedStorageKey, useOrgStorageScope } from "@/lib/org-scoped-storage";
+import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { useChatRealtime } from "@/hooks/api/chat-realtime";
 import { useStartHuddle, useJoinHuddle, useActiveHuddle } from "@/hooks/api/chat-huddles";
 import { useHuddleRealtime } from "./huddle-realtime";
 import { useAblyConnection } from "./use-ably-connection";
-import { getDateLabel, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
-import type { Message } from "./chat-types";
-import { useChatScroll } from "./use-chat-scroll";
-import { resolveMessageWindowStart } from "./message-render-window";
+import { buildChatUserMap, readChannelJoinRequired, resolveChatUserName } from "./chat-helpers";
+import type { Message } from "@/types/chat";
 import type { AiAction } from "@/components/ai";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 import { useCan } from "@/hooks/api/access";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
-import type { ForwardableMessage } from "./forward-message-dialog";
-import { useChatMentions } from "./use-chat-mentions";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
+import { chatDraftKey } from "./composer-draft";
 import { resolveDirectPartner } from "./channel-member-lookup";
-import { flattenMessagePages } from "./message-page-merge";
-import { resolveFirstUnreadIndex } from "./chat-read-position";
 import { useChatReadMarker } from "./use-chat-read-marker";
 import { useChatOfflineQueue } from "./use-chat-offline-queue";
 import { useHuddleAutoStart } from "./use-huddle-auto-start";
+import { useMessageTimeline } from "./use-message-timeline";
+import { useMessagePanelOverlays } from "./use-message-panel-overlays";
+import { useSavedMessageActions } from "./use-saved-message-actions";
 
 export interface MessagePanelProps {
   channelId: number;
@@ -45,23 +41,26 @@ export interface MessagePanelProps {
   showInfoPanel: boolean;
   autoStartCall?: "huddle" | null;
   onAutoStartHandled?: () => void;
-  isSidebarCollapsed?: boolean;
-  onToggleSidebar?: () => void;
   scrollToMessageId?: number | null;
+  onLeaveMessage?: () => void;
+  joinHuddleRequested?: boolean;
+  onJoinHuddleHandled?: () => void;
 }
 
 export function useMessagePanelData({
   channelId, currentUserId, onBack, onToggleInfo, showInfoPanel,
-  autoStartCall, onAutoStartHandled, isSidebarCollapsed, onToggleSidebar,
-  scrollToMessageId,
+  autoStartCall, onAutoStartHandled, scrollToMessageId, onLeaveMessage,
+  joinHuddleRequested = false, onJoinHuddleHandled,
 }: MessagePanelProps) {
   const scope = useOrgStorageScope();
-  const draftKey = orgScopedStorageKey(`chat:draft:${channelId}`, scope);
+  const draftKey = chatDraftKey(channelId, scope);
   const draftKeyRef = useRef(draftKey);
   draftKeyRef.current = draftKey;
-  const { data: channel } = useChatChannel(channelId);
+  const history = useChatMessages(channelId);
+  const { channels: myChannels } = useChatChannels();
+  const canReadChannel = history.isSuccess || myChannels.some((row) => row.id === channelId);
+  const { data: channel } = useChatChannel(channelId, canReadChannel);
   const {
-    data: messagesData,
     isLoading,
     // A 500 or a 403 on the history read used to reach the list as `isLoading
     // false, messages []`, which the timeline rendered as an ordinary empty
@@ -69,29 +68,23 @@ export function useMessagePanelData({
     isError: messagesError,
     error: messagesErrorValue,
     refetch: refetchMessages,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useChatMessages(channelId);
+  } = history;
+  const joinRequired = useMemo(() => readChannelJoinRequired(messagesErrorValue), [messagesErrorValue]);
   const markReadRef = useRef(useMarkChannelRead());
   const markRead = markReadRef.current;
-  const sendMessage = useSendMessage();
+  const sendMutation = useSendMessage();
   const deleteMessage = useDeleteMessage();
   const editMessage = useEditMessage();
   const toggleReaction = useToggleReaction(channelId);
   const pinMessage = usePinMessage();
   const unpinMessage = useUnpinMessage();
-  const { data: pins } = useChatPins(channelId);
-  const { data: savedData } = useSavedMessages();
-  const saveMessage = useSaveMessage();
-  const unsaveMessage = useUnsaveMessage();
+  const { data: pins } = useChatPins(channelId, canReadChannel);
   const { data: onlineUsers } = useChatOnlineUsers();
-  const lastTypingSent = useRef(0);
-  const { isConnected: ablyConnected, typingUsers, publishTyping } = useChatRealtime(channelId);
+  const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId, !canReadChannel);
   const { isConnected: ablySocketConnected } = useAblyConnection();
 
-  useHuddleRealtime(channelId);
-  const { data: activeHuddle } = useActiveHuddle(channelId);
+  useHuddleRealtime(canReadChannel ? channelId : null);
+  const { data: activeHuddle, isPending: huddlePending } = useActiveHuddle(channelId, canReadChannel);
   const startHuddle = useStartHuddle();
   const joinHuddle = useJoinHuddle();
   const summarize = useChatSummarize();
@@ -115,9 +108,16 @@ export function useMessagePanelData({
     [onlineUsers],
   );
 
+  const typingUsers = useMemo(
+    () =>
+      typingUserIds.map((userId) => ({
+        userId,
+        name: channel?.members.find((member) => member.userId === userId)?.user?.name ?? "Someone",
+      })),
+    [typingUserIds, channel?.members],
+  );
   const typingText = useChatTypingText(typingUsers);
-
-  const [threadMessageId, setThreadMessageId] = useState<number | null>(null);
+  const { mainMessages, messages, list: timelineList, scrollToBottom, sendMessage, threadMessageId, highlightedReplyId, openThread: handleOpenThread, closeThread: handleCloseThread } = useMessageTimeline({ channelId, currentUserId, members: channel?.members, anchorMessageId: scrollToMessageId ?? null, onLeaveAnchor: onLeaveMessage, canReadChannel, history, send: sendMutation });
 
   useHuddleAutoStart({
     channelId,
@@ -127,11 +127,13 @@ export function useMessagePanelData({
     isInHuddle,
     startHuddle,
     joinHuddle,
+    joinHuddleRequested,
+    huddleSettled: !huddlePending,
+    onJoinHuddleHandled,
   });
 
-  const [showSavedPanel, setShowSavedPanel] = useState(false);
-  const [showFilesPanel, setShowFilesPanel] = useState(false);
-  const [forwardMessage, setForwardMessage] = useState<ForwardableMessage | null>(null);
+  const { showSavedPanel, setShowSavedPanel, forwardMessage, setForwardMessage, handleToggleSaved } =
+    useMessagePanelOverlays({ threadMessageId, closeThread: handleCloseThread });
   const flushQueueRef = useRef<() => Promise<void>>(async () => undefined);
   const { isOnline } = useChatOfflineQueue(flushQueueRef);
 
@@ -143,10 +145,14 @@ export function useMessagePanelData({
     [chatUserMap],
   );
   const scrollToBottomRef = useRef<(behavior?: ScrollBehavior) => void>(() => undefined);
-  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionQuery, setMentionQuery, mentionIndex, setMentionIndex, showTicketPicker, setShowTicketPicker, ticketQuery, setTicketQuery, ticketSelectedIndex, setTicketSelectedIndex, inputRef, fileInputRef, emojiRef, pendingEntitiesRef, pendingMentionsRef, setFilteredMentions, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, insertTicket, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, filteredMentions: [] });
+  const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionIndex, filteredMentions, mentionPrompt, dismissMentionPrompt, recordPicker, selectRecord, linkedRecords, removeLinkedRecord, inputRef, fileInputRef, emojiRef, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, channel, currentUserId });
   useEffect(() => {
     flushQueueRef.current = flushMessageQueue;
   }, [flushMessageQueue]);
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, [channelId, inputRef]);
 
   useEffect(() => {
     const key = draftKeyRef.current;
@@ -156,9 +162,6 @@ export function useMessagePanelData({
       localStorage.removeItem(key);
     }
   }, [messageInput]);
-
-  const { filtered: filteredMentions } = useChatMentions({ orgUsers, channel, currentUserId, query: mentionQuery });
-  setFilteredMentions(filteredMentions);
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
@@ -173,123 +176,31 @@ export function useMessagePanelData({
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
-  const messages = useMemo(
-    () => flattenMessagePages(messagesData),
-    [messagesData],
-  );
-
-  const [renderPages, setRenderPages] = useState(1);
-  useEffect(() => {
-    setRenderPages(1);
-  }, [channelId]);
-
-  /**
-   * Every older page the reader asks for has to land INSIDE the render window,
-   * or the fetch paints nothing: `messages` is oldest-first, so a 50-row page
-   * arrives at the front and `resolveMessageWindowStart`'s tail immediately
-   * slices it back off. Both routes to an older page — the "Load older messages"
-   * control and `useChatScroll`'s scroll-to-top auto-load, which calls
-   * `fetchNextPage` directly — went through that, so the reader saw no change
-   * and had to ask twice. The server page is 50 (`chat.schemas.ts`) against a
-   * 60-row window, so one window page per network page covers it.
-   */
-  const loadedPageCount = messagesData?.pages.length ?? 0;
-  useEffect(() => {
-    if (loadedPageCount <= 1) return;
-    setRenderPages((p) => Math.max(p, loadedPageCount));
-  }, [loadedPageCount]);
-
   useChatPollReconciliation({
     channelId,
-    newestLoadedAt: messages.at(-1)?.createdAt ?? null,
+    newestLoadedAt: mainMessages.at(-1)?.createdAt ?? null,
     isRealtimeConnected: ablyConnected,
     isHistoryLoading: isLoading,
+    canReadChannel,
     refetchHistory: refetchMessages,
   });
 
   useChatReadMarker({
     channelId,
-    newestMessageId: messages.at(-1)?.id,
+    newestMessageId: mainMessages.at(-1)?.id,
     markRead,
+    enabled: history.isSuccess,
   });
 
-  const { scrollContainerRef, messagesEndRef, showScrollBtn, scrollToBottom, handleScroll } = useChatScroll({
-    channelId,
-    messageCount: messages.length,
-    isLoading,
-    hasNextPage,
-    isFetchingNextPage,
-    fetchNextPage,
-  });
   scrollToBottomRef.current = scrollToBottom;
-
-  useEffect(() => {
-    setReplyTo(null);
-    setMessageInput(localStorage.getItem(draftKey) ?? "");
-    setEditingMessage(null);
-    setPendingAttachments([]);
-    setShowEmojiPicker(false);
-    setShowMentions(false);
-    setShowTicketPicker(false);
-    setTicketQuery("");
-    pendingEntitiesRef.current = [];
-    setThreadMessageId(null);
-    setShowFilesPanel(false);
-    inputRef.current?.focus();
-  }, [channelId]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      const meta = e.metaKey || e.ctrlKey;
-      if (meta && e.key === "k") {
-        e.preventDefault();
-        window.dispatchEvent(new CustomEvent("chat:open-search"));
-        return;
-      }
-      if (e.key === "Escape") {
-        if (threadMessageId !== null) { setThreadMessageId(null); return; }
-        if (showSavedPanel) { setShowSavedPanel(false); return; }
-        if (showFilesPanel) setShowFilesPanel(false);
-      }
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [threadMessageId, showSavedPanel, showFilesPanel]);
 
   const pinnedMessageIds = useMemo(() => new Set((pins ?? []).map((p) => p.messageId)), [pins]);
 
-  const savedMessageIds = useMemo(
-    () => new Set(savedData?.pages.flatMap((p) => p.items.map((i) => i.messageId)) ?? []),
-    [savedData],
-  );
-
-  const handleSave = useCallback(
-    async (messageId: number) => {
-      try {
-        await saveMessage.mutateAsync(messageId);
-        toast.success("Message saved");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [saveMessage],
-  );
-
-  const handleUnsaveMsg = useCallback(
-    async (messageId: number) => {
-      try {
-        await unsaveMessage.mutateAsync(messageId);
-        toast.success("Message removed from saved");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [unsaveMessage],
-  );
+  const { savedMessageIds, handleSave, handleUnsaveMsg } = useSavedMessageActions();
 
   const handleForward = useCallback((msg: Message) => {
     setForwardMessage({ content: msg.content, metadata: msg.metadata, attachments: msg.attachments });
-  }, []);
+  }, [setForwardMessage]);
 
   const handleReact = useCallback(
     (messageId: number, emoji: string) => { toggleReaction.mutate({ messageId, emoji }); },
@@ -309,7 +220,7 @@ export function useMessagePanelData({
   const otherMember =
     channel?.type === "DIRECT" ? resolveDirectPartner(channel.members, currentUserId) : null;
   const displayName =
-    channel?.type === "DIRECT" ? (otherMember?.name ?? "Unknown") : (channel?.name ?? "Chat");
+    channel?.type === "DIRECT" ? (otherMember?.name ?? "Unknown") : (channel?.name ?? joinRequired?.channelName ?? "Chat");
   const memberCount = channel?.memberCount ?? channel?.members?.length ?? 0;
   const isOtherOnline = channel?.type === "DIRECT" && otherMember ? onlineUserIds.has(otherMember.id) : false;
 
@@ -322,58 +233,10 @@ export function useMessagePanelData({
     return map;
   }, [messages]);
 
-  const handleOpenThread = useCallback((msg: Message) => { setThreadMessageId(msg.id); }, []);
-  const handleCloseThread = useCallback(() => { setThreadMessageId(null); }, []);
-  const handleToggleFiles = useCallback(() => { setShowFilesPanel((p) => !p); setShowSavedPanel(false); }, []);
-  const handleToggleSaved = useCallback(() => { setShowSavedPanel((p) => !p); setShowFilesPanel(false); }, []);
   const handleHuddle = useCallback(() => {
     if (activeHuddle) { joinHuddle.mutate({ huddleId: activeHuddle.id, channelId }); return; }
     startHuddle.mutate(channelId);
   }, [activeHuddle, channelId, joinHuddle, startHuddle]);
-
-  const firstUnreadIndex = useMemo(
-    () => resolveFirstUnreadIndex(messages, channel?.members, currentUserId),
-    [messages, channel, currentUserId],
-  );
-
-  const firstUnreadMessageId =
-    firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
-
-  const windowStart = resolveMessageWindowStart(
-    messages.length,
-    renderPages,
-    firstUnreadIndex,
-  );
-  const renderedMessages = useMemo(
-    () => (windowStart === 0 ? messages : messages.slice(windowStart)),
-    [messages, windowStart],
-  );
-  const hasOlderHeld = windowStart > 0;
-
-  const handleLoadOlder = useCallback(() => {
-    if (hasOlderHeld) {
-      setRenderPages((p) => p + 1);
-      return;
-    }
-    void fetchNextPage();
-  }, [hasOlderHeld, fetchNextPage]);
-
-  const groupedMessages = useMemo(() => {
-    const groups: { date: string; messages: Message[] }[] = [];
-    let currentDate = "";
-    for (const msg of renderedMessages) {
-      const d = msg.createdAt ? new Date(msg.createdAt) : new Date();
-      const dateStr = getDateLabel(d);
-      let group = groups[groups.length - 1];
-      if (!group || dateStr !== currentDate) {
-        currentDate = dateStr;
-        group = { date: dateStr, messages: [] };
-        groups.push(group);
-      }
-      group.messages.push(msg);
-    }
-    return groups;
-  }, [renderedMessages]);
 
   const handleStartEdit = useCallback((msg: Message) => {
     setEditingMessage(msg);
@@ -390,8 +253,6 @@ export function useMessagePanelData({
     [deleteMessage, channelId],
   );
 
-  const handleScrollToBottom = useCallback(() => scrollToBottom("smooth"), [scrollToBottom]);
-
   const handleReply = useCallback((msg: Message) => {
     setReplyTo(msg);
     inputRef.current?.focus();
@@ -402,14 +263,14 @@ export function useMessagePanelData({
   }, [refetchMessages]);
 
   return {
-    header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, channelId, onToggleFiles: handleToggleFiles, onToggleSaved: handleToggleSaved, showFilesPanel, showSavedPanel, onToggleInfo, showInfoPanel, isSidebarCollapsed, onToggleSidebar },
+    header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, onToggleSaved: handleToggleSaved, onToggleInfo, showInfoPanel },
     workspace: {
-      messageList: { groupedMessages, messages, isLoading, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, hasNextPage: hasNextPage || hasOlderHeld, isFetchingNextPage, fetchNextPage: handleLoadOlder, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, firstUnreadMessageId, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, showScrollBtn, scrollToBottom: handleScrollToBottom, messagesEndRef, scrollContainerRef, onScroll: handleScroll, scrollToMessageId },
-      messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionQuery, mentionIndex, setMentionIndex, filteredMentions, insertMention, showTicketPicker, ticketQuery, ticketSelectedIndex, onTicketSelect: insertTicket, typingText, sendMessage, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
+      messageList: { ...timelineList, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, joinRequired, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, scrollToMessageId },
+      messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionIndex, filteredMentions, insertMention, mentionPrompt, onDismissMentionPrompt: dismissMentionPrompt, recordPicker, onSelectRecord: selectRecord, linkedRecords, onRemoveLinkedRecord: removeLinkedRecord, typingText, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },
-    thread: { messageId: threadMessageId, channelId, currentUserId, onClose: handleCloseThread },
-    sidePanels: { channelId, isPanelNarrow, showSavedPanel, setShowSavedPanel, showFilesPanel, setShowFilesPanel, forwardMessage, setForwardMessage },
+    thread: { messageId: threadMessageId, highlightedReplyId, channelId, currentUserId, onClose: handleCloseThread },
+    sidePanels: { isPanelNarrow, showSavedPanel, setShowSavedPanel, forwardMessage, setForwardMessage },
     isOnline,
     isReconnecting: isOnline && !ablySocketConnected,
   };

@@ -147,10 +147,7 @@ export function ManagedProductOverviewPage({
           animate="visible"
         >
           {summaryData ? (
-            <ManagedProductOverviewPulse
-              managedProductId={managedProductId}
-              summary={summaryData}
-            />
+            <ManagedProductOverviewPulse summary={summaryData} />
           ) : null}
 
           <BuildOfflineNotice dataUpdatedAt={summaryDataUpdatedAt} />

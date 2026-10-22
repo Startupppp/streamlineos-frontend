@@ -1,23 +1,19 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { MessageSquare, PhoneOff, Video, VideoOff } from "lucide-react";
+import { PhoneOff, Video, VideoOff } from "lucide-react";
 import { ChevronDownIcon, ChevronUpIcon, UserPlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { useLeaveHuddle, useKickParticipant, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
-import { useEntitlements } from "@/hooks/api/entitlements";
+import { useLeaveHuddle, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
 import type { Huddle } from "@/types/chat";
-import { HuddleChatPanel } from "./huddle-chat-panel";
 import { useHuddleEvents } from "./use-huddle-events";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { HuddleParticipantCard } from "./huddle-participant-card";
 import { useElapsedTime } from "./use-elapsed-time";
 import { HuddleInviteSection } from "./huddle-invite-section";
 import { HuddleMiniBar } from "./huddle-mini-bar";
-
-const FREE_PLAN_HUDDLE_CAP = 2;
+import { EXTERNAL_MEETING_LABEL, huddleProviderPresentation } from "./huddle-provider";
 
 interface HuddlePanelProps {
   huddle: Huddle;
@@ -27,21 +23,17 @@ interface HuddlePanelProps {
 
 export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelProps) {
   const [expanded, setExpanded] = useState(false);
-  const [showHuddleChat, setShowHuddleChat] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
 
   const leaveHuddle = useLeaveHuddle();
-  const kickParticipant = useKickParticipant();
-  useHuddleHeartbeat(huddle.id);
+  const isJoined = huddle.participants.some((p) => p.userId === currentUserId);
+  useHuddleHeartbeat(huddle.id, channelId, isJoined);
   const elapsed = useElapsedTime(huddle.startedAt);
 
-  const isHost = huddle.startedBy === currentUserId;
   const meetingUrl = huddle.meetingUrl;
+  const { joinLabel, Icon: ProviderIcon } = huddleProviderPresentation(huddle.meetingProvider);
+  const starterName = huddle.startedByUser?.name ?? null;
   const participantCount = huddle.participants.length;
-
-  const { data: entitlements } = useEntitlements();
-  const groupHuddlesAllowed = entitlements?.features.chatGroupHuddles ?? false;
-  const inviteBlockedByPlan = !groupHuddlesAllowed && participantCount >= FREE_PLAN_HUDDLE_CAP;
 
   const handleLeave = useCallback(() => {
     leaveHuddle.mutate({ huddleId: huddle.id, channelId });
@@ -51,31 +43,15 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
     channelId,
     currentUserId,
     participants: huddle.participants,
-    onKicked: handleLeave,
   });
 
   const handleToggleExpanded = useCallback(() => {
     setExpanded((prev) => !prev);
   }, []);
 
-  const handleToggleHuddleChat = useCallback(() => {
-    setShowHuddleChat((prev) => !prev);
-  }, []);
-
-  const handleCloseHuddleChat = useCallback(() => {
-    setShowHuddleChat(false);
-  }, []);
-
   const handleToggleInvite = useCallback(() => {
     setShowInviteDialog((prev) => !prev);
   }, []);
-
-  const handleKick = useCallback(
-    (targetUserId: string) => {
-      kickParticipant.mutate({ huddleId: huddle.id, channelId, targetUserId });
-    },
-    [kickParticipant, huddle.id, channelId],
-  );
 
   return (
     <div className="border-t border-border/40 bg-card/90">
@@ -91,7 +67,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           </div>
           <TruncatedText text={`Huddle · ${elapsed}`} className="text-sm font-medium text-status-success-ink" />
           <span className="text-xs text-muted-foreground">
-            {participantCount} {participantCount === 1 ? "participant" : "participants"}
+            {participantCount} joined through StreamlineOS
           </span>
         </div>
         <div className="flex items-center gap-1 shrink-0">
@@ -105,6 +81,12 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
       {expanded && (
         <div className="px-4 pb-3">
+          {starterName ? (
+            <p className="mb-2 text-dense text-muted-foreground">Started by {starterName}</p>
+          ) : null}
+          {meetingUrl && huddle.meetingProvider === null ? (
+            <p className="mb-2 text-dense text-muted-foreground">{EXTERNAL_MEETING_LABEL}</p>
+          ) : null}
           {meetingUrl ? (
             <a
               href={meetingUrl}
@@ -112,8 +94,8 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               rel="noopener noreferrer"
               className="mb-3 flex h-9 w-full items-center justify-center gap-2 rounded-md bg-primary px-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
-              <Video className="h-4 w-4 shrink-0" />
-              Join meeting
+              <ProviderIcon className="h-4 w-4 shrink-0" />
+              {joinLabel}
             </a>
           ) : (
             <div className="mb-3 flex items-start gap-2 rounded-lg bg-status-warning-surface px-3 py-2 text-dense text-status-warning-ink">
@@ -124,34 +106,24 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
             </div>
           )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3">
+          <div
+            role="list"
+            aria-label="Joined through StreamlineOS"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-3"
+          >
             {huddle.participants.map((participant) => {
-              const participantUserId = participant.userId;
-              const isSelf = participantUserId !== null && participantUserId === currentUserId;
-              const canKick = isHost && participantUserId !== null && !isSelf;
+              const isSelf = participant.userId !== null && participant.userId === currentUserId;
               return (
                 <HuddleParticipantCard
                   key={participant.id}
                   participant={participant}
                   isCurrentUser={isSelf}
-                  isHost={isHost}
-                  onKick={canKick ? () => handleKick(participantUserId) : undefined}
                 />
               );
             })}
           </div>
 
           <div className="flex items-center justify-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className={cn("h-9 w-9 rounded-full p-0", showHuddleChat && "bg-muted/60")}
-              onClick={handleToggleHuddleChat}
-              aria-label="Huddle chat"
-            >
-              <MessageSquare className="h-4 w-4" />
-            </Button>
-
             <AnimatedIconButton
               icon={UserPlusIcon}
               iconSize={16}
@@ -176,21 +148,11 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
           <HuddleInviteSection
             show={showInviteDialog}
-            inviteBlockedByPlan={inviteBlockedByPlan}
             currentUserId={currentUserId}
+            channelId={channelId}
             huddleId={huddle.id}
             participants={huddle.participants}
           />
-
-          {showHuddleChat && (
-            <div className="mt-3 border-t border-border/40 pt-3">
-              <HuddleChatPanel
-                channelId={channelId}
-                currentUserId={currentUserId}
-                onClose={handleCloseHuddleChat}
-              />
-            </div>
-          )}
         </div>
       )}
 
@@ -198,6 +160,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
         <HuddleMiniBar
           participants={huddle.participants}
           meetingUrl={meetingUrl}
+          meetingProvider={huddle.meetingProvider}
           onLeave={handleLeave}
           isLeavePending={leaveHuddle.isPending}
         />

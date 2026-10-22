@@ -10,6 +10,8 @@ export const kbPageGrantItemContract = z.object({
   grantedByMembershipId: z.number().int().nullable(),
   createdAt: z.string(),
   revokedAt: z.string().nullable(),
+  expiresAt: z.string().nullable(),
+  isExpired: z.boolean(),
   granteeName: z.string().nullable(),
   granteeEmail: z.string().nullable(),
   granteeImage: z.string().nullable(),

@@ -55,8 +55,11 @@ const BACKEND_WIKI_PAGE_PAYLOAD = {
   title: "Team handbook",
   icon: "📖",
   coverImage: "gradient:ocean",
+  kind: "document",
   content: { type: "doc", content: [] },
   updatedAt: "2025-06-15T09:00:00.000Z",
+  allowDownload: false,
+  file: null,
 };
 
 describe("publicKbListContract — backend field parity", () => {
@@ -171,6 +174,36 @@ describe("publicWikiPageContract — backend field parity", () => {
       ...BACKEND_WIKI_PAGE_PAYLOAD,
       updatedAt: 1_234_567_890,
     });
+    expect(result.success).toBe(false);
+  });
+
+  it("includes allowDownload in the parsed result so a missing field fails parsing", () => {
+    const result = publicWikiPageContract.safeParse(BACKEND_WIKI_PAGE_PAYLOAD);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.allowDownload).toBe(false);
+  });
+
+  it("accepts file null for a document page and a file object for a file page", () => {
+    const withFile = {
+      ...BACKEND_WIKI_PAGE_PAYLOAD,
+      kind: "file",
+      allowDownload: true,
+      file: { fileName: "report.pdf", mimeType: "application/pdf", byteSize: 1024 },
+    };
+    const result = publicWikiPageContract.safeParse(withFile);
+    expect(result.success).toBe(true);
+    if (!result.success) return;
+    expect(result.data.file).toEqual({
+      fileName: "report.pdf",
+      mimeType: "application/pdf",
+      byteSize: 1024,
+    });
+  });
+
+  it("rejects a payload missing allowDownload", () => {
+    const { allowDownload: _dropped, ...withoutField } = BACKEND_WIKI_PAGE_PAYLOAD;
+    const result = publicWikiPageContract.safeParse(withoutField);
     expect(result.success).toBe(false);
   });
 });

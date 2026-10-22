@@ -25,10 +25,10 @@ it("reports a failed first Quick Find read without calling it an empty result", 
   });
 
   const view = render(<QuickFindDialog open onOpenChange={jest.fn()} />);
-  fireEvent.change(view.getByPlaceholderText("Search pages…"), { target: { value: "missing" } });
+  fireEvent.change(view.getByPlaceholderText("Search files…"), { target: { value: "missing" } });
 
-  expect(view.queryByText(/No pages found/)).not.toBeInTheDocument();
-  expect(view.getByRole("alert")).toHaveTextContent("Couldn't search pages");
+  expect(view.queryByText(/No files found/)).not.toBeInTheDocument();
+  expect(view.getByRole("alert")).toHaveTextContent("Couldn't search files");
   expect(view.getByText("req-quick-find-first")).toBeInTheDocument();
 });
 
@@ -43,10 +43,10 @@ it("reports a failed Quick Find search and hides cached results after access is 
   });
 
   const view = render(<QuickFindDialog open onOpenChange={jest.fn()} />);
-  fireEvent.change(view.getByPlaceholderText("Search pages…"), { target: { value: "visible" } });
+  fireEvent.change(view.getByPlaceholderText("Search files…"), { target: { value: "visible" } });
 
   expect(view.queryByText("Formerly visible page")).not.toBeInTheDocument();
-  expect(view.queryByText(/No pages found/)).not.toBeInTheDocument();
+  expect(view.queryByText(/No files found/)).not.toBeInTheDocument();
   expect(view.getByRole("alert")).toHaveTextContent("Access denied");
   expect(view.getByText("req-quick-find")).toBeInTheDocument();
   fireEvent.click(view.getByRole("button", { name: "Try again" }));
@@ -58,5 +58,5 @@ it("caps the Quick Find input at the backend's 200-character search limit", () =
 
   const view = render(<QuickFindDialog open onOpenChange={jest.fn()} />);
 
-  expect(view.getByPlaceholderText("Search pages…")).toHaveAttribute("maxLength", "200");
+  expect(view.getByPlaceholderText("Search files…")).toHaveAttribute("maxLength", "200");
 });

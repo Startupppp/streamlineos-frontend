@@ -5,6 +5,7 @@ import type { ChannelMember } from "@/types/chat";
 
 jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useRemoveChannelMember: () => ({ mutateAsync: jest.fn(), isPending: false }),
+  useLeaveChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useUpdateChannelMemberRole: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
@@ -89,6 +90,7 @@ describe("ChannelMembersSection (ITEM: channel-info-panel split)", () => {
     isMultiMemberChannel: true,
     onlineUserIds: new Set<string>(),
     onClose: jest.fn(),
+    conversationName: "#general",
   };
 
   it("renders 'Members (0)' when empty", () => {

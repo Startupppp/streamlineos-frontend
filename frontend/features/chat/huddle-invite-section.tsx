@@ -1,43 +1,45 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "sonner";
-import { getErrorMessage } from "@/lib/get-error-message";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { UserCombobox } from "@/components/ui/user-combobox";
+import { MemberPicker } from "@/components/members/member-picker";
+import type { MemberOption } from "@/components/members/member-picker-options";
 import { useInviteToHuddle } from "@/hooks/api/chat-huddles";
+import { describeHuddleInviteError } from "@/hooks/api/chat-huddle-errors";
+import { useChatChannel } from "@/hooks/api/chat-core-read";
 import type { Huddle } from "@/types/chat";
 
 interface HuddleInviteSectionProps {
   show: boolean;
-  inviteBlockedByPlan: boolean;
   currentUserId: string;
+  channelId: number;
   huddleId: number;
   participants: Huddle["participants"];
 }
 
 export function HuddleInviteSection({
   show,
-  inviteBlockedByPlan,
   currentUserId,
+  channelId,
   huddleId,
   participants,
 }: HuddleInviteSectionProps) {
   const [inviteUserId, setInviteUserId] = useState("");
   const inviteToHuddle = useInviteToHuddle();
+  const { data: channel } = useChatChannel(channelId);
+  const candidates = useMemo<MemberOption[]>(() => {
+    const inHuddle = new Set(participants.map((p) => p.userId));
+    return (channel?.members ?? []).flatMap((member) =>
+      member.user && member.user.id !== currentUserId && !inHuddle.has(member.user.id)
+        ? [{ id: member.user.id, name: member.user.name, email: member.user.email, image: member.user.image }]
+        : [],
+    );
+  }, [channel?.members, participants, currentUserId]);
+
+  const handlePick = useCallback((userId: string | null) => setInviteUserId(userId ?? ""), []);
 
   if (!show) return null;
-
-  if (inviteBlockedByPlan) {
-    return (
-      <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
-        <p className="text-dense font-semibold mb-1">Invite to huddle</p>
-        <p className="text-dense text-muted-foreground">
-          Huddles are one-to-one on the Free plan. Upgrade to start group huddles.
-        </p>
-      </div>
-    );
-  }
 
   const handleInvite = () => {
     if (participants.some((p) => p.userId === inviteUserId)) {
@@ -51,7 +53,10 @@ export function HuddleInviteSection({
           toast.success("Invited to the huddle");
           setInviteUserId("");
         },
-        onError: (error) => toast.error(getErrorMessage(error)),
+        onError: (error) =>
+          toast.error(
+            describeHuddleInviteError(error, (userId) => candidates.find((m) => m.id === userId)?.name ?? undefined),
+          ),
       },
     );
   };
@@ -59,11 +64,11 @@ export function HuddleInviteSection({
   return (
     <div className="mt-3 border border-border/40 rounded-xl p-3 bg-muted/20">
       <p className="text-dense font-semibold mb-2">Invite to huddle</p>
-      <UserCombobox
+      <MemberPicker
+        candidates={candidates}
         value={inviteUserId}
-        onChange={setInviteUserId}
+        onChange={handlePick}
         placeholder="Select member to invite…"
-        excludeUserId={currentUserId}
         className="text-xs mb-2"
       />
       <LoadingButton

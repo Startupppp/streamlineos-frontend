@@ -111,7 +111,6 @@ export function OrganizationOverviewPage() {
                   tone="blue"
                   isLoading={projectsQuery.isLoading}
                   hint={projectsData?.hasMore ? "First page shown" : undefined}
-                  href="/build/projects"
                 />
               )}
             </StatCardGrid>

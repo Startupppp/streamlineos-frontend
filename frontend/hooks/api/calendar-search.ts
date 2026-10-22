@@ -9,6 +9,7 @@ import { useAccess } from "@/hooks/api/access";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type { CalendarSearchResponse } from "./calendar-types";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const responseContract = lazyContract(() =>
   import("./calendar-schema").then(
@@ -54,11 +55,11 @@ export function useCalendarSearch(
       canView,
       requestFilters,
     ),
-    initialPageParam: "" as string,
+    initialPageParam: NO_CURSOR_YET,
     queryFn: ({ pageParam, signal }) =>
       apiClient.get<CalendarSearchResponse>(
         "/calendar/search",
-        { ...requestFilters, ...(pageParam ? { cursor: pageParam } : {}) },
+        { ...requestFilters, ...(pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : {}) },
         signal,
         responseContract,
       ),

@@ -1,34 +1,42 @@
 # Step 3 — Information Architecture and Design System Plan
 
+> **Supporting specification:** [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns the final navigation and removals.
+
 ## Target navigation
 
 ```text
-Knowledge
-├─ Ask KB
-└─ Wiki
-   ├─ Home
-   ├─ My pages
-   ├─ Shared with me
-   ├─ Spaces
-   │  └─ Space detail
-   ├─ Templates
-   ├─ Reviews
-   ├─ Import & Export
-   ├─ Analytics
-   ├─ Content Health          P1, managers only
-   ├─ Research Briefs         P1, when moved
-   └─ Trash
+Docs
+├─ Home                       recents and favorites
+├─ My files
+├─ Shared with me
+├─ Team folders
+│  └─ Team folder detail
+├─ Templates
+├─ Quick find
+└─ Trash
 ```
 
-Full Search is reached from global search, Quick find, and page-list search; it does not need a permanent sidebar row. History is a page child. Settings do not get a generic page until there are multiple customer-approved settings; retention remains in Trash.
+Ask is launched from Docs or a selected file/folder. Reviews, analytics, content health, retention, storage, share reports, and import/export are contextual or permission-gated administration. Linked company/project/support documents appear through record-linked collections rather than separate library destinations. History remains a document child.
+
+### Current-to-target navigation delta
+
+As rechecked on 2026-10-20, the current shell still exposes Docs and Ask documents as primary items; My files, Shared with me, and Team folders under Library; Templates, Reviews, Import & Export, Analytics, and Content Health under Manage when permitted; and Quick find/Trash in the shell footer. Docs home also retains a linked Company Documents strip.
+
+The target is not complete until:
+
+- `/knowledge`, the product switcher, route tests, and deployment agree on Docs home as the default;
+- Ask launches contextually instead of competing with the daily library;
+- Templates moves to the daily tier;
+- administration remains discoverable for authorized operators without occupying ordinary-user daily navigation;
+- linked company documents render through record-linked collections rather than a standalone home strip or library destination.
 
 ## Navigation rules
 
-- Read destinations are visible to every active member who can use Knowledge; management destinations appear only when the actor can use at least one action on them.
+- Daily destinations are visible to every active member who can use Docs; management destinations appear only when the actor can use at least one relevant action.
 - Hidden navigation is convenience, not authorization. Every route and record is protected on the server.
-- Sidebar labels describe user jobs. Use “My pages,” not “Private.” Use “Content Health,” not “Manage.”
-- The document breadcrumb is the authoritative back path: Wiki → Space → ancestors → current page. A project adapter uses Project → Wiki → ancestors.
-- Space and page moves preserve stable ids. Title and parent changes must not break saved links.
+- Sidebar labels describe user jobs. Use “My files,” not “Private,” and “Team folders,” not “Spaces.”
+- The document breadcrumb is the authoritative back path: Docs → Team folder → ancestors → current document. A project adapter uses Project → Docs → ancestors.
+- Folder and document moves preserve stable ids. Title and parent changes must not break saved links.
 - Command palette and global Create expose the same authorized destinations as visible navigation.
 
 ## Page anatomy
@@ -94,7 +102,7 @@ The only path to an action can never be a context menu. Financial, access, appro
 
 | Width | Behavior |
 |---|---|
-| `< 640 px` | Wiki sidebar becomes a drawer; tables render task-focused mobile cards; metadata/comments are sheets; editor toolbar collapses to essential actions + overflow |
+| `< 640 px` | Docs sidebar becomes a drawer; tables render task-focused mobile cards; metadata/comments are sheets; editor toolbar collapses to essential actions + overflow |
 | `640–1023 px` | Collapsible navigation; filters wrap into a sheet; two-column cards where appropriate |
 | `>= 1024 px` | Persistent navigation and optional right panel; dense tables; keyboard shortcuts visible |
 
@@ -138,7 +146,7 @@ No feature may exist only in a hover state or desktop right panel.
 
 **Implementation:** query, skeletons, filters, table/cards, mobile alternative, selection, retries.
 
-**Adapters:** Pages, Spaces, Reviews, Trash, Templates, Health. Create an adapter only when a second real collection uses it.
+**Adapters:** Documents, Team folders, Reviews, Trash, Templates, Health. Reviews and Health remain permission-gated administration. Create an adapter only when a second real collection uses it.
 
 ### `KnowledgeDocument`
 

@@ -1,5 +1,7 @@
 # Step 0 — Current-State Page and Backend Audit
 
+> **Historical audit:** Observations describe the audited revision. [`2026-10-20-document-module-product-decision.md`](2026-10-20-document-module-product-decision.md) owns current dispositions, navigation, and priorities.
+
 ## Audit method
 
 The audit combined three views:
@@ -14,14 +16,14 @@ No destructive action or content mutation was used. Dynamic routes without a val
 
 | Route | Disposition | Evidence | Current good | Missing or incorrect | Priority |
 |---|---|---|---|---|---:|
-| `/knowledge` | KEEP redirect | Source | Single entry point | Verify redirect, telemetry, and entitlement behavior | P0 |
-| `/knowledge/chat` | KEEP | Observed | Clear Ask value proposition, prompts, Conversations and Sources entry points | Conversation search, source filters, answer confidence/provenance, feedback, retry/cancel, no-answer recovery, stable citations, permission-expiry handling | P0/P1 |
-| `/knowledge/wiki` | KEEP | Observed + Source | Wiki shell and New page exist; source has recents, favorites, roots | Live page was visually sparse; add search/filter/view controls, page menus, trust badges, bounded All pages, first-run guidance | P0 |
-| `/knowledge/wiki/private` | KEEP, rename “My pages” | Observed + Source | Dedicated personal library surface | Current source filters `visibility=private`; target is server-side ownership. Add search, status/space filters, cursor paging, page actions | P0 |
-| `/knowledge/wiki/shared` | KEEP | Observed + Source | Dedicated inbound-share surface | Current source treats “created by someone else” as shared. Add explicit grants, sharer/date/access fields, search/filter, retry/error state, cursor paging | P0 |
-| `/knowledge/wiki/spaces` | KEEP | Observed + Source | Create/edit cards and empty state | Current source loads full page tree for counts and hard-deletes spaces. Add server counts, search, audience filter, cursor paging, members, archive/restore | P0 |
-| `/knowledge/wiki/spaces/[spaceId]` | KEEP | Source | Page tree and audience badge | Add in-space search, status filter, create-in-space, members, archive, inaccessible/not-found distinction, lazy tree | P0/P1 |
-| `/knowledge/wiki/templates` | KEEP | Observed | Useful starter set; Starters/Saved split | Add `q`, category/use-case filters, saved-template pagination, preview, permission split, last-used/owner for saved templates; do not add a marketplace | P1 |
+| `/knowledge` | KEEP; target is Docs home | Source conflict rechecked 2026-10-20 | Single entry point | Route source still names `/knowledge/chat` while the route test expects `/knowledge/wiki`; reconcile source/test, then verify telemetry, entitlement, and deployed behavior | P0 |
+| `/knowledge/chat` | KEEP contextual compatibility route | Observed | Clear Ask value proposition, prompts, Conversations and Sources entry points | Launch from Docs/file/folder context; add source filters, provenance, feedback, retry/cancel, no-answer recovery, stable citations, permission-expiry handling | P1 |
+| `/knowledge/wiki` | KEEP as Docs home | Observed + Source | Existing shell; source has recents, favorites, roots, and Quick find | Add page menus, trust badges, bounded unified file collection, and first-run guidance; prove Quick find handoff | P0 |
+| `/knowledge/wiki/private` | KEEP compatibility route, present as “My files” | Source rechecked 2026-10-20 | Page collection now uses server-side `owner=me` semantics | Unify owned uploaded files/sources with native documents; add search, status/folder filters, cursor proof, file actions, and owner transfer | P0 |
+| `/knowledge/wiki/shared` | KEEP | Source rechecked 2026-10-20 | Page collection now uses explicit `kb_page_grants` through `sharedWithMe=1` | Add uploaded-file parity, sharer display identity, group/role reason, expiry, access-lost handling, search/filter, and production revocation proof | P0 |
+| `/knowledge/wiki/spaces` | KEEP compatibility route, present as “Team folders” | Source rechecked 2026-10-20 | Cards, members, archive/restore, and delete-after-archive lifecycle exist | Replace page-tree-derived counts, prove organization ownership/member-removal survival, add bounded search/list behavior, and complete asynchronous purge evidence | P0 |
+| `/knowledge/wiki/spaces/[spaceId]` | KEEP as Team folder detail | Source | Page tree and audience badge | Add in-folder search, status filter, create-in-folder, members, archive, inaccessible/not-found distinction, lazy tree | P0/P1 |
+| `/knowledge/wiki/templates` | KEEP; target daily destination | Observed + Source | Useful starter set; Starters/Saved split | Currently appears under Manage; move to the daily tier and add `q`, category/use-case filters, saved-template pagination, preview, permission split, and last-used/owner | P1 |
 | `/knowledge/wiki/reviews` | KEEP | Observed + Source | Queue table and Status/Type controls | Live surface remained in “Loading results…” during audit. Add retry/error, URL filters, `q`, overdue derivation, cursor paging, bulk approve/reject, decision reason, SLA/freshness context | P0/P1 |
 | `/knowledge/wiki/import` | KEEP | Observed | Paste and file import, export, recent jobs | Add required title/target/duplicate policy, format/size validation, job progress/errors, retry, cursor jobs, independent import/export permissions | P0 |
 | `/knowledge/wiki/analytics` | KEEP | Observed + Source | Dedicated destination and backend analytics | Live page exposed only a heading during audit. Add range/space filters, permission-safe metrics, result bounds, health/gap workflows, skeleton/error/no-data states; remove vanity metrics | P1 |
@@ -31,21 +33,32 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | `/knowledge/wiki/pages/[pageId]`, `/knowledge/wiki/pages/[pageId]/history` | KEEP redirect aliases | Source 2026-10-16 | `next.config.ts` redirects to canonical document and history routes | Verify parameters and links preserve the intended page and version | P0 |
 | `/knowledge/wiki/search` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P0 |
 | `/knowledge/wiki/manage` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P1 |
-| `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | KEEP at shipped path | Source 2026-10-16 | List and detail shipped under Knowledge; page contract in Step 2 | Confirm citation lifecycle and remove a former Support route only after caller proof | P1 |
-| `/knowledge/wiki/company-documents`, `/knowledge/wiki/company-documents/[linkedDocumentId]` | KEEP | Source 2026-10-16 | Linked-document list and detail exist; page contracts in Step 2 | Authorization, bounded collection, and browser state evidence remain | P1 |
+| `/knowledge/wiki/manage/sharing` | ADDED 2026-10-21 — External sharing administration | Source 2026-10-22 | Tenant external-sharing mode, public-link opt-in and expiry, inventory with bulk revoke; gated by `kb:settings:manage` | Browser verification blocked on backend deploy (`/kb/settings/sharing` 404 on the 21 Oct build) | P0 |
+| `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | RETAIN route/data, remove from daily navigation | Source 2026-10-16 | List and detail shipped under Knowledge | Treat as compatibility/add-on surface until a separate retention or retirement decision | Deferred |
+| `/knowledge/wiki/company-documents`, `/knowledge/wiki/company-documents/[linkedDocumentId]` | RETAIN route/data, remove as separate library destination | Source 2026-10-16 | Linked-document list and detail exist | Surface company documents through permission-safe linked-record collections; retire routes only after migration gates | Deferred |
 | `/support/knowledge-gaps` | KEEP | Source 2026-10-16 | Support-owned triage surface exists; page contract in Step 2 | Verify detection, draft, dismissal, and browser state through current routes | P1 |
 | `/build/[projectId]/wiki` | KEEP adapter | Source | Reuses wiki home | Scope every list/search/create/read by project; project back path; no duplicate data or editor | P0 |
 | `/build/[projectId]/wiki/[pageId]` | KEEP adapter | Source | Reuses document surface | Enforce project membership on every path; add history adapter | P0 |
 | `/build/[projectId]/wiki/[pageId]/history` | KEEP adapter | Source 2026-10-16 | History adapter route exists | Verify project membership and version access through the route | P0 |
 | `/wiki/[shareToken]` | KEEP | Source | Public token renderer and rate limiting exist | Prove 404 for invalid/revoked, no sibling/title leakage, accessible typography, optional feedback; expiry/password only after demand | P0/P2 |
+| `/shared-docs`, `/shared-docs/[pageId]` (portal) | ADDED 2026-10-21 — named-guest shared documents | Source 2026-10-22 | Portal guests list and read pages shared with them by named grant; download only where the share allows it | Browser verification with a real portal guest open (KB-OPEN-092) | P0 |
 | `/support/kb/**` | DUAL-RUN then REMOVE/MIGRATE | Source | Existing help-centre CMS remains usable | Stop mixing article ids and page URLs; publish from pages or maintain explicit record kind until cutover | P1 |
 | `/help/**` | KEEP renderer | Source | Public help job is distinct | Reuse published page projections only after migration; keep public cache and analytics separate | P1 |
 | `/ask` | KEEP redirect alias | Source 2026-10-16 | `next.config.ts` redirects to `/knowledge/chat`; no duplicate page route exists | Verify caller migration and live redirect behavior before retiring the alias | P0 |
 | `/docs`, `/kb` | KEEP redirect aliases | Source 2026-10-16 | `next.config.ts` redirects both to `/knowledge/wiki` | Verify live redirect behavior and retain while promised callers exist | P0 |
 
+## Non-route object-model census
+
+| Surface/model | Current implementation | Required correction |
+|---|---|---|
+| `kb_pages` | Canonical native-document tree with versions, grants, comments, search, history, and lifecycle foundations | Keep canonical during migration; adapt it into one Drive library rather than creating a second native-document store |
+| `kb_sources` | Retired as a write path 2026-10-22: migration 2575 moved every source to a `file` page; `/kb/sources` routes are deprecated adapters over `/kb/files` and page create/trash; Ask, search and citations read pages only | Contraction migration dropping the table after the adapters' callers are gone |
+| Drive files/folders/shortcuts/workspaces | Phase 1 code complete 2026-10-22: `file` pages with binary versions and viewer, shortcuts, activity, team folders with inherited and limited access, named guests and public-link policy (KB-OPEN-090 to 095) | Production browser verification after the backend deploy |
+| Microsoft 365 and Live Data Blocks | No production editor or `live_data_block` implementation | Phase 2/3 pending; require provider consent/callback/fidelity and viewer-authorized live-data contracts |
+
 ## What already works well
 
-- A coherent Wiki shell with Library, Manage, Quick find, and Trash.
+- A reusable document shell with library, management, Quick find, and Trash foundations.
 - A mature document editor with autosave, formatting, page decoration, AI, share, and edit history infrastructure.
 - Version rows, optimistic concurrency, idempotency support, outbox infrastructure, queues/workflows, replica routing, rate limiting, Redis-compatible caching, and tenant-aware tests already exist in the broader backend.
 - Retrieval already combines keyword and vector candidates and degrades to keyword search when embeddings fail.
@@ -58,8 +71,8 @@ These are assets to deepen, not reasons to add another platform.
 
 ### Product correctness
 
-1. Ownership and sharing semantics are wrong in the browser and lack a first-class page share-grant model.
-2. A full search results page is absent; Quick find cannot carry discovery, filtering, and bulk actions.
+1. Page ownership and explicit-grant semantics now exist, but uploaded files/sources are not part of the same My files/Shared library and grants still lack expiry, reason-for-access, and complete external collaboration.
+2. The shipped search route still needs verification as the single Quick find/full-results path.
 3. Important list pages derive from the full tree, which is both semantically wrong and unbounded.
 4. Several pages render generic empty states for network or authorization failures, making recovery and support difficult.
 5. Content trust metadata exists in pieces but is not consistently visible at decision points: search, cards, Ask citations, and page headers.
@@ -86,11 +99,11 @@ These are assets to deepen, not reasons to add another platform.
 
 | Blocker | Why it blocks release | Proof required |
 |---|---|---|
-| Shared/My pages semantics | Users can see the wrong collection and may infer access incorrectly | First-class grant schema, server filters, cross-tenant and revocation tests |
+| Unified Shared/My files semantics | Native pages and uploaded files currently use different models, so the library cannot provide one ownership/share contract | File objects plus page/file parity, sharer/reason/expiry fields, cross-tenant and revocation tests |
 | Canonical ACL parity | Search/Ask/analytics can expose metadata even if detail is protected | One authorization module used by every read projection; leak tests for title/snippet/citation/count |
 | Unbounded or silent-capped collections | Data disappears or latency grows with tenant size | Cursor response with `hasMore`, indexes, 10k/100k-record test data |
-| Missing full search | Core “find knowledge” job cannot be completed | Search route, facets, snippets, keyboard access, zero/partial/error states |
-| Space hard-delete | Destructive behavior conflicts with recoverability | Archive/restore default; asynchronous purge after retention |
+| Unverified Quick find/full search | Core “find documents” behavior is not release-proven | Facets, snippets, keyboard access, zero/partial/error states |
+| Team-folder lifecycle proof | Archive/restore exists, but organization ownership, member-removal survival, retention, and complete purge remain unproven | Offboarding, archive/restore, retention/hold, interrupted purge, and recovery evidence |
 | Incomplete live states | Blank/indefinite pages look broken and hide errors | Browser evidence for loading, ready, empty, filtered-empty, error, denied, offline/conflict where applicable |
 
 ## Explicit assumptions to validate

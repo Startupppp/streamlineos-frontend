@@ -12,8 +12,8 @@ interface SpaceDeleteDialogProps {
 }
 
 function pagesSentence(pageCount: number | undefined): string {
-  if (pageCount === undefined) return "Its pages will move to Trash";
-  return `${pageCount} ${pageCount === 1 ? "page" : "pages"} will move to Trash`;
+  if (pageCount === undefined) return "Its files will move to Trash";
+  return `${pageCount} ${pageCount === 1 ? "file" : "files"} will move to Trash`;
 }
 
 export function SpaceDeleteDialog({ space, onOpenChange, onDeleted }: SpaceDeleteDialogProps) {
@@ -24,7 +24,7 @@ export function SpaceDeleteDialog({ space, onOpenChange, onDeleted }: SpaceDelet
     if (!space) return;
     deleteSpace.mutate(space.id, {
       onSuccess: () => {
-        toast.success(`Deleted "${space.name}". Its pages are in Trash.`);
+        toast.success(`Deleted "${space.name}". Its files are in Trash.`);
         onOpenChange(false);
         onDeleted?.();
       },
@@ -40,7 +40,7 @@ export function SpaceDeleteDialog({ space, onOpenChange, onDeleted }: SpaceDelet
     <ConfirmDialog
       open={space !== null}
       onOpenChange={onOpenChange}
-      title="Delete space permanently?"
+      title="Delete team folder permanently?"
       description={description}
       confirmLabel="Delete permanently"
       destructive

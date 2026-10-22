@@ -9,6 +9,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { KbSpace, CreateSpaceInput, UpdateSpaceInput } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   KbSpaceListPage,
   KbSpaceArchiveImpact,
@@ -66,7 +67,7 @@ export function useKbSpaces(params?: KbSpacesListParams) {
 
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: [...knowledgeAndSurveysQueryKeys.kb.spaces(), params],
+    queryKey: knowledgeAndSurveysQueryKeys.kb.spacesList(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceListPage>("/kb/spaces", queryParams, signal, kbSpaceListPageContract),
     staleTime: 60_000,
@@ -197,7 +198,7 @@ export interface AddKbSpaceMemberInput {
 
 export function useAddKbSpaceMember() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("kb:spaces:manage", {
+  return useAuthorizedMutation("kb:spaces:view", {
     mutationKey: ["kb", "spaces", "members", "add"],
     mutationFn: ({ spaceId, ...body }: AddKbSpaceMemberInput) =>
       apiClient.post(
@@ -214,9 +215,34 @@ export function useAddKbSpaceMember() {
   });
 }
 
+export interface UpdateKbSpaceMemberInput {
+  spaceId: number;
+  memberId: number;
+  spaceRole: "viewer" | "commenter" | "editor" | "publisher" | "admin";
+}
+
+export function useUpdateKbSpaceMemberRole() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("kb:spaces:view", {
+    mutationKey: ["kb", "spaces", "members", "update"],
+    mutationFn: ({ spaceId, memberId, spaceRole }: UpdateKbSpaceMemberInput) =>
+      apiClient.patch(
+        `/kb/spaces/${spaceId}/members/${memberId}`,
+        { spaceRole },
+        undefined,
+        kbSpaceMemberContract,
+      ),
+    onSuccess: (_data, { spaceId }) => {
+      void qc.invalidateQueries({
+        queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
+      });
+    },
+  });
+}
+
 export function useRemoveKbSpaceMember() {
   const qc = useQueryClient();
-  return useAuthorizedMutation("kb:spaces:manage", {
+  return useAuthorizedMutation("kb:spaces:view", {
     mutationKey: ["kb", "spaces", "members", "remove"],
     mutationFn: ({ spaceId, memberId }: { spaceId: number; memberId: number }) =>
       apiClient.delete(
@@ -237,21 +263,21 @@ export function useKbSpaceMembers(
   spaceId: number,
   options?: { enabled?: boolean },
 ) {
-  const canManage = useCan("kb:spaces:manage");
+  const canView = useCan("kb:spaces:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     queryKey: [...knowledgeAndSurveysQueryKeys.kb.space(spaceId), "members"],
     queryFn: ({ pageParam, signal }) =>
       apiClient.get(
         `/kb/spaces/${spaceId}/members`,
-        pageParam ? { cursor: pageParam } : undefined,
+        pageParam !== NO_CURSOR_YET ? { cursor: pageParam } : undefined,
         signal,
         kbSpaceMemberListContract,
       ),
-    initialPageParam: null as string | null,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor,
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     select: (data) => data.pages.flatMap((page) => page.data),
-    enabled: canManage && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
+    enabled: canView && Number.isFinite(spaceId) && spaceId > 0 && (options?.enabled ?? true),
     staleTime: 60_000,
   });
 }

@@ -18,6 +18,9 @@ export function useHuddleAutoStart({
   isInHuddle,
   startHuddle,
   joinHuddle,
+  joinHuddleRequested,
+  huddleSettled,
+  onJoinHuddleHandled,
 }: {
   channelId: number;
   autoStartCall: "huddle" | null | undefined;
@@ -26,9 +29,11 @@ export function useHuddleAutoStart({
   isInHuddle: boolean;
   startHuddle: HuddleStarter;
   joinHuddle: HuddleJoiner;
+  joinHuddleRequested: boolean;
+  huddleSettled: boolean;
+  onJoinHuddleHandled: (() => void) | undefined;
 }): void {
   const autoStartHandledRef = useRef(false);
-  const joinHuddleCalledRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!autoStartCall) {
@@ -53,15 +58,18 @@ export function useHuddleAutoStart({
   ]);
 
   useEffect(() => {
-    if (joinHuddleCalledRef.current === channelId) return;
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("joinHuddle") === "1" && activeHuddle && !isInHuddle) {
-      joinHuddleCalledRef.current = channelId;
+    if (!joinHuddleRequested || !huddleSettled) return;
+    if (activeHuddle && !isInHuddle) {
       joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
-      const url = new URL(window.location.href);
-      url.searchParams.delete("joinHuddle");
-      window.history.replaceState({}, "", url.toString());
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeHuddle, channelId]);
+    onJoinHuddleHandled?.();
+  }, [
+    joinHuddleRequested,
+    huddleSettled,
+    activeHuddle,
+    isInHuddle,
+    channelId,
+    joinHuddle,
+    onJoinHuddleHandled,
+  ]);
 }

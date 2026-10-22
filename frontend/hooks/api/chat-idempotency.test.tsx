@@ -205,12 +205,6 @@ function allKeysSent(): (string | undefined)[] {
   );
 }
 
-function keysSentOn(url: string): (string | undefined)[] {
-  return post.mock.calls
-    .filter(([called]) => called === url)
-    .map(([, , config]) => (config as RequestConfig | undefined)?.headers?.["Idempotency-Key"]);
-}
-
 async function run(caller: FencedCall, input: unknown): Promise<void> {
   const { result } = renderHook(caller.useHook, {
     wrapper: wrapperFor(newClient()),

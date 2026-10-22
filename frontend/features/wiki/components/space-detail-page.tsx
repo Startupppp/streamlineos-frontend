@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -14,18 +13,28 @@ import {
   useArchiveKbSpace,
   useRestoreKbSpace,
 } from "@/hooks/api/kb/spaces";
+import {
+  useKbSpaceSharingPolicy,
+  useUpdateKbSpaceSharingPolicy,
+} from "@/hooks/api/kb/sharing";
+import { externalSharingModeContract } from "@/hooks/api/kb/kb-sharing-schema";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { pageHref } from "@/lib/knowledge-routes";
-import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
 import { getUserDisplayName } from "@/lib/person-display";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import {
   KbArchiveIcon,
   KbLayoutGridIcon,
-  KbPlusIcon,
   KbRotateCcwIcon,
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
+import { KbNewMenu } from "./kb-new-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
 import { Button } from "@/components/ui/button";
@@ -53,6 +62,20 @@ const AUDIENCE_LABELS: Record<KbAudience, string> = {
   mixed: "Mixed",
 };
 
+const VIEWER_ACCESS_VIA_LABELS: Record<string, string> = {
+  admin: "org admin",
+  team_folder: "team folder membership",
+  team_folder_admin: "team folder admin role",
+  organization: "org-wide access",
+};
+
+const VIEWER_ACCESS_LEVEL_LABELS: Record<string, string> = {
+  view: "Viewer",
+  comment: "Commenter",
+  edit: "Editor",
+  manage: "Manager",
+};
+
 const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
   internal: "bg-muted text-muted-foreground border-border",
   public:
@@ -73,7 +96,6 @@ interface SpaceDetailPageProps {
 }
 
 export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
-  const router = useRouter();
   const {
     data: space,
     isLoading,
@@ -81,11 +103,11 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     error,
     refetch,
   } = useKbSpace(spaceId);
-  const canCreatePage = useCan("kb:pages:create");
   const canManage = useCan("kb:spaces:manage");
-  const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
   const archiveSpace = useArchiveKbSpace();
   const restoreSpace = useRestoreKbSpace();
+  const { data: spacePolicy } = useKbSpaceSharingPolicy(spaceId);
+  const updateSharingPolicy = useUpdateKbSpaceSharingPolicy(spaceId);
   const [membersOpen, setMembersOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
@@ -102,10 +124,6 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
 
   function handleRetry() {
     void refetch();
-  }
-
-  function handleNewPage() {
-    void createPage.submit({ spaceId });
   }
 
   function handleMembersOpenChange(open: boolean) {
@@ -149,24 +167,27 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     });
   }
 
+  function handleSharingPolicyChange(value: string) {
+    const parsed = externalSharingModeContract.safeParse(value);
+    if (value !== "inherit" && !parsed.success) return;
+    const externalSharing = parsed.success ? parsed.data : null;
+    updateSharingPolicy.mutate(
+      { externalSharing },
+      { onError: (err) => toast.error(getErrorMessage(err)) },
+    );
+  }
+
   const audience: KbAudience = space?.audience ?? "internal";
   const isArchived =
     space?.archivedAt !== undefined && space?.archivedAt !== null;
   const pagesOverdueForReview = space?.pagesOverdueForReview ?? 0;
   const pagesWithReviewPolicy = space?.pagesWithReviewPolicy ?? 0;
 
+  const spaceScope = useMemo(() => ({ spaceId }), [spaceId]);
+
   const headerActions = visibleSpace ? (
     <div className="flex items-center gap-1.5">
-      {canCreatePage && (
-        <Button
-          size="sm"
-          onClick={handleNewPage}
-          disabled={createPage.isSubmitting}
-        >
-          <KbPlusIcon className="h-4 w-4 mr-1.5" />
-          New page
-        </Button>
-      )}
+      <KbNewMenu scope={spaceScope} allowFolder={false} />
       {canManage && (
         <Button variant="outline" size="sm" onClick={handleOpenMembers}>
           <KbUsersIcon className="h-4 w-4 mr-1.5" />
@@ -269,8 +290,30 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                   {space.description}
                 </p>
               )}
+              {canManage && spacePolicy !== undefined && (
+                <div className="mt-2 flex items-center gap-2">
+                  <span className="text-xs text-muted-foreground">External sharing:</span>
+                  <Select
+                    value={spacePolicy.externalSharing ?? "inherit"}
+                    onValueChange={handleSharingPolicyChange}
+                    disabled={updateSharingPolicy.isPending}
+                  >
+                    <SelectTrigger className="h-7 w-44 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="inherit">
+                        Inherit ({spacePolicy.effective})
+                      </SelectItem>
+                      <SelectItem value="disabled">Disabled</SelectItem>
+                      <SelectItem value="guests">Guests only</SelectItem>
+                      <SelectItem value="guests_and_links">Guests and links</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div
-                className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground"
+                className="mt-1.5 flex items-center gap-3 text-xs text-muted-foreground flex-wrap"
                 suppressHydrationWarning
               >
                 {space?.ownerName != null && (
@@ -280,6 +323,14 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                 )}
                 {space?.updatedAt && (
                   <span>Updated {kbTimeAgo(space.updatedAt)}</span>
+                )}
+                {space?.viewerAccess != null && (
+                  <span>
+                    Your access:{" "}
+                    {VIEWER_ACCESS_LEVEL_LABELS[space.viewerAccess.level] ?? space.viewerAccess.level}
+                    {" via "}
+                    {VIEWER_ACCESS_VIA_LABELS[space.viewerAccess.via] ?? space.viewerAccess.via}
+                  </span>
                 )}
               </div>
             </div>
@@ -312,8 +363,8 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             <div className="flex min-h-0 flex-1 flex-col">
               <WikiPageCollectionTable
                 fixedParams={{ spaceId }}
-                emptyTitle="No pages in this space yet"
-                emptyDescription="Move or create pages inside this space to see them here."
+                emptyTitle="No files in this team folder yet"
+                emptyDescription="Move or create files inside this team folder to see them here."
               />
             </div>
           </div>
@@ -323,6 +374,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       <SpaceMembersSheet
         spaceId={spaceId}
         spaceName={visibleSpace?.name ?? ""}
+        canManageFolder={visibleSpace?.viewerAccess?.level === "manage"}
         open={membersOpen && Boolean(visibleSpace)}
         onOpenChange={handleMembersOpenChange}
       />
@@ -331,7 +383,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
         <SheetContent side="left" className="gap-0 p-0 sm:max-w-sm">
           <SheetHeader className="border-b border-border px-4 py-3">
             <SheetTitle>Hierarchy</SheetTitle>
-            <SheetDescription>Pages in {visibleSpace?.name ?? "this space"}</SheetDescription>
+            <SheetDescription>Files in {visibleSpace?.name ?? "this team folder"}</SheetDescription>
           </SheetHeader>
           <SheetBody className="p-3">
             {hierarchyOpen && visibleSpace && (
@@ -344,10 +396,10 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
       <ConfirmDialog
         open={archiveConfirmOpen && Boolean(visibleSpace)}
         onOpenChange={handleArchiveConfirmOpenChange}
-        title="Archive space?"
+        title="Archive team folder?"
         description={
           <>
-            {`Archiving "${visibleSpace?.name ?? "this space"}" will hide it from users. Pages and content are preserved and can be restored.`}
+            {`Archiving "${visibleSpace?.name ?? "this team folder"}" will hide it from users. Files and content are preserved and can be restored.`}
             {archiveConfirmOpen && visibleSpace && <SpaceArchiveImpact spaceId={spaceId} />}
           </>
         }

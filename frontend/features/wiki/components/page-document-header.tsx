@@ -50,6 +50,7 @@ interface PageDocumentHeaderProps {
   onInsertSummary?: (text: string) => void;
   onOpenCover: () => void;
   onOpenDetailsPanel?: () => void;
+  onSpreadsheetExport?: (format: "xlsx" | "csv") => void;
   projectId?: number;
 }
 
@@ -67,6 +68,7 @@ export default function PageDocumentHeader({
   onInsertSummary,
   onOpenCover,
   onOpenDetailsPanel,
+  onSpreadsheetExport,
   projectId,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
@@ -130,7 +132,7 @@ export default function PageDocumentHeader({
         : KNOWLEDGE_BASE;
     deletePage.mutate(pageId, {
       onSuccess: () => {
-        toast.success("Page moved to trash");
+        toast.success("File moved to trash");
         router.push(afterDeleteHref);
       },
       onError: (error) => toast.error(getErrorMessage(error)),
@@ -194,6 +196,7 @@ export default function PageDocumentHeader({
           onDelete={handleDelete}
           onNavigate={onNavigate}
           onOpenDetailsPanel={onOpenDetailsPanel}
+          onSpreadsheetExport={onSpreadsheetExport}
         />
       </div>
 
@@ -219,8 +222,8 @@ export default function PageDocumentHeader({
       <ConfirmDialog
         open={deleteAlertOpen}
         onOpenChange={handleDeleteAlertOpenChange}
-        title="Move page to trash?"
-        description="This page will be moved to the Recycle Bin. You can restore it from the Recycle Bin."
+        title="Move file to trash?"
+        description="This file will be moved to the Recycle Bin. You can restore it from the Recycle Bin."
         destructive
         confirmLabel="Move to trash"
         isPending={deletePage.isPending}
@@ -232,7 +235,7 @@ export default function PageDocumentHeader({
           <DialogHeader>
             <DialogTitle>Save as template</DialogTitle>
             <DialogDescription className="text-xs">
-              Reuse this page&apos;s structure when creating new pages.
+              Reuse this file&apos;s structure when creating new files.
             </DialogDescription>
           </DialogHeader>
           <Input

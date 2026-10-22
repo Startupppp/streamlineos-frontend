@@ -14,8 +14,10 @@ import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { ChatAblyProvider } from "./ably-provider";
 import { MessagePanel } from "./message-panel";
+import { useChatOutboxDrain } from "./use-chat-offline-queue";
 import { ChannelInfoPanel } from "./channel-info-panel";
 import { useIsChatPanelNarrow } from "./use-chat-mobile";
+import { useMobilePanelBack } from "./use-mobile-panel-back";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { PM_PANEL_SOLID, PmPageShell } from "@/components/pm-chrome";
 
@@ -28,6 +30,7 @@ const noop = () => {};
 export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
+  useChatOutboxDrain();
   const { data: channel, error, isLoading, isError, refetch } = useEntityChannel(
     "project",
     projectId,
@@ -52,6 +55,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
   const handleCloseInfo = useCallback(() => {
     setShowInfoPanel(false);
   }, []);
+  useMobilePanelBack(showInfoPanel, handleCloseInfo);
 
   const handleRetry = useCallback(() => {
     void refetch();
@@ -113,6 +117,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
                 <div className="flex min-h-0 min-w-0 flex-1">
                   <div className="flex min-h-0 min-w-0 flex-1 flex-col">
                     <MessagePanel
+                      key={channel.id}
                       channelId={channel.id}
                       currentUserId={currentUserId}
                       onBack={noop}
@@ -141,7 +146,7 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
                   </AnimatePresence>
                   {isPanelNarrow && (
                     <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-                      <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0">
+                      <SheetContent showCloseButton={false} className="flex w-full flex-col gap-0 overflow-hidden p-0">
                         <ChannelInfoPanel
                           channelId={channel.id}
                           currentUserId={currentUserId}

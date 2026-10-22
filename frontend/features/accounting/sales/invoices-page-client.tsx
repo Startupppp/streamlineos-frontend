@@ -252,7 +252,6 @@ export function InvoicesPageClient() {
           }
           tone="amber"
           isLoading={agingQuery.isLoading}
-          href="/accounting/aged-receivables"
         />
         <StatCard
           label="Overdue 91+ days"

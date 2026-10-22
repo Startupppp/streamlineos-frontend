@@ -368,7 +368,7 @@ export default function TemplatesPage() {
                     <KbLayoutTemplateIcon className="w-8 text-muted-foreground" />
                   }
                   title="No saved templates yet"
-                  description="Save a page as a template to reuse its structure across your wiki."
+                  description="Save a file as a template to reuse its structure across your docs."
                   className={CONTENT_FILL_PANEL}
                 />
               )

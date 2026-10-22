@@ -2,25 +2,16 @@
 
 import { useState, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogBody,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogBody } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Camera, Globe, Hash, Lock, Loader2, Users } from "lucide-react";
-import { ChevronRightIcon, UsersIcon } from "@animateicons/react/lucide";
+import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import {
-  useCreateGroupChannel,
-  useCreatePublicChannel,
-  useCreatePrivateChannel,
-} from "@/hooks/api/chat-core-mutations-b";
+import { useCreateGroupChannel, useCreatePublicChannel, useCreatePrivateChannel } from "@/hooks/api/chat-core-mutations-b";
 import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";
@@ -32,6 +23,7 @@ const storageUploadContract = lazyContract(() =>
 import { MemberPicker } from "@/components/shared";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ChatDialogHeader } from "./chat-dialog-header";
+import { useDialogReturnFocus } from "./use-dialog-return-focus";
 
 type ChannelKind = "GROUP" | "PUBLIC" | "PRIVATE";
 
@@ -90,7 +82,10 @@ function ChannelKindOption({
   selected: boolean;
   onSelect: (kind: ChannelKind) => void;
 }) {
-  const handleSelect = useCallback(() => onSelect(kind.value), [kind.value, onSelect]);
+  const handleSelect = useCallback(
+    () => onSelect(kind.value),
+    [kind.value, onSelect],
+  );
   return (
     <button
       type="button"
@@ -107,22 +102,21 @@ function ChannelKindOption({
     >
       {kind.icon}
       <span className="text-xs font-semibold">{kind.label}</span>
-      <span className="text-micro leading-tight opacity-70">{kind.description}</span>
+      <span className="text-micro leading-tight opacity-70">
+        {kind.description}
+      </span>
     </button>
   );
 }
 
 export function NewGroupDialog({
-  open,
   onOpenChange,
   onCreated,
-  hideTrigger,
 }: {
-  open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated: (channelId: number) => void;
-  hideTrigger?: boolean;
 }) {
+  const handleCloseAutoFocus = useDialogReturnFocus("new");
   const createGroup = useCreateGroupChannel();
   const createPublic = useCreatePublicChannel();
   const createPrivate = useCreatePrivateChannel();
@@ -140,7 +134,7 @@ export function NewGroupDialog({
   const avatarInputRef = useRef<HTMLInputElement>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [step, setStep] = useState<"info" | "members">("info");
-  const chatUsers = useChatOrgUsers(open && step === "members");
+  const chatUsers = useChatOrgUsers(step === "members");
   const candidates = useMemo(
     () =>
       (chatUsers.data ?? []).map((u) => ({
@@ -228,50 +222,16 @@ export function NewGroupDialog({
       } else {
         channel = await createGroup.mutateAsync(payload);
       }
-      onCreated(channel.id);
-      onOpenChange(false);
       toast.success("Channel created");
-      setName("");
-      setNameRejected(false);
-      setDescription("");
-      setAvatarUrl("");
-      setSelectedIds([]);
-      setStep("info");
-      setChannelKind("GROUP");
+      onCreated(channel.id);
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   };
 
-  const resetAndClose = (nextOpen: boolean) => {
-    if (!nextOpen) {
-      setStep("info");
-      setName("");
-      setNameRejected(false);
-      setDescription("");
-      setAvatarUrl("");
-      setSelectedIds([]);
-      setChannelKind("GROUP");
-    }
-    onOpenChange(nextOpen);
-  };
-
   return (
-    <Dialog open={open} onOpenChange={resetAndClose}>
-      {!hideTrigger && (
-        <DialogTrigger asChild>
-          <AnimatedIconButton
-            icon={UsersIcon}
-            iconSize={14}
-            variant="ghost"
-            size="icon"
-            className="w-7 rounded-lg"
-            title="New Channel"
-            aria-label="New Channel"
-          />
-        </DialogTrigger>
-      )}
-      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
+    <Dialog open onOpenChange={onOpenChange}>
+      <DialogContent className="flex max-h-[90dvh] flex-col gap-0 overflow-hidden p-0 sm:max-w-md" onCloseAutoFocus={handleCloseAutoFocus}>
         <ChatDialogHeader
           title={step === "info" ? "Create channel" : "Add members"}
           description="Create a focused space for a team or topic."
@@ -306,6 +266,7 @@ export function NewGroupDialog({
                 type="button"
                 onClick={handleOpenAvatarInput}
                 disabled={uploadingAvatar}
+                aria-label={avatarUrl ? "Change channel avatar" : "Upload channel avatar"}
                 className="group relative"
               >
                 {avatarUrl ? (
@@ -349,7 +310,8 @@ export function NewGroupDialog({
               </div>
               {(nameRejected || (name !== "" && !isNamedChannel(name))) && (
                 <p className="mt-1 text-xs text-destructive">
-                  Use letters or numbers — spaces and punctuation alone are not a name
+                  Use letters or numbers — spaces and punctuation alone are not
+                  a name
                 </p>
               )}
             </div>
@@ -395,13 +357,18 @@ export function NewGroupDialog({
                   values={selectedIds}
                   onToggle={handleToggleMember}
                   disabled={chatUsers.isLoading}
-                  placeholder={chatUsers.isLoading ? "Loading members…" : "Search and add people…"}
+                  placeholder={
+                    chatUsers.isLoading
+                      ? "Loading members…"
+                      : "Search and add people…"
+                  }
                 />
               )}
               {selectedIds.length === 0 && (
                 <p className="text-micro text-muted-foreground">
-                  A channel needs at least one other person besides you. If nobody is
-                  listed, invite a teammate first under Settings → Users.
+                  A channel needs at least one other person besides you. If
+                  nobody is listed, invite a teammate first under Settings →
+                  Users.
                 </p>
               )}
             </DialogBody>

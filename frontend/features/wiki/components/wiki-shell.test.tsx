@@ -1,28 +1,22 @@
-import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import { ApiError } from "@/lib/api-envelope";
+import { render, screen, fireEvent } from "@testing-library/react";
 import WikiShell from "./wiki-shell";
 
-const mockFavorites = jest.fn();
-const mockCanState = jest.fn();
+const mockReplace = jest.fn();
+const mockPush = jest.fn();
+let mockSearchParams = new URLSearchParams();
+const mockMutate = jest.fn();
 
 jest.mock("next/navigation", () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
-  useSearchParams: () => new URLSearchParams(),
+  useRouter: () => ({ push: mockPush, replace: mockReplace }),
+  useSearchParams: () => mockSearchParams,
 }));
 
 jest.mock("@/hooks/api/kb", () => ({
-  useKbPagesFavorites: () => mockFavorites(),
-  useCreateKbPage: () => ({ mutate: jest.fn(), isPending: false }),
+  useCreateKbPage: () => ({ mutate: mockMutate, isPending: false }),
 }));
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
-  useCanState: () => mockCanState(),
-}));
-
-jest.mock("@/hooks/api/kb/hr-link-config", () => ({
-  useHrKbLinkFlags: () => ({ link: false }),
 }));
 
 jest.mock("@/components/layout/shell-sidebar-collapse-context", () => ({
@@ -46,90 +40,114 @@ jest.mock("./quick-find-dialog", () => ({
 jest.mock("./wiki-sidebar-nav", () => ({
   __esModule: true,
   default: () => <div>Wiki navigation</div>,
-  WikiSidebarFooter: () => null,
 }));
 
 jest.mock("./wiki-sidebar-chrome", () => ({
   WikiCollapsedSidebarChrome: () => null,
 }));
 
-jest.mock("@/features/wiki/lib/kb-icons", () => ({
-  KbStarIcon: () => <span />,
-}));
-
 beforeEach(() => {
   jest.clearAllMocks();
-  mockCanState.mockReturnValue("granted");
+  mockSearchParams = new URLSearchParams();
 });
 
-it("shows a request reference and retries a failed first Favorites read", async () => {
-  const refetch = jest.fn();
-  mockFavorites.mockReturnValue({
-    data: [],
-    isError: true,
-    error: new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE", { correlationId: "favorites-first" }),
-    refetch,
-    hasNextPage: false,
-    fetchNextPage: jest.fn(),
-  });
-
+it("renders one focused navigation rail without duplicating the home Favorites collection", () => {
   render(<WikiShell><div>Wiki body</div></WikiShell>);
 
-  expect(screen.getByText("Couldn't load favorites")).toBeInTheDocument();
-  expect(screen.getByText("favorites-first")).toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Try again" }));
-  expect(refetch).toHaveBeenCalledTimes(1);
-});
-
-it("retains loaded Favorites and retries only a failed later cursor page", async () => {
-  const refetch = jest.fn();
-  const fetchNextPage = jest.fn();
-  mockFavorites.mockReturnValue({
-    data: [{ id: 42, title: "Runbook", icon: null }],
-    isError: true,
-    isFetchNextPageError: true,
-    error: new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE", { correlationId: "favorites-later" }),
-    refetch,
-    hasNextPage: true,
-    fetchNextPage,
-  });
-
-  render(<WikiShell><div>Wiki body</div></WikiShell>);
-
-  expect(screen.getByRole("link", { name: "Runbook" })).toBeInTheDocument();
-  expect(screen.getByText("Couldn't load more favorites")).toBeInTheDocument();
-  expect(screen.getByText("favorites-later")).toBeInTheDocument();
-  expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
-  await userEvent.click(screen.getByRole("button", { name: "Try again" }));
-  expect(fetchNextPage).toHaveBeenCalledTimes(1);
-  expect(refetch).not.toHaveBeenCalled();
-});
-
-it("hides cached Favorites when the permission snapshot denies access", () => {
-  mockCanState.mockReturnValue("denied");
-  mockFavorites.mockReturnValue({
-    data: [{ id: 42, title: "Runbook", icon: null }],
-    isError: false,
-    hasNextPage: false,
-  });
-
-  render(<WikiShell><div>Wiki body</div></WikiShell>);
-
-  expect(screen.queryByRole("link", { name: "Runbook" })).not.toBeInTheDocument();
+  expect(screen.getByText("Wiki navigation")).toBeInTheDocument();
+  expect(screen.getByText("Folder tree")).toBeInTheDocument();
+  expect(screen.getByText("Wiki body")).toBeInTheDocument();
   expect(screen.queryByText("Favorites")).not.toBeInTheDocument();
 });
 
-it("hides cached Favorites when a read reports revoked access", () => {
-  mockFavorites.mockReturnValue({
-    data: [{ id: 42, title: "Runbook", icon: null }],
-    isError: true,
-    error: new ApiError("Access revoked", 403, "FORBIDDEN", { correlationId: "favorites-revoked" }),
-    refetch: jest.fn(),
-    hasNextPage: false,
+describe("WikiShell — ?create=1 confirmation guard", () => {
+  it("does not call createPage.mutate immediately when ?create=1 is present", () => {
+    mockSearchParams = new URLSearchParams("create=1");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(mockMutate).not.toHaveBeenCalled();
   });
 
-  render(<WikiShell><div>Wiki body</div></WikiShell>);
+  it("shows the confirmation dialog when ?create=1 is in the URL", () => {
+    mockSearchParams = new URLSearchParams("create=1");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(screen.getByText("Create a new document?")).toBeInTheDocument();
+  });
 
-  expect(screen.queryByRole("link", { name: "Runbook" })).not.toBeInTheDocument();
-  expect(screen.getByText("favorites-revoked")).toBeInTheDocument();
+  it("strips ?create=1 from the URL when the confirm dialog is shown", () => {
+    mockSearchParams = new URLSearchParams("create=1");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.not.stringContaining("create=1"),
+    );
+  });
+
+  it("calls createPage.mutate when the user confirms", () => {
+    mockSearchParams = new URLSearchParams("create=1");
+    render(<WikiShell><div>body</div></WikiShell>);
+    const confirmButton = screen.getByRole("button", { name: /create/i });
+    fireEvent.click(confirmButton);
+    expect(mockMutate).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not call createPage.mutate when the user cancels", () => {
+    mockSearchParams = new URLSearchParams("create=1");
+    render(<WikiShell><div>body</div></WikiShell>);
+    const cancelButton = screen.getByRole("button", { name: /cancel/i });
+    fireEvent.click(cancelButton);
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
+  it("does not show a confirmation dialog when ?create=1 is absent", () => {
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(screen.queryByText("Create a new document?")).not.toBeInTheDocument();
+  });
+
+  it("calls createPage.mutate with kind: document when ?create=1 is confirmed", () => {
+    mockSearchParams = new URLSearchParams("create=1");
+    render(<WikiShell><div>body</div></WikiShell>);
+    const confirmButton = screen.getByRole("button", { name: /create/i });
+    fireEvent.click(confirmButton);
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "document" }),
+      expect.anything(),
+    );
+  });
+});
+
+describe("WikiShell — ?create=spreadsheet confirmation guard", () => {
+  it("does not call createPage.mutate immediately when ?create=spreadsheet is present", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(mockMutate).not.toHaveBeenCalled();
+  });
+
+  it("shows the spreadsheet confirmation dialog when ?create=spreadsheet is in the URL", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(screen.getByText("Create a new spreadsheet?")).toBeInTheDocument();
+  });
+
+  it("strips ?create=spreadsheet from the URL when the confirm dialog is shown", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(mockReplace).toHaveBeenCalledWith(
+      expect.not.stringContaining("create=spreadsheet"),
+    );
+  });
+
+  it("calls createPage.mutate with kind: spreadsheet when confirmed", () => {
+    mockSearchParams = new URLSearchParams("create=spreadsheet");
+    render(<WikiShell><div>body</div></WikiShell>);
+    const confirmButton = screen.getByRole("button", { name: /create/i });
+    fireEvent.click(confirmButton);
+    expect(mockMutate).toHaveBeenCalledWith(
+      expect.objectContaining({ kind: "spreadsheet" }),
+      expect.anything(),
+    );
+  });
+
+  it("does not show the spreadsheet dialog when ?create=spreadsheet is absent", () => {
+    render(<WikiShell><div>body</div></WikiShell>);
+    expect(screen.queryByText("Create a new spreadsheet?")).not.toBeInTheDocument();
+  });
 });

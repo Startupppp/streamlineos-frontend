@@ -27,6 +27,12 @@ function ablyMock() {
     }),
     unsubscribe: jest.fn(),
     publish: jest.fn().mockResolvedValue(undefined),
+    presence: {
+      subscribe: jest.fn().mockResolvedValue(undefined),
+      unsubscribe: jest.fn(),
+      update: jest.fn().mockResolvedValue(undefined),
+      leave: jest.fn().mockResolvedValue(undefined),
+    },
   };
   return {
     handlers,
@@ -46,6 +52,7 @@ const source: Message = {
   messageType: "text",
   metadata: null,
   actionStatus: null,
+  reactions: {},
   createdAt: "2026-09-30T10:00:00.000Z",
   updatedAt: "2026-09-30T10:00:00.000Z",
   sender: { id: "user-2", name: "Bo", image: null },
@@ -78,9 +85,42 @@ describe("message:updated carrying a converted ticket", () => {
       });
     });
 
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: messagesKey });
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: messagesKey, exact: true });
     const after = client.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
     expect(after?.pages[0]?.messages[0]).toMatchObject({ content: "the login page 500s", isEdited: false });
+    unmount();
+  });
+});
+
+describe("message:updated carrying converted entities for a message in a context window", () => {
+  it("invalidates exactly the context windows holding that message, so a jumped-to message shows its new pill too", async () => {
+    const { useChatRealtime } = await import("@/hooks/api/chat-realtime");
+    const ably = ablyMock();
+    useAbly.mockReturnValue(ably);
+    const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const holding = collaborationQueryKeys.chat.messageContext(CHANNEL_ID, 42);
+    const other = collaborationQueryKeys.chat.messageContext(CHANNEL_ID, 900);
+    client.setQueryData(holding, { pages: [{ messages: [source] }], pageParams: [undefined] });
+    client.setQueryData(other, {
+      pages: [{ messages: [{ ...source, id: 900 }] }],
+      pageParams: [undefined],
+    });
+    const invalidate = jest.spyOn(client, "invalidateQueries");
+    const { unmount } = renderHook(() => useChatRealtime(CHANNEL_ID), {
+      wrapper: ({ children }: { children: ReactNode }) => (
+        <QueryClientProvider client={client}>{children}</QueryClientProvider>
+      ),
+    });
+    await waitFor(() => expect(ably.handlers.get("message:updated")?.length).toBe(1));
+
+    act(() => {
+      ably.handlers.get("message:updated")?.[0]?.({
+        data: { id: 42, channelId: CHANNEL_ID, entities: [{ type: "ticket", id: "99" }] },
+      });
+    });
+
+    expect(invalidate).toHaveBeenCalledWith({ queryKey: holding, exact: true });
+    expect(invalidate).not.toHaveBeenCalledWith({ queryKey: other, exact: true });
     unmount();
   });
 });

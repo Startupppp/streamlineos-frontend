@@ -1,4 +1,4 @@
-export const MESSAGE_RENDER_PAGE_SIZE = 60;
+const MESSAGE_RENDER_PAGE_SIZE = 60;
 
 /**
  * `useChatMessages` sends no `limit` and its pages accumulate, so a channel that

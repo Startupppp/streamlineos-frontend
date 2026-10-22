@@ -44,27 +44,17 @@
  * undeclared value arriving is drift the screen cannot render anyway.
  */
 
-export { chatMemberUserContract, chatPreviewUserContract } from "./user-schema";
 export {
   chatChannelContract,
   chatChannelMemberContract,
   chatChannelMemberPreviewContract,
   chatChannelPageContract,
-  chatLastMessageContract,
   chatPublicChannelContract,
 } from "./channel-schema";
-export type {
-  ChatChannelMemberWire,
-  ChatChannelWire,
-  ChatPublicChannelWire,
-} from "./channel-schema";
+export type { ChatChannelMemberWire } from "./channel-schema";
+export { chatActiveHuddleContract, chatHuddleContract } from "./huddle-schema";
 export {
-  chatActiveHuddleContract,
-  chatHuddleContract,
-  chatHuddleParticipantContract,
-} from "./huddle-schema";
-export type { ChatHuddleWire } from "./huddle-schema";
-export {
+  chatMessageContextContract,
   chatMessageContract,
   chatMessagesPageContract,
   chatPollPageContract,

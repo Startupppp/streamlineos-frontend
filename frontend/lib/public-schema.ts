@@ -242,6 +242,7 @@ export const publicWikiPageContract = z.object({
   title: z.string(),
   icon: z.string().nullable(),
   coverImage: z.string().nullable(),
+  kind: z.enum(["document", "spreadsheet", "file"]),
   content: z
     .union([
       z.record(z.string(), z.unknown()),
@@ -249,6 +250,14 @@ export const publicWikiPageContract = z.object({
     ])
     .nullable(),
   updatedAt: z.string().nullable(),
+  allowDownload: z.boolean(),
+  file: z
+    .object({
+      fileName: z.string(),
+      mimeType: z.string(),
+      byteSize: z.number(),
+    })
+    .nullable(),
 });
 
 export const publicKbFeedbackContract = z.object({

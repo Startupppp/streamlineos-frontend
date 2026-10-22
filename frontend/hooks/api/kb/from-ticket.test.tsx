@@ -4,7 +4,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { ReactNode } from "react";
 import { backendAvailable, backendPath } from "@/test-utils/backend-repo";
 import { installAbortSignalPolyfill } from "@/test-utils/abort-signal-polyfill";
-import { clearBackendTokenCache, resetOutageCircuit, seedBackendToken } from "@/lib/api-client";
+import { clearBackendTokenCache, seedBackendToken } from "@/lib/api-client";
+import { resetOutageCircuit } from "@/lib/api-outage-circuit";
 import { ApiContractError } from "@/lib/api-envelope";
 
 jest.mock("@/hooks/api/authorized-mutation", () => ({

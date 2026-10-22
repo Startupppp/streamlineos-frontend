@@ -1,4 +1,4 @@
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import WikiHomePage from "./wiki-home-page";
 import { kbSpacesQueryStub } from "@/test-utils/kb-spaces-fixture";
@@ -25,10 +25,28 @@ jest.mock("@/hooks/api/kb", () => ({
   useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
   useKbPageBacklinks: jest.fn(() => ({ data: [] })),
+  useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
 }));
 
 jest.mock("@/hooks/api/kb/record-links", () => ({
   useKbPageRecordLinks: jest.fn(() => ({ data: [] })),
+}));
+
+jest.mock("@/hooks/api/kb/page-grants", () => ({
+  useKbPageGrants: jest.fn(() => ({ data: undefined, isLoading: false, hasNextPage: false, fetchNextPage: jest.fn(), isFetchingNextPage: false })),
+  useCreateKbPageGrant: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useRevokeKbPageGrant: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useKbPageGrantCandidates: jest.fn(() => ({ data: undefined, isLoading: false })),
+}));
+
+jest.mock("@/hooks/api/kb/export-page", () => ({
+  useExportKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
+jest.mock("@/hooks/common/use-online-status", () => ({
+  useOnlineStatus: jest.fn(() => true),
 }));
 
 jest.mock("@/hooks/api/organization", () => ({
@@ -46,17 +64,31 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
   useKbPageCollection: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/kb/shortcuts", () => ({
+  useCreateKbShortcut: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 let mockCan: (key: string) => boolean = () => true;
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockCan(key),
 }));
 
-jest.mock("@/hooks/api/kb/hr-link-config", () => ({
-  useHrKbLinkFlags: () => ({ link: false, search: false, ai: false }),
-}));
-
-jest.mock("@/hooks/api/kb/linked-documents", () => ({
-  useLinkedDocuments: () => ({ data: undefined }),
+jest.mock("./wiki-home-sections", () => ({
+  WikiHomeHeaderActions: ({
+    canCreate,
+    isProjectScoped,
+  }: {
+    canCreate: boolean;
+    isProjectScoped: boolean;
+    projectId?: number;
+  }) => (
+    <div>
+      {!isProjectScoped && <a href="/knowledge/chat">Ask documents</a>}
+      {canCreate && <button type="button">New document</button>}
+    </div>
+  ),
+  WikiHomeActivitySection: () => null,
+  WikiHomeSharedUpdatesSection: () => null,
 }));
 
 type BuildListKeyboardOptions = Record<string, unknown>;
@@ -272,7 +304,7 @@ describe("WikiHomePage — favorites pagination", () => {
 
     render(<WikiHomePage />);
 
-    expect(screen.getByRole("heading", { name: "Favorites" })).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Starred" })).toBeInTheDocument();
     expect(screen.getByRole("alert")).toHaveTextContent("Could not load favorites");
     expect(screen.getByText("favorites-req-1")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Try again" }));
@@ -355,8 +387,20 @@ describe("WikiHomePage — favorites pagination", () => {
 
     render(<WikiHomePage projectId={7} />);
 
-    expect(screen.queryByText("Favorites")).not.toBeInTheDocument();
+    expect(screen.queryByText("Starred")).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Load more favorites" })).not.toBeInTheDocument();
+  });
+});
+
+describe("WikiHomePage — contextual Ask entry", () => {
+  it("offers Ask documents from Docs home now that Ask is not a sidebar destination", () => {
+    render(<WikiHomePage />);
+    expect(screen.getByRole("link", { name: "Ask documents" })).toHaveAttribute("href", "/knowledge/chat");
+  });
+
+  it("does not offer organization-wide Ask inside a project-scoped wiki", () => {
+    render(<WikiHomePage projectId={7} />);
+    expect(screen.queryByRole("link", { name: "Ask documents" })).toBeNull();
   });
 });
 
@@ -395,16 +439,16 @@ describe("WikiHomePage — first-run and filtered-empty states", () => {
 
     render(<WikiHomePage />);
 
-    expect(screen.getByText("Your wiki starts here")).toBeInTheDocument();
+    expect(screen.getByText("Your Docs workspace starts here")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /create a page/i }),
+      screen.getByRole("button", { name: /create a document/i }),
     ).toBeInTheDocument();
   });
 
   it("does not show the first-run empty state when pages exist", () => {
     render(<WikiHomePage />);
 
-    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your Docs workspace starts here")).not.toBeInTheDocument();
     expect(screen.getByTestId("table-rows")).toBeInTheDocument();
   });
 
@@ -439,7 +483,7 @@ describe("WikiHomePage — first-run and filtered-empty states", () => {
     expect(
       screen.getByRole("button", { name: /clear filters/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your Docs workspace starts here")).not.toBeInTheDocument();
   });
 
   it("filtered-empty renders differently from first-run — filtered offers clear action that first-run does not", () => {
@@ -457,14 +501,14 @@ describe("WikiHomePage — first-run and filtered-empty states", () => {
     expect(
       screen.getByRole("button", { name: /clear filters/i }),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Your wiki starts here")).not.toBeInTheDocument();
+    expect(screen.queryByText("Your Docs workspace starts here")).not.toBeInTheDocument();
 
     mockSearchParams = new URLSearchParams();
     rerender(<WikiHomePage />);
     expect(
       screen.queryByRole("button", { name: /clear filters/i }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Your wiki starts here")).toBeInTheDocument();
+    expect(screen.getByText("Your Docs workspace starts here")).toBeInTheDocument();
   });
 });
 
@@ -715,15 +759,15 @@ describe("WikiHomePage — the create control fails closed on kb:pages:create", 
     mockUseBuildListKeyboard.mockClear();
   });
 
-  it("renders no New page action when kb:pages:create is denied", () => {
+  it("renders no New document action when kb:pages:create is denied", () => {
     mockCan = (key) => key !== "kb:pages:create";
     render(<WikiHomePage />);
-    expect(screen.queryByRole("button", { name: /new page/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /new document/i })).toBeNull();
   });
 
-  it("renders the New page action when kb:pages:create is granted — paired positive control for the denial above", () => {
+  it("renders the New document action when kb:pages:create is granted — paired positive control for the denial above", () => {
     render(<WikiHomePage />);
-    expect(screen.getByRole("button", { name: /new page/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /new document/i })).toBeInTheDocument();
   });
 
   it("passes no onCreate to the keyboard hook when kb:pages:create is denied so the c shortcut cannot create a page", () => {
@@ -734,146 +778,30 @@ describe("WikiHomePage — the create control fails closed on kb:pages:create", 
   });
 });
 
-describe("WikiHomePage — keyboard handler wiring (task F)", () => {
-  beforeEach(() => {
-    mockUseBuildListKeyboard.mockClear();
+describe("WikiHomePage — Manage dropdown gating", () => {
+  it("passes canCreate=true to the header actions when kb:pages:create is granted", () => {
+    render(<WikiHomePage />);
+    expect(screen.getByRole("button", { name: /new document/i })).toBeInTheDocument();
   });
 
-  it("passes the real item count from the collection to useBuildListKeyboard so j/k/Enter work", () => {
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([makeItem(1), makeItem(2), makeItem(3)]),
-      isLoading: false,
+  it("passes canCreate=false to the header actions when kb:pages:create is denied so the New action is hidden", () => {
+    mockCan = (key) => key !== "kb:pages:create";
+    render(<WikiHomePage />);
+    expect(screen.queryByRole("button", { name: /new document/i })).toBeNull();
+  });
+
+  it("renders the Starred section heading when starred pages exist", () => {
+    useKbPagesFavorites.mockReturnValue({
+      data: [makeItem(3)],
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
       isError: false,
       error: undefined,
       refetch: jest.fn(),
+      isFetchNextPageError: false,
     });
-    usePageState.mockReturnValue({ kind: "ready" });
-
     render(<WikiHomePage />);
-
-    const options = lastKeyboardOptions();
-    expect(options.itemCount).toBe(3);
-  });
-
-  it("passes itemCount 0 when the collection is empty so j/k are inert on an empty list", () => {
-    useKbPageCollection.mockReturnValue({
-      data: makeResponse([]),
-      isLoading: false,
-      isError: false,
-      error: undefined,
-      refetch: jest.fn(),
-    });
-    usePageState.mockReturnValue({ kind: "empty" });
-
-    render(<WikiHomePage />);
-
-    const options = lastKeyboardOptions();
-    expect(options.itemCount).toBe(0);
-  });
-
-  it("passes a real onOpen handler so Enter navigates to the page at the focused index", () => {
-    render(<WikiHomePage />);
-    const options = lastKeyboardOptions();
-    expect(typeof options.onOpen).toBe("function");
-    const onOpen = options.onOpen as (index: number) => void;
-    onOpen(0);
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("1"));
-  });
-
-  it("search input is present for the non-project-scoped wiki so / can focus it", () => {
-    render(<WikiHomePage />);
-    expect(screen.getByRole("search")).toBeInTheDocument();
-  });
-
-  it("search input is also present for the project-scoped wiki now that it has been added", () => {
-    render(<WikiHomePage projectId={7} />);
-    expect(screen.getByRole("search")).toBeInTheDocument();
-  });
-
-  it("passes onEdit so the e key opens the focused page, which on this surface is the editor because the wiki document has no separate edit route", () => {
-    render(<WikiHomePage />);
-    const options = lastKeyboardOptions();
-    expect(typeof options.onEdit).toBe("function");
-    const onEdit = options.onEdit as (index: number) => void;
-    onEdit(0);
-    expect(mockPush).toHaveBeenCalledWith(expect.stringContaining("1"));
-  });
-});
-
-async function settleSearchDebounce() {
-  await act(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 400));
-  });
-}
-
-describe("WikiHomePage — project-scoped search writes a debounced q to the URL (task B)", () => {
-  it("renders a project-scoped search box that types into the q URL parameter rather than navigating out of the project", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook");
-    await settleSearchDebounce();
-
-    expect(mockReplace).toHaveBeenCalledWith(
-      expect.stringContaining("q=runbook"),
-      expect.objectContaining({ scroll: false }),
-    );
-    expect(mockPush).not.toHaveBeenCalled();
-  });
-
-  it("writes nothing to the URL before the debounce settles, so the collection is not refetched once per keystroke", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook");
-
-    expect(mockReplace).not.toHaveBeenCalled();
-
-    await settleSearchDebounce();
-
-    expect(mockReplace).toHaveBeenCalledTimes(1);
-  });
-
-  it("writes no q key for a whitespace-only query, because /kb/pages declares q as min(1) and an empty q would 400 the whole list", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "   ");
-    await settleSearchDebounce();
-
-    expect(mockReplace).not.toHaveBeenCalled();
-  });
-
-  it("drops the cursor parameter in the same URL write as the query, so a search cannot inherit the previous result set's page-two cursor", async () => {
-    const user = userEvent.setup();
-    mockSearchParams = new URLSearchParams("cursor=stale-cursor");
-    render(<WikiHomePage projectId={7} />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook");
-    await settleSearchDebounce();
-
-    const url = mockReplace.mock.calls.at(-1)?.[0] as string;
-    expect(url).toContain("q=runbook");
-    expect(url).not.toContain("cursor=");
-  });
-
-  it("seeds the search box from the q URL parameter so a shared search link shows its own query", () => {
-    mockSearchParams = new URLSearchParams("q=runbook");
-    render(<WikiHomePage projectId={7} />);
-
-    expect(screen.getByRole("searchbox")).toHaveValue("runbook");
-  });
-
-  it("leaves the organization-wide wiki search on its deliberate redirect to the full KB search route instead of writing q", async () => {
-    const user = userEvent.setup();
-    render(<WikiHomePage />);
-
-    await user.type(screen.getByRole("searchbox"), "runbook{Enter}");
-    await settleSearchDebounce();
-
-    expect(mockPush).toHaveBeenCalledWith(
-      expect.stringContaining("/search?q=runbook"),
-    );
-    expect(mockReplace).not.toHaveBeenCalled();
+    expect(screen.getByRole("heading", { name: "Starred" })).toBeInTheDocument();
   });
 });

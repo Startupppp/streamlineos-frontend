@@ -60,156 +60,127 @@ function makeProps(
     insertEmoji: jest.fn(),
     showMentions: false,
     setShowMentions: jest.fn(),
-    mentionQuery: "",
     mentionIndex: 0,
-    setMentionIndex: jest.fn(),
     filteredMentions: [],
     insertMention: jest.fn(),
-    showTicketPicker: false,
-    ticketQuery: "",
-    ticketSelectedIndex: 0,
-    onTicketSelect: jest.fn(),
+    mentionPrompt: null,
+    onDismissMentionPrompt: jest.fn(),
+    recordPicker: null,
+    onSelectRecord: jest.fn(),
+    linkedRecords: [],
+    onRemoveLinkedRecord: jest.fn(),
     typingText: null,
-    sendMessage: { isPending: false },
     onSend: jest.fn(),
     onKeyDown: jest.fn(),
     onInputChange: jest.fn(),
   };
 }
 
-describe("#170 — format buttons must preserve textarea selection and have correct type", () => {
-  it("Bold button has type=button so it cannot accidentally submit a form", () => {
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello", jest.fn(), inputRef)} />);
-    expect(screen.getByRole("button", { name: "Bold" })).toHaveAttribute("type", "button");
+async function selectAndPress(
+  setMessageInput: jest.Mock,
+  value: string,
+  from: number,
+  to: number,
+  keys: string,
+) {
+  const inputRef = createRef<HTMLTextAreaElement>();
+  render(<MessageInput {...makeProps(value, setMessageInput, inputRef)} />);
+  const textarea = screen.getByRole("textbox", { name: "Message general" });
+  if (!(textarea instanceof HTMLTextAreaElement)) throw new Error("composer is not a textarea");
+  textarea.focus();
+  textarea.setSelectionRange(from, to);
+  await userEvent.keyboard(keys);
+}
+
+describe("MessageInput — composer is labelled and carries no formatting strip", () => {
+  it("names the composer textarea for assistive technology", () => {
+    render(<MessageInput {...makeProps("", jest.fn(), createRef<HTMLTextAreaElement>())} />);
+    expect(screen.getByRole("textbox", { name: "Message general" })).toBeInTheDocument();
   });
 
-  it("Italic button has type=button", () => {
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello", jest.fn(), inputRef)} />);
-    expect(screen.getByRole("button", { name: "Italic" })).toHaveAttribute("type", "button");
+  it("names a direct-message composer after the person", () => {
+    const props = makeProps("", jest.fn(), createRef<HTMLTextAreaElement>());
+    render(<MessageInput {...props} channelType="DIRECT" displayName="Ada" />);
+    expect(screen.getByRole("textbox", { name: "Message Ada" })).toBeInTheDocument();
   });
 
-  it("Code button has type=button", () => {
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello", jest.fn(), inputRef)} />);
-    expect(screen.getByRole("button", { name: "Code" })).toHaveAttribute("type", "button");
+  it("labels every icon button in the composer", () => {
+    render(<MessageInput {...makeProps("hi", jest.fn(), createRef<HTMLTextAreaElement>())} />);
+    for (const button of screen.getAllByRole("button")) {
+      expect(button).toHaveAccessibleName();
+      expect(button).toHaveAttribute("type", "button");
+    }
+    expect(screen.getByRole("button", { name: "Attach file" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add emoji" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Mention someone" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send" })).toBeInTheDocument();
   });
 
-  it("Bold button prevents mousedown default so the textarea does not blur and lose its selection", () => {
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello world", jest.fn(), inputRef)} />);
-    const boldButton = screen.getByRole("button", { name: "Bold" });
-    const event = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
-    boldButton.dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
-  });
-
-  it("Italic button prevents mousedown default", () => {
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello world", jest.fn(), inputRef)} />);
-    const event = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
-    screen.getByRole("button", { name: "Italic" }).dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
-  });
-
-  it("Code button prevents mousedown default", () => {
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello world", jest.fn(), inputRef)} />);
-    const event = new MouseEvent("mousedown", { bubbles: true, cancelable: true });
-    screen.getByRole("button", { name: "Code" }).dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
-  });
-
-  it("Bold button wraps the selected text in ** markers", async () => {
-    const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello world", setMessageInput, inputRef)} />);
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(0, 5);
-
-    await userEvent.click(screen.getByRole("button", { name: "Bold" }));
-
-    expect(setMessageInput).toHaveBeenCalledWith("**hello** world");
-  });
-
-  it("Italic button wraps the selected text in * markers", async () => {
-    const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello world", setMessageInput, inputRef)} />);
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(0, 5);
-
-    await userEvent.click(screen.getByRole("button", { name: "Italic" }));
-
-    expect(setMessageInput).toHaveBeenCalledWith("*hello* world");
-  });
-
-  it("Code button wraps the selected text in backtick markers", async () => {
-    const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(<MessageInput {...makeProps("hello world", setMessageInput, inputRef)} />);
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(0, 5);
-
-    await userEvent.click(screen.getByRole("button", { name: "Code" }));
-
-    expect(setMessageInput).toHaveBeenCalledWith("`hello` world");
+  it("exposes no Bold, Italic or Code buttons", () => {
+    render(<MessageInput {...makeProps("hello", jest.fn(), createRef<HTMLTextAreaElement>())} />);
+    expect(screen.queryByRole("button", { name: "Bold" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Italic" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Code" })).toBeNull();
   });
 });
 
-describe("MessageInput — CHAT-S04 format controls toggle", () => {
+describe("MessageInput — markdown still works from the keyboard", () => {
+  it("Ctrl+B wraps the selected text in ** markers", async () => {
+    const setMessageInput = jest.fn();
+    await selectAndPress(setMessageInput, "hello world", 0, 5, "{Control>}b{/Control}");
+    expect(setMessageInput).toHaveBeenCalledWith("**hello** world");
+  });
+
+  it("Ctrl+I wraps the selected text in * markers", async () => {
+    const setMessageInput = jest.fn();
+    await selectAndPress(setMessageInput, "hello world", 0, 5, "{Control>}i{/Control}");
+    expect(setMessageInput).toHaveBeenCalledWith("*hello* world");
+  });
+
+  it("Ctrl+E wraps the selected text in backtick markers", async () => {
+    const setMessageInput = jest.fn();
+    await selectAndPress(setMessageInput, "hello world", 0, 5, "{Control>}e{/Control}");
+    expect(setMessageInput).toHaveBeenCalledWith("`hello` world");
+  });
+
+  it("Cmd+B works the same on a Mac", async () => {
+    const setMessageInput = jest.fn();
+    await selectAndPress(setMessageInput, "hello world", 0, 5, "{Meta>}b{/Meta}");
+    expect(setMessageInput).toHaveBeenCalledWith("**hello** world");
+  });
+
+  it("hands every other key to the composer's own handler", async () => {
+    const props = makeProps("hello", jest.fn(), createRef<HTMLTextAreaElement>());
+    render(<MessageInput {...props} />);
+    screen.getByRole("textbox", { name: "Message general" }).focus();
+    await userEvent.keyboard("{Enter}");
+    expect(props.onKeyDown).toHaveBeenCalled();
+  });
+
+  it("typed markdown is sent as typed, so a message formatted by hand still renders", async () => {
+    const props = makeProps("**done**", jest.fn(), createRef<HTMLTextAreaElement>());
+    render(<MessageInput {...props} />);
+    await userEvent.click(screen.getByRole("button", { name: "Send" }));
+    expect(props.onSend).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe("MessageInput — CHAT-S04 format shortcuts toggle", () => {
   it("removes the ** markers when the selection is already bold", async () => {
     const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(
-      <MessageInput {...makeProps("**hello** world", setMessageInput, inputRef)} />,
-    );
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(2, 7);
-
-    await userEvent.click(screen.getByRole("button", { name: "Bold" }));
-
+    await selectAndPress(setMessageInput, "**hello** world", 2, 7, "{Control>}b{/Control}");
     expect(setMessageInput).toHaveBeenCalledWith("hello world");
   });
 
   it("removes the backticks when the selection is already a code span", async () => {
     const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(
-      <MessageInput {...makeProps("`hello` world", setMessageInput, inputRef)} />,
-    );
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(1, 6);
-
-    await userEvent.click(screen.getByRole("button", { name: "Code" }));
-
+    await selectAndPress(setMessageInput, "`hello` world", 1, 6, "{Control>}e{/Control}");
     expect(setMessageInput).toHaveBeenCalledWith("hello world");
   });
 
   it("still nests a different marker rather than toggling the one already there", async () => {
     const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(
-      <MessageInput {...makeProps("**hello** world", setMessageInput, inputRef)} />,
-    );
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(2, 7);
-
-    await userEvent.click(screen.getByRole("button", { name: "Italic" }));
-
+    await selectAndPress(setMessageInput, "**hello** world", 2, 7, "{Control>}i{/Control}");
     expect(setMessageInput).toHaveBeenCalledWith("***hello*** world");
   });
 });
@@ -217,33 +188,13 @@ describe("MessageInput — CHAT-S04 format controls toggle", () => {
 describe("MessageInput — CHAT-S04 bold-italic combined form", () => {
   it("Italic takes back one marker from ***text***", async () => {
     const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(
-      <MessageInput {...makeProps("***hello*** world", setMessageInput, inputRef)} />,
-    );
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(3, 8);
-
-    await userEvent.click(screen.getByRole("button", { name: "Italic" }));
-
+    await selectAndPress(setMessageInput, "***hello*** world", 3, 8, "{Control>}i{/Control}");
     expect(setMessageInput).toHaveBeenCalledWith("**hello** world");
   });
 
   it("Bold takes back two markers from ***text***", async () => {
     const setMessageInput = jest.fn();
-    const inputRef = createRef<HTMLTextAreaElement>();
-    render(
-      <MessageInput {...makeProps("***hello*** world", setMessageInput, inputRef)} />,
-    );
-
-    const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    textarea.focus();
-    textarea.setSelectionRange(3, 8);
-
-    await userEvent.click(screen.getByRole("button", { name: "Bold" }));
-
+    await selectAndPress(setMessageInput, "***hello*** world", 3, 8, "{Control>}b{/Control}");
     expect(setMessageInput).toHaveBeenCalledWith("*hello* world");
   });
 });

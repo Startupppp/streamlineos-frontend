@@ -1,151 +1,15 @@
 import { render, screen } from "@testing-library/react";
+import {
+  baseChannelResult,
+  mockMessagePanel,
+  mockMessagePanelMounts,
+  mockUseCan,
+  mockUseChatOutboxDrain,
+  mockUseCreateEntityChannel,
+  mockUseEntityChannel,
+  mockUsePageState,
+} from "./build-project-chat-page-test-harness";
 import { BuildProjectChatPage } from "./build-project-chat-page";
-
-jest.mock("next-auth/react", () => ({
-  useSession: () => ({ data: { user: { id: "user-1" } }, status: "authenticated" }),
-}));
-
-jest.mock("framer-motion", () => ({
-  motion: {
-    div: ({ children, ...rest }: React.HTMLAttributes<HTMLDivElement>) => (
-      <div {...rest}>{children}</div>
-    ),
-  },
-  AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  useReducedMotion: () => false,
-}));
-
-jest.mock("sonner", () => ({
-  toast: { success: jest.fn(), error: jest.fn() },
-}));
-
-jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({
-    children,
-  }: {
-    children: React.ReactNode;
-    noInternalScroll?: boolean;
-  }) => <div>{children}</div>,
-}));
-
-jest.mock("@/components/pm-chrome", () => ({
-  PmPageShell: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  PM_PANEL_SOLID: "pm-panel-solid",
-}));
-
-jest.mock("@/components/ui/empty-state", () => ({
-  EmptyState: ({
-    title,
-    description,
-    action,
-  }: {
-    title: string;
-    description: string;
-    action?: { label: string; onClick: () => void };
-  }) => (
-    <div data-testid="empty-state">
-      <span>{title}</span>
-      <span>{description}</span>
-      {action ? <button type="button" onClick={action.onClick}>{action.label}</button> : null}
-    </div>
-  ),
-}));
-
-jest.mock("@/components/ui/sheet", () => ({
-  Sheet: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  SheetContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-const mockMessagePanel = jest.fn();
-const mockChannelInfoPanel = jest.fn();
-
-jest.mock("./message-panel", () => ({
-  MessagePanel: (...args: unknown[]) => {
-    mockMessagePanel(...args);
-    return <div data-testid="message-panel" />;
-  },
-}));
-
-jest.mock("./channel-info-panel", () => ({
-  ChannelInfoPanel: (...args: unknown[]) => {
-    mockChannelInfoPanel(...args);
-    return <div data-testid="channel-info-panel" />;
-  },
-}));
-
-jest.mock("./ably-provider", () => ({
-  ChatAblyProvider: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}));
-
-jest.mock("./use-chat-mobile", () => ({
-  useIsChatPanelNarrow: () => false,
-}));
-
-const mockUseEntityChannel = jest.fn();
-const mockUseCreateEntityChannel = jest.fn();
-const mockUseCan = jest.fn();
-
-jest.mock("@/hooks/api/chat-personal-b", () => ({
-  useEntityChannel: (...args: unknown[]) => mockUseEntityChannel(...args),
-  useCreateEntityChannel: () => mockUseCreateEntityChannel(),
-}));
-
-jest.mock("@/hooks/api/access", () => ({
-  useCan: (permission: string) => mockUseCan(permission),
-}));
-
-jest.mock("@/lib/get-error-message", () => ({
-  getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : "Unknown error"),
-}));
-
-const mockUsePageState = jest.fn();
-jest.mock("@/hooks/api/use-page-state", () => ({
-  usePageState: (...args: Parameters<typeof mockUsePageState>) => mockUsePageState(...args),
-}));
-
-jest.mock("@/components/shared/page-state", () => ({
-  PageState: ({
-    resolution,
-    loading,
-    empty,
-    children,
-    onRetry,
-  }: {
-    resolution: { kind: string };
-    loading: React.ReactNode;
-    empty?: React.ReactNode;
-    children?: React.ReactNode;
-    onRetry?: () => void;
-  }) => {
-    if (resolution.kind === "loading") return <>{loading}</>;
-    if (resolution.kind === "empty") return <>{empty}</>;
-    if (
-      resolution.kind === "denied" ||
-      resolution.kind === "module-disabled" ||
-      resolution.kind === "plan-required" ||
-      resolution.kind === "module-denied"
-    )
-      return <div role="status" data-testid="no-permission-state">Access Restricted</div>;
-    if (resolution.kind === "error")
-      return (
-        <div data-testid="error-state">
-          <button type="button" onClick={onRetry}>Retry</button>
-        </div>
-      );
-    return <>{children}</>;
-  },
-}));
-
-function baseChannelResult(overrides = {}) {
-  return {
-    data: undefined,
-    isLoading: false,
-    isError: false,
-    error: undefined,
-    refetch: jest.fn(),
-    ...overrides,
-  };
-}
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -153,6 +17,13 @@ beforeEach(() => {
   mockUseEntityChannel.mockReturnValue(baseChannelResult());
   mockUseCreateEntityChannel.mockReturnValue({ mutate: jest.fn(), isPending: false });
   mockUsePageState.mockReturnValue({ kind: "ready" });
+});
+
+describe("BuildProjectChatPage — outbox", () => {
+  it("drains the chat outbox, because this page has no chat suite to do it", () => {
+    render(<BuildProjectChatPage projectId="1" />);
+    expect(mockUseChatOutboxDrain).toHaveBeenCalled();
+  });
 });
 
 describe("BuildProjectChatPage — loading state", () => {
@@ -264,6 +135,16 @@ describe("BuildProjectChatPage — ready state", () => {
       expect.objectContaining({ currentUserId: "user-1" }),
       undefined,
     );
+  });
+
+  it("remounts the MessagePanel when the project's channel changes, so no composer or scroll state leaks between channels", () => {
+    mockUsePageState.mockReturnValue({ kind: "ready" });
+    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: { id: 1 } }));
+    const { rerender } = render(<BuildProjectChatPage projectId="1" />);
+    expect(mockMessagePanelMounts).toHaveBeenCalledTimes(1);
+    mockUseEntityChannel.mockReturnValue(baseChannelResult({ data: { id: 2 } }));
+    rerender(<BuildProjectChatPage projectId="2" />);
+    expect(mockMessagePanelMounts).toHaveBeenCalledTimes(2);
   });
 
   it("does not render the empty state or error state when the channel is present", () => {

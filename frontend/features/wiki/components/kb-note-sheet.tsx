@@ -17,7 +17,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { AppSheet } from "@/components/shared/app-sheet";
-import { useCreateKbSourceNote } from "@/hooks/api/kb/sources";
+import { useCreateKbPage } from "@/hooks/api/kb/pages";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 interface KbNoteSheetProps {
@@ -26,7 +26,7 @@ interface KbNoteSheetProps {
 }
 
 export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
-  const createNote = useCreateKbSourceNote();
+  const createNote = useCreateKbPage();
 
   const form = useForm<KbNoteFormValues>({
     resolver: zodResolver(kbNoteSchema),
@@ -47,7 +47,7 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
 
   function handleSave(values: KbNoteFormValues) {
     createNote.mutate(
-      { title: values.title.trim(), text: values.text.trim() },
+      { kind: "document", title: values.title.trim(), initialText: values.text.trim() },
       {
         onSuccess: () => {
           toast.success("Note added");

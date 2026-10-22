@@ -1,3 +1,7 @@
+import type { KbWorkbookCell } from "./kb-pages-schema";
+
+export type KbPageKind = "document" | "spreadsheet" | "file";
+
 export type KbPage = {
   id: number;
   orgId: string;
@@ -10,6 +14,7 @@ export type KbPage = {
   coverImage: string | null;
   status: "draft" | "in_review" | "published" | "archived";
   contentType: string;
+  kind: KbPageKind;
   trustState: "unverified" | "verified" | "verification_expired";
   visibility: "private" | "org" | "public";
   publicToken: string | null;
@@ -40,10 +45,33 @@ export type KbPage = {
 
 export type KbPageListItem = Omit<KbPage, "content" | "contentText">;
 
+export type KbPageCapabilities = {
+  view: boolean;
+  comment: boolean;
+  edit: boolean;
+  manage: boolean;
+  restore: boolean;
+};
+
+export type KbAccessRoute =
+  | "owner"
+  | "admin"
+  | "creator"
+  | "organization"
+  | "public"
+  | "space"
+  | "project"
+  | "grant"
+  | "team_folder"
+  | "team_folder_admin"
+  | "inherited_grant";
+
 export type KbPageDetail = KbPage & {
   ancestors: Array<{ id: number; title: string }>;
   isFavorite: boolean;
   canEdit?: boolean;
+  can: KbPageCapabilities;
+  access: { via: KbAccessRoute; grantExpiresAt: string | null };
 };
 
 export type KbPageTreeNode = {
@@ -53,6 +81,7 @@ export type KbPageTreeNode = {
   spaceId: number | null;
   projectId: number | null;
   title: string;
+  kind: KbPageKind;
   icon: string | null;
   coverImage?: string | null;
   sortOrder: number | null;
@@ -91,12 +120,34 @@ export type KbPageVersion = {
   createdAt: string;
 };
 
+export type KbWorkbookSheetInput = {
+  id?: string;
+  name: string;
+  position: number;
+  config: Record<string, unknown>;
+  cells: KbWorkbookCell[];
+};
+
+export type KbWorkbookInput = { sheets: KbWorkbookSheetInput[] };
+
+export type KbWorkbookOp =
+  | { op: "addSheet"; sheetId: string; name: string; position: number }
+  | { op: "renameSheet"; sheetId: string; name: string }
+  | { op: "moveSheet"; sheetId: string; position: number }
+  | { op: "deleteSheet"; sheetId: string }
+  | { op: "setSheetConfig"; sheetId: string; config: Record<string, unknown> }
+  | { op: "setCells"; sheetId: string; cells: KbWorkbookCell[] }
+  | { op: "clearCells"; sheetId: string; cells: Array<{ r: number; c: number }> };
+
 export type CreateKbPageInput = {
   parentPageId?: number | null;
   spaceId?: number | null;
   title?: string;
+  initialText?: string;
   templateId?: number | null;
   projectId?: number | null;
+  kind?: KbPageKind;
+  workbook?: KbWorkbookInput;
 };
 
 type KbPageMetadataPatch = {
@@ -134,6 +185,7 @@ export type MoveKbPageInput = {
   parentPageId: number | null;
   spaceId?: number | null;
   index: number;
+  confirmAccessChange?: boolean;
 };
 
 export interface KbPageSearchPage {

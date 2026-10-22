@@ -83,14 +83,22 @@ jest.mock("@/hooks/api/kb/chat-history", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/kb/sources", () => ({
-  useKbSources: () => ({
+jest.mock("@/hooks/api/kb/page-collection", () => ({
+  ...jest.requireActual("@/hooks/api/kb/page-collection"),
+  useInfiniteKbPageCollection: () => ({
     data: { pages: [{ data: [], pagination: { limit: 50, nextCursor: null, hasMore: false } }] },
     isLoading: false,
+    isError: false,
+    error: null,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
   }),
-  useUploadKbSource: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteKbSource: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
-  useCreateKbSourceNote: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/kb/files", () => ({
+  useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 import KnowledgeBasePage from "./knowledge-base-page";

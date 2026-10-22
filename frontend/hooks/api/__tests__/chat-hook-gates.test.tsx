@@ -103,13 +103,13 @@ describe("chat read hooks — stay idle without permission", () => {
     expect(mockedGet).not.toHaveBeenCalled();
   });
 
-  it("useChannelInviteLink — fetchStatus idle when chat:invite-links:manage denied", async () => {
-    const { useChannelInviteLink } = await import("@/hooks/api/chat-personal-b");
+  it("useChannelInviteLink — mints nothing when chat:invite-links:manage denied", async () => {
+    const { useChannelInviteLink } = await import("@/hooks/api/chat-invite-links");
     const client = freshClient();
     const { result } = renderHook(() => useChannelInviteLink(5, true), {
       wrapper: makeWrapper(client),
     });
-    expect(result.current.fetchStatus).toBe("idle");
+    expect(result.current.isLoading).toBe(false);
     expect(mockedPost).not.toHaveBeenCalled();
   });
 

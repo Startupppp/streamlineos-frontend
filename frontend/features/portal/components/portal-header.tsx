@@ -34,6 +34,16 @@ export function PortalHeader({ showProjectsLink = false }: PortalHeaderProps) {
             </span>
           </div>
         </Link>
+        {showProjectsLink && (
+          <nav aria-label="Portal" className="flex items-center gap-4 text-sm">
+            <Link href="/client-portal" className="text-muted-foreground hover:text-foreground">
+              Projects
+            </Link>
+            <Link href="/shared-docs" className="text-muted-foreground hover:text-foreground">
+              Shared documents
+            </Link>
+          </nav>
+        )}
       </div>
 
       <a

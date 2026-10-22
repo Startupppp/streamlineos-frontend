@@ -10,6 +10,8 @@ import {
   rewritePublicCoverImage,
   rewritePublicMediaUrls,
 } from "@/features/wiki/lib/rewrite-public-media-urls";
+import { formatFileSize } from "@/lib/format-utils";
+import { PublicFileDownloadButton } from "@/features/wiki/components/public-file-download-button";
 
 export const dynamic = "force-dynamic";
 
@@ -103,7 +105,29 @@ export default async function PublicWikiPage({ params }: Props) {
               Last updated {format(new Date(data.updatedAt), "MMM d, yyyy")}
             </time>
           )}
-          <PublicPageContentLoader content={brokerContent} />
+          {data.kind === "file" ? (
+            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+              {data.file && (
+                <div className="flex items-start gap-3">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-sm text-foreground truncate">
+                      {data.file.fileName}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {data.file.mimeType}
+                      {" · "}
+                      {formatFileSize(data.file.byteSize)}
+                    </p>
+                  </div>
+                </div>
+              )}
+              {data.allowDownload && (
+                <PublicFileDownloadButton shareToken={shareToken} />
+              )}
+            </div>
+          ) : (
+            <PublicPageContentLoader content={brokerContent} />
+          )}
         </div>
       </main>
     </div>

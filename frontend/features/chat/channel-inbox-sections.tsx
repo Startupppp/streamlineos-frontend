@@ -6,35 +6,19 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { cn } from "@/lib/utils";
 import { ChannelArchivedSection } from "./channel-archived-section";
 import { ChannelSectionList } from "./channel-section-list";
-import { ChannelSidebarSection } from "./channel-sidebar-section";
 import {
   inboxEmptyTitle,
   inboxStatusLabel,
   type ChatInboxFilter,
 } from "./chat-inbox-filter";
-import type { Channel } from "./chat-types";
+import type { Channel } from "@/types/chat";
 
 interface ChannelInboxSectionsProps {
   inboxFilter: ChatInboxFilter;
-  search: string;
   isCollapsed: boolean;
   showArchived: boolean;
-  favorites: Channel[];
-  publicChannels: Channel[];
-  groups: Channel[];
-  dms: Channel[];
-  favoritesCollapsed: boolean;
-  publicCollapsed: boolean;
-  groupsCollapsed: boolean;
-  dmsCollapsed: boolean;
-  onToggleFavorites: () => void;
-  onTogglePublic: () => void;
-  onToggleGroups: () => void;
-  onToggleDMs: () => void;
-  onOpenFavorites: () => void;
-  onOpenPublic: () => void;
-  onOpenGroups: () => void;
-  onOpenDMs: () => void;
+  starred: Channel[];
+  conversations: Channel[];
   archivedChannels: Channel[];
   archivedUnreadCount: number;
   isArchivedLoading: boolean;
@@ -49,7 +33,6 @@ interface ChannelInboxSectionsProps {
   onSelectChannel: (id: number) => void;
   onStartCall?: (channelId: number, type: "huddle") => void;
   onOpenSettings?: (channelId: number) => void;
-  visibleCount: number;
   hasMoreChannels: boolean;
   channelsTruncated: boolean;
   isLoadingMoreChannels: boolean;
@@ -57,31 +40,15 @@ interface ChannelInboxSectionsProps {
   onClearFilters: () => void;
 }
 
-function unreadIn(channels: Channel[]): number {
-  return channels.reduce((sum, channel) => sum + channel.unreadCount, 0);
-}
+const SECTION_HEADING_CLASS =
+  "flex items-center gap-1 px-2 pt-2 pb-1 text-dense font-medium text-muted-foreground";
 
 export function ChannelInboxSections({
   inboxFilter,
-  search,
   isCollapsed,
   showArchived,
-  favorites,
-  publicChannels,
-  groups,
-  dms,
-  favoritesCollapsed,
-  publicCollapsed,
-  groupsCollapsed,
-  dmsCollapsed,
-  onToggleFavorites,
-  onTogglePublic,
-  onToggleGroups,
-  onToggleDMs,
-  onOpenFavorites,
-  onOpenPublic,
-  onOpenGroups,
-  onOpenDMs,
+  starred,
+  conversations,
   archivedChannels,
   archivedUnreadCount,
   isArchivedLoading,
@@ -96,15 +63,12 @@ export function ChannelInboxSections({
   onSelectChannel,
   onStartCall,
   onOpenSettings,
-  visibleCount,
   hasMoreChannels,
   channelsTruncated,
   isLoadingMoreChannels,
   onLoadMoreChannels,
   onClearFilters,
 }: ChannelInboxSectionsProps) {
-  const filtersActive = Boolean(search) || inboxFilter !== "all";
-  const useAccordions = inboxFilter === "all" || inboxFilter === "unread";
   const listProps = {
     activeChannelId,
     currentUserId,
@@ -120,7 +84,7 @@ export function ChannelInboxSections({
         isLoading={isArchivedLoading}
         channels={archivedChannels}
         isCollapsed={isCollapsed}
-        search={search}
+        search=""
         activeChannelId={activeChannelId}
         currentUserId={currentUserId}
         onlineUserIds={onlineUserIds}
@@ -135,96 +99,36 @@ export function ChannelInboxSections({
     );
   }
 
-  const flatChannels = [...favorites, ...publicChannels, ...groups, ...dms];
+  const visibleCount = starred.length + conversations.length;
 
   return (
     <div className={cn("pb-1", isCollapsed && "lg:hidden")}>
       {visibleCount > 0 && (
         <p className="sr-only" role="status">
-          {inboxStatusLabel(inboxFilter, visibleCount, Boolean(search))}
+          {inboxStatusLabel(inboxFilter, visibleCount, false)}
         </p>
       )}
 
-      {useAccordions ? (
-        <>
-          {favorites.length > 0 && (
-            <ChannelSidebarSection
-              title="Favorites"
-              count={unreadIn(favorites)}
-              collapsed={favoritesCollapsed}
-              onToggle={onToggleFavorites}
-              onOpen={onOpenFavorites}
-              icon={<Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" />}
-            >
-              <ChannelSectionList channels={favorites} label="Favorites" {...listProps} />
-            </ChannelSidebarSection>
-          )}
+      {starred.length > 0 && (
+        <section aria-label="Starred" className="mb-1">
+          <h3 className={SECTION_HEADING_CLASS}>
+            <Star className="h-3 w-3 fill-amber-400 text-status-warning-ink" aria-hidden="true" />
+            Starred
+          </h3>
+          <ChannelSectionList channels={starred} label="Starred" {...listProps} />
+        </section>
+      )}
 
-          {!search && inboxFilter === "all" && archivedChannels.length > 0 && (
-            <button
-              type="button"
-              onClick={onOpenArchived}
-              className="mb-1 flex min-h-14 w-full items-center gap-3 rounded-xl px-2 py-2 text-left hover:bg-muted/40"
-            >
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-muted/60">
-                <Archive className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <span className="flex-1 text-label font-medium text-foreground">Archived</span>
-              {archivedUnreadCount > 0 && (
-                <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
-                  {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
-                </span>
-              )}
-            </button>
-          )}
-
-          {publicChannels.length > 0 && (
-            <ChannelSidebarSection
-              title="Public channels"
-              count={unreadIn(publicChannels)}
-              collapsed={publicCollapsed}
-              onToggle={onTogglePublic}
-              onOpen={onOpenPublic}
-            >
-              <ChannelSectionList
-                channels={publicChannels}
-                label="Public channels"
-                {...listProps}
-              />
-            </ChannelSidebarSection>
-          )}
-
-          {groups.length > 0 && (
-            <ChannelSidebarSection
-              title="Groups"
-              count={unreadIn(groups)}
-              collapsed={groupsCollapsed}
-              onToggle={onToggleGroups}
-              onOpen={onOpenGroups}
-            >
-              <ChannelSectionList channels={groups} label="Groups" {...listProps} />
-            </ChannelSidebarSection>
-          )}
-
-          {dms.length > 0 && (
-            <ChannelSidebarSection
-              title="Direct messages"
-              count={unreadIn(dms)}
-              collapsed={dmsCollapsed}
-              onToggle={onToggleDMs}
-              onOpen={onOpenDMs}
-            >
-              <ChannelSectionList channels={dms} label="Direct messages" {...listProps} />
-            </ChannelSidebarSection>
-          )}
-        </>
-      ) : flatChannels.length > 0 ? (
-        <ChannelSectionList
-          channels={flatChannels}
-          label={inboxFilter === "direct" ? "Direct messages" : "Channels"}
-          {...listProps}
-        />
-      ) : null}
+      {conversations.length > 0 && (
+        <section aria-label="Conversations">
+          <h3 className={SECTION_HEADING_CLASS}>Conversations</h3>
+          <ChannelSectionList
+            channels={conversations}
+            label="Conversations"
+            {...listProps}
+          />
+        </section>
+      )}
 
       {visibleCount === 0 && !hasMoreChannels && (
         <EmptyState
@@ -232,15 +136,15 @@ export function ChannelInboxSections({
           illustrationPreset="mail"
           title="No conversations yet"
           description="Start a message or channel."
-          filtersActive={filtersActive}
-          filteredTitle={inboxEmptyTitle(inboxFilter, Boolean(search))}
+          filtersActive={inboxFilter !== "all"}
+          filteredTitle={inboxEmptyTitle(inboxFilter, false)}
           onClearFilters={onClearFilters}
         />
       )}
 
       {channelsTruncated ? (
         <p role="status" className="px-2 py-1.5 text-dense text-muted-foreground">
-          Showing the channels loaded so far. Search by name to reach the rest.
+          Showing the conversations loaded so far. Use search to reach the rest.
         </p>
       ) : (
         <InfiniteScrollSentinel
@@ -249,6 +153,22 @@ export function ChannelInboxSections({
           onLoadMore={onLoadMoreChannels}
           label="Load more conversations"
         />
+      )}
+
+      {inboxFilter === "all" && archivedChannels.length > 0 && (
+        <button
+          type="button"
+          onClick={onOpenArchived}
+          className="mt-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+        >
+          <Archive className="h-4 w-4 shrink-0" aria-hidden="true" />
+          <span className="flex-1 text-label font-medium">Archived</span>
+          {archivedUnreadCount > 0 && (
+            <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
+              {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
+            </span>
+          )}
+        </button>
       )}
     </div>
   );

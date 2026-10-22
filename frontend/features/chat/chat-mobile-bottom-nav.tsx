@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
 
 import {
   CompassIcon,
@@ -11,7 +10,6 @@ import {
   UsersIcon,
 } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import {
   Drawer,
   DrawerContent,
@@ -25,33 +23,15 @@ import {
 } from "@/components/layout/mobile/chat-mobile-chrome-layout";
 import { ChatPresenceMenu } from "./chat-presence-menu";
 
-const EXPLORE_LINK_CLASS =
-  "inline-flex min-h-11 min-w-11 flex-col items-center justify-center gap-0.5 rounded-md py-1 text-dense text-muted-foreground hover:bg-accent hover:text-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-
 const NAV_BUTTON_CLASS =
   "h-auto min-h-11 min-w-11 flex-col gap-0.5 py-1 text-dense text-muted-foreground";
-
-function ExploreNavLink() {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <Link
-      href="/chat/channels"
-      aria-label="Explore channels"
-      className={EXPLORE_LINK_CLASS}
-      {...hoverHandlers}
-    >
-      <CompassIcon ref={iconRef} size={20} />
-      <span>Explore</span>
-    </Link>
-  );
-}
 
 interface ChatMobileBottomNavProps {
   onOpenMobileMenu: () => void;
 }
 
-function dispatchChatEvent(name: string) {
-  window.dispatchEvent(new Event(name));
+function dispatchChatEvent(name: string, detail?: string) {
+  window.dispatchEvent(new CustomEvent(name, { detail }));
 }
 
 export function ChatMobileBottomNav({
@@ -60,6 +40,9 @@ export function ChatMobileBottomNav({
   const [createOpen, setCreateOpen] = useState(false);
   const handleSearch = useCallback(() => {
     dispatchChatEvent("chat:open-search");
+  }, []);
+  const handleBrowseChannels = useCallback(() => {
+    dispatchChatEvent("chat:open-search", "channels");
   }, []);
   const handleOpenCreate = useCallback(() => setCreateOpen(true), []);
   const handleNewDM = useCallback(() => {
@@ -94,7 +77,16 @@ export function ChatMobileBottomNav({
         >
           Search
         </AnimatedIconButton>
-        <ExploreNavLink />
+        <AnimatedIconButton
+          icon={CompassIcon}
+          iconSize={20}
+          variant="ghost"
+          className={NAV_BUTTON_CLASS}
+          onClick={handleBrowseChannels}
+          aria-label="Browse channels"
+        >
+          Channels
+        </AnimatedIconButton>
         <AnimatedIconButton
           icon={PlusIcon}
           iconSize={20}

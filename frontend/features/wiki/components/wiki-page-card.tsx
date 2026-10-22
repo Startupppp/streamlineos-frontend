@@ -3,7 +3,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { TruncatedText } from "@/components/ui/truncated-text";
-import { KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
+import { KbFileTextIcon, KbTable2Icon } from "@/features/wiki/lib/kb-icons";
 import { coverSurfaceStyle } from "@/features/wiki/components/page-cover";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,7 @@ interface WikiPageCardProps {
   icon: string | null;
   coverImage: string | null;
   subtitle: string;
+  kind?: "document" | "spreadsheet" | "file";
   children?: ReactNode;
   menu?: ReactNode;
 }
@@ -26,6 +27,7 @@ export function WikiPageCard({
   icon,
   coverImage,
   subtitle,
+  kind,
   children,
   menu,
 }: WikiPageCardProps) {
@@ -45,10 +47,17 @@ export function WikiPageCard({
         )}
       </span>
       <div className="min-w-0 flex-1">
-        <TruncatedText
-          text={title || "Untitled"}
-          className="text-sm font-medium"
-        />
+        <div className="flex items-center gap-1">
+          <TruncatedText
+            text={title || "Untitled"}
+            className="text-sm font-medium"
+          />
+          {kind === "spreadsheet" && (
+            <span role="img" aria-label="Spreadsheet">
+              <KbTable2Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            </span>
+          )}
+        </div>
         {subtitle ? (
           <p
             className="mt-0.5 text-xs text-muted-foreground"

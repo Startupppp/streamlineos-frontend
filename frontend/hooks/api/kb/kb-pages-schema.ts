@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { cursorPageContract } from "@/hooks/api/cursor-page-schema";
 
+export const kbPageKindSchema = z.enum(["document", "spreadsheet", "file"]);
+
 const kbPageBaseContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -13,6 +15,7 @@ const kbPageBaseContract = z.object({
   coverImage: z.string().nullable(),
   status: z.enum(["draft", "in_review", "published", "archived"]),
   contentType: z.string(),
+  kind: kbPageKindSchema.default("document"),
   trustState: z.enum(["unverified", "verified", "verification_expired"]),
   visibility: z.enum(["private", "org", "public"]),
   publicToken: z.string().nullable(),
@@ -68,6 +71,17 @@ export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
   ancestors: z.array(z.object({ id: z.number().int(), title: z.string() })),
   isFavorite: z.boolean(),
   canEdit: z.boolean().optional(),
+  can: z.object({
+    view: z.boolean(),
+    comment: z.boolean(),
+    edit: z.boolean(),
+    manage: z.boolean(),
+    restore: z.boolean(),
+  }),
+  access: z.object({
+    via: z.enum(["owner", "admin", "creator", "organization", "public", "space", "project", "grant"]),
+    grantExpiresAt: z.string().nullable(),
+  }),
 });
 
 export const kbPageSearchResponseContract = z.object({
@@ -132,6 +146,41 @@ export const kbPageVersionListContract = z.object({
 });
 
 export const kbPageVersionContract = kbPageVersionItemContract;
+
+const kbWorkbookCellContract = z.object({
+  r: z.number().int(),
+  c: z.number().int(),
+  t: z.enum(["string", "number", "boolean", "error", "empty"]).optional(),
+  v: z.union([z.string(), z.number(), z.boolean(), z.null()]).optional(),
+  f: z.string().optional(),
+  m: z.string().optional(),
+  s: z.record(z.string(), z.unknown()).nullable().optional(),
+});
+
+const kbWorkbookSheetContract = z.object({
+  id: z.string().uuid(),
+  name: z.string(),
+  position: z.number().int(),
+  rowCount: z.number().int(),
+  columnCount: z.number().int(),
+  config: z.record(z.string(), z.unknown()),
+  cells: z.array(kbWorkbookCellContract),
+});
+
+export const kbWorkbookContract = z.object({
+  pageId: z.number().int(),
+  contentRevision: z.number().int(),
+  sheets: z.array(kbWorkbookSheetContract),
+});
+
+export type KbWorkbookCell = z.infer<typeof kbWorkbookCellContract>;
+export type KbWorkbookSheet = z.infer<typeof kbWorkbookSheetContract>;
+export type KbWorkbook = z.infer<typeof kbWorkbookContract>;
+
+export const kbWorkbookSaveContract = z.object({
+  contentRevision: z.number().int(),
+  updatedAt: z.string(),
+});
 
 export const kbTrashPageListContract = z.object({
   data: z.array(kbPageListItemContract),

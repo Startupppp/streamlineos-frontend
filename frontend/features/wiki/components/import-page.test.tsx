@@ -144,10 +144,10 @@ describe("ImportPage — Import / Export tabs", () => {
 
     await user.click(screen.getByRole("button", { name: /paste text/i }));
 
-    for (const name of ["Target team folder", "Parent page", "Default visibility", "Duplicate items"]) {
+    for (const name of ["Target team folder", "Parent file", "Default visibility", "Duplicate items"]) {
       expect(screen.getByRole("combobox", { name })).toBeInTheDocument();
     }
-    expect(screen.getByRole("combobox", { name: "Parent page" })).toBeDisabled();
+    expect(screen.getByRole("combobox", { name: "Parent file" })).toBeDisabled();
   });
 
   it("names the pending page remove action and removes the selected page", async () => {
@@ -275,7 +275,7 @@ describe("ImportPage — Import / Export tabs", () => {
     fireEvent.change(screen.getByLabelText("Content"), { target: { value: "x".repeat(50001) } });
     await user.click(screen.getByRole("button", { name: "Add to list" }));
 
-    expect(toast.error).toHaveBeenCalledWith("Content exceeds the 50,000-character page limit");
+    expect(toast.error).toHaveBeenCalledWith("Content exceeds the 50,000-character file limit");
     expect(screen.getByText("0/100 files loaded")).toBeInTheDocument();
   });
 
@@ -293,7 +293,7 @@ describe("ImportPage — Import / Export tabs", () => {
     await user.type(screen.getByLabelText("Page title"), "Policy");
     await user.type(screen.getByLabelText("Content"), "Body");
     await user.click(screen.getByRole("button", { name: "Add to list" }));
-    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 file" }));
 
     expect(screen.getByText("Processing import… 1/3 pages")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Cancel" })).not.toBeInTheDocument();
@@ -332,7 +332,7 @@ describe("ImportPage — Import / Export tabs", () => {
     await user.click(screen.getByRole("button", { name: "Paste text" }));
     await user.type(screen.getByLabelText("Page title"), "Policy");
     await user.click(screen.getByRole("button", { name: "Add to list" }));
-    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 file" }));
     await user.click(screen.getByRole("button", { name: "Cancel" }));
 
     expect(mockCancelMutate).toHaveBeenCalledWith(11, expect.anything());
@@ -358,10 +358,10 @@ describe("ImportPage — Import / Export tabs", () => {
     await user.click(screen.getByRole("button", { name: "Paste text" }));
     await user.type(screen.getByLabelText("Page title"), "Policy");
     await user.click(screen.getByRole("button", { name: "Add to list" }));
-    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 file" }));
 
     expect(toast.success).toHaveBeenCalledWith(
-      "Imported 1 page (1 skipped, 1 failed)",
+      "Imported 1 file (1 skipped, 1 failed)",
       expect.anything(),
     );
     expect(screen.getByText("Failed Policy")).toBeInTheDocument();
@@ -393,12 +393,12 @@ describe("ImportPage — Import / Export tabs", () => {
     await user.click(screen.getByRole("button", { name: "Paste text" }));
     await user.type(screen.getByLabelText("Page title"), "Policy");
     await user.click(screen.getByRole("button", { name: "Add to list" }));
-    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 file" }));
 
     expect(screen.getByText("Failed Guide")).toBeInTheDocument();
     expect(screen.getByText("Item 1:")).toBeInTheDocument();
     expect(screen.getByText("Choose an existing space and import again.")).toBeInTheDocument();
-    expect(toast.error).toHaveBeenCalledWith("Import failed — 1 page could not be imported");
+    expect(toast.error).toHaveBeenCalledWith("Import failed — 1 file could not be imported");
   });
 
   it("keeps manual reconciliation guidance visible after the active job fails", async () => {
@@ -420,7 +420,7 @@ describe("ImportPage — Import / Export tabs", () => {
     await user.click(screen.getByRole("button", { name: "Paste text" }));
     await user.type(screen.getByLabelText("Page title"), "Policy");
     await user.click(screen.getByRole("button", { name: "Add to list" }));
-    await user.click(screen.getByRole("button", { name: "Import 1 page" }));
+    await user.click(screen.getByRole("button", { name: "Import 1 file" }));
 
     expect(screen.getByRole("alert")).toHaveTextContent(reason);
     expect(toast.error).toHaveBeenCalledWith(reason);

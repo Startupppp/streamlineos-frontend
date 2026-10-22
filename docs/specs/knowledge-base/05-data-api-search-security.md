@@ -25,12 +25,12 @@ Read the AV items in [OPEN-TASKS.md](OPEN-TASKS.md) alongside this target spec. 
 | Field | Purpose |
 |---|---|
 | `id`, `org_id`, `page_id` | tenant-safe identity |
-| one of `membership_id`, `group_id`, `public_token_id` | grantee |
+| one of `membership_id`, `role_id`, or future named-guest identity | grantee |
 | `access` (`view`, `comment`, `edit`, `manage`) | explicit capability |
 | `granted_by_membership_id`, `created_at`, `revoked_at` | audit/lifecycle |
-| `expires_at` | nullable; add only when product ships expiry |
+| `expires_at` | required for expiring guest/external grants; nullable for policy-approved internal grants |
 
-Unique live grant per page/grantee. Index `(org_id, membership_id, revoked_at, page_id)` and group equivalent. Page, membership, and group references are tenant-composite.
+Unique live grant per page/grantee. Index `(org_id, membership_id, revoked_at, page_id)` and role/guest equivalents. Page, membership, role, and guest references are tenant-composite. Current public page tokens remain on the public-share contract rather than pretending `kb_page_grants.public_token_id` already exists; a future unified external-share model requires an explicit migration.
 
 #### `kb_page_owners`
 
@@ -68,6 +68,15 @@ Keep current page metadata normalized:
 - created/updated/deleted/archive timestamps and actor memberships.
 
 Versions are append-only. The current page row is the read projection and points to the latest revision. A restore creates a new version. Links, backlinks, record links, comments, reviews, favorites, visits, attachments, and grants reference page id and tenant.
+
+## Uploaded-source versus Drive-file contract
+
+`kb_sources` is currently a separate upload/indexing input for Ask and search. It is not a first-class library file and must not be presented as proof that the Drive model exists.
+
+- Current source files require tenant/space authorization, validated type/size/magic bytes, bounded extraction, scan state, object identity, parser version, and revocation-safe citations.
+- The Drive target additionally requires stable location, ownership, binary versions, My files/Shared with me parity, folder inheritance, shortcut/reference semantics, preview/download policy, trash/restore/purge, activity, and provider-edit lifecycle.
+- CSV support claimed by the product decision must be implemented and contract-tested before it is advertised; XLSX extraction alone is not CSV lifecycle support.
+- Migration must either wrap a source in the canonical file identity or deliberately retain it as an ingestion-only source. It must not create two editable copies or silently broaden access.
 
 ## Interface conventions
 

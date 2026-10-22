@@ -66,7 +66,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
   return (
     <CommandDialog open={open} onOpenChange={handleOpenChange}>
       <CommandInput
-        placeholder="Search pages…"
+        placeholder="Search files…"
         value={inputValue}
         maxLength={KB_PAGE_SEARCH_MAX_LENGTH}
         onValueChange={handleInputValueChange}
@@ -79,7 +79,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
         )}
         {!isFetching && isError && debouncedQ.length > 0 && (
           <ErrorState
-            title="Couldn't search pages"
+            title="Couldn't search files"
             description={getErrorMessage(error)}
             error={error}
             onRetry={handleRetrySearch}
@@ -87,10 +87,10 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
           />
         )}
         {!isFetching && !isError && debouncedQ.length > 0 && results.length === 0 && (
-          <CommandEmpty>No pages found for &ldquo;{debouncedQ}&rdquo;</CommandEmpty>
+          <CommandEmpty>No files found for &ldquo;{debouncedQ}&rdquo;</CommandEmpty>
         )}
         {results.length > 0 && (
-          <CommandGroup heading="Pages">
+          <CommandGroup heading="Files">
             {results.map((result) => (
               <CommandItem
                 key={result.id}
@@ -123,7 +123,7 @@ export default function QuickFindDialog({ open, onOpenChange }: QuickFindDialogP
           </CommandGroup>
         )}
         {debouncedQ.length === 0 && (
-          <CommandEmpty>Start typing to search pages…</CommandEmpty>
+          <CommandEmpty>Start typing to search files…</CommandEmpty>
         )}
       </CommandList>
     </CommandDialog>

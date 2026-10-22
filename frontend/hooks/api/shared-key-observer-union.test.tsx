@@ -30,6 +30,20 @@ import type { AccessResponse } from "@/types/access";
  * workaround that patched over the shared key.
  */
 
+jest.mock("next/link", () => ({
+  __esModule: true,
+  default: ({
+    href,
+    children,
+  }: {
+    href: string;
+    children: unknown;
+  }) => {
+    const React = require("react") as typeof import("react");
+    return React.createElement("a", { href }, children);
+  },
+}));
+
 jest.mock("next-auth/react", () => ({
   useSession: jest
     .fn()

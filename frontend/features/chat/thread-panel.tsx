@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useRef, useCallback, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2, MessageSquare, Send } from "lucide-react";
-import { SendIcon, XIcon } from "@animateicons/react/lucide";
-import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
-import React from "react";
+import { XIcon } from "@animateicons/react/lucide";
+import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
@@ -14,49 +14,27 @@ import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import { ThreadMessage } from "./thread-message";
 import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 
-const ThreadCloseButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement>
->(function ThreadCloseButton({ className, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      <XIcon ref={iconRef} size={16} className="text-muted-foreground" />
-    </button>
-  );
-});
-
-const ThreadSendButton = React.forwardRef<
-  HTMLButtonElement,
-  React.ButtonHTMLAttributes<HTMLButtonElement> & { isPending: boolean }
->(function ThreadSendButton({ className, isPending, ...props }, ref) {
-  const { iconRef, hoverHandlers } = useAnimatedIcon();
-  return (
-    <button ref={ref} {...hoverHandlers} className={className} {...props}>
-      {isPending ? (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      ) : (
-        <SendIcon ref={iconRef} size={14} />
-      )}
-    </button>
-  );
-});
+const MAX_HIGHLIGHT_REPLY_PAGES = 10;
+const HIGHLIGHT_NOT_FOUND_COPY = "That reply is further back in this thread. Scroll up to load older replies.";
 
 export function ThreadPanel({
   channelId,
   parentMessageId,
   currentUserId,
   onClose,
+  highlightedReplyId = null,
 }: {
   channelId: number;
   parentMessageId: number;
   currentUserId: string;
   onClose: () => void;
+  highlightedReplyId?: number | null;
 }) {
   const [input, setInput] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
 
   const {
     data,
@@ -65,6 +43,12 @@ export function ThreadPanel({
     isFetchingNextPage,
     fetchNextPage,
   } = useThreadReplies(channelId, parentMessageId);
+
+  useEffect(() => {
+    if (isLoading) return;
+    const viewport = viewportRef.current;
+    if (viewport) viewport.scrollTop = viewport.scrollHeight;
+  }, [isLoading, parentMessageId]);
 
   const sendReply = useSendThreadReply(channelId, parentMessageId);
   const { data: orgUsers } = useChatOrgUsers();
@@ -91,16 +75,22 @@ export function ThreadPanel({
     el.style.height = Math.min(el.scrollHeight, 120) + "px";
   }, []);
 
+  const pendingSendRef = useRef<{ content: string; clientKey: string } | null>(null);
+
   const handleSend = useCallback(async () => {
     const content = input.trim();
     if (!content) return;
+    const clientKey =
+      pendingSendRef.current?.content === content ? pendingSendRef.current.clientKey : crypto.randomUUID();
+    pendingSendRef.current = { content, clientKey };
     setInput("");
     if (inputRef.current) {
       inputRef.current.style.height = "auto";
     }
     try {
-      await sendReply.mutateAsync({ content, clientKey: crypto.randomUUID() });
-      bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+      await sendReply.mutateAsync({ content, clientKey });
+      pendingSendRef.current = null;
+      viewportRef.current?.scrollTo({ top: viewportRef.current.scrollHeight, behavior: "smooth" });
     } catch (error) {
       setInput(content);
       toast.error(getErrorMessage(error));
@@ -124,10 +114,56 @@ export function ThreadPanel({
     fetchNextPage,
     parentMessageId,
   );
-  const visibleReplies = useMemo(
-    () => replies.slice(renderWindow.windowStart),
-    [replies, renderWindow.windowStart],
+  const highlightedIndex = useMemo(
+    () =>
+      highlightedReplyId === null
+        ? -1
+        : replies.findIndex((reply) => reply.id === highlightedReplyId),
+    [replies, highlightedReplyId],
   );
+  const windowStart =
+    highlightedIndex >= 0
+      ? Math.min(renderWindow.windowStart, highlightedIndex)
+      : renderWindow.windowStart;
+  const visibleReplies = useMemo(
+    () => replies.slice(windowStart),
+    [replies, windowStart],
+  );
+  const isHighlightedVisible = highlightedIndex >= 0;
+
+  const highlightLoadsRef = useRef(0);
+  useEffect(() => {
+    highlightLoadsRef.current = 0;
+  }, [highlightedReplyId]);
+  useEffect(() => {
+    if (highlightedReplyId === null || isLoading || isHighlightedVisible) return;
+    if (!hasNextPage || isFetchingNextPage) return;
+    const loads = highlightLoadsRef.current;
+    if (loads >= MAX_HIGHLIGHT_REPLY_PAGES) {
+      if (loads === MAX_HIGHLIGHT_REPLY_PAGES)
+        toast(HIGHLIGHT_NOT_FOUND_COPY, { id: `chat-thread-highlight-${highlightedReplyId}` });
+      highlightLoadsRef.current = MAX_HIGHLIGHT_REPLY_PAGES + 1;
+      return;
+    }
+    highlightLoadsRef.current = loads + 1;
+    void fetchNextPage();
+  }, [highlightedReplyId, isLoading, isHighlightedVisible, hasNextPage, isFetchingNextPage, fetchNextPage]);
+
+  useEffect(() => {
+    if (!isHighlightedVisible || highlightedReplyId === null) return;
+    let innerFrame = 0;
+    const outerFrame = requestAnimationFrame(() => {
+      innerFrame = requestAnimationFrame(() => {
+        document
+          .getElementById(`thread-reply-${highlightedReplyId}`)
+          ?.scrollIntoView({ behavior: "smooth", block: "center" });
+      });
+    });
+    return () => {
+      cancelAnimationFrame(outerFrame);
+      cancelAnimationFrame(innerFrame);
+    };
+  }, [isHighlightedVisible, highlightedReplyId]);
 
   return (
     <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
@@ -136,14 +172,18 @@ export function ThreadPanel({
           <MessageSquare className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-sm font-bold">Thread</h3>
         </div>
-        <ThreadCloseButton
+        <AnimatedIconButton
+          type="button"
+          icon={XIcon}
+          iconSize={16}
+          variant="ghost"
           onClick={onClose}
-          className="p-1.5 hover:bg-muted rounded-lg"
+          className="size-8 rounded-lg p-0 text-muted-foreground"
           aria-label="Close thread"
         />
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1" viewportRef={viewportRef}>
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-10" aria-busy="true">
             <span role="status" className="sr-only">Loading thread…</span>
@@ -169,23 +209,14 @@ export function ThreadPanel({
               </>
             )}
 
-            {renderWindow.hasMore && (
-              <div className="flex justify-center pb-2">
-                <button
-                  type="button"
-                  onClick={renderWindow.onLoadMore}
-                  disabled={isFetchingNextPage}
-                  className="text-dense text-primary hover:underline disabled:opacity-50"
-                >
-                  {panelRevealLabel(
-                    renderWindow,
-                    total,
-                    isFetchingNextPage,
-                    "Load older replies",
-                  )}
-                </button>
-              </div>
-            )}
+            <InfiniteScrollSentinel
+              hasNextPage={renderWindow.hasMore}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={renderWindow.onLoadMore}
+              label={panelRevealLabel(renderWindow, total, isFetchingNextPage, "Load older replies")}
+              pending="Loading older replies…"
+              className="py-1"
+            />
 
             {replies.length === 0 && !isLoading && (
               <div className="flex flex-col items-center justify-center py-8 px-4">
@@ -202,8 +233,14 @@ export function ThreadPanel({
               {visibleReplies.map((reply, index) => (
                 <div
                   key={reply.id}
+                  id={`thread-reply-${reply.id}`}
                   role="listitem"
-                  aria-posinset={renderWindow.windowStart + index + 1}
+                  data-anchored={reply.id === highlightedReplyId || undefined}
+                  className={cn(
+                    reply.id === highlightedReplyId &&
+                      "rounded-lg bg-primary/5 ring-1 ring-primary/30",
+                  )}
+                  aria-posinset={windowStart + index + 1}
                   aria-setsize={hasNextPage ? -1 : total}
                 >
                   <ThreadMessage
@@ -215,7 +252,6 @@ export function ThreadPanel({
               ))}
             </div>
 
-            <div ref={bottomRef} />
           </div>
         )}
       </ScrollArea>
@@ -227,22 +263,26 @@ export function ThreadPanel({
             value={input}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
+            aria-label="Reply in thread"
             placeholder="Reply in thread..."
             rows={1}
             className="flex-1 bg-transparent text-label resize-none focus:outline-none min-h-[22px] max-h-[120px] leading-[1.5]"
           />
-          <ThreadSendButton
+          <LoadingButton
+            type="button"
             onClick={handleSend}
-            disabled={!input.trim() || sendReply.isPending}
+            disabled={!input.trim()}
             isPending={sendReply.isPending}
             className={cn(
-              "shrink-0 h-7 w-7 rounded-lg flex items-center justify-center transition-colors",
+              "size-7 shrink-0 rounded-lg p-0 transition-colors",
               input.trim()
                 ? "bg-primary text-primary-foreground hover:bg-primary/90"
                 : "bg-muted text-muted-foreground"
             )}
             aria-label="Send reply"
-          />
+          >
+            {sendReply.isPending ? null : <Send className="size-3.5" />}
+          </LoadingButton>
         </div>
       </div>
     </div>

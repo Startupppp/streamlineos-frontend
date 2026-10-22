@@ -22,7 +22,6 @@ const SESSION_ONLY_BY_DESIGN: readonly SessionOnlySurface[] = [
   { path: "/mail", reason: "Platform core communication surface." },
   { path: "/calendar", reason: "One unified calendar serves everyone; sources are toggles inside it." },
   { path: "/chat", reason: "Platform core communication surface." },
-  { path: "/chat/channels", subtree: true, reason: "Channel membership is enforced per channel, not per route." },
   { path: "/chat/invite", subtree: true, reason: "Accepting a chat invite is a member self-service action." },
   { path: "/me", subtree: true, reason: "Employee self-service. The whole /me/* subtree derives its subject from the session." },
   { path: "/settings", reason: "The personal account landing page. Everything beneath it is organization administration." },

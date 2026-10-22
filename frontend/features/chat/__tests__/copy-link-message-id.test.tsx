@@ -2,7 +2,7 @@ import React, { createRef } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render } from "@testing-library/react";
 import { MessageList } from "../message-list";
-import type { Message } from "../chat-types";
+import type { Message } from "@/types/chat";
 
 jest.mock("@/lib/api-client", () => ({
   apiClient: { get: jest.fn(), post: jest.fn(), patch: jest.fn(), delete: jest.fn() },
@@ -30,8 +30,9 @@ function chatMessage(id: number): Message {
     messageType: "text",
     metadata: null,
     actionStatus: null,
-    createdAt: new Date("2026-01-01T00:00:00.000Z"),
-    updatedAt: new Date("2026-01-01T00:00:00.000Z"),
+    reactions: {},
+    createdAt: "2026-01-01T00:00:00.000Z",
+    updatedAt: "2026-01-01T00:00:00.000Z",
     sender: { id: "user-1", name: "Ada", image: null },
     attachments: [],
     replyTo: null,

@@ -1,12 +1,18 @@
-import type { ReactNode } from "react";
-import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { apiClient } from "@/lib/api-client";
 import { resolveContract } from "@/lib/api-envelope";
 import { isForgedServerFrame } from "@/lib/ably-safe-subscribe";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { chatMessageContract } from "@/hooks/api/chat-schema";
-import type { Message, MessagesPage } from "@/types/chat";
+import {
+  CHANNEL_ID,
+  ablyMock,
+  freshClient,
+  message,
+  seedTimeline,
+  timeline,
+  wrapperFor,
+} from "@/hooks/api/chat-cache-test-harness";
 
 jest.mock("next-auth/react", () => ({
   useSession: jest.fn().mockReturnValue({
@@ -39,76 +45,13 @@ jest.mock("sonner", () => ({ toast: Object.assign(jest.fn(), { error: jest.fn() 
 const mockedPost = apiClient.post as jest.Mock;
 const mockedDelete = apiClient.delete as jest.Mock;
 const { useAbly } = jest.requireMock("ably/react") as { useAbly: jest.Mock };
-const { toast } = jest.requireMock("sonner") as { toast: jest.Mock };
-
-const CHANNEL_ID = 7;
-const messagesKey = collaborationQueryKeys.chat.messages(CHANNEL_ID);
-
-function freshClient() {
-  return new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-}
-
-function wrapperFor(client: QueryClient) {
-  function Wrapper({ children }: { children: ReactNode }) {
-    return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-  }
-  return Wrapper;
-}
-
-function message(over: Partial<Message> = {}): Message {
-  return {
-    id: 1,
-    channelId: CHANNEL_ID,
-    senderId: "user-2",
-    content: "hi",
-    replyToId: null,
-    isEdited: false,
-    isDeleted: false,
-    messageType: "text",
-    metadata: null,
-    actionStatus: null,
-    createdAt: "2026-09-30T10:00:00.000Z",
-    updatedAt: "2026-09-30T10:00:00.000Z",
-    sender: { id: "user-2", name: "Bo", image: null },
-    attachments: [],
-    replyTo: null,
-    ...over,
-  };
-}
-
-function seed(client: QueryClient, messages: Message[]) {
-  const data: InfiniteData<MessagesPage> = { pages: [{ messages, nextCursor: null }], pageParams: [undefined] };
-  client.setQueryData(messagesKey, data);
-}
-
-function cached(client: QueryClient): Message[] {
-  return client.getQueryData<InfiniteData<MessagesPage>>(messagesKey)?.pages.flatMap((p) => p.messages) ?? [];
-}
-
-function ablyMock() {
-  const handlers = new Map<string, Array<(msg: unknown) => void>>();
-  const channel = {
-    subscribe: jest.fn((event: string, handler: (msg: unknown) => void) => {
-      handlers.set(event, [...(handlers.get(event) ?? []), handler]);
-      return Promise.resolve(undefined);
-    }),
-    unsubscribe: jest.fn(),
-    publish: jest.fn().mockResolvedValue(undefined),
-  };
-  return {
-    handlers,
-    channels: { get: jest.fn().mockReturnValue(channel) },
-    connection: { state: "connected", on: jest.fn(), off: jest.fn() },
-  };
-}
 
 beforeEach(() => jest.clearAllMocks());
 
 describe("F1 — the message contract keeps reactions", () => {
-  const wire = {
-    ...message(),
-    metadata: null,
-  };
+  const wire = Object.fromEntries(
+    Object.entries({ ...message(), metadata: null }).filter(([key]) => key !== "reactions"),
+  );
 
   it("keeps the reactions map the backend sends", () => {
     const parsed = chatMessageContract.parse({ ...wire, reactions: { "👍": ["user-1"] } });
@@ -143,9 +86,9 @@ describe("F2 — a thread reply parses the raw row the endpoint answers", () => 
 
 describe("F3 — a reaction toggle removes what the viewer already added", () => {
   it("DELETEs (URL-encoded) when the viewer already reacted, then writes the answered map", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
-    seed(client, [message({ reactions: { "👍": ["user-1"] } })]);
+    seedTimeline(client, [message({ reactions: { "👍": ["user-1"] } })]);
     mockedDelete.mockResolvedValue({ reactions: {} });
     const { result } = renderHook(() => useToggleReaction(CHANNEL_ID), { wrapper: wrapperFor(client) });
     await act(async () => {
@@ -155,13 +98,13 @@ describe("F3 — a reaction toggle removes what the viewer already added", () =>
       `/chat/channels/${CHANNEL_ID}/messages/1/reactions/${encodeURIComponent("👍")}`,
     );
     expect(mockedPost).not.toHaveBeenCalled();
-    expect(cached(client)[0]?.reactions).toEqual({});
+    expect(timeline(client)[0]?.reactions).toEqual({});
   });
 
   it("POSTs when the viewer has not reacted with that emoji", async () => {
-    const { useToggleReaction } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useToggleReaction } = await import("@/hooks/api/chat-reaction-mutation");
     const client = freshClient();
-    seed(client, [message({ reactions: { "👍": ["user-2"] } })]);
+    seedTimeline(client, [message({ reactions: { "👍": ["user-2"] } })]);
     mockedPost.mockResolvedValue({ reactions: { "👍": ["user-2", "user-1"] } });
     const { result } = renderHook(() => useToggleReaction(CHANNEL_ID), { wrapper: wrapperFor(client) });
     await act(async () => {
@@ -172,21 +115,32 @@ describe("F3 — a reaction toggle removes what the viewer already added", () =>
       { emoji: "👍" },
     ]);
     expect(mockedDelete).not.toHaveBeenCalled();
-    expect(cached(client)[0]?.reactions).toEqual({ "👍": ["user-2", "user-1"] });
+    expect(timeline(client)[0]?.reactions).toEqual({ "👍": ["user-2", "user-1"] });
   });
 });
 
-describe("F4 — marking read refreshes the channel detail", () => {
-  it("invalidates chat.channel(id), which carries lastReadAt", async () => {
+describe("F4 — marking read moves the read marker in the channel detail without refetching it", () => {
+  it("patches the viewer's lastReadAt in chat.channel(id) to the newest visible message", async () => {
     const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
     const client = freshClient();
+    seedTimeline(client, [message({ createdAt: "2026-09-30T10:00:00.000Z" })]);
+    client.setQueryData(collaborationQueryKeys.chat.channel(CHANNEL_ID), {
+      id: CHANNEL_ID,
+      members: [{ userId: "user-1", lastReadAt: "2026-09-29T10:00:00.000Z" }],
+    });
     const spy = jest.spyOn(client, "invalidateQueries");
     mockedPost.mockResolvedValue({ ok: true });
     const { result } = renderHook(() => useMarkChannelRead(), { wrapper: wrapperFor(client) });
     await act(async () => {
       await result.current.mutateAsync({ channelId: CHANNEL_ID });
     });
-    expect(spy).toHaveBeenCalledWith({ queryKey: collaborationQueryKeys.chat.channel(CHANNEL_ID) });
+    expect(
+      client.getQueryData<{ members: Array<{ lastReadAt: string }> }>(collaborationQueryKeys.chat.channel(CHANNEL_ID))
+        ?.members[0].lastReadAt,
+    ).toBe("2026-09-30T10:00:00.000Z");
+    expect(spy).not.toHaveBeenCalledWith(
+      expect.objectContaining({ queryKey: collaborationQueryKeys.chat.channel(CHANNEL_ID) }),
+    );
   });
 });
 
@@ -196,7 +150,7 @@ describe("F5 — the realtime echo of our own send replaces the optimistic copy"
     const ably = ablyMock();
     useAbly.mockReturnValue(ably);
     const client = freshClient();
-    seed(client, [message({ id: -123, senderId: "user-1", content: "mine", clientKey: "ck-9" })]);
+    seedTimeline(client, [message({ id: -123, senderId: "user-1", content: "mine", clientKey: "ck-9" })]);
     const { unmount } = renderHook(() => useChatRealtime(CHANNEL_ID), { wrapper: wrapperFor(client) });
     await waitFor(() => expect(ably.handlers.get("message")?.length).toBe(1));
     act(() => {
@@ -207,38 +161,7 @@ describe("F5 — the realtime echo of our own send replaces the optimistic copy"
         },
       });
     });
-    expect(cached(client).map((m) => m.id)).toEqual([55]);
-    unmount();
-  });
-});
-
-describe("F7 — a DM or mention in an unloaded channel still moves the badges", () => {
-  it("invalidates unread and toasts from the per-user notifications channel", async () => {
-    const { useChatGlobalNotifications } = await import("@/hooks/api/chat-notifications");
-    const ably = ablyMock();
-    useAbly.mockReturnValue(ably);
-    const client = freshClient();
-    const spy = jest.spyOn(client, "invalidateQueries");
-    const { unmount } = renderHook(() => useChatGlobalNotifications([], null, "user-1"), {
-      wrapper: wrapperFor(client),
-    });
-    await waitFor(() => expect(ably.handlers.get("notification:message")?.length).toBe(1));
-    act(() => {
-      ably.handlers.get("notification:message")?.[0]?.({
-        data: { channelId: 99, messageId: 1, senderId: "user-2", senderName: "Bo", channelType: "DIRECT" },
-      });
-    });
-    expect(spy).toHaveBeenCalledWith({ queryKey: collaborationQueryKeys.chat.unreadTotal(), exact: true });
-    expect(toast).toHaveBeenCalledWith("Bo", expect.anything());
-
-    spy.mockClear();
-    act(() => {
-      ably.handlers.get("notification:mention")?.[0]?.({
-        data: { channelId: 99, messageId: 2, senderId: "user-2", senderName: "Bo" },
-        clientId: "user-2",
-      });
-    });
-    expect(spy).not.toHaveBeenCalled();
+    expect(timeline(client).map((m) => m.id)).toEqual([55]);
     unmount();
   });
 });

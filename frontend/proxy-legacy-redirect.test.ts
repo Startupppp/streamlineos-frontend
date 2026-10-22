@@ -14,7 +14,7 @@ function request(url: string): NextRequest {
   return new NextRequest(new Request(url));
 }
 
-describe("proxy observes the two code-owned Build compatibility redirects", () => {
+describe("proxy observes the code-owned compatibility redirects", () => {
   let origInfo: typeof console.info;
 
   beforeEach(() => {
@@ -28,13 +28,13 @@ describe("proxy observes the two code-owned Build compatibility redirects", () =
     resetLegacyRedirectCounts();
   });
 
-  it("keeps the code-owned Build redirect inventory exact", () => {
+  it("keeps the code-owned redirect inventory exact", () => {
     const source = readFileSync(resolve(process.cwd(), "proxy.ts"), "utf8");
     const observedSources = [
       ...source.matchAll(/recordLegacyRedirect\("([^"]+)"/g),
     ].map((match) => match[1]);
 
-    expect(observedSources).toEqual(["/projects", "/product-management"]);
+    expect(observedSources).toEqual(["/projects", "/product-management", "/knowledge"]);
   });
 
   it("still redirects /projects into /build with the search preserved", async () => {
@@ -58,6 +58,19 @@ describe("proxy observes the two code-owned Build compatibility redirects", () =
     expect(res.headers.get("location")).toBe("https://app.test/build/roadmap");
     expect(legacyRedirectHits("/product-management")).toBe(1);
     expect(legacyRedirectHits("/projects")).toBe(0);
+  });
+
+  it("redirects /knowledge to Docs home and counts the hit so the compatibility entry is observable", async () => {
+    const res = await proxy(request("https://app.test/knowledge?ref=bookmark"));
+    expect(res.status).toBe(307);
+    expect(res.headers.get("location")).toBe("https://app.test/knowledge/wiki?ref=bookmark");
+    expect(legacyRedirectHits("/knowledge")).toBe(1);
+  });
+
+  it("leaves Docs child routes alone and counts nothing for them", async () => {
+    const res = await proxy(request("https://app.test/knowledge/wiki"));
+    expect(res.headers.get("location")).not.toBe("https://app.test/knowledge/wiki");
+    expect(legacyRedirectHits("/knowledge")).toBe(0);
   });
 
   it("counts nothing for a path that is not a legacy Build family", async () => {

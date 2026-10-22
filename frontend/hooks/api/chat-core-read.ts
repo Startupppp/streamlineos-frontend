@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useMemo } from "react";
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import {
+  infiniteQueryOptions,
+  queryOptions,
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract, type ContractSource } from "@/lib/api-envelope";
@@ -11,10 +17,10 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { isPresenceStatus, type PresenceStatus } from "@/lib/presence";
 import { chatChannelReadEnabled } from "@/features/chat/chat-read-position";
+import { keepConfirmedMessages } from "@/features/chat/message-page-merge";
 import type {
   Channel,
   ChannelPage,
-  Message,
   MessagesPage,
   OrgUser,
   PublicChannel,
@@ -23,7 +29,7 @@ import type { ChatOnlineUser } from "@/hooks/api/chat-schema/presence-schema";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { NO_ID_CURSOR_YET, NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-export interface ChannelListResult<TChannel> {
+interface ChannelListResult<TChannel> {
   channels: TChannel[];
   hasMore: boolean;
   isTruncated: boolean;
@@ -50,13 +56,12 @@ const publicChannelsContract = lazyContract(() =>
   ),
 );
 
-const messagesPageContract = lazyContract(() =>
+export const messagesPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatMessagesPageContract),
 );
 
-const pollPageContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatPollPageContract),
-);
+const CHAT_MESSAGES_STALE_MS = 15_000;
+const CHAT_MESSAGES_GC_MS = 30 * 60_000;
 
 const channelDetailContract = lazyContract(() =>
   import("@/hooks/api/chat-extra-schema").then((m) => m.chatChannelDetailContract),
@@ -74,9 +79,9 @@ const chatOrgUsersContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOrgUsersContract),
 );
 
-export const MAX_CHANNEL_PAGES = 20;
+const MAX_CHANNEL_PAGES = 20;
 
-export async function fetchChannelPage<TChannel>(
+async function fetchChannelPage<TChannel>(
   path: string,
   signal: AbortSignal,
   contract: ContractSource<ChannelPage<TChannel>>,
@@ -202,20 +207,17 @@ export function usePublicChannels(enabled = true): ChannelListResult<PublicChann
   });
 }
 
-export function useChatChannel(channelId: number) {
-  const canRead = useCan("chat:channels:read");
-  return useQuery({
+function chatChannelQueryOptions(channelId: number) {
+  return queryOptions({
     ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.channel(channelId),
     queryFn: ({ signal }) => apiClient.get<ChatChannelDetailWire>(`/chat/channels/${channelId}`, undefined, signal, channelDetailContract),
     staleTime: 2 * 60_000,
-    enabled: chatChannelReadEnabled(canRead, channelId),
   });
 }
 
-export function useChatMessages(channelId: number) {
-  const canRead = useCan("chat:messages:read");
-  return useInfiniteQuery({
+function chatMessagesQueryOptions(channelId: number) {
+  return infiniteQueryOptions({
     ...INLINE_READ_ERROR,
     queryKey: collaborationQueryKeys.chat.messages(channelId),
     queryFn: ({ pageParam, signal }) =>
@@ -225,57 +227,43 @@ export function useChatMessages(channelId: number) {
         signal,
         messagesPageContract,
       ),
-    getNextPageParam: (lastPage) => lastPage.nextCursor,
+    getNextPageParam: (lastPage: MessagesPage) => lastPage.nextCursor,
     initialPageParam: NO_ID_CURSOR_YET,
+    staleTime: CHAT_MESSAGES_STALE_MS,
+    gcTime: CHAT_MESSAGES_GC_MS,
+    structuralSharing: keepConfirmedMessages,
+  });
+}
+
+export function useChatChannel(channelId: number, enabled = true) {
+  const canRead = useCan("chat:channels:read");
+  return useQuery({
+    ...chatChannelQueryOptions(channelId),
+    enabled: enabled && chatChannelReadEnabled(canRead, channelId),
+  });
+}
+
+export function useChatMessages(channelId: number) {
+  const canRead = useCan("chat:messages:read");
+  return useInfiniteQuery({
+    ...chatMessagesQueryOptions(channelId),
     enabled: chatChannelReadEnabled(canRead, channelId),
   });
 }
 
-export type PollPage = {
-  messages: Message[];
-  nextCursor: number | null;
-  hasMore: boolean;
-  latestPosition: number | null;
-};
-
-export type ChatPollPosition =
-  | { kind: "since"; since: string }
-  | { kind: "cursor"; cursor: number };
-
-export function chatPollPositionKey(position: ChatPollPosition): string {
-  return position.kind === "since"
-    ? `since:${position.since}`
-    : `cursor:${position.cursor}`;
-}
-
-const CHAT_POLL_FALLBACK_INTERVAL_MS = 30_000;
-
-/** `enabled` is the caller's realtime verdict: it polls only while the socket is down. */
-export function useChatPoll(
-  channelId: number,
-  position: ChatPollPosition,
-  enabled: boolean,
-) {
-  const canRead = useCan("chat:messages:read");
-  return useQuery({
-    ...INLINE_READ_ERROR,
-    queryKey: collaborationQueryKeys.chat.poll(
-      channelId,
-      chatPollPositionKey(position),
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<PollPage>(
-        `/chat/channels/${channelId}/messages/poll`,
-        position.kind === "since"
-          ? { since: position.since }
-          : { cursor: position.cursor },
-        signal,
-        pollPageContract,
-      ),
-    staleTime: 2 * 60_000,
-    enabled: enabled && chatChannelReadEnabled(canRead, channelId),
-    refetchInterval: enabled && canRead ? CHAT_POLL_FALLBACK_INTERVAL_MS : false,
-  });
+export function usePrefetchChatChannel(): (channelId: number) => void {
+  const queryClient = useQueryClient();
+  const canReadChannels = useCan("chat:channels:read");
+  const canReadMessages = useCan("chat:messages:read");
+  return useCallback(
+    (channelId: number) => {
+      if (chatChannelReadEnabled(canReadMessages, channelId))
+        void queryClient.prefetchInfiniteQuery(chatMessagesQueryOptions(channelId));
+      if (chatChannelReadEnabled(canReadChannels, channelId))
+        void queryClient.prefetchQuery(chatChannelQueryOptions(channelId));
+    },
+    [queryClient, canReadChannels, canReadMessages],
+  );
 }
 
 export function useChatUnreadTotal(enabled = true) {
@@ -327,7 +315,7 @@ export function usePresenceMap(enabled = true): ReadonlyMap<string, PresenceStat
   }, [result.data]);
 }
 
-export interface PresenceCustomStatus {
+interface PresenceCustomStatus {
   statusMessage: string | null;
   statusExpiresAt: string | null;
 }

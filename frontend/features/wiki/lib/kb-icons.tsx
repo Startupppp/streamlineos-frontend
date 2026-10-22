@@ -41,7 +41,10 @@ import {
   Archive,
   Building2,
   Clock,
+  File,
   FileDown,
+  FileSpreadsheet,
+  FolderOpen,
   History,
   Image as ImageIcon,
   Link2,
@@ -51,6 +54,7 @@ import {
   RotateCcw,
   Save,
   Smile,
+  Table2,
   Unlock,
   type LucideIcon,
 } from "lucide-react";
@@ -168,4 +172,8 @@ export const KbLink2Icon = createLucideIcon(Link2);
 export const KbUnlockIcon = createLucideIcon(Unlock);
 export const KbFileDownIcon = createLucideIcon(FileDown);
 export const KbSaveIcon = createLucideIcon(Save);
+export const KbTable2Icon = createLucideIcon(Table2);
+export const KbSpreadsheetIcon = createLucideIcon(FileSpreadsheet);
+export const KbFolderOpenIcon = createLucideIcon(FolderOpen);
 export const KbPenLineIcon = createLucideIcon(PenLine);
+export const KbFileIcon = createLucideIcon(File);

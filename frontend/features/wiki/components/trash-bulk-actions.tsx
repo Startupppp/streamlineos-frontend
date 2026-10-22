@@ -27,7 +27,7 @@ const FAILURE_REASONS: Record<
   },
   purge: {
     conflict:
-      "is on legal hold, has a subpage outside Trash, or changed since you selected it",
+      "is on legal hold, has a child file outside Trash, or changed since you selected it",
     notFound: "no longer in Trash",
     denied: "you do not have permission",
   },
@@ -179,7 +179,7 @@ export function TrashEmptyConfirmation({
       title="Empty the trash?"
       description={
         hasMore
-          ? "This permanently deletes every page currently in the trash, not just the ones shown on this page. This cannot be undone."
+          ? "This permanently deletes every file currently in the trash, not just the ones shown on this page. This cannot be undone."
           : `All ${pageCount} page${pageCount === 1 ? "" : "s"} in the trash will be permanently deleted. This cannot be undone.`
       }
       content={

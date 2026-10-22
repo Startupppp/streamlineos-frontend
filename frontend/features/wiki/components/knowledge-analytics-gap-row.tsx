@@ -22,6 +22,7 @@ export const GapTableRow = memo(function GapTableRow({
   onCreateFix,
   isCreatingFix,
   canCreatePage,
+  canManageAnalytics,
 }: {
   row: KbGapRow;
   onCreatePage: (q: string) => void;
@@ -35,6 +36,7 @@ export const GapTableRow = memo(function GapTableRow({
   onCreateFix: (query: string) => void;
   isCreatingFix: boolean;
   canCreatePage: boolean;
+  canManageAnalytics: boolean;
 }) {
   const [assignOpen, setAssignOpen] = useState(false);
   const [assignValue, setAssignValue] = useState("");
@@ -106,28 +108,32 @@ export const GapTableRow = memo(function GapTableRow({
             })}
           </span>
         </button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleAssignToggle}
-          disabled={!row.query}
-          type="button"
-          aria-label="Assign gap owner"
-        >
-          Assign
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          className="px-2 text-xs gap-1 shrink-0"
-          onClick={handleDismissToggle}
-          disabled={!row.query}
-          type="button"
-          aria-label="Dismiss gap"
-        >
-          Dismiss
-        </Button>
+        {canManageAnalytics ? (
+          <>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 text-xs gap-1 shrink-0"
+              onClick={handleAssignToggle}
+              disabled={!row.query}
+              type="button"
+              aria-label="Assign gap owner"
+            >
+              Assign
+            </Button>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="px-2 text-xs gap-1 shrink-0"
+              onClick={handleDismissToggle}
+              disabled={!row.query}
+              type="button"
+              aria-label="Dismiss gap"
+            >
+              Dismiss
+            </Button>
+          </>
+        ) : null}
         {canCreatePage ? (
           <>
             <Button
@@ -137,7 +143,7 @@ export const GapTableRow = memo(function GapTableRow({
               onClick={handleCreateFixClick}
               disabled={isCreatingFix || !row.query}
               type="button"
-              aria-label="Create fix page for gap"
+              aria-label="Create fix file for gap"
             >
               <KbPlusIcon className="h-3 w-3" />
               Fix

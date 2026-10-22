@@ -17,32 +17,24 @@ export function OverviewWidget({
   overdueIssues,
 }: OverviewWidgetProps) {
   const shouldReduceMotion = useReducedMotion();
-  const hover = shouldReduceMotion ? undefined : { y: -2 };
   return (
     <div className="h-full min-h-0 min-w-0 w-full max-w-full">
       <StatCardGrid cols={3}>
-        <motion.div whileHover={hover} transition={pmSnappy}>
-          <StatCard
-            label="Projects"
-            value={activeProjects}
-            icon={Briefcase}
-            tone="default"
-            index={0}
-            href="/build/projects"
-          />
-        </motion.div>
-        <motion.div whileHover={hover} transition={pmSnappy}>
-          <StatCard
-            label="Open issues"
-            value={openIssues}
-            icon={CheckSquare}
-            tone="default"
-            index={1}
-            href="/build/my-work"
-          />
-        </motion.div>
+        <StatCard
+          label="Projects"
+          value={activeProjects}
+          icon={Briefcase}
+          tone="default"
+          index={0}
+        />
+        <StatCard
+          label="Open issues"
+          value={openIssues}
+          icon={CheckSquare}
+          tone="default"
+          index={1}
+        />
         <motion.div
-          whileHover={hover}
           transition={pmSnappy}
           animate={
             overdueIssues > 0 && !shouldReduceMotion
@@ -56,7 +48,6 @@ export function OverviewWidget({
             icon={AlertCircle}
             tone={overdueIssues > 0 ? "red" : "default"}
             index={2}
-            href="/build/my-work?tab=overdue"
           />
         </motion.div>
       </StatCardGrid>

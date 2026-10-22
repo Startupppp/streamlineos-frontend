@@ -10,6 +10,7 @@ const NEUTRAL_SUBJECT: KbPageActionSubject = {
   isFavorite: false,
   isLocked: false,
   hasCover: false,
+  isArchived: false,
 };
 
 const FULL_CAPABILITIES: KbPageActionCapabilities = {
@@ -32,15 +33,24 @@ const NO_CAPABILITIES: KbPageActionCapabilities = {
   isEditable: false,
 };
 
-function idsFor(capabilities: KbPageActionCapabilities): string[] {
-  return resolveKbPageActions(NEUTRAL_SUBJECT, capabilities).map(
+function idsFor(capabilities: KbPageActionCapabilities, opts?: { collection?: boolean }): string[] {
+  return resolveKbPageActions(NEUTRAL_SUBJECT, capabilities, opts).map(
     (action) => action.id,
   );
 }
 
 describe("kb page action descriptors", () => {
-  it("offers every action to an actor holding every permission", () => {
-    expect(idsFor(FULL_CAPABILITIES)).toEqual([...KB_PAGE_ACTION_IDS]);
+  it("offers every non-collection action to an actor holding every permission", () => {
+    expect(idsFor(FULL_CAPABILITIES)).toEqual([
+      "comments", "history", "info", "backlinks", "favorite", "linkedRecords",
+      "cover", "duplicate", "move", "lock", "saveTemplate", "export", "copyLink",
+      "delete",
+    ]);
+  });
+
+  it("includes share and archive in collection context for a fully-capable actor", () => {
+    expect(idsFor(FULL_CAPABILITIES, { collection: true })).toContain("share");
+    expect(idsFor(FULL_CAPABILITIES, { collection: true })).toContain("archive");
   });
 
   it("omits an action the actor cannot perform rather than offering one that fails", () => {
@@ -64,6 +74,21 @@ describe("kb page action descriptors", () => {
     ).find((action) => action.id === "export");
 
     expect(exportAction?.permission).toBe("kb:pages:export");
+  });
+
+  it("gates share on kb:pages:manage so only managers can delegate access from the collection menu", () => {
+    expect(idsFor(NO_CAPABILITIES, { collection: true })).not.toContain("share");
+    const shareAction = resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES, { collection: true })
+      .find((a) => a.id === "share");
+    expect(shareAction?.permission).toBe("kb:pages:manage");
+  });
+
+  it("gates archive on kb:pages:update and hides it outside collection context", () => {
+    expect(idsFor(NO_CAPABILITIES, { collection: true })).not.toContain("archive");
+    expect(idsFor(FULL_CAPABILITIES)).not.toContain("archive");
+    const archiveAction = resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES, { collection: true })
+      .find((a) => a.id === "archive");
+    expect(archiveAction?.permission).toBe("kb:pages:update");
   });
 
   it("gates export independently of delete, so revoking one leaves the other", () => {
@@ -93,10 +118,11 @@ describe("kb page action descriptors", () => {
   });
 
   it("states what a toggle will do, not what the page currently is", () => {
-    const off = resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES);
+    const off = resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES, { collection: true });
     const on = resolveKbPageActions(
-      { isFavorite: true, isLocked: true, hasCover: true },
+      { isFavorite: true, isLocked: true, hasCover: true, isArchived: true },
       FULL_CAPABILITIES,
+      { collection: true },
     );
 
     const labelOf = (actions: typeof off, id: string) =>
@@ -104,14 +130,16 @@ describe("kb page action descriptors", () => {
 
     expect(labelOf(off, "favorite")).toBe("Add to favorites");
     expect(labelOf(on, "favorite")).toBe("Remove from favorites");
-    expect(labelOf(off, "lock")).toBe("Lock page");
-    expect(labelOf(on, "lock")).toBe("Unlock page");
+    expect(labelOf(off, "lock")).toBe("Lock file");
+    expect(labelOf(on, "lock")).toBe("Unlock file");
     expect(labelOf(off, "cover")).toBe("Add cover");
     expect(labelOf(on, "cover")).toBe("Change cover");
+    expect(labelOf(off, "archive")).toBe("Archive");
+    expect(labelOf(on, "archive")).toBe("Unarchive");
   });
 
-  it("marks delete destructive and nothing else", () => {
-    const destructive = resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES)
+  it("marks delete destructive and nothing else — archive is reversible so it is not destructive", () => {
+    const destructive = resolveKbPageActions(NEUTRAL_SUBJECT, FULL_CAPABILITIES, { collection: true })
       .filter((action) => action.destructive)
       .map((action) => action.id);
 

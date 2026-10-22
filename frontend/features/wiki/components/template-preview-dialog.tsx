@@ -98,12 +98,13 @@ export function SavedTemplatePreviewDialog({
     onOpenChange(false);
   }
 
+  const icon = template.icon ?? (template.kind === "spreadsheet" ? "📊" : "📄");
   return (
     <AppDialog
       open
       onOpenChange={onOpenChange}
-      title={`${template.icon ?? "📄"} ${template.name}`}
-      description={template.description ?? "Saved template preview"}
+      title={`${icon} ${template.name}`}
+      description={template.description ?? (template.kind === "spreadsheet" ? "Spreadsheet template" : "Saved template preview")}
       className="max-w-2xl"
       footer={
         <Button type="button" variant="outline" onClick={handleClose}>
@@ -111,9 +112,15 @@ export function SavedTemplatePreviewDialog({
         </Button>
       }
     >
-      <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-border bg-muted/20 p-4">
-        <PublicPageContentLoader content={template.content} />
-      </div>
+      {template.kind === "spreadsheet" ? (
+        <div className="rounded-lg border border-border bg-muted/20 px-4 py-6 text-center text-sm text-muted-foreground">
+          Spreadsheet template — a blank sheet will open when you use this template.
+        </div>
+      ) : (
+        <div className="max-h-[60vh] overflow-y-auto rounded-lg border border-border bg-muted/20 p-4">
+          <PublicPageContentLoader content={template.content} />
+        </div>
+      )}
     </AppDialog>
   );
 }

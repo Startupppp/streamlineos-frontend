@@ -33,7 +33,7 @@ export function ChatInboxFilters({ value, counts, onChange }: ChatInboxFiltersPr
         {CHAT_INBOX_FILTERS.map((filter) => {
           const count = filterCount(filter, counts);
           return (
-            <TabsTrigger key={filter} value={filter}>
+            <TabsTrigger key={filter} value={filter} aria-controls={undefined}>
               {chatInboxFilterLabel(filter)}
               {count > 0 ? (
                 <span className="font-mono text-micro tabular-nums">

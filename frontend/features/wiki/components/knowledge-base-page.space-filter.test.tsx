@@ -45,8 +45,9 @@ jest.mock("@/hooks/api/kb/chat-history", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/kb/sources", () => ({
-  useKbSources: () => ({
+jest.mock("@/hooks/api/kb/page-collection", () => ({
+  ...jest.requireActual("@/hooks/api/kb/page-collection"),
+  useInfiniteKbPageCollection: () => ({
     data: {
       pages: [
         {
@@ -56,26 +57,16 @@ jest.mock("@/hooks/api/kb/sources", () => ({
               kind: "file",
               title: "Engineering Spec",
               spaceId: 10,
-              status: "ready",
-              chunkCount: 4,
-              mimeType: null,
-              fileSize: null,
-              fileUrl: null,
-              errorMessage: null,
+              status: "published",
               createdById: "user-1",
               createdAt: "2026-09-01T00:00:00.000Z",
             },
             {
               id: 2,
-              kind: "note",
+              kind: "file",
               title: "Marketing Playbook",
               spaceId: 20,
-              status: "ready",
-              chunkCount: 2,
-              mimeType: null,
-              fileSize: null,
-              fileUrl: null,
-              errorMessage: null,
+              status: "published",
               createdById: "user-2",
               createdAt: "2026-09-02T00:00:00.000Z",
             },
@@ -85,10 +76,17 @@ jest.mock("@/hooks/api/kb/sources", () => ({
       ],
     },
     isLoading: false,
+    isError: false,
+    error: null,
+    hasNextPage: false,
+    isFetchingNextPage: false,
+    fetchNextPage: jest.fn(),
+    refetch: jest.fn(),
   }),
-  useUploadKbSource: () => ({ mutate: jest.fn(), isPending: false }),
-  useDeleteKbSource: () => ({ mutate: jest.fn(), isPending: false, variables: undefined }),
-  useCreateKbSourceNote: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/kb/files", () => ({
+  useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
 jest.mock("@/hooks/api/kb/spaces", () => ({

@@ -28,6 +28,7 @@ export interface KnowledgeAnalyticsGapsListProps {
   handleCreateGapFix: (query: string) => void;
   createGapFixPending: boolean;
   canCreatePage: boolean;
+  canManageAnalytics: boolean;
   relatedPages: KbGapRelatedPageRow[];
   relatedPagesLoading: boolean;
   relatedPagesError: boolean;
@@ -44,7 +45,7 @@ export function KnowledgeAnalyticsGapsList({
   gaps, gapsScopeComplete, gapsLoading, hasNextGaps, isFetchingNextGaps,
   handleLoadMoreGaps, selectedGapQuery, handleCreatePageFromGap, createPagePending,
   handleGapRowSelect, handleAssignGap, assignGapPending, handleDismissGap,
-  dismissGapPending, handleCreateGapFix, createGapFixPending, canCreatePage,
+  dismissGapPending, handleCreateGapFix, createGapFixPending, canCreatePage, canManageAnalytics,
   relatedPages, relatedPagesLoading, relatedPagesError, relatedPagesReadError,
   handleRetryRelatedPages, hasNextRelated, isFetchingNextRelated,
   handleLoadMoreRelated, spaceId, isFiltered,
@@ -69,7 +70,7 @@ export function KnowledgeAnalyticsGapsList({
             </div>
             {spaceId !== undefined && !gapsScopeComplete && !gapsLoading ? (
               <p role="status" className="text-sm text-muted-foreground">
-                Knowledge gaps for this space are unavailable because older events lack space information.
+                Knowledge gaps for this team folder are unavailable because older events lack team folder information.
               </p>
             ) : gaps.length === 0 ? (
               <EmptyState
@@ -119,6 +120,7 @@ export function KnowledgeAnalyticsGapsList({
                       onCreateFix={handleCreateGapFix}
                       isCreatingFix={createGapFixPending}
                       canCreatePage={canCreatePage}
+                      canManageAnalytics={canManageAnalytics}
                     />
                     {selectedGapQuery === row.query && (
                       <div className="px-3 py-2 bg-muted/30 border-t border-border/40">

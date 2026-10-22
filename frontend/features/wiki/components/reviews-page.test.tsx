@@ -328,7 +328,7 @@ describe("ReviewsPage — empty states distinguish first-empty from filtered-emp
 
     render(<ReviewsPage />);
 
-    expect(screen.getByText("No pages under review.")).toBeInTheDocument();
+    expect(screen.getByText("No files under review.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
   });
 
@@ -367,7 +367,7 @@ describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
     expect(useKbPageReviews).toHaveBeenCalledWith(
       expect.objectContaining({ status: "overdue", cursor: "bookmarked-page" }),
     );
-    expect(screen.getByText("No reviews on this page.")).toBeInTheDocument();
+    expect(screen.getByText("No reviews on this file.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     const previousParams = new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams;
     expect(previousParams.get("status")).toBe("overdue");
@@ -403,8 +403,8 @@ describe("ReviewsPage — cursor pagination preserves URL filter state", () => {
     usePageState.mockReturnValue({ kind: "empty" });
     view.rerender(<ReviewsPage />);
 
-    expect(screen.getByText("No reviews on this page.")).toBeInTheDocument();
-    expect(screen.queryByText("No pages under review.")).not.toBeInTheDocument();
+    expect(screen.getByText("No reviews on this file.")).toBeInTheDocument();
+    expect(screen.queryByText("No files under review.")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Previous page" }));
     const previousParams = new URL(replace.mock.lastCall?.[0], "https://example.test").searchParams;
     expect(previousParams.has("cursor")).toBe(false);
