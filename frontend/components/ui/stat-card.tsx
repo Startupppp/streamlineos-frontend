@@ -141,6 +141,7 @@ export interface StatCardGridProps {
   cols?: 2 | 3 | 4 | 5 | 6;
   className?: string;
   stackOnMobile?: boolean | 2;
+  minColumn?: string;
 }
 
 export interface StatCardGridSkeletonProps {
@@ -155,6 +156,7 @@ export function StatCardGrid({
   cols = 4,
   className,
   stackOnMobile = false,
+  minColumn = "10rem",
 }: StatCardGridProps) {
   const childCount = countGridChildren(children);
   const columnCount = childCount > 0 ? childCount : cols;
@@ -173,7 +175,7 @@ export function StatCardGrid({
   }, [children]);
 
   const scrollableWithoutFocus = overflow.scrolls && !hasFocusableChild;
-  const template = `repeat(${columnCount}, minmax(10rem, 1fr))`;
+  const template = `repeat(${columnCount}, minmax(${minColumn}, 1fr))`;
 
   return (
     <div
@@ -227,16 +229,18 @@ export function StatCardSkeleton({
     <div
       data-slot="stat-card"
       className={cn(
-        "relative flex h-full items-start gap-3 overflow-hidden rounded-xl border bg-card px-3.5 py-3 shadow-sm",
-        wash.rule,
+        "relative flex h-full items-start gap-3 overflow-hidden rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm",
         className,
       )}
     >
-      <span
+      <div
         aria-hidden="true"
-        className={cn("pointer-events-none absolute inset-0", wash.surface)}
+        className={cn(
+          "mt-0.5 h-9 w-9 shrink-0 rounded-lg border",
+          wash.surface,
+          wash.rule,
+        )}
       />
-      <Skeleton className="relative mt-0.5 h-9 w-9 shrink-0 rounded-lg" />
       <div className="relative min-w-0 flex-1 space-y-0.5">
         <Skeleton className="h-5 w-20" />
         <Skeleton className="h-5 w-12" />
@@ -326,31 +330,20 @@ export const StatCard = memo(function StatCard({
       data-featured={featured ? "true" : undefined}
       className={cn(
         "relative flex h-full items-start gap-3 overflow-hidden rounded-xl border bg-card px-3.5 py-3 shadow-sm",
-        featured
-          ? "border-primary bg-primary text-primary-foreground"
-          : wash
-            ? wash.rule
-            : "border-border/80",
+        featured ? "border-primary bg-primary text-primary-foreground" : "border-border/80",
         className,
       )}
     >
-      {wash ? (
-        <span
-          aria-hidden="true"
-          data-slot="stat-card-wash"
-          className={cn("pointer-events-none absolute inset-0", wash.surface)}
-        />
-      ) : null}
       {Icon && (
         <div
           aria-hidden="true"
           className={cn(
-            "relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg",
+            "relative mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border",
             featured
-              ? "bg-primary-foreground/15"
+              ? "border-transparent bg-primary-foreground/15"
               : wash
-                ? "bg-card"
-                : "bg-muted",
+                ? cn(wash.surface, wash.rule)
+                : "border-transparent bg-muted",
           )}
         >
           <Icon

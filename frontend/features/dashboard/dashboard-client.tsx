@@ -3,7 +3,7 @@
 import { useMemo, useCallback, type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
-import { useDashboardStats, useMyIssues } from "@/hooks/api/dashboard";
+import { useDashboardStats, useExecutiveDashboard, useMyIssues } from "@/hooks/api/dashboard";
 import { RefreshCw, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 const ClockInWidget = dynamic(
@@ -32,7 +32,10 @@ import { getGreeting, getFirstName } from "@/lib/format-utils";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { FocusStrip } from "@/features/dashboard/focus-strip";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
-import { useDashboardStatCards } from "@/features/dashboard/use-dashboard-stat-cards";
+import {
+  executiveKpiStats,
+  useDashboardStatCards,
+} from "@/features/dashboard/use-dashboard-stat-cards";
 import { DashboardDeferredBody } from "./dashboard-deferred-body";
 import { DashboardPageSkeleton } from "./dashboard-page-skeleton";
 import {
@@ -47,14 +50,6 @@ const GuidedTourOverlay = dynamic(
       default: m.GuidedTourOverlay,
     })),
   { ssr: false },
-);
-
-const ExecutiveKpiWidget = dynamic(
-  () =>
-    import("@/components/dashboard/executive-kpi-widget").then((m) => ({
-      default: m.ExecutiveKpiWidget,
-    })),
-  { loading: () => <StatCardGridSkeleton cols={4} /> },
 );
 
 interface DashboardClientProps {
@@ -109,9 +104,29 @@ export function DashboardClient({
       : headerClock.greeting
     : "Dashboard";
 
-  const handleRefresh = useCallback(() => void refetch(), [refetch]);
+  const {
+    data: executive,
+    isLoading: executiveLoading,
+    isError: executiveError,
+    refetch: refetchExecutive,
+  } = useExecutiveDashboard({ enabled: canViewExecutive });
+
+  const handleRefresh = useCallback(() => {
+    void refetch();
+    void refetchExecutive();
+  }, [refetch, refetchExecutive]);
 
   const statCards = useDashboardStatCards(stats, access, openIssueCount);
+  const executiveCards = executiveKpiStats({
+    included: canViewExecutive,
+    headcount: executive?.headcount,
+    openRoles: executive?.openRoles,
+    isLoading: canViewExecutive && executiveLoading && !executive,
+    unavailable: canViewExecutive && executiveError && !executive,
+  });
+  const homeStatCards = executiveCards.length > 0
+    ? [...statCards, ...executiveCards]
+    : statCards;
 
   if (
     shouldRenderDashboardLoading({
@@ -170,7 +185,7 @@ export function DashboardClient({
               />
             }
           >
-            {statCards.length > 0 ? (
+            {homeStatCards.length > 0 ? (
               <motion.div
                 variants={fadeUp}
                 initial="hidden"
@@ -178,21 +193,32 @@ export function DashboardClient({
                 className="space-y-2"
               >
                 <StatCardGrid
+                  stackOnMobile={2}
+                  minColumn="0"
                   cols={
-                    statCards.length >= 4 ? 4 : statCards.length >= 3 ? 3 : 2
+                    homeStatCards.length >= 6
+                      ? 6
+                      : homeStatCards.length === 5
+                        ? 5
+                        : homeStatCards.length >= 4
+                          ? 4
+                          : homeStatCards.length === 3
+                            ? 3
+                            : 2
                   }
                 >
-                  {statCards.map((stat) => (
+                  {homeStatCards.map((stat) => (
                     <StatCard
                       key={stat.id}
                       label={stat.label}
                       value={stat.value}
                       hint={stat.hint}
                       icon={stat.icon}
+                      isLoading={stat.isLoading}
                     />
                   ))}
                 </StatCardGrid>
-                {statCards.some((stat) => stat.unavailable) && (
+                {homeStatCards.some((stat) => stat.unavailable) && (
                   <div
                     role="status"
                     className="flex flex-wrap items-center gap-x-3 gap-y-1.5 rounded-lg border border-status-warning-rule bg-status-warning-surface px-3 py-2"
@@ -223,12 +249,6 @@ export function DashboardClient({
           </PageState>
 
           <FocusStrip access={access} />
-
-          {canViewExecutive && (
-            <motion.div variants={fadeUp} initial="hidden" animate="visible">
-              <ExecutiveKpiWidget />
-            </motion.div>
-          )}
 
           <DashboardDeferredBody
             access={access}

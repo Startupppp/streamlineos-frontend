@@ -7,7 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { ProjectAccessSkeleton } from "./project-access-skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { ProjectMemberRolesSection } from "@/features/build/settings/project-member-roles-section";
 import { TeamRosterSection } from "@/features/build/settings/team-roster-section";
@@ -18,8 +18,6 @@ import { TEXT_ONE_LINE, TEXT_BODY } from "@/lib/text-overflow";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
-
-const MEMBER_HEADERS = ["Name", "Role", "Added", "Actions"] as const;
 
 interface ProjectSettingsAccessPageProps {
   projectId: number;
@@ -105,13 +103,7 @@ export function ProjectSettingsAccessPage({
         <PmPageShell>
           <PageState
             resolution={pageState}
-            loading={
-              <DataTableSkeleton
-                rows={6}
-                headers={MEMBER_HEADERS}
-                className="flex-1"
-              />
-            }
+            loading={<ProjectAccessSkeleton />}
             onRetry={handleRetry}
             className="flex-1"
           >

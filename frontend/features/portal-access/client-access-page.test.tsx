@@ -31,6 +31,9 @@ jest.mock("@/components/ui/data-table", () => ({
       />
     );
   },
+}));
+
+jest.mock("@/components/ui/data-table-skeleton", () => ({
   DataTableSkeleton: () => <div data-testid="data-table-skeleton" />,
 }));
 

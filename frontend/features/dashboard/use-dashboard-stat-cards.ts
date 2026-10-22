@@ -13,6 +13,7 @@ interface StatCardConfig {
   icon: LucideIcon;
   unavailable?: boolean;
   hint?: string;
+  isLoading?: boolean;
 }
 
 const UNAVAILABLE_VALUE = "—";
@@ -24,6 +25,38 @@ function statValue(
   return count === null || count === undefined
     ? { value: UNAVAILABLE_VALUE, unavailable: true, hint: UNAVAILABLE_HINT }
     : { value: count };
+}
+
+export function executiveKpiStats(input: {
+  included: boolean;
+  headcount?: number;
+  openRoles?: number;
+  isLoading?: boolean;
+  unavailable?: boolean;
+}): StatCardConfig[] {
+  if (!input.included) return [];
+  const pending = Boolean(input.isLoading || input.unavailable);
+  const hint = input.unavailable ? UNAVAILABLE_HINT : undefined;
+  return [
+    {
+      id: "headcount",
+      label: "Headcount",
+      value: pending || input.headcount === undefined ? UNAVAILABLE_VALUE : input.headcount,
+      icon: Users,
+      isLoading: input.isLoading,
+      unavailable: input.unavailable,
+      hint,
+    },
+    {
+      id: "open-roles",
+      label: "Open Roles",
+      value: pending || input.openRoles === undefined ? UNAVAILABLE_VALUE : input.openRoles,
+      icon: Briefcase,
+      isLoading: input.isLoading,
+      unavailable: input.unavailable,
+      hint,
+    },
+  ];
 }
 
 export function useDashboardStatCards(

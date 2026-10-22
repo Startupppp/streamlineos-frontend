@@ -54,7 +54,7 @@ jest.mock("@/hooks/api/entitlements", () => ({
   useEntitlements: () => ({ data: undefined }),
 }));
 
-jest.mock("@/hooks/api/kb", () => ({
+jest.mock("@/hooks/api/kb/analytics", () => ({
   useKbAnalyticsOverview: (...args: unknown[]) => useKbAnalyticsOverview(...args),
   useKbNoResults: (...args: unknown[]) => useKbNoResults(...args),
   usePageAnalytics: (...args: unknown[]) => usePageAnalytics(...args),

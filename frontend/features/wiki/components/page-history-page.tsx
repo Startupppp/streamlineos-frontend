@@ -16,6 +16,7 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHistorySkeleton } from "./page-history-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -184,12 +185,8 @@ export default function PageHistoryPage({
 
   if (pageLoading) {
     return (
-      <PageWrapper title="File history" backHref={backHref}>
-        <div className="space-y-3">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <Skeleton key={i} className="h-14 w-full rounded-lg" />
-          ))}
-        </div>
+      <PageWrapper title="File history" backHref={backHref} noInternalScroll>
+        <PageHistorySkeleton />
       </PageWrapper>
     );
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CalendarDays, FilePen } from "lucide-react";
@@ -21,12 +21,13 @@ import { AttendanceRegularizationDialog } from "@/features/hr/attendance/attenda
 import { AttendanceEmailDialog } from "@/features/hr/attendance/attendance-email-dialog";
 import { cn } from "@/lib/utils";
 import { useT } from "@/lib/i18n/i18n";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 
 const TAB_PANEL_CLASS = `${TABS_CONTENT_PAGE_BODY_CLASS} mt-0 h-full min-h-0 w-full flex-1`;
 const MY_ATTENDANCE_TABS = ["today", "history"] as const;
 const WFH_REQUEST_HREF = "/me/workday?section=time-off&tab=wfh&wfh=1";
 
-export function MyAttendancePage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyAttendancePage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const t = useT();
   const router = useRouter();
   const { activeTab, onTabChange } = useUrlTab(MY_ATTENDANCE_TABS, "today");
@@ -47,21 +48,23 @@ export function MyAttendancePage({ sectionSelector }: { sectionSelector?: ReactN
         className="flex min-h-0 flex-1 flex-col gap-0"
       >
         <PageWrapper
-          title={sectionSelector ?? t("attendance.title")}
-          subtitle={t("attendance.subtitle")}
+          title={hubChrome?.title ?? t("attendance.title")}
+          subtitle={hubChrome?.subtitle ?? t("attendance.subtitle")}
           noInternalScroll
           contentClassName="flex min-h-0 flex-1 flex-col"
           filtersClassName="justify-between"
           filters={
             <>
-              <TabsList className="w-full shrink-0 md:w-auto">
-                <TabsTrigger value="today" className="gap-1.5 truncate">
-                  {t("attendance.tabToday")}
-                </TabsTrigger>
-                <TabsTrigger value="history" className="gap-1.5 truncate">
-                  {t("attendance.tabHistory")}
-                </TabsTrigger>
-              </TabsList>
+              {hubChrome?.tabs ?? (
+                <TabsList className="w-full shrink-0 md:w-auto">
+                  <TabsTrigger value="today" className="gap-1.5 truncate">
+                    {t("attendance.tabToday")}
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="gap-1.5 truncate">
+                    {t("attendance.tabHistory")}
+                  </TabsTrigger>
+                </TabsList>
+              )}
 
               <div className="ml-auto flex shrink-0 items-center gap-2">
                 <Button

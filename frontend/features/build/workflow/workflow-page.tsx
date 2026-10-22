@@ -8,7 +8,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { WorkflowSkeleton } from "./workflow-skeleton";
 import {
   PmPageShell,
   PmPanel,
@@ -20,11 +20,8 @@ import { useBuildListFilters } from "@/features/build/shared/use-build-list-filt
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { TransitionsTable } from "./transitions-table";
-import { TRANSITION_TABLE_HEADERS } from "./transition-table-parts";
 import { WipRow } from "./wip-row";
 import type { WorkflowTransition } from "@/types/projects/workflow";
-
-const WIP_TABLE_HEADERS = ["Status", "WIP limit"] as const;
 
 interface WorkflowPageProps {
   projectId: number;
@@ -148,16 +145,7 @@ export function WorkflowPage({ projectId }: WorkflowPageProps) {
       <PmPageShell>
         <PageState
           resolution={pageState}
-          loading={
-            <div className="flex min-h-0 flex-1 flex-col space-y-4">
-              <DataTableSkeleton rows={12} headers={WIP_TABLE_HEADERS} className="flex-1" />
-              <DataTableSkeleton
-                rows={12}
-                headers={TRANSITION_TABLE_HEADERS}
-                className="flex-1"
-              />
-            </div>
-          }
+          loading={<WorkflowSkeleton />}
           empty={
             <EmptyState
               className={CONTENT_FILL_PANEL}

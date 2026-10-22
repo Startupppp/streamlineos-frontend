@@ -7,7 +7,7 @@ import { useCan } from "@/hooks/api/access";
 import { useProjectRetentionSettings } from "@/hooks/api/build/project-retention-settings";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { RetentionSettingsSkeleton } from "./retention-settings-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PmPageShell, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
 import { cn } from "@/lib/utils";
@@ -26,14 +26,6 @@ const SECTION_PARAM = "section";
 interface ProjectSettingsRetentionPageProps {
   projectId: number;
 }
-
-const SKELETON_LOADING = (
-  <div className="space-y-3">
-    <Skeleton className="h-10 w-full" />
-    <Skeleton className="h-32 w-full" />
-    <Skeleton className="h-32 w-full" />
-  </div>
-);
 
 const NAV_SECTIONS: { id: RetentionSection; label: string }[] = [
   { id: "policy", label: "Policy" },
@@ -136,7 +128,7 @@ export function ProjectSettingsRetentionPage({ projectId }: ProjectSettingsReten
         </div>
         <PageState
           resolution={pageState}
-          loading={SKELETON_LOADING}
+          loading={<RetentionSettingsSkeleton />}
           empty={emptyState}
           onRetry={handleRefetch}
           className="flex-1"

@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { UploadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PageState } from "@/components/shared/page-state";
@@ -31,7 +32,7 @@ function DocumentsSkeleton() {
   );
 }
 
-export function MyDocumentsPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyDocumentsPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [pendingOnly, setPendingOnly] = useState(false);
   const [cursors, setCursors] = useState<Array<string | undefined>>([undefined]);
@@ -71,8 +72,9 @@ export function MyDocumentsPage({ sectionSelector }: { sectionSelector?: ReactNo
 
   return (
     <PageWrapper
-      title={sectionSelector ?? "My Documents"}
-      subtitle="Track the documents requested for your employment record."
+      title={hubChrome?.title ?? "My Documents"}
+      subtitle={hubChrome?.subtitle ?? "Track the documents requested for your employment record."}
+      filters={hubChrome?.tabs}
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={

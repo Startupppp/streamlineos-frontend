@@ -6,7 +6,7 @@ import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useProjectCustomFields } from "@/hooks/api/build/custom-fields";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectSettingsPanelSkeleton } from "./project-settings-skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { CustomFieldsSettings } from "@/features/build/settings/custom-fields-settings";
 import { cn } from "@/lib/utils";
@@ -96,12 +96,7 @@ export function ProjectSettingsFieldsPage({ projectId }: ProjectSettingsFieldsPa
       <PmPageShell>
         <PageState
           resolution={pageState}
-          loading={
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          }
+          loading={<ProjectSettingsPanelSkeleton />}
           className="flex-1"
         >
           <PmSection index={0}>

@@ -1,15 +1,14 @@
 "use client";
 
 import { createContext, useCallback, useContext, type ReactNode } from "react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Check, ChevronDown } from "lucide-react";
 import { PageState } from "@/components/shared/page-state";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { TabsNavigation, TabsNavigationLink } from "@/components/ui/tabs";
 import { useAccess, useModuleEnabled } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useT } from "@/lib/i18n/i18n";
 import { SelfServiceHubSkeleton } from "./self-service-hub-skeleton";
 
 type Hub = "workday" | "records" | "money" | "career";
@@ -44,40 +43,46 @@ const HUB_TITLES: Record<Hub, string> = {
 
 const SelfServiceHubContext = createContext<{ hub: Hub; available: readonly Section[]; active: string } | null>(null);
 
-export function SelfServiceSectionSelector() {
+export function SelfServiceHubTabs() {
   const context = useContext(SelfServiceHubContext);
-  if (!context) throw new Error("SelfServiceSectionSelector must be rendered inside SelfServiceHub");
+  const searchParams = useSearchParams();
+  const t = useT();
+  if (!context) throw new Error("SelfServiceHubTabs must be rendered inside SelfServiceHub");
   const { hub, available, active } = context;
-  const activeLabel = available.find((section) => section.value === active)?.label ?? HUB_TITLES[hub];
+  const tabs = hub === "workday"
+    ? [
+        { value: "today", label: t("attendance.tabToday"), href: "/me/workday" },
+        { value: "history", label: t("attendance.tabHistory"), href: "/me/workday?tab=history" },
+        { value: "my-leaves", label: t("timeOff.tabMyLeaves"), href: "/me/workday?section=time-off" },
+        { value: "wfh", label: t("timeOff.tabWfh"), href: "/me/workday?section=time-off&tab=wfh" },
+      ]
+    : available.map(({ value, label }) => ({
+        value,
+        label,
+        href: value === SECTIONS[hub][0].value ? `/me/${hub}` : `/me/${hub}?section=${value}`,
+      }));
+  const activeTab = hub === "workday" && active === "attendance"
+    ? searchParams.get("tab") === "history" ? "history" : "today"
+    : hub === "workday" ? searchParams.get("tab") === "wfh" ? "wfh" : "my-leaves"
+    : active;
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={`${activeLabel}; switch section`}
-          className="inline-flex max-w-full items-center gap-1.5 rounded-md text-left hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <span className="truncate">{activeLabel}</span>
-          <ChevronDown className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="min-w-52">
-        <DropdownMenuLabel className="text-xs text-muted-foreground">{HUB_TITLES[hub]}</DropdownMenuLabel>
-        {available.map(({ value, label }) => (
-          <DropdownMenuItem key={value} asChild>
-            <Link
-              href={value === SECTIONS[hub][0].value ? `/me/${hub}` : `/me/${hub}?section=${value}`}
-              aria-current={value === active ? "page" : undefined}
-              className="justify-between"
-            >
-              {label}
-              {value === active ? <Check className="size-4" aria-hidden="true" /> : null}
-            </Link>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <TabsNavigation aria-label={`${HUB_TITLES[hub]} sections`} className="w-full shrink-0 md:w-fit">
+      {tabs.map(({ value, label, href }) => (
+        <TabsNavigationLink key={value} active={value === activeTab}>
+          <a
+            href={href}
+            onClick={(event) => {
+              if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              window.history.pushState(null, "", href);
+            }}
+          >
+            {label}
+          </a>
+        </TabsNavigationLink>
+      ))}
+    </TabsNavigation>
   );
 }
 
@@ -110,7 +115,7 @@ export function SelfServiceHub({ hub, content }: { hub: Hub; content: Record<str
   return (
     <PageState
       resolution={pageState}
-      loading={<SelfServiceHubSkeleton title={SECTIONS[hub][0].label} />}
+      loading={<SelfServiceHubSkeleton title={HUB_TITLES[hub]} tabCount={hub === "workday" ? 4 : hub === "career" ? 3 : 2} />}
       onRetry={handleRetry}
     >
       {!active || !available.some((section) => section.value === active.value) ? (

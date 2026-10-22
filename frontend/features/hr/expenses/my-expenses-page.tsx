@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { ErrorState } from "@/components/shared";
@@ -47,7 +48,7 @@ function toStatusFilter(value: string): StatusFilter {
   }
 }
 
-export function MyExpensesPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyExpensesPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<StatusFilter>("ALL");
@@ -181,9 +182,9 @@ export function MyExpensesPage({ sectionSelector }: { sectionSelector?: ReactNod
 
   return (
     <PageWrapper
-      title={sectionSelector ?? "My Expenses"}
-      subtitle="Submit and track your reimbursement claims."
-      filters={filters}
+      title={hubChrome?.title ?? "My Expenses"}
+      subtitle={hubChrome?.subtitle ?? "Submit and track your reimbursement claims."}
+      filters={hubChrome ? <>{hubChrome.tabs}{filters}</> : filters}
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       actions={

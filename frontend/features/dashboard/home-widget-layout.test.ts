@@ -1,8 +1,10 @@
 import {
   compactHomeLayout,
+  normalizeHomeWidgetSize,
   presentHomeLayout,
   HOME_WIDGET_DEFAULT_H,
   HOME_WIDGET_DEFAULT_W,
+  HOME_WIDGET_MIN_H,
 } from "./home-widget-layout";
 
 function place(id: string, x: number, y: number, w: number, h = 4, moved = false) {
@@ -85,5 +87,32 @@ describe("home widget layout", () => {
     expect(twice.map((item) => [item.i, item.x, item.y, item.w, item.h])).toEqual(
       once.map((item) => [item.i, item.x, item.y, item.w, item.h]),
     );
+  });
+
+  it("gives Business pulse a short row and lifts the old minimum height", () => {
+    const fresh = presentHomeLayout(["Business pulse"], []);
+    expect(fresh[0]).toMatchObject({ h: 2, minH: 2 });
+
+    const stuck = presentHomeLayout(
+      ["Business pulse"],
+      [{ id: "Business pulse", w: 12, h: HOME_WIDGET_MIN_H }],
+    );
+    expect(stuck[0]?.h).toBe(2);
+    expect(normalizeHomeWidgetSize({ id: "Business pulse", w: 12, h: 2 }).h).toBe(2);
+  });
+
+  it("keeps a Business pulse the user stretched, and a taller row in compact density", () => {
+    const stretched = presentHomeLayout(
+      ["Business pulse"],
+      [{ id: "Business pulse", w: 12, h: 6 }],
+    );
+    expect(stretched[0]?.h).toBe(6);
+
+    const compact = presentHomeLayout(
+      ["Business pulse"],
+      [{ id: "Business pulse", w: 12, h: 2 }],
+      "compact",
+    );
+    expect(compact[0]?.h).toBe(3);
   });
 });

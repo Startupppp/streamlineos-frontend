@@ -26,10 +26,10 @@ import { cn } from "@/lib/utils";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { PlusIcon } from "@animateicons/react/lucide";
 import {
-  TRANSITION_TABLE_HEADERS,
   TransitionRowActions,
   buildTransitionColumns,
 } from "./transition-table-parts";
+import { TRANSITION_TABLE_HEADERS } from "./workflow-table-headers";
 
 interface TransitionsTableProps {
   projectId: number;

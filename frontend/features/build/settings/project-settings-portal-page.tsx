@@ -14,7 +14,7 @@ import {
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectSettingsPanelSkeleton } from "./project-settings-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Switch } from "@/components/ui/switch";
 import { PmPageShell, PmPanel, PmSection, CONTENT_FILL_PANEL } from "@/components/pm-chrome";
@@ -143,12 +143,7 @@ export function ProjectSettingsPortalPage({ projectId }: ProjectSettingsPortalPa
       <PmPageShell>
         <PageState
           resolution={pageState}
-          loading={
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-48 w-full" />
-            </div>
-          }
+          loading={<ProjectSettingsPanelSkeleton tall />}
           empty={
             <EmptyState
               className={CONTENT_FILL_PANEL}

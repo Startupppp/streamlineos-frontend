@@ -46,24 +46,54 @@ function clamp(value: number, min: number, max: number): number {
   return Math.min(max, Math.max(min, Math.round(value)));
 }
 
+type HomeLayoutDensity = "comfortable" | "compact";
+
+const BUSINESS_PULSE_ID = "Business pulse";
+const BUSINESS_PULSE_H = 2;
+
+function minHeight(id: string): number {
+  return id === BUSINESS_PULSE_ID ? BUSINESS_PULSE_H : HOME_WIDGET_MIN_H;
+}
+
+function defaultHeight(id: string, density: HomeLayoutDensity): number {
+  if (id !== BUSINESS_PULSE_ID) return HOME_WIDGET_DEFAULT_H;
+  return density === "compact" ? HOME_WIDGET_MIN_H : BUSINESS_PULSE_H;
+}
+
+function resolveHeight(
+  id: string,
+  saved: HomeWidgetSize | undefined,
+  density: HomeLayoutDensity,
+): number {
+  const fallback = defaultHeight(id, density);
+  const usesShortRow =
+    id === BUSINESS_PULSE_ID &&
+    (saved === undefined ||
+      saved.h === BUSINESS_PULSE_H ||
+      saved.h === HOME_WIDGET_MIN_H ||
+      saved.h === HOME_WIDGET_DEFAULT_H);
+  return usesShortRow ? fallback : (saved?.h ?? fallback);
+}
+
 export function normalizeHomeWidgetSize(size: HomeWidgetSize): HomeWidgetSize {
   return {
     id: size.id,
     w: clamp(size.w, HOME_WIDGET_MIN_W, HOME_GRID_COLUMNS),
-    h: clamp(size.h, HOME_WIDGET_MIN_H, HOME_WIDGET_MAX_H),
+    h: clamp(size.h, minHeight(size.id), HOME_WIDGET_MAX_H),
   };
 }
 
 function withBounds(source: HomeLayoutSource): HomeLayoutItem {
+  const minH = minHeight(source.i);
   return {
     i: source.i,
     x: source.x,
     y: source.y,
     w: clamp(source.w, HOME_WIDGET_MIN_W, HOME_GRID_COLUMNS),
-    h: clamp(source.h, HOME_WIDGET_MIN_H, HOME_WIDGET_MAX_H),
+    h: clamp(source.h, minH, HOME_WIDGET_MAX_H),
     moved: source.moved,
     minW: HOME_WIDGET_MIN_W,
-    minH: HOME_WIDGET_MIN_H,
+    minH,
     maxW: HOME_GRID_COLUMNS,
     maxH: HOME_WIDGET_MAX_H,
   };
@@ -72,6 +102,7 @@ function withBounds(source: HomeLayoutSource): HomeLayoutItem {
 function seedHomeLayout(
   orderedIds: readonly string[],
   placements: readonly HomeWidgetSize[],
+  density: HomeLayoutDensity,
 ): HomeLayoutItem[] {
   const sizeById = new Map(placements.map((item) => [item.id, item]));
   return orderedIds.map((id, index) => {
@@ -81,7 +112,7 @@ function seedHomeLayout(
       x: index,
       y: 0,
       w: saved?.w ?? HOME_WIDGET_DEFAULT_W,
-      h: saved?.h ?? HOME_WIDGET_DEFAULT_H,
+      h: resolveHeight(id, saved, density),
     });
   });
 }
@@ -176,15 +207,17 @@ export function compactHomeLayout(
 export function presentHomeLayout(
   orderedIds: readonly string[],
   placements: readonly HomeWidgetSize[],
+  density: HomeLayoutDensity = "comfortable",
 ): HomeLayoutItem[] {
-  return compactHomeLayout(seedHomeLayout(orderedIds, placements), HOME_GRID_COLUMNS);
+  return compactHomeLayout(seedHomeLayout(orderedIds, placements, density), HOME_GRID_COLUMNS);
 }
 
 export function stackHomeLayout(
   orderedIds: readonly string[],
   placements: readonly HomeWidgetSize[],
+  density: HomeLayoutDensity = "comfortable",
 ): HomeLayoutItem[] {
-  return compactHomeLayout(seedHomeLayout(orderedIds, placements), 1);
+  return compactHomeLayout(seedHomeLayout(orderedIds, placements, density), 1);
 }
 
 export function markResizedItems(
@@ -219,8 +252,9 @@ export function homeLayoutChanged(
 export function reflowHomeLayout(
   orderedIds: readonly string[],
   placements: readonly HomeWidgetSize[],
+  density: HomeLayoutDensity = "comfortable",
 ): HomeLayoutCommit[] {
-  const seeded = seedHomeLayout(orderedIds, placements);
+  const seeded = seedHomeLayout(orderedIds, placements, density);
   const rows = packWide(seeded, true);
   let y = 0;
   const placed: HomeLayoutCommit[] = [];

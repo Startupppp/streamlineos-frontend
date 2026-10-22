@@ -22,7 +22,7 @@ import {
   useAssignGap,
   useDismissGap,
   useCreateGapFix,
-} from "@/hooks/api/kb";
+} from "@/hooks/api/kb/analytics";
 import { useKbSpaces } from "@/hooks/api/kb/spaces";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useCan } from "@/hooks/api/access";

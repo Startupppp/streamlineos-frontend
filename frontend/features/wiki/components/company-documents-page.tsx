@@ -8,7 +8,7 @@ import { PageState } from "@/components/shared/page-state";
 import { SourceBadge } from "@/components/shared/source-badge";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { CompanyDocumentsSkeleton } from "./company-documents-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -167,7 +167,7 @@ export default function CompanyDocumentsPage() {
 
   return (
     <PageWrapper title="Company documents" subtitle="Policies and documents HR has shared with you" filters={filters}>
-      <PageState resolution={pageState} loading={<DataTableSkeleton columns={COLUMNS.length} />} empty={linkOff ? notEnabled : empty} onRetry={handleRetry}>
+      <PageState resolution={pageState} loading={<CompanyDocumentsSkeleton />} empty={linkOff ? notEnabled : empty} onRetry={handleRetry}>
         <DataTable
           data={rows}
           columns={COLUMNS}

@@ -12,7 +12,16 @@ export function BusinessPulseWidget() {
   const crmEnabled = useModuleEnabled("crm");
 
   if (crmState === "loading")
-    return <WidgetCard icon={FolderKanban} title="Business Pulse" isLoading loadingRows={2} />;
+    return (
+      <WidgetCard
+        className="h-auto"
+        contentClassName="flex-none pb-3"
+        icon={FolderKanban}
+        title="Business Pulse"
+        isLoading
+        loadingRows={1}
+      />
+    );
   if (crmState === "denied" || !crmEnabled)
     return <NoPermissionState permission="crm:leads:view" compact />;
 
@@ -32,6 +41,7 @@ function BusinessPulseCard() {
 
   return (
     <WidgetCard
+      className="h-auto"
       icon={FolderKanban}
       title="Business Pulse"
       link={
@@ -40,9 +50,10 @@ function BusinessPulseCard() {
           : { href: "/crm/leads", label: "View pipeline", ariaLabel: "View CRM pipeline" }
       }
       isLoading={isLoading}
-      loadingRows={2}
+      loadingRows={1}
       error={error}
       onRetry={handleRetry}
+      contentClassName="flex-none pb-3"
     >
       <StatCardGrid cols={2}>
         <StatCard

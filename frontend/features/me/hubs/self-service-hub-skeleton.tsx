@@ -1,10 +1,20 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export function SelfServiceHubSkeleton({ title = "My work" }: { title?: string }) {
+export function SelfServiceHubSkeleton({ title = "My work", tabCount = 2 }: { title?: string; tabCount?: number }) {
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col" role="status" aria-label={`Loading ${title}`}>
-      <PageWrapper title={title} subtitle="Loading your information…">
+      <PageWrapper
+        title={title}
+        subtitle="Loading your information…"
+        filters={
+          <div className="flex w-full items-center gap-2 rounded-md border p-1 md:w-fit">
+            {Array.from({ length: tabCount }, (_, index) => (
+              <Skeleton key={index} className="h-8 w-20 rounded-sm" />
+            ))}
+          </div>
+        }
+      >
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {Array.from({ length: 3 }, (_, index) => (

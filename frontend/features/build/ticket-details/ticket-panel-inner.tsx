@@ -2,8 +2,6 @@
 
 import { useCallback, useMemo } from "react";
 import { notFound, usePathname, useRouter, useSearchParams } from "next/navigation";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { TicketDetailPage } from "./ticket-detail-page";
 import {
   parseTicketKey,
@@ -12,13 +10,7 @@ import {
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { TicketDetailPane } from "@/features/build/ticket-details/ticket-detail-pane";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { Skeleton } from "@/components/ui/skeleton";
+import { TicketPanelSkeleton } from "./ticket-panel-skeleton";
 import {
   isTicketDetailPath,
   resolveTicketBackHref,
@@ -75,46 +67,8 @@ export function TicketPanelInner({
   if (routeKeyMismatch) return notFound();
   if (searchParams.get("draft") === "resume") return <TicketDetailPage projectId={projectId} ticketKey={ticketKey} />;
 
-  const loadingSheet = (
-    <Sheet open onOpenChange={(open) => { if (!open) handleClose(); }}>
-      <SheetContent
-        aria-describedby={undefined}
-        side="right"
-        className="flex w-full max-w-xl flex-col p-0 sm:max-w-xl"
-      >
-        <SheetHeader className="flex flex-row items-center gap-2 border-b px-4 py-3">
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-7 shrink-0"
-            onClick={handleClose}
-            aria-label="Close ticket pane"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-          <SheetTitle className="line-clamp-1 text-sm font-medium">
-            Ticket
-          </SheetTitle>
-        </SheetHeader>
-        <div className="flex flex-col gap-3 p-4">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-5 w-16 rounded-full" />
-            <Skeleton className="h-5 w-12 rounded-full" />
-          </div>
-          <Skeleton className="h-5 w-3/4" />
-          <div className="space-y-2">
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-
   return (
-    <PageState resolution={pageState} loading={loadingSheet} onRetry={parsed ? handleRetry : undefined}>
+    <PageState resolution={pageState} loading={<TicketPanelSkeleton onClose={handleClose} />} onRetry={parsed ? handleRetry : undefined}>
       {lookup.data ? (
         <TicketDetailPane
           ticketId={lookup.data.id}

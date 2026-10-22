@@ -101,6 +101,8 @@ async function installBrowserFixtures(page: Page) {
       };
     } else if (path === "/me/preferences") {
       body = { language: "en" };
+    } else if (path === "/organization") {
+      body = [{ id: "self-service-org", name: "Example Organization", slug: "example", role: "MEMBER", joinedAt: null }];
     } else if (path === "/me/inbox/unified/count") {
       body = { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true, approvalExact: true };
     } else if (path === "/me/org-display") {
@@ -143,22 +145,25 @@ for (const viewport of VIEWPORTS) {
     await installBrowserFixtures(page);
     await page.setViewportSize(viewport);
 
-    for (const [path, section] of [
-      ["/me/workday", "Time off"],
-      ["/me/records", "Onboarding"],
-      ["/me/money", "Pay"],
-      ["/me/career", "Job openings"],
+    for (const [path, heading, section] of [
+      ["/me/workday", "Attendance & Time Off", "Time off"],
+      ["/me/records", "Documents & Onboarding", "Onboarding"],
+      ["/me/money", "Expenses & Pay", "Pay"],
+      ["/me/career", "Hiring & Referrals", "Job openings"],
     ] as const) {
       await page.goto(path, { waitUntil: "domcontentloaded" });
-      const switcher = page.getByRole("button", { name: /switch section/ });
-      await expect(switcher).toBeVisible({ timeout: 60_000 });
-      await switcher.focus();
-      await switcher.press("Enter");
-      const sectionLink = page.getByRole("menuitem", { name: section });
+      await expect(page.getByRole("heading", { name: heading })).toBeVisible({ timeout: 60_000 });
+      const tabs = page.getByRole("navigation", { name: `${heading} sections` });
+      await expect(tabs).toBeVisible();
+      if (path === "/me/workday") {
+        await expect(tabs.getByRole("link", { name: "Today" })).toBeVisible();
+        await expect(tabs.getByRole("link", { name: "History" })).toBeVisible();
+      }
+      const sectionLink = tabs.getByRole("link", { name: section });
       await expect(sectionLink).toBeVisible();
       await sectionLink.click();
       await expect(page).toHaveURL(/section=/, { timeout: 60_000 });
-      await expect(page.getByRole("button", { name: `${section}; switch section` })).toBeVisible();
+      await expect(page.getByRole("navigation", { name: `${heading} sections` }).getByRole("link", { name: section })).toHaveAttribute("aria-current", "page");
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(overflow).toBeLessThanOrEqual(1);
       await page.screenshot({ path: testInfo.outputPath(`${path.slice(4)}-${viewport.width}.png`) });

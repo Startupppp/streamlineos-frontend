@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { format } from "date-fns";
 import { CheckCircle2, ExternalLink, MessageSquareText } from "lucide-react";
 import { ErrorState } from "@/components/shared";
@@ -33,7 +34,7 @@ function safeMeetingLink(value: string | null): string | null {
   }
 }
 
-export function MyRecruitmentPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const [page, setPage] = useState(1);
   const [feedbackInterview, setFeedbackInterview] =
     useState<AssignedInterview | null>(null);
@@ -60,8 +61,9 @@ export function MyRecruitmentPage({ sectionSelector }: { sectionSelector?: React
 
   return (
     <PageWrapper
-      title={sectionSelector ?? "My Recruitment"}
-      subtitle="Your assigned interviews and hiring feedback actions."
+      title={hubChrome?.title ?? "My Recruitment"}
+      subtitle={hubChrome?.subtitle ?? "Your assigned interviews and hiring feedback actions."}
+      filters={hubChrome?.tabs}
     >
       <div className="flex flex-1 min-h-0 flex-col gap-3">
       {interviews.isLoading ? (

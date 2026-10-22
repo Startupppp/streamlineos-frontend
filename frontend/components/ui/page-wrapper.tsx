@@ -57,6 +57,7 @@ interface PageWrapperProps {
   backLabel?: string;
   leading?: React.ReactNode;
   actions?: React.ReactNode;
+  extraActions?: React.ReactNode;
   filters?: React.ReactNode;
   loadingFilters?: React.ReactNode;
   filtersClassName?: string;
@@ -103,6 +104,7 @@ export function PageWrapper({
   backLabel = "Back",
   leading,
   actions,
+  extraActions,
   filters,
   loadingFilters,
   filtersClassName,
@@ -132,6 +134,8 @@ export function PageWrapper({
     state.kind !== "empty" &&
     state.kind !== "filtered-empty";
   const visibleActions = isInterrupted && state?.kind !== "loading" ? undefined : actions;
+  const visibleExtraActions =
+    isInterrupted && state?.kind !== "loading" ? undefined : extraActions;
   const visibleFilters =
     state?.kind === "loading"
       ? loadingFilters
@@ -177,6 +181,7 @@ export function PageWrapper({
     onBack != null ||
     leading != null ||
     visibleActions != null ||
+    visibleExtraActions != null ||
     builtInBack != null;
 
   const body =
@@ -247,7 +252,7 @@ export function PageWrapper({
               {subtitle ? <SubtitleBlock subtitle={subtitle} /> : null}
             </div>
 
-            {visibleActions && (
+            {(visibleActions || visibleExtraActions) && (
               <div
                 className={cn(
                   actionsInline
@@ -255,6 +260,7 @@ export function PageWrapper({
                     : "flex w-full flex-col items-stretch gap-2 sm:ml-auto sm:w-auto sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:self-start [&>*]:w-full sm:[&>*]:w-auto",
                 )}
               >
+                {visibleExtraActions}
                 {visibleActions}
               </div>
             )}

@@ -6,7 +6,7 @@ import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { useAgentTokens } from "@/hooks/api/build/agent-tokens";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectSettingsPanelSkeleton } from "./project-settings-skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { AgentTokensSection } from "@/features/build/settings/agent-tokens-section";
 import { cn } from "@/lib/utils";
@@ -75,12 +75,7 @@ export function ProjectSettingsCredentialsPage({ projectId: _projectId }: Projec
       <PmPageShell>
         <PageState
           resolution={pageState}
-          loading={
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          }
+          loading={<ProjectSettingsPanelSkeleton />}
           className="flex-1"
         >
           <div className="flex flex-col gap-4">

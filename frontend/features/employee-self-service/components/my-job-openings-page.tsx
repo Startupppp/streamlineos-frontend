@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, type ReactNode } from "react";
+import { useCallback } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { Briefcase, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
@@ -63,7 +64,7 @@ function JobOpeningCard({ opening, onApply, applyingJobId }: JobOpeningCardProps
   );
 }
 
-export function MyJobOpeningsPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyJobOpeningsPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const openings = useSelfJobOpenings();
   const { mutate: apply, isPending, variables } = useApplyToJobOpening();
 
@@ -95,8 +96,9 @@ export function MyJobOpeningsPage({ sectionSelector }: { sectionSelector?: React
 
   return (
     <PageWrapper
-      title={sectionSelector ?? "Internal Job Openings"}
-      subtitle="Open roles across the organization you can apply to."
+      title={hubChrome?.title ?? "Internal Job Openings"}
+      subtitle={hubChrome?.subtitle ?? "Open roles across the organization you can apply to."}
+      filters={hubChrome?.tabs}
       state={state}
       onRetry={openings.refetch}
       loading={

@@ -63,15 +63,21 @@ export function ClockInWidget() {
 
   const isCheckedIn = statusData?.status === "PRESENT";
   const isOnBreak = statusData?.status === "ON_BREAK";
+  const hasOpenSession =
+    Boolean(statusData?.todayLog?.checkIn) && !statusData?.todayLog?.checkOut;
+  const canClockOut = isCheckedIn || isOnBreak || hasOpenSession;
   const isInCooldown = localCooldown > 0;
+  const canClockIn = !canClockOut && !isInCooldown;
 
-  const handleClockAction = useCallback(() => {
-    if (isCheckedIn || isOnBreak) {
-      checkOutMutation.mutate();
-    } else if (!isInCooldown) {
-      checkInMutation.mutate({});
-    }
-  }, [isCheckedIn, isOnBreak, isInCooldown, checkOutMutation, checkInMutation]);
+  const handleClockIn = useCallback(() => {
+    if (!canClockIn) return;
+    checkInMutation.mutate({});
+  }, [canClockIn, checkInMutation]);
+
+  const handleClockOut = useCallback(() => {
+    if (!canClockOut) return;
+    checkOutMutation.mutate();
+  }, [canClockOut, checkOutMutation]);
 
   const isPending = checkInMutation.isPending || checkOutMutation.isPending;
 
@@ -97,7 +103,7 @@ export function ClockInWidget() {
   if (isLoading) return <ClockInWidgetSkeleton />;
 
   return (
-    <div className="flex items-center gap-6">
+    <div className="flex items-center gap-3">
       <div className="flex flex-col items-end">
         <div className="text-muted-foreground font-bold text-sm tracking-wide">
           {orgTz !== null ? formatClockInOrgTz(now, orgTz) : "—"}
@@ -130,37 +136,45 @@ export function ClockInWidget() {
         )}
       </div>
 
-      <Button
-        variant={
-          isCheckedIn || isOnBreak
-            ? "outline"
-            : isInCooldown
-              ? "secondary"
-              : "default"
-        }
-        disabled={isPending || isInCooldown}
-        onClick={handleClockAction}
-        className={`font-bold px-6 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
-          isCheckedIn || isOnBreak
-            ? "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
-            : isInCooldown
-              ? "bg-muted text-muted-foreground cursor-not-allowed"
-              : ""
-        }`}
-      >
-        {isPending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : isCheckedIn || isOnBreak ? (
-          "WEB CLOCK-OUT"
-        ) : isInCooldown ? (
-          <span className="flex items-center gap-2">
-            <Timer className="h-3.5 w-3.5" />
-            {formatCooldown(localCooldown)}
-          </span>
-        ) : (
-          "WEB CLOCK-IN"
-        )}
-      </Button>
+      <div className="flex items-center gap-2">
+        <Button
+          variant={canClockIn ? "default" : "outline"}
+          disabled={isPending || !canClockIn}
+          onClick={handleClockIn}
+          className={`font-bold px-3 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
+            canClockIn
+              ? ""
+              : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
+          }`}
+        >
+          {checkInMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : isInCooldown && !canClockOut ? (
+            <span className="flex items-center gap-2">
+              <Timer className="h-3.5 w-3.5" />
+              {formatCooldown(localCooldown)}
+            </span>
+          ) : (
+            "WEB CLOCK-IN"
+          )}
+        </Button>
+        <Button
+          variant={canClockOut ? "default" : "outline"}
+          disabled={isPending || !canClockOut}
+          onClick={handleClockOut}
+          className={`font-bold px-3 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
+            canClockOut
+              ? ""
+              : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
+          }`}
+        >
+          {checkOutMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            "WEB CLOCK-OUT"
+          )}
+        </Button>
+      </div>
     </div>
   );
 }

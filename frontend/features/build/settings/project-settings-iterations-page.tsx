@@ -12,7 +12,7 @@ import { updateIterationSettingsSchema, type UpdateIterationSettingsInput } from
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectSettingsPanelSkeleton } from "./project-settings-skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import {
   Form,
@@ -100,12 +100,7 @@ export function ProjectSettingsIterationsPage({ projectId }: ProjectSettingsIter
       <PmPageShell>
         <PageState
           resolution={pageState}
-          loading={
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          }
+          loading={<ProjectSettingsPanelSkeleton />}
           onRetry={handleRetry}
           className="flex-1"
         >

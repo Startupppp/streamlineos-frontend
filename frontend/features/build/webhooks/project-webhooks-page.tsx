@@ -4,7 +4,7 @@ import { useState, useCallback, useMemo, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { useRegisterDirtyState } from "@/components/shared/dirty-state-context";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectWebhooksSkeleton } from "./project-webhooks-skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { WebhookFormSheet } from "@/features/build/webhooks/webhook-form-sheet";
@@ -192,13 +192,7 @@ export function ProjectWebhooksPage({ projectId: projectIdStr }: ProjectWebhooks
           />
           <PageState
             resolution={pageState}
-            loading={
-              <div className="flex flex-col gap-3">
-                {Array.from({ length: 2 }).map((_, i) => (
-                  <Skeleton key={i} className="h-20 w-full rounded-xl" />
-                ))}
-              </div>
-            }
+            loading={<ProjectWebhooksSkeleton />}
             empty={
               <WebhookEmptyState
                 isOnline={isOnline}

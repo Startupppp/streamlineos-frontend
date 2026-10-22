@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import Link from "next/link";
 import { CheckCircle2, PartyPopper } from "lucide-react";
 import { toast } from "sonner";
@@ -43,7 +44,7 @@ function AllDoneBanner() {
   );
 }
 
-export function MyOnboardingTasksPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyOnboardingTasksPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const canManageOnboarding = useCan("hr:onboarding:manage");
   const {
     data: onboardingTasks,
@@ -119,8 +120,9 @@ export function MyOnboardingTasksPage({ sectionSelector }: { sectionSelector?: R
 
   return (
     <PageWrapper
-      title={sectionSelector ?? "My Onboarding"}
-      subtitle="Complete these tasks to finish your onboarding journey"
+      title={hubChrome?.title ?? "My Onboarding"}
+      subtitle={hubChrome?.subtitle ?? "Complete these tasks to finish your onboarding journey"}
+      filters={hubChrome?.tabs}
       actions={
         canManageOnboarding ? (
           <Button variant="ghost" size="sm" asChild>

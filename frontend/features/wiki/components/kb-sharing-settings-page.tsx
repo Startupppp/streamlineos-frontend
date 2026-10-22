@@ -29,6 +29,7 @@ import { useKbSharingSettings, useUpdateKbSharingSettings } from "@/hooks/api/kb
 import type { SharingSettings } from "@/hooks/api/kb/sharing";
 import { sharingSettingsFormSchema, type SharingSettingsFormValues } from "./kb-sharing-settings-schema";
 import { KbSharingInventoryTable } from "./kb-sharing-inventory-table";
+import { KbSharingSettingsSkeleton } from "./kb-sharing-settings-skeleton";
 
 interface SharingSettingsFormProps {
   settings: SharingSettings;
@@ -154,7 +155,7 @@ export default function KbSharingSettingsPage() {
     <PageWrapper title="External sharing" subtitle="Control how content can be shared outside the organization.">
       <PageState
         resolution={pageState}
-        loading={<div className="h-64 w-full rounded-xl bg-muted animate-pulse" />}
+        loading={<KbSharingSettingsSkeleton />}
       >
         <div className="flex flex-col gap-6 max-w-lg">
           {settings && <SharingSettingsForm key={settings.externalSharing} settings={settings} />}

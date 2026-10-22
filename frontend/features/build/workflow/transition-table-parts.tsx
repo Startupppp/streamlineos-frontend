@@ -16,16 +16,6 @@ import type { DataTableColumn } from "@/components/ui/data-table";
 import { TABLE_TITLE_CELL } from "@/lib/text-overflow";
 import type { WorkflowTransition } from "@/types/projects/workflow";
 
-export const TRANSITION_TABLE_HEADERS = [
-  "From",
-  "To",
-  "Label",
-  "Approval",
-  "Required fields",
-  "Allowed roles",
-  "Actions",
-] as const;
-
 export function TransitionRowActions({
   transition,
   onEdit,

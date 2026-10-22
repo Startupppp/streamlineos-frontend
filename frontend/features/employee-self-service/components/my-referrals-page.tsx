@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,7 +37,7 @@ const EMPTY_FORM = {
   notes: "",
 };
 
-export function MyReferralsPage({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyReferralsPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const referrals = useSelfReferrals();
@@ -144,8 +145,9 @@ export function MyReferralsPage({ sectionSelector }: { sectionSelector?: ReactNo
 
   return (
     <PageWrapper
-      title={sectionSelector ?? "My Referrals"}
-      subtitle="Candidates you have referred and where they stand."
+      title={hubChrome?.title ?? "My Referrals"}
+      subtitle={hubChrome?.subtitle ?? "Candidates you have referred and where they stand."}
+      filters={hubChrome?.tabs}
       actions={referAction}
       state={state}
       onRetry={referrals.refetch}

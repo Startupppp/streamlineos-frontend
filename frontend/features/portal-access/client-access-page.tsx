@@ -13,7 +13,7 @@ import { PM_TOOLBAR } from "@/components/pm-chrome";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
-import { DataTableSkeleton } from "@/components/ui/data-table";
+import { ClientAccessSkeleton } from "./client-access-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 import { SearchInput } from "@/components/ui/search-input";
@@ -502,7 +502,7 @@ export function ClientAccessPage() {
     >
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton rows={12} columns={5} className="flex-1" />}
+        loading={<ClientAccessSkeleton />}
         onRetry={handleRetry}
         className="flex-1"
       >

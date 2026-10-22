@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useState } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { format } from "date-fns";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
@@ -41,10 +42,10 @@ const LEAVE_TABS = ["my-leaves", "wfh", "approvals"] as const;
 
 interface LeavesWfhContentProps {
   selfService?: boolean;
-  sectionSelector?: ReactNode;
+  hubChrome?: SelfServiceHubChrome;
 }
 
-export function LeavesWfhContent({ selfService = false, sectionSelector }: LeavesWfhContentProps) {
+export function LeavesWfhContent({ selfService = false, hubChrome }: LeavesWfhContentProps) {
   const t = useT();
   const { data: session } = useSession();
   const data = useLeavesWfhData(selfService);
@@ -124,8 +125,9 @@ export function LeavesWfhContent({ selfService = false, sectionSelector }: Leave
   if (data.isLoading) {
     return (
       <PageWrapper
-        title={sectionSelector ?? title}
-        subtitle={subtitle}
+        title={hubChrome?.title ?? title}
+        subtitle={hubChrome?.subtitle ?? subtitle}
+        filters={hubChrome?.tabs}
         noInternalScroll
         actionsInline={selfService}
         contentClassName="flex min-h-0 flex-1 flex-col"
@@ -143,8 +145,9 @@ export function LeavesWfhContent({ selfService = false, sectionSelector }: Leave
   if (data.isError) {
     return (
       <PageWrapper
-        title={sectionSelector ?? title}
-        subtitle={subtitle}
+        title={hubChrome?.title ?? title}
+        subtitle={hubChrome?.subtitle ?? subtitle}
+        filters={hubChrome?.tabs}
         noInternalScroll
         actionsInline={selfService}
         contentClassName="flex min-h-0 flex-1 flex-col"
@@ -170,28 +173,31 @@ export function LeavesWfhContent({ selfService = false, sectionSelector }: Leave
         className="flex min-h-0 flex-1 flex-col gap-0"
       >
         <PageWrapper
-          title={sectionSelector ?? title}
-          subtitle={subtitle}
+          title={hubChrome?.title ?? title}
+          subtitle={hubChrome?.subtitle ?? subtitle}
           noInternalScroll
           actionsInline={selfService}
           contentClassName="flex min-h-0 flex-1 flex-col"
           filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
           filters={
-            <LeavesWfhToolbar
-              isAdmin={data.isAdmin}
-              totalAvailable={data.totalAvailable}
-              availableHint={data.availableHint}
-              pendingCount={data.pendingCount}
-              approvedDays={data.approvedDays}
-              myLeaveCount={data.myLeaveRequests.length}
-              totalPendingApprovals={data.totalPendingApprovals}
-              activeTab={activeTab}
-              wfhStatusFilter={wfhStatusFilter}
-              onWfhStatusFilterChange={setWfhStatusFilter}
-              canExport={canExportLeaves}
-              exportNoun={exportView.noun}
-              onExport={handleExportExcel}
-            />
+            <>
+              {hubChrome?.tabs}
+              <LeavesWfhToolbar
+                isAdmin={data.isAdmin}
+                totalAvailable={data.totalAvailable}
+                availableHint={data.availableHint}
+                pendingCount={data.pendingCount}
+                approvedDays={data.approvedDays}
+                myLeaveCount={data.myLeaveRequests.length}
+                totalPendingApprovals={data.totalPendingApprovals}
+                activeTab={activeTab}
+                wfhStatusFilter={wfhStatusFilter}
+                onWfhStatusFilterChange={setWfhStatusFilter}
+                canExport={canExportLeaves}
+                exportNoun={exportView.noun}
+                onExport={handleExportExcel}
+              />
+            </>
           }
           actions={headerActions}
         >

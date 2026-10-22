@@ -1,6 +1,6 @@
 import { renderHook } from "@testing-library/react";
 
-import { useDashboardStatCards } from "./use-dashboard-stat-cards";
+import { executiveKpiStats, useDashboardStatCards } from "./use-dashboard-stat-cards";
 import type { DashboardAccess } from "./use-dashboard-access";
 import type { DashboardStats } from "@/types/dashboard";
 
@@ -114,5 +114,18 @@ describe("useDashboardStatCards", () => {
 
   it("renders nothing at all before the payload arrives", () => {
     expect(cardsFor(undefined).size).toBe(0);
+  });
+
+  it("places headcount and open roles after the home stats", () => {
+    const cards = executiveKpiStats({
+      included: true,
+      headcount: 5,
+      openRoles: 0,
+    });
+    expect(cards.map((card) => [card.label, card.value])).toEqual([
+      ["Headcount", 5],
+      ["Open Roles", 0],
+    ]);
+    expect(cards.some((card) => card.label === "Active Projects")).toBe(false);
   });
 });

@@ -33,7 +33,24 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
     expect(button).toBeEnabled();
     expect(button.className).not.toMatch(/(^|\s)bg-(destructive|status-danger)/);
     expect(button.className).toMatch(/(^|\s)bg-primary(\s|$)/);
+    const clockOut = screen.getByRole("button", { name: "WEB CLOCK-OUT" });
+    expect(clockOut).toBeDisabled();
     expect(screen.getByText("Your location is recorded when you clock in.")).toBeInTheDocument();
     expect(screen.queryByTestId("clock-in-widget-skeleton")).not.toBeInTheDocument();
+  });
+
+  it("offers clock-out once the person is checked in, and holds clock-in", () => {
+    statusQuery.isLoading = false;
+    statusQuery.data = {
+      status: "PRESENT",
+      cooldownRemaining: 0,
+      todayLog: { checkIn: "2026-10-22T09:00:00.000Z", checkOut: null },
+      dailyStats: null,
+    };
+
+    render(<ClockInWidget />);
+
+    expect(screen.getByRole("button", { name: "WEB CLOCK-IN" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "WEB CLOCK-OUT" })).toBeEnabled();
   });
 });

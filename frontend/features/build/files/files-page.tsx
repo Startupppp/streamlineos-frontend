@@ -21,6 +21,7 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
+import { ProjectFilesSkeleton } from "./project-files-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
@@ -205,24 +206,12 @@ export function FilesPage({ projectId }: FilesPageProps) {
 
   const pageState = usePageState({ permission: "build:files:view", isLoading, isError, error });
 
-  if (pageState.kind !== "ready" && pageState.kind !== "empty" && pageState.kind !== "loading") {
+  if (pageState.kind !== "ready" && pageState.kind !== "empty") {
     return (
       <PageWrapper title="Files" subtitle="Project files and documents">
-        <PageState resolution={pageState} loading={null} onRetry={handleRetry} className="flex-1">
+        <PageState resolution={pageState} loading={<ProjectFilesSkeleton />} onRetry={handleRetry} className="flex-1">
           {null}
         </PageState>
-      </PageWrapper>
-    );
-  }
-
-  if (pageState.kind === "loading") {
-    return (
-      <PageWrapper title="Files" subtitle="Project files and documents">
-        <div className="flex flex-col gap-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className={`${CONTENT_PANEL_SOLID} h-16 animate-pulse`} />
-          ))}
-        </div>
       </PageWrapper>
     );
   }

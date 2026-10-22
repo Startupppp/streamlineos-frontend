@@ -112,11 +112,10 @@ function DesktopHeader({
         )}
       </div>
 
-      <div className="flex min-w-0 flex-1 justify-center px-4">
-        <SearchButton />
-      </div>
+      <div className="min-w-0 flex-1" />
 
       <div className="flex shrink-0 items-center gap-1 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-1">
+        <SearchButton />
         {!hideAdminChrome && (
           <>
             <HeaderPayrollCutoff />

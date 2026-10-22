@@ -8,9 +8,20 @@ jest.mock("next/link", () => ({
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
-  PageWrapper: ({ children, title, filters }: { children: React.ReactNode; title: React.ReactNode; filters?: React.ReactNode }) => (
+  PageWrapper: ({
+    children,
+    title,
+    filters,
+    extraActions,
+  }: {
+    children: React.ReactNode;
+    title: React.ReactNode;
+    filters?: React.ReactNode;
+    extraActions?: React.ReactNode;
+  }) => (
     <div>
       <h1>{title}</h1>
+      {extraActions}
       {filters}
       {children}
     </div>

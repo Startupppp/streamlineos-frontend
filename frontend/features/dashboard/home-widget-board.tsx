@@ -69,8 +69,10 @@ export function HomeWidgetBoard({
             if (separator <= 0 || !Number.isFinite(w) || !Number.isFinite(h)) return [];
             return [{ id: token.slice(0, separator), w, h }];
           });
-    return isWide ? presentHomeLayout(ids, sizes) : stackHomeLayout(ids, sizes);
-  }, [isWide, orderKey, placementKey]);
+    return isWide
+      ? presentHomeLayout(ids, sizes, density)
+      : stackHomeLayout(ids, sizes, density);
+  }, [density, isWide, orderKey, placementKey]);
   const previousLayoutRef = useRef<HomeLayoutItem[] | null>(null);
   const placementsRef = useRef(placements);
   const seenOrderRef = useRef(orderKey);
@@ -138,10 +140,10 @@ export function HomeWidgetBoard({
     seenOrderRef.current = orderKey;
     if (orderKey.length === 0) return;
     const ids = orderKey.split("\0");
-    const filled = reflowHomeLayout(ids, placementsRef.current);
+    const filled = reflowHomeLayout(ids, placementsRef.current, density);
     if (!homeLayoutChanged(ids, placementsRef.current, filled)) return;
     onLayoutCommit(filled, false);
-  }, [onLayoutCommit, orderKey]);
+  }, [density, onLayoutCommit, orderKey]);
   const handleRemove = useCallback(
     (id: string) => {
       const index = orderedIds.indexOf(id);

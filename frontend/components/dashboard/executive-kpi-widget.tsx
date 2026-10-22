@@ -2,9 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
+import { executiveKpiStats } from "@/features/dashboard/use-dashboard-stat-cards";
 import { useExecutiveDashboard } from "@/hooks/api/dashboard";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { Users, Briefcase, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 
 export function ExecutiveKpiWidget() {
   const { data, isLoading, error, refetch } = useExecutiveDashboard();
@@ -29,22 +30,22 @@ export function ExecutiveKpiWidget() {
     return <StatCardGridSkeleton cols={4} count={2} />;
   }
 
+  const cards = executiveKpiStats({
+    included: true,
+    headcount: data.headcount,
+    openRoles: data.openRoles,
+  });
+
   return (
     <StatCardGrid cols={4}>
-      <StatCard
-        label="Headcount"
-        value={data.headcount}
-        icon={Users}
-        color="blue"
-        index={0}
-      />
-      <StatCard
-        label="Open Roles"
-        value={data.openRoles}
-        icon={Briefcase}
-        color="gold"
-        index={1}
-      />
+      {cards.map((stat) => (
+        <StatCard
+          key={stat.id}
+          label={stat.label}
+          value={stat.value}
+          icon={stat.icon}
+        />
+      ))}
     </StatCardGrid>
   );
 }

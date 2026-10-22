@@ -11,7 +11,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { SemanticBadge } from "@/components/ui/semantic-badge";
-import { Skeleton } from "@/components/ui/skeleton";
+import { CompanyDocumentDetailSkeleton } from "./company-document-detail-skeleton";
 import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useHrKbLinkConfig } from "@/hooks/api/kb/hr-link-config";
@@ -142,7 +142,7 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
     >
       <PageState
         resolution={pageState}
-        loading={<Skeleton className="h-40 w-full" />}
+        loading={<CompanyDocumentDetailSkeleton />}
         empty={notFound}
         onRetry={handleRetry}
       >

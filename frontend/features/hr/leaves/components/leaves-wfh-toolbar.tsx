@@ -29,6 +29,8 @@ import { LeavesSummaryStrip } from "./leaves-summary-strip";
 import { useT } from "@/lib/i18n/i18n";
 
 export interface LeavesWfhToolbarProps {
+  showTabs?: boolean;
+  showSummary?: boolean;
   isAdmin: boolean;
   totalAvailable: number;
   availableHint: string | undefined;
@@ -45,6 +47,8 @@ export interface LeavesWfhToolbarProps {
 }
 
 export function LeavesWfhToolbar({
+  showTabs = true,
+  showSummary = true,
   isAdmin,
   totalAvailable,
   availableHint,
@@ -62,15 +66,18 @@ export function LeavesWfhToolbar({
   const t = useT();
   return (
     <>
-      <LeavesSummaryStrip
-        totalAvailable={totalAvailable}
-        availableHint={availableHint}
-        pendingCount={pendingCount}
-        approvedDays={approvedDays}
-      />
+      {showSummary ? (
+        <LeavesSummaryStrip
+          totalAvailable={totalAvailable}
+          availableHint={availableHint}
+          pendingCount={pendingCount}
+          approvedDays={approvedDays}
+        />
+      ) : null}
 
+      {showTabs || canExport || activeTab === "wfh" ? (
       <div className="flex min-w-0 flex-wrap items-center gap-2">
-        <TabsList className="w-full shrink-0 md:w-auto">
+        {showTabs ? <TabsList className="w-full shrink-0 md:w-auto">
           <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
             {t("timeOff.tabMyLeaves")}
             {myLeaveCount > 0 ? (
@@ -94,7 +101,7 @@ export function LeavesWfhToolbar({
               ) : null}
             </TabsTrigger>
           ) : null}
-        </TabsList>
+        </TabsList> : null}
 
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {canExport ? (
@@ -132,6 +139,7 @@ export function LeavesWfhToolbar({
           ) : null}
         </div>
       </div>
+      ) : null}
     </>
   );
 }

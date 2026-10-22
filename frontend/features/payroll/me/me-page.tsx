@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useMemo, useState } from "react";
+import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import Link from "next/link";
 import {
   Wallet,
@@ -78,7 +79,7 @@ function getYear(month: string): string {
   return month.split("-")[0] ?? "";
 }
 
-export function MyPayrollPageContent({ sectionSelector }: { sectionSelector?: ReactNode } = {}) {
+export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHubChrome } = {}) {
   const t = useT();
   const payrollModuleEnabled = useModuleEnabled("payroll");
   const { data: fnf, isError: fnfFailed } = useEssFnf();
@@ -212,18 +213,34 @@ export function MyPayrollPageContent({ sectionSelector }: { sectionSelector?: Re
       className="flex min-h-0 flex-1 flex-col gap-0"
     >
       <PageWrapper
-        title={sectionSelector ?? t("pay.title")}
-        subtitle={t("pay.subtitle", { month: formatMonth(currentYearMonth()) })}
+        title={hubChrome?.title ?? t("pay.title")}
+        subtitle={hubChrome?.subtitle ?? t("pay.subtitle", { month: formatMonth(currentYearMonth()) })}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
         state={pageState}
         onRetry={handleRetryOverview}
+        extraActions={
+          payNotSetUp || hasTeam ? (
+            <>
+              {payNotSetUp ? <PayNotSetUpNotice /> : null}
+              {hasTeam ? (
+                <Link
+                  href="/payroll/team"
+                  className="inline-flex w-fit items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-dense font-medium text-foreground transition-colors hover:bg-muted/50"
+                >
+                  <Users className="h-3 w-3 shrink-0 text-muted-foreground" />
+                  Team inbox · {managerInbox?.totals.membersNeedingAction ?? 0}/
+                  {managerInbox?.reportCount ?? 0}
+                </Link>
+              ) : null}
+            </>
+          ) : undefined
+        }
         filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*]:w-full"
         filters={
           <>
-            {payNotSetUp ? (
-              <PayNotSetUpNotice />
-            ) : (
+            {hubChrome?.tabs}
+            {payNotSetUp ? null : (
             <StatCardGrid cols={activeLoanBalance > 0 ? 4 : 3} stackOnMobile>
               <StatCard
                 label={t("pay.netLastMonth")}
@@ -385,7 +402,7 @@ export function MyPayrollPageContent({ sectionSelector }: { sectionSelector?: Re
         }
       >
         <div className="flex min-h-0 flex-1 flex-col gap-3">
-          {(actionRequired.length > 0 || hasTeam) && (
+          {actionRequired.length > 0 && (
             <div className="flex shrink-0 flex-wrap items-center gap-2">
               {actionRequired.map((a) => (
                 <Link
@@ -397,17 +414,6 @@ export function MyPayrollPageContent({ sectionSelector }: { sectionSelector?: Re
                   {a.label}
                 </Link>
               ))}
-
-              {hasTeam ? (
-                <Link
-                  href="/payroll/team"
-                  className="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-dense font-medium text-foreground transition-colors hover:bg-muted/50"
-                >
-                  <Users className="h-3 w-3 shrink-0 text-muted-foreground" />
-                  Team inbox · {managerInbox?.totals.membersNeedingAction ?? 0}/
-                  {managerInbox?.reportCount ?? 0}
-                </Link>
-              ) : null}
             </div>
           )}
 

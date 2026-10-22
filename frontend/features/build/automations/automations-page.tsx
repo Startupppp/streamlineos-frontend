@@ -2,7 +2,7 @@
 
 import { AnimatePresence } from "framer-motion";
 import { Zap } from "lucide-react";
-import { Skeleton } from "@/components/ui/skeleton";
+import { AutomationsSkeleton } from "./automations-skeleton";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { StatCardGrid, StatCard } from "@/components/ui/stat-card";
@@ -72,13 +72,7 @@ export function AutomationsPage({ projectId }: AutomationsPageProps) {
     handleActionFilterChange,
   } = useAutomationsPage(projectId);
 
-  const loadingContent = (
-    <PmSection index={0} className="flex min-h-0 flex-1 flex-col gap-3">
-      {Array.from({ length: 2 }).map((_, i) => (
-        <Skeleton key={i} className="h-28 w-full rounded-xl" />
-      ))}
-    </PmSection>
-  );
+  const loadingContent = <AutomationsSkeleton />;
 
   const emptyContent = (
     <PmSection index={1} className="flex min-h-0 flex-1 flex-col">

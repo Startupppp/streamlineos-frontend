@@ -11,7 +11,7 @@ import { useDeleteView, useUpdateView, useViews } from "@/hooks/api/build/views"
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectSettingsPanelSkeleton } from "./project-settings-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -187,12 +187,7 @@ export function ProjectSettingsViewsPage({ projectId }: ProjectSettingsViewsPage
       <PmPageShell className="overflow-hidden">
         <PageState
           resolution={pageState}
-          loading={
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          }
+          loading={<ProjectSettingsPanelSkeleton />}
           empty={emptyState}
           onRetry={handleRefetch}
           className="flex min-h-0 flex-1 flex-col"

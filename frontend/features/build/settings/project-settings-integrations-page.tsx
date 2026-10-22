@@ -3,7 +3,7 @@
 import { usePageState } from "@/hooks/api/use-page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { ProjectSettingsPanelSkeleton } from "./project-settings-skeleton";
 import { PmPageShell, PmPanel, PmSection } from "@/components/pm-chrome";
 import { ProjectsGitIntegrationSettings } from "@/features/build/settings/git-integration-settings";
 import { SlackIntegrationSettings } from "@/features/build/settings/slack-integration-settings";
@@ -32,12 +32,7 @@ export function ProjectSettingsIntegrationsPage({ projectId: _projectId }: Proje
       <PmPageShell>
         <PageState
           resolution={pageState}
-          loading={
-            <div className="space-y-3">
-              <Skeleton className="h-10 w-full" />
-              <Skeleton className="h-24 w-full" />
-            </div>
-          }
+          loading={<ProjectSettingsPanelSkeleton />}
           className="flex-1"
         >
           <PmSection index={0}>
