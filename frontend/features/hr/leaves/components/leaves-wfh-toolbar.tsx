@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCan } from "@/hooks/api/access";
 import type { PermissionKey } from "@/lib/rbac/permissions";
+import { cn } from "@/lib/utils";
 import { LeavesSummaryStrip } from "./leaves-summary-strip";
 import { useT } from "@/lib/i18n/i18n";
 
@@ -46,6 +47,66 @@ export interface LeavesWfhToolbarProps {
   onExport: () => void;
 }
 
+export function LeavesWfhTabActions({
+  activeTab,
+  wfhStatusFilter,
+  onWfhStatusFilterChange,
+  canExport,
+  exportNoun,
+  onExport,
+  className,
+}: Pick<
+  LeavesWfhToolbarProps,
+  | "activeTab"
+  | "wfhStatusFilter"
+  | "onWfhStatusFilterChange"
+  | "canExport"
+  | "exportNoun"
+  | "onExport"
+> & { className?: string }) {
+  if (!canExport && activeTab !== "wfh") return null;
+
+  return (
+    <div
+      className={cn(
+        "flex w-full min-w-0 shrink-0 flex-wrap items-center gap-2 md:w-auto md:justify-end",
+        className,
+      )}
+    >
+      {activeTab === "wfh" ? (
+        <Select value={wfhStatusFilter} onValueChange={onWfhStatusFilterChange}>
+          <SelectTrigger
+            className={cn(FILTER_SELECT_TRIGGER, "min-w-0 flex-1 sm:w-[130px] sm:flex-none")}
+            aria-label="Filter WFH requests by status"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="ALL">All statuses</SelectItem>
+            <SelectItem value="PENDING">Pending</SelectItem>
+            <SelectItem value="APPROVED">Approved</SelectItem>
+            <SelectItem value="REJECTED">Rejected</SelectItem>
+          </SelectContent>
+        </Select>
+      ) : null}
+      {canExport ? (
+        <AnimatedIconButton
+          icon={DownloadIcon}
+          iconSize={14}
+          iconClassName="mr-1.5"
+          variant="outline"
+          size="sm"
+          onClick={onExport}
+          className="gap-1.5"
+          aria-label={`Export ${exportNoun}s to Excel`}
+        >
+          Export
+        </AnimatedIconButton>
+      ) : null}
+    </div>
+  );
+}
+
 export function LeavesWfhToolbar({
   showTabs = true,
   showSummary = true,
@@ -64,6 +125,18 @@ export function LeavesWfhToolbar({
   onExport,
 }: LeavesWfhToolbarProps) {
   const t = useT();
+  const tabActions = (
+    <LeavesWfhTabActions
+      activeTab={activeTab}
+      wfhStatusFilter={wfhStatusFilter}
+      onWfhStatusFilterChange={onWfhStatusFilterChange}
+      canExport={canExport}
+      exportNoun={exportNoun}
+      onExport={onExport}
+      className={showTabs ? "md:ml-auto" : undefined}
+    />
+  );
+
   return (
     <>
       {showSummary ? (
@@ -75,71 +148,38 @@ export function LeavesWfhToolbar({
         />
       ) : null}
 
-      {showTabs || canExport || activeTab === "wfh" ? (
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        {showTabs ? <TabsList className="w-full shrink-0 md:w-auto">
-          <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
-            {t("timeOff.tabMyLeaves")}
-            {myLeaveCount > 0 ? (
-              <span className="text-xs tabular-nums">{myLeaveCount}</span>
-            ) : null}
-          </TabsTrigger>
-          <TabsTrigger value="wfh" className="gap-1.5 truncate">
-            {t("timeOff.tabWfh")}
-          </TabsTrigger>
-          {isAdmin ? (
-            <TabsTrigger value="approvals" className="gap-1.5 truncate">
-              Approvals
-              {totalPendingApprovals > 0 ? (
-                <span
-                  className="text-xs tabular-nums"
-                  title="Leave and WFH requests awaiting your decision"
-                >
-                  {totalPendingApprovals}
-                  <span className="sr-only"> awaiting your decision</span>
-                </span>
+      {showTabs ? (
+        <div className="flex min-w-0 flex-col gap-2 md:flex-row md:items-center md:gap-3">
+          <TabsList className="w-full shrink-0 md:w-auto">
+            <TabsTrigger value="my-leaves" className="gap-1.5 truncate">
+              {t("timeOff.tabMyLeaves")}
+              {myLeaveCount > 0 ? (
+                <span className="text-xs tabular-nums">{myLeaveCount}</span>
               ) : null}
             </TabsTrigger>
-          ) : null}
-        </TabsList> : null}
-
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          {canExport ? (
-            <AnimatedIconButton
-              icon={DownloadIcon}
-              iconSize={14}
-              iconClassName="mr-1.5"
-              variant="outline"
-              size="sm"
-              onClick={onExport}
-              className="gap-1.5"
-              aria-label={`Export ${exportNoun}s to Excel`}
-            >
-              Export
-            </AnimatedIconButton>
-          ) : null}
-          {activeTab === "wfh" ? (
-            <Select
-              value={wfhStatusFilter}
-              onValueChange={onWfhStatusFilterChange}
-            >
-              <SelectTrigger
-                className={`${FILTER_SELECT_TRIGGER} w-[130px]`}
-                aria-label="Filter WFH requests by status"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                <SelectItem value="ALL">All statuses</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="REJECTED">Rejected</SelectItem>
-              </SelectContent>
-            </Select>
-          ) : null}
+            <TabsTrigger value="wfh" className="gap-1.5 truncate">
+              {t("timeOff.tabWfh")}
+            </TabsTrigger>
+            {isAdmin ? (
+              <TabsTrigger value="approvals" className="gap-1.5 truncate">
+                Approvals
+                {totalPendingApprovals > 0 ? (
+                  <span
+                    className="text-xs tabular-nums"
+                    title="Leave and WFH requests awaiting your decision"
+                  >
+                    {totalPendingApprovals}
+                    <span className="sr-only"> awaiting your decision</span>
+                  </span>
+                ) : null}
+              </TabsTrigger>
+            ) : null}
+          </TabsList>
+          {tabActions}
         </div>
-      </div>
-      ) : null}
+      ) : (
+        tabActions
+      )}
     </>
   );
 }

@@ -33,7 +33,12 @@ import { LeaveApprovalsContent } from "./leave-approvals";
 import { LeavesThisWeekCard } from "./leaves-this-week-card";
 import { LeavesNoPolicyEmptyState } from "./leaves-no-policy-empty-state";
 import { TeamAvailabilityOverlay } from "./team-availability-overlay";
-import { LeavesWfhToolbar, LeavesWfhActions } from "./leaves-wfh-toolbar";
+import {
+  LeavesWfhActions,
+  LeavesWfhTabActions,
+  LeavesWfhToolbar,
+} from "./leaves-wfh-toolbar";
+import { LeavesSummaryStrip } from "./leaves-summary-strip";
 import { useLeavesWfhData } from "./use-leaves-wfh-data";
 import { useT } from "@/lib/i18n/i18n";
 
@@ -186,13 +191,34 @@ export function LeavesWfhContent({
           noInternalScroll
           actionsInline={selfService}
           contentClassName="flex min-h-0 flex-1 flex-col"
-          filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3 [&>*:not([data-slot=tabs-navigation])]:w-full"
+          filtersClassName="flex-col items-stretch gap-3 overflow-visible pb-3"
           filters={
-            <>
-              {hubChrome?.tabs}
+            hubChrome ? (
+              <>
+                <div className="flex w-full min-w-0 flex-col gap-2 md:flex-row md:items-center md:justify-between md:gap-3">
+                  <div className="min-w-0">{hubChrome.tabs}</div>
+                  <LeavesWfhTabActions
+                    activeTab={activeTab}
+                    wfhStatusFilter={wfhStatusFilter}
+                    onWfhStatusFilterChange={setWfhStatusFilter}
+                    canExport={canExportLeaves}
+                    exportNoun={exportView.noun}
+                    onExport={handleExportExcel}
+                  />
+                </div>
+                {activeTab === "my-leaves" ? (
+                  <LeavesSummaryStrip
+                    totalAvailable={data.totalAvailable}
+                    availableHint={data.availableHint}
+                    pendingCount={data.pendingCount}
+                    approvedDays={data.approvedDays}
+                  />
+                ) : null}
+              </>
+            ) : (
               <LeavesWfhToolbar
-                showTabs={!hubChrome}
-                showSummary={!hubChrome || activeTab === "my-leaves"}
+                showTabs
+                showSummary
                 isAdmin={data.isAdmin}
                 totalAvailable={data.totalAvailable}
                 availableHint={data.availableHint}
@@ -207,7 +233,7 @@ export function LeavesWfhContent({
                 exportNoun={exportView.noun}
                 onExport={handleExportExcel}
               />
-            </>
+            )
           }
           actions={headerActions}
         >

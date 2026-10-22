@@ -88,6 +88,7 @@ describe("PageWrapper state", () => {
       </TooltipProvider>,
     );
     expect(screen.getByRole("button", { name: "Add" })).toBeInTheDocument();
+    expect(screen.getByLabelText("Search")).toBeInTheDocument();
     expect(screen.getByTestId("skeleton")).toBeInTheDocument();
     expect(screen.queryByText("table")).toBeNull();
   });

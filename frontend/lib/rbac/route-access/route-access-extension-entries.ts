@@ -343,12 +343,6 @@ export const ROUTE_ACCESS_EXTENSIONS: readonly RouteAccessExtension[] = [
     backendRoute: { method: "get", path: "/chat/channels/entity/{entityType}/{entityId}" },
   },
   {
-    prefix: "/calendar/resource-approvals",
-    product: "home",
-    permission: ["calendar:admin:manage", "hr:assets:manage", "inventory:warehouses:manage"],
-    reason: "The legacy approval URL keeps its owner permission gate before redirecting to the combined Calendar view.",
-  },
-  {
     prefix: "/calendar/settings",
     product: "administration",
     permission: "calendar:admin:manage",

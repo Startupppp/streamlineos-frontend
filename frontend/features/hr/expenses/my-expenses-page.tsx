@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { ErrorState } from "@/components/shared";
 import { EmptyState } from "@/components/ui/empty-state";
 import { EmptyExpensesIllustration } from "@/components/illustrations";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -26,6 +25,7 @@ import { EXPENSE_CATEGORIES, PAYMENT_METHODS } from "@/lib/expense-constants";
 import type { StatusFilter } from "@/lib/expense-constants";
 import { MemberExpenseList } from "@/features/hr/expenses/expense-list";
 import { useExpensePageData, useWithdrawExpense } from "@/hooks/api/hr/expenses";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { toast } from "sonner";
@@ -179,38 +179,44 @@ export function MyExpensesPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome
   const endItem = Math.min(pagination.page * pagination.pageSize, pagination.total);
   const activeFilterCount = Number(Boolean(search)) + Number(status !== "ALL");
   const isEmpty = Boolean(data) && list.length === 0;
+  const pageState = usePageState({
+    permission: "self:expenses",
+    isLoading: expenses.isLoading && !data,
+    isError: expenses.isError && !data,
+    error: expenses.error,
+    isEmpty,
+  });
 
   return (
+    <>
     <PageWrapper
       title={hubChrome?.title ?? "My Expenses"}
       subtitle={hubChrome?.subtitle ?? "Submit and track your reimbursement claims."}
-      filters={hubChrome ? <>{hubChrome.tabs}{filters}</> : filters}
+      filters={
+        hubChrome ? (
+          <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:gap-2.5 lg:flex-row lg:flex-nowrap lg:items-center lg:gap-3">
+            <div className="min-w-0 w-fit max-w-full shrink-0">{hubChrome.tabs}</div>
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-2.5 lg:ml-auto lg:w-auto lg:max-w-md lg:flex-nowrap [&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem] [&>[data-slot=select-trigger]]:shrink-0">
+              {filters}
+            </div>
+          </div>
+        ) : (
+          filters
+        )
+      }
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
-      actions={
-        <AnimatedIconButton icon={PlusIcon} onClick={handleOpenCreate}>
-          Submit Claim
-        </AnimatedIconButton>
-      }
-    >
-      {expenses.isLoading && !data ? (
+      state={pageState}
+      onRetry={expenses.refetch}
+      onClearFilters={handleClearFilters}
+      loading={
         <div className={PAGE_BODY_SKELETON_CLASS}>
-          {Array.from({ length: 8 }).map((_, i) => (
+          {Array.from({ length: 8 }, (_, i) => (
             <Skeleton key={i} className="h-14 w-full rounded-lg" />
           ))}
         </div>
-      ) : null}
-
-      {expenses.isError && !data ? (
-        <ErrorState
-          className={PAGE_BODY_EMPTY_CLASS}
-          title="Expenses unavailable"
-          description={getErrorMessage(expenses.error)}
-          onRetry={expenses.refetch}
-        />
-      ) : null}
-
-      {isEmpty ? (
+      }
+      empty={
         <EmptyState
           illustration={<EmptyExpensesIllustration className="h-full w-full" />}
           title="No expenses found"
@@ -224,8 +230,13 @@ export function MyExpensesPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome
           action={{ label: "Submit New Claim", onClick: handleOpenCreate }}
           className={PAGE_BODY_EMPTY_CLASS}
         />
-      ) : null}
-
+      }
+      actions={
+        <AnimatedIconButton icon={PlusIcon} onClick={handleOpenCreate}>
+          Submit Claim
+        </AnimatedIconButton>
+      }
+    >
       {data && list.length > 0 ? (
         <MemberExpenseList
           expenses={list}
@@ -243,6 +254,8 @@ export function MyExpensesPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome
           onPageChange={setPage}
         />
       ) : null}
+
+    </PageWrapper>
 
       <ConfirmDialog
         open={withdrawTarget !== null}
@@ -265,6 +278,6 @@ export function MyExpensesPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome
         editExpense={editTarget}
         selfService
       />
-    </PageWrapper>
+    </>
   );
 }

@@ -4,18 +4,17 @@ import { useCallback, useMemo, useState } from "react";
 import type { SelfServiceHubChrome } from "@/lib/self-service-hub-chrome";
 import { format } from "date-fns";
 import { CheckCircle2, ExternalLink, MessageSquareText } from "lucide-react";
-import { ErrorState } from "@/components/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePageState } from "@/hooks/api/use-page-state";
 import {
   type AssignedInterview,
   useAssignedInterviews,
 } from "@/hooks/api/employee-self-service/recruitment";
-import { getErrorMessage } from "@/lib/get-error-message";
 import {
   PAGE_BODY_SKELETON_CLASS,
   PAGE_BODY_EMPTY_CLASS,
@@ -40,6 +39,13 @@ export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
     useState<AssignedInterview | null>(null);
   const interviews = useAssignedInterviews(page);
   const data = interviews.data;
+  const pageState = usePageState({
+    permission: "self:recruitment",
+    isLoading: interviews.isLoading,
+    isError: interviews.isError,
+    error: interviews.error,
+    isEmpty: data?.items.length === 0,
+  });
 
   const upcomingCount = useMemo(
     () =>
@@ -64,33 +70,25 @@ export function MyRecruitmentPage({ hubChrome }: { hubChrome?: SelfServiceHubChr
       title={hubChrome?.title ?? "My Recruitment"}
       subtitle={hubChrome?.subtitle ?? "Your assigned interviews and hiring feedback actions."}
       filters={hubChrome?.tabs}
-    >
-      <div className="flex flex-1 min-h-0 flex-col gap-3">
-      {interviews.isLoading ? (
+      state={pageState}
+      onRetry={interviews.refetch}
+      loading={
         <div className={PAGE_BODY_SKELETON_CLASS}>
           {Array.from({ length: 6 }, (_, index) => (
             <Skeleton key={index} className="h-20 rounded-lg" />
           ))}
         </div>
-      ) : null}
-
-      {interviews.isError ? (
-        <ErrorState
-          title="Recruitment actions unavailable"
-          description={getErrorMessage(interviews.error)}
-          onRetry={interviews.refetch}
-        />
-      ) : null}
-
-      {data && data.items.length === 0 ? (
+      }
+      empty={
         <EmptyState
           illustrationPreset="calendar"
           title="No assigned interviews"
           description="Interviews assigned to you will appear here."
           className={PAGE_BODY_EMPTY_CLASS}
         />
-      ) : null}
-
+      }
+    >
+      <div className="flex flex-1 min-h-0 flex-col gap-3">
       {data && data.items.length > 0 ? (
         <div className="space-y-3">
           <p className="text-xs text-muted-foreground">

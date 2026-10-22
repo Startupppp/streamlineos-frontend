@@ -138,7 +138,7 @@ export function PageWrapper({
     isInterrupted && state?.kind !== "loading" ? undefined : extraActions;
   const visibleFilters =
     state?.kind === "loading"
-      ? loadingFilters
+      ? (loadingFilters ?? filters)
       : isInterrupted
         ? undefined
         : filters;

@@ -120,6 +120,11 @@ async function installBrowserFixtures(page: Page) {
       };
     } else if (path === "/me/time-off/requests") {
       body = { data: [], pageInfo: { limit: 25, hasMore: false, nextCursor: null } };
+    } else if (path === "/me/expenses") {
+      body = {
+        expenses: [], pendingExpenses: [], stats: null, categories: [],
+        pagination: { page: 1, pageSize: 10, total: 0, totalPages: 0 }, isAdmin: false,
+      };
     } else if (path === "/calendar/resources/pending-allocation-pages") {
       body = { items: [], nextCursor: null };
     } else if (path === "/hr/recruitment/me/job-openings") {
@@ -187,10 +192,18 @@ for (const viewport of VIEWPORTS) {
       }
       const sectionLink = tabs.getByRole("link", { name: section });
       await expect(sectionLink).toBeVisible();
+      if (path === "/me/money") {
+        await page.evaluate(() => { document.documentElement.dataset.moneyHubMarker = "mounted"; });
+        await expect(page.getByText("No expenses found")).toBeVisible();
+        await page.getByRole("button", { name: "Submit New Claim" }).click();
+        await expect(page.getByRole("dialog", { name: "New Expense Claim" })).toBeVisible();
+        await page.getByRole("dialog", { name: "New Expense Claim" }).press("Escape");
+      }
       await sectionLink.click();
       await expect(page).toHaveURL(new RegExp(query), { timeout: 60_000 });
       await expect(tabs.getByRole("link", { name: section })).toHaveAttribute("aria-current", "page");
       if (path === "/me/money") {
+        expect(await page.evaluate(() => document.documentElement.dataset.moneyHubMarker)).toBe("mounted");
         await expect(tabs.getByRole("link", { name: "Claims" })).toBeVisible();
         await expect(tabs.getByRole("tablist")).toHaveCount(0);
         await tabs.getByRole("link", { name: "Form 16" }).click();

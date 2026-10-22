@@ -9,7 +9,7 @@ function sampleForDynamicSegment(segment: string): string {
   return name.toLowerCase().includes("slug") ? "sample-slug" : "1";
 }
 
-export function routePathFromPageFile(relativeFile: string): string {
+function routePathFromAppFile(relativeFile: string): string {
   const segments = relativeFile.split(/[\\/]/).slice(0, -1);
   const kept: string[] = [];
   for (const segment of segments) {
@@ -25,16 +25,16 @@ export function routePathFromPageFile(relativeFile: string): string {
   return joined === "" ? "/" : joined;
 }
 
-function walkPageFiles(dir: string, base: string): string[] {
+function walkAppRouteFiles(dir: string, base: string): string[] {
   const out: string[] = [];
   for (const entry of readdirSync(dir)) {
     const full = join(dir, entry);
     if (statSync(full).isDirectory()) {
       if (entry.startsWith("(.")) continue;
-      out.push(...walkPageFiles(full, base));
+      out.push(...walkAppRouteFiles(full, base));
       continue;
     }
-    if (entry === "page.tsx" || entry === "page.jsx")
+    if (entry === "page.tsx" || entry === "page.jsx" || entry === "route.ts" || entry === "route.js")
       out.push(full.slice(base.length + 1));
   }
   return out;
@@ -50,9 +50,9 @@ export function collectAppRoutes(groupSegment: string): AppRoute[] {
   if (!existsSync(appDir)) return [];
   const seen = new Set<string>();
   const routes: AppRoute[] = [];
-  for (const file of walkPageFiles(appDir, appDir)) {
+  for (const file of walkAppRouteFiles(appDir, appDir)) {
     if (!file.split(/[\\/]/).includes(groupSegment)) continue;
-    const path = routePathFromPageFile(file);
+    const path = routePathFromAppFile(file);
     if (seen.has(path)) continue;
     seen.add(path);
     routes.push({ file, path });
