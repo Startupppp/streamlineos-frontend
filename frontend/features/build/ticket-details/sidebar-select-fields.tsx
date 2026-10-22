@@ -97,7 +97,7 @@ export function SidebarSelectFields({
   disabled = false,
 }: SidebarSelectFieldsProps) {
   const [pointsDraft, setPointsDraft] = useState(
-    ticket.points == null ? "" : String(ticket.points),
+    ticket.estimate == null ? "" : String(ticket.estimate),
   );
   const [pointsError, setPointsError] = useState<string | null>(null);
 
@@ -105,12 +105,12 @@ export function SidebarSelectFields({
     const points = parseTicketPointsInput(pointsDraft);
     if (points === undefined) {
       setPointsError(`Must be 0–${MAX_TICKET_POINTS}`);
-      setPointsDraft(ticket.points == null ? "" : String(ticket.points));
+      setPointsDraft(ticket.estimate == null ? "" : String(ticket.estimate));
       return;
     }
     setPointsError(null);
     setPointsDraft(points == null ? "" : String(points));
-    if (points !== (ticket.points ?? null)) onPointsChange(points);
+    if (points !== (ticket.estimate ?? null)) onPointsChange(points);
   }
 
   function handlePointsChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -121,7 +121,7 @@ export function SidebarSelectFields({
   function handlePointsKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") event.currentTarget.blur();
     if (event.key === "Escape") {
-      setPointsDraft(ticket.points == null ? "" : String(ticket.points));
+      setPointsDraft(ticket.estimate == null ? "" : String(ticket.estimate));
       setPointsError(null);
       event.currentTarget.blur();
     }

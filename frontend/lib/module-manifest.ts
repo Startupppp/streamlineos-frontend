@@ -12,16 +12,16 @@ const byId = new Map<string, ModuleEntry>(
   MANIFEST.modules.map((m) => [m.id, m]),
 );
 
-const byProductKey = new Map<string, ModuleEntry>(
+const byModuleKey = new Map<string, ModuleEntry>(
   MANIFEST.modules
-    .filter((m): m is ModuleEntry & { productKey: string } => m.productKey !== null)
-    .map((m) => [m.productKey, m]),
+    .filter((m): m is ModuleEntry & { moduleKey: string } => m.moduleKey !== null)
+    .map((m) => [m.moduleKey, m]),
 );
 
 export function moduleById(id: string): ModuleEntry | undefined {
   return byId.get(id);
 }
 
-export function moduleByProductKey(key: string): ModuleEntry | undefined {
-  return byProductKey.get(key);
+export function moduleByModuleKey(key: string): ModuleEntry | undefined {
+  return byModuleKey.get(key);
 }

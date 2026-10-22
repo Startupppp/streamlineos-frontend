@@ -38,6 +38,8 @@ export type {
 export {
   isModuleEnabled,
   MODULE_ACCENTS,
+  MODULE_SWITCHER_ORDER,
+  moduleSwitcherRank,
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,
   PRODUCT_MODULE_KEY,
@@ -401,15 +403,15 @@ function getHomeNavGroups(
 }
 
 export function getNavGroupsForModule(
-  productKey: ModuleKey,
+  moduleKey: ModuleKey,
   role: string | undefined,
   scopes: GrantedScopes | undefined,
   enabledModules: string[] = [],
   lockedModules: string[] = [],
 ): NavGroup[] {
-  if (productKey === "home")
+  if (moduleKey === "home")
     return getHomeNavGroups(role, scopes, enabledModules, lockedModules);
 
   const allGroups = getNavGroupsForUser(role, scopes, enabledModules, lockedModules);
-  return allGroups.filter((group) => group.module === productKey);
+  return allGroups.filter((group) => group.module === moduleKey);
 }

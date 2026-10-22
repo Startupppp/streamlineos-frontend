@@ -11,8 +11,8 @@
       "id": "accounting",
       "ladder": "delegable",
       "moduleFolder": "accounting",
+      "moduleKey": "finance",
       "planGated": true,
-      "productKey": "finance",
       "publicExposure": false,
       "route": "/accounting",
       "schemaFolder": "accounting"
@@ -25,8 +25,8 @@
       "id": "billing",
       "ladder": "platform-admin",
       "moduleFolder": "billing",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": true,
       "route": null,
       "schemaFolder": "billing"
@@ -39,8 +39,8 @@
       "id": "blog",
       "ladder": "delegable",
       "moduleFolder": "blog",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": true,
       "route": "/blog",
       "schemaFolder": "blog"
@@ -58,8 +58,8 @@
       "id": "build",
       "ladder": "delegable",
       "moduleFolder": "build",
+      "moduleKey": "build",
       "planGated": true,
-      "productKey": "build",
       "publicExposure": true,
       "route": "/build/command-center",
       "schemaFolder": "build"
@@ -74,8 +74,8 @@
       "id": "calendar",
       "ladder": "universal",
       "moduleFolder": "calendar",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": false,
       "route": "/calendar",
       "schemaFolder": "calendar"
@@ -88,8 +88,8 @@
       "id": "chat",
       "ladder": "universal",
       "moduleFolder": "chat",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": false,
       "route": "/chat",
       "schemaFolder": "chat"
@@ -113,8 +113,8 @@
       "id": "crm",
       "ladder": "delegable",
       "moduleFolder": "crm",
+      "moduleKey": "crm",
       "planGated": true,
-      "productKey": "crm",
       "publicExposure": true,
       "route": "/crm",
       "schemaFolder": "crm"
@@ -127,8 +127,8 @@
       "id": "directory",
       "ladder": "delegable",
       "moduleFolder": "directory",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": false,
       "route": "/directory",
       "schemaFolder": "directory"
@@ -148,8 +148,8 @@
       "id": "home",
       "ladder": "universal",
       "moduleFolder": "dashboard",
+      "moduleKey": "home",
       "planGated": false,
-      "productKey": "home",
       "publicExposure": false,
       "route": "/dashboard",
       "schemaFolder": null
@@ -164,8 +164,8 @@
       "id": "hr",
       "ladder": "delegable",
       "moduleFolder": "hr",
+      "moduleKey": "hrms",
       "planGated": true,
-      "productKey": "hrms",
       "publicExposure": true,
       "route": "/hr",
       "schemaFolder": "hr"
@@ -180,8 +180,8 @@
       "id": "inventory",
       "ladder": "delegable",
       "moduleFolder": "inventory",
+      "moduleKey": "inventory",
       "planGated": true,
-      "productKey": "inventory",
       "publicExposure": false,
       "route": "/inventory",
       "schemaFolder": "inventory"
@@ -196,8 +196,8 @@
       "id": "kb",
       "ladder": "universal",
       "moduleFolder": "kb",
+      "moduleKey": "documents",
       "planGated": false,
-      "productKey": "documents",
       "publicExposure": true,
       "route": "/knowledge/wiki",
       "schemaFolder": "kb"
@@ -212,8 +212,8 @@
       "id": "mail",
       "ladder": "universal",
       "moduleFolder": "mail",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": false,
       "route": "/mail",
       "schemaFolder": "mail"
@@ -226,8 +226,8 @@
       "id": "notifications",
       "ladder": "universal",
       "moduleFolder": "notifications",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": true,
       "route": "/notifications",
       "schemaFolder": null
@@ -240,8 +240,8 @@
       "id": "payroll",
       "ladder": "delegable",
       "moduleFolder": "payroll",
+      "moduleKey": "payroll",
       "planGated": true,
-      "productKey": "payroll",
       "publicExposure": false,
       "route": "/payroll",
       "schemaFolder": "payroll"
@@ -254,8 +254,8 @@
       "id": "settings",
       "ladder": "platform-admin",
       "moduleFolder": "settings",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": false,
       "route": "/settings",
       "schemaFolder": null
@@ -268,8 +268,8 @@
       "id": "sign",
       "ladder": "delegable",
       "moduleFolder": "e-sign",
+      "moduleKey": "sign",
       "planGated": true,
-      "productKey": "sign",
       "publicExposure": true,
       "route": "/sign",
       "schemaFolder": "e-sign"
@@ -284,8 +284,8 @@
       "id": "support",
       "ladder": "delegable",
       "moduleFolder": "support",
+      "moduleKey": "helpdesk",
       "planGated": true,
-      "productKey": "helpdesk",
       "publicExposure": true,
       "route": "/support",
       "schemaFolder": "support"
@@ -298,8 +298,8 @@
       "id": "surveys",
       "ladder": "delegable",
       "moduleFolder": "surveys",
+      "moduleKey": "surveys",
       "planGated": true,
-      "productKey": "surveys",
       "publicExposure": true,
       "route": "/surveys",
       "schemaFolder": "surveys"
@@ -312,8 +312,8 @@
       "id": "tasks",
       "ladder": "universal",
       "moduleFolder": "tasks",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": false,
       "route": null,
       "schemaFolder": null
@@ -328,8 +328,8 @@
       "id": "timesheets",
       "ladder": "delegable",
       "moduleFolder": "timesheets",
+      "moduleKey": "timesheets",
       "planGated": true,
-      "productKey": "timesheets",
       "publicExposure": false,
       "route": "/timesheets",
       "schemaFolder": "timesheets"
@@ -342,8 +342,8 @@
       "id": "workflows",
       "ladder": "delegable",
       "moduleFolder": "workflows",
+      "moduleKey": null,
       "planGated": false,
-      "productKey": null,
       "publicExposure": true,
       "route": "/workflows",
       "schemaFolder": null

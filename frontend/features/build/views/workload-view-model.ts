@@ -55,21 +55,21 @@ export function applyTicketFilters(
   filters: FilterState,
 ): KanbanTicket[] {
   let result = tickets;
-  if (filters.cycleId !== "all") {
+  if (filters.cycleId !== "all")
     result = result.filter((t) => t.cycleId === Number(filters.cycleId));
-  }
-  if (filters.priority !== "all") {
+
+  if (filters.priority !== "all")
     result = result.filter((t) => t.priority === filters.priority);
-  }
-  if (filters.type !== "all") {
+
+  if (filters.type !== "all")
     result = result.filter((t) => t.type === filters.type);
-  }
-  if (filters.status !== "all") {
+
+  if (filters.status !== "all")
     result = result.filter((t) => t.status === filters.status);
-  }
-  if (filters.assigneeId !== "all") {
-    result = result.filter((t) => t.assigneeId === filters.assigneeId);
-  }
+
+  if (filters.assigneeId !== "all")
+    result = result.filter((t) => t.assignee?.id === filters.assigneeId);
+
   return result;
 }
 

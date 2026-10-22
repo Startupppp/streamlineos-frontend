@@ -82,10 +82,8 @@ export interface Ticket {
   projectId: number | null;
   ticketNumber: number;
   epicId: number | null;
-  assigneeId?: string | null;
   reporterId: string | null;
   points: number | null;
-  storyPoints: number | null;
   link: string | null;
   rank: string | null;
   parentTicketId: number | null;
@@ -251,8 +249,6 @@ export interface AllWorkTicket {
   projectName: string | null;
   ticketNumber: number;
   epicId: number | null;
-  assigneeId: string | null;
-  points: number | null;
   estimate: number | null;
   rank: string | null;
   version: number;

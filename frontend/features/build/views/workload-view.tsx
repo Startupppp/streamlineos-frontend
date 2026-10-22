@@ -74,7 +74,7 @@ export const WorkloadView = memo(function WorkloadView({
       });
       const total = memberTickets.length;
       const overdue = memberTickets.filter((t) => isTicketOverdue(t, projectStatuses)).length;
-      const points = memberTickets.reduce((sum, t) => sum + (t.points ?? 0), 0);
+      const points = memberTickets.reduce((sum, t) => sum + (t.estimate ?? 0), 0);
       return { member, memberTickets, ticketsByDay, total, overdue, points };
     });
   }, [members, filteredTickets, days, filters.statCard, filters.assigneeId, capacityByMemberId, projectStatuses]);
@@ -106,11 +106,11 @@ export const WorkloadView = memo(function WorkloadView({
   }, [group, memberWorkload, capacityByMemberId]);
 
   const unassigned = useMemo(
-    () => filteredTickets.filter((t) => !t.assigneeId),
+    () => filteredTickets.filter((t) => !t.assignee?.id),
     [filteredTickets],
   );
   const totalAssigned = useMemo(
-    () => filteredTickets.filter((t) => !!t.assigneeId).length,
+    () => filteredTickets.filter((t) => !!t.assignee?.id).length,
     [filteredTickets],
   );
   const overCapacityCount = memberWorkload.filter((m) =>

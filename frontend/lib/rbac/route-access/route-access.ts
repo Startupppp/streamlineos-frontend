@@ -6,7 +6,7 @@ import type {
   PermissionRequirement,
   ModuleKey,
 } from "@/components/layout/sidebar/sidebar-nav-types";
-import { moduleById, moduleByProductKey } from "@/lib/module-manifest";
+import { moduleById, moduleByModuleKey } from "@/lib/module-manifest";
 import { namespaceOf } from "@/lib/rbac/administering-module";
 import permissionCatalog from "@/contracts/permission-catalog.json";
 import { matchRouteAccessExtension } from "./route-access-extensions";
@@ -31,7 +31,7 @@ const MEMBER_DEFAULT_PERMISSIONS = new Set(
 );
 
 function manifestModuleFor(module: ModuleKey) {
-  const direct = moduleByProductKey(module);
+  const direct = moduleByModuleKey(module);
   if (direct) return direct;
   const fallbackModuleId = PRODUCT_MODULE_KEY[module];
   return fallbackModuleId ? moduleById(fallbackModuleId) : undefined;

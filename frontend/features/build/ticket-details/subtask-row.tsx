@@ -91,12 +91,12 @@ export const SubtaskRow = memo(function SubtaskRow({
         {subtask.title}
       </span>
 
-      {subtask.points != null && subtask.points > 0 && (
+      {subtask.estimate != null && subtask.estimate > 0 && (
         <Badge
           variant="secondary"
           className="shrink-0 h-4 px-1 py-0 text-micro font-mono"
         >
-          {subtask.points}
+          {subtask.estimate}
         </Badge>
       )}
 
@@ -114,7 +114,7 @@ export const SubtaskRow = memo(function SubtaskRow({
           ticketId={subtask.id}
           projectId={resolvedProjectId}
           version={version}
-          currentAssigneeId={subtask.assigneeId}
+          currentAssigneeId={subtask.assignee?.id}
           assignee={subtask.assignee ?? null}
         />
       </span>

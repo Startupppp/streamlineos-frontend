@@ -14,7 +14,7 @@ const VALID_ENTRY: ModuleEntry = {
   ladder: "delegable",
   moduleFolder: "hr",
   planGated: true,
-  productKey: "hrms",
+  moduleKey: "hrms",
   publicExposure: false,
   route: "/hr",
   schemaFolder: "hr",
@@ -42,12 +42,12 @@ describe("parseModuleManifest accepts a well-formed manifest", () => {
     const parsed = parseModuleManifest(
       manifestWith({
         moduleFolder: null,
-        productKey: null,
+        moduleKey: null,
         route: null,
         schemaFolder: null,
       }),
     );
-    expect(parsed.modules[0]?.productKey).toBeNull();
+    expect(parsed.modules[0]?.moduleKey).toBeNull();
   });
 });
 

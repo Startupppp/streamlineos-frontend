@@ -282,3 +282,35 @@ export function useRestoreManagedProduct() {
     },
   });
 }
+
+interface BulkUpdateManagedProductsInput {
+  ids: number[];
+  action: "update_status";
+  status: "active" | "archived";
+}
+
+const managedProductBulkResultContractLazy = lazyContract(() =>
+  import("@/contracts/build-contracts.generated").then(
+    (m) => m.managedProductsBulkUpdateManagedProductsResponseSchema,
+  ),
+);
+
+export function useBulkUpdateManagedProducts() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("build:managed-products:update", {
+    mutationKey: ["projects", "managed-products", "bulk"],
+    mutationFn: (input: BulkUpdateManagedProductsInput) =>
+      apiClient.post(
+        "/build/managed-products/bulk",
+        input,
+        undefined,
+        managedProductBulkResultContractLazy,
+      ),
+    onSuccess: () => {
+      qc.invalidateQueries({
+        queryKey: buildWorkQueryKeys.projects.managedProducts.list(),
+        refetchType: "none",
+      });
+    },
+  });
+}

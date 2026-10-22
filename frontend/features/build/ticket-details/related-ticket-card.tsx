@@ -100,7 +100,7 @@ export function RelatedTicketCard({
         ticketId={ticket.id}
         projectId={resolvedProjectId}
         version={ticket.version}
-        currentAssigneeId={ticket.assigneeId}
+        currentAssigneeId={ticket.assignee?.id}
         assignee={ticket.assignee ?? null}
       />
     </span>

@@ -9,7 +9,7 @@ jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => mockUseCan(permission),
 }));
 
-jest.mock("@/hooks/api/build/managed-products-schema", () => ({
+jest.mock("@/hooks/api/build/managed-product-mutations", () => ({
   useBulkUpdateManagedProducts: () => mockUseBulkUpdateManagedProducts(),
 }));
 

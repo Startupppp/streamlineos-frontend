@@ -200,10 +200,10 @@ export const ListViewItem = memo(function ListViewItem({
               ticketId={ticket.id}
               projectId={resolvedProjectId}
               version={version}
-              currentPoints={ticket.points}
+              currentPoints={ticket.estimate}
             />
           </span>
-        ) : showEstimate && ticket.points != null && ticket.points > 0 ? (
+        ) : showEstimate && ticket.estimate != null && ticket.estimate > 0 ? (
           <Badge
             variant="outline"
             className={cn(
@@ -211,7 +211,7 @@ export const ListViewItem = memo(function ListViewItem({
               layout === "work-index" && "hidden md:inline-flex",
             )}
           >
-            {ticket.points}pt
+            {ticket.estimate}pt
           </Badge>
         ) : null}
         {showDueDate && hasProjectId && canUpdate && (
@@ -229,7 +229,7 @@ export const ListViewItem = memo(function ListViewItem({
             ticketId={ticket.id}
             projectId={resolvedProjectId}
             version={version}
-            currentAssigneeId={ticket.assigneeId ?? primaryAssignee?.id}
+            currentAssigneeId={primaryAssignee?.id}
             assignee={primaryAssignee}
           />
         ) : showAssignee && primaryAssignee ? (

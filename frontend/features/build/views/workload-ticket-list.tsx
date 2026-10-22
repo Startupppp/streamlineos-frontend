@@ -46,9 +46,9 @@ export function WorkloadTicketList({
               #{ticket.ticketNumber}
             </span>
             <TruncatedText text={ticket.title} className="min-w-0 flex-1 text-xs text-foreground" />
-            {ticket.points != null && (
+            {ticket.estimate != null && (
               <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
-                {ticket.points}pt
+                {ticket.estimate}pt
               </span>
             )}
             {ticket.dueDate && (
@@ -80,7 +80,7 @@ export function WorkloadTicketList({
                   ticketId={ticket.id}
                   projectId={projectId}
                   version={ticket.version}
-                  currentAssigneeId={ticket.assigneeId}
+                  currentAssigneeId={ticket.assignee?.id}
                   assignee={ticket.assignee}
                 />
               </span>

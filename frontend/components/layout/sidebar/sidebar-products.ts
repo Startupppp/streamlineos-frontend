@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import type { ComponentType } from "react";
 import { matchesOrgModule } from "@/lib/org-module-keys";
-import { MANIFEST, moduleByProductKey } from "@/lib/module-manifest";
+import { MANIFEST, moduleByModuleKey } from "@/lib/module-manifest";
 import type { ModuleKey } from "./sidebar-nav-types";
 
 export interface ProductDefinition {
@@ -42,15 +42,38 @@ export const PRODUCT_KEY_EXCEPTIONS = new Set<ModuleKey>([
 function resolveProductHref(key: ModuleKey): string {
   const exception = PRODUCT_HREF_EXCEPTIONS[key];
   if (exception !== undefined) return exception;
-  const manifestModule = moduleByProductKey(key);
+  const manifestModule = moduleByModuleKey(key);
   return manifestModule?.route ?? `/${key}`;
 }
 
 const manifestModuleKeys = new Set(
   MANIFEST.modules
-    .filter((m) => m.productKey !== null)
-    .map((m) => m.productKey as string),
+    .filter((m) => m.moduleKey !== null)
+    .map((m) => m.moduleKey as string),
 );
+
+export const MODULE_SWITCHER_ORDER: readonly ModuleKey[] = [
+  "home",
+  "documents",
+  "hrms",
+  "payroll",
+  "recruitment",
+  "timesheets",
+  "build",
+  "crm",
+  "inventory",
+  "finance",
+  "helpdesk",
+  "surveys",
+  "sign",
+  "workflows",
+  "administration",
+] as const;
+
+export function moduleSwitcherRank(key: ModuleKey): number {
+  const index = MODULE_SWITCHER_ORDER.indexOf(key);
+  return index === -1 ? MODULE_SWITCHER_ORDER.length : index;
+}
 
 export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   {
@@ -60,10 +83,10 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     icon: LayoutDashboard,
   },
   {
-    key: "crm",
-    label: "CRM OS",
-    href: resolveProductHref("crm"),
-    icon: Handshake,
+    key: "documents",
+    label: "Documents OS",
+    href: resolveProductHref("documents"),
+    icon: Library,
   },
   {
     key: "hrms",
@@ -72,10 +95,22 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     icon: Users,
   },
   {
+    key: "payroll",
+    label: "Payroll OS",
+    href: resolveProductHref("payroll"),
+    icon: IndianRupee,
+  },
+  {
     key: "recruitment",
     label: "Recruitment OS",
     href: resolveProductHref("recruitment"),
     icon: UserPlus,
+  },
+  {
+    key: "timesheets",
+    label: "Timesheets OS",
+    href: resolveProductHref("timesheets"),
+    icon: Timer,
   },
   {
     key: "build",
@@ -84,10 +119,10 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     icon: Briefcase,
   },
   {
-    key: "timesheets",
-    label: "Timesheets OS",
-    href: resolveProductHref("timesheets"),
-    icon: Timer,
+    key: "crm",
+    label: "CRM OS",
+    href: resolveProductHref("crm"),
+    icon: Handshake,
   },
   {
     key: "inventory",
@@ -108,28 +143,10 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     icon: LifeBuoy,
   },
   {
-    key: "documents",
-    label: "Documents OS",
-    href: resolveProductHref("documents"),
-    icon: Library,
-  },
-  {
     key: "surveys",
     label: "Surveys OS",
     href: resolveProductHref("surveys"),
     icon: ClipboardList,
-  },
-  {
-    key: "administration",
-    label: "Administration",
-    href: resolveProductHref("administration"),
-    icon: Building2,
-  },
-  {
-    key: "payroll",
-    label: "Payroll OS",
-    href: resolveProductHref("payroll"),
-    icon: IndianRupee,
   },
   {
     key: "sign",
@@ -137,20 +154,13 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
     href: resolveProductHref("sign"),
     icon: PenTool,
   },
+  {
+    key: "administration",
+    label: "Administration",
+    href: resolveProductHref("administration"),
+    icon: Building2,
+  },
 ];
-
-if (process.env.NODE_ENV !== "production") {
-  for (const definition of PRODUCT_DEFINITIONS) {
-    if (
-      !PRODUCT_KEY_EXCEPTIONS.has(definition.key) &&
-      !manifestModuleKeys.has(definition.key)
-    ) {
-      console.warn(
-        `[sidebar-products] product key "${definition.key}" is not in the manifest productKey set and not in PRODUCT_KEY_EXCEPTIONS`,
-      );
-    }
-  }
-}
 
 export const PRODUCT_DESCRIPTIONS: Record<ModuleKey, string> = {
   home: "Overview & activity",

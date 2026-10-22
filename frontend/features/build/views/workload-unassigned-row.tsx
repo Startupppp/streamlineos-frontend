@@ -112,9 +112,9 @@ export function WorkloadUnassignedRow({
                   text={ticket.title}
                   className="min-w-0 flex-1 text-xs text-foreground"
                 />
-                {ticket.points != null && (
+                {ticket.estimate != null && (
                   <span className="shrink-0 text-micro tabular-nums text-muted-foreground">
-                    {ticket.points}pt
+                    {ticket.estimate}pt
                   </span>
                 )}
                 <Link

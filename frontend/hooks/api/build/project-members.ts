@@ -5,7 +5,7 @@ import type {
   UseMutationOptions,
   UseQueryOptions,
 } from "@tanstack/react-query";
-import { isApiError, lazyContract } from "@/lib/api-envelope";
+import { lazyContract } from "@/lib/api-envelope";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
@@ -43,7 +43,6 @@ export function useProjectMembers(
   projectId: number,
   params?: {
     cursor?: string | null;
-    q?: string | null;
     search?: string | null;
   },
   options?: Omit<UseQueryOptions<ProjectMemberPage>, "queryKey" | "queryFn">,
@@ -51,7 +50,7 @@ export function useProjectMembers(
   const canView = useCan("build:view");
   const { enabled: callerEnabled, ...restOptions } = options ?? {};
   const cursor = params?.cursor ?? undefined;
-  const search = (params?.search ?? params?.q)?.trim() || undefined;
+  const search = params?.search?.trim() || undefined;
   const requestParams = {
     ...(cursor ? { cursor } : {}),
     ...(search ? { search } : {}),
@@ -59,29 +58,12 @@ export function useProjectMembers(
   return useQuery<ProjectMemberPage>({
     ...projectMembersQueryOptions(projectId, Object.keys(requestParams).length > 0 ? requestParams : undefined),
     queryFn: async ({ signal }) => {
-      try {
-        return await apiClient.get<ProjectMemberPage>(
-          `/build/${projectId}/members`,
-          Object.keys(requestParams).length > 0 ? requestParams : undefined,
-          signal,
-          memberResponseLazy,
-        );
-      } catch (requestError) {
-        if (
-          !search ||
-          !isApiError(requestError) ||
-          requestError.status !== 400 ||
-          requestError.code !== "VALIDATION_FAILED"
-        ) {
-          throw requestError;
-        }
-        return apiClient.get<ProjectMemberPage>(
-          `/build/${projectId}/members`,
-          cursor ? { cursor } : undefined,
-          signal,
-          memberResponseLazy,
-        );
-      }
+      return apiClient.get<ProjectMemberPage>(
+        `/build/${projectId}/members`,
+        Object.keys(requestParams).length > 0 ? requestParams : undefined,
+        signal,
+        memberResponseLazy,
+      );
     },
     ...restOptions,
     enabled: canView && !!projectId && (callerEnabled ?? true),

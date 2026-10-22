@@ -233,7 +233,6 @@ export const MyWorkContent = memo(function MyWorkContent({
                     type: t.type,
                     dueDate: t.dueDate,
                     assignee: t.assignee,
-                    assigneeId: t.assigneeId,
                     version: t.version,
                     labels: t.labels,
                   })) ?? [];

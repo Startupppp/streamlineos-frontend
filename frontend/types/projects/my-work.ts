@@ -12,7 +12,6 @@ export interface MyWorkItem {
   type: string;
   dueDate: string | null;
   assignee?: AllWorkTicket["assignee"];
-  assigneeId?: AllWorkTicket["assigneeId"];
   version?: number;
   moduleId?: number | null;
   labels?: AllWorkTicket["labels"];

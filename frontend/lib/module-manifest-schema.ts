@@ -10,7 +10,7 @@ export interface ModuleEntry {
   ladder: ModuleLadder;
   moduleFolder: string | null;
   planGated: boolean;
-  productKey: string | null;
+  moduleKey: string | null;
   publicExposure: boolean;
   route: string | null;
   schemaFolder: string | null;
@@ -107,7 +107,7 @@ function readModuleEntry(value: unknown, path: string): ModuleEntry {
       `${path}.moduleFolder`,
     ),
     planGated: readBoolean(entry.planGated, `${path}.planGated`),
-    productKey: readNullableString(entry.productKey, `${path}.productKey`),
+    moduleKey: readNullableString(entry.moduleKey, `${path}.moduleKey`),
     publicExposure: readBoolean(
       entry.publicExposure,
       `${path}.publicExposure`,

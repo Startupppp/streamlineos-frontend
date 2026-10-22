@@ -103,7 +103,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
   const showDescription = displayOptions?.showDescription ?? false;
   const showDueDate = displayOptions?.showDueDate ?? true;
 
-  const points = ticket.points ?? ticket.storyPoints;
+  const points = ticket.estimate;
   const createdDate = parseDisplayDate(ticket.createdAt);
   const version = ticket.version;
   const labelIds =
@@ -302,7 +302,7 @@ export const KanbanTicketCard = memo(function KanbanTicketCard({
               projectId={resolvedProjectId}
               version={version}
               currentAssigneeId={
-                ticket.assigneeId ?? primaryAssignee?.id ?? null
+                primaryAssignee?.id ?? null
               }
               assignee={primaryAssignee}
             />

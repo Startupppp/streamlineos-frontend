@@ -124,9 +124,9 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
       cell: (ticket) => (
         <InlineFieldCell>
           {hasEditableProject ? (
-            <InlineEstimate ticketId={ticket.id} projectId={projectId} version={ticket.version} currentPoints={ticket.points} />
+            <InlineEstimate ticketId={ticket.id} projectId={projectId} version={ticket.version} currentPoints={ticket.estimate} />
           ) : (
-            <span className="font-mono text-dense tabular-nums">{ticket.points ?? "—"}</span>
+            <span className="font-mono text-dense tabular-nums">{ticket.estimate ?? "—"}</span>
           )}
         </InlineFieldCell>
       ),
@@ -143,7 +143,7 @@ export const TableView = memo(function TableView({ tickets, onTicketClick, proje
               ticketId={ticket.id}
               projectId={projectId}
               version={ticket.version}
-              currentAssigneeId={ticket.assigneeId ?? ticket.assignee?.id}
+              currentAssigneeId={ticket.assignee?.id}
               assignee={ticket.assignee}
             />
           ) : ticket.assignee ? (

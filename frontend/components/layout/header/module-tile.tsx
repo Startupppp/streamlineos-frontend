@@ -15,8 +15,8 @@ import { cn } from "@/lib/utils";
 
 export const ICON_STROKE = 1.75;
 
-export interface ProductTileProps {
-  productKey: ModuleKey;
+export interface ModuleTileProps {
+  moduleKey: ModuleKey;
   label: string;
   href: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
@@ -27,8 +27,8 @@ export interface ProductTileProps {
   onClose: () => void;
 }
 
-export function ProductTile({
-  productKey,
+export function ModuleTile({
+  moduleKey,
   label,
   href,
   icon: Icon,
@@ -37,10 +37,10 @@ export function ProductTile({
   planLocked,
   canManageModules,
   onClose,
-}: ProductTileProps) {
+}: ModuleTileProps) {
   const shouldReduceMotion = useReducedMotion();
-  const accent = MODULE_ACCENTS[productKey];
-  const description = PRODUCT_DESCRIPTIONS[productKey];
+  const accent = MODULE_ACCENTS[moduleKey];
+  const description = PRODUCT_DESCRIPTIONS[moduleKey];
   const effectivelyEnabled = isEnabled && !planLocked;
   const prefetchOnIntent = useNavIntentPrefetch();
   const destination = planLocked

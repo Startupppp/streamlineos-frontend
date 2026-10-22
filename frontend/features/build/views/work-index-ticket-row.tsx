@@ -124,7 +124,7 @@ export const WorkIndexTicketRow = memo(function WorkIndexTicketRow({
               {formatCalendarDate(ticket.dueDate)}
             </span>
           ) : null}
-          {(displayOptions?.showAssignee ?? true) && canAssign && resolvedProjectId ? <InlineAssignee ticketId={ticket.id} projectId={resolvedProjectId} version={ticket.version} currentAssigneeId={ticket.assigneeId ?? assignee?.id} assignee={assignee} /> : (displayOptions?.showAssignee ?? true) ? (
+          {(displayOptions?.showAssignee ?? true) && canAssign && resolvedProjectId ? <InlineAssignee ticketId={ticket.id} projectId={resolvedProjectId} version={ticket.version} currentAssigneeId={assignee?.id} assignee={assignee} /> : (displayOptions?.showAssignee ?? true) ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <span

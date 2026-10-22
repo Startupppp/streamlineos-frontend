@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useBulkUpdateManagedProducts } from "@/hooks/api/build/managed-products-schema";
+import { useBulkUpdateManagedProducts } from "@/hooks/api/build/managed-product-mutations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useState } from "react";
 import { useCan } from "@/hooks/api/access";

@@ -10,20 +10,41 @@ export interface Ticket {
   status: string;
   type: string;
   priority?: string | null;
-  points?: number | null;
+  estimate?: number | null;
   ticketNumber?: number;
   sequenceId?: string | null;
-  assigneeId?: string | null;
   cycleId?: number | null;
   moduleId?: number | null;
   dueDate?: string | null;
   startDate?: string | null;
   rank?: string | null;
   version: number;
-  assignee?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } | null;
-  assignees?: { user?: { id: string; name?: string | null; firstName?: string | null; lastName?: string | null; email?: string | null; image?: string | null } }[];
+  assignee?: {
+    id: string;
+    name?: string | null;
+    firstName?: string | null;
+    lastName?: string | null;
+    email?: string | null;
+    image?: string | null;
+  } | null;
+  assignees?: {
+    user?: {
+      id: string;
+      name?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      email?: string | null;
+      image?: string | null;
+    };
+  }[];
   labels?: { label?: { id: number; name: string; color?: string | null } }[];
-  cycle?: { id: number; name: string; status: string; startDate: string; endDate: string } | null;
+  cycle?: {
+    id: number;
+    name: string;
+    status: string;
+    startDate: string;
+    endDate: string;
+  } | null;
   project?: { id: number; name: string; key: string } | null;
 }
 
@@ -39,7 +60,11 @@ export interface ListViewProps {
   rowBy?: string;
   projectKey?: string | null;
   projectId?: number;
-  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  projectStatuses?: Array<{
+    name: string;
+    color: string | null;
+    type?: string | null;
+  }>;
   displayOptions?: DisplayOptions;
   showEmptyRows?: boolean;
   showEmptyColumns?: boolean;
@@ -52,7 +77,11 @@ export interface ListViewItemProps {
   ticket: Ticket;
   projectKey?: string | null;
   projectId?: number;
-  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  projectStatuses?: Array<{
+    name: string;
+    color: string | null;
+    type?: string | null;
+  }>;
   onClick: (id: number) => void;
   displayOptions?: DisplayOptions;
   dragHandleProps?: DraggableProvidedDragHandleProps | null;
@@ -84,7 +113,11 @@ export interface NestedGroupProps {
   groupBy: string;
   projectKey?: string | null;
   projectId?: number;
-  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  projectStatuses?: Array<{
+    name: string;
+    color: string | null;
+    type?: string | null;
+  }>;
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
   selection?: ListSelection;
@@ -96,7 +129,11 @@ export interface DroppableGroupProps {
   items: Ticket[];
   projectKey?: string | null;
   projectId?: number;
-  projectStatuses?: Array<{ name: string; color: string | null; type?: string | null }>;
+  projectStatuses?: Array<{
+    name: string;
+    color: string | null;
+    type?: string | null;
+  }>;
   displayOptions?: DisplayOptions;
   onTicketClick: (id: number) => void;
   shouldReduceMotion: boolean | null;
@@ -123,10 +160,13 @@ export function isReorderContext(v: unknown): v is ReorderContext {
   return typeof v === "object" && v !== null && "previousTickets" in v;
 }
 
-type GroupFieldPatch = Pick<UpdateTicketInput, "status" | "priority" | "assigneeId" | "assigneeIds">;
+type GroupFieldPatch = Pick<
+  UpdateTicketInput,
+  "status" | "priority" | "assigneeId" | "assigneeIds"
+>;
 
 const VALID_PRIORITIES = ["LOW", "MEDIUM", "HIGH", "URGENT"] as const;
-type ValidPriority = typeof VALID_PRIORITIES[number];
+type ValidPriority = (typeof VALID_PRIORITIES)[number];
 
 function isValidPriority(v: string): v is ValidPriority {
   return VALID_PRIORITIES.some((candidate) => candidate === v);
@@ -138,24 +178,38 @@ export const LIST_RENDER_PAGE_SIZE = 100;
 
 export function getGroupKey(ticket: Ticket, groupBy: string): string {
   switch (groupBy) {
-    case "status": return ticket.status ?? "None";
-    case "priority": return ticket.priority ?? "None";
-    case "assignee": return ticket.assignee ? getUserDisplayName(ticket.assignee) : "Unassigned";
+    case "status":
+      return ticket.status ?? "None";
+    case "priority":
+      return ticket.priority ?? "None";
+    case "assignee":
+      return ticket.assignee
+        ? getUserDisplayName(ticket.assignee)
+        : "Unassigned";
     case "label": {
       const first = ticket.labels?.[0]?.label;
       return first ? first.name : "No label";
     }
-    case "cycle": return ticket.cycle?.name ?? "No cycle";
-    default: return "All Items";
+    case "cycle":
+      return ticket.cycle?.name ?? "No cycle";
+    default:
+      return "All Items";
   }
 }
 
-export function getGroupStatus(groupBy: string, groupKey: string, tickets: Ticket[]): string {
+export function getGroupStatus(
+  groupBy: string,
+  groupKey: string,
+  tickets: Ticket[],
+): string {
   if (groupBy === "status") return groupKey;
   return tickets[0]?.status ?? "TODO";
 }
 
-export function encodeNestedAccordionValue(outerKey: string, innerKey: string): string {
+export function encodeNestedAccordionValue(
+  outerKey: string,
+  innerKey: string,
+): string {
   return `${outerKey}||${innerKey}`;
 }
 
@@ -174,27 +228,33 @@ export function buildGroupFieldPatch(
   }
   if (groupBy === "assignee") {
     if (newGroupKey === "Unassigned") return { assigneeIds: [] };
-    const match = tickets.find((t) => t.id !== ticketId && getUserDisplayName(t.assignee) === newGroupKey);
-    const id = match?.assigneeId ?? match?.assignee?.id;
+    const match = tickets.find(
+      (t) =>
+        t.id !== ticketId && getUserDisplayName(t.assignee) === newGroupKey,
+    );
+    const id = match?.assignee?.id;
     if (!id) return null;
     return { assigneeId: id };
   }
   return null;
 }
 
-export function applyLocalPatch(ticket: Ticket, patch: GroupFieldPatch, groupBy: string): Ticket {
+export function applyLocalPatch(
+  ticket: Ticket,
+  patch: GroupFieldPatch,
+  groupBy: string,
+): Ticket {
   const next = { ...ticket };
-  if (groupBy === "status" && patch.status !== undefined) next.status = patch.status;
+  if (groupBy === "status" && patch.status !== undefined)
+    next.status = patch.status;
   if (groupBy === "priority") {
     next.priority = patch.priority ?? null;
   }
   if (groupBy === "assignee") {
-    if (patch.assigneeIds !== undefined) {
-      next.assigneeId = patch.assigneeIds[0] ?? null;
-      next.assignee = null;
-    } else if (patch.assigneeId !== undefined) {
-      next.assigneeId = patch.assigneeId ?? null;
-    }
+    if (patch.assigneeIds !== undefined) next.assignee = null;
+    else if (patch.assigneeId !== undefined)
+      next.assignee =
+        patch.assigneeId != null ? { id: patch.assigneeId } : null;
   }
   return next;
 }

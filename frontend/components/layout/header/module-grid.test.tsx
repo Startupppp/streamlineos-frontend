@@ -5,7 +5,7 @@ import {
   OrgStorageScopeProvider,
   orgScopedStorageKey,
 } from "@/lib/org-scoped-storage";
-import { ProductGrid } from "./product-grid";
+import { ModuleGrid } from "./module-grid";
 import {
   LAST_PRODUCT_PATHS_STORAGE,
   writeLastProductPath,
@@ -64,9 +64,39 @@ jest.mock("../nav-intent-prefetch", () => ({
   useNavIntentPrefetch: () => jest.fn(),
 }));
 
-describe("ProductGrid last-path restore", () => {
+describe("ModuleGrid", () => {
   beforeEach(() => {
     window.localStorage.clear();
+  });
+
+  it("lists frequent modules before the rest when enabled", () => {
+    renderWithProviders(
+      <ModuleGrid
+        activeModule="home"
+        enabledModules={["hr", "payroll", "build", "crm"]}
+        lockedModules={[]}
+        canManageModules={false}
+        scopes={{}}
+        effectiveRole="OWNER"
+        onClose={jest.fn()}
+        shouldReduceMotion
+      />,
+    );
+
+    const labels = screen.getAllByRole("link").map((link) => link.getAttribute("aria-label"));
+    const frequent = [
+      "Home OS",
+      "Documents OS",
+      "HRMS OS",
+      "Payroll OS",
+      "Recruitment OS",
+      "Timesheets OS",
+      "Build OS",
+    ];
+    const positions = frequent.map((label) => labels.indexOf(label));
+    expect(positions.every((index) => index >= 0)).toBe(true);
+    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    expect(labels.indexOf("CRM OS")).toBeGreaterThan(labels.indexOf("Build OS"));
   });
 
   it("links Home OS to the remembered calendar URL", () => {
@@ -77,8 +107,8 @@ describe("ProductGrid last-path restore", () => {
     );
 
     renderWithProviders(
-      <ProductGrid
-        activeProduct="hrms"
+      <ModuleGrid
+        activeModule="hrms"
         enabledModules={["hr"]}
         lockedModules={[]}
         canManageModules={false}

@@ -6,7 +6,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import type { QueryKeyParams } from "@/lib/query-keys/base";
 import { useAccess } from "@/hooks/api/access";
-import { leaveContextQueryOptions } from "@/hooks/api/hr/leaves-query-identity-read-options";
+export { leaveContextQueryOptions } from "@/hooks/api/hr/leaves-query-identity-read-options";
 
 export const LEAVE_TYPES_KEY = [...humanResourcesQueryKeys.hr.all, "leaveTypesAdmin"] as const;
 

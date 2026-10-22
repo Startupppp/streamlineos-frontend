@@ -7,12 +7,11 @@ export interface Ticket {
   status: string;
   type: string;
   priority?: string | null;
-  points?: number | null;
+  estimate?: number | null;
   ticketNumber?: number;
   sequenceId?: string | null;
   startDate?: string | null;
   dueDate?: string | null;
-  assigneeId?: string | null;
   cycleId?: number | null;
   version: number;
   assignee?: {

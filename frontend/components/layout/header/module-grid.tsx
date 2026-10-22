@@ -8,9 +8,10 @@ import {
   getNavGroupsForModule,
   isModuleEnabled,
   flattenNavRoutes,
+  moduleSwitcherRank,
   type ModuleKey,
 } from "../sidebar/sidebar-nav-items";
-import { ProductTile } from "./product-tile";
+import { ModuleTile } from "./module-tile";
 import { hasAssignedProductAccess } from "@/lib/rbac/route-access/route-access";
 import {
   orgScopedStorageKey,
@@ -22,8 +23,8 @@ import {
   resolveRememberedProductHref,
 } from "../last-product-path";
 
-export interface ProductGridProps {
-  activeProduct: ModuleKey;
+export interface ModuleGridProps {
+  activeModule: ModuleKey;
   enabledModules: string[];
   lockedModules: string[];
   canManageModules: boolean;
@@ -33,8 +34,8 @@ export interface ProductGridProps {
   shouldReduceMotion: boolean | null;
 }
 
-export function ProductGrid({
-  activeProduct,
+export function ModuleGrid({
+  activeModule,
   enabledModules,
   lockedModules,
   canManageModules,
@@ -42,7 +43,7 @@ export function ProductGrid({
   effectiveRole,
   onClose,
   shouldReduceMotion,
-}: ProductGridProps) {
+}: ModuleGridProps) {
   const scope = useOrgStorageScope();
   const rememberedPaths = readLastProductPaths(
     orgScopedStorageKey(LAST_PRODUCT_PATHS_STORAGE, scope),
@@ -85,8 +86,8 @@ export function ProductGrid({
     return products.sort((a, b) => {
       const aEnabled = isModuleEnabled(a.key, enabledModules) && !a.planLocked;
       const bEnabled = isModuleEnabled(b.key, enabledModules) && !b.planLocked;
-      if (aEnabled === bEnabled) return 0;
-      return aEnabled ? -1 : 1;
+      if (aEnabled !== bEnabled) return aEnabled ? -1 : 1;
+      return moduleSwitcherRank(a.key) - moduleSwitcherRank(b.key);
     });
   }, [
     effectiveRole,
@@ -106,7 +107,7 @@ export function ProductGrid({
         {visibleProducts.map((product, index) => {
           const enabled = isModuleEnabled(product.key, enabledModules);
           const isActive =
-            activeProduct === product.key && enabled && !product.planLocked;
+            activeModule === product.key && enabled && !product.planLocked;
           return (
             <motion.div
               key={product.key}
@@ -122,8 +123,8 @@ export function ProductGrid({
                 delay: shouldReduceMotion ? 0 : index * 0.02,
               }}
             >
-              <ProductTile
-                productKey={product.key}
+              <ModuleTile
+                moduleKey={product.key}
                 label={product.label}
                 href={product.href}
                 icon={product.icon}

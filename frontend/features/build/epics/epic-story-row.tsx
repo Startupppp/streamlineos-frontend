@@ -120,7 +120,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
                   ticketId={story.id}
                   projectId={projectId}
                   version={story.version}
-                  currentPoints={story.points}
+                  currentPoints={story.estimate}
                 />
                 <InlineDueDate
                   ticketId={story.id}
@@ -141,13 +141,13 @@ export const EpicStoryRow = memo(function EpicStoryRow({
                 />
               </>
             ) : (
-              story.points != null &&
-              story.points > 0 && (
+              story.estimate != null &&
+              story.estimate > 0 && (
                 <Badge
                   variant="secondary"
                   className="h-5 shrink-0 px-1.5 text-micro"
                 >
-                  {story.points} pts
+                  {story.estimate} pts
                 </Badge>
               )
             )}
@@ -157,7 +157,7 @@ export const EpicStoryRow = memo(function EpicStoryRow({
                 ticketId={story.id}
                 projectId={projectId}
                 version={story.version}
-                currentAssigneeId={story.assigneeId}
+                currentAssigneeId={story.assignee?.id}
                 assignee={story.assignee ?? null}
               />
             ) : null}

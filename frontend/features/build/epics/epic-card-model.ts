@@ -27,7 +27,7 @@ export function computeEpicRollup(
 
   let done = 0, inProgress = 0, totalPts = 0, completedPts = 0;
   for (const child of children) {
-    const pts = child.points ?? 0;
+    const pts = child.estimate ?? 0;
     totalPts += pts;
     if (completedNames.has(child.status)) {
       done++;

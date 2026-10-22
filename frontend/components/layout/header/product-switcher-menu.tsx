@@ -30,8 +30,8 @@ import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared/error-state";
 import { LoadingState } from "@/components/shared/loading-state";
 
-const ProductGrid = dynamic(
-  () => import("./product-grid").then((m) => ({ default: m.ProductGrid })),
+const ModuleGrid = dynamic(
+  () => import("./module-grid").then((m) => ({ default: m.ModuleGrid })),
   { ssr: false, loading: () => <LoadingState variant="list" rows={4} /> },
 );
 
@@ -182,7 +182,7 @@ export function ProductSwitcherMenu({
   );
 
   const gridProps = {
-    activeProduct,
+    activeModule: activeProduct,
     enabledModules,
     lockedModules,
     canManageModules,
@@ -193,7 +193,7 @@ export function ProductSwitcherMenu({
   };
 
   const menuBody = access ? (
-    <ProductGrid {...gridProps} />
+    <ModuleGrid {...gridProps} />
   ) : accessError ? (
     <ErrorState
       compact

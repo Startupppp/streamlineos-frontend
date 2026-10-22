@@ -17,11 +17,10 @@ export function toKanbanTicket(t: AllWorkTicket): KanbanTicket {
     status: t.status,
     type: t.type,
     priority: t.priority ?? undefined,
-    points: t.points ?? undefined,
+    estimate: t.estimate ?? undefined,
     ticketNumber: t.ticketNumber,
     rank: t.rank ?? undefined,
     epicId: t.epicId ?? undefined,
-    assigneeId: t.assigneeId ?? undefined,
     version: t.version,
     cycleId: t.cycleId,
     dueDate: t.dueDate,
@@ -49,13 +48,12 @@ export type TableRow = {
   status: string;
   type: string;
   priority: string | null | undefined;
-  points: number | null | undefined;
+  estimate: number | null | undefined;
   ticketNumber: number;
   projectKey: string | null | undefined;
   sequenceId: string | null | undefined;
   startDate: string | null | undefined;
   dueDate: string | null | undefined;
-  assigneeId: string | null | undefined;
   cycleId: number | null | undefined;
   assignee: {
     id: string;
@@ -75,13 +73,12 @@ export function toTableTicket(t: AllWorkTicket): TableRow {
     status: t.status,
     type: t.type,
     priority: t.priority,
-    points: t.points,
+    estimate: t.estimate,
     ticketNumber: t.ticketNumber,
     projectKey: t.projectKey,
     sequenceId: undefined,
     startDate: t.startDate,
     dueDate: t.dueDate,
-    assigneeId: t.assigneeId,
     cycleId: t.cycleId,
     assignee: t.assignee
       ? {
@@ -152,7 +149,7 @@ function groupByPriority(tickets: AllWorkTicket[]): TicketGroup[] {
 function groupByAssignee(tickets: AllWorkTicket[]): TicketGroup[] {
   const map = new Map<string, AllWorkTicket[]>();
   for (const t of tickets) {
-    const key = t.assigneeId ?? "__unassigned__";
+    const key = t.assignee?.id ?? "__unassigned__";
     const existing = map.get(key);
     if (existing) existing.push(t);
     else map.set(key, [t]);

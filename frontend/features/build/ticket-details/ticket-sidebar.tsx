@@ -119,8 +119,7 @@ export function TicketSidebar({
     onAutoSave({ moduleId: v === "none" ? null : parseInt(v) });
   const handleCycleChange = (v: string) =>
     onAutoSave({ cycleId: v === "none" ? null : parseInt(v) });
-  const handlePointsChange = (points: number | null) =>
-    onAutoSave({ points });
+  const handlePointsChange = (points: number | null) => onAutoSave({ points });
 
   const currentAssigneeIds = ticket.assignees
     ? ticket.assignees.map((a) => a.userId)
@@ -182,21 +181,26 @@ export function TicketSidebar({
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {(ticket.labels ?? []).flatMap((entry) =>
-              entry.label ? [<TicketLabelChip key={entry.label.id} label={entry.label} />] : [],
+              entry.label
+                ? [<TicketLabelChip key={entry.label.id} label={entry.label} />]
+                : [],
             )}
           </div>
         )}
       </div>
 
       <div className="space-y-4 px-4 py-4">
-        <h3 className="text-xs font-semibold text-muted-foreground">Workflow</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground">
+          Workflow
+        </h3>
         {viewOnly ? (
           <p className="text-xs text-muted-foreground">
-            View only. You can read these fields, but your role cannot change them.
+            View only. You can read these fields, but your role cannot change
+            them.
           </p>
         ) : null}
         <SidebarSelectFields
-          key={`${ticket.id}:${ticket.points ?? ""}`}
+          key={`${ticket.id}:${ticket.estimate ?? ""}`}
           ticket={ticket}
           statuses={statuses}
           epics={selectableEpics}
@@ -232,12 +236,16 @@ export function TicketSidebar({
             onChange={handleCustomerChange}
           />
         ) : (
-          <div className="text-xs text-muted-foreground">Customer: {ticket.customer?.name ?? "None"}</div>
+          <div className="text-xs text-muted-foreground">
+            Customer: {ticket.customer?.name ?? "None"}
+          </div>
         )}
       </div>
 
       <div className="space-y-4 px-4 py-4">
-        <h3 className="text-xs font-semibold text-muted-foreground">Schedule</h3>
+        <h3 className="text-xs font-semibold text-muted-foreground">
+          Schedule
+        </h3>
         {canUpdate ? (
           <TicketDateFields
             startDate={ticket.startDate}
@@ -262,7 +270,8 @@ export function TicketSidebar({
             />
           ) : (
             <span className="text-xs text-muted-foreground">
-              Recurring: {ticket.recurrenceRule ? ticket.recurrenceRule.frequency : "No"}
+              Recurring:{" "}
+              {ticket.recurrenceRule ? ticket.recurrenceRule.frequency : "No"}
             </span>
           )}
         </div>

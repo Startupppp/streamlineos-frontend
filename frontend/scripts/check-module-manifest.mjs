@@ -67,8 +67,8 @@ export function parseRegistryModules(content) {
       const idMatch = /\bid:\s*"([^"]+)"/.exec(line);
       if (idMatch) current.id = idMatch[1];
 
-      const pkMatch = /productKey:\s*(?:"([^"]+)"|(null))/.exec(line);
-      if (pkMatch) current.productKey = pkMatch[1] ?? null;
+      const moduleKeyMatch = /moduleKey:\s*(?:"([^"]+)"|(null))/.exec(line);
+      if (moduleKeyMatch) current.moduleKey = moduleKeyMatch[1] ?? null;
 
       const routeMatch = /\broute:\s*(?:"([^"]+)"|(null))/.exec(line);
       if (routeMatch) current.route = routeMatch[1] ?? null;
@@ -154,9 +154,9 @@ export function checkRegistryAgreement(manifest, registryContent) {
     );
     if (!manifestModule) continue;
 
-    if (registryModule.productKey !== manifestModule.productKey) {
+    if (registryModule.moduleKey !== manifestModule.moduleKey) {
       violations.push(
-        `  [rule-1] Module "${registryModule.id}" productKey mismatch: manifest="${manifestModule.productKey}", registry="${registryModule.productKey}"`,
+        `  [rule-1] Module "${registryModule.id}" moduleKey mismatch: manifest="${manifestModule.moduleKey}", registry="${registryModule.moduleKey}"`,
       );
     }
 
@@ -216,22 +216,22 @@ export function compareAdministersNamespaces(registryModules, manifestModules) {
   return violations;
 }
 
-function checkProductKeySet(manifest, sidebarContent) {
+function checkModuleKeySet(manifest, sidebarContent) {
   const violations = [];
-  const manifestProductKeys = new Set(
+  const manifestModuleKeys = new Set(
     manifest.modules
-      .filter((m) => m.productKey !== null)
-      .map((m) => m.productKey),
+      .filter((m) => m.moduleKey !== null)
+      .map((m) => m.moduleKey),
   );
 
   const sidebarKeys = parseSidebarProductKeys(sidebarContent);
   for (const key of sidebarKeys) {
     if (
       !PRODUCT_KEY_EXCEPTIONS.has(key) &&
-      !manifestProductKeys.has(key)
+      !manifestModuleKeys.has(key)
     ) {
       violations.push(
-        `  [rule-2] PRODUCT_DEFINITIONS key "${key}" is not a manifest productKey and not in PRODUCT_KEY_EXCEPTIONS`,
+        `  [rule-2] PRODUCT_DEFINITIONS key "${key}" is not a manifest moduleKey and not in PRODUCT_KEY_EXCEPTIONS`,
       );
     }
   }
@@ -240,10 +240,10 @@ function checkProductKeySet(manifest, sidebarContent) {
 
 function checkProductHrefs(manifest, sidebarContent) {
   const violations = [];
-  const manifestRouteByProductKey = new Map(
+  const manifestRouteByModuleKey = new Map(
     manifest.modules
-      .filter((m) => m.productKey !== null && m.route !== null)
-      .map((m) => [m.productKey, m.route]),
+      .filter((m) => m.moduleKey !== null && m.route !== null)
+      .map((m) => [m.moduleKey, m.route]),
   );
 
   const sidebarKeys = parseSidebarProductKeys(sidebarContent);
@@ -251,7 +251,7 @@ function checkProductHrefs(manifest, sidebarContent) {
     if (key in PRODUCT_HREF_EXCEPTIONS) continue;
     if (PRODUCT_KEY_EXCEPTIONS.has(key)) continue;
 
-    const expectedRoute = manifestRouteByProductKey.get(key);
+    const expectedRoute = manifestRouteByModuleKey.get(key);
     if (expectedRoute === undefined) {
       violations.push(
         `  [rule-3] PRODUCT_DEFINITIONS key "${key}" has no manifest route to validate against`,
@@ -299,8 +299,8 @@ function runSelfTest() {
   const validManifest = {
     version: 1,
     modules: [
-      { id: "hr", productKey: "hrms", route: "/hr" },
-      { id: "build", productKey: "build", route: "/build" },
+      { id: "hr", moduleKey: "hrms", route: "/hr" },
+      { id: "build", moduleKey: "build", route: "/build" },
     ],
   };
 
@@ -308,8 +308,8 @@ function runSelfTest() {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 2;
       export const MODULE_REGISTRY = [
-        { id: "hr", productKey: "hrms", route: "/hr" },
-        { id: "build", productKey: "build", route: "/build" },
+        { id: "hr", moduleKey: "hrms", route: "/hr" },
+        { id: "build", moduleKey: "build", route: "/build" },
       ] as const satisfies readonly [];
     `;
     const v = checkRegistryAgreement(validManifest, brokenRegistry);
@@ -320,9 +320,9 @@ function runSelfTest() {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
       export const MODULE_REGISTRY = [
-        { id: "hr", productKey: "hrms", route: "/hr" },
-        { id: "build", productKey: "build", route: "/build" },
-        { id: "crm", productKey: "crm", route: "/crm" },
+        { id: "hr", moduleKey: "hrms", route: "/hr" },
+        { id: "build", moduleKey: "build", route: "/build" },
+        { id: "crm", moduleKey: "crm", route: "/crm" },
       ] as const satisfies readonly [];
     `;
     const v = checkRegistryAgreement(validManifest, brokenRegistry);
@@ -336,7 +336,7 @@ function runSelfTest() {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
       export const MODULE_REGISTRY = [
-        { id: "hr", productKey: "hrms", route: "/hr" },
+        { id: "hr", moduleKey: "hrms", route: "/hr" },
       ] as const satisfies readonly [];
     `;
     const v = checkRegistryAgreement(validManifest, brokenRegistry);
@@ -350,14 +350,14 @@ function runSelfTest() {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
       export const MODULE_REGISTRY = [
-        { id: "hr", productKey: "hr_changed", route: "/hr" },
-        { id: "build", productKey: "build", route: "/build" },
+        { id: "hr", moduleKey: "hr_changed", route: "/hr" },
+        { id: "build", moduleKey: "build", route: "/build" },
       ] as const satisfies readonly [];
     `;
     const v = checkRegistryAgreement(validManifest, brokenRegistry);
     assert(
-      "rule-1 fires on productKey drift",
-      v.some((s) => s.includes("productKey") && s.includes("rule-1")),
+      "rule-1 fires on moduleKey drift",
+      v.some((s) => s.includes("moduleKey") && s.includes("rule-1")),
     );
   }
 
@@ -365,8 +365,8 @@ function runSelfTest() {
     const brokenRegistry = `
       export const MODULE_MANIFEST_VERSION = 1;
       export const MODULE_REGISTRY = [
-        { id: "hr", productKey: "hrms", route: "/hr-new" },
-        { id: "build", productKey: "build", route: "/build" },
+        { id: "hr", moduleKey: "hrms", route: "/hr-new" },
+        { id: "build", moduleKey: "build", route: "/build" },
       ] as const satisfies readonly [];
     `;
     const v = checkRegistryAgreement(validManifest, brokenRegistry);
@@ -383,7 +383,7 @@ function runSelfTest() {
         { key: "phantom", label: "Phantom", href: resolveProductHref("phantom"), icon: X },
       ];
     `;
-    const v = checkProductKeySet(validManifest, brokenSidebar);
+    const v = checkModuleKeySet(validManifest, brokenSidebar);
     assert(
       "rule-2 fires on unknown product key",
       v.some((s) => s.includes("phantom") && s.includes("rule-2")),
@@ -397,7 +397,7 @@ function runSelfTest() {
         { key: "administration", label: "Administration", href: resolveProductHref("administration"), icon: X },
       ];
     `;
-    const v = checkProductKeySet(validManifest, sidebarWithException);
+    const v = checkModuleKeySet(validManifest, sidebarWithException);
     assert(
       "rule-2 does not fire for PRODUCT_KEY_EXCEPTIONS entries",
       !v.some((s) => s.includes("administration") && s.includes("rule-2")),
@@ -496,7 +496,7 @@ function runCheck() {
     process.exit(1);
   }
   const sidebarContent = readFileSync(SIDEBAR_PRODUCTS, "utf8");
-  violations.push(...checkProductKeySet(manifest, sidebarContent));
+  violations.push(...checkModuleKeySet(manifest, sidebarContent));
   violations.push(...checkProductHrefs(manifest, sidebarContent));
 
   if (!existsSync(MANIFEST_LOADER)) {

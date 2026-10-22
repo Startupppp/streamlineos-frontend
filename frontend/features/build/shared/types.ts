@@ -47,9 +47,7 @@ export interface KanbanTicket {
   priority?: TicketPriority | string | null;
   ticketNumber?: number;
   sequenceId?: string | null;
-  points?: number | null;
-  storyPoints?: number | null;
-  assigneeId?: string | null;
+  estimate?: number | null;
   epicId?: number | null;
   cycleId?: number | null;
   moduleId?: number | null;

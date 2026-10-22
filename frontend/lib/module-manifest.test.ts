@@ -2,7 +2,7 @@ import {
   MANIFEST,
   EXPECTED_MANIFEST_VERSION,
   moduleById,
-  moduleByProductKey,
+  moduleByModuleKey,
 } from "./module-manifest";
 import {
   ORG_MODULE_NAME,
@@ -46,32 +46,32 @@ describe("moduleById lookup", () => {
   });
 });
 
-describe("moduleByProductKey lookup", () => {
-  it("resolves known product keys", () => {
-    expect(moduleByProductKey("hrms")?.id).toBe("hr");
-    expect(moduleByProductKey("finance")?.id).toBe("accounting");
-    expect(moduleByProductKey("helpdesk")?.id).toBe("support");
-    expect(moduleByProductKey("documents")?.id).toBe("kb");
-    expect(moduleByProductKey("build")?.id).toBe("build");
-    expect(moduleByProductKey("home")?.id).toBe("home");
+describe("moduleByModuleKey lookup", () => {
+  it("resolves known module keys", () => {
+    expect(moduleByModuleKey("hrms")?.id).toBe("hr");
+    expect(moduleByModuleKey("finance")?.id).toBe("accounting");
+    expect(moduleByModuleKey("helpdesk")?.id).toBe("support");
+    expect(moduleByModuleKey("documents")?.id).toBe("kb");
+    expect(moduleByModuleKey("build")?.id).toBe("build");
+    expect(moduleByModuleKey("home")?.id).toBe("home");
   });
 
-  it("returns undefined for an unknown product key", () => {
-    expect(moduleByProductKey("projects")).toBeUndefined();
+  it("returns undefined for an unknown module key", () => {
+    expect(moduleByModuleKey("projects")).toBeUndefined();
   });
 });
 
 describe("ORG_MODULE_NAME derivation", () => {
-  it("covers all administrable modules with a productKey", () => {
+  it("covers all administrable modules with a moduleKey", () => {
     const administrableWithProduct = MANIFEST.modules.filter(
-      (m) => m.administrable && m.productKey !== null,
+      (m) => m.administrable && m.moduleKey !== null,
     );
     for (const m of administrableWithProduct) {
       expect(ORG_MODULE_NAME[m.id]).toBe(m.id.toUpperCase());
     }
   });
 
-  it("does not include modules without administrable+productKey", () => {
+  it("does not include modules without administrable+moduleKey", () => {
     expect(ORG_MODULE_NAME["billing"]).toBeUndefined();
     expect(ORG_MODULE_NAME["calendar"]).toBeUndefined();
   });

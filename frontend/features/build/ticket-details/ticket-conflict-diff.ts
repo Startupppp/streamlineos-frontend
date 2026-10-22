@@ -102,7 +102,7 @@ function formatMemberList(value: unknown, members: { id: string; name: string }[
 
 function readServerAssigneeIds(ticket: Ticket): string[] {
   if (Array.isArray(ticket.assignees)) return ticket.assignees.map((entry) => entry.userId);
-  const single = ticket.assignee?.id ?? ticket.assigneeId;
+  const single = ticket.assignee?.id;
   return single ? [single] : [];
 }
 

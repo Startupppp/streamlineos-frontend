@@ -264,7 +264,7 @@ describe("Administration information architecture", () => {
 describe("module-gate completeness", () => {
   const PRODUCT_KEYED_MODULE_IDS = new Set(
     MANIFEST.modules
-      .filter((m) => m.productKey !== null)
+      .filter((m) => m.moduleKey !== null)
       .map((m) => m.id),
   );
   const ALWAYS_ENABLED_MODULE_IDS = new Set([

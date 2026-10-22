@@ -8,7 +8,7 @@ const RETIRED_CANONICAL: Readonly<Record<string, string>> = {
 
 export const ORG_MODULE_NAME: Readonly<Record<string, string>> = Object.fromEntries(
   MANIFEST.modules
-    .filter((m) => m.productKey !== null && m.administrable)
+    .filter((m) => m.moduleKey !== null && m.administrable)
     .map((m) => [m.id, m.id.toUpperCase()]),
 );
 
@@ -21,16 +21,16 @@ const moduleAliasesMap: Record<string, readonly string[]> = {
 
 for (const m of MANIFEST.modules) {
   if (
-    m.productKey !== null &&
-    m.productKey !== m.id &&
+    m.moduleKey !== null &&
+    m.moduleKey !== m.id &&
     LEGACY_STORED_AS_PRODUCT_KEY.has(m.id)
   ) {
     const aliases: readonly string[] = [
-      m.productKey.toUpperCase(),
+      m.moduleKey.toUpperCase(),
       m.id.toUpperCase(),
     ];
     moduleAliasesMap[m.id] = aliases;
-    moduleAliasesMap[m.productKey] = aliases;
+    moduleAliasesMap[m.moduleKey] = aliases;
   }
 }
 
@@ -41,8 +41,8 @@ const canonicalMap: Record<string, string> = {};
 
 for (const m of MANIFEST.modules) {
   canonicalMap[m.id] = m.id;
-  if (m.productKey !== null && m.productKey !== m.id) {
-    canonicalMap[m.productKey] = m.id;
+  if (m.moduleKey !== null && m.moduleKey !== m.id) {
+    canonicalMap[m.moduleKey] = m.id;
   }
 }
 
