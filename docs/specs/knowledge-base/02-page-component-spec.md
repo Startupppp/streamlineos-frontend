@@ -262,6 +262,22 @@ The collection must represent native documents, uploaded files, folders, spreads
 
 **Acceptance:** valid content, unknown slug, withdrawn content, and revoked public access have distinct safe outcomes; retained redirects resolve without exposing another tenant's content.
 
+## 22. External Sharing Administration — `/knowledge/wiki/manage/sharing`
+
+**Customer job:** decide how content may leave the organization and see everything that already has.
+
+**Rules:** gated by `kb:settings:manage`. The tenant mode is the ceiling and a team folder can only narrow it. Public links are off by default; when enabled they carry an expiry and an optional download policy. The inventory lists every live link and guest grant with a cursor and supports bulk revoke.
+
+**Acceptance:** turning links off stops every existing link resolving; bulk revoke removes rows from the inventory without a reload; a non-admin gets a denied state, never an empty one.
+
+## 23. Portal Shared Documents — `/shared-docs` and `/shared-docs/[pageId]`
+
+**Customer job:** a portal guest reads the documents named for them.
+
+**Rules:** only pages with a live named-guest grant to that guest appear; a file downloads only when the grant allows it; revoked or expired grants answer not-found.
+
+**Acceptance:** list, detail, download-allowed and download-denied, and revoked states each render distinctly for a real portal guest.
+
 ## Shared module inventory
 
 Reuse or deepen these modules before creating page-specific versions:

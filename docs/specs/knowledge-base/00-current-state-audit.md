@@ -33,6 +33,7 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | `/knowledge/wiki/pages/[pageId]`, `/knowledge/wiki/pages/[pageId]/history` | KEEP redirect aliases | Source 2026-10-16 | `next.config.ts` redirects to canonical document and history routes | Verify parameters and links preserve the intended page and version | P0 |
 | `/knowledge/wiki/search` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P0 |
 | `/knowledge/wiki/manage` | ADDED — now exists | Source 2026-09-27 | Route shipped since this row was written | Row said “Observed 404”; re-audit the shipped surface against its page contract | P1 |
+| `/knowledge/wiki/manage/sharing` | ADDED 2026-10-21 — External sharing administration | Source 2026-10-22 | Tenant external-sharing mode, public-link opt-in and expiry, inventory with bulk revoke; gated by `kb:settings:manage` | Browser verification blocked on backend deploy (`/kb/settings/sharing` 404 on the 21 Oct build) | P0 |
 | `/knowledge/research-briefs`, `/knowledge/research-briefs/[briefId]` | RETAIN route/data, remove from daily navigation | Source 2026-10-16 | List and detail shipped under Knowledge | Treat as compatibility/add-on surface until a separate retention or retirement decision | Deferred |
 | `/knowledge/wiki/company-documents`, `/knowledge/wiki/company-documents/[linkedDocumentId]` | RETAIN route/data, remove as separate library destination | Source 2026-10-16 | Linked-document list and detail exist | Surface company documents through permission-safe linked-record collections; retire routes only after migration gates | Deferred |
 | `/support/knowledge-gaps` | KEEP | Source 2026-10-16 | Support-owned triage surface exists; page contract in Step 2 | Verify detection, draft, dismissal, and browser state through current routes | P1 |
@@ -40,6 +41,7 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | `/build/[projectId]/wiki/[pageId]` | KEEP adapter | Source | Reuses document surface | Enforce project membership on every path; add history adapter | P0 |
 | `/build/[projectId]/wiki/[pageId]/history` | KEEP adapter | Source 2026-10-16 | History adapter route exists | Verify project membership and version access through the route | P0 |
 | `/wiki/[shareToken]` | KEEP | Source | Public token renderer and rate limiting exist | Prove 404 for invalid/revoked, no sibling/title leakage, accessible typography, optional feedback; expiry/password only after demand | P0/P2 |
+| `/shared-docs`, `/shared-docs/[pageId]` (portal) | ADDED 2026-10-21 — named-guest shared documents | Source 2026-10-22 | Portal guests list and read pages shared with them by named grant; download only where the share allows it | Browser verification with a real portal guest open (KB-OPEN-092) | P0 |
 | `/support/kb/**` | DUAL-RUN then REMOVE/MIGRATE | Source | Existing help-centre CMS remains usable | Stop mixing article ids and page URLs; publish from pages or maintain explicit record kind until cutover | P1 |
 | `/help/**` | KEEP renderer | Source | Public help job is distinct | Reuse published page projections only after migration; keep public cache and analytics separate | P1 |
 | `/ask` | KEEP redirect alias | Source 2026-10-16 | `next.config.ts` redirects to `/knowledge/chat`; no duplicate page route exists | Verify caller migration and live redirect behavior before retiring the alias | P0 |
@@ -50,8 +52,8 @@ No destructive action or content mutation was used. Dynamic routes without a val
 | Surface/model | Current implementation | Required correction |
 |---|---|---|
 | `kb_pages` | Canonical native-document tree with versions, grants, comments, search, history, and lifecycle foundations | Keep canonical during migration; adapt it into one Drive library rather than creating a second native-document store |
-| `kb_sources` | Separate Ask/source upload and indexing path for supported files, including XLSX text extraction | It is not a Drive file library: add location, binary versions, My/Shared parity, preview, lifecycle, sharing, and migration rules |
-| Drive files/folders/shortcuts/workspaces | No first-class Drive object model is implemented | Phase 1 release blocker; add one canonical object/location/access contract before claiming Drive-first readiness |
+| `kb_sources` | Retired as a write path 2026-10-22: migration 2575 moved every source to a `file` page; `/kb/sources` routes are deprecated adapters over `/kb/files` and page create/trash; Ask, search and citations read pages only | Contraction migration dropping the table after the adapters' callers are gone |
+| Drive files/folders/shortcuts/workspaces | Phase 1 code complete 2026-10-22: `file` pages with binary versions and viewer, shortcuts, activity, team folders with inherited and limited access, named guests and public-link policy (KB-OPEN-090 to 095) | Production browser verification after the backend deploy |
 | Microsoft 365 and Live Data Blocks | No production editor or `live_data_block` implementation | Phase 2/3 pending; require provider consent/callback/fidelity and viewer-authorized live-data contracts |
 
 ## What already works well
