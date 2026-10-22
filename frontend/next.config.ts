@@ -55,6 +55,7 @@ const nextConfig: NextConfig = {
   },
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
+  reactCompiler: true,
   experimental: {
     webpackBuildWorker: true,
     webpackMemoryOptimizations: true,

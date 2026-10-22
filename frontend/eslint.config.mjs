@@ -39,13 +39,25 @@ const eslintConfig = defineConfig([
       "react-hooks/exhaustive-deps": "warn",
       "@typescript-eslint/no-unused-vars": [
         "warn",
-        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
     },
   },
   {
-    files: ["features/build/**/*.{ts,tsx}", "hooks/api/build/**/*.{ts,tsx}", "app/(authenticated)/build/**/*.{ts,tsx}"],
-    ignores: ["features/build/intake/**", "features/build/qa/**", "features/build/reports/**"],
+    files: [
+      "features/build/**/*.{ts,tsx}",
+      "hooks/api/build/**/*.{ts,tsx}",
+      "app/(authenticated)/build/**/*.{ts,tsx}",
+    ],
+    ignores: [
+      "features/build/intake/**",
+      "features/build/qa/**",
+      "features/build/reports/**",
+    ],
     rules: {
       "react-hooks/set-state-in-effect": "error",
       "react-hooks/refs": "error",
@@ -54,19 +66,22 @@ const eslintConfig = defineConfig([
       "react-hooks/exhaustive-deps": "error",
       "@typescript-eslint/no-unused-vars": [
         "error",
-        { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" },
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
       ],
     },
   },
   {
-    /**
-     * Platform-wide, now that every module has been migrated.
-     *
-     * It flags only what the token set can express — see the rule itself. Solid
-     * fills and gradients have no role yet and are left alone rather than
-     * demanding something impossible, which is how a rule gets disabled.
-     */
-    files: ["features/**/*.{ts,tsx}", "components/**/*.{ts,tsx}", "app/**/*.{ts,tsx}", "hooks/**/*.{ts,tsx}", "lib/**/*.{ts,tsx}"],
+    files: [
+      "features/**/*.{ts,tsx}",
+      "components/**/*.{ts,tsx}",
+      "app/**/*.{ts,tsx}",
+      "hooks/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+    ],
     ignores: [
       "features/landing/**",
       "app/(public)/**",
@@ -87,22 +102,6 @@ const eslintConfig = defineConfig([
     },
   },
   {
-    /**
-     * Marketing and display surfaces, held to colour but not to the scales.
-     *
-     * A landing hero is set at 2.75rem, a pricing headline at 1.35rem, and both
-     * carry hand-tuned shadows and radii — sizes and elevations that exist to be
-     * looked at rather than read in a table. Forcing them onto the product scale
-     * would flatten the page; adding a token for each would put marketing
-     * one-offs into the system every product screen reads from.
-     *
-     * These were previously listed in the block above's `ignores`, which turned
-     * the WHOLE rule off for them — colour included — while the comment claimed
-     * colour was still enforced. It was not, and `included-apps-grid.tsx` had
-     * drifted to `hover:border-slate-300 hover:bg-white` as a result. Naming the
-     * relaxed kinds keeps the colour check, which is the one whose absence
-     * silently breaks dark mode.
-     */
     files: [
       "features/landing/**",
       "app/(public)/**",
@@ -118,7 +117,10 @@ const eslintConfig = defineConfig([
     ],
     plugins: { streamline: streamlinePlugin },
     rules: {
-      "streamline/no-raw-visual-values": ["error", { skip: ["type", "shadow", "radius"] }],
+      "streamline/no-raw-visual-values": [
+        "error",
+        { skip: ["type", "shadow", "radius"] },
+      ],
       "streamline/no-unlabelled-icon-button": "error",
     },
   },
