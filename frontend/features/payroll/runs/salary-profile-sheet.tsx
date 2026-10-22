@@ -120,6 +120,7 @@ export function SalaryProfileSheet({
   const annualCtcValue = form.watch("annualCtc");
   const taxRegimeValue = form.watch("taxRegime");
   const workerTypeValue = form.watch("workerType");
+  const componentIdsValue = form.watch("componentIds");
   const canPreviewBreakup = Boolean(resolvedUserId || resolvedWorkerId) && SALARY_PREVIEW_CTC.test(annualCtcValue);
 
   function handleToggleBreakup() {
@@ -286,6 +287,7 @@ export function SalaryProfileSheet({
                       annualCtc={annualCtcValue}
                       regime={taxRegimeValue === "none" ? undefined : taxRegimeValue}
                       workerType={workerTypeValue}
+                      componentIds={componentIdsValue}
                     />
                   ) : null}
                 </div>

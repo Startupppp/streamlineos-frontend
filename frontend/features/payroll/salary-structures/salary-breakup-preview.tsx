@@ -106,10 +106,12 @@ function BreakupSkeleton() {
   );
 }
 
-export function SalaryBreakupPreview({ annualCtc, regime, workerType, className }: SalaryBreakupPreviewProps) {
+export function SalaryBreakupPreview({ annualCtc, regime, workerType, componentIds, className }: SalaryBreakupPreviewProps) {
   const debouncedCtc = useDebouncedValue(annualCtc.trim(), 400);
   const validCtc = SALARY_PREVIEW_CTC.test(debouncedCtc) && Number(debouncedCtc) > 0;
-  const { data, isLoading, isError, error, refetch } = useSalaryPreview({ annualCtc: debouncedCtc, regime, workerType });
+  // Without a list the server previews every active component, ticked or not (#51).
+  const selectedIds = componentIds && componentIds.length > 0 ? componentIds : undefined;
+  const { data, isLoading, isError, error, refetch } = useSalaryPreview({ annualCtc: debouncedCtc, regime, workerType, componentIds: selectedIds });
   const resolution = usePageState({ permission: "payroll:salaries:view", isLoading, isError, error });
 
   function handleRetry() {
