@@ -270,12 +270,12 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 </div>
               )}
               <div className="space-y-1">
-                <Label className="text-xs">Effective from</Label>
+                <Label htmlFor="toggle-change-effective-from" className="text-xs">Effective from</Label>
                 <Controller
                   control={control}
                   name="effectiveFrom"
                   render={({ field }) => (
-                    <MonthPicker value={field.value} onChange={field.onChange} minMonth={monthFromToday(0)} />
+                    <MonthPicker id="toggle-change-effective-from" value={field.value} onChange={field.onChange} minMonth={monthFromToday(0)} />
                   )}
                 />
                 <p className="text-micro text-muted-foreground">The change applies from the first day of this month.</p>
@@ -284,8 +284,9 @@ export function ToggleSettingsSection({ policy, activeVersion }: ToggleSettingsS
                 )}
               </div>
               <div className="space-y-1">
-                <Label className="text-xs">Reason</Label>
+                <Label htmlFor="toggle-change-reason" className="text-xs">Reason</Label>
                 <Textarea
+                  id="toggle-change-reason"
                   {...register("reason")}
                   placeholder="Why is this change being made?"
                   className="text-sm resize-none"

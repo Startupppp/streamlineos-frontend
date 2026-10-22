@@ -362,10 +362,11 @@ export function FilingsTab() {
               challan and/or acknowledgement reference to mark this filing acknowledged.
             </p>
             <div className="space-y-1.5">
-              <label className="block text-label font-medium text-foreground">
+              <label htmlFor="filing-ack-challan-ref" className="block text-label font-medium text-foreground">
                 Challan reference
               </label>
               <Input
+                id="filing-ack-challan-ref"
                 value={challanRef}
                 onChange={(e) => setChallanRef(e.target.value)}
                 placeholder="e.g. CIN / CRN"
@@ -373,10 +374,11 @@ export function FilingsTab() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="block text-label font-medium text-foreground">
+              <label htmlFor="filing-ack-ack-ref" className="block text-label font-medium text-foreground">
                 Acknowledgement reference
               </label>
               <Input
+                id="filing-ack-ack-ref"
                 value={ackRef}
                 onChange={(e) => setAckRef(e.target.value)}
                 placeholder="e.g. token / receipt number"

@@ -210,9 +210,9 @@ export function PayrollMappingSheet({
   const formBody = (
     <div className="space-y-5 px-6 py-5">
       <div className="space-y-1.5">
-        <Label className="text-xs font-medium">Provider</Label>
+        <Label htmlFor="payroll-mapping-provider" className="text-xs font-medium">Provider</Label>
         <Select value={form.watch("provider")} onValueChange={handleProviderChange}>
-          <SelectTrigger className="h-9" aria-label="Payroll provider">
+          <SelectTrigger id="payroll-mapping-provider" className="h-9" aria-label="Payroll provider">
             <SelectValue />
           </SelectTrigger>
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">

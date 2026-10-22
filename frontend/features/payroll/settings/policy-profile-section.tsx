@@ -135,16 +135,16 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
-            <Label className="text-xs">Legal Entity Name</Label>
-            <Input {...register("legalEntityName")} className="text-sm" maxLength={200} />
+            <Label htmlFor="policy-legal-entity-name" className="text-xs">Legal Entity Name</Label>
+            <Input id="policy-legal-entity-name" {...register("legalEntityName")} className="text-sm" maxLength={200} />
             {errors.legalEntityName && (
               <p className="text-xs text-destructive">{errors.legalEntityName.message}</p>
             )}
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Currency <span className="text-destructive">*</span></Label>
+            <Label htmlFor="policy-currency" className="text-xs">Currency <span className="text-destructive">*</span></Label>
             <Select value={watch("currency")} onValueChange={handleCurrencyChange}>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger id="policy-currency" className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -157,9 +157,9 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Pay Frequency <span className="text-destructive">*</span></Label>
+            <Label htmlFor="policy-pay-frequency" className="text-xs">Pay Frequency <span className="text-destructive">*</span></Label>
             <Select value={watch("payFrequency")} onValueChange={handleFrequencyChange}>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger id="policy-pay-frequency" className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -172,9 +172,9 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Pay Day <span className="text-destructive">*</span></Label>
+            <Label htmlFor="policy-pay-day" className="text-xs">Pay Day <span className="text-destructive">*</span></Label>
             <Select value={watch("payDay")} onValueChange={handlePayDayChange}>
-              <SelectTrigger className="text-sm">
+              <SelectTrigger id="policy-pay-day" className="text-sm">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -187,8 +187,9 @@ export function PolicyProfileSection({ policy }: PolicyProfileSectionProps) {
             </Select>
           </div>
           <div className="space-y-1 col-span-2">
-            <Label className="text-xs">Start Month</Label>
+            <Label htmlFor="policy-start-month" className="text-xs">Start Month</Label>
             <MonthPicker
+              id="policy-start-month"
               value={watch("startMonth")}
               onChange={(val) => setValue("startMonth", val)}
               className=""

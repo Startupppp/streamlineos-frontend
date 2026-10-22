@@ -138,8 +138,9 @@ export function PayrollExportDialog({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-xs font-medium">Format</Label>
+            <Label id="payroll-export-format-label" className="text-xs font-medium">Format</Label>
             <RadioGroup
+              aria-labelledby="payroll-export-format-label"
               value={exportFormat}
               onValueChange={handleFormatChange}
               className="flex gap-4"
