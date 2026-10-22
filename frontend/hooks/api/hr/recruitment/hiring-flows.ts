@@ -1,11 +1,12 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { useCan } from "@/hooks/api/access";
 import type {
   HiringFlow,
   HiringFlowRound,
@@ -14,8 +15,6 @@ import type {
   CreateHiringFlowRoundInput,
   UpdateHiringFlowRoundInput,
 } from "@/types/hr/recruitment";
-import { useGatedQuery } from "@/hooks/api/gated-query";
-
 const hiringFlowListContract = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/hiring-flows-schema").then(
     (m) => m.hiringFlowListResponseSchema,
@@ -37,12 +36,23 @@ const hiringRoundContract = lazyContract(() =>
   ),
 );
 
+type HiringFlowWithRounds = HiringFlow & { rounds: HiringFlowRound[] };
+
 export function useHiringFlows() {
-  return useGatedQuery("hr:interviews:view", {
+  const canView = useCan("hr:interviews:view");
+  return useInfiniteQuery({
     queryKey: humanResourcesQueryKeys.hr.hiringFlows(),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<HiringFlow>>("/hr/recruitment/hiring-flows", undefined, signal, hiringFlowListContract)).items,
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<{ data: HiringFlowWithRounds[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        "/hr/recruitment/hiring-flows",
+        pageParam !== null ? { cursor: pageParam } : undefined,
+        signal,
+        hiringFlowListContract,
+      ),
+    initialPageParam: NULL_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
+    enabled: canView,
   });
 }
 

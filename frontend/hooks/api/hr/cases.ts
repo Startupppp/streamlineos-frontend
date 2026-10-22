@@ -1,6 +1,7 @@
 "use client";
 
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -223,10 +224,19 @@ export function useStartInvestigation(caseId: number) {
 }
 
 export function useCaseNotes(caseId: number) {
-  return useGatedQuery("hr:cases:view", {
+  const canView = useCan("hr:cases:view");
+  return useInfiniteQuery({
     queryKey: caseKeys.notes(caseId),
-    queryFn: ({ signal }) => apiClient.get<CaseNote[]>(`/hr/cases/${caseId}/notes`, undefined, signal, hrCaseNotesLazy),
-    enabled: caseId > 0,
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<{ data: CaseNote[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/hr/cases/${caseId}/notes`,
+        pageParam !== null ? { cursor: pageParam } : undefined,
+        signal,
+        hrCaseNotesLazy,
+      ),
+    initialPageParam: NULL_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
+    enabled: canView && caseId > 0,
     staleTime: 20_000,
   });
 }
@@ -246,10 +256,19 @@ export function useAddCaseNote(caseId: number) {
 }
 
 export function useCaseDocuments(caseId: number) {
-  return useGatedQuery("hr:cases:view", {
+  const canView = useCan("hr:cases:view");
+  return useInfiniteQuery({
     queryKey: caseKeys.documents(caseId),
-    queryFn: ({ signal }) => apiClient.get<CaseDocument[]>(`/hr/cases/${caseId}/documents`, undefined, signal, hrCaseDocumentsLazy),
-    enabled: caseId > 0,
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<{ data: CaseDocument[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
+        `/hr/cases/${caseId}/documents`,
+        pageParam !== null ? { cursor: pageParam } : undefined,
+        signal,
+        hrCaseDocumentsLazy,
+      ),
+    initialPageParam: NULL_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
+    enabled: canView && caseId > 0,
     staleTime: 30_000,
   });
 }

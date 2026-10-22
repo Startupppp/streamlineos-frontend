@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { unionMembershipsListQueryOptions } from "./use-labor-read-options";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -68,13 +69,6 @@ export interface LaborCase {
 }
 
 const LABOR_KEY = ["hr", "governance", "labor"] as const;
-
-export function unionMembershipsListQueryOptions(params?: { unionName?: string; status?: string; cursor?: string; limit?: number }) {
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.hrLaborMembershipsAll, params] as const,
-    staleTime: 30_000,
-  };
-}
 
 export function useUnionMemberships(params?: { unionName?: string; status?: string; cursor?: string; limit?: number }) {
   const canViewLabor = useCan("hr:labor:view");

@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { ProjectOverviewPage } from "@/features/build/overview/project-overview-page";
-import { prefetchProjectMilestones } from "@/lib/prefetch/build";
+import { prefetchProjectOverview } from "@/lib/prefetch/build";
 import ProjectBoardLoading from "./loading";
 
 interface PageProps {
@@ -15,7 +15,7 @@ export default async function ProjectOverviewRoute({ params }: PageProps) {
   const { projectId } = await params;
   const id = Number(projectId);
   if (!Number.isInteger(id) || id <= 0) notFound();
-  const state = await prefetchProjectMilestones(id);
+  const state = await prefetchProjectOverview(id);
   return (
     <Suspense fallback={<ProjectBoardLoading />}>
       <HydrationBoundary state={state}>

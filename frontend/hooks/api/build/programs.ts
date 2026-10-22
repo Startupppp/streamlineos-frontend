@@ -47,31 +47,6 @@ interface ProgramListFilters {
   order?: ProgramListOrder;
 }
 
-export function usePrograms(filters?: ProgramListFilters) {
-  const canView = useCan("build:programs:view");
-  const params: Record<string, string> = {};
-  if (filters?.cursor) params["cursor"] = filters.cursor;
-  if (filters?.limit) params["limit"] = String(filters.limit);
-  if (filters?.q) params["q"] = filters.q;
-  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
-  if (filters?.health) params["health"] = filters.health;
-  if (filters?.status) params["status"] = filters.status;
-  if (filters?.portfolioId) params["portfolioId"] = String(filters.portfolioId);
-  if (filters?.projectId) params["projectId"] = String(filters.projectId);
-  if (filters?.sort) params["sort"] = filters.sort;
-  if (filters?.order) params["order"] = filters.order;
-  return useQuery<ProgramsPage>({
-    queryKey: buildWorkQueryKeys.projects.programs.list(
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProgramsPage>("/build/programs", params, signal, programPageContract),
-    enabled: canView,
-    placeholderData: keepPreviousData,
-    staleTime: 30_000,
-  });
-}
-
 export function useProgram(
   programId: number,
   filters?: { projectsCursor?: string; projectsLimit?: number },
@@ -160,7 +135,10 @@ export function programsListQueryOptions(filters?: ProgramListFilters) {
   if (filters?.ownerId) params["ownerId"] = filters.ownerId;
   if (filters?.health) params["health"] = filters.health;
   if (filters?.status) params["status"] = filters.status;
+  if (filters?.portfolioId) params["portfolioId"] = String(filters.portfolioId);
+  if (filters?.projectId) params["projectId"] = String(filters.projectId);
   if (filters?.sort) params["sort"] = filters.sort;
+  if (filters?.order) params["order"] = filters.order;
   return queryOptions<ProgramsPage>({
     queryKey: buildWorkQueryKeys.projects.programs.list(
       Object.keys(params).length > 0 ? params : undefined,
@@ -168,5 +146,14 @@ export function programsListQueryOptions(filters?: ProgramListFilters) {
     queryFn: ({ signal }) =>
       apiClient.get<ProgramsPage>("/build/programs", params, signal, programPageContract),
     staleTime: 30_000,
+  });
+}
+
+export function usePrograms(filters?: ProgramListFilters) {
+  const canView = useCan("build:programs:view");
+  return useQuery<ProgramsPage>({
+    ...programsListQueryOptions(filters),
+    enabled: canView,
+    placeholderData: keepPreviousData,
   });
 }

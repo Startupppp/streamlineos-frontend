@@ -43,20 +43,9 @@ interface SaveDashboardLayoutContext {
 
 export function useDashboardLayout() {
   const canView = useCan("build:dashboard:view");
-  const qk = buildWorkQueryKeys.commandCenter.layout();
   return useQuery({
+    ...commandCenterLayoutQueryOptions(),
     enabled: canView,
-    staleTime: 60_000,
-    queryKey: qk,
-    queryFn: ({ signal }) =>
-      optionalSignalRead(
-        apiClient.get(
-          "/build/command-center/layout",
-          {},
-          signal,
-          dashboardLayoutLazy,
-        ),
-      ),
     ...INLINE_READ_ERROR,
   });
 }

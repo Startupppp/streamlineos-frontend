@@ -36,7 +36,7 @@ export function useIntakeRequests(
   if (params?.limit) query["limit"] = String(params.limit);
   const queryParams = Object.keys(query).length ? query : undefined;
   return useQuery<IntakePage>({
-    queryKey: buildWorkQueryKeys.projects.intake(projectId, queryParams),
+    ...intakeRequestsQueryOptions(projectId, queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<IntakePage>(
         `/build/${projectId}/intake`,
@@ -44,17 +44,19 @@ export function useIntakeRequests(
         signal,
         intakeListContract,
       ),
-    staleTime: 30_000,
     ...options,
     enabled: canView && !!projectId,
   });
 }
 
-export function intakeRequestsQueryOptions(projectId: number) {
+export function intakeRequestsQueryOptions(projectId: number, params?: Record<string, string>) {
   return {
-    queryKey: buildWorkQueryKeys.projects.intake(projectId),
+    queryKey: buildWorkQueryKeys.projects.intake(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
     staleTime: 30_000,
-  } as const;
+  };
 }
 
 export function useCreateIntakeRequest() {

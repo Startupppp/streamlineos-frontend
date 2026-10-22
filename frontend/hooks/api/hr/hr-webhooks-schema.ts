@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 import { queryKeyBase } from "@/lib/query-keys/base";
 
 const WEBHOOKS_BASE = [...queryKeyBase, "hr", "webhooks"] as const;
@@ -26,11 +27,8 @@ export const hrWebhookSubscriptionWithSecretContract = hrWebhookSubscriptionCont
 });
 
 export const hrWebhookSubscriptionListContract = z.object({
-  items: z.array(hrWebhookSubscriptionContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  pageSize: z.number().int(),
-  totalPages: z.number().int(),
+  data: z.array(hrWebhookSubscriptionContract),
+  pagination: cursorPaginationContract,
 });
 
 export const hrWebhookDeliveryContract = z.object({
@@ -48,11 +46,8 @@ export const hrWebhookDeliveryContract = z.object({
 });
 
 export const hrWebhookDeliveryListContract = z.object({
-  items: z.array(hrWebhookDeliveryContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  pageSize: z.number().int(),
-  totalPages: z.number().int(),
+  data: z.array(hrWebhookDeliveryContract),
+  pagination: cursorPaginationContract,
 });
 
 export const hrWebhookEventsResponseContract = z.object({

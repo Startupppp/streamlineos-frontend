@@ -7,7 +7,15 @@ function bodyOf(hookName: string): string {
   const start = SOURCE.indexOf(`export function ${hookName}(`);
   expect(start).toBeGreaterThanOrEqual(0);
   const next = SOURCE.indexOf("\nexport function ", start + 1);
-  return SOURCE.slice(start, next === -1 ? undefined : next);
+  const body = SOURCE.slice(start, next === -1 ? undefined : next);
+  const factoryBodies = [...body.matchAll(/\.\.\.(\w+QueryOptions)\(/g)].map((match) => {
+    const marker = `export function ${match[1]}(`;
+    const fStart = SOURCE.indexOf(marker);
+    if (fStart === -1) return "";
+    const fEnd = SOURCE.indexOf("\nexport function ", fStart + marker.length);
+    return SOURCE.slice(fStart, fEnd === -1 ? undefined : fEnd);
+  });
+  return [body, ...factoryBodies].join("\n");
 }
 
 const GOAL_WRITES = [

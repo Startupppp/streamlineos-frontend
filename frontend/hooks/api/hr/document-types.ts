@@ -9,6 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { hrDocumentTypesPageQueryOptions } from "./document-types-read-options";
 
 const documentTypeLazy = lazyContract(() =>
   import("@/hooks/api/hr/document-types-schema").then((m) => m.documentTypeContract),
@@ -63,14 +64,6 @@ export function useHrDocumentTypes(options?: { enabled?: boolean; limit?: number
     },
     staleTime: 5 * 60_000,
   });
-}
-
-export function hrDocumentTypesPageQueryOptions(cursor: string | undefined, limit: number) {
-  const params = cursor ? { cursor, limit } : { limit };
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), params] as const,
-    staleTime: 30_000,
-  } as const;
 }
 
 export function useHrDocumentTypesPage(cursor: string | undefined, limit: number) {

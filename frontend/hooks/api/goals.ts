@@ -184,13 +184,9 @@ function forEachGoalList(
 }
 
 export function useGoals(params?: GoalsParams, options?: { enabled?: boolean }) {
-  const queryParams = toQueryParams(params);
   return useGatedQuery("build:goals:view", {
-    queryKey: accountingAndSupportQueryKeys.goals.list(queryParams),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
+    ...goalsListQueryOptions(params),
     enabled: options?.enabled ?? true,
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
     ...INLINE_READ_ERROR,
   });

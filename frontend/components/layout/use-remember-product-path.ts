@@ -14,7 +14,6 @@ import {
   writeLastProductPath,
 } from "./last-product-path";
 
-/** Persist the current module URL so the product switcher can restore it later. */
 export function useRememberProductPath(): void {
   const pathname = usePathname() ?? "";
   const searchParams = useSearchParams();

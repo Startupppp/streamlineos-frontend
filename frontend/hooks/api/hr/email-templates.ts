@@ -4,6 +4,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import { emailTemplatesListQueryOptions } from "./email-templates-read-options";
 import type { UseMutationOptions, UseQueryOptions } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useSession } from "next-auth/react";
@@ -59,13 +60,6 @@ export interface GenerateAiEmailTemplateInput {
   name: string;
   subject?: string;
   category?: string;
-}
-
-export function emailTemplatesListQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.emailTemplatesList(),
-    staleTime: 60_000,
-  } as const;
 }
 
 export function useEmailTemplates(

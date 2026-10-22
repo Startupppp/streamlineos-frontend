@@ -27,7 +27,8 @@ import { FlowFormSheet } from "@/features/recruitment/hiring-flows/flow-form-she
 import { RoundFormSheet } from "@/features/recruitment/hiring-flows/round-form-sheet";
 
 export function HiringFlowsPage() {
-  const { data: flows, isLoading, isError, refetch } = useHiringFlows();
+  const { data: flowsData, isPending: isLoading, isError, refetch } = useHiringFlows();
+  const flows = flowsData?.pages?.flatMap((p) => p.data) ?? [];
   const deleteFlow = useDeleteHiringFlow();
 
   const [flowSheetOpen, setFlowSheetOpen] = useState(false);
@@ -108,7 +109,7 @@ export function HiringFlowsPage() {
       );
     }
 
-    if (!flows || flows.length === 0) {
+    if (flows.length === 0) {
       return (
         <RecruitmentEmptyState
           illustration={<EmptySprintIllustration />}

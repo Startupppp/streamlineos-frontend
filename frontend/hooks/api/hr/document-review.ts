@@ -8,6 +8,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { onboardingDocsSummaryQueryOptions } from "./document-review-read-options";
 
 const onboardingDocListLazy = lazyContract(() =>
   import("@/hooks/api/hr/document-review-schema").then((m) => m.onboardingDocListContract),
@@ -18,9 +19,14 @@ const onboardingDocRowLazy = lazyContract(() =>
 
 const REVIEW_DOCS_PAGE_SIZE = 20;
 
-export function hrOnboardingDocAdminListQueryOptions(params?: { limit?: number; cursor?: string }) {
+function hrOnboardingDocAdminListQueryOptions(params?: { limit?: number; cursor?: string; userId?: string }) {
+  const normalized = {
+    limit: params?.limit ?? REVIEW_DOCS_PAGE_SIZE,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
+    ...(params?.userId ? { userId: params.userId } : {}),
+  };
   return {
-    queryKey: humanResourcesQueryKeys.hr.onboardingDocs({ limit: params?.limit ?? REVIEW_DOCS_PAGE_SIZE, ...(params?.cursor ? { cursor: params.cursor } : {}) }),
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocs(normalized),
     staleTime: 30_000,
   } as const;
 }
@@ -35,10 +41,10 @@ export function useEmployeeOnboardingDocs(
 ) {
   const canReviewDocs = useCan("hr:onboarding:manage");
   return useQuery<EmployeeOnboardingDocsResponse>({
-    queryKey: humanResourcesQueryKeys.hr.onboardingDocs({
-      userId: userId ?? undefined,
-      cursor,
+    ...hrOnboardingDocAdminListQueryOptions({
       limit: REVIEW_DOCS_PAGE_SIZE,
+      ...(userId ? { userId } : {}),
+      ...(cursor ? { cursor } : {}),
     }),
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeOnboardingDocsResponse>(
@@ -48,7 +54,6 @@ export function useEmployeeOnboardingDocs(
         onboardingDocListLazy,
       ),
     enabled: canReviewDocs && !!userId,
-    staleTime: 30_000,
   });
 }
 

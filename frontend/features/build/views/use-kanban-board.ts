@@ -4,7 +4,8 @@ import { useState, useRef, useCallback, useMemo } from "react";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useCan } from "@/hooks/api/access";
-import { useTicketColumnCounts, type BoardFilters } from "@/hooks/api/build/ticket-queries";
+import { useTicketColumnCounts } from "@/hooks/api/build/ticket-queries";
+import type { BoardFilters } from "@/hooks/api/build/ticket-queries-read-options";
 import {
   type StatusEntry,
   buildColumns,

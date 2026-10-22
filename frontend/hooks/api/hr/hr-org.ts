@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { orgRolesQueryOptions } from "./hr-org-read-options";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -15,13 +16,6 @@ import type {
   HrJobLevel,
   OrgCatalogInput,
 } from "@/types/hr/core";
-
-export function orgRolesQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.orgRoles(),
-    staleTime: 5 * 60_000,
-  } as const;
-}
 
 export function useOrgJobRoles(options?: { enabled?: boolean }) {
   const canView = useCan("hr:employees:view");

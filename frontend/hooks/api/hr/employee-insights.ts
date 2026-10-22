@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { skillsMatrixQueryOptions } from "./employee-insights-read-options";
 import type { EmployeeStats } from "@/types/hr";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
@@ -111,13 +112,6 @@ export function useHrEmployeeStats(userId: string) {
     queryFn: ({ signal }) =>
       apiClient.get<EmployeeStats>("/hr/employees/stats", { userId }, signal, employeeStatsLazy),
     staleTime: 2 * 60_000,
-    /**
-     * Ticket 02. This is a satellite read on a profile whose own record has
-     * already loaded, and every consumer draws its absence. Left on the
-     * provider default it throws to the route boundary instead, and the whole
-     * employee page becomes "Failed to load employee details" because one
-     * secondary call failed.
-     */
     ...INLINE_READ_ERROR,
     enabled: hrEnabled && !!userId && canView,
   });
@@ -207,13 +201,6 @@ export function useFindExpert(params: FindExpertParams) {
   });
 }
 
-export function skillsMatrixQueryOptions(params?: { cursor?: string; limit?: number }) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.skillsMatrix({ cursor: params?.cursor, limit: params?.limit ?? 20 }),
-    staleTime: 60_000,
-  } as const;
-}
-
 export function useSkillsMatrix(params: SkillsMatrixParams = {}) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
@@ -249,9 +236,6 @@ export function useDirectReports(employeeId: string) {
       ),
     enabled: hrEnabled && !!employeeId && canView,
     staleTime: 5 * 60_000,
-    // `DirectReportsSection` already draws its own failure and retry; on the
-    // provider default it never gets the chance, because the failure replaces
-    // the whole profile route first (ticket 02).
     ...INLINE_READ_ERROR,
   });
 }
@@ -274,7 +258,6 @@ export function useManagerScorecard(employeeId: string) {
       ),
     enabled: hrEnabled && !!employeeId && canView,
     staleTime: 5 * 60_000,
-    // Same as `useDirectReports`: the card owns its error state (ticket 02).
     ...INLINE_READ_ERROR,
   });
 }

@@ -6,7 +6,6 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { readFileAsBase64 } from "@/lib/read-file-as-base64";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
@@ -74,7 +73,7 @@ export function useProjectFiles(projectId: number, filters?: { q?: string }) {
   const keyFilters = filters?.q ? { q: filters.q } : undefined;
   const query = useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: buildWorkQueryKeys.projects.files.list(projectId, keyFilters),
+    ...projectFilesListQueryOptions(projectId, keyFilters),
     queryFn: ({ signal, pageParam }) => {
       const params: Record<string, string> = {};
       if (pageParam !== undefined) params["cursor"] = pageParam;
@@ -86,10 +85,7 @@ export function useProjectFiles(projectId: number, filters?: { q?: string }) {
         filePageContract,
       );
     },
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
-    staleTime: 30_000,
   });
   const data = useMemo(
     () => query.data?.pages.flatMap((page) => page.data) ?? [],
@@ -157,9 +153,12 @@ export function useDeleteProjectFile(projectId: number) {
   });
 }
 
-export function projectFilesListQueryOptions(projectId: number) {
+export function projectFilesListQueryOptions(projectId: number, filters?: { q?: string }) {
   return {
-    queryKey: buildWorkQueryKeys.projects.files.list(projectId),
+    queryKey: buildWorkQueryKeys.projects.files.list(
+      projectId,
+      filters?.q ? filters : undefined,
+    ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
       last.pagination.nextCursor ?? undefined,

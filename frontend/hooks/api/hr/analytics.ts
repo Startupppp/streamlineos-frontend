@@ -1,6 +1,7 @@
 "use client";
 
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { queryOptions, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -254,24 +255,24 @@ export function useHrComplianceGaps(departmentId?: number) {
   });
 }
 
-export interface HrDrilldownData {
+export interface HrDrilldownPage {
   rows: Record<string, unknown>[];
-  total: number;
-  page: number;
-  limit: number;
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export function useHrDrilldown(metric: string, page: number, departmentId?: number, limit = 20) {
+export function useHrDrilldown(metric: string, departmentId?: number, limit = 20) {
   const canAnalytics = useCan("hr:analytics:read");
-  return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "drilldown", metric, page, departmentId, limit] as const,
-    queryFn: ({ signal }) =>
-      apiClient.get<HrDrilldownData>("/hr/analytics-plus/drilldown", {
+  return useInfiniteQuery({
+    queryKey: [...humanResourcesQueryKeys.hr.all, "drilldown", metric, departmentId, limit] as const,
+    queryFn: ({ pageParam, signal }) =>
+      apiClient.get<HrDrilldownPage>("/hr/analytics-plus/drilldown", {
         metric,
-        page: String(page),
         limit: String(limit),
+        ...(pageParam !== null ? { cursor: pageParam } : {}),
         ...(departmentId ? { departmentId: String(departmentId) } : {}),
       }, signal, hrDrilldownC),
+    initialPageParam: NULL_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
     enabled: canAnalytics && !!metric,
     ...INLINE_READ_ERROR,

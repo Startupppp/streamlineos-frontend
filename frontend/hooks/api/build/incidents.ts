@@ -47,12 +47,10 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   if (filters?.q) params["q"] = filters.q;
   if (filters?.cursor) params["cursor"] = filters.cursor;
   if (filters?.limit) params["limit"] = String(filters.limit);
+  const keyParams = Object.keys(params).length > 0 ? params : undefined;
 
   return useQuery({
-    queryKey: buildWorkQueryKeys.projects.incidents.list(
-      projectId ?? 0,
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
+    ...incidentsListQueryOptions(projectId ?? 0, keyParams),
     queryFn: ({ signal }) =>
       apiClient.get<{
         data: IncidentsCreateIncidentResponse[];
@@ -64,16 +62,18 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
         incidentListContract,
       ),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
     refetchOnWindowFocus: "always",
   });
 }
 
-export function incidentsListQueryOptions(projectId: number) {
+export function incidentsListQueryOptions(projectId: number, params?: Record<string, string>) {
   return {
-    queryKey: buildWorkQueryKeys.projects.incidents.list(projectId),
+    queryKey: buildWorkQueryKeys.projects.incidents.list(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
     staleTime: 60_000,
-  } as const;
+  };
 }
 
 export function incidentDetailQueryOptions(projectId: number, incidentId: number) {
@@ -88,10 +88,7 @@ export function incidentDetailQueryOptions(projectId: number, incidentId: number
 export function useIncident(projectId?: number, incidentId?: number) {
   const canView = useCan("build:incidents:view");
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.incidents.detail(
-      projectId ?? 0,
-      incidentId ?? 0,
-    ),
+    ...incidentDetailQueryOptions(projectId ?? 0, incidentId ?? 0),
     queryFn: ({ signal, pageParam }) => {
       const params: Record<string, string> = { limit: "100" };
       if (pageParam.updatesCursor !== undefined)
@@ -107,7 +104,6 @@ export function useIncident(projectId?: number, incidentId?: number) {
         incidentDetailContract,
       );
     },
-    initialPageParam: INITIAL_INCIDENT_PAGE_PARAM,
     getNextPageParam: (last) => {
       const pagination = last.childrenPagination;
       if (
@@ -129,7 +125,6 @@ export function useIncident(projectId?: number, incidentId?: number) {
       };
     },
     enabled: canView && !!projectId && !!incidentId,
-    staleTime: 15_000,
     refetchInterval: 30_000,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: "always",

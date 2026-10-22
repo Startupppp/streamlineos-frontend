@@ -24,6 +24,7 @@ const onboardingDocsSummaryLazy = lazyContract(() =>
 );
 import type { Document, DocumentType } from "@/types/hr";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { hrDocumentListQueryOptions, myOnboardingDocsQueryOptions } from "./documents-read-options";
 
 export interface HrDocumentListParams {
   cursor?: string;
@@ -40,23 +41,6 @@ export interface HrDocumentListResponse {
 }
 
 export const hrDocumentListPrefix = humanResourcesQueryKeys.hr.documentsAll;
-
-export function hrDocumentListQueryOptions(params?: HrDocumentListParams) {
-  const queryParams: Record<string, unknown> = {
-    limit: params?.limit ?? 20,
-    ...(params?.cursor ? { cursor: params.cursor } : {}),
-    ...(params?.userId ? { userId: params.userId } : {}),
-    ...(params?.type ? { type: params.type } : {}),
-    ...(params?.search ? { search: params.search } : {}),
-    ...(params?.category && params.category !== "All Files"
-      ? { category: params.category }
-      : {}),
-  };
-  return {
-    queryKey: humanResourcesQueryKeys.hr.documents(queryParams),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useHrDocumentList(params?: HrDocumentListParams) {
   const canDocs = useCan("hr:documents:view");
@@ -163,13 +147,6 @@ export interface MyOnboardingDocsParams {
   cursor?: string;
   limit?: number;
   status?: MyOnboardingDocStatus;
-}
-
-export function myOnboardingDocsQueryOptions(params: { limit: number; cursor?: string; status?: MyOnboardingDocStatus }) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.onboardingDocs(params),
-    staleTime: 60_000,
-  } as const;
 }
 
 export function useMyOnboardingDocs(

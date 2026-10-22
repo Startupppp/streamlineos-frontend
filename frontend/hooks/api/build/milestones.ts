@@ -11,7 +11,8 @@ import type {
   ProjectBudgetUpdate,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { queryKeyBase } from "@/lib/query-keys/base";
+import { milestonesQueryOptions, milestoneBaseKey } from "./milestones-read-options";
+import type { MilestoneListQuery } from "./milestones-read-options";
 
 export type ProjectMilestone = ProjectMilestoneBase & {
   completedTicketCount: number;
@@ -61,47 +62,22 @@ interface UpdateMilestoneInput {
   ownerMembershipId?: number | null;
 }
 
-interface MilestoneListQuery {
-  cursor?: string;
-  limit?: number;
-  status?: "PENDING" | "ACHIEVED" | "MISSED";
-  q?: string;
-  from?: string;
-  to?: string;
-  ownerId?: number;
-}
-
-function milestoneBaseKey(projectId: number) {
-  return [...queryKeyBase, "projects", projectId, "milestones"] as const;
-}
-
-function milestoneKey(projectId: number, query?: MilestoneListQuery) {
-  return [...milestoneBaseKey(projectId), query ?? {}] as const;
-}
-
-export function milestonesQueryOptions(projectId: number) {
-  return {
-    queryKey: milestoneKey(projectId),
-    staleTime: 30_000,
-  };
-}
-
 export function useProjectMilestones(
   projectId: number,
   query: MilestoneListQuery = {},
 ) {
   const canViewState = useCanState("build:view");
+  const q = query;
   return useQuery({
-    queryKey: milestoneKey(projectId, query),
+    ...milestonesQueryOptions(projectId, q),
     queryFn: ({ signal }) =>
-      apiClient.get(
+      apiClient.get<MilestonePage>(
         `/build/${projectId}/milestones`,
-        query,
+        q,
         signal,
         milestoneListContract,
       ),
     enabled: canViewState !== "denied" && !!projectId,
-    staleTime: 30_000,
   });
 }
 
@@ -168,10 +144,17 @@ export function useDeleteMilestone(projectId: number) {
   });
 }
 
+export function projectBudgetQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.budget(projectId),
+    staleTime: 60_000,
+  };
+}
+
 export function useProjectBudget(projectId: number) {
   const canManage = useCan("build:manage");
   return useQuery({
-    queryKey: buildWorkQueryKeys.projects.budget(projectId),
+    ...projectBudgetQueryOptions(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectBudget>(
         `/build/${projectId}/budget`,
@@ -180,7 +163,6 @@ export function useProjectBudget(projectId: number) {
         projectBudgetContract,
       ),
     enabled: canManage && !!projectId,
-    staleTime: 60_000,
   });
 }
 

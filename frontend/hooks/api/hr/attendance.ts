@@ -15,6 +15,7 @@ import { getClockLocation } from "@/lib/geo/get-clock-location";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { attendanceStatusQueryOptions } from "./attendance-read-options";
 import type {
   AttendanceStatusResult,
   AttendanceLog,
@@ -87,13 +88,6 @@ export interface CreateRegularizationInput {
 export interface AttendanceHistoryResponse {
   data: AttendanceLog[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
-
-export function attendanceStatusQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.attendanceStatus(),
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useHrAttendanceStatus(

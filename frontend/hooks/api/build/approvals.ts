@@ -140,12 +140,11 @@ export function useProjectApprovals(projectId: number, filters?: ApprovalFilters
   if (filters?.status) params.status = filters.status;
   if (filters?.entityType) params.entityType = filters.entityType;
   if (filters?.actorId) params.approverId = filters.actorId;
+  const keyParams = Object.keys(params).length ? params : undefined;
   return useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.approvals.list(projectId, Object.keys(params).length ? params : undefined),
+    ...projectApprovalsListQueryOptions(projectId, keyParams),
     queryFn: ({ pageParam, signal }) => getProjectApprovalsPage(projectId, filters, pageParam, signal),
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
-    enabled: canView && projectId > 0, staleTime: 60_000,
+    enabled: canView && projectId > 0,
   });
 }
 
@@ -365,9 +364,12 @@ export function useDeleteApproval(projectId: number) {
   );
 }
 
-export function projectApprovalsListQueryOptions(projectId: number) {
+export function projectApprovalsListQueryOptions(projectId: number, params?: Record<string, string>) {
   return {
-    queryKey: buildWorkQueryKeys.projects.approvals.list(projectId),
+    queryKey: buildWorkQueryKeys.projects.approvals.list(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
       last.pagination.nextCursor ?? undefined,

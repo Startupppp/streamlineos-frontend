@@ -18,6 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { ErrorState } from "@/components/shared/error-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
@@ -124,7 +125,8 @@ function DeliveryRow({
 }
 
 export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Props) {
-  const { data: deliveries, isLoading, isError, error, refetch } = useHrWebhookDeliveries(subscription.id);
+  const { data: deliveriesData, isPending: isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useHrWebhookDeliveries(subscription.id);
+  const deliveries = deliveriesData?.pages?.flatMap((p) => p.data) ?? [];
 
   const manageAccess = useCanState("hr:integrations:manage");
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
@@ -163,7 +165,7 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
                 onRetry={handleRetry}
               />
             </div>
-          ) : !deliveries || deliveries.length === 0 ? (
+          ) : deliveries.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-48 text-center text-sm text-muted-foreground">
               <p>No deliveries yet.</p>
               <p className="text-xs mt-1">Use the Test button to send a sample payload.</p>
@@ -173,6 +175,12 @@ export function WebhookDeliveriesSheet({ open, onOpenChange, subscription }: Pro
               {deliveries.map((d) => (
                 <DeliveryRow key={d.id} delivery={d} subscriptionId={subscription.id} />
               ))}
+              <InfiniteScrollSentinel
+                hasNextPage={hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={fetchNextPage}
+                label="Load more deliveries"
+              />
             </div>
           )}
         </ScrollArea>

@@ -6,7 +6,6 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const updatePageContract = lazyContract(() =>
@@ -75,11 +74,9 @@ export function useProjectUpdates(
   if (filters?.status) activeFilters.status = filters.status;
   if (filters?.audience) activeFilters.audience = filters.audience;
 
+  const keyFilters = Object.keys(activeFilters).length > 0 ? activeFilters : undefined;
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.updates.list(
-      projectId,
-      Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
-    ),
+    ...projectUpdatesListQueryOptions(projectId, keyFilters),
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<ProjectUpdatePage>(
         `/build/${projectId}/updates`,
@@ -94,10 +91,7 @@ export function useProjectUpdates(
         signal,
         updatePageContract,
       ),
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
-    staleTime: 30_000,
   });
   const data = useMemo(
     () => query.data?.pages.flatMap((page) => page.data) ?? [],
@@ -125,9 +119,12 @@ export function useCreateProjectUpdate(projectId: number) {
   });
 }
 
-export function projectUpdatesListQueryOptions(projectId: number) {
+export function projectUpdatesListQueryOptions(projectId: number, filters?: ProjectUpdatesFilters) {
   return {
-    queryKey: buildWorkQueryKeys.projects.updates.list(projectId),
+    queryKey: buildWorkQueryKeys.projects.updates.list(
+      projectId,
+      filters && Object.keys(filters).length > 0 ? filters : undefined,
+    ),
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
       last.pagination.nextCursor ?? undefined,

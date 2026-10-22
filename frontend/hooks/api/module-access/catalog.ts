@@ -4,18 +4,13 @@ import { useInfiniteQuery, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
+import { moduleMyPermissionsQueryOptions } from "./catalog-read-options";
 import { useCan } from "@/hooks/api/access";
 import type { AuditCursorPage, AuditLogEntry, ModuleMyPermissions, ModulePermission } from "./types";
 import { viewKey, manageKey } from "./types";
 import { lazyContract } from "@/lib/api-envelope";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
-/**
- * Deferred: `components/members/member-picker.tsx` reaches this module through
- * the `hooks/api/module-access` barrel from route shells that never open a
- * module-access screen, which put Zod in their first load. Each contract is
- * still passed to the seam, so all three reads parse as before.
- */
 const catalogContract = lazyContract(() =>
   import("./module-access-schema").then((m) => m.moduleCatalogContract),
 );
@@ -44,13 +39,6 @@ export function useModuleAccessCatalog(
     enabled: canManage && (options?.enabled ?? true),
     staleTime: 5 * 60_000,
   });
-}
-
-export function moduleMyPermissionsQueryOptions(moduleKey: string) {
-  return {
-    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.myPermissions(moduleKey),
-    staleTime: 30_000,
-  } as const;
 }
 
 export function useModuleMyPermissions(moduleKey: string) {

@@ -64,6 +64,7 @@ const crmPulseDashboardContract = lazyContract(() =>
   import("@/hooks/api/dashboard-schema").then((m) => m.crmPulseDashboardContract),
 );
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { dashboardStatsQueryOptions, myIssuesQueryOptions, personalDashboardQueryOptions, publicDocumentsQueryOptions } from "./dashboard-read-options";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { homeSectionModule } from "@/lib/home/home-sections";
@@ -94,34 +95,6 @@ export type LeaveBalance = z.infer<typeof leaveBalanceContractDef>[number];
 export type TeamAttendance = z.infer<typeof teamAttendanceContractDef>;
 type CreatedAnnouncement = z.infer<typeof announcementContractDef>;
 type PersonalDashboard = z.infer<typeof personalDashboardContractDef>;
-
-export function dashboardStatsQueryOptions() {
-  return {
-    queryKey: collaborationQueryKeys.dashboard.stats(),
-    staleTime: 5 * 60_000,
-  };
-}
-
-export function myIssuesQueryOptions() {
-  return {
-    queryKey: collaborationQueryKeys.dashboard.myIssues(),
-    staleTime: 5 * 60_000,
-  };
-}
-
-export function personalDashboardQueryOptions() {
-  return {
-    queryKey: collaborationQueryKeys.dashboard.personal(),
-    staleTime: 2 * 60_000,
-  };
-}
-
-export function publicDocumentsQueryOptions(limit: number) {
-  return {
-    queryKey: collaborationQueryKeys.dashboard.publicDocuments(limit),
-    staleTime: 5 * 60_000,
-  };
-}
 
 export const useDashboardStats = (
   options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
@@ -360,17 +333,6 @@ export interface Announcement {
   authorLastName: string | null;
 }
 
-/**
- * `leaveBalance` and `unreadNotifications` used to be here and are gone.
- *
- * Neither was ever read: they appeared exactly once each in this repository —
- * on this interface — while `usePersonalDashboard`'s three consumers
- * (my-tasks-widget, timesheet-widget, upcoming-events-widget) read `myTasks`,
- * `timesheetStatus` and `upcomingEvents`. The leave balance Home renders comes
- * from `useMyLeaveBalance` -> GET /dashboard/my-leave-balance, a different
- * route. The backend no longer computes either; the unread count was the most
- * expensive query on the Home surface.
- */
 interface ExecutiveDashboard {
   headcount: number;
   openRoles: number;

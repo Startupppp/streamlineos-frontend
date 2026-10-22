@@ -25,7 +25,7 @@ import {
   BOARD_COLUMN_VIRTUALIZATION_THRESHOLD,
 } from "./kanban-board-utils";
 import { useKanbanBoard } from "./use-kanban-board";
-import type { BoardFilters } from "@/hooks/api/build/ticket-queries";
+import type { BoardFilters } from "@/hooks/api/build/ticket-queries-read-options";
 
 interface KanbanBoardProps {
   tickets: KanbanTicket[];

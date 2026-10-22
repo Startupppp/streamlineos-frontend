@@ -3,9 +3,9 @@
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { assignedInterviewsQueryOptions } from "./recruitment-read-options";
 
 const ASSIGNED_INTERVIEWS_PAGE_SIZE = 20;
 
@@ -40,20 +40,15 @@ const interviewScorecardC = lazyContract(() =>
 
 const recruitmentKey = ["employee-self-service", "recruitment"] as const;
 
-export function assignedInterviewsQueryOptions(page: number) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.hrAssignedInterviews(page),
+export function useAssignedInterviews(page: number) {
+  return useGatedQuery("self:recruitment", {
+    ...assignedInterviewsQueryOptions(page),
     queryFn: ({ signal }: { signal?: AbortSignal }) =>
       apiClient.get<AssignedInterviewsResponse>("/me/recruitment", {
         page,
         pageSize: ASSIGNED_INTERVIEWS_PAGE_SIZE,
       }, signal, assignedInterviewsC),
-    staleTime: 60_000,
-  } as const;
-}
-
-export function useAssignedInterviews(page: number) {
-  return useGatedQuery("self:recruitment", assignedInterviewsQueryOptions(page));
+  });
 }
 
 export function useSubmitAssignedInterviewScorecard(interviewId: number) {

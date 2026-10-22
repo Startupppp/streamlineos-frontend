@@ -7,7 +7,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeyBase } from "@/lib/query-keys/base";
+import { emergencyKeys, emergencyEventsListQueryOptions } from "./enterprise-ops-emergency-read-options";
 
 export type EmergencyEventType = "office_closure" | "disaster" | "safety_check" | "other";
 export type EmergencyEventStatus = "active" | "resolved";
@@ -43,12 +43,6 @@ interface PaginatedResult<T> {
 
 const BASE = "/hr/enterprise/ops/emergency";
 
-const emergencyKeys = {
-  all: [...queryKeyBase, "hr-emergency"] as const,
-  list: (p: Record<string, unknown>) => [...queryKeyBase, "hr-emergency", "list", p] as const,
-  detail: (id: string) => [...queryKeyBase, "hr-emergency", "detail", id] as const,
-  status: (id: string) => [...queryKeyBase, "hr-emergency", "status", id] as const,
-};
 
 const _listEmergencyEventsContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listEmergencyEventsContract),
@@ -71,13 +65,6 @@ const _broadcastResponseContract = lazyContract(() =>
 const _respondToEventContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.respondToEventContract),
 );
-
-export function emergencyEventsListQueryOptions(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
-  return {
-    queryKey: emergencyKeys.list(params),
-    staleTime: 30_000,
-  };
-}
 
 export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
   return useGatedQuery("hr:emergency:manage", {

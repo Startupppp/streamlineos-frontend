@@ -3,8 +3,8 @@ import { z } from "zod";
 import type { templateRowContract as templateRowContractDef } from "@/hooks/api/build/roadmap-schema";
 
 import {
+  infiniteQueryOptions,
   keepPreviousData,
-  queryOptions,
   useInfiniteQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -70,31 +70,9 @@ interface TemplateFilters {
 
 export function useProjectTemplates(filters?: TemplateFilters) {
   const canView = useCan("build:view");
-  const q = filters?.q;
-  const category = filters?.category;
-  const sort = filters?.sort;
   return useInfiniteQuery({
-    queryKey: [
-      ...buildWorkQueryKeys.projects.templates(),
-      { q, category, sort },
-    ],
-    queryFn: ({ pageParam, signal }) => {
-      const params: Record<string, string> = {};
-      if (pageParam !== undefined) params["cursor"] = pageParam;
-      if (q) params["q"] = q;
-      if (category) params["category"] = category;
-      if (sort) params["sort"] = sort;
-      return apiClient.get<TemplateListPage>(
-        "/build/templates",
-        Object.keys(params).length > 0 ? params : undefined,
-        signal,
-        templateListContract,
-      );
-    },
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
+    ...templatesListQueryOptions(filters),
     enabled: canView,
-    staleTime: 60_000,
     placeholderData: keepPreviousData,
   });
 }
@@ -168,14 +146,26 @@ export function useApplyProjectTemplate() {
 }
 
 export function templatesListQueryOptions(filters?: TemplateFilters) {
-  const params: Record<string, string> = {};
-  if (filters?.q) params["q"] = filters.q;
-  if (filters?.category) params["category"] = filters.category;
-  if (filters?.sort) params["sort"] = filters.sort;
-  return queryOptions<TemplateListPage>({
-    queryKey: buildWorkQueryKeys.projects.templates(),
-    queryFn: ({ signal }) =>
-      apiClient.get<TemplateListPage>("/build/templates", params, signal, templateListContract),
+  const q = filters?.q;
+  const category = filters?.category;
+  const sort = filters?.sort;
+  return infiniteQueryOptions<TemplateListPage, Error, TemplateListPage, TemplateListPage[], string | undefined>({
+    queryKey: [...buildWorkQueryKeys.projects.templates(), { q, category, sort }],
+    queryFn: ({ pageParam, signal }) => {
+      const params: Record<string, string> = {};
+      if (pageParam !== undefined) params["cursor"] = pageParam;
+      if (q) params["q"] = q;
+      if (category) params["category"] = category;
+      if (sort) params["sort"] = sort;
+      return apiClient.get<TemplateListPage>(
+        "/build/templates",
+        Object.keys(params).length > 0 ? params : undefined,
+        signal,
+        templateListContract,
+      );
+    },
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
   });
 }

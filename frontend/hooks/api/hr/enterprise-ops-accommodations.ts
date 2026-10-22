@@ -9,7 +9,7 @@ import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idemp
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeyBase } from "@/lib/query-keys/base";
+import { accKeys, accommodationsListQueryOptions } from "./enterprise-ops-accommodations-read-options";
 
 export type AccommodationType = "equipment" | "schedule" | "workspace" | "medical_restriction" | "other";
 export type AccommodationStatus = "requested" | "under_review" | "approved" | "denied" | "implemented";
@@ -60,12 +60,6 @@ export interface ListAccommodationsParams {
 
 const BASE = "/hr/enterprise/ops/accommodations";
 
-const accKeys = {
-  all: [...queryKeyBase, "hr-accommodations"] as const,
-  list: (p: ListAccommodationsParams) => [...queryKeyBase, "hr-accommodations", "list", p] as const,
-  detail: (id: string) => [...queryKeyBase, "hr-accommodations", "detail", id] as const,
-  tasks: (id: string) => [...queryKeyBase, "hr-accommodations", "tasks", id] as const,
-};
 
 const _listAccommodationsContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listAccommodationsContract),
@@ -82,13 +76,6 @@ const _createAccommodationContract = lazyContract(() =>
 const _approveAccommodationContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.approveAccommodationContract),
 );
-
-export function accommodationsListQueryOptions(params: ListAccommodationsParams = {}) {
-  return {
-    queryKey: accKeys.list(params),
-    staleTime: 30_000,
-  };
-}
 
 export function useAccommodations(params: ListAccommodationsParams = {}) {
   return useGatedQuery("hr:accommodations:view", {
@@ -135,7 +122,6 @@ export function useCreateAccommodation() {
 
 export function useApproveAccommodation(accommodationId: string) {
   const qc = useQueryClient();
-  // The route is @Idempotent("hr.accommodation.approve"): the key must outlive a retry.
   return useAuthorizedIdempotentMutation("hr:accommodations:manage", {
     mutationKey: ["hr-accommodations", "approve", accommodationId],
     mutationFn: (

@@ -22,6 +22,7 @@ import { AutomationUpsertSheet } from "@/features/hr/automations/automation-upse
 import { AutomationRunsSheet } from "@/features/hr/automations/automation-runs-sheet";
 import { AutomationTestDialog } from "@/features/hr/automations/automation-test-dialog";
 import { AutomationRuleCard } from "@/features/hr/automations/automation-rule-card";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import type { HrAutomationRule } from "@/types/hr/automations";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
@@ -43,11 +44,12 @@ export function AutomationsSettingsPage() {
 
   const enabledFilter = statusFilter === "enabled" ? true : statusFilter === "disabled" ? false : undefined;
 
-  const { data: rules, isLoading, isError, error, refetch } = useHrAutomations({
+  const { data: rulesData, isPending: isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useHrAutomations({
     search: debouncedSearch.trim() || undefined,
     triggerEvent: triggerFilter === "all" ? undefined : triggerFilter,
     isEnabled: enabledFilter,
   });
+  const rules = rulesData?.pages?.flatMap((p) => p.data) ?? [];
   const { data: eventCatalog } = useHrAutomationEvents();
   const triggerEvents = eventCatalog?.events.map((e) => e.value) ?? [];
 
@@ -188,6 +190,12 @@ export function AutomationsSettingsPage() {
                 onTest={() => setTestTarget(rule)}
               />
             ))}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more automation rules"
+            />
           </div>
         )}
 

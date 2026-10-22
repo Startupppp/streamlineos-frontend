@@ -9,7 +9,7 @@ import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
-import type { BoardFilters } from "@/hooks/api/build/ticket-queries";
+import type { BoardFilters } from "@/hooks/api/build/ticket-queries-read-options";
 import type { FilterState as WorkloadFilterState, MemberCapacityData } from "./workload-types";
 import type { Cycle } from "@/types/projects";
 import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";

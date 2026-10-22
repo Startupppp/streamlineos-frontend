@@ -51,22 +51,9 @@ interface ListFilters {
 
 export function usePortfolios(filters?: ListFilters) {
   const canView = useCan("build:portfolios:view");
-  const params: Record<string, string> = {};
-  if (filters?.cursor) params["cursor"] = filters.cursor;
-  if (filters?.limit) params["limit"] = String(filters.limit);
-  if (filters?.search) params["q"] = filters.search;
-  if (filters?.status) params["status"] = filters.status;
-  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
-  if (filters?.health) params["health"] = filters.health;
-  if (filters?.sort) params["sort"] = filters.sort;
   return useQuery<PortfoliosPage>({
-    queryKey: buildWorkQueryKeys.projects.portfolios.list(
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<PortfoliosPage>("/build/portfolios", params, signal, portfolioPageContract),
+    ...portfoliosListQueryOptions(filters),
     enabled: canView,
-    staleTime: 30_000,
   });
 }
 

@@ -20,6 +20,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 import { IDEMPOTENCY_HEADER } from "@/lib/idempotency-key";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { exitListQueryOptions, exitDetailQueryOptions, myResignationsQueryOptions } from "./exit-read-options";
 
 export type Resignation = z.infer<typeof resignationContract>;
 export type ResignationDetail = z.infer<typeof resignationDetailContract>;
@@ -61,13 +62,6 @@ const _resignationProgressContract = lazyContract(() =>
 const _offboardingChecklistSummaryListContract = lazyContract(() =>
   import("@/hooks/api/hr/exit-schema").then((m) => m.offboardingChecklistSummaryListContract),
 );
-
-export function exitListQueryOptions(params?: ResignationListParams) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.exitList(params),
-    staleTime: 2 * 60_000,
-  } as const;
-}
 
 export function useResignations(params?: ResignationListParams) {
   const canExit = useCan("hr:exit:view");
@@ -115,17 +109,12 @@ export function useOffboardingChecklists() {
   });
 }
 
-export function myResignationsQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.exitMine(),
+export function useMyResignations() {
+  return useGatedQuery("self:resignation", {
+    ...myResignationsQueryOptions(),
     queryFn: ({ signal }: { signal?: AbortSignal }) =>
       apiClient.get("/me/resignations", undefined, signal, _resignationListContract),
-    staleTime: 60_000,
-  } as const;
-}
-
-export function useMyResignations() {
-  return useGatedQuery("self:resignation", myResignationsQueryOptions());
+  });
 }
 
 export function useSubmitMyResignation() {
@@ -194,13 +183,6 @@ export function useWithdrawResignation() {
       apiClient.patch(`/hr/exit/${exitId}/withdraw`, {}, undefined, _successContract),
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.exitAll }),
   });
-}
-
-export function exitDetailQueryOptions(resignationId: number) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.exitDetail(resignationId),
-    staleTime: 60_000,
-  } as const;
 }
 
 export function useResignation(resignationId: number) {

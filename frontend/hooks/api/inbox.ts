@@ -12,8 +12,7 @@ const unifiedInboxContract = lazyContract(() =>
 const unifiedInboxCountContract = lazyContract(() =>
   import("@/hooks/api/inbox-schema").then((m) => m.unifiedInboxCountContract),
 );
-import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { inboxCountQueryOptions } from "@/hooks/api/inbox-read-options";
+import { inboxCountQueryOptions, unifiedInboxListQueryOptions } from "@/hooks/api/inbox-read-options";
 import { INLINE_READ_ERROR, isTransientNetworkError } from "@/lib/query-error-policy";
 import type { InboxKind, UnifiedInboxCount, UnifiedInboxResponse } from "@/types/inbox";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
@@ -37,8 +36,6 @@ export function inboxErrorRecoveryInterval(query: {
 }): number | false {
   if (query.state.status !== "error") return false;
   const error = query.state.error;
-  // An origin outage is paced by the api-client outage circuit; a 3s poll on
-  // top only re-fails fast against it (SEC-HRMS-003).
   if (isTransientNetworkError(error)) return false;
   if (
     isApiError(error) &&
@@ -94,7 +91,7 @@ export function useUnifiedInbox(
 
   return useInfiniteQuery<UnifiedInboxResponse, Error>({
     ...INLINE_READ_ERROR,
-    queryKey: platformCoreQueryKeys.inbox.unified({
+    ...unifiedInboxListQueryOptions({
       limit,
       kinds,
       unreadOnly,
@@ -104,7 +101,6 @@ export function useUnifiedInbox(
       eventKeys,
       module: moduleFilter,
       triage,
-      infinite: true,
     }),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ pageParam, signal }) => {
@@ -121,7 +117,6 @@ export function useUnifiedInbox(
       return apiClient.get<UnifiedInboxResponse>("/me/inbox/unified", query, signal, unifiedInboxContract);
     },
     getNextPageParam: (lastPage) => lastPage.hasMore ? (lastPage.nextCursor ?? undefined) : undefined,
-    staleTime: 30_000,
     refetchInterval: inboxErrorRecoveryInterval,
     refetchIntervalInBackground: false,
     enabled: !!orgId && (options?.enabled ?? true),

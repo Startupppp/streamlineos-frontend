@@ -11,9 +11,9 @@ import { ticketDetailContract, ticketListPageContract } from "@/hooks/api/build/
 import { projectDetailQueryOptions } from "@/hooks/api/build/projects";
 import { cyclesQueryOptions } from "@/hooks/api/build/cycles";
 import { epicPageQueryOptions } from "@/hooks/api/build/epics";
-import { modulesQueryOptions } from "@/hooks/api/build/modules";
-import { milestonesQueryOptions } from "@/hooks/api/build/milestones";
-import { projectBoardTicketsQueryOptions, ticketByKeyQueryOptions } from "@/hooks/api/build/ticket-queries";
+import { modulesQueryOptions } from "@/hooks/api/build/modules-read-options";
+import { milestonesQueryOptions } from "@/hooks/api/build/milestones-read-options";
+import { projectBoardTicketsQueryOptions, ticketByKeyQueryOptions } from "@/hooks/api/build/ticket-queries-read-options";
 
 import type { z } from "zod";
 import type { ProjectWithDetails, CursorPageResponse, Ticket } from "@/types/projects";
@@ -74,9 +74,62 @@ export async function prefetchProjectModules(projectId: number) {
     if (gate.can("build:view")) {
       await queryClient.prefetchQuery({
         ...modulesQueryOptions(projectId),
-        queryFn: () => serverGet<ModulePage>(`/build/${projectId}/modules`, moduleResponseContract),
+        queryFn: async () => (await serverGet<ModulePage>(`/build/${projectId}/modules`, moduleResponseContract)).data,
       });
     }
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
+}
+
+export async function prefetchProjectOverview(projectId: number) {
+  try {
+    const gate = await resolvePrefetchGate();
+    const queryClient = await createServerQueryClient();
+    await Promise.all([
+      gate.can("build:view")
+        ? queryClient.prefetchQuery({
+            ...milestonesQueryOptions(projectId),
+            queryFn: () => serverGet<MilestonePage>(`/build/${projectId}/milestones`, milestoneListContract),
+          })
+        : Promise.resolve(),
+      gate.can("build:cycles:view")
+        ? queryClient.prefetchQuery({
+            ...cyclesQueryOptions(projectId),
+            queryFn: () => serverGet<CyclePage>(`/build/${projectId}/cycles`, cycleListContract),
+          })
+        : Promise.resolve(),
+    ]);
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
+}
+
+export async function prefetchCycleDetail(projectId: number, cycleId: number) {
+  try {
+    const gate = await resolvePrefetchGate();
+    const queryClient = await createServerQueryClient();
+    await Promise.all([
+      gate.can("build:cycles:view")
+        ? queryClient.prefetchQuery({
+            ...cyclesQueryOptions(projectId),
+            queryFn: () => serverGet<CyclePage>(`/build/${projectId}/cycles`, cycleListContract),
+          })
+        : Promise.resolve(),
+      gate.can("build:tickets:view")
+        ? queryClient.prefetchInfiniteQuery({
+            ...projectBoardTicketsQueryOptions(projectId, { cycle: String(cycleId) }),
+            queryFn: () =>
+              serverGet<CursorPageResponse<Ticket>>(
+                `/build/${projectId}/tickets?limit=100&orderBy=rank&orderDir=asc&cycleId=${cycleId}`,
+                ticketListPageContract,
+              ),
+            pages: 1,
+          })
+        : Promise.resolve(),
+    ]);
     return dehydrate(queryClient);
   } catch {
     return dehydrate(await createServerQueryClient());

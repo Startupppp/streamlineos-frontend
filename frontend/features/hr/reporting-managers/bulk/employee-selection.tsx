@@ -32,11 +32,6 @@ function rowKey(row: EmployeeListItem): string {
   return row.id;
 }
 
-function rowLabel(row: EmployeeListItem): string {
-  return getUserDisplayName(row);
-}
-
-/** Source 1 of the wizard: pick employees (active, searched on the server) and one new primary manager. */
 export function EmployeeSelection({ value, onChange }: EmployeeSelectionProps) {
   const managerFieldId = useId();
   const [search, setSearch] = useState("");
@@ -83,7 +78,7 @@ export function EmployeeSelection({ value, onChange }: EmployeeSelectionProps) {
           columns={COLUMNS}
           getRowKey={rowKey}
           isLoading={isLoading}
-          selection={{ selected, onChange: handleSelectionChange, getRowLabel: rowLabel }}
+          selection={{ selected, onChange: handleSelectionChange, getRowLabel: getUserDisplayName }}
           pagination={{ pageSize: 25 }}
         />
       </div>

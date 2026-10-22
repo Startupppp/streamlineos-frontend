@@ -41,13 +41,27 @@ function renderSheet() {
   );
 }
 
+const BASE_OK = {
+  isPending: false,
+  isError: false,
+  error: null,
+  fetchNextPage: jest.fn(),
+  hasNextPage: false,
+  isFetchingNextPage: false,
+  refetch,
+};
+
+function emptyPage() {
+  return { pages: [{ data: [], pagination: { limit: 50, hasMore: false, nextCursor: null } }] };
+}
+
 function failing() {
   return {
+    ...BASE_OK,
     data: undefined,
-    isLoading: false,
+    isPending: false,
     isError: true,
     error: new ApiError("Internal server error", 500),
-    refetch,
   };
 }
 
@@ -55,11 +69,8 @@ beforeEach(() => {
   jest.clearAllMocks();
   access.mockReturnValue("granted");
   deliveries.mockReturnValue({
-    data: [],
-    isLoading: false,
-    isError: false,
-    error: null,
-    refetch,
+    ...BASE_OK,
+    data: emptyPage(),
   });
 });
 
@@ -113,21 +124,25 @@ describe("HRMS-B3-013 an unreadable delivery log must not read as nothing having
 
   it("still lists a delivery that was read successfully", () => {
     deliveries.mockReturnValue({
-      data: [
-        {
-          id: 11,
-          event: "employee.created",
-          status: "delivered",
-          responseStatus: 200,
-          error: null,
-          attempts: 1,
-          lastAttemptAt: "2026-01-02T00:00:00.000Z",
-        },
-      ],
-      isLoading: false,
-      isError: false,
-      error: null,
-      refetch,
+      ...BASE_OK,
+      data: {
+        pages: [
+          {
+            data: [
+              {
+                id: 11,
+                event: "employee.created",
+                status: "delivered",
+                responseStatus: 200,
+                error: null,
+                attempts: 1,
+                lastAttemptAt: "2026-01-02T00:00:00.000Z",
+              },
+            ],
+            pagination: { limit: 50, hasMore: false, nextCursor: null },
+          },
+        ],
+      },
     });
     renderSheet();
 
@@ -139,11 +154,11 @@ describe("HRMS-B3-013 an unreadable delivery log must not read as nothing having
 describe("the failed read's request id is quotable to support", () => {
   it("renders the copyable reference the backend echoed on the error envelope", () => {
     deliveries.mockReturnValue({
+      ...BASE_OK,
       data: undefined,
-      isLoading: false,
+      isPending: false,
       isError: true,
       error: new ApiError("Internal server error", 500, undefined, { correlationId: "req-abc123" }),
-      refetch,
     });
     renderSheet();
     expect(screen.getByText(/reference/i)).toBeInTheDocument();

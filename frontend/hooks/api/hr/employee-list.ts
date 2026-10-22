@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { employeeListQueryOptions } from "./employee-list-read-options";
 
 const employeeListPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/employee-list-schema").then((m) => m.employeeListPageContract),
@@ -29,7 +30,6 @@ export type HrEmployeesParams = {
   search?: string;
   departmentId?: string;
   isActive?: "true" | "false" | "all" | "pending" | "current";
-  /** Server-side role filter (users.role). */
   role?: string;
 };
 
@@ -37,7 +37,6 @@ export type HrEmployeeCountsParams = Pick<HrEmployeesParams, "search" | "departm
 
 export interface HrEmployeeCounts {
   active: number;
-  /** Invited, account created, never accepted — not headcount. */
   pending: number;
   inactive: number;
 }
@@ -85,7 +84,6 @@ export function normalizeEmployeesResponse(
   return { data, pagination };
 }
 
-/** Safe list extract for pickers / legacy call sites. */
 export function unwrapEmployees(
   res: EmployeeListItem[] | PaginatedEmployees | EmployeeCursorPage | null | undefined,
 ): EmployeeListItem[] {
@@ -111,13 +109,6 @@ export function normalizeEmployeeCursorResponse(
     data: Array.isArray(res.data) ? res.data : [],
     pageInfo: res.pageInfo,
   };
-}
-
-export function employeeListQueryOptions(params?: HrEmployeesParams) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.employees(params),
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useHrEmployees(
@@ -185,14 +176,6 @@ export function useInfiniteHrEmployees(
     initialPageParam: undefined,
     getNextPageParam: (lastPage) => lastPage.pageInfo.nextCursor ?? undefined,
     staleTime: 2 * 60_000,
-    /**
-     * The directory's search is debounced, so the key still changes whenever a
-     * query settles. Without this the list unmounts to a skeleton on every
-     * change and the page height collapses under the user; with it the previous
-     * result stays put (`isFetching` dims it) until the new one arrives, and a
-     * superseded request is cancelled through the `signal` above rather than
-     * being allowed to land late.
-     */
     placeholderData: keepPreviousData,
     ...INLINE_READ_ERROR,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
@@ -207,8 +190,6 @@ export function useHrEmployeeCounts(params: HrEmployeeCountsParams) {
     queryFn: ({ signal }) =>
       apiClient.get<HrEmployeeCounts>("/hr/employees/counts", params, signal, employeeCountsLazy),
     staleTime: 2 * 60_000,
-    // Same key churn as the list: hold the last counts rather than dropping the
-    // stat tiles to skeletons on every settled search.
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
     ...INLINE_READ_ERROR,

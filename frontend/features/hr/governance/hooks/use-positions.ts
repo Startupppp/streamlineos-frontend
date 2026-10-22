@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { positionsQueryOptions } from "./use-positions-read-options";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -79,24 +80,17 @@ export interface ReorgScenario {
 }
 
 
-export function positionsQueryOptions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
+export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
+  const canViewPositions = useCan("hr:positions:view");
   const p: Record<string, unknown> = {};
   if (params?.status) p["status"] = params.status;
   if (params?.departmentId) p["departmentId"] = params.departmentId;
   if (params?.page) p["page"] = params.page;
   if (params?.limit) p["limit"] = params.limit;
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, params] as const,
-    queryFn: ({ signal }: { signal?: AbortSignal }) =>
-      apiClient.get("/hr/governance/positions", p, signal, positionListContract),
-    staleTime: 30_000,
-  } as const;
-}
-
-export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
-  const canViewPositions = useCan("hr:positions:view");
   return useQuery({
     ...positionsQueryOptions(params),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get("/hr/governance/positions", p, signal, positionListContract),
     enabled: canViewPositions,
   });
 }

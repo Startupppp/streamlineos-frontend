@@ -66,6 +66,24 @@ import {
   kbPageQueryOptions,
   kbPageVersionsQueryOptions,
 } from "@/hooks/api/kb/kb-read-options";
+import { projectBudgetQueryOptions } from "@/hooks/api/build/milestones";
+import { projectBudgetContract } from "@/hooks/api/build/workspace-schema";
+
+export async function prefetchProjectBudget(projectId: number) {
+  try {
+    const gate = await resolvePrefetchGate();
+    const queryClient = await createServerQueryClient();
+    if (gate.can("build:manage")) {
+      await queryClient.prefetchQuery({
+        ...projectBudgetQueryOptions(projectId),
+        queryFn: () => serverGet(`/build/${projectId}/budget`, projectBudgetContract),
+      });
+    }
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(await createServerQueryClient());
+  }
+}
 
 export async function prefetchProjectChangeRequests(projectId: number) {
   try {

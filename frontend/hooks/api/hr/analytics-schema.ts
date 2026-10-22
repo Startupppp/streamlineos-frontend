@@ -82,7 +82,9 @@ export const hrComplianceGapsContract = z.object({
 
 export const hrDrilldownContract = z.object({
   rows: z.array(z.record(z.string(), z.unknown())),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
+  pagination: z.object({
+    limit: z.number().int(),
+    hasMore: z.boolean(),
+    nextCursor: z.string().nullable(),
+  }),
 });

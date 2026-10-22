@@ -6,7 +6,7 @@ import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
 import type { ViewType } from "./view-switcher";
-import type { BoardFilters } from "@/hooks/api/build/ticket-queries";
+import type { BoardFilters } from "@/hooks/api/build/ticket-queries-read-options";
 import type { FilterState as WorkloadFilterState, MemberCapacityData } from "./workload-types";
 import type { Cycle } from "@/types/projects";
 import { PAGE_CHROME_X } from "@/components/ui/content-fill-panel";

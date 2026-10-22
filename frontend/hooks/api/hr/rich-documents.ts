@@ -7,6 +7,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { richDocumentDetailQueryOptions } from "./rich-documents-read-options";
 
 const richDocumentDetailC = lazyContract(() =>
   import("@/hooks/api/hr/rich-documents-schema").then((m) => m.richDocumentDetailContract),
@@ -43,11 +44,6 @@ export interface RichDocument {
 
 export type RichDocumentListItem = Omit<RichDocument, "contentJson">;
 
-/**
- * `RichDocumentsService.list` is a keyset walk over `(updatedAt, id)` — it
- * answers `{ limit, hasMore, nextCursor }` and never a `total` or a page count,
- * so a numbered pager cannot be built over it.
- */
 export interface RichDocumentListResponse {
   data: RichDocumentListItem[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
@@ -58,7 +54,6 @@ export interface RichDocumentListParams {
   limit?: number;
   isPublished?: boolean;
 }
-
 
 export function useRichDocuments(params?: RichDocumentListParams) {
   const canView = useCan("hr:documents:view");
@@ -82,13 +77,6 @@ export function useRichDocuments(params?: RichDocumentListParams) {
     enabled: hrEnabled && canView,
     ...INLINE_READ_ERROR,
   });
-}
-
-export function richDocumentDetailQueryOptions(documentId: number) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.richDocumentDetail(documentId),
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useRichDocument(documentId: number) {

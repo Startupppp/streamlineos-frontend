@@ -8,6 +8,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { terminationListQueryOptions } from "./termination-read-options";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 
@@ -42,7 +43,6 @@ interface CreateTerminationInput {
   severanceAmount?: number;
   noticePeriodWaived?: boolean;
   internalNotes?: string;
-  /** An approver keeps the record as a DRAFT instead of approving it on create. */
   saveAsDraft?: boolean;
 }
 
@@ -62,18 +62,6 @@ export interface UseTerminationsParams {
   cursor?: string;
   limit?: number;
   status?: TerminationStatus;
-}
-
-
-export function terminationListQueryOptions(params: {
-  cursor: string;
-  limit: number;
-  status: string;
-}) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.terminationList(params),
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useTerminations(params: UseTerminationsParams = {}) {
@@ -143,7 +131,6 @@ export function useRehireEmployee() {
   });
 }
 
-/** Archives an employee without a termination: exits the employment and archives the membership. */
 export function useArchiveEmployee() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();

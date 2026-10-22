@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { legalHoldsListQueryOptions } from "./use-legal-holds-read-options";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
@@ -42,13 +43,6 @@ export interface LegalHold {
 }
 
 const HOLDS_KEY = ["hr", "governance", "legal-holds"] as const;
-
-export function legalHoldsListQueryOptions(params?: { status?: string; subjectUserId?: string; cursor?: string; limit?: number }) {
-  return {
-    queryKey: [...humanResourcesQueryKeys.hr.hrLegalHoldsBase, params] as const,
-    staleTime: 30_000,
-  };
-}
 
 export function useLegalHolds(params?: { status?: string; subjectUserId?: string; cursor?: string; limit?: number }) {
   const canViewHolds = useCan("hr:legalhold:view");

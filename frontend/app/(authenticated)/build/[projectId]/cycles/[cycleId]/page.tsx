@@ -3,7 +3,7 @@ import { Suspense } from "react";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { CycleDetailPage } from "@/features/build/cycles/cycle-detail-page";
-import { prefetchProjectCycles } from "@/lib/prefetch/build";
+import { prefetchCycleDetail } from "@/lib/prefetch/build";
 import CycleDetailLoading from "./loading";
 
 export default async function Page({
@@ -14,8 +14,9 @@ export default async function Page({
   await enforceRouteAccess("/build/[projectId]/cycles/[cycleId]");
   const { projectId, cycleId } = await params;
   const id = Number(projectId);
+  const cid = Number(cycleId);
   if (!Number.isInteger(id) || id <= 0) notFound();
-  const state = await prefetchProjectCycles(id);
+  const state = await prefetchCycleDetail(id, cid);
   return (
     <Suspense fallback={<CycleDetailLoading />}>
       <HydrationBoundary state={state}>

@@ -1,10 +1,11 @@
 "use client";
 
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
-import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   HrAutomationRule,
   HrAutomationRun,
@@ -14,6 +15,7 @@ import type {
   UpdateHrAutomationInput,
 } from "@/types/hr/automations";
 import { lazyContract } from "@/lib/api-envelope";
+import { useQuery } from "@tanstack/react-query";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -32,28 +34,35 @@ export const hrAutomationKeys = {
   events: () => [...BASE, "events"] as const,
 };
 
-export const hrAutomationsQueryOptions = (params?: { search?: string; triggerEvent?: string; isEnabled?: boolean; page?: number; limit?: number }) => ({
+type AutomationListParams = { search?: string; triggerEvent?: string; isEnabled?: boolean; limit?: number };
+
+export const hrAutomationsQueryOptions = (params?: AutomationListParams) => ({
   queryKey: hrAutomationKeys.list(params),
-  queryFn: async ({ signal }: { signal?: AbortSignal }) => {
-    const search = new URLSearchParams();
-    if (params?.search) search.set("search", params.search);
-    if (params?.triggerEvent) search.set("triggerEvent", params.triggerEvent);
-    if (params?.isEnabled !== undefined) search.set("isEnabled", String(params.isEnabled));
-    if (params?.page) search.set("page", String(params.page));
-    if (params?.limit) search.set("limit", String(params.limit));
-    const qs = search.toString();
-    const page = await apiClient.get<OffsetPage<HrAutomationRule>>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleListContract)));
-    return page.items;
-  },
   staleTime: 30_000,
 }) as const;
 
-export function useHrAutomations(params?: { search?: string; triggerEvent?: string; isEnabled?: boolean; page?: number; limit?: number }) {
+type AutomationRulePage = {
+  data: HrAutomationRule[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+export function useHrAutomations(params?: AutomationListParams) {
   const canView = useCan("hr:automations:view");
   const hrEnabled = useModuleEnabled("hr");
-  return useQuery({
+  return useInfiniteQuery({
     ...hrAutomationsQueryOptions(params),
-    placeholderData: keepPreviousData,
+    queryFn: async ({ pageParam, signal }) => {
+      const search = new URLSearchParams();
+      if (params?.search) search.set("search", params.search);
+      if (params?.triggerEvent) search.set("triggerEvent", params.triggerEvent);
+      if (params?.isEnabled !== undefined) search.set("isEnabled", String(params.isEnabled));
+      if (params?.limit) search.set("limit", String(params.limit));
+      if (pageParam !== null) search.set("cursor", pageParam);
+      const qs = search.toString();
+      return apiClient.get<AutomationRulePage>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleListContract)));
+    },
+    initialPageParam: NULL_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,
   });
@@ -90,7 +99,6 @@ export function useHrAutomationRuns(ruleId?: number, params?: { cursor?: string;
       return apiClient.get<PaginatedHrAutomationRuns>(`${path}${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRunListContract)));
     },
     staleTime: 15_000,
-    placeholderData: keepPreviousData,
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,
   });
@@ -127,12 +135,17 @@ export function useToggleHrAutomation() {
       apiClient.post<HrAutomationRule>(`/hr/automations/${automationId}/toggle`, { isEnabled }, undefined, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleDetailContract))),
     onMutate: async ({ automationId, isEnabled }) => {
       await qc.cancelQueries({ queryKey: hrAutomationKeys.all });
-      const previous = qc.getQueriesData<HrAutomationRule[]>({ queryKey: hrAutomationKeys.all });
-      qc.setQueriesData<HrAutomationRule[]>({ queryKey: hrAutomationKeys.all }, (old) =>
-        Array.isArray(old)
-          ? old.map((r) => (r.id === automationId ? { ...r, isEnabled } : r))
-          : old,
-      );
+      const previous = qc.getQueriesData<InfiniteData<AutomationRulePage>>({ queryKey: hrAutomationKeys.all });
+      qc.setQueriesData<InfiniteData<AutomationRulePage>>({ queryKey: hrAutomationKeys.all }, (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          pages: old.pages.map((page) => ({
+            ...page,
+            data: page.data.map((r) => (r.id === automationId ? { ...r, isEnabled } : r)),
+          })),
+        };
+      });
       return { previous };
     },
     onError: (_, _vars, ctx) => {

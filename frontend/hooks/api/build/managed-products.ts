@@ -48,51 +48,9 @@ export interface ListManagedProductsParams {
 
 export function useManagedProducts(params?: ListManagedProductsParams) {
   const canView = useCan("build:managed-products:view");
-  const queryParams: Record<string, string> = {};
-
-  if (params?.cursor) queryParams["cursor"] = params.cursor;
-  if (params?.status) queryParams["status"] = params.status;
-  if (params?.search) queryParams["search"] = params.search;
-  if (params?.limit) queryParams["limit"] = String(params.limit);
-  if (params?.ownerId) queryParams["ownerId"] = params.ownerId;
-  if (params?.sort) queryParams["sort"] = params.sort;
-  if (params?.lifecycle) queryParams["lifecycle"] = params.lifecycle;
-  if (params?.health) queryParams["health"] = params.health;
-  if (params?.teamId) queryParams["teamId"] = params.teamId;
-  if (params?.segment) queryParams["segment"] = params.segment;
-  if (params?.tag) queryParams["tag"] = params.tag;
-  if (params?.linkedProjectId) queryParams["linkedProjectId"] = params.linkedProjectId;
-  if (params?.archived !== undefined) queryParams["archived"] = String(params.archived);
-
   return useQuery<ManagedProductsPage>({
-    queryKey: buildWorkQueryKeys.projects.managedProducts.list(
-      Object.keys(queryParams).length > 0 ? queryParams : undefined,
-    ),
-    queryFn: async ({ signal }) => {
-      try {
-        return await apiClient.get<ManagedProductsPage>(
-          "/build/managed-products",
-          queryParams,
-          signal,
-          managedProductPageContract,
-        );
-      } catch (error) {
-        if (!isApiError(error) || error.status !== 400) throw error;
-        const {
-          ownerId: _ownerId,
-          sort: _sort,
-          ...compatibleParams
-        } = queryParams;
-        return apiClient.get<ManagedProductsPage>(
-          "/build/managed-products",
-          compatibleParams,
-          signal,
-          managedProductPageContract,
-        );
-      }
-    },
+    ...managedProductsListQueryOptions(params),
     enabled: canView,
-    staleTime: 60_000,
   });
 }
 
@@ -255,6 +213,13 @@ export function managedProductsListQueryOptions(params?: ListManagedProductsPara
   if (params?.limit) queryParams["limit"] = String(params.limit);
   if (params?.ownerId) queryParams["ownerId"] = params.ownerId;
   if (params?.sort) queryParams["sort"] = params.sort;
+  if (params?.lifecycle) queryParams["lifecycle"] = params.lifecycle;
+  if (params?.health) queryParams["health"] = params.health;
+  if (params?.teamId) queryParams["teamId"] = params.teamId;
+  if (params?.segment) queryParams["segment"] = params.segment;
+  if (params?.tag) queryParams["tag"] = params.tag;
+  if (params?.linkedProjectId) queryParams["linkedProjectId"] = params.linkedProjectId;
+  if (params?.archived !== undefined) queryParams["archived"] = String(params.archived);
   return queryOptions<ManagedProductsPage>({
     queryKey: buildWorkQueryKeys.projects.managedProducts.list(
       Object.keys(queryParams).length > 0 ? queryParams : undefined,

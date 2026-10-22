@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { lazyContract } from "@/lib/api-envelope";
+import { handbookListQueryOptions } from "./handbook-read-options";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -46,13 +47,6 @@ interface UpdateHandbookVersionInput {
   version?: string;
   documentUrl?: string;
   changelog?: string;
-}
-
-export function handbookListQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.handbookList(),
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useHandbookVersions() {

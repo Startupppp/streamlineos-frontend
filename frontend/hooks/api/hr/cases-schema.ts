@@ -51,7 +51,10 @@ export const hrCaseNoteContract = z.object({
   createdAt: z.string(),
 });
 
-export const hrCaseNotesContract = z.array(hrCaseNoteContract);
+export const hrCaseNotesContract = z.object({
+  data: z.array(hrCaseNoteContract),
+  pagination: cursorPaginationSchema,
+});
 
 export const hrCaseDocumentContract = z.object({
   id: z.number().int(),
@@ -64,7 +67,10 @@ export const hrCaseDocumentContract = z.object({
   createdAt: z.string(),
 });
 
-export const hrCaseDocumentsContract = z.array(hrCaseDocumentContract);
+export const hrCaseDocumentsContract = z.object({
+  data: z.array(hrCaseDocumentContract),
+  pagination: cursorPaginationSchema,
+});
 
 const hrDisciplinaryActionSchema = z.object({
   id: z.number().int(),

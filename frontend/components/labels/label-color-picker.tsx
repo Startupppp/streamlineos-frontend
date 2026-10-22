@@ -4,11 +4,8 @@ import { useState, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import {
-  LABEL_COLORS,
-  normalizeHexColor,
-  resolveLabelColor,
-} from "./label-colors";
+import { normalizeHexColor } from "@/lib/column-colors";
+import { LABEL_COLORS, resolveLabelColor } from "./label-colors";
 
 interface LabelColorPickerProps {
   value: string;

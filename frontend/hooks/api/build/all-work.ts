@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  queryOptions,
   useQuery,
   keepPreviousData,
   useInfiniteQuery,
@@ -33,6 +32,7 @@ import type {
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { ProjectsTicketsGetAllWorkIdsResponse } from "@/contracts/build-contracts.generated";
+import { allWorkQueryOptions } from "./all-work-read-options";
 
 export const COMMAND_CENTER_MY_ISSUES_PAGE_SIZE = 15;
 
@@ -54,9 +54,7 @@ export function useAllWork(
   const canView = useCan("build:tickets:view");
   const { enabled: enabledOption, ...restOptions } = options ?? {};
   return useQuery<CursorPaginatedResponse<AllWorkTicket>>({
-    queryKey: buildWorkQueryKeys.projects.allWork(
-      filters ? { ...filters } : undefined,
-    ),
+    ...allWorkQueryOptions(filters),
     queryFn: ({ signal }) =>
       apiClient.get<CursorPaginatedResponse<AllWorkTicket>>(
         "/build/all-work",
@@ -64,7 +62,6 @@ export function useAllWork(
         signal,
         allWorkPageContract,
       ),
-    staleTime: 30_000,
     placeholderData: (prev) => prev,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
@@ -133,16 +130,3 @@ export function useAllWorkIds(
   });
 }
 
-export function allWorkQueryOptions(filters?: AllWorkFilters) {
-  return queryOptions<CursorPaginatedResponse<AllWorkTicket>>({
-    queryKey: buildWorkQueryKeys.projects.allWork(filters),
-    queryFn: ({ signal }) =>
-      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>(
-        "/build/all-work",
-        filters as Record<string, unknown>,
-        signal,
-        allWorkPageContract,
-      ),
-    staleTime: 30_000,
-  });
-}

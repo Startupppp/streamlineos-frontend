@@ -36,7 +36,7 @@ const fakeRule = {
 
 function loadedQuery() {
   return {
-    data: [fakeRule],
+    data: { pages: [{ data: [fakeRule], pagination: { nextCursor: null, hasMore: false } }], pageParams: [null] },
     isLoading: false,
     isError: false,
     error: null,
@@ -46,7 +46,7 @@ function loadedQuery() {
 
 function emptyQuery() {
   return {
-    data: [],
+    data: { pages: [{ data: [], pagination: { nextCursor: null, hasMore: false } }], pageParams: [null] },
     isLoading: false,
     isError: false,
     error: null,

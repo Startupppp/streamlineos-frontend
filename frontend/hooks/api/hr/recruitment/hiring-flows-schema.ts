@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 
 export const hiringRoundSchema = z.object({
   id: z.number().int(),
@@ -33,11 +34,8 @@ export const hiringFlowWithRoundsSchema = hiringFlowSchema.extend({
 });
 
 export const hiringFlowListResponseSchema = z.object({
-  items: z.array(hiringFlowWithRoundsSchema),
-  total: z.number().int(),
-  page: z.number().int(),
-  pageSize: z.number().int(),
-  totalPages: z.number().int(),
+  data: z.array(hiringFlowWithRoundsSchema),
+  pagination: cursorPaginationContract,
 });
 
 export const hiringFlowSuccessSchema = z.object({ success: z.literal(true) });

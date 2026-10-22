@@ -4,6 +4,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { simulationHistoryQueryOptions } from "./enterprise-ops-simulator-read-options";
 import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
@@ -46,13 +47,6 @@ const _simulatePayrollImpactContract = lazyContract(() =>
 const _compareSimulationContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.compareSimulationContract),
 );
-
-export function simulationHistoryQueryOptions(params: { cursor?: string; type?: SimulationType } = {}) {
-  return {
-    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history(params),
-    staleTime: 30_000,
-  } as const;
-}
 
 export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
   return useGatedQuery("hr:policies:manage", {

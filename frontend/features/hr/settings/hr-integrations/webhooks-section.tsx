@@ -18,6 +18,7 @@ import { ConfirmSheet } from "@/components/ui/confirm-sheet";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   useHrWebhooks,
   useToggleHrWebhook,
@@ -164,7 +165,8 @@ function WebhookRow({
 }
 
 export function WebhooksSection() {
-  const { data: subscriptions, isLoading, isError, error, refetch } = useHrWebhooks();
+  const { data: webhooksData, isPending: isLoading, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useHrWebhooks();
+  const subscriptions = webhooksData?.pages?.flatMap((p) => p.data) ?? [];
   const [upsertOpen, setUpsertOpen] = useState(false);
   const [editing, setEditing] = useState<HrWebhookSubscription | undefined>(undefined);
   const [deliveriesSub, setDeliveriesSub] = useState<HrWebhookSubscription | undefined>(undefined);
@@ -213,7 +215,6 @@ export function WebhooksSection() {
 
       <div className="rounded-lg border divide-y-0">
         {manageAccess === "denied" ? (
-          // FE-47: the list read is disabled without the key; that is not "No webhooks configured".
           <NoPermissionState permission="hr:integrations:manage" compact />
         ) : isLoading || manageAccess === "loading" ? (
           <div className="p-4 space-y-3">
@@ -237,14 +238,22 @@ export function WebhooksSection() {
             compact
           />
         ) : (
-          subscriptions.map((sub) => (
-            <WebhookRow
-              key={sub.id}
-              sub={sub}
-              onEdit={handleEdit}
-              onViewDeliveries={setDeliveriesSub}
+          <>
+            {subscriptions.map((sub) => (
+              <WebhookRow
+                key={sub.id}
+                sub={sub}
+                onEdit={handleEdit}
+                onViewDeliveries={setDeliveriesSub}
+              />
+            ))}
+            <InfiniteScrollSentinel
+              hasNextPage={hasNextPage}
+              isFetchingNextPage={isFetchingNextPage}
+              onLoadMore={fetchNextPage}
+              label="Load more webhooks"
             />
-          ))
+          </>
         )}
       </div>
 

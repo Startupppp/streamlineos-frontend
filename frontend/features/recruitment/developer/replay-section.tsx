@@ -21,25 +21,10 @@ import {
   useSandboxCatalogue,
 } from "@/hooks/api/hr/recruitment/developer-sandbox";
 
-/**
- * Fires one hiring event's sample body at a webhook the tenant already owns.
- *
- * It replaces the only previous way to test a hiring receiver, which was to
- * hire somebody. The server refuses an event the subscription is not subscribed
- * to and marks the body `replay: true`, so a test can never be mistaken for a
- * real hire by whatever is listening on the other end.
- */
 export function ReplaySection() {
-  /*
-    FE-47. `useHrWebhooks` is gated on this key, and a disabled Query v5 read
-    reports `isPending: true, isFetching: false` — so `isLoading` is false and
-    the list is empty, which is indistinguishable from an organisation that has
-    configured no webhooks. Without this check a denied viewer would be told
-    "No webhooks configured" and go looking for a button they are not allowed
-    to have.
-  */
   const manageState = useCanState("hr:integrations:manage");
-  const { data: subscriptions = [], isLoading } = useHrWebhooks({ limit: 50 });
+  const { data: webhooksData, isLoading } = useHrWebhooks({ limit: 50 });
+  const subscriptions = webhooksData?.pages?.flatMap((p) => p.data) ?? [];
   const { data: catalogue } = useSandboxCatalogue();
   const replay = useReplaySandboxEvent();
 

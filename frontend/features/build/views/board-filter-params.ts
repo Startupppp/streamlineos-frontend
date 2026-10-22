@@ -9,7 +9,7 @@ import {
   parsePriorityParam,
   parseTicketTypeParam,
 } from "../shared/use-build-list-url-state";
-import type { TicketOrderBy, TicketOrderDir } from "@/hooks/api/build/ticket-queries";
+import type { TicketOrderBy, TicketOrderDir } from "@/hooks/api/build/ticket-queries-read-options";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import {
   buildIssuesFilterQuery,
@@ -110,7 +110,7 @@ export function useBoardFilterParams() {
   );
 
   useEffect(() => {
-    if (/\/tickets\//.test(pathname)) return;
+    if (/\/tickets\
     const updates: Record<string, string | null> = {};
     let changed = false;
     if (rawPriority && !filterPriority) {

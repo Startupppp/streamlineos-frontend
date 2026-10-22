@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { bgvListQueryOptions } from "./background-verification-read-options";
 
 const bgvListC = lazyContract(() =>
   import("@/hooks/api/hr/background-verification-schema").then((m) => m.bgvListContract),
@@ -31,19 +32,13 @@ export interface BackgroundVerification {
   user?: { id: string; name: string | null; email: string | null } | null;
 }
 
-export function bgvListQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.bgvList(),
-    staleTime: 2 * 60_000,
-  } as const;
-}
-
 export function useBackgroundVerifications() {
   const canView = useCan("hr:sensitive:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
     ...bgvListQueryOptions(),
-    queryFn: ({ signal }) => apiClient.get<BackgroundVerification[]>("/hr/background-verification", undefined, signal, bgvListC),
+    queryFn: ({ signal }) =>
+      apiClient.get<BackgroundVerification[]>("/hr/background-verification", undefined, signal, bgvListC),
     enabled: canView && hrEnabled,
   });
 }

@@ -1,6 +1,10 @@
+import { Suspense } from "react";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { redirect } from "next/navigation";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { InboxPage } from "@/features/build/inbox/inbox-page";
+import { prefetchBuildInbox } from "@/lib/prefetch/build-portfolio";
+import InboxLoading from "./loading";
 
 export default async function BuildInboxRoute({
   searchParams,
@@ -20,5 +24,12 @@ export default async function BuildInboxRoute({
     }
     redirect(`/build/my-work?${next}`);
   }
-  return <InboxPage />;
+  const state = await prefetchBuildInbox();
+  return (
+    <Suspense fallback={<InboxLoading />}>
+      <HydrationBoundary state={state}>
+        <InboxPage />
+      </HydrationBoundary>
+    </Suspense>
+  );
 }

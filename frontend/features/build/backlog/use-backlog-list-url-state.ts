@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import type { DataTableSortState } from "@/components/ui/data-table.types";
-import type { TicketOrderBy } from "@/hooks/api/build/ticket-queries";
+import type { TicketOrderBy } from "@/hooks/api/build/ticket-queries-read-options";
 import { useBuildListUrlState } from "@/features/build/shared/use-build-list-url-state";
 
 const BACKLOG_SORT_FIELDS = ["id", "title", "created", "priority"] as const;

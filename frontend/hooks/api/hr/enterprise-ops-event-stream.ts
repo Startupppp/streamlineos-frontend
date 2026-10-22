@@ -6,7 +6,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeyBase } from "@/lib/query-keys/base";
+import { streamKeys, hrEventsListQueryOptions } from "./enterprise-ops-event-stream-read-options";
 
 export interface HrEvent {
   id: string;
@@ -42,12 +42,6 @@ export interface ListEventsParams {
 
 const BASE = "/hr/enterprise/ops/event-stream";
 
-const streamKeys = {
-  all: [...queryKeyBase, "hr-event-stream"] as const,
-  list: (p: ListEventsParams) => [...queryKeyBase, "hr-event-stream", "list", p] as const,
-  dictionary: [...queryKeyBase, "hr-event-stream", "dictionary"] as const,
-  metrics: [...queryKeyBase, "hr-event-stream", "metrics"] as const,
-};
 
 const _listHrEventsContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listHrEventsContract),
@@ -61,13 +55,6 @@ const _hrMetricDefinitionsContract = lazyContract(() =>
 const _hrEventsExportContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.hrEventsExportContract),
 );
-
-export function hrEventsListQueryOptions(params: ListEventsParams = {}) {
-  return {
-    queryKey: streamKeys.list(params),
-    staleTime: 30_000,
-  };
-}
 
 export function useHrEvents(params: ListEventsParams = {}) {
   return useGatedQuery("hr:eventstream:view", {

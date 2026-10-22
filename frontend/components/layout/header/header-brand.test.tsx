@@ -34,8 +34,7 @@ jest.mock("next/link", () => {
 
 jest.mock("next/image", () => {
   return function Image(props: { alt: string; src: string }) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img alt={props.alt} src={props.src} />;
+    return <span data-testid="mock-image" data-src={props.src} aria-hidden />;
   };
 });
 

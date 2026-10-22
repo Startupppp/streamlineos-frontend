@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { complianceRequirementsQueryOptions, contractsQueryOptions } from "./global-read-options";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { toast } from "sonner";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -215,18 +216,13 @@ export function useDeleteWorkAuth() {
   });
 }
 
-export const complianceRequirementsQueryOptions = (params?: ComplianceRequirementsParams) => ({
-  queryKey: humanResourcesQueryKeys.hr.complianceRequirements(params),
-  queryFn: ({ signal }: { signal?: AbortSignal }) =>
-    apiClient.get<CursorResult<ComplianceRequirement>>("/hr/global/compliance/requirements", params, signal, _listComplianceRequirementsContract),
-  staleTime: 120_000,
-}) as const;
-
 export function useComplianceRequirements(params?: ComplianceRequirementsParams) {
   const canManage = useCan("hr:compliance:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceRequirement>>({
     ...complianceRequirementsQueryOptions(params),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get<CursorResult<ComplianceRequirement>>("/hr/global/compliance/requirements", params, signal, _listComplianceRequirementsContract),
     enabled: canManage && hrEnabled,
   });
 }
@@ -336,18 +332,13 @@ export function useSeedCountryPack() {
   });
 }
 
-export const contractsQueryOptions = (params?: ContractsParams) => ({
-  queryKey: humanResourcesQueryKeys.hr.contracts(params),
-  queryFn: ({ signal }: { signal?: AbortSignal }) =>
-    apiClient.get<CursorResult<HrContract>>("/hr/global/contracts", params, signal, _listContractsContract),
-  staleTime: 60_000,
-}) as const;
-
 export function useContracts(params?: ContractsParams) {
   const canView = useCan("hr:contracts:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<HrContract>>({
     ...contractsQueryOptions(params),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get<CursorResult<HrContract>>("/hr/global/contracts", params, signal, _listContractsContract),
     enabled: canView && hrEnabled,
   });
 }

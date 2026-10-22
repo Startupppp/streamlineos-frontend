@@ -39,10 +39,9 @@ export function useFeedbucketWidgets(params?: WidgetListParams) {
       ) as Record<string, string | number>)
     : undefined;
   return useGatedQuery("feedbucket:widgets:view", {
-    queryKey: growthAndSignQueryKeys.feedbucket.widgets(params),
+    ...feedbucketWidgetsQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<FeedbucketWidgetPage>("/feedbucket/widgets", queryParams, signal, feedbucketWidgetListC),
-    staleTime: 30_000,
     ...INLINE_READ_ERROR,
     enabled: feedbucketEnabled,
   });
@@ -86,9 +85,9 @@ export function useRotateFeedbucketWidgetKey() {
   });
 }
 
-export function feedbucketWidgetsQueryOptions() {
+export function feedbucketWidgetsQueryOptions(params?: WidgetListParams) {
   return {
-    queryKey: growthAndSignQueryKeys.feedbucket.widgets(),
+    queryKey: growthAndSignQueryKeys.feedbucket.widgets(params),
     staleTime: 30_000,
-  } as const;
+  };
 }

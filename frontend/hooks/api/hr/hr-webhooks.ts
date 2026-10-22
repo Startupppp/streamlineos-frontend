@@ -1,10 +1,11 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import type { InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { OffsetPage } from "@/hooks/api/offset-page-schema";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type {
   HrWebhookSubscription,
   HrWebhookDelivery,
@@ -17,6 +18,7 @@ import { lazyContract } from "@/lib/api-envelope";
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
+import { useQuery } from "@tanstack/react-query";
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { hrWebhooksListKey } from "@/hooks/api/hr/hr-webhooks-schema";
@@ -31,19 +33,36 @@ export const hrWebhookKeys = {
   events: () => [...BASE, "events"] as const,
 };
 
-export function hrWebhooksQueryOptions(params?: { page?: number; limit?: number }) {
+type WebhookListPage = {
+  data: HrWebhookSubscription[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+type DeliveryListPage = {
+  data: HrWebhookDelivery[];
+  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
+};
+
+export function hrWebhooksQueryOptions(params?: { limit?: number }) {
   return {
     queryKey: hrWebhookKeys.list(params),
     staleTime: 30_000,
   } as const;
 }
 
-export function useHrWebhooks(params?: { page?: number; limit?: number }) {
+export function useHrWebhooks(params?: { limit?: number }) {
   const canManage = useCan("hr:integrations:manage");
-  return useQuery({
+  return useInfiniteQuery({
     ...hrWebhooksQueryOptions(params),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<HrWebhookSubscription>>("/hr/webhooks", params, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionListContract)))).items,
+    queryFn: async ({ pageParam, signal }) => {
+      const search = new URLSearchParams();
+      if (params?.limit) search.set("limit", String(params.limit));
+      if (pageParam !== null) search.set("cursor", pageParam);
+      const qs = search.toString();
+      return apiClient.get<WebhookListPage>(`/hr/webhooks${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionListContract)));
+    },
+    initialPageParam: NULL_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canManage,
   });
 }
@@ -60,12 +79,16 @@ export function useHrWebhookEvents() {
 
 export function useHrWebhookDeliveries(subscriptionId: number, limit = 50) {
   const canManage = useCan("hr:integrations:manage");
-  return useQuery({
+  return useInfiniteQuery({
     queryKey: hrWebhookKeys.deliveries(subscriptionId),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<HrWebhookDelivery>>(`/hr/webhooks/${subscriptionId}/deliveries`, {
-        limit: String(limit),
-      }, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookDeliveryListContract)))).items,
+    queryFn: async ({ pageParam, signal }) => {
+      const search = new URLSearchParams();
+      search.set("limit", String(limit));
+      if (pageParam !== null) search.set("cursor", pageParam);
+      return apiClient.get<DeliveryListPage>(`/hr/webhooks/${subscriptionId}/deliveries?${search.toString()}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookDeliveryListContract)));
+    },
+    initialPageParam: NULL_CURSOR_YET,
+    getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     enabled: canManage && subscriptionId > 0,
     staleTime: 15_000,
     ...INLINE_READ_ERROR,
@@ -103,11 +126,18 @@ export function useToggleHrWebhook() {
       apiClient.patch<HrWebhookSubscription>(`/hr/webhooks/${webhookId}`, { isActive }, undefined, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionContract))),
     onMutate: async ({ webhookId, isActive }) => {
       await qc.cancelQueries({ queryKey: hrWebhookKeys.list() });
-      const previous = qc.getQueryData<HrWebhookSubscription[]>(hrWebhookKeys.list());
+      const previous = qc.getQueryData<InfiniteData<WebhookListPage>>(hrWebhookKeys.list());
       if (previous) {
-        qc.setQueryData<HrWebhookSubscription[]>(hrWebhookKeys.list(), (old) =>
-          (old ?? []).map((s) => (s.id === webhookId ? { ...s, isActive } : s)),
-        );
+        qc.setQueryData<InfiniteData<WebhookListPage>>(hrWebhookKeys.list(), (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              data: page.data.map((s) => (s.id === webhookId ? { ...s, isActive } : s)),
+            })),
+          };
+        });
       }
       return { previous };
     },

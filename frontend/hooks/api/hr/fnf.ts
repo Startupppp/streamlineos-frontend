@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { fnfListQueryOptions } from "./fnf-read-options";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 
 export interface FnfSettlement {
@@ -47,13 +48,6 @@ export interface CreateFnfSettlementInput {
   deductions?: number;
   loanRecovery?: number;
   notes?: string;
-}
-
-export function fnfListQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.fnfList(),
-    staleTime: 30_000,
-  } as const;
 }
 
 export function useFnfSettlements(

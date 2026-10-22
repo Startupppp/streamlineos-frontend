@@ -180,26 +180,14 @@ export interface ScoredRoadmapItem {
 }
 
 export function useRoadmapItems(filters: RoadmapItemFilters = {}) {
-  const params: Record<string, unknown> = { ...filters };
   const canView = useCan("build:roadmap:view");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
-    queryFn: ({ signal }) =>
-      apiClient.get<CursorPaginated<ScoredRoadmapItem>>(
-        "/build/roadmap",
-        params,
-        signal,
-        roadmapPageContract,
-      ),
+    ...roadmapItemsQueryOptions(filters),
     enabled: canView,
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
     throwOnError: readErrorExceptNotFoundReachesBoundary,
   });
 }
-
-const roadmapSignalsQueryKey = (roadmapItemId: number) =>
-  knowledgeAndSurveysQueryKeys.roadmap.itemSignals(roadmapItemId);
 
 export function useRoadmapItem(
   roadmapItemId: number | null,
@@ -228,7 +216,7 @@ export function useRoadmapItemSignals(
   const canView = useCan("build:roadmap:view");
   return useQuery({
     ...options,
-    queryKey: roadmapSignalsQueryKey(roadmapItemId ?? 0),
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.itemSignals(roadmapItemId ?? 0),
     queryFn: ({ signal }) =>
       apiClient.get<RoadmapSignals>(
         `/build/roadmap/${String(roadmapItemId)}/signals`,

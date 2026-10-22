@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { useCaseNotes, useCaseDocuments, useAddCaseNote } from "@/hooks/api/hr/cases";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useCan } from "@/hooks/api/access";
 import { formatDistanceToNow } from "date-fns";
 
@@ -41,9 +42,9 @@ function AddNoteButton({
 }
 
 export function NoteThread({ caseId }: { caseId: number }) {
-  const { data: notes, isLoading } = useCaseNotes(caseId);
+  const { data: notesData, isPending: isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useCaseNotes(caseId);
+  const notes = notesData?.pages?.flatMap((p) => p.data) ?? [];
   const addNote = useAddCaseNote(caseId);
-  // POST /hr/cases/:id/notes is @RequirePermission("hr:cases:manage").
   const canAddNote = useCan("hr:cases:manage");
   const [text, setText] = useState("");
   const [isConfidential, setIsConfidential] = useState(false);
@@ -68,7 +69,7 @@ export function NoteThread({ caseId }: { caseId: number }) {
 
   return (
     <div className="space-y-3">
-      {notes?.map((note) => (
+      {notes.map((note) => (
         <div
           key={note.id}
           className={cn(
@@ -90,6 +91,12 @@ export function NoteThread({ caseId }: { caseId: number }) {
           <p className="text-sm leading-relaxed whitespace-pre-wrap">{note.note}</p>
         </div>
       ))}
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+        label="Load more notes"
+      />
 
       {canAddNote && (
       <div className="space-y-2 pt-2">
@@ -118,14 +125,15 @@ export function NoteThread({ caseId }: { caseId: number }) {
 }
 
 export function DocumentsList({ caseId }: { caseId: number }) {
-  const { data: docs, isLoading } = useCaseDocuments(caseId);
+  const { data: docsData, isPending: isLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useCaseDocuments(caseId);
+  const docs = docsData?.pages?.flatMap((p) => p.data) ?? [];
 
   if (isLoading) return (
     <div className="space-y-2 pt-1">
       {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
     </div>
   );
-  if (!docs?.length) return <p className="text-xs text-muted-foreground">No documents attached</p>;
+  if (!docs.length) return <p className="text-xs text-muted-foreground">No documents attached</p>;
 
   return (
     <div className="space-y-2">
@@ -144,6 +152,12 @@ export function DocumentsList({ caseId }: { caseId: number }) {
           )}
         </a>
       ))}
+      <InfiniteScrollSentinel
+        hasNextPage={hasNextPage}
+        isFetchingNextPage={isFetchingNextPage}
+        onLoadMore={fetchNextPage}
+        label="Load more documents"
+      />
     </div>
   );
 }

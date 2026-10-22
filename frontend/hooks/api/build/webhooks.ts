@@ -71,11 +71,13 @@ const noContentContract = lazyContract(() =>
 );
 export type { ProjectWebhook } from "@/types/projects";
 
-export function webhooksListQueryOptions(projectId: number) {
+export function webhooksListQueryOptions(projectId: number, filters?: WebhookListFilters) {
+  const hasFilters = filters !== undefined && Object.values(filters).some((v) => v !== undefined);
+  const activeFilters = hasFilters ? filters : undefined;
   return {
-    queryKey: buildWorkQueryKeys.projects.webhooks(projectId),
+    queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters),
     staleTime: 30_000,
-  } as const;
+  };
 }
 
 export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
@@ -85,7 +87,7 @@ export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
     Object.values(filters).some((v) => v !== undefined);
   const activeFilters = hasFilters ? filters : undefined;
   return useQuery<WebhookPage>({
-    queryKey: buildWorkQueryKeys.projects.webhooks(projectId, activeFilters),
+    ...webhooksListQueryOptions(projectId, filters),
     queryFn: ({ signal }) =>
       apiClient.get<WebhookPage>(
         `/build/${projectId}/webhooks`,
@@ -94,7 +96,6 @@ export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
         projectWebhookPageContract,
       ),
     enabled: canManage && !!projectId,
-    staleTime: 30_000,
   });
 }
 

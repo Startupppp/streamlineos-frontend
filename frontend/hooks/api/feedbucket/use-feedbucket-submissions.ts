@@ -153,7 +153,7 @@ export function useFeedbucketSubmissions(
 
 export function useFeedbucketSubmission(submissionId: number) {
   return useGatedQuery("feedbucket:submissions:view", {
-    queryKey: growthAndSignQueryKeys.feedbucket.submission(submissionId),
+    ...feedbucketSubmissionQueryOptions(submissionId),
     queryFn: ({ signal }) =>
       apiClient.get<FeedbucketSubmission>(
         `/feedbucket/submissions/${submissionId}`,
@@ -161,7 +161,6 @@ export function useFeedbucketSubmission(submissionId: number) {
         signal,
         feedbucketSubmissionDetailC,
       ),
-    staleTime: 30_000,
     enabled: submissionId > 0,
     throwOnError: false,
   });

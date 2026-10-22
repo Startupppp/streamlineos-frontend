@@ -1,12 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
+import {
+  projectBoardTicketsQueryOptions,
+  ticketByKeyQueryOptions,
+} from "./ticket-queries-read-options";
+import type { BoardFilters } from "./ticket-queries-read-options";
 
 const ticketListPageLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-core-schema").then((m) => m.ticketListPageContract),
@@ -25,26 +29,8 @@ import type {
   CursorPageResponse,
   TicketFilters,
 } from "@/types/projects";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const BOARD_PAGE_SIZE = 100;
-
-export function projectBoardTicketsQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board" }),
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (last: CursorPageResponse<Ticket>) =>
-      last.pagination.nextCursor ?? undefined,
-    staleTime: 30_000,
-  };
-}
-
-export function ticketByKeyQueryOptions(projectId: number, ticketNumber: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.ticketByKey(projectId, ticketNumber),
-    staleTime: 60_000,
-  };
-}
 
 export function useTickets(
   projectId: number,
@@ -62,30 +48,12 @@ export function useTickets(
   });
 }
 
-export type TicketOrderBy = "created" | "updated" | "priority" | "dueDate" | "number" | "title" | "rank";
-export type TicketOrderDir = "asc" | "desc";
-
-export type BoardFilters = {
-  q?: string;
-  status?: string;
-  priority?: string;
-  type?: string;
-  assigneeId?: string;
-  labels?: string;
-  cycle?: string;
-  module?: string;
-  dueDateFrom?: string;
-  dueDateTo?: string;
-  orderBy?: TicketOrderBy;
-  orderDir?: TicketOrderDir;
-  cursor?: string;
-};
 
 export function useProjectBoardTickets(projectId: number, filters?: BoardFilters) {
   const canView = useCan("build:tickets:view");
   const query = useInfiniteQuery({
-    queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board", ...filters }),
-    queryFn: ({ pageParam , signal }) => {
+    ...projectBoardTicketsQueryOptions(projectId, filters),
+    queryFn: ({ pageParam, signal }: { pageParam: string | undefined; signal: AbortSignal }) => {
       const params: Record<string, unknown> = {
         limit: BOARD_PAGE_SIZE,
         orderBy: filters?.orderBy ?? "rank",
@@ -104,16 +72,9 @@ export function useProjectBoardTickets(projectId: number, filters?: BoardFilters
       if (filters?.dueDateTo) params.dueDateTo = filters.dueDateTo;
       return apiClient.get<CursorPageResponse<Ticket>>(`/build/${projectId}/tickets`, params, signal, ticketListPageLazy);
     },
-    initialPageParam: filters?.cursor ?? NO_CURSOR_YET,
-    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
-    staleTime: 30_000,
   });
-
-  const data = useMemo(
-    () => query.data?.pages.flatMap((p) => p.data ?? []) ?? [],
-    [query.data],
-  );
+  const data = query.data?.pages.flatMap((p) => p.data ?? []) ?? [];
   return {
     ...query,
     data,
@@ -147,10 +108,13 @@ export function useTicketByKey(
   const canView = useCan("build:tickets:view");
   const queryClient = useQueryClient();
   return useQuery<Ticket | null>({
-    queryKey: buildWorkQueryKeys.projects.ticketByKey(projectId, ticketNumber ?? 0),
+    ...ticketByKeyQueryOptions(projectId, ticketNumber ?? 0),
     queryFn: async ({ signal }) => {
       const ticket = await apiClient.get<Ticket | null>(
-        `/build/${projectId}/tickets/key/${ticketNumber}`, undefined, signal, ticketDetailLazy,
+        `/build/${projectId}/tickets/key/${ticketNumber ?? 0}`,
+        undefined,
+        signal,
+        ticketDetailLazy,
       );
       if (ticket) {
         queryClient.setQueryData(buildWorkQueryKeys.projects.ticket(projectId, ticket.id), ticket);
@@ -158,7 +122,6 @@ export function useTicketByKey(
       return ticket;
     },
     enabled: canView && !!ticketNumber && !!projectId,
-    staleTime: 60_000,
     ...options,
   });
 }

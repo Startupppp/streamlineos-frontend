@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { reportingManagerRequestsQueryOptions } from "./reporting-manager-requests-read-options";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
@@ -17,7 +18,6 @@ import type {
   ReviewReportingManagerRequestResponse,
 } from "@/hooks/api/hr/reporting-manager-requests-schema";
 
-/** HR review queue (CONTRACT §4.14–§4.16), gated on `hr:reporting-lines:review`. */
 
 const pageLazy = lazyContract(() =>
   import("@/hooks/api/hr/reporting-manager-requests-schema").then((m) => m.hrReportingManagerRequestPageContract),
@@ -37,16 +37,6 @@ export interface ReportingManagerRequestFilters {
   limit?: number;
 }
 
-export function reportingManagerRequestsQueryOptions(params: {
-  status: ReportingManagerRequestStatus | null;
-  cursor: string | null;
-  limit: number | null;
-}) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.reportingManagerRequests(params),
-    staleTime: 30_000,
-  } as const;
-}
 
 export function useReportingManagerRequests(filters: ReportingManagerRequestFilters) {
   const canReview = useCan("hr:reporting-lines:review");

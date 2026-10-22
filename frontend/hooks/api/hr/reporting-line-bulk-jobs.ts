@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { reportingLineBulkJobsQueryOptions, reportingLineBulkJobQueryOptions } from "./reporting-line-bulk-jobs-read-options";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -17,7 +18,6 @@ import type {
   CreateBulkJobInput,
 } from "@/hooks/api/hr/reporting-line-bulk-jobs-schema";
 
-/** Bulk reporting change (CONTRACT §4.17–§4.19), gated on `hr:reporting-lines:manage`. */
 
 const jobLazy = lazyContract(() =>
   import("@/hooks/api/hr/reporting-line-bulk-jobs-schema").then((m) => m.bulkJobContract),
@@ -25,20 +25,6 @@ const jobLazy = lazyContract(() =>
 const jobPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/reporting-line-bulk-jobs-schema").then((m) => m.bulkJobPageContract),
 );
-
-export function reportingLineBulkJobsQueryOptions(params: { cursor: string | null }) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.reportingLineBulkJobs(params),
-    staleTime: 30_000,
-  } as const;
-}
-
-export function reportingLineBulkJobQueryOptions(jobId: string, rowCursor?: string) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.reportingLineBulkJob(jobId, rowCursor),
-    staleTime: 30_000,
-  } as const;
-}
 
 export function useReportingLineBulkJobs(cursor?: string) {
   const canManage = useCan("hr:reporting-lines:manage");
@@ -76,7 +62,6 @@ export function useReportingLineBulkJob(jobId: string, rowCursor?: string) {
   });
 }
 
-/** Preview: validates every row and persists a PREVIEWED job; writes no line. */
 export function useCreateReportingLineBulkJob() {
   const qc = useQueryClient();
   const operation = useIdempotentOperation();
@@ -109,14 +94,12 @@ export function useCommitReportingLineBulkJob() {
       qc.setQueryData(humanResourcesQueryKeys.hr.reportingLineBulkJob(job.jobId), job);
       void invalidateHrWorkforceQueries(qc, undefined, [
         humanResourcesQueryKeys.hr.reportingLineBulkJobs(),
-        // A job moves many employees' lines; the prefix reaches each one's card.
         humanResourcesQueryKeys.hr.reportingLinesAll(),
       ]);
     },
   });
 }
 
-/** `GET …/failures.csv` — text/csv, saved as a file. */
 export async function downloadReportingLineBulkJobFailures(jobId: string): Promise<void> {
   const blob = await apiClient.download(`/hr/reporting-lines/bulk-jobs/${jobId}/failures.csv`);
   downloadBlob(blob, `reporting-change-${jobId.slice(0, 8)}-failures.csv`);

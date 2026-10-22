@@ -3,6 +3,7 @@ import "server-only";
 import type { z } from "zod";
 
 import { dehydrate } from "@tanstack/react-query";
+import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { createServerQueryClient } from "./server-query-client";
 import { serverGet } from "@/lib/server-fetch";
 import { resolvePrefetchGate } from "@/lib/prefetch/prefetch-gate";
@@ -282,15 +283,11 @@ export async function prefetchHrAutomations() {
     if (!gate.can("hr:automations:view"))
       return dehydrate(await createServerQueryClient());
     const queryClient = await createServerQueryClient();
-    await queryClient.prefetchQuery({
+    await queryClient.prefetchInfiniteQuery({
       ...hrAutomationsQueryOptions(),
-      queryFn: async () => {
-        const page = await serverGet<AutomationRuleList>(
-          "/hr/automations",
-          automationRuleListContract,
-        );
-        return page.items;
-      },
+      queryFn: () =>
+        serverGet<AutomationRuleList>("/hr/automations", automationRuleListContract),
+      initialPageParam: NULL_CURSOR_YET,
     });
     return dehydrate(queryClient);
   } catch {
@@ -357,15 +354,11 @@ export async function prefetchHrWebhooks() {
     if (!gate.can("hr:integrations:manage"))
       return dehydrate(await createServerQueryClient());
     const queryClient = await createServerQueryClient();
-    await queryClient.prefetchQuery({
+    await queryClient.prefetchInfiniteQuery({
       ...hrWebhooksQueryOptions(),
-      queryFn: async () => {
-        const page = await serverGet<HrWebhookSubscriptionList>(
-          "/hr/webhooks",
-          hrWebhookSubscriptionListContract,
-        );
-        return page.items;
-      },
+      queryFn: () =>
+        serverGet<HrWebhookSubscriptionList>("/hr/webhooks", hrWebhookSubscriptionListContract),
+      initialPageParam: NULL_CURSOR_YET,
     });
     return dehydrate(queryClient);
   } catch {

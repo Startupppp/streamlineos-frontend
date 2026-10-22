@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { documentTemplatesQueryOptions, documentTemplateDetailQueryOptions } from "./document-templates-read-options";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -46,20 +47,6 @@ export interface UpdateDocumentTemplateInput {
   variables?: string[];
 }
 
-
-export function documentTemplatesQueryOptions(params?: { type?: string }) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.documentTemplates(params),
-    staleTime: 2 * 60_000,
-  } as const;
-}
-
-export function documentTemplateDetailQueryOptions(templateId: number) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.documentTemplate(templateId),
-    staleTime: 2 * 60_000,
-  } as const;
-}
 
 export function useDocumentTemplates(type?: string) {
   const canView = useCan("hr:documents:view");

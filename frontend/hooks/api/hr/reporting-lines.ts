@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { managerCoverageQueryOptions } from "./reporting-lines-read-options";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
@@ -42,13 +43,6 @@ export function useReportingLine(employeeUserId: string) {
   });
 }
 
-export function managerCoverageQueryOptions() {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.managerCoverage(),
-    staleTime: 60_000,
-  } as const;
-}
-
 export function useManagerCoverage() {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
@@ -61,10 +55,6 @@ export function useManagerCoverage() {
   });
 }
 
-/**
- * Active, accepted, eligible members only (CONTRACT §4.6), ≤ 20, server-searched.
- * The caller debounces `q`; `enabled` lets a picker fetch only while open.
- */
 export function useManagerCandidates(q: string, excludeUserId?: string, options?: { enabled?: boolean }) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");

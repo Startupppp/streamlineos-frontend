@@ -1,10 +1,10 @@
 "use client";
 
-import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetBody } from "@/components/ui/sheet";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCanState } from "@/hooks/api/access";
 import { useHrDrilldown } from "@/hooks/api/hr/analytics";
@@ -40,12 +40,10 @@ function getRowKey(row: DrilldownRow): number {
 }
 
 export function DrilldownSheet({ open, onClose, metric, title, departmentId }: DrilldownSheetProps) {
-  const [page, setPage] = useSourceOverride(metric, 1);
-
   const access = useCanState("hr:analytics:read");
-  const { data, isLoading, isError, error, refetch } = useHrDrilldown(metric, page, departmentId);
+  const { data, isPending, isError, error, refetch, fetchNextPage, hasNextPage, isFetchingNextPage } = useHrDrilldown(metric, departmentId);
 
-  const rows = data?.rows ?? [];
+  const rows = data?.pages?.flatMap((p) => p.rows) ?? [];
   const columns = rows.length > 0 ? Object.keys(rows[0] ?? {}) : [];
 
   const indexedRows: DrilldownRow[] = rows.map((row, i) => ({ ...row, _rowIdx: i }));
@@ -64,8 +62,11 @@ export function DrilldownSheet({ open, onClose, metric, title, departmentId }: D
     void refetch();
   }
 
-  const pending = isLoading || access === "loading";
-  const indeterminate = !pending && !isError && access === "granted" && data === undefined;
+  function handleLoadMore() {
+    void fetchNextPage();
+  }
+
+  const pending = isPending || access === "loading";
 
   return (
     <Sheet open={open} onOpenChange={handleOpenChange}>
@@ -86,36 +87,26 @@ export function DrilldownSheet({ open, onClose, metric, title, departmentId }: D
               error={error}
               onRetry={handleRetry}
             />
-          ) : indeterminate ? (
-            <div
-              className="flex h-32 items-center justify-center px-4 text-center text-sm text-muted-foreground"
-              role="status"
-            >
-              These details could not be determined.
-            </div>
           ) : (
-            <DataTable
-              data={indexedRows}
-              columns={tableColumns}
-              getRowKey={getRowKey}
-              isLoading={pending}
-              emptyState={
-                <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
-                  No data available
-                </div>
-              }
-              pagination={
-                data === undefined
-                  ? undefined
-                  : {
-                      mode: "server",
-                      page,
-                      pageSize: data.limit,
-                      total: data.total,
-                      onPageChange: setPage,
-                    }
-              }
-            />
+            <>
+              <DataTable
+                data={indexedRows}
+                columns={tableColumns}
+                getRowKey={getRowKey}
+                isLoading={pending}
+                emptyState={
+                  <div className="flex h-32 items-center justify-center text-sm text-muted-foreground">
+                    No data available
+                  </div>
+                }
+              />
+              <InfiniteScrollSentinel
+                hasNextPage={hasNextPage ?? false}
+                isFetchingNextPage={isFetchingNextPage}
+                onLoadMore={handleLoadMore}
+                label="Load more rows"
+              />
+            </>
           )}
         </SheetBody>
       </SheetContent>

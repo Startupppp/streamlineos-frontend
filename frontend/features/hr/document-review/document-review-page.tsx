@@ -20,11 +20,11 @@ import { DocumentAcknowledgementsPanel } from "@/features/hr/document-review/doc
 
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan } from "@/hooks/api/access";
+import { onboardingDocsSummaryQueryOptions } from "@/hooks/api/hr/document-review-read-options";
 
 const docsSummaryContract = lazyContract(() =>
-  import("@/features/hr/document-review/document-review-schema").then((m) => m.onboardingDocsSummaryContract),
+  import("@/hooks/api/hr/document-review-schema").then((m) => m.onboardingDocsSummaryContract),
 );
 
 const PAGE_SIZE = 20;
@@ -40,23 +40,22 @@ interface DocReviewSummaryResponse {
 }
 
 function useDocReviewSummary(cursor: string | undefined, search: string, status: string) {
-  const params: Record<string, unknown> = { cursor, limit: PAGE_SIZE };
-  if (search.trim()) params.search = search.trim();
-  if (status !== "ALL") params.status = status;
+  const params = {
+    cursor,
+    limit: PAGE_SIZE,
+    ...(search.trim() ? { search: search.trim() } : {}),
+    ...(status !== "ALL" ? { status } : {}),
+  };
   const canReviewDocs = useCan("hr:onboarding:manage");
   return useQuery<DocReviewSummaryResponse>({
-    queryKey: humanResourcesQueryKeys.hr.onboardingDocsSummary(params),
+    ...onboardingDocsSummaryQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get("/hr/onboarding-docs/summary", params, signal, docsSummaryContract),
     placeholderData: keepPreviousData,
-    staleTime: 30_000,
     enabled: canReviewDocs,
   });
 }
 
 export function DocumentReviewPage() {
-  // PATCH /hr/onboarding-docs/:docId is `hr:onboarding:manage`
-  // (hr-onboarding-docs-admin.controller.ts:121); hr:employees:manage was the
-  // wrong key, so reviewers without it saw no Approve / Re-upload.
   const canReview = useCan("hr:onboarding:manage");
 
   const [reviewUserId, setReviewUserId] = useState<string | null>(null);
@@ -77,9 +76,6 @@ export function DocumentReviewPage() {
   );
 
   const list = data?.data ?? [];
-  // The summary read is disabled without hr:onboarding:manage while the route
-  // only requires hr:documents:view, so a documents viewer used to see an
-  // empty table instead of a denial (FE-47).
   const pageState = usePageState({ permission: "hr:onboarding:manage", isLoading, isError, error });
 
   const handleRetry = useCallback(() => { void refetch(); }, [refetch]);

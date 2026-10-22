@@ -60,17 +60,7 @@ export function useProjectTeams(params?: {
   leadId?: string;
   memberId?: string;
 }) {
-  const query: Record<string, string> = {};
-  if (params?.cursor) query["cursor"] = params.cursor;
-  if (params?.pageSize) query["pageSize"] = String(params.pageSize);
-  if (params?.search) query["search"] = params.search;
-  if (params?.leadId) query["leadId"] = params.leadId;
-  if (params?.memberId) query["memberId"] = params.memberId;
-  return useGatedQuery<TeamListResponse>("build:teams:view", {
-    queryKey: buildWorkQueryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
-    queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),
-    staleTime: 60_000,
-  });
+  return useGatedQuery<TeamListResponse>("build:teams:view", teamsListQueryOptions(params));
 }
 
 export function useProjectTeam(teamId: number) {

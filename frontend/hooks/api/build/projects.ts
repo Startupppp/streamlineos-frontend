@@ -6,7 +6,6 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
-import { useCallback } from "react";
 import type {
   InfiniteData,
   UseInfiniteQueryOptions,
@@ -82,17 +81,7 @@ export function useProjects(
 ) {
   const canView = useCan("build:view");
   return useQuery<ProjectListResponse>({
-    queryKey: buildWorkQueryKeys.projects.list(
-      filters ? { ...filters } : undefined,
-    ),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProjectListResponse>(
-        "/build",
-        filters ? { ...filters } : undefined,
-        signal,
-        projectListPageLazy,
-      ),
-    staleTime: 30_000,
+    ...projectsListQueryOptions(filters),
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });
@@ -144,19 +133,11 @@ export function useProject(
   const canView = useCan("build:view");
   const hydratedProject = useHydratedProject(projectId);
   return useQuery<ProjectWithDetails | null>({
-    queryKey: buildWorkQueryKeys.projects.detail(projectId),
-    queryFn: ({ signal }) =>
-      apiClient.get<ProjectWithDetails | null>(
-        `/build/${projectId}`,
-        undefined,
-        signal,
-        projectDetailLazy,
-      ),
-    enabled: canView && !!projectId,
-    staleTime: 30_000,
+    ...projectDetailQueryOptions(projectId),
     initialData: hydratedProject,
     throwOnError: projectReadErrorReachesBoundary,
     ...options,
+    enabled: canView && !!projectId,
   });
 }
 
@@ -401,16 +382,13 @@ export function useProjectLabels(
 }
 
 export function useCheckProjectKeyAvailable() {
-  return useCallback(
-    (key: string, signal?: AbortSignal) =>
-      apiClient.get<{ available: boolean }>(
-        "/build/project-key-available",
-        { key },
-        signal,
-        projectKeyAvailableLazy,
-      ),
-    [],
-  );
+  return (key: string, signal?: AbortSignal) =>
+    apiClient.get<{ available: boolean }>(
+      "/build/project-key-available",
+      { key },
+      signal,
+      projectKeyAvailableLazy,
+    );
 }
 
 export function projectsListQueryOptions(filters?: ProjectFilters) {

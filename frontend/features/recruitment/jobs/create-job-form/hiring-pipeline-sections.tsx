@@ -39,7 +39,8 @@ function newScreeningQuestion(): ScreeningQuestionValues {
 export function Section7({ form }: SectionProps) {
   const { register, watch, setValue, control, formState: { errors } } = form;
   const selectedRounds = watch("interviewRounds") ?? [];
-  const { data: hiringFlows } = useHiringFlows();
+  const { data: hiringFlowsData } = useHiringFlows();
+  const hiringFlows = hiringFlowsData?.pages?.flatMap((p) => p.data) ?? [];
 
   function handleRoundToggle(round: string, checked: boolean) {
     const next = checked
@@ -67,7 +68,7 @@ export function Section7({ form }: SectionProps) {
                 </SelectTrigger>
                 <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
                   <SelectItem value={NO_HIRING_FLOW}>None</SelectItem>
-                  {(hiringFlows ?? []).map((f) => (
+                  {hiringFlows.map((f) => (
                     <SelectItem key={f.id} value={String(f.id)}>
                       {f.name}{f.isDefault ? " (Default)" : ""}
                     </SelectItem>

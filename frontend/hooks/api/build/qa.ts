@@ -73,10 +73,9 @@ interface TestRunFilters {
 export function useTestSuites(projectId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestSuite[]>({
-    queryKey: buildWorkQueryKeys.projects.qa.suites(projectId ?? 0),
+    ...testSuitesQueryOptions(projectId ?? 0),
     queryFn: ({ signal }) => apiClient.get<TestSuite[]>(`/build/${projectId}/test-suites`, undefined, signal, testSuiteListContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 
@@ -88,12 +87,10 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
   if (filters?.priority) params["priority"] = filters.priority;
   if (filters?.automationStatus) params["automationStatus"] = filters.automationStatus;
   if (filters?.cursor !== undefined) params["cursor"] = String(filters.cursor);
+  const keyParams = Object.keys(params).length > 0 ? params : undefined;
 
   return useQuery<IdCursorPage<TestCase>>({
-    queryKey: buildWorkQueryKeys.projects.qa.cases(
-      projectId ?? 0,
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
+    ...testCasesQueryOptions(projectId ?? 0, keyParams),
     queryFn: ({ signal }) =>
       apiClient.get<IdCursorPage<TestCase>>(
         `/build/${projectId}/test-cases`,
@@ -102,7 +99,6 @@ export function useTestCases(projectId?: number, filters?: TestCaseFilters) {
         testCasePageContract,
       ),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 
@@ -175,7 +171,7 @@ export function useTestRuns(projectId?: number, filters?: TestRunFilters) {
 export function useTestRunDetail(projectId?: number, runId?: number) {
   const canView = useCan("build:qa:view");
   return useQuery<TestRunDetail | null>({
-    queryKey: buildWorkQueryKeys.projects.qa.run(projectId ?? 0, runId ?? 0),
+    ...testRunDetailQueryOptions(projectId ?? 0, runId ?? 0),
     queryFn: async ({ signal }) => {
       try {
         return await apiClient.get<TestRunDetail>(
@@ -190,7 +186,6 @@ export function useTestRunDetail(projectId?: number, runId?: number) {
       }
     },
     enabled: canView && !!projectId && !!runId,
-    staleTime: 30_000,
     throwOnError: false,
   });
 }
@@ -199,21 +194,24 @@ export function testSuitesQueryOptions(projectId: number) {
   return {
     queryKey: buildWorkQueryKeys.projects.qa.suites(projectId),
     staleTime: 60_000,
-  } as const;
+  };
 }
 
-export function testCasesQueryOptions(projectId: number) {
+export function testCasesQueryOptions(projectId: number, params?: Record<string, string>) {
   return {
-    queryKey: buildWorkQueryKeys.projects.qa.cases(projectId),
+    queryKey: buildWorkQueryKeys.projects.qa.cases(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
     staleTime: 60_000,
-  } as const;
+  };
 }
 
 export function testRunDetailQueryOptions(projectId: number, runId: number) {
   return {
     queryKey: buildWorkQueryKeys.projects.qa.run(projectId, runId),
     staleTime: 30_000,
-  } as const;
+  };
 }
 
 export function useCreateTestRun() {

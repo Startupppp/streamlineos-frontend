@@ -6,6 +6,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
+import { probationListQueryOptions } from "./probation-read-options";
 import type { HrProbationReviewRow } from "@/hooks/api/hr/probation-schema";
 
 const probationListC = lazyContract(() =>
@@ -51,12 +52,6 @@ export interface ProbationListResponse {
   };
 }
 
-export function probationListQueryOptions(params: ProbationListParams = {}) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.probationList(params),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useProbationList(params: ProbationListParams = {}) {
   const canProbation = useCan("hr:probation:view");

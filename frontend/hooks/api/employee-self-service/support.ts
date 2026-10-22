@@ -8,6 +8,7 @@ import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idemp
 import { lazyContract } from "@/lib/api-envelope";
 import { employeeSupportQueryKeys } from "@/lib/query-keys/employee-support";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { mySupportRequestsQueryOptions } from "./support-read-options";
 import type { HelpdeskCategory } from "@/lib/employee-support";
 import type {
   HelpdeskComment,
@@ -48,19 +49,12 @@ export function useMySupportSuggest(query: string) {
   });
 }
 
-export function mySupportRequestsQueryOptions(params: MyRequestsParams) {
-  return {
-    queryKey: keys.myRequests(params),
-    queryFn: ({ signal }: { signal?: AbortSignal }) =>
-      apiClient.get<HelpdeskListResult>("/me/support", params, signal, listC),
-    staleTime: 15_000,
-  } as const;
-}
-
 export function useMySupportRequests(params: MyRequestsParams) {
   const canRaise = useCan("self:support");
   return useQuery({
     ...mySupportRequestsQueryOptions(params),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get<HelpdeskListResult>("/me/support", params, signal, listC),
     enabled: canRaise,
   });
 }

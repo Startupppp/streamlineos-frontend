@@ -9,6 +9,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import type { Module, CreateModuleInput } from "@/types/projects";
+import { modulesQueryOptions } from "./modules-read-options";
 
 const moduleRowContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.moduleRowContract),
@@ -27,25 +28,17 @@ type ModulePage = {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-export function modulesQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.modules(projectId),
-    staleTime: 60_000,
-  };
-}
-
 export function useModules(
   projectId: number,
   options?: Omit<UseQueryOptions<Module[]>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:view");
   return useQuery<Module[]>({
-    queryKey: buildWorkQueryKeys.projects.modules(projectId),
+    ...modulesQueryOptions(projectId),
     queryFn: async ({ signal }) => {
       const response = await apiClient.get<ModulePage>(`/build/${projectId}/modules`, undefined, signal, moduleListContract);
       return response.data;
     },
-    staleTime: 60_000,
     ...options,
     enabled: canView && !!projectId,
   });

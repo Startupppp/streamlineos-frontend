@@ -8,7 +8,7 @@ import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { queryKeyBase } from "@/lib/query-keys/base";
+import { identityKeys, accessProvisioningQueryOptions } from "./enterprise-ops-identity-read-options";
 
 export type ProvisioningAction = "grant" | "revoke" | "review";
 export type ProvisioningStatus = "pending" | "completed" | "verified" | "failed";
@@ -53,12 +53,6 @@ interface PaginatedResult<T> {
 
 const BASE = "/hr/enterprise/ops/identity";
 
-const identityKeys = {
-  all: [...queryKeyBase, "hr-identity"] as const,
-  provisioning: (p: Record<string, unknown>) => [...queryKeyBase, "hr-identity", "provisioning", p] as const,
-  templates: [...queryKeyBase, "hr-identity", "templates"] as const,
-  exitVerification: (userId: string) => [...queryKeyBase, "hr-identity", "exit-verification", userId] as const,
-};
 
 const _listProvisioningContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.listProvisioningContract),
@@ -78,18 +72,6 @@ const _createTemplateContract = lazyContract(() =>
 const _voidContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.voidContract),
 );
-
-export function accessProvisioningQueryOptions(params: {
-  cursor?: string;
-  userId?: string;
-  triggeredBy?: ProvisioningTrigger;
-  status?: ProvisioningStatus;
-} = {}) {
-  return {
-    queryKey: identityKeys.provisioning(params),
-    staleTime: 30_000,
-  };
-}
 
 export function useAccessProvisioning(params: {
   cursor?: string;

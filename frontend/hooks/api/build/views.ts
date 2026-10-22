@@ -30,11 +30,11 @@ const noContentLazy = lazyContract(() =>
 
 type ViewPage = { data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } };
 
-export function viewsListQueryOptions(projectId: number) {
+export function viewsListQueryOptions(projectId: number, params?: Record<string, string>) {
   return {
-    queryKey: [...buildWorkQueryKeys.projects.views(projectId), {}] as const,
+    queryKey: [...buildWorkQueryKeys.projects.views(projectId), params ?? {}],
     staleTime: 60_000,
-  } as const;
+  };
 }
 
 export function useViews(
@@ -48,11 +48,11 @@ export function useViews(
   const search = params?.search || undefined;
   if (cursor) queryParams.cursor = cursor;
   if (search) queryParams.search = search;
+  const keyParams = Object.keys(queryParams).length > 0 ? queryParams : undefined;
   return useQuery<ViewPage>({
-    queryKey: [...buildWorkQueryKeys.projects.views(projectId), queryParams],
+    ...viewsListQueryOptions(projectId, keyParams),
     queryFn: ({ signal }) =>
       apiClient.get(`/build/${projectId}/views`, Object.keys(queryParams).length > 0 ? queryParams : undefined, signal, viewPageContract),
-    staleTime: 60_000,
     ...options,
     enabled: canView && !!projectId,
   });

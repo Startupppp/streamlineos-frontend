@@ -56,7 +56,7 @@ export function useProjectMembers(
     ...(search ? { search } : {}),
   };
   return useQuery<ProjectMemberPage>({
-    queryKey: buildWorkQueryKeys.projects.members(projectId, requestParams),
+    ...projectMembersQueryOptions(projectId, Object.keys(requestParams).length > 0 ? requestParams : undefined),
     queryFn: async ({ signal }) => {
       try {
         return await apiClient.get<ProjectMemberPage>(
@@ -82,7 +82,6 @@ export function useProjectMembers(
         );
       }
     },
-    staleTime: 30_000,
     ...restOptions,
     enabled: canView && !!projectId && (callerEnabled ?? true),
   });
@@ -156,9 +155,12 @@ export function useUpdateProjectMemberRole(
   });
 }
 
-export function projectMembersQueryOptions(projectId: number) {
+export function projectMembersQueryOptions(projectId: number, params?: Record<string, string>) {
   return {
-    queryKey: buildWorkQueryKeys.projects.members(projectId),
+    queryKey: buildWorkQueryKeys.projects.members(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
     staleTime: 30_000,
-  } as const;
+  };
 }

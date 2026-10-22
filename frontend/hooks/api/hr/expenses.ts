@@ -16,6 +16,7 @@ import type {
   ExpenseStats,
 } from "@/types/hr/expenses";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { expensePageDataQueryOptions } from "./expenses-read-options";
 
 interface ExpensePageFilters {
   page?: number;
@@ -47,21 +48,6 @@ const _successContract = lazyContract(() =>
 const _expenseExportJobContract = lazyContract(() =>
   import("@/hooks/api/hr/expenses-schema").then((m) => m.expenseExportJobContract),
 );
-
-export function expensePageDataQueryOptions(
-  params: Record<string, unknown> = {},
-  selfService = false,
-) {
-  return {
-    queryKey: [
-      ...humanResourcesQueryKeys.hr.expenses(),
-      "pageData",
-      selfService ? "self" : "org",
-      params,
-    ] as const,
-    staleTime: 30_000,
-  };
-}
 
 export function useExpensePageData(
   filters: ExpensePageFilters = {},
@@ -97,7 +83,6 @@ export function useCreateExpense() {
   });
 }
 
-/** Withdraws the caller's own PENDING or DRAFT claim (`POST /me/expenses/:expenseId/withdraw`). */
 export function useWithdrawExpense() {
   const qc = useQueryClient();
   return useAuthorizedMutation("self:expenses", {
@@ -105,7 +90,6 @@ export function useWithdrawExpense() {
     mutationFn: ({ expenseId, config }: { expenseId: number; config?: RequestConfig }) =>
       apiClient.post(`/me/expenses/${expenseId}/withdraw`, undefined, config, _successContract),
     onSuccess: () => {
-      // The list totals and status counts are server aggregates, so the page is re-read.
       void qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.expenses() });
     },
   });
@@ -216,7 +200,6 @@ export function useDownloadExpenseExportJob() {
     mutationFn: (jobId) => {
       if (!canRead)
         return Promise.reject(new Error("Expense read access is required"));
-      // Saves the file itself, and refuses an empty or non-file body (HRMS-E2E-009).
       return downloadExport(`/hr/expenses/export/jobs/${jobId}/download`, {
         label: "expenses",
         fallbackName: "expenses.csv",

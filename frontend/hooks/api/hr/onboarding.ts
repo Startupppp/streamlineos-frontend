@@ -8,6 +8,7 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { invalidateHrWorkforceQueries } from "@/lib/hr-workforce-cache";
+import { onboardingStatusPageQueryOptions, onboardingUserQueryOptions } from "./onboarding-read-options";
 
 const initiatedOnboardingUserIdsC = lazyContract(() =>
   import("@/hooks/api/hr/onboarding-schema").then((m) => m.initiatedOnboardingUserIdsContract),
@@ -70,7 +71,6 @@ export interface OnboardingTask {
   completedAt: string | null;
   completedBy: string | null;
   createdAt: string | null;
-  /** Computed by the API from the task owner and the caller's effective permissions/scope. */
   canComplete: boolean;
 }
 
@@ -84,13 +84,6 @@ export function useInitiatedOnboardingUserIds(enabled: boolean) {
     staleTime: 2 * 60_000,
     enabled: canManage && enabled,
   });
-}
-
-export function onboardingStatusPageQueryOptions(cursor: string | undefined, limit: number) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.onboardingStatusPage(cursor, limit),
-    staleTime: 2 * 60_000,
-  } as const;
 }
 
 export function useOnboardingStatusPage(cursor: string | undefined, limit = 25) {
@@ -117,13 +110,6 @@ export function useOnboardingUserStatus(userId: string) {
   });
 }
 
-
-export function onboardingUserQueryOptions(userId: string) {
-  return {
-    queryKey: humanResourcesQueryKeys.hr.onboardingUser(userId),
-    staleTime: 60_000,
-  } as const;
-}
 
 export function useUserOnboarding(userId: string) {
   const canViewTasks = useCan("hr:onboarding:tasks:view");
@@ -215,9 +201,6 @@ export function useOnboardingTemplateDepartments() {
   });
 }
 
-// Named Hr* to avoid collision with hooks/api/crm/clients.ts's client-onboarding
-// useOnboardingTemplates/useCreateOnboardingTemplate (a different feature: CRM client
-// onboarding, /clients/onboarding/templates — unrelated to employee onboarding plans).
 export function useHrOnboardingTemplates() {
   const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingTemplate[]>({
@@ -234,9 +217,6 @@ export function useCreateHrOnboardingTemplate() {
     mutationKey: ["onboarding", "templates", "create"],
     mutationFn: (data: CreateOnboardingTemplateInput) =>
       apiClient.post<{ success: boolean; templateId: number }>("/onboarding/templates", data, undefined, createOnboardingTemplateC),
-    // Returned, not fired: the caller's toast waits for the refetched list, so
-    // "Onboarding plan created" never shows over "No onboarding plans yet"
-    // (BUG-HRMS-021).
     onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.onboardingTemplates() }),
   });
 }

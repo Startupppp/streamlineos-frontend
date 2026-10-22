@@ -54,7 +54,7 @@ function getSuggestTitleDisabledReason(
   return undefined;
 }
 
-function getImproveDescriptionDisabledReason(
+function getTextDraftDisabledReason(
   projectId: number | null,
   title: string,
   description: string,
@@ -65,14 +65,6 @@ function getImproveDescriptionDisabledReason(
     return "Add a title or description first";
   }
   return undefined;
-}
-
-function getSuggestFieldsDisabledReason(
-  projectId: number | null,
-  title: string,
-  description: string,
-): string | undefined {
-  return getImproveDescriptionDisabledReason(projectId, title, description);
 }
 
 function formatSuggestedFields(data: TicketSuggestFieldsResult): AiActionResult {
@@ -118,12 +110,7 @@ export function useCreateTicketAi({
   }, [title, description]);
 
   const suggestTitleDisabledReason = getSuggestTitleDisabledReason(projectId, description);
-  const improveDescriptionDisabledReason = getImproveDescriptionDisabledReason(
-    projectId,
-    title,
-    description,
-  );
-  const suggestFieldsDisabledReason = getSuggestFieldsDisabledReason(
+  const textDraftDisabledReason = getTextDraftDisabledReason(
     projectId,
     title,
     description,
@@ -197,14 +184,14 @@ export function useCreateTicketAi({
       },
       descriptionTrigger: {
         label: "Improve description",
-        disabledReason: improveDescriptionDisabledReason,
+        disabledReason: textDraftDisabledReason,
         disabled,
         isPending: descriptionAction.isPending || improveMutation.isPending,
         onClick: descriptionAction.run,
       },
       fieldsTrigger: {
         label: "Suggest priority and labels",
-        disabledReason: suggestFieldsDisabledReason,
+        disabledReason: textDraftDisabledReason,
         disabled,
         isPending: fieldsAction.isPending || suggestFieldsMutation.isPending,
         onClick: fieldsAction.run,
@@ -213,8 +200,7 @@ export function useCreateTicketAi({
     [
       canUseAI,
       suggestTitleDisabledReason,
-      improveDescriptionDisabledReason,
-      suggestFieldsDisabledReason,
+      textDraftDisabledReason,
       disabled,
       titleAction.isPending,
       titleAction.run,

@@ -38,11 +38,8 @@ const automationRuleContract = z.object({
 });
 
 export const automationRuleListContract = z.object({
-  items: z.array(automationRuleContract),
-  total: z.number().int(),
-  page: z.number().int(),
-  pageSize: z.number().int(),
-  totalPages: z.number().int(),
+  data: z.array(automationRuleContract),
+  pagination: cursorPaginationContract,
 });
 
 export const automationRuleDetailContract = automationRuleContract;

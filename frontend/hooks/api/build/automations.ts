@@ -57,9 +57,9 @@ export interface AutomationsFilters {
   search?: string;
 }
 
-export function automationsListQueryOptions(projectId: number) {
+export function automationsListQueryOptions(projectId: number, filters?: AutomationsFilters) {
   return {
-    queryKey: [...queryKeys.projects.automations(projectId), {}] as const,
+    queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
     initialPageParam: undefined as string | undefined,
     getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
       last.pagination.nextCursor ?? undefined,
@@ -77,7 +77,7 @@ export function useAutomations(
   if (filters?.ownerId) baseParams["ownerId"] = filters.ownerId;
   if (filters?.search) baseParams["search"] = filters.search;
   return useInfiniteQuery({
-    queryKey: [...queryKeys.projects.automations(projectId), filters ?? {}],
+    ...automationsListQueryOptions(projectId, filters),
     queryFn: ({ signal, pageParam }) => {
       const params = pageParam !== undefined
         ? { ...baseParams, cursor: pageParam }
@@ -96,10 +96,7 @@ export function useAutomations(
         projectAutomationListContract,
       );
     },
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 
