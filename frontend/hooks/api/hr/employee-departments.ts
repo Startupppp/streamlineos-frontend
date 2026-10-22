@@ -34,12 +34,17 @@ export function useCreateDepartment() {
     mutationFn: (data: CreateDepartmentInput) =>
       apiClient.post<Department>("/hr/departments", data, undefined, departmentItemLazy),
     onSuccess: (created) => {
+      function appendCreated(current: Department[] | undefined) {
+        return current === undefined || current.some((d) => d.id === created.id)
+          ? current
+          : [...current, { id: created.id, name: created.name }];
+      }
+      qc.setQueryData<Department[]>(humanResourcesQueryKeys.hr.departments(), appendCreated);
+      // The onboarding wizard lists departments from this key; without the
+      // patch an inline "Add 'QA Dept'" showed as unset until a refetch (#18).
       qc.setQueryData<Department[]>(
-        humanResourcesQueryKeys.hr.departments(),
-        (current) =>
-          current === undefined || current.some((d) => d.id === created.id)
-            ? current
-            : [...current, created],
+        humanResourcesQueryKeys.hr.onboardingTemplateDepartments(),
+        appendCreated,
       );
       void qc.invalidateQueries({
         queryKey: humanResourcesQueryKeys.hr.departments(),
