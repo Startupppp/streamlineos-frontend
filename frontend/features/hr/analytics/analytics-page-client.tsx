@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useCallback } from "react";
+import { AnalyticsExportButton } from "./analytics-export-button";
 import {
   useHrAnalytics,
   useHrAttritionAnalytics,
@@ -159,8 +160,6 @@ export function AnalyticsPageClient() {
   const [dateRange, setDateRange] = useState<DateRange>("month");
   const [activeSection, setActiveSection] = useState<SectionTab>("command-center");
 
-  const analyticsYear = useMemo(() => CURRENT_YEAR, []);
-
   const analyticsMonth = useMemo(() => {
     if (dateRange === "month") return CURRENT_MONTH;
     if (dateRange === "quarter") return Math.ceil(CURRENT_MONTH / 3) * 3 - 2;
@@ -206,7 +205,8 @@ export function AnalyticsPageClient() {
   return (
     <PageWrapper
       title="People analytics"
-      subtitle="Workforce insights and operational metrics">
+      subtitle="Workforce insights and operational metrics"
+      actions={<AnalyticsExportButton data={data} />}>
       <PageState
         resolution={pageState}
         onRetry={handleRetry}
@@ -278,13 +278,13 @@ export function AnalyticsPageClient() {
 
                 <TabsContent value="attendance" className="mt-0 flex-none">
                   <AttendanceSection
-                    year={analyticsYear}
+                    year={CURRENT_YEAR}
                     month={analyticsMonth}
                   />
                 </TabsContent>
 
                 <TabsContent value="leaves" className="mt-0 flex-none">
-                  <LeaveSection year={analyticsYear} />
+                  <LeaveSection year={CURRENT_YEAR} />
                 </TabsContent>
 
                 <TabsContent value="attrition" className="mt-0 flex-none">
