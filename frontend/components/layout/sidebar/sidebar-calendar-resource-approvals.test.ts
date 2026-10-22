@@ -1,10 +1,10 @@
-import { flattenNavRoutes, getNavGroupsForProduct } from "./sidebar-nav-items";
+import { flattenNavRoutes, getNavGroupsForModule } from "./sidebar-nav-items";
 import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
 
 const approvalPath = "/calendar/resource-approvals";
 
 it("shows the combined Calendar entry to an Inventory warehouse manager without Calendar read", () => {
-  const groups = getNavGroupsForProduct("home", "MEMBER", { "inventory:warehouses:manage": "all" }, ["calendar", "inventory"]);
+  const groups = getNavGroupsForModule("home", "MEMBER", { "inventory:warehouses:manage": "all" }, ["calendar", "inventory"]);
   const routes = groups.flatMap((group) => flattenNavRoutes(group.routes));
   const hrefs = routes.map((route) => route.href);
 
@@ -17,7 +17,7 @@ it("shows the combined Calendar entry to an Inventory warehouse manager without 
 });
 
 it("keeps a single Calendar entry for a reader without owner management rights", () => {
-  const groups = getNavGroupsForProduct("home", "MEMBER", { "calendar:read": "all" }, ["calendar", "inventory"]);
+  const groups = getNavGroupsForModule("home", "MEMBER", { "calendar:read": "all" }, ["calendar", "inventory"]);
   const hrefs = groups.flatMap((group) => flattenNavRoutes(group.routes)).map((route) => route.href);
 
   expect(hrefs).toContain("/calendar");

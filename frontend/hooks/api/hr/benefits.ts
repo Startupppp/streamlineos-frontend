@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -106,17 +106,24 @@ export type BenefitPlansQuery = {
   limit?: number;
 };
 
-export function useBenefitPlans(query: BenefitPlansQuery = {}) {
-  const canView = useCan("hr:benefits:view");
-  const hrEnabled = useModuleEnabled("hr");
-  return useQuery({
+export const benefitPlansQueryOptions = (query: BenefitPlansQuery = {}) =>
+  queryOptions({
     queryKey: humanResourcesQueryKeys.hr.benefitPlans(query),
     queryFn: ({ signal }) =>
       apiClient.get<BenefitsCursorPage<BenefitPlan>>(
         "/hr/benefits/plans",
-        query, signal, benefitPlansPageC,
+        query,
+        signal,
+        benefitPlansPageC,
       ),
     staleTime: 2 * 60_000,
+  });
+
+export function useBenefitPlans(query: BenefitPlansQuery = {}) {
+  const canView = useCan("hr:benefits:view");
+  const hrEnabled = useModuleEnabled("hr");
+  return useQuery({
+    ...benefitPlansQueryOptions(query),
     enabled: canView && hrEnabled,
   });
 }

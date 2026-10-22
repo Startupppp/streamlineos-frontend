@@ -22,3 +22,6 @@ export const hrFieldDefListContract = z.array(hrFieldDefContract);
 export type HrFieldDef = z.infer<typeof hrFieldDefContract>;
 
 export const hrFieldDefDeleteContract = z.undefined();
+
+export const hrCustomFieldsListKey = (entityType: string) =>
+  ["hr", "custom-fields", "definitions", entityType] as const;

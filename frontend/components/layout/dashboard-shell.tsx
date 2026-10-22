@@ -301,6 +301,7 @@ export function DashboardShell({
                       className="relative z-50 hidden h-full shrink-0 flex-col overflow-visible border-r border-sidebar-border bg-sidebar transition-[width] duration-300 ease-in-out lg:flex"
                     >
                       <AppSidebar
+                        navGroups={navGroups}
                         isCollapsed={isSidebarCollapsed}
                         buildSidebarSlot={buildSidebarSlot}
                       />
@@ -364,6 +365,7 @@ export function DashboardShell({
                     switchers for organizations and modules.
                   </DrawerDescription>
                   <AppSidebar
+                    navGroups={navGroups}
                     isMobile
                     onNavigate={handleCloseMobileMenu}
                     onRequestProductSwitcher={handleRequestProductSwitcher}

@@ -37,14 +37,20 @@ const reimbursementKeys = {
   list: () => [...reimbursementKeys.all, "list"] as const,
 };
 
+export function reimbursementsListQueryOptions() {
+  return {
+    queryKey: reimbursementKeys.list(),
+    staleTime: 2 * 60_000,
+  };
+}
+
 export function useReimbursements() {
   const canPayroll = useCan("hr:payroll:view");
   const payrollEnabled = useModuleEnabled("payroll");
   return useQuery({
-    queryKey: reimbursementKeys.list(),
+    ...reimbursementsListQueryOptions(),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<Reimbursement>>("/hr/reimbursements", undefined, signal, reimbursementsListC)).items,
-    staleTime: 2 * 60_000,
     enabled: canPayroll && payrollEnabled,
   });
 }

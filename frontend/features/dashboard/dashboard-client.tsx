@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useCallback, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { useDashboardStats, useExecutiveDashboard, useMyIssues } from "@/hooks/api/dashboard";
@@ -93,10 +93,7 @@ export function DashboardClient({
   const { data: myIssuesData } = useMyIssues({
     enabled: access.projectsEnabled,
   });
-  const openIssueCount = useMemo(
-    () => myIssuesData?.length ?? 0,
-    [myIssuesData],
-  );
+  const openIssueCount = myIssuesData?.length ?? 0;
 
   const pageTitle = headerClock
     ? firstName
@@ -111,10 +108,10 @@ export function DashboardClient({
     refetch: refetchExecutive,
   } = useExecutiveDashboard({ enabled: canViewExecutive });
 
-  const handleRefresh = useCallback(() => {
+  function handleRefresh() {
     void refetch();
     void refetchExecutive();
-  }, [refetch, refetchExecutive]);
+  }
 
   const statCards = useDashboardStatCards(stats, access, openIssueCount);
   const executiveCards = executiveKpiStats({

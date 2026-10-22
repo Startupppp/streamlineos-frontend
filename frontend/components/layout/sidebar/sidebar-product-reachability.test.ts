@@ -1,6 +1,6 @@
 import { ORG_MODULE_NAME } from "@/lib/org-module-keys";
 import { HOME_NAV_GROUPS } from "./sidebar-home-nav";
-import { NAV_GROUPS, getNavGroupsForProduct } from "./sidebar-nav-items";
+import { NAV_GROUPS, getNavGroupsForModule } from "./sidebar-nav-items";
 import { PRODUCT_DEFINITIONS } from "./sidebar-products";
 import type { NavGroup, ModuleKey } from "./sidebar-nav-types";
 
@@ -13,7 +13,7 @@ const EVERY_PRODUCT: ModuleKey[] = PRODUCT_DEFINITIONS.map(
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
 function groupsShownFor(product: ModuleKey): NavGroup[] {
-  return getNavGroupsForProduct(product, "OWNER", {}, EVERY_MODULE);
+  return getNavGroupsForModule(product, "OWNER", {}, EVERY_MODULE);
 }
 
 describe("every navigation group is reachable from a product", () => {
@@ -30,7 +30,7 @@ describe("every navigation group is reachable from a product", () => {
   it("shows every declared group in exactly one product", () => {
     const unreachable = DECLARED_GROUPS.filter(
       (group) => (productsByGroupLabel.get(group.label) ?? []).length === 0,
-    ).map((group) => `${group.label} (declares product=${group.product})`);
+    ).map((group) => `${group.label} (declares module=${group.module})`);
 
     expect(unreachable).toEqual([]);
   });
@@ -46,8 +46,8 @@ describe("every navigation group is reachable from a product", () => {
   it("only declares products that exist in the product switcher", () => {
     const known = new Set<string>(EVERY_PRODUCT);
     const unknown = DECLARED_GROUPS.filter(
-      (group) => !known.has(group.product),
-    ).map((group) => `${group.label} -> ${group.product}`);
+      (group) => !known.has(group.module),
+    ).map((group) => `${group.label} -> ${group.module}`);
 
     expect(unknown).toEqual([]);
   });

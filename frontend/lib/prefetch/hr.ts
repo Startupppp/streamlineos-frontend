@@ -53,12 +53,15 @@ export async function prefetchHrAssets() {
 }
 
 export async function prefetchHrExpenses() {
+  const gate = await resolvePrefetchGate();
   const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.expenses(), "pageData", "org", {}] as const,
-    queryFn: () => serverGet<ExpensePageDataResponse>("/hr/expenses/page-data", expensePageDataContract),
-    staleTime: 30_000,
-  });
+  if (gate.can("hr:expenses:view")) {
+    await queryClient.prefetchQuery({
+      queryKey: [...humanResourcesQueryKeys.hr.expenses(), "pageData", "org", {}] as const,
+      queryFn: () => serverGet<ExpensePageDataResponse>("/hr/expenses/page-data", expensePageDataContract),
+      staleTime: 30_000,
+    });
+  }
   return dehydrate(queryClient);
 }
 
@@ -66,7 +69,10 @@ export async function prefetchHrReimbursements() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
     queryKey: [...humanResourcesQueryKeys.hr.all, "reimbursements", "list"] as const,
-    queryFn: () => serverGet<ReimbursementsListResponse>("/hr/reimbursements", reimbursementsListContract),
+    queryFn: async () => {
+      const page = await serverGet<ReimbursementsListResponse>("/hr/reimbursements", reimbursementsListContract);
+      return page.items;
+    },
     staleTime: 2 * 60_000,
   });
   return dehydrate(queryClient);

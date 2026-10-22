@@ -31,8 +31,10 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [x] Coordinator: hr-policies.controller → HrPolicyConflictService direct; delete detectConflicts/detectOrgConflicts wrappers
 - [ ] Coordinator/paired: getDueLoanRepayments bounded page + payroll-inputs-build caller
 - [x] Coordinator: deleted dead CACHE_KEYS ticketsList/customStates/projectLabels (decision records kept)
-- [ ] BA7 (running) Home follow-up: approval writers (build approvals, attention adapters) bump the approver's inbox namespace; 22+ calendar unprojected selects
+- [x] BA7 Home follow-up: approval writers (build approvals, attention adapters) bump the approver's inbox namespace; 22+ calendar unprojected selects
 - [x] Coordinator: check:cache-invalidation now passes (analytics readers use the literal namespace the 12 writers bump)
+- [ ] Deferred: hr-workflow-engine approval writers inbox bump; 8 calendar stores still full-row (typed $inferSelect views)
+- [ ] Coordinator (after FS): HR nav travel entries use hr:expenses:view/manage but pages gate hr:travel:view/manage — align nav to page keys
 - [ ] Coordinator: index migrations (modules, cycles trgm, workItemRelations, members search)
 
 ## Phase 2C — paired contract changes (BE + FE together)
@@ -41,15 +43,15 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [ ] NavGroup alias: keep `module`, delete `product` (in FS)
 ## Phase 2B — frontend fixes (BRIEF-FRONTEND.md; prefetch + per-page loading + cache patching + pagination + dead code + compiler cleanup + RBAC)
 - [ ] (running) FS Shell/sidebar/nav (L7) incl. NavGroup `product` → `module`, ProductKey → ModuleKey (user ruling: "product" = Build managed products only)
-- [ ] (running) FH1 HR people & documents (employees, org, onboarding, exit, termination, fnf, bgv, documents…)
-- [ ] (running, follow-up: prefetch N's + gate parity) FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
+- [ ] (running, follow-up: prefetch 7→31 pages; editor gate restored to manage) FH1 HR people & documents (employees, org, onboarding, exit, termination, fnf, bgv, documents…)
+- [ ] (follow-up: shared queryOptions keys + page-gate check) FH2 HR time & settings (attendance, leaves, holidays, shifts, rosters, overtime, comp-off, geofencing, settings…)
 - [x] FH3 HR talent & analytics (performance, goals, kpis, benefits, engagement, analytics, workforce, hub)
-- [ ] (running) FH4 HR pay, cases & ops (expenses, travel, cases, safety, assets, service-delivery, enterprise ops)
-- [ ] FME Employee self-service `/me`
+- [ ] (follow-up: shared queryOptions keys) FH4 HR pay, cases & ops (expenses, travel, cases, safety, assets, service-delivery, enterprise ops)
+- [ ] (running) FME Employee self-service `/me`
 - [ ] FBA Build cross-project pages (all-work, command-center, goals, roadmap, portfolios, managed-products…)
 - [ ] FBB Build project tickets/board/list/cycles/ticket-details
 - [ ] FBC Build project other pages (wiki, files, intake, qa, releases, risks, meetings…)
-- [ ] FHM Home: dashboard, calendar, chat, inbox, mail (L5)
+- [ ] (running) FHM Home: dashboard, calendar, chat, inbox, mail (L5)
 - [ ] FKB Knowledge: docs/wiki/Ask OS/research briefs (L6)
 ## Phase 3 — verification
 - [ ] (running) BX backend spec repair: 48 suites failing after Wave A (mostly mock drift; checking real regressions)

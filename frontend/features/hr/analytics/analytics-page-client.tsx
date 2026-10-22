@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback } from "react";
+import { useState } from "react";
 import { AnalyticsExportButton } from "./analytics-export-button";
 import {
   useHrAnalytics,
@@ -135,12 +135,9 @@ function DateRangeSelector({
   value: DateRange;
   onChange: (v: DateRange) => void;
 }) {
-  const handleChange = useCallback(
-    (v: string) => {
-      if (isDateRange(v)) onChange(v);
-    },
-    [onChange],
-  );
+  function handleChange(v: string) {
+    if (isDateRange(v)) onChange(v);
+  }
 
   return (
     <Select value={value} onValueChange={handleChange}>
@@ -160,11 +157,12 @@ export function AnalyticsPageClient() {
   const [dateRange, setDateRange] = useState<DateRange>("month");
   const [activeSection, setActiveSection] = useState<SectionTab>("command-center");
 
-  const analyticsMonth = useMemo(() => {
-    if (dateRange === "month") return CURRENT_MONTH;
-    if (dateRange === "quarter") return Math.ceil(CURRENT_MONTH / 3) * 3 - 2;
-    return 1;
-  }, [dateRange]);
+  const analyticsMonth =
+    dateRange === "month"
+      ? CURRENT_MONTH
+      : dateRange === "quarter"
+        ? Math.ceil(CURRENT_MONTH / 3) * 3 - 2
+        : 1;
 
   const {
     data,
@@ -173,7 +171,7 @@ export function AnalyticsPageClient() {
     error,
     refetch,
   } = useHrAnalytics();
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  function handleRetry() { void refetch(); }
   const {
     data: attritionData,
     isLoading: isAttritionLoading,
@@ -190,9 +188,9 @@ export function AnalyticsPageClient() {
       : `${attritionData.attritionRatePercent}%`;
   const attendanceLogs = data ? data.attendance.totalLogsThisMonth : UNMEASURED;
 
-  const handleSectionChange = useCallback((v: string) => {
+  function handleSectionChange(v: string) {
     if (isSectionTab(v)) setActiveSection(v);
-  }, []);
+  }
 
   const pageState = usePageState({
     permission: "hr:analytics:read",
@@ -238,9 +236,7 @@ export function AnalyticsPageClient() {
           >
             <PageTabsToolbar
               tabsDensity="labeled"
-            // Six labelled tabs + the range select need ~1180px; below xl they
-            // pushed the select off-screen at 768 and 1024 (measured).
-            collapseBelow="xl"
+              collapseBelow="xl"
               tabs={
                 <TabsList>
                   {SECTION_TABS.map(({ value, label, icon: Icon }) => (

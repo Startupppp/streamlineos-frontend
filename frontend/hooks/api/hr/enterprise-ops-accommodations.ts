@@ -83,11 +83,17 @@ const _approveAccommodationContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.approveAccommodationContract),
 );
 
+export function accommodationsListQueryOptions(params: ListAccommodationsParams = {}) {
+  return {
+    queryKey: accKeys.list(params),
+    staleTime: 30_000,
+  };
+}
+
 export function useAccommodations(params: ListAccommodationsParams = {}) {
   return useGatedQuery("hr:accommodations:view", {
-    queryKey: accKeys.list(params),
+    ...accommodationsListQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get("/hr/enterprise/ops/accommodations", params, signal, _listAccommodationsContract),
-    staleTime: 30_000,
   });
 }
 

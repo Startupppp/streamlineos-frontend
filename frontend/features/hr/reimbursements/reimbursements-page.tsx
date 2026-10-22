@@ -1,12 +1,12 @@
 "use client";
 
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import {
   useReimbursements,
   useProcessReimbursement,
   type Reimbursement,
-} from "@/hooks/api/hr";
+} from "@/hooks/api/hr/reimbursements";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { DataTable } from "@/components/ui/data-table";
@@ -27,7 +27,6 @@ export function ReimbursementsPage() {
   const { data: session } = useSession();
   const { data: items, isLoading, isError, error, refetch } = useReimbursements();
   const process = useProcessReimbursement();
-  // PATCH /hr/reimbursements/:id re-checks hr:expenses:approve in-handler.
   const isAdmin = useCan("hr:expenses:approve");
   const money = useOrgDisplay();
   const pageState = usePageState({ permission: "hr:payroll:view", module: "payroll", isLoading, isError, error });
@@ -35,23 +34,20 @@ export function ReimbursementsPage() {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [rejectId, setRejectId] = useState<number | null>(null);
 
-  const handleRejectDialogOpenChange = useCallback((open: boolean) => { if (!open) setRejectId(null); }, []);
-  const handleOpenNewRequest = useCallback(() => setSheetOpen(true), []);
+  function handleRejectDialogOpenChange(open: boolean) { if (!open) setRejectId(null); }
+  function handleOpenNewRequest() { setSheetOpen(true); }
 
-  const handleApprove = useCallback(
-    (id: number) => {
-      process.mutate(
-        { reimbursementId: id, status: "APPROVED" },
-        {
-          onSuccess: () => toast.success("Approved"),
-          onError: (e) => toast.error(getErrorMessage(e)),
-        },
-      );
-    },
-    [process],
-  );
+  function handleApprove(id: number) {
+    process.mutate(
+      { reimbursementId: id, status: "APPROVED" },
+      {
+        onSuccess: () => toast.success("Approved"),
+        onError: (e) => toast.error(getErrorMessage(e)),
+      },
+    );
+  }
 
-  const handleReject = useCallback(() => {
+  function handleReject() {
     if (!rejectId) return;
     process.mutate(
       { reimbursementId: rejectId, status: "REJECTED" },
@@ -63,7 +59,7 @@ export function ReimbursementsPage() {
         onError: (e) => toast.error(getErrorMessage(e)),
       },
     );
-  }, [rejectId, process]);
+  }
 
   function handleRetry() { void refetch(); }
 

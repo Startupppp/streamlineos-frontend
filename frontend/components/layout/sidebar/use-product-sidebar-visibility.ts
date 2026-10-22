@@ -6,6 +6,8 @@ import { useAccess, useModuleEnabled } from "@/hooks/api/access";
 import { useProject } from "@/hooks/api/build/projects";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
 import { useEntitlements } from "@/hooks/api/entitlements";
+import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
+import { applyHrWeekOneNav } from "./hr-week-one-nav";
 import type { PermissionKey } from "@/lib/rbac/permissions";
 import { toBuildNavGroups } from "@/lib/build/build-nav-groups";
 import { resolveBuildNavModel } from "@/lib/build/build-nav-model";
@@ -15,7 +17,7 @@ import {
   type BuildNavCapability,
 } from "@/lib/build/nav/build-nav-destination";
 import {
-  getNavGroupsForProduct,
+  getNavGroupsForModule,
   shouldHideProductSidebar,
   getProductFromPathname,
   isKnowledgeWikiPath,
@@ -40,6 +42,7 @@ export function useProductSidebarVisibility(): {
   const enabledModules = useEnabledModules();
   const { data: entitlements } = useEntitlements();
   const lockedModules = entitlements?.lockedModules ?? [];
+  const [showAdvancedHr] = useHrSettingsMode();
   const scopes = access?.scopes;
 
   const isOrgOwner =
@@ -70,13 +73,12 @@ export function useProductSidebarVisibility(): {
             pinnedIds: EMPTY_PINS,
           }),
         )
-      : getNavGroupsForProduct(
-          activeProduct,
-          effectiveRole,
-          scopes,
-          enabledModules,
-          lockedModules,
-        );
+      : activeProduct === "hrms"
+        ? applyHrWeekOneNav(
+            getNavGroupsForModule(activeProduct, effectiveRole, scopes, enabledModules, lockedModules),
+            showAdvancedHr,
+          )
+        : getNavGroupsForModule(activeProduct, effectiveRole, scopes, enabledModules, lockedModules);
 
   const { hideSidebar, showSidebarToggle } = resolveProductSidebarChrome({
     sessionReady: status !== "loading",

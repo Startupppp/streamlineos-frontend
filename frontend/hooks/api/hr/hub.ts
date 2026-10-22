@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -27,6 +27,21 @@ export function hubSectionError<T>(
   return section?.status === "error" ? new Error(section.message) : null;
 }
 
+export const hrHubQueryOptions = (today: string) =>
+  queryOptions({
+    queryKey: humanResourcesQueryKeys.hr.hub(today),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrHubSnapshot>(
+        "/hr/hub",
+        { today },
+        signal,
+        lazyContract(() =>
+          import("@/hooks/api/hr/hub-schema").then((m) => m.hrHubSnapshotContract),
+        ),
+      ),
+    staleTime: 30_000,
+  });
+
 export function useHrHubSnapshot() {
   const { data: session } = useSession();
   const orgId = session?.orgId;
@@ -34,10 +49,8 @@ export function useHrHubSnapshot() {
   const today = localDateKey();
 
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.hub(today),
-    queryFn: ({ signal }) => apiClient.get<HrHubSnapshot>("/hr/hub", { today }, signal, lazyContract(() => import("@/hooks/api/hr/hub-schema").then(m => m.hrHubSnapshotContract))),
+    ...hrHubQueryOptions(today),
     enabled: Boolean(orgId && userId),
-    staleTime: 30_000,
     refetchInterval: 60_000,
     refetchOnWindowFocus: "always",
     refetchIntervalInBackground: false,

@@ -12,22 +12,19 @@ import { useChatUnreadTotal } from "@/hooks/api/chat-core-read";
 import { useUnifiedInboxCount } from "@/hooks/api/inbox";
 import { NOTIFICATION_FALLBACK_INTERVAL_MS } from "@/lib/query-request-policies";
 import {
-  getNavGroupsForProduct,
   getProductFromPathname,
   isModuleEnabled,
   MODULE_ACCENTS,
   type ModuleAccent,
 } from "./sidebar/sidebar-nav-items";
 import type { BuildSidebarSlotProps } from "./sidebar/build-sidebar-slot";
+import type { NavGroup } from "./sidebar/sidebar-nav-types";
 import { SidebarSection } from "./sidebar/sidebar-section";
 import { ProductSwitcherMenu } from "./header/product-switcher-menu";
 import { WorkspaceSwitcher } from "./header/org-switcher";
 
 import { useAccess, useCan } from "@/hooks/api/access";
-import { useHrSettingsMode } from "@/hooks/common/use-hr-settings-mode";
-import { applyHrWeekOneNav } from "./sidebar/hr-week-one-nav";
 import { useEnabledModules } from "@/hooks/api/access/org-modules";
-import { useEntitlements } from "@/hooks/api/entitlements";
 import {
   isSidebarGroupOpen,
   mergeCollapsedGroups,
@@ -47,6 +44,7 @@ function readStoredCollapsedGroups(): Record<string, boolean> | null {
 }
 
 interface AppSidebarProps {
+  navGroups: NavGroup[];
   isCollapsed?: boolean;
   onNavigate?: () => void;
   onRequestProductSwitcher?: () => void;
@@ -98,6 +96,7 @@ function SidebarSkeleton({ isCollapsed, isMobile }: SidebarSkeletonProps) {
 }
 
 export function AppSidebar({
+  navGroups: moduleNavGroups,
   isCollapsed = false,
   onNavigate,
   onRequestProductSwitcher,
@@ -107,15 +106,12 @@ export function AppSidebar({
 }: AppSidebarProps) {
   const { data: session, status } = useSession();
   const { data: access } = useAccess();
-  const isOrgOwner = access?.isOrgOwner === true;
-  const effectiveRole = isOrgOwner ? "OWNER" : "MEMBER";
 
   const pathname = usePathname();
   const activeProduct = getProductFromPathname(pathname);
   const accent: ModuleAccent = MODULE_ACCENTS[activeProduct];
   const isBuildProduct = activeProduct === "build";
 
-  const scopes = access?.scopes;
   const canApproveLeaves = useCan("hr:leaves:approve");
   const canReadChat = useCan("chat:channels:read");
   const canReadCalendar = useCan("calendar:read");
@@ -137,21 +133,7 @@ export function AppSidebar({
   }, [access, canReadCalendar, session?.orgId, session?.user?.id]);
   const enabledModules = useEnabledModules();
   const isHrModuleEnabled = isModuleEnabled("hrms", enabledModules);
-  const { data: entitlements } = useEntitlements();
-  const lockedModules = entitlements?.lockedModules ?? [];
-
-  const [showAdvancedHr] = useHrSettingsMode();
-  const navGroups = (() => {
-    if (isBuildProduct) return [];
-    const groups = getNavGroupsForProduct(
-      activeProduct,
-      effectiveRole,
-      scopes,
-      enabledModules,
-      lockedModules,
-    );
-    return activeProduct === "hrms" ? applyHrWeekOneNav(groups, showAdvancedHr) : groups;
-  })();
+  const navGroups = isBuildProduct ? [] : moduleNavGroups;
 
   const groupLabels = navGroups.map((group) => group.label);
 

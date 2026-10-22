@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { queryKeyBase } from "@/lib/query-keys/base";
+
+const WEBHOOKS_BASE = [...queryKeyBase, "hr", "webhooks"] as const;
+
+export const hrWebhooksListKey = (params?: Record<string, unknown>) =>
+  [...WEBHOOKS_BASE, "list", params] as const;
 import type { HrAutomationEvent } from "@/types/hr/automations";
 
 const hrAutomationEventContract = z.custom<HrAutomationEvent>((v) => typeof v === "string");

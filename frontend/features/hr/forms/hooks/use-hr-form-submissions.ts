@@ -8,6 +8,7 @@ import type {
   HrFormSubmissionStatus,
 } from "../lib/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { hrFormSubmissionsListKey } from "@/features/hr/forms/hooks/hr-forms-schema";
 
 const formSubmissionListContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormSubmissionListContract),
@@ -16,19 +17,13 @@ const formSubmissionRowContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormSubmissionRowContract),
 );
 
-function submissionsKey(formId: number, params?: Record<string, unknown>) {
-  return params
-    ? ["hr", "forms", formId, "submissions", params]
-    : ["hr", "forms", formId, "submissions"];
-}
-
 export function useHrFormSubmissions(
   formId: number,
   params?: { cursor?: string; limit?: number; status?: HrFormSubmissionStatus },
 ) {
   const canViewForms = useCan("hr:forms:view");
   return useQuery({
-    queryKey: submissionsKey(formId, params),
+    queryKey: hrFormSubmissionsListKey(formId, params),
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.cursor) p["cursor"] = params.cursor;
@@ -51,6 +46,6 @@ export function useUpdateSubmissionStatus(formId: number) {
     mutationKey: ["hr", "forms", "submission", "status"],
     mutationFn: ({ submissionId, status }) =>
       apiClient.patch(`/hr/forms/submissions/${submissionId}/status`, { status }, undefined, formSubmissionRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: submissionsKey(formId) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrFormSubmissionsListKey(formId) }),
   });
 }

@@ -10,6 +10,7 @@ import type {
   UpdateCustomFieldPayload,
 } from "@/features/hr/forms/lib/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { hrCustomFieldsListKey } from "@/features/hr/custom-fields/hooks/hr-custom-fields-schema";
 
 const fieldDefListContract = lazyContract(() =>
   import("@/features/hr/custom-fields/hooks/hr-custom-fields-schema").then((m) => m.hrFieldDefListContract),
@@ -21,17 +22,13 @@ const fieldDefDeleteContract = lazyContract(() =>
   import("@/features/hr/custom-fields/hooks/hr-custom-fields-schema").then((m) => m.hrFieldDefDeleteContract),
 );
 
-function cfDefsKey(entityType: string) {
-  return ["hr", "custom-fields", "definitions", entityType] as const;
-}
-
 export function useHrCustomFields(
   entityType: string = "employee",
   options?: { enabled?: boolean },
 ) {
   const canManage = useCan("hr:custom-fields:manage");
   return useQuery<HrCustomFieldDefinition[]>({
-    queryKey: cfDefsKey(entityType),
+    queryKey: hrCustomFieldsListKey(entityType),
     queryFn: ({ signal }) =>
       apiClient.get("/hr/custom-fields/definitions", { entityType }, signal, fieldDefListContract),
     staleTime: 60_000,
@@ -45,7 +42,7 @@ export function useCreateCustomField(entityType: string) {
     mutationKey: ["hr", "custom-fields", "create"],
     mutationFn: (payload) =>
       apiClient.post("/hr/custom-fields/definitions", payload, undefined, fieldDefRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: cfDefsKey(entityType) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrCustomFieldsListKey(entityType) }),
   });
 }
 
@@ -55,7 +52,7 @@ export function useUpdateCustomField(entityType: string) {
     mutationKey: ["hr", "custom-fields", "update"],
     mutationFn: ({ id, payload }) =>
       apiClient.patch(`/hr/custom-fields/definitions/${id}`, payload, undefined, fieldDefRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: cfDefsKey(entityType) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrCustomFieldsListKey(entityType) }),
   });
 }
 
@@ -65,6 +62,6 @@ export function useDeleteCustomField(entityType: string) {
     mutationKey: ["hr", "custom-fields", "delete"],
     mutationFn: (id) =>
       apiClient.delete(`/hr/custom-fields/definitions/${id}`, undefined, undefined, fieldDefDeleteContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: cfDefsKey(entityType) }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrCustomFieldsListKey(entityType) }),
   });
 }

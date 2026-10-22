@@ -14,6 +14,8 @@ import { kpiListContract } from "@/hooks/api/hr/kpis-schema";
 import { workforcePlansContract } from "@/hooks/api/hr/workforce-schema";
 import { recognitionListContract } from "@/features/hr/engagement/engagement-schema";
 import { costSummaryContract } from "@/hooks/api/hr/enterprise-comp-schema";
+import { hrHubSnapshotContract } from "@/hooks/api/hr/hub-schema";
+import { localDateKey } from "@/hooks/api/hr/hub";
 
 import type { z } from "zod";
 
@@ -27,6 +29,7 @@ type KpiList = z.infer<typeof kpiListContract>;
 type WorkforcePlanList = z.infer<typeof workforcePlansContract>;
 type RecognitionList = z.infer<typeof recognitionListContract>;
 type CostSummary = z.infer<typeof costSummaryContract>;
+type HrHubSnapshot = z.infer<typeof hrHubSnapshotContract>;
 
 export async function prefetchHrReviewCycles() {
   try {
@@ -162,6 +165,21 @@ export async function prefetchHrWorkforceCostSummary() {
       queryFn: () =>
         serverGet<CostSummary>("/hr/enterprise/comp/costing/summary", costSummaryContract),
       staleTime: 5 * 60_000,
+    });
+    return dehydrate(queryClient);
+  } catch {
+    return dehydrate(new QueryClient());
+  }
+}
+
+export async function prefetchHrHub() {
+  try {
+    const today = localDateKey();
+    const queryClient = await createServerQueryClient();
+    await queryClient.prefetchQuery({
+      queryKey: humanResourcesQueryKeys.hr.hub(today),
+      queryFn: () => serverGet<HrHubSnapshot>(`/hr/hub?today=${today}`, hrHubSnapshotContract),
+      staleTime: 30_000,
     });
     return dehydrate(queryClient);
   } catch {

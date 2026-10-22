@@ -3,7 +3,7 @@ import { resolve } from "node:path";
 import {
   flattenNavRoutes,
   getAccessibleProductHref,
-  getNavGroupsForProduct,
+  getNavGroupsForModule,
   isModuleEnabled,
   NAV_GROUPS,
   type NavRoute,
@@ -27,10 +27,10 @@ function scopesOf(keys: readonly string[]): Record<string, "all"> {
 }
 
 function hrefsFor(
-  product: Parameters<typeof getNavGroupsForProduct>[0],
+  product: Parameters<typeof getNavGroupsForModule>[0],
   permissions: string[],
 ): string[] {
-  return getNavGroupsForProduct(product, "MEMBER", scopesOf(permissions), [
+  return getNavGroupsForModule(product, "MEMBER", scopesOf(permissions), [
     product === "hrms"
       ? "HR"
       : product === "finance"
@@ -46,7 +46,7 @@ function hrefsFor(
 describe("permission-aware product navigation", () => {
   it("fails closed while module entitlement data is absent or loaded empty", () => {
     expect(isModuleEnabled("hrms", [])).toBe(false);
-    expect(getNavGroupsForProduct("hrms", "OWNER", scopesOf([]), [])).toEqual([]);
+    expect(getNavGroupsForModule("hrms", "OWNER", scopesOf([]), [])).toEqual([]);
     expect(isModuleEnabled("home", [])).toBe(true);
     expect(isModuleEnabled("administration", [])).toBe(true);
   });
@@ -65,7 +65,7 @@ describe("permission-aware product navigation", () => {
       "hr:attendance:regularize",
       "hr:leaves:view",
     ];
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "hrms",
       "MEMBER",
       scopesOf(permissions),
@@ -104,7 +104,7 @@ describe("permission-aware product navigation", () => {
   });
 
   it("keeps organization structure in Settings and HR limited to job architecture", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "hrms",
       "MEMBER",
       scopesOf(["hr:employees:view"]),
@@ -144,7 +144,7 @@ describe("permission-aware product navigation", () => {
   });
 
   it("lands a product on the first route the member can actually open", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "hrms",
       "MEMBER",
       scopesOf(["hr:access:view"]),

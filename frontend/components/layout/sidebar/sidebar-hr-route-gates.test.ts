@@ -22,7 +22,7 @@ describe("permission-aware product navigation", () => {
     });
     expect(resolveNavRouteAccess("/hr/announcements")).toEqual({
       matched: true,
-      module: undefined,
+      module: "home",
       requiredPermission: undefined,
     });
     expect(resolveNavRouteAccess("/hr/not-configured")).toEqual({

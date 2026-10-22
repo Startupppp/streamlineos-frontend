@@ -1,7 +1,7 @@
 import { ORG_MODULE_NAME } from "@/lib/org-module-keys";
 import {
   flattenNavRoutes,
-  getNavGroupsForProduct,
+  getNavGroupsForModule,
   resolveNavRouteAccess,
 } from "./sidebar-nav-items";
 import {
@@ -17,7 +17,7 @@ const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"
 
 function founderAdminGroups(showAdvanced: boolean): NavGroup[] {
   return applyHrWeekOneNav(
-    getNavGroupsForProduct("hrms", "OWNER", {}, EVERY_MODULE),
+    getNavGroupsForModule("hrms", "OWNER", {}, EVERY_MODULE),
     showAdvanced,
   );
 }
@@ -101,7 +101,7 @@ describe("HRMS-UX-010 — the locked chrome kills are executed in HR nav", () =>
   });
 
   it("points reimbursements at the payroll product instead", () => {
-    const payroll = hrefsOf(getNavGroupsForProduct("payroll", "OWNER", {}, EVERY_MODULE));
+    const payroll = hrefsOf(getNavGroupsForModule("payroll", "OWNER", {}, EVERY_MODULE));
     expect(payroll).toContain("/payroll/reimbursements");
   });
 

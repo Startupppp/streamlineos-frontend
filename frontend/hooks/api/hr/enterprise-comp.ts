@@ -2,7 +2,7 @@
 
 import type { z } from "zod";
 import type { equityGrantContract } from "@/hooks/api/hr/enterprise-comp-schema";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -338,13 +338,19 @@ export function useRecordExercise() {
 
 const COSTING_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "costing"] as const;
 
+export const workforceCostSummaryQueryOptions = () =>
+  queryOptions({
+    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCostingAll, "summary"] as const,
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/enterprise/comp/costing/summary", undefined, signal, _costSummaryContract),
+    staleTime: 5 * 60_000,
+  });
+
 export function useWorkforceCostSummary() {
   const canRead = useCan("hr:analytics:read");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCostingAll, "summary"],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/costing/summary", undefined, signal, _costSummaryContract),
-    staleTime: 5 * 60_000,
+    ...workforceCostSummaryQueryOptions(),
     enabled: canRead && hrEnabled,
     ...INLINE_READ_ERROR,
   });

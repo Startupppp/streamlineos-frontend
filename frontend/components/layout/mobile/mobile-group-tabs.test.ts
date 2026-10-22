@@ -1,10 +1,10 @@
 import { ORG_MODULE_NAME } from "@/lib/org-module-keys";
-import { getNavGroupsForProduct } from "../sidebar/sidebar-nav-items";
+import { getNavGroupsForModule } from "../sidebar/sidebar-nav-items";
 import { getMobileGroupTabs, usesMobileGroupTabs } from "./mobile-module-nav-items";
 
 const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"];
-const payroll = getNavGroupsForProduct("payroll", "OWNER", {}, EVERY_MODULE);
-const hr = getNavGroupsForProduct("hrms", "OWNER", {}, EVERY_MODULE);
+const payroll = getNavGroupsForModule("payroll", "OWNER", {}, EVERY_MODULE);
+const hr = getNavGroupsForModule("hrms", "OWNER", {}, EVERY_MODULE);
 
 describe("mobile bottom bar for grouped products", () => {
   it("shows one tab per HR and Payroll group, five at most", () => {

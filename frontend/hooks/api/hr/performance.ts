@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -52,13 +52,19 @@ import type {
   UpdateOneOnOneInput,
 } from "@/types/hr";
 
+export const reviewCyclesQueryOptions = () =>
+  queryOptions({
+    queryKey: humanResourcesQueryKeys.hr.reviewCycles(),
+    queryFn: ({ signal }) =>
+      apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal, listCyclesC),
+    staleTime: 2 * 60_000,
+  });
+
 export function useReviewCycles() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.reviewCycles(),
-    queryFn: ({ signal }) => apiClient.get<ReviewCycle[]>("/hr/performance/cycles", undefined, signal, listCyclesC),
-    staleTime: 2 * 60_000,
+    ...reviewCyclesQueryOptions(),
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,
   });

@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import {
   PRODUCT_DEFINITIONS,
   getAccessibleProductHref,
-  getNavGroupsForProduct,
+  getNavGroupsForModule,
   isModuleEnabled,
   flattenNavRoutes,
   type ModuleKey,
@@ -44,7 +44,6 @@ export function ProductGrid({
   shouldReduceMotion,
 }: ProductGridProps) {
   const scope = useOrgStorageScope();
-  // Read on each open (this grid unmounts when the switcher closes).
   const rememberedPaths = readLastProductPaths(
     orgScopedStorageKey(LAST_PRODUCT_PATHS_STORAGE, scope),
   );
@@ -52,7 +51,7 @@ export function ProductGrid({
   const visibleProducts = useMemo(() => {
     const products = PRODUCT_DEFINITIONS.flatMap((product) => {
       if (product.key === "administration") return [];
-      const groups = getNavGroupsForProduct(
+      const groups = getNavGroupsForModule(
         product.key,
         effectiveRole,
         scopes,

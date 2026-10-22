@@ -1,4 +1,10 @@
 import { z } from "zod";
+import { queryKeyBase } from "@/lib/query-keys/base";
+
+const AUTOMATIONS_BASE = [...queryKeyBase, "hr", "automations"] as const;
+
+export const hrAutomationsListKey = (params?: Record<string, unknown>) =>
+  [...AUTOMATIONS_BASE, "list", params] as const;
 import { cursorPaginationContract } from "@/hooks/api/cursor-page-schema";
 import type {
   HrAutomationEvent,

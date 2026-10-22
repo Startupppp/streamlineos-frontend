@@ -50,8 +50,6 @@ const exitKeys = {
     [...exitKeys.all, "progress", resignationId] as const,
 };
 
-export const exitListKey = exitKeys.list;
-
 const _resignationListContract = lazyContract(() =>
   import("@/hooks/api/hr/exit-schema").then((m) => m.resignationListContract),
 );

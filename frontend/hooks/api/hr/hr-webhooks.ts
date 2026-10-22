@@ -19,12 +19,13 @@ const noContentC = lazyContract(() =>
 );
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { hrWebhooksListKey } from "@/hooks/api/hr/hr-webhooks-schema";
 
 const BASE = [...queryKeyBase, "hr", "webhooks"] as const;
 
 export const hrWebhookKeys = {
   all: BASE,
-  list: (params?: Record<string, unknown>) => [...BASE, "list", params] as const,
+  list: hrWebhooksListKey,
   detail: (id: number) => [...BASE, "detail", id] as const,
   deliveries: (subscriptionId: number) => [...BASE, "deliveries", subscriptionId] as const,
   events: () => [...BASE, "events"] as const,

@@ -125,12 +125,18 @@ const caseKeys = {
   disciplinaryList: (params: Record<string, unknown>) => [...queryKeyBase, "hr", "disciplinary", "list", params] as const,
 };
 
+export function hrCasesListQueryOptions(params: ListCasesParams = {}) {
+  return {
+    queryKey: caseKeys.list(params),
+    staleTime: 30_000,
+  };
+}
+
 export function useHrCases(params: ListCasesParams = {}) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
-    queryKey: caseKeys.list(params),
+    ...hrCasesListQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get<CursorResult<HrCase>>("/hr/cases", params, signal, hrCaseListLazy),
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
     enabled: canCases,
   });

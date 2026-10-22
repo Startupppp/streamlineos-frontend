@@ -76,3 +76,11 @@ export type HrFormSubmissionRow = z.infer<typeof hrFormSubmissionRowContract>;
 export type HrFormSubmissionList = z.infer<typeof hrFormSubmissionListContract>;
 
 export const hrFormDeleteContract = z.undefined();
+
+export const hrFormsListKey = (params?: Record<string, unknown>) =>
+  params !== undefined ? (["hr", "forms", params] as const) : (["hr", "forms"] as const);
+
+export const hrFormSubmissionsListKey = (formId: number, params?: Record<string, unknown>) =>
+  params !== undefined
+    ? (["hr", "forms", formId, "submissions", params] as const)
+    : (["hr", "forms", formId, "submissions"] as const);

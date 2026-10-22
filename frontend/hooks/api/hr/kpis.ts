@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -61,13 +61,19 @@ export interface Competency {
   createdAt: string;
 }
 
+export const hrKpisQueryOptions = () =>
+  queryOptions({
+    queryKey: humanResourcesQueryKeys.hr.kpis(),
+    queryFn: ({ signal }) =>
+      apiClient.get<KpiDefinition[]>("/hr/kpis", undefined, signal, kpiListC),
+    staleTime: 2 * 60_000,
+  });
+
 export function useKpis() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.kpis(),
-    queryFn: ({ signal }) => apiClient.get<KpiDefinition[]>("/hr/kpis", undefined, signal, kpiListC),
-    staleTime: 2 * 60_000,
+    ...hrKpisQueryOptions(),
     enabled: canView && hrEnabled,
   });
 }

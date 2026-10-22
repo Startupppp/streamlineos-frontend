@@ -11,6 +11,8 @@ import type {
 } from "../lib/types";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
+import { hrFormsListKey } from "@/features/hr/forms/hooks/hr-forms-schema";
+
 const formListContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormListContract),
 );
@@ -21,16 +23,10 @@ const formDeleteContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormDeleteContract),
 );
 
-const FORMS_KEY = ["hr", "forms"] as const;
-
-function formKeys(params?: Record<string, unknown>) {
-  return params ? [...FORMS_KEY, params] : FORMS_KEY;
-}
-
 export function useHrForms(params?: { status?: string; audience?: string; cursor?: string; limit?: number }) {
   const canViewForms = useCan("hr:forms:view");
   return useQuery({
-    queryKey: formKeys(params),
+    queryKey: hrFormsListKey(params),
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -59,7 +55,7 @@ export function useCreateHrForm() {
   return useAuthorizedMutation<unknown, Error, CreateHrFormPayload>("hr:forms:manage", {
     mutationKey: ["hr", "forms", "create"],
     mutationFn: (payload) => apiClient.post("/hr/forms", payload, undefined, formRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: FORMS_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrFormsListKey() }),
   });
 }
 
@@ -70,7 +66,7 @@ export function useUpdateHrForm(formId: number) {
     mutationFn: (payload) =>
       apiClient.patch(`/hr/forms/${formId}`, payload, undefined, formRowContract),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: FORMS_KEY });
+      qc.invalidateQueries({ queryKey: hrFormsListKey() });
       qc.invalidateQueries({ queryKey: [...humanResourcesQueryKeys.hr.hrFormsAll, formId] });
     },
   });
@@ -82,7 +78,7 @@ export function useActivateHrForm() {
     mutationKey: ["hr", "forms", "activate"],
     mutationFn: (formId) =>
       apiClient.post(`/hr/forms/${formId}/activate`, undefined, undefined, formRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: FORMS_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrFormsListKey() }),
   });
 }
 
@@ -92,7 +88,7 @@ export function useArchiveHrForm() {
     mutationKey: ["hr", "forms", "archive"],
     mutationFn: (formId) =>
       apiClient.post(`/hr/forms/${formId}/archive`, undefined, undefined, formRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: FORMS_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrFormsListKey() }),
   });
 }
 
@@ -101,6 +97,6 @@ export function useDeleteHrForm() {
   return useAuthorizedMutation<void, Error, number>("hr:forms:manage", {
     mutationKey: ["hr", "forms", "delete"],
     mutationFn: (formId) => apiClient.delete(`/hr/forms/${formId}`, undefined, undefined, formDeleteContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: FORMS_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: hrFormsListKey() }),
   });
 }

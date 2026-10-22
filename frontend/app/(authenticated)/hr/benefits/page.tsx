@@ -6,7 +6,7 @@ import { BenefitsPageClient } from "@/features/hr/benefits/benefits-page-client"
 import BenefitsLoading from "./loading";
 
 async function BenefitsHydrated() {
-  await requirePermission("hr:benefits:view");
+  await requirePermission(["hr:benefits:view", "hr:compensation:manage", "hr:equity:view"]);
   const state = await prefetchHrBenefitPlans();
   return (
     <HydrationBoundary state={state}>

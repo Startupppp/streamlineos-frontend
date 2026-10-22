@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -55,13 +55,26 @@ export interface FeedbackResult {
   }[];
 }
 
+export const feedbackCyclesQueryOptions = () =>
+  queryOptions({
+    queryKey: humanResourcesQueryKeys.hr.feedbackCycles(),
+    queryFn: ({ signal }) =>
+      apiClient.get<FeedbackCycle[]>(
+        "/hr/feedback/cycles",
+        undefined,
+        signal,
+        lazyContract(() =>
+          import("@/hooks/api/hr/feedback-schema").then((m) => m.listCyclesContract),
+        ),
+      ),
+    staleTime: 2 * 60_000,
+  });
+
 export function useFeedbackCycles() {
   const canView = useCan("hr:performance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.feedbackCycles(),
-    queryFn: ({ signal }) => apiClient.get<FeedbackCycle[]>("/hr/feedback/cycles", undefined, signal, lazyContract(() => import("@/hooks/api/hr/feedback-schema").then(m => m.listCyclesContract))),
-    staleTime: 2 * 60_000,
+    ...feedbackCyclesQueryOptions(),
     enabled: canView && hrEnabled,
   });
 }

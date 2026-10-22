@@ -1,6 +1,6 @@
 import {
   flattenNavRoutes,
-  getNavGroupsForProduct,
+  getNavGroupsForModule,
   getProductFromPathname,
   isNavRouteActive,
   NAV_GROUPS,
@@ -29,9 +29,9 @@ const EMPLOYEE_PERMISSIONS = [
 
 describe("Home employee navigation", () => {
   it("keeps universal self-service visible without any granted permission (module state is irrelevant)", () => {
-    const homeRoutes = getNavGroupsForProduct("home", "MEMBER", scopesOf([]), ["build"])
+    const homeRoutes = getNavGroupsForModule("home", "MEMBER", scopesOf([]), ["build"])
       .flatMap((group) => flattenNavRoutes(group.routes));
-    const knowledgeRoutes = getNavGroupsForProduct(
+    const knowledgeRoutes = getNavGroupsForModule(
       "documents",
       "MEMBER",
       scopesOf([]),
@@ -53,7 +53,7 @@ describe("Home employee navigation", () => {
   });
 
   it("hides HR and payroll self-service in Home when those modules are off", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "home",
       "MEMBER",
       scopesOf(EMPLOYEE_PERMISSIONS),
@@ -79,7 +79,7 @@ describe("Home employee navigation", () => {
   });
 
   it("shows HR and payroll self-service in Home when those modules are enabled", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "home",
       "MEMBER",
       scopesOf(EMPLOYEE_PERMISSIONS),
@@ -102,7 +102,7 @@ describe("Home employee navigation", () => {
   });
 
   it("keeps owner navigation focused on shared services and operational products", () => {
-    const routes = getNavGroupsForProduct(
+    const routes = getNavGroupsForModule(
       "home",
       "OWNER",
       scopesOf(EMPLOYEE_PERMISSIONS),
@@ -137,7 +137,7 @@ describe("Build route product selection", () => {
 });
 describe("Administration information architecture", () => {
   it("matches the owning settings item without activating broader siblings", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "administration",
       "OWNER",
       scopesOf([]),
@@ -176,7 +176,7 @@ describe("Administration information architecture", () => {
   });
 
   it("lists organization structure as the base route with flat entity links", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "administration",
       "OWNER",
       scopesOf([]),
@@ -198,7 +198,7 @@ describe("Administration information architecture", () => {
 
   // OrgHierarchyController carries no @RequireModule, so gating this nav on HRMS hid a working surface.
   it("keeps organization structure available when HR is not enabled", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "administration",
       "OWNER",
       scopesOf([]),
@@ -214,7 +214,7 @@ describe("Administration information architecture", () => {
   });
 
   it("shows operational workers in Home when payroll is enabled without HR", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "home",
       "OWNER",
       scopesOf([]),
@@ -227,7 +227,7 @@ describe("Administration information architecture", () => {
   });
 
   it("shows AI Credits to its permission without requiring settings management", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "administration",
       "MEMBER",
       scopesOf(["billing:ai-credits:view"]),
@@ -242,7 +242,7 @@ describe("Administration information architecture", () => {
   });
 
   it("places business parties in CRM and classifies the route as CRM", () => {
-    const groups = getNavGroupsForProduct(
+    const groups = getNavGroupsForModule(
       "crm",
       "MEMBER",
       scopesOf(["party:parties:view"]),

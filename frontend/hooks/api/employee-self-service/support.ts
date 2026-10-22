@@ -48,12 +48,19 @@ export function useMySupportSuggest(query: string) {
   });
 }
 
+export function mySupportRequestsQueryOptions(params: MyRequestsParams) {
+  return {
+    queryKey: keys.myRequests(params),
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get<HelpdeskListResult>("/me/support", params, signal, listC),
+    staleTime: 15_000,
+  } as const;
+}
+
 export function useMySupportRequests(params: MyRequestsParams) {
   const canRaise = useCan("self:support");
   return useQuery({
-    queryKey: keys.myRequests(params),
-    queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/me/support", params, signal, listC),
-    staleTime: 15_000,
+    ...mySupportRequestsQueryOptions(params),
     enabled: canRaise,
   });
 }

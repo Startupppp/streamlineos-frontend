@@ -20,12 +20,13 @@ const noContentC = lazyContract(() =>
 );
 import { queryKeyBase } from "@/lib/query-keys/base";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { hrAutomationsListKey } from "@/hooks/api/hr/hr-automations-schema";
 
 const BASE = [...queryKeyBase, "hr", "automations"] as const;
 
 export const hrAutomationKeys = {
   all: BASE,
-  list: (params?: Record<string, unknown>) => [...BASE, "list", params] as const,
+  list: hrAutomationsListKey,
   detail: (id: number) => [...BASE, "detail", id] as const,
   runs: (ruleId?: number, params?: Record<string, unknown>) => [...BASE, "runs", ruleId, params] as const,
   events: () => [...BASE, "events"] as const,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
@@ -41,12 +41,16 @@ export interface HrAnnouncement {
 export type CreateHrAnnouncementData = Omit<HrAnnouncement, "id" | "orgId" | "authorId" | "readCount" | "createdAt">;
 export type UpdateHrAnnouncementData = Partial<CreateHrAnnouncementData> & { announcementId: number };
 
-export function useHrAnnouncements() {
-  return useQuery<HrAnnouncement[]>({
+export const hrAnnouncementsQueryOptions = () =>
+  queryOptions({
     queryKey: humanResourcesQueryKeys.hr.announcements(),
-    queryFn: ({ signal }) => apiClient.get<HrAnnouncement[]>("/org/announcements", undefined, signal, announcementListC),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrAnnouncement[]>("/org/announcements", undefined, signal, announcementListC),
     staleTime: 60_000,
   });
+
+export function useHrAnnouncements() {
+  return useQuery(hrAnnouncementsQueryOptions());
 }
 
 export function useAllHrAnnouncements(options?: { enabled?: boolean }) {

@@ -15,7 +15,7 @@ async function ShiftsHydrated() {
 }
 
 export default async function Page() {
-  await requirePermission("hr:attendance:view");
+  await requirePermission("hr:attendance:manage");
   return (
     <Suspense fallback={<ShiftsLoading />}>
       <ShiftsHydrated />

@@ -404,7 +404,7 @@ function getHomeNavGroups(
   }).filter((group) => group.routes.length > 0);
 }
 
-export function getNavGroupsForProduct(
+export function getNavGroupsForModule(
   productKey: ModuleKey,
   role: string | undefined,
   scopes: GrantedScopes | undefined,

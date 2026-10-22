@@ -2,7 +2,7 @@
 import type { z } from "zod";
 import type { workforcePlansContract as workforcePlansContractDef } from "@/hooks/api/hr/workforce-schema";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
@@ -74,12 +74,18 @@ const workforceKeys = {
   attritionForecast: () => [...humanResourcesQueryKeys.hr.all, "workforce", "attritionForecast"] as const,
 };
 
+export const hrWorkforcePlansQueryOptions = () =>
+  queryOptions({
+    queryKey: workforceKeys.plans(),
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/analytics-plus/workforce/plans", undefined, signal, workforcePlansContract),
+    staleTime: 5 * 60_000,
+  });
+
 export function useHrWorkforcePlans() {
   const canHeadcount = useCan("hr:headcount:read");
   return useQuery({
-    queryKey: workforceKeys.plans(),
-    queryFn: ({ signal }) => apiClient.get("/hr/analytics-plus/workforce/plans", undefined, signal, workforcePlansContract),
-    staleTime: 5 * 60_000,
+    ...hrWorkforcePlansQueryOptions(),
     enabled: canHeadcount,
   });
 }

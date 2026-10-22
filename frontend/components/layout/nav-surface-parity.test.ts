@@ -1,7 +1,7 @@
 import {
   flattenNavRoutes,
   getNavGroupsForUser,
-  getNavGroupsForProduct,
+  getNavGroupsForModule,
   type NavGroup,
 } from "./sidebar/sidebar-nav-items";
 
@@ -46,7 +46,7 @@ describe("all three navigation surfaces use the same permission predicate", () =
 
     const paletteHrefs = hrefsFrom(getNavGroupsForUser("MEMBER", scopes, enabledModules));
     const sidebarHrefs = hrefsFrom(
-      getNavGroupsForProduct("hrms", "MEMBER", scopes, enabledModules),
+      getNavGroupsForModule("hrms", "MEMBER", scopes, enabledModules),
     );
 
     expect(sidebarHrefs.length).toBeGreaterThan(0);

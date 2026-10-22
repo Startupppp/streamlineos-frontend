@@ -62,11 +62,17 @@ const _hrEventsExportContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.hrEventsExportContract),
 );
 
+export function hrEventsListQueryOptions(params: ListEventsParams = {}) {
+  return {
+    queryKey: streamKeys.list(params),
+    staleTime: 30_000,
+  };
+}
+
 export function useHrEvents(params: ListEventsParams = {}) {
   return useGatedQuery("hr:eventstream:view", {
-    queryKey: streamKeys.list(params),
+    ...hrEventsListQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params, signal, _listHrEventsContract),
-    staleTime: 30_000,
   });
 }
 

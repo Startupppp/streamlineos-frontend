@@ -3,8 +3,9 @@ import type { z } from "zod";
 import type { communityBaseContract, listCommunitiesContract, campaignContract } from "@/hooks/api/hr/engagement-schema";
 import type { orgMoodAggregateContract, pollContract, pollResultsContract } from "@/hooks/api/hr/engagement-schema";
 
-import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
 import { hrEngagementQueryKeys } from "@/lib/query-keys/hr-engagement";
+import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -359,3 +360,15 @@ export function useDeleteCampaign() {
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEngagementQueryKeys.hrEngagementHub.campaigns() }),
   });
 }
+
+const recognitionListC = lazyContract(() =>
+  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionListContract),
+);
+
+export const recognitionQueryOptions = () =>
+  queryOptions({
+    queryKey: humanResourcesQueryKeys.hr.hrRecognition,
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/recognition", undefined, signal, recognitionListC),
+    staleTime: 60_000,
+  });

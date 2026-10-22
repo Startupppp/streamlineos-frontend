@@ -79,6 +79,18 @@ const _voidContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.voidContract),
 );
 
+export function accessProvisioningQueryOptions(params: {
+  cursor?: string;
+  userId?: string;
+  triggeredBy?: ProvisioningTrigger;
+  status?: ProvisioningStatus;
+} = {}) {
+  return {
+    queryKey: identityKeys.provisioning(params),
+    staleTime: 30_000,
+  };
+}
+
 export function useAccessProvisioning(params: {
   cursor?: string;
   userId?: string;
@@ -86,9 +98,8 @@ export function useAccessProvisioning(params: {
   status?: ProvisioningStatus;
 } = {}) {
   return useGatedQuery("hr:identity:view", {
-    queryKey: identityKeys.provisioning(params),
+    ...accessProvisioningQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get(`${BASE}/provisioning`, params, signal, _listProvisioningContract),
-    staleTime: 30_000,
   });
 }
 

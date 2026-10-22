@@ -72,11 +72,17 @@ const _respondToEventContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.respondToEventContract),
 );
 
+export function emergencyEventsListQueryOptions(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
+  return {
+    queryKey: emergencyKeys.list(params),
+    staleTime: 30_000,
+  };
+}
+
 export function useEmergencyEvents(params: { cursor?: string; status?: EmergencyEventStatus } = {}) {
   return useGatedQuery("hr:emergency:manage", {
-    queryKey: emergencyKeys.list(params),
+    ...emergencyEventsListQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get(`${BASE}/events`, params, signal, _listEmergencyEventsContract),
-    staleTime: 30_000,
   });
 }
 

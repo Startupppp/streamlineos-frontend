@@ -27,7 +27,7 @@ export default async function DashboardLayout({
     requireSession(),
     cookies(),
     headers(),
-    getServerAccessResult(), // warms the React cache(); calls at lines below reuse it without a new HTTP request
+    getServerAccessResult(),
   ]);
   const nonce = requestHeaders.get("x-nonce") ?? undefined;
   const pathname = requestHeaders.get("x-pathname") ?? "";

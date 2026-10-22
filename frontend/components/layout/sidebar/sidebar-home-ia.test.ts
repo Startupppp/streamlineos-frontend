@@ -81,7 +81,7 @@ describe("Home information architecture — Notifications restructure", () => {
   });
 
   describe("Administration nav — Notifications group removed from sidebar", () => {
-    const adminGroups = NAV_GROUPS.filter((g) => g.product === "administration");
+    const adminGroups = NAV_GROUPS.filter((g) => g.module === "administration");
     const notificationsGroup = adminGroups.find((g) => g.label === "Notifications");
     const allAdminHrefs = flattenGroupRoutes(adminGroups).map((r) => r.href);
 
@@ -113,7 +113,7 @@ describe("Home information architecture — Notifications restructure", () => {
   });
 
   describe("Administration nav — Account group personal Notifications entry", () => {
-    const adminGroups = NAV_GROUPS.filter((g) => g.product === "administration");
+    const adminGroups = NAV_GROUPS.filter((g) => g.module === "administration");
     const accountGroup = adminGroups.find((g) => g.label === "Account");
     const notifEntry = accountGroup?.routes.find(
       (r) => r.href === "/settings/notifications/my-preferences",

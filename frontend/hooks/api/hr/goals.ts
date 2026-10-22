@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -34,17 +34,16 @@ export interface HrGoal {
   updatedAt: string;
 }
 
-export function useHrGoals(params?: { userId?: string }) {
-  return useGatedQuery("hr:performance:view", {
+export const hrGoalsQueryOptions = (params?: { userId?: string }) =>
+  queryOptions({
     queryKey: humanResourcesQueryKeys.hr.goals(params?.userId),
     queryFn: ({ signal }) =>
-      apiClient.get<HrGoal[]>(
-        "/hr/performance/goals",
-        params, signal,
-        goalListLazy,
-      ),
+      apiClient.get<HrGoal[]>("/hr/performance/goals", params, signal, goalListLazy),
     staleTime: 60_000,
   });
+
+export function useHrGoals(params?: { userId?: string }) {
+  return useGatedQuery("hr:performance:view", hrGoalsQueryOptions(params));
 }
 
 export function useCreateHrGoal() {

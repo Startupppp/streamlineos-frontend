@@ -7,6 +7,8 @@ import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 
+const ASSIGNED_INTERVIEWS_PAGE_SIZE = 20;
+
 export interface AssignedInterview {
   id: number;
   type: string;
@@ -38,16 +40,20 @@ const interviewScorecardC = lazyContract(() =>
 
 const recruitmentKey = ["employee-self-service", "recruitment"] as const;
 
-export function useAssignedInterviews(page: number) {
-  return useGatedQuery("self:recruitment", {
+export function assignedInterviewsQueryOptions(page: number) {
+  return {
     queryKey: humanResourcesQueryKeys.hr.hrAssignedInterviews(page),
-    queryFn: ({ signal }) =>
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
       apiClient.get<AssignedInterviewsResponse>("/me/recruitment", {
         page,
-        pageSize: 20,
+        pageSize: ASSIGNED_INTERVIEWS_PAGE_SIZE,
       }, signal, assignedInterviewsC),
     staleTime: 60_000,
-  });
+  } as const;
+}
+
+export function useAssignedInterviews(page: number) {
+  return useGatedQuery("self:recruitment", assignedInterviewsQueryOptions(page));
 }
 
 export function useSubmitAssignedInterviewScorecard(interviewId: number) {

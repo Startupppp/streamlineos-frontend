@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { CheckCircle2, XCircle, MapPin, Calendar, Wallet, Plane, User } from "lucide-react";
@@ -23,7 +23,7 @@ import {
   useFinanceApproveTravelRequest,
   useRejectTravelRequest,
   type TravelRequest,
-} from "@/hooks/api/hr";
+} from "@/hooks/api/hr/travel";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { format } from "date-fns";
@@ -33,14 +33,17 @@ import {
   type NamedUser,
 } from "@/lib/person-display";
 
+const SKELETON_SECTIONS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
+const SKELETON_CARDS = [1, 2] as const;
+
 function ApprovalsLoading() {
   return (
     <PageWrapper title="Travel Approvals" subtitle="Review pending travel requests">
       <div className="flex flex-1 min-h-0 flex-col gap-4">
-        {Array.from({ length: 8 }).map((_, si) => (
+        {SKELETON_SECTIONS.map((si) => (
           <div key={si} className="space-y-3">
             <Skeleton className="h-5 w-48" />
-            {Array.from({ length: 2 }).map((_, i) => (
+            {SKELETON_CARDS.map((i) => (
               <Card key={i} className="rounded-lg">
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between gap-3">
@@ -96,7 +99,6 @@ function RejectInline({
 
   function handleConfirm(): void {
     if (!reason.trim()) return;
-    // Stays open: the card leaves the list on success; on failure the reason is kept for a retry.
     onReject(id, reason.trim());
   }
 
@@ -152,7 +154,7 @@ function SectionHeader({ title, count }: { title: string; count: number }) {
   );
 }
 
-const TravelApprovalCard = memo(function TravelApprovalCard({
+function TravelApprovalCard({
   request,
   requesterName,
   section,
@@ -253,7 +255,7 @@ const TravelApprovalCard = memo(function TravelApprovalCard({
       </Card>
     </motion.div>
   );
-});
+}
 
 export function TravelApprovalsPage() {
   const { staggerContainer } = useMotionVariants();
@@ -271,68 +273,53 @@ export function TravelApprovalsPage() {
   const money = useOrgDisplay();
   const pageState = usePageState({ permission: "hr:travel:manage", module: "hr", isLoading, isError, error });
 
-  const memberById = useMemo(() => {
-    const map = new Map<string, NamedUser>();
-    for (const member of membersData?.data ?? []) {
-      map.set(member.userId, { name: member.name, email: member.email });
-    }
-    return map;
-  }, [membersData]);
+  const memberById = new Map<string, NamedUser>();
+  for (const member of membersData?.data ?? []) {
+    memberById.set(member.userId, { name: member.name, email: member.email });
+  }
 
-  const resolveMemberName = useCallback(
-    (userId: string) => {
-      const member = memberById.get(userId);
-      return member ? getUserDisplayName(member) : "Unknown member";
-    },
-    [memberById],
-  );
+  function resolveMemberName(userId: string) {
+    const member = memberById.get(userId);
+    return member ? getUserDisplayName(member) : "Unknown member";
+  }
 
-  const handleRetry = useCallback(() => {
+  function handleRetry() {
     void refetch();
-  }, [refetch]);
+  }
 
-  const handleManagerApprove = useCallback(
-    async (id: number) => {
-      const loadingToastId = toast.loading("Approving travel request...");
-      try {
-        await managerApprove.mutateAsync(id);
-        toast.success("Travel request approved by manager", { id: loadingToastId });
-      } catch (error) {
-        toast.error(getErrorMessage(error), { id: loadingToastId });
-      }
-    },
-    [managerApprove],
-  );
+  async function handleManagerApprove(id: number) {
+    const loadingToastId = toast.loading("Approving travel request...");
+    try {
+      await managerApprove.mutateAsync(id);
+      toast.success("Travel request approved by manager", { id: loadingToastId });
+    } catch (error) {
+      toast.error(getErrorMessage(error), { id: loadingToastId });
+    }
+  }
 
-  const handleFinanceApprove = useCallback(
-    async (id: number) => {
-      const loadingToastId = toast.loading("Approving travel request...");
-      try {
-        await financeApprove.mutateAsync(id);
-        toast.success("Travel request approved by finance", { id: loadingToastId });
-      } catch (error) {
-        toast.error(getErrorMessage(error), { id: loadingToastId });
-      }
-    },
-    [financeApprove],
-  );
+  async function handleFinanceApprove(id: number) {
+    const loadingToastId = toast.loading("Approving travel request...");
+    try {
+      await financeApprove.mutateAsync(id);
+      toast.success("Travel request approved by finance", { id: loadingToastId });
+    } catch (error) {
+      toast.error(getErrorMessage(error), { id: loadingToastId });
+    }
+  }
 
-  const handleReject = useCallback(
-    async (id: number, reason: string) => {
-      if (!reason.trim()) {
-        toast.error("Please provide a rejection reason");
-        return;
-      }
-      const loadingToastId = toast.loading("Rejecting travel request...");
-      try {
-        await reject.mutateAsync({ travelId: id, reason: reason.trim() });
-        toast.success("Travel request rejected", { id: loadingToastId });
-      } catch (error) {
-        toast.error(getErrorMessage(error), { id: loadingToastId });
-      }
-    },
-    [reject],
-  );
+  async function handleReject(id: number, reason: string) {
+    if (!reason.trim()) {
+      toast.error("Please provide a rejection reason");
+      return;
+    }
+    const loadingToastId = toast.loading("Rejecting travel request...");
+    try {
+      await reject.mutateAsync({ travelId: id, reason: reason.trim() });
+      toast.success("Travel request rejected", { id: loadingToastId });
+    } catch (error) {
+      toast.error(getErrorMessage(error), { id: loadingToastId });
+    }
+  }
 
   if (pageState.kind === "loading") return <ApprovalsLoading />;
 

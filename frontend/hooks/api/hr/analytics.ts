@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
@@ -61,12 +61,18 @@ export interface HrAnalyticsData {
   joiningExitsTrend: { month: string; joins: number; exits: number }[];
 }
 
+export const hrAnalyticsQueryOptions = () =>
+  queryOptions({
+    queryKey: [...humanResourcesQueryKeys.hr.all, "analytics"] as const,
+    queryFn: ({ signal }) =>
+      apiClient.get<HrAnalyticsData>("/hr/analytics", undefined, signal, hrAnalyticsOverviewC),
+    staleTime: 60_000,
+  });
+
 export function useHrAnalytics() {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "analytics"] as const,
-    queryFn: ({ signal }) => apiClient.get<HrAnalyticsData>("/hr/analytics", undefined, signal, hrAnalyticsOverviewC),
-    staleTime: 60_000,
+    ...hrAnalyticsQueryOptions(),
     enabled: canAnalytics,
     ...INLINE_READ_ERROR,
   });

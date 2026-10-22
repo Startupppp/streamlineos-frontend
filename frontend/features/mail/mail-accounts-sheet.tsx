@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useState } from "react";
+import { useState } from "react";
 import { AppSheet } from "@/components/shared/app-sheet";
 import {
   AlertDialog,
@@ -60,25 +60,16 @@ function isMailToolkit(toolkit: IntegrationToolkit): boolean {
   return MAIL_TOOLKITS.includes(toolkit);
 }
 
-const AccountRow = memo(function AccountRow({
+function AccountRow({
   connection,
   canManage,
   onConnect,
   onSetPrimary,
   onDisconnect,
 }: AccountRowProps) {
-  const handleReconnect = useCallback(
-    () => { void onConnect(connection.toolkit); },
-    [connection.toolkit, onConnect],
-  );
-  const handleMakePrimary = useCallback(
-    () => { void onSetPrimary(connection.id); },
-    [connection.id, onSetPrimary],
-  );
-  const handleDisconnectClick = useCallback(
-    () => { void onDisconnect(connection); },
-    [connection, onDisconnect],
-  );
+  function handleReconnect() { void onConnect(connection.toolkit); }
+  function handleMakePrimary() { void onSetPrimary(connection.id); }
+  function handleDisconnectClick() { void onDisconnect(connection); }
 
   const statusVariant =
     connection.status === "active"
@@ -148,7 +139,7 @@ const AccountRow = memo(function AccountRow({
       )}
     </div>
   );
-});
+}
 
 export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   const { data: allConnections, isLoading, isError, refetch } = useIntegrationConnections();
@@ -160,40 +151,25 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
   const [pendingToolkit, setPendingToolkit] = useState<IntegrationToolkit | null>(null);
   const [disconnectTarget, setDisconnectTarget] = useState<IntegrationConnection | null>(null);
 
-  const handleConnect = useCallback(
-    async (toolkit: IntegrationToolkit) => {
-      setPendingToolkit(toolkit);
-      try {
-        const { redirectUrl } = await initiate.mutateAsync({ toolkit, returnPath: "/mail" });
-        window.location.assign(redirectUrl);
-      } catch (error) {
-        setPendingToolkit(null);
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [initiate],
-  );
+  async function handleConnect(toolkit: IntegrationToolkit) {
+    setPendingToolkit(toolkit);
+    try {
+      const { redirectUrl } = await initiate.mutateAsync({ toolkit, returnPath: "/mail" });
+      window.location.assign(redirectUrl);
+    } catch (error) {
+      setPendingToolkit(null);
+      toast.error(getErrorMessage(error));
+    }
+  }
 
-  const handleConnectGmail = useCallback(
-    () => { void handleConnect("gmail"); },
-    [handleConnect],
-  );
-
-  const handleConnectOutlook = useCallback(
-    () => { void handleConnect("outlook"); },
-    [handleConnect],
-  );
-
-  const handleDisconnectRequest = useCallback(
-    (connection: IntegrationConnection) => setDisconnectTarget(connection),
-    [],
-  );
-
-  const handleDisconnectAlertOpenChange = useCallback((isOpen: boolean) => {
+  function handleConnectGmail() { void handleConnect("gmail"); }
+  function handleConnectOutlook() { void handleConnect("outlook"); }
+  function handleDisconnectRequest(connection: IntegrationConnection) { setDisconnectTarget(connection); }
+  function handleDisconnectAlertOpenChange(isOpen: boolean) {
     if (!isOpen) setDisconnectTarget(null);
-  }, []);
+  }
 
-  const handleConfirmDisconnect = useCallback(async () => {
+  async function handleConfirmDisconnect() {
     if (!disconnectTarget) return;
     const target = disconnectTarget;
     setDisconnectTarget(null);
@@ -205,21 +181,18 @@ export function MailAccountsSheet({ open, onClose }: MailAccountsSheetProps) {
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
-  }, [disconnect, disconnectTarget]);
+  }
 
-  const handleSetPrimary = useCallback(
-    async (connectionId: number) => {
-      try {
-        await setPrimary.mutateAsync(connectionId);
-        toast.success("Default account updated");
-      } catch (error) {
-        toast.error(getErrorMessage(error));
-      }
-    },
-    [setPrimary],
-  );
+  async function handleSetPrimary(connectionId: number) {
+    try {
+      await setPrimary.mutateAsync(connectionId);
+      toast.success("Default account updated");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
+  function handleRetry() { void refetch(); }
 
   const accountsContent = isLoading ? (
     <div className="space-y-2">

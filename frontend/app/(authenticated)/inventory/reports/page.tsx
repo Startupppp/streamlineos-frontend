@@ -19,62 +19,28 @@ import { cn } from "@/lib/utils";
 const REPORTS_HREF = "/inventory/reports";
 const REPORTS_READ = "inventory:reports:read";
 
-/**
- * T09 — the reports hub, derived from the navigation model rather than restated.
- *
- * `/inventory/reports` was a directory with seven leaves and no `page.tsx`, so
- * the segment answered 404 on direct entry. The sidebar hid that: its Reports
- * parent pointed at `/inventory/reports/stock-summary`, aliasing its own first
- * child, so nobody clicking through ever met the hole. A reader who typed the
- * obvious URL, or bookmarked the group, did.
- *
- * The list of reports comes from `INVENTORY_NAV_GROUPS` — the same object the
- * sidebar, the mobile drawer, the bottom nav and the command palette read
- * (frontend §17: hubs consume the navigation model, never a parallel hard-coded
- * list). A report added to nav appears here on its own; one removed disappears.
- * Only the one-line descriptions are local, because nav carries labels and not
- * prose, and each is the leaf screen's own subtitle so the hub promises what the
- * screen delivers.
- */
 const REPORT_ROUTES: readonly NavRoute[] =
   INVENTORY_NAV_GROUPS.flatMap((group) => group.routes).find(
     (route) => route.href === REPORTS_HREF,
   )?.children ?? [];
 
-/**
- * What each report answers, in the words its own screen uses.
- *
- * Keyed by href rather than by position, so a reordered nav cannot shuffle the
- * descriptions onto the wrong reports. A report added to nav with no entry here
- * still renders — with its label and no subtitle — which is a thinner card
- * rather than a missing one.
- */
 const REPORT_DESCRIPTIONS: Readonly<Record<string, string>> = {
-  "/inventory/reports/stock-summary": "Current stock levels across all products",
+  "/inventory/reports/stock-summary":
+    "Current stock levels across all products",
   "/inventory/reports/movements":
     "Receipts, shipments, adjustments and transfers, in order",
   "/inventory/reports/reorder": "Products below their reorder points",
   "/inventory/reports/slow-moving":
     "Stock on hand with no outbound activity in the window",
   "/inventory/reports/expiry": "Lots approaching or past their expiry date",
-  "/inventory/reports/throughput": "Receiving, picking and shipping against SLA",
-  "/inventory/reports/audit-trail": "Who changed which inventory record, and when",
+  "/inventory/reports/throughput":
+    "Receiving, picking and shipping against SLA",
+  "/inventory/reports/audit-trail":
+    "Who changed which inventory record, and when",
   "/inventory/reports/allocation-overrides":
     "Every time an expiry rule was set aside for a lot, and the reason given",
 };
 
-/**
- * The sidebar's own rule for whether a person may open a route, applied to the
- * routes the sidebar itself declares: an org owner holds everything, and a
- * requirement is met when any one of its keys is granted.
- *
- * Mirrored here rather than imported because `getNavGroupsForProduct` filters
- * whole product trees against a role and a module list, which is more machinery
- * than one hub needs — and `useCan` cannot be called once per derived route
- * without putting a hook in a loop. It decides which *cards* appear; the page's
- * own denied answer below still comes from `useCan`, the canonical gate, so a
- * drift in this mirror can hide a card but can never invent access.
- */
 function holds(
   access: AccessResponse | undefined,
   requirement: PermissionRequirement | undefined,
@@ -90,20 +56,10 @@ export default function InventoryReportsHubPage() {
   const access = useAccess();
   const canReadReports = useCan(REPORTS_READ);
 
-  /**
-   * Every card carries the exact permission its nav entry declares, so the hub
-   * never offers a destination that predictably ends at Access Denied (§17).
-   * Audit Trail is the one that matters: it is gated on `inventory:audit:read`
-   * rather than `inventory:reports:read`, so a reports reader without it sees
-   * six cards instead of six cards and a locked door.
-   */
   const open = REPORT_ROUTES.filter((route) =>
     holds(access.data, route.requiredPermission),
   );
 
-  // Denied is its own answer, not an empty grid: somebody whose inventory access
-  // stops short of reporting is told they may not read these, rather than shown
-  // a page that looks as though seven reports have gone missing.
   const denied = !canReadReports && open.length === 0;
 
   return (

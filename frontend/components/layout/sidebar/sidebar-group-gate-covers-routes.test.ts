@@ -16,7 +16,7 @@ import type { NavGroup } from "./sidebar-nav-types";
  */
 const PINNED_PRODUCTS = new Set(["sign", "timesheets"]);
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS].filter((group) =>
-  PINNED_PRODUCTS.has(group.product),
+  PINNED_PRODUCTS.has(group.module),
 );
 
 function keys(gate: string | readonly string[] | undefined): string[] {

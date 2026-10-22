@@ -3,14 +3,14 @@ import { HOME_NAV_GROUPS } from "./sidebar-home-nav";
 import {
   NAV_GROUPS,
   flattenNavRoutes,
-  getNavGroupsForProduct,
+  getNavGroupsForModule,
   getProductFromPathname,
 } from "./sidebar-nav-items";
 import { PRODUCT_DEFINITIONS } from "./sidebar-products";
 import type { NavGroup, NavRoute, ModuleKey } from "./sidebar-nav-types";
 
 /**
- * The chain, not its links. `getProductFromPathname` and `getNavGroupsForProduct`
+ * The chain, not its links. `getProductFromPathname` and `getNavGroupsForModule`
  * are each already pinned; nothing asserted that following one into the other
  * lands a route in the sidebar it actually appears in.
  *
@@ -23,7 +23,7 @@ const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
 function groupsShownFor(product: ModuleKey): NavGroup[] {
-  return getNavGroupsForProduct(product, "OWNER", {}, EVERY_MODULE);
+  return getNavGroupsForModule(product, "OWNER", {}, EVERY_MODULE);
 }
 
 function leavesOf(group: NavGroup): NavRoute[] {
@@ -36,7 +36,7 @@ const DECLARED_ROUTES = DECLARED_GROUPS.flatMap((group) =>
     href: route.href as string,
     label: route.label,
     group: group.label,
-    product: group.product,
+    module: group.module,
   })),
 );
 
@@ -47,10 +47,10 @@ describe("deep-linking a declared route reaches the sidebar that holds it", () =
 
   it("resolves every declared route to the product whose group declares it", () => {
     const mismatched = DECLARED_ROUTES.filter(
-      (route) => getProductFromPathname(route.href) !== route.product,
+      (route) => getProductFromPathname(route.href) !== route.module,
     ).map(
       (route) =>
-        `${route.href} declared in ${route.product}/${route.group}, resolves to ${getProductFromPathname(route.href)}`,
+        `${route.href} declared in ${route.module}/${route.group}, resolves to ${getProductFromPathname(route.href)}`,
     );
 
     expect(mismatched).toEqual([]);
