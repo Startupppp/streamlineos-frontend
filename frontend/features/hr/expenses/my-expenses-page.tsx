@@ -190,78 +190,78 @@ export function MyExpensesPage({ hubChrome }: { hubChrome?: SelfServiceHubChrome
 
   return (
     <>
-    <PageWrapper
-      title={hubChrome?.title ?? "My Expenses"}
-      subtitle={hubChrome?.subtitle ?? "Submit and track your reimbursement claims."}
-      filters={
-        hubChrome ? (
-          <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:gap-2.5">
-            <div className="flex w-full min-w-0 shrink-0 items-center">
-              {hubChrome.tabs}
+      <PageWrapper
+        title={hubChrome?.title ?? "My Expenses"}
+        subtitle={hubChrome?.subtitle ?? "Submit and track your reimbursement claims."}
+        filters={
+          hubChrome ? (
+            <div className="flex w-full min-w-0 flex-col items-stretch gap-2 sm:gap-2.5">
+              <div className="flex w-full min-w-0 shrink-0 items-center">
+                {hubChrome.tabs}
+              </div>
+              <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-2.5 [&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem] [&>[data-slot=select-trigger]]:shrink-0">
+                {filters}
+              </div>
             </div>
-            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:gap-2.5 [&>[data-slot=search-input]]:min-w-[12rem] [&>[data-slot=search-input]]:flex-1 [&>[data-slot=search-input]]:basis-[12rem] [&>[data-slot=select-trigger]]:shrink-0">
-              {filters}
-            </div>
-          </div>
-        ) : (
-          filters
-        )
-      }
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col"
-      actions={
-        <AnimatedIconButton icon={PlusIcon} onClick={handleOpenCreate}>
-          Submit Claim
-        </AnimatedIconButton>
-      }
-    >
-      <PageState
-        resolution={pageState}
-        onRetry={expenses.refetch}
-        onClearFilters={handleClearFilters}
-        className="flex-1"
-        loading={
-          <div className={PAGE_BODY_SKELETON_CLASS}>
-            {Array.from({ length: 8 }, (_, i) => (
-              <Skeleton key={i} className="h-14 w-full rounded-lg" />
-            ))}
-          </div>
+          ) : (
+            filters
+          )
         }
-        empty={
-          <EmptyState
-            illustration={<EmptyExpensesIllustration className="h-full w-full" />}
-            title="No expenses found"
-            description={
-              activeFilterCount > 0
-                ? "No claim matches the current search and status."
-                : "Submit your first expense claim to get started"
-            }
-            filtersActive={activeFilterCount > 0}
-            onClearFilters={handleClearFilters}
-            action={{ label: "Submit New Claim", onClick: handleOpenCreate }}
-            className={PAGE_BODY_EMPTY_CLASS}
-          />
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+        actions={
+          <AnimatedIconButton icon={PlusIcon} onClick={handleOpenCreate}>
+            Submit Claim
+          </AnimatedIconButton>
         }
       >
-        {data && list.length > 0 ? (
-          <MemberExpenseList
-            expenses={list}
-            pagination={pagination}
-            startItem={startItem}
-            endItem={endItem}
-            totalPages={Math.max(1, pagination.totalPages)}
-            statusFilter={status}
-            activeFilterCount={activeFilterCount}
-            onEdit={handleEdit}
-            onResubmit={handleResubmit}
-            onWithdraw={handleWithdrawRequest}
-            onShowAll={handleShowAll}
-            onCreateNew={handleOpenCreate}
-            onPageChange={setPage}
-          />
-        ) : null}
-      </PageState>
-    </PageWrapper>
+        <PageState
+          resolution={pageState}
+          onRetry={expenses.refetch}
+          onClearFilters={handleClearFilters}
+          className="flex-1"
+          loading={
+            <div className={PAGE_BODY_SKELETON_CLASS}>
+              {Array.from({ length: 8 }, (_, i) => (
+                <Skeleton key={i} className="h-14 w-full rounded-lg" />
+              ))}
+            </div>
+          }
+          empty={
+            <EmptyState
+              illustration={<EmptyExpensesIllustration className="h-full w-full" />}
+              title="No expenses found"
+              description={
+                activeFilterCount > 0
+                  ? "No claim matches the current search and status."
+                  : "Submit your first expense claim to get started"
+              }
+              filtersActive={activeFilterCount > 0}
+              onClearFilters={handleClearFilters}
+              action={{ label: "Submit New Claim", onClick: handleOpenCreate }}
+              className={PAGE_BODY_EMPTY_CLASS}
+            />
+          }
+        >
+          {data && list.length > 0 ? (
+            <MemberExpenseList
+              expenses={list}
+              pagination={pagination}
+              startItem={startItem}
+              endItem={endItem}
+              totalPages={Math.max(1, pagination.totalPages)}
+              statusFilter={status}
+              activeFilterCount={activeFilterCount}
+              onEdit={handleEdit}
+              onResubmit={handleResubmit}
+              onWithdraw={handleWithdrawRequest}
+              onShowAll={handleShowAll}
+              onCreateNew={handleOpenCreate}
+              onPageChange={setPage}
+            />
+          ) : null}
+        </PageState>
+      </PageWrapper>
 
       <ConfirmDialog
         open={withdrawTarget !== null}

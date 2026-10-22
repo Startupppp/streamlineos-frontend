@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
+import { LoadingState } from "@/components/shared/loading-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
@@ -218,8 +220,6 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
         subtitle={hubChrome?.subtitle ?? t("pay.subtitle", { month: formatMonth(currentYearMonth()) })}
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col max-md:pb-[calc(5.5rem+env(safe-area-inset-bottom))]"
-        state={pageState}
-        onRetry={handleRetryOverview}
         loading={
           <div className={PAGE_BODY_SKELETON_CLASS}>
             {Array.from({ length: 6 }, (_, index) => (
@@ -407,6 +407,12 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
           </>
         }
       >
+        <PageState
+          resolution={pageState}
+          loading={<LoadingState variant="page" />}
+          onRetry={handleRetryOverview}
+          className="flex-1"
+        >
         <div className="flex min-h-0 flex-1 flex-col gap-3">
           {actionRequired.length > 0 && (
             <div className="flex shrink-0 flex-wrap items-center gap-2">
@@ -488,6 +494,7 @@ export function MyPayrollPageContent({ hubChrome }: { hubChrome?: SelfServiceHub
             </TabsContent>
           )}
         </div>
+        </PageState>
       </PageWrapper>
     </Tabs>
   );
