@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -73,7 +72,7 @@ export default function CompanyDocumentsPage() {
   const requestedStatus = canPublish ? status : "active";
   const cursor = canPublish || status === "active" ? searchParams.get("cursor") || undefined : undefined;
   const trailValue = searchParams.get("cursorTrail");
-  const cursorTrail = useMemo<(string | null)[]>(() => {
+  function parseCursorTrail(): (string | null)[] {
     if (!cursor) return [];
     if (!trailValue) return [null];
     try {
@@ -91,7 +90,8 @@ export default function CompanyDocumentsPage() {
       return [null];
     }
     return [null];
-  }, [cursor, trailValue]);
+  }
+  const cursorTrail = parseCursorTrail();
   const { data: linkFlags, isLoading: configLoading, isError: configFailed, error: configError, refetch: refetchConfig } = useHrKbLinkConfig();
   const linkOn = linkFlags?.link === true;
   const linkOff = linkFlags?.link === false;
@@ -99,7 +99,7 @@ export default function CompanyDocumentsPage() {
     { cursor, limit: PAGE_LIMIT, status: requestedStatus },
     { enabled: linkOn },
   );
-  const rows = useMemo(() => data?.data ?? [], [data]);
+  const rows = data?.data ?? [];
   const isEmpty = linkOff || (data !== undefined && rows.length === 0);
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -109,27 +109,33 @@ export default function CompanyDocumentsPage() {
     isEmpty,
   });
 
-  const handleNext = useCallback(() => {
+  function handleNext() {
     if (!data?.pagination.nextCursor) return;
     update({
       cursor: data.pagination.nextCursor,
       cursorTrail: JSON.stringify([...cursorTrail, cursor ?? null]),
     });
-  }, [data?.pagination.nextCursor, update, cursorTrail, cursor]);
-  const handlePrevious = useCallback(() => {
+  }
+  function handlePrevious() {
     if (!cursor) return;
     update({
       cursor: cursorTrail[cursorTrail.length - 1] ?? null,
       cursorTrail: cursorTrail.length > 1 ? JSON.stringify(cursorTrail.slice(0, -1)) : null,
     });
-  }, [cursor, cursorTrail, update]);
-  const handleRetry = useCallback(() => {
+  }
+  function handleRetry() {
     if (configFailed) void refetchConfig();
     else void refetch();
-  }, [configFailed, refetchConfig, refetch]);
-  const handleStatusChange = useCallback((value: string) => update({ status: value === "active" ? null : value, cursorTrail: null }), [update]);
-  const handleClearFilters = useCallback(() => update({ status: null, cursorTrail: null }), [update]);
-  const getRowKey = useCallback((row: LinkedDocumentItem) => row.id, []);
+  }
+  function handleStatusChange(value: string) {
+    update({ status: value === "active" ? null : value, cursorTrail: null });
+  }
+  function handleClearFilters() {
+    update({ status: null, cursorTrail: null });
+  }
+  function getRowKey(row: LinkedDocumentItem) {
+    return row.id;
+  }
 
   const filters = canPublish && !linkOff ? (
     <Select value={status} onValueChange={handleStatusChange}>

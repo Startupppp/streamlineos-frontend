@@ -5,8 +5,6 @@ import { motion } from "framer-motion";
 import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableView } from "./table-view";
-import { GanttView } from "./gantt-view";
-import { WorkloadView } from "./workload-view";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { KanbanTicket, DisplayOptions } from "@/features/build/shared/types";
@@ -25,6 +23,16 @@ const KanbanBoard = dynamic(
 const ListView = dynamic(
   () => import("./list-view").then((m) => m.ListView),
   { ssr: false, loading: () => <Skeleton className="flex-1 min-h-[400px] rounded-xl" /> },
+);
+
+const GanttView = dynamic(
+  () => import("./gantt-view").then((m) => m.GanttView),
+  { ssr: false, loading: () => <Skeleton className="flex-1 min-h-[400px] rounded-xl" /> },
+);
+
+const WorkloadView = dynamic(
+  () => import("./workload-view").then((m) => m.WorkloadView),
+  { ssr: false, loading: () => <KanbanBoardSkeleton /> },
 );
 
 interface ProjectBoardViewPaneProps {

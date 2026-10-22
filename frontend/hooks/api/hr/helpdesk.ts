@@ -59,12 +59,18 @@ export interface HelpdeskListParams {
   q?: string;
 }
 
+export function helpdeskQueueListQueryOptions(params: HelpdeskListParams) {
+  return {
+    queryKey: keys.queueList(params),
+    staleTime: 15_000,
+  } as const;
+}
+
 export function useSupportQueueTickets(params: HelpdeskListParams) {
   const canView = useCan("hr:helpdesk:view");
   return useQuery({
-    queryKey: keys.queueList(params),
+    ...helpdeskQueueListQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get<HelpdeskListResult>("/hr/helpdesk", params, signal, listC),
-    staleTime: 15_000,
     enabled: canView,
   });
 }

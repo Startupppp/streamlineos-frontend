@@ -32,23 +32,27 @@ export const hrAutomationKeys = {
   events: () => [...BASE, "events"] as const,
 };
 
+export const hrAutomationsQueryOptions = (params?: { search?: string; triggerEvent?: string; isEnabled?: boolean; page?: number; limit?: number }) => ({
+  queryKey: hrAutomationKeys.list(params),
+  queryFn: async ({ signal }: { signal?: AbortSignal }) => {
+    const search = new URLSearchParams();
+    if (params?.search) search.set("search", params.search);
+    if (params?.triggerEvent) search.set("triggerEvent", params.triggerEvent);
+    if (params?.isEnabled !== undefined) search.set("isEnabled", String(params.isEnabled));
+    if (params?.page) search.set("page", String(params.page));
+    if (params?.limit) search.set("limit", String(params.limit));
+    const qs = search.toString();
+    const page = await apiClient.get<OffsetPage<HrAutomationRule>>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleListContract)));
+    return page.items;
+  },
+  staleTime: 30_000,
+}) as const;
+
 export function useHrAutomations(params?: { search?: string; triggerEvent?: string; isEnabled?: boolean; page?: number; limit?: number }) {
   const canView = useCan("hr:automations:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: hrAutomationKeys.list(params),
-    queryFn: async ({ signal }) => {
-      const search = new URLSearchParams();
-      if (params?.search) search.set("search", params.search);
-      if (params?.triggerEvent) search.set("triggerEvent", params.triggerEvent);
-      if (params?.isEnabled !== undefined) search.set("isEnabled", String(params.isEnabled));
-      if (params?.page) search.set("page", String(params.page));
-      if (params?.limit) search.set("limit", String(params.limit));
-      const qs = search.toString();
-      const page = await apiClient.get<OffsetPage<HrAutomationRule>>(`/hr/automations${qs ? `?${qs}` : ""}`, undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-automations-schema").then(m => m.automationRuleListContract)));
-      return page.items;
-    },
-    staleTime: 30_000,
+    ...hrAutomationsQueryOptions(params),
     placeholderData: keepPreviousData,
     enabled: canView && hrEnabled,
     ...INLINE_READ_ERROR,

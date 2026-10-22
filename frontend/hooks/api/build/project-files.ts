@@ -156,3 +156,13 @@ export function useDeleteProjectFile(projectId: number) {
     },
   });
 }
+
+export function projectFilesListQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.files.list(projectId),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
+      last.pagination.nextCursor ?? undefined,
+    staleTime: 30_000,
+  };
+}

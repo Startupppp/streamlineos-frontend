@@ -9,6 +9,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { invalidateKbPageChange } from "./page-invalidation";
+import { kbPageReviewsQueryOptions } from "./kb-read-options";
 
 export type KbReviewType = "approval" | "freshness";
 export type KbReviewStatus = "pending" | "approved" | "rejected";
@@ -106,7 +107,7 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
   const queryParams: Record<string, unknown> = { ...params };
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageReviews(queryParams),
+    ...kbPageReviewsQueryOptions(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageReviewPage>(
         "/kb/page-reviews",
@@ -114,7 +115,6 @@ export function useKbPageReviews(params?: KbPageReviewsParams) {
         signal,
         kbPageReviewListContract,
       ),
-    staleTime: 30_000,
     enabled: canViewReviews,
   });
 }

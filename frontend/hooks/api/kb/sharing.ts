@@ -20,6 +20,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages } from "@/lib/api/select-flat-pages";
+import { kbSharingSettingsQueryOptions } from "./kb-read-options";
 
 export type SharingSettings = z.infer<typeof SharingSettingsC>;
 type SpaceSharingPolicy = z.infer<typeof SpaceSharingPolicyC>;
@@ -61,10 +62,9 @@ export function useKbSharingSettings() {
   const canManage = useCan("kb:settings:manage");
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.sharingSettings(),
+    ...kbSharingSettingsQueryOptions,
     queryFn: ({ signal }) =>
       apiClient.get<SharingSettings>("/kb/settings/sharing", undefined, signal, sharingSettingsC),
-    staleTime: 300_000,
     enabled: canManage,
   });
 }

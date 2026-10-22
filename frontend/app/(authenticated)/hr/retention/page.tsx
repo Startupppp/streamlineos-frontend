@@ -1,13 +1,14 @@
 import { Suspense } from "react";
-import { dehydrate, HydrationBoundary, QueryClient } from "@tanstack/react-query";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { requirePermission } from "@/lib/rbac/require-permission";
+import { prefetchHrRetentionPolicies } from "@/lib/prefetch/hr-talent";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { RetentionPageContent } from "@/features/hr/governance/components/retention-page-content";
 import HrRetentionLoading from "./loading";
 
 async function RetentionHydrated() {
   await requirePermission("hr:retention:manage");
-  const state = dehydrate(new QueryClient());
+  const state = await prefetchHrRetentionPolicies();
   return (
     <HydrationBoundary state={state}>
       <PageWrapper

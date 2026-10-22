@@ -274,9 +274,25 @@ export function restoreMailCaches(
   }
 }
 
-export function invalidateAfterMailSend(qc: QueryClient): void {
-  const messagesPrefix = [...directoryAndOwnershipQueryKeys.mail.all, "messages"] as const;
-  void qc.invalidateQueries({ queryKey: messagesPrefix });
+export function invalidateAfterMailSend(
+  qc: QueryClient,
+  opts?: { accountId?: number; threadId?: string },
+): void {
+  void qc.invalidateQueries({
+    queryKey: directoryAndOwnershipQueryKeys.mail.messages({ folder: "sent" }),
+  });
+  if (opts?.accountId !== undefined && opts?.threadId !== undefined) {
+    void qc.invalidateQueries({
+      queryKey: directoryAndOwnershipQueryKeys.mail.thread(opts.accountId, opts.threadId),
+      exact: true,
+    });
+    void qc.invalidateQueries({
+      queryKey: directoryAndOwnershipQueryKeys.mail.messages({ folder: "inbox" }),
+    });
+    void qc.invalidateQueries({
+      queryKey: platformCoreQueryKeys.inbox.unified({ infinite: true }),
+    });
+  }
   void qc.invalidateQueries({
     queryKey: platformCoreQueryKeys.inbox.unified({ count: true }),
     exact: true,

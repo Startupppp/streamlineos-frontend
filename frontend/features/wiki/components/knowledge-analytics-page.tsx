@@ -11,6 +11,7 @@ import {
   StatCardGrid,
 } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   useKbAnalyticsOverview,
   useKbNoResults,
@@ -286,6 +287,11 @@ export default function KnowledgeAnalyticsPage() {
                   {space.name}
                 </SelectItem>
               ))}
+              {spacesPage?.pagination.hasMore ? (
+                <SelectItem value="" disabled>
+                  And more — use the search page to filter by folder
+                </SelectItem>
+              ) : null}
             </SelectContent>
           </Select>
           <Button
@@ -370,17 +376,12 @@ export default function KnowledgeAnalyticsPage() {
             ) : null}
           </StatCardGrid>
         )}
-        {hasNextCitationReuse ? (
-          <Button
-            type="button"
-            variant="outline"
-            className="mb-4"
-            onClick={() => void fetchNextCitationReuse()}
-            disabled={isFetchingNextCitationReuse}
-          >
-            {isFetchingNextCitationReuse ? "Loading citations..." : "Load more citation results"}
-          </Button>
-        ) : null}
+        <InfiniteScrollSentinel
+          hasNextPage={!!hasNextCitationReuse}
+          isFetchingNextPage={isFetchingNextCitationReuse}
+          onLoadMore={() => void fetchNextCitationReuse()}
+          label="Load more citation results"
+        />
 
         <div className="space-y-4">
         <KnowledgeAnalyticsLists

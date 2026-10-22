@@ -17,13 +17,23 @@ const formSubmissionRowContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormSubmissionRowContract),
 );
 
+export function hrFormSubmissionsQueryOptions(
+  formId: number,
+  params?: { cursor?: string; limit?: number; status?: HrFormSubmissionStatus },
+) {
+  return {
+    queryKey: hrFormSubmissionsListKey(formId, params),
+    staleTime: 15_000,
+  } as const;
+}
+
 export function useHrFormSubmissions(
   formId: number,
   params?: { cursor?: string; limit?: number; status?: HrFormSubmissionStatus },
 ) {
   const canViewForms = useCan("hr:forms:view");
   return useQuery({
-    queryKey: hrFormSubmissionsListKey(formId, params),
+    ...hrFormSubmissionsQueryOptions(formId, params),
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.cursor) p["cursor"] = params.cursor;
@@ -31,7 +41,6 @@ export function useHrFormSubmissions(
       if (params?.status) p["status"] = params.status;
       return apiClient.get(`/hr/forms/${formId}/submissions`, p, signal, formSubmissionListContract);
     },
-    staleTime: 15_000,
     enabled: canViewForms,
   });
 }

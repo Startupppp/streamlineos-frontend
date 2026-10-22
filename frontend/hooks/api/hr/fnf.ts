@@ -49,15 +49,21 @@ export interface CreateFnfSettlementInput {
   notes?: string;
 }
 
+export function fnfListQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.fnfList(),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useFnfSettlements(
   options?: Omit<UseQueryOptions<FnfSettlement[], Error>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("hr:payroll:view");
   return useQuery<FnfSettlement[], Error>({
-    queryKey: humanResourcesQueryKeys.hr.fnfList(),
+    ...fnfListQueryOptions(),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<FnfSettlement>>("/hr/fnf", undefined, signal, lazyContract(() => import("@/hooks/api/hr/fnf-schema").then(m => m.fnfListContract)))).items,
-    staleTime: 30_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });

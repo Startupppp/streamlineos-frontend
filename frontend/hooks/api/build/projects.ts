@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import {
+  queryOptions,
   useInfiniteQuery,
   useQuery,
   useQueryClient,
@@ -410,4 +411,34 @@ export function useCheckProjectKeyAvailable() {
       ),
     [],
   );
+}
+
+export function projectsListQueryOptions(filters?: ProjectFilters) {
+  return queryOptions<ProjectListResponse>({
+    queryKey: buildWorkQueryKeys.projects.list(
+      filters ? { ...filters } : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectListResponse>(
+        "/build",
+        filters ? { ...filters } : undefined,
+        signal,
+        projectListPageLazy,
+      ),
+    staleTime: 30_000,
+  });
+}
+
+export function projectDetailQueryOptions(projectId: number) {
+  return queryOptions<ProjectWithDetails | null>({
+    queryKey: buildWorkQueryKeys.projects.detail(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProjectWithDetails | null>(
+        `/build/${projectId}`,
+        undefined,
+        signal,
+        projectDetailLazy,
+      ),
+    staleTime: 30_000,
+  });
 }

@@ -86,15 +86,21 @@ export function useInitiatedOnboardingUserIds(enabled: boolean) {
   });
 }
 
+export function onboardingStatusPageQueryOptions(cursor: string | undefined, limit: number) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.onboardingStatusPage(cursor, limit),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useOnboardingStatusPage(cursor: string | undefined, limit = 25) {
   const canManage = useCan("hr:onboarding:manage");
   return useQuery<OnboardingStatusPage>({
-    queryKey: humanResourcesQueryKeys.hr.onboardingStatusPage(cursor, limit),
+    ...onboardingStatusPageQueryOptions(cursor, limit),
     queryFn: ({ signal }) => apiClient.get<OnboardingStatusPage>(
       "/onboarding/progress", { cursor, limit }, signal, onboardingStatusPageC,
     ),
     placeholderData: keepPreviousData,
-    staleTime: 2 * 60_000,
     enabled: canManage,
   });
 }
@@ -112,13 +118,19 @@ export function useOnboardingUserStatus(userId: string) {
 }
 
 
+export function onboardingUserQueryOptions(userId: string) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.onboardingUser(userId),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useUserOnboarding(userId: string) {
   const canViewTasks = useCan("hr:onboarding:tasks:view");
   return useQuery<OnboardingTask[]>({
-    queryKey: humanResourcesQueryKeys.hr.onboardingUser(userId),
+    ...onboardingUserQueryOptions(userId),
     queryFn: ({ signal }) => apiClient.get<OnboardingTask[]>(`/onboarding/${userId}`, undefined, signal, onboardingTaskListC),
     enabled: !!userId && canViewTasks,
-    staleTime: 60_000,
   });
 }
 

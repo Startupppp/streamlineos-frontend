@@ -7,7 +7,6 @@
   "features/calendar/create-ticket-from-calendar-dialog.tsx",
   "features/crm/leads/kanban-card.tsx",
   "features/crm/leads/lead-detail-sheet.tsx",
-  "features/hr/assets/assets-page.tsx",
   "features/recruitment/jobs/create-job-form/job-basics-sections.tsx",
   "features/recruitment/reports-page.tsx",
   "features/recruitment/reports/components/report-builder-card.tsx",

@@ -8,6 +8,7 @@ import type { HrHubSnapshot } from "./hub-types";
 jest.mock("@tanstack/react-query", () => ({
   useQuery: jest.fn(),
   hashKey: jest.requireActual("@tanstack/react-query").hashKey,
+  queryOptions: jest.requireActual("@tanstack/react-query").queryOptions,
 }));
 
 jest.mock("next-auth/react", () => ({

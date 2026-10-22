@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import {
   useTicketRelations,
   useAddTicketRelation,
@@ -26,8 +26,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { Link2, ArrowRight, ArrowLeft, Copy, Minus } from "lucide-react";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { RemoveRelationButton } from "./remove-relation-button";
+import { PlusIcon, XIcon } from "@animateicons/react/lucide";
 import { cn } from "@/lib/utils";
 import { RelatedTicketCard } from "./related-ticket-card";
 import type { ProjectStatusRecord } from "@/types/projects";
@@ -115,16 +114,10 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
   const projectKey = projectData?.key ?? null;
   const projectStatuses: ProjectStatusRecord[] = projectData?.statuses ?? [];
 
-  const allTickets = useMemo(
-    () => (boardTickets ?? []).filter((t) => t.id !== ticketId),
-    [boardTickets, ticketId],
-  );
-  const existingRelatedIds = useMemo(
-    () => new Set((relations ?? []).map((r) => r.relatedTicket.id)),
-    [relations],
-  );
+  const allTickets = (boardTickets ?? []).filter((t) => t.id !== ticketId);
+  const existingRelatedIds = new Set((relations ?? []).map((r) => r.relatedTicket.id));
 
-  const handleAdd = useCallback(() => {
+  function handleAdd() {
     if (!selectedTicketId) { toast.error("Select a ticket first"); return; }
     addRelation.mutate(
       {
@@ -142,37 +135,30 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
         onError: (e) => toast.error(getErrorMessage(e)),
       }
     );
-  }, [selectedTicketId, selectedType, addRelation, allTickets, projectKey]);
+  }
 
-  const handleRemoveRelation = useCallback(
-    (relatedTicketId: number) => {
-      removeRelation.mutate(relatedTicketId, {
-        onError: (e) => toast.error(getErrorMessage(e)),
-      });
-    },
-    [removeRelation]
-  );
+  function handleRemoveRelation(relatedTicketId: number) {
+    removeRelation.mutate(relatedTicketId, {
+      onError: (e) => toast.error(getErrorMessage(e)),
+    });
+  }
 
-  const handleTypeChange = useCallback((v: string) => {
+  function handleTypeChange(v: string) {
     const match = RELATION_TYPES.find((t) => t === v);
     if (match) setSelectedType(match);
-  }, []);
+  }
 
-  const handleRetryRelations = useCallback(() => {
+  function handleRetryRelations() {
     void refetch();
-  }, [refetch]);
+  }
 
-  const grouped = useMemo(
-    () =>
-      (relations ?? []).reduce<Partial<Record<DisplayRelationType, typeof relations>>>(
-        (acc, r) => {
-          const t = getDisplayRelationType(r.relationType, r.direction);
-          acc[t] = [...(acc[t] ?? []), r];
-          return acc;
-        },
-        {},
-      ),
-    [relations],
+  const grouped = (relations ?? []).reduce<Partial<Record<DisplayRelationType, typeof relations>>>(
+    (acc, r) => {
+      const t = getDisplayRelationType(r.relationType, r.direction);
+      acc[t] = [...(acc[t] ?? []), r];
+      return acc;
+    },
+    {},
   );
 
   const resolution = usePageState({ isLoading, isError, error });
@@ -290,7 +276,16 @@ export function TicketRelations({ ticketId, projectId }: TicketRelationsProps) {
                           projectStatuses={projectStatuses}
                           canUpdate={canUpdate}
                           endAction={canUpdate ? (
-                            <RemoveRelationButton onClick={() => handleRemoveRelation(t.id)} />
+                            <AnimatedIconButton
+                              icon={XIcon}
+                              iconSize={12}
+                              aria-label="Remove relation"
+                              variant="ghost"
+                              size="icon"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive h-5 w-5 rounded p-0.5 hover:bg-muted/60"
+                              onClick={(e) => { e.stopPropagation(); handleRemoveRelation(t.id); }}
+                              onKeyDown={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                            />
                           ) : undefined}
                         />
                       );

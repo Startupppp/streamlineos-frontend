@@ -16,13 +16,19 @@ import type {
   OrgCatalogInput,
 } from "@/types/hr/core";
 
+export function orgRolesQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.orgRoles(),
+    staleTime: 5 * 60_000,
+  } as const;
+}
+
 export function useOrgJobRoles(options?: { enabled?: boolean }) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.orgRoles(),
+    ...orgRolesQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<HrJobRole[]>("/hr/org/roles", undefined, signal, lazyContract(() => import("@/hooks/api/hr/hr-org-schema").then(m => m.jobRoleListContract))),
-    staleTime: 5 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }

@@ -48,11 +48,17 @@ interface UpdateHandbookVersionInput {
   changelog?: string;
 }
 
+export function handbookListQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.handbookList(),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useHandbookVersions() {
   return useGatedQuery("hr:employees:view", {
-    queryKey: humanResourcesQueryKeys.hr.handbookList(),
+    ...handbookListQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<HandbookVersion[]>("/hr/handbook", undefined, signal, handbookListLazy),
-    staleTime: 2 * 60_000,
   });
 }
 

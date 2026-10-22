@@ -23,10 +23,24 @@ const formDeleteContract = lazyContract(() =>
   import("@/features/hr/forms/hooks/hr-forms-schema").then((m) => m.hrFormDeleteContract),
 );
 
+export function hrFormsListQueryOptions(params?: { status?: string; audience?: string; cursor?: string; limit?: number }) {
+  return {
+    queryKey: hrFormsListKey(params),
+    staleTime: 30_000,
+  } as const;
+}
+
+export function hrFormDetailQueryOptions(formId: number | undefined) {
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.hrFormsAll, formId] as const,
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useHrForms(params?: { status?: string; audience?: string; cursor?: string; limit?: number }) {
   const canViewForms = useCan("hr:forms:view");
   return useQuery({
-    queryKey: hrFormsListKey(params),
+    ...hrFormsListQueryOptions(params),
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
       if (params?.status) p["status"] = params.status;
@@ -35,7 +49,6 @@ export function useHrForms(params?: { status?: string; audience?: string; cursor
       if (params?.limit) p["limit"] = params.limit;
       return apiClient.get("/hr/forms", p, signal, formListContract);
     },
-    staleTime: 30_000,
     enabled: canViewForms,
   });
 }
@@ -43,10 +56,9 @@ export function useHrForms(params?: { status?: string; audience?: string; cursor
 export function useHrForm(formId: number | undefined) {
   const canViewForms = useCan("hr:forms:view");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrFormsAll, formId],
+    ...hrFormDetailQueryOptions(formId),
     queryFn: ({ signal }) => apiClient.get(`/hr/forms/${formId}`, undefined, signal, formRowContract),
     enabled: canViewForms && formId !== undefined,
-    staleTime: 30_000,
   });
 }
 

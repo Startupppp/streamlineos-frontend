@@ -29,6 +29,23 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const BOARD_PAGE_SIZE = 100;
 
+export function projectBoardTicketsQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.tickets({ projectId, view: "board" }),
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (last: CursorPageResponse<Ticket>) =>
+      last.pagination.nextCursor ?? undefined,
+    staleTime: 30_000,
+  };
+}
+
+export function ticketByKeyQueryOptions(projectId: number, ticketNumber: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.ticketByKey(projectId, ticketNumber),
+    staleTime: 60_000,
+  };
+}
+
 export function useTickets(
   projectId: number,
   filters?: TicketFilters,

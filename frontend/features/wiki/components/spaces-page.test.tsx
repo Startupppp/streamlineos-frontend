@@ -2,7 +2,7 @@ import { fireEvent, render, screen, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
-import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
+import type { KbSpaceListItem } from "@/hooks/api/kb/kb-spaces-settings-schema";
 import SpacesPage from "./spaces-page";
 
 const mockReplace = jest.fn();

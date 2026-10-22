@@ -22,16 +22,22 @@ const fieldDefDeleteContract = lazyContract(() =>
   import("@/features/hr/custom-fields/hooks/hr-custom-fields-schema").then((m) => m.hrFieldDefDeleteContract),
 );
 
+export function hrCustomFieldsQueryOptions(entityType: string = "employee") {
+  return {
+    queryKey: hrCustomFieldsListKey(entityType),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useHrCustomFields(
   entityType: string = "employee",
   options?: { enabled?: boolean },
 ) {
   const canManage = useCan("hr:custom-fields:manage");
   return useQuery<HrCustomFieldDefinition[]>({
-    queryKey: hrCustomFieldsListKey(entityType),
+    ...hrCustomFieldsQueryOptions(entityType),
     queryFn: ({ signal }) =>
       apiClient.get("/hr/custom-fields/definitions", { entityType }, signal, fieldDefListContract),
-    staleTime: 60_000,
     enabled: canManage && (options?.enabled ?? true),
   });
 }

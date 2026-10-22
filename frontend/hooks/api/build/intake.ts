@@ -50,6 +50,13 @@ export function useIntakeRequests(
   });
 }
 
+export function intakeRequestsQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.intake(projectId),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useCreateIntakeRequest() {
   const queryClient = useQueryClient();
   return useAuthorizedMutation("build:workspace:manage", {

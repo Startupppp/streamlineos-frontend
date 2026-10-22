@@ -7,6 +7,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { kbHrLinkConfigQueryOptions } from "./kb-read-options";
 
 const hrKbLinkFlagsLazy = lazyContract(() =>
   import("@/hooks/api/kb/hr-link-config-schema").then((m) => m.hrKbLinkFlagsContract),
@@ -32,10 +33,9 @@ const ALL_OFF: HrKbLinkFlags = { link: false, search: false, ai: false };
 
 export function useHrKbLinkConfig() {
   return useGatedQuery("kb:pages:view", {
-    queryKey: knowledgeAndSurveysQueryKeys.kb.hrLinkConfig(),
+    ...kbHrLinkConfigQueryOptions,
     queryFn: ({ signal }) =>
       apiClient.get<HrKbLinkFlags>("/kb/hr-link/config", undefined, signal, hrKbLinkFlagsLazy),
-    staleTime: 60_000,
     ...INLINE_READ_ERROR,
   });
 }

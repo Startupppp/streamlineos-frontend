@@ -1,15 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSubmitGuard } from "@/hooks/common/use-submit-guard";
-import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useQueryClient } from "@tanstack/react-query";
 import {
-  useAddAttachment,
   useAddComment,
 } from "@/hooks/api/build/ticket-sub-resources";
-import { useCreateTicket } from "@/hooks/api/build/tickets";
 import {
   useUpdateComment,
   useDeleteComment,
@@ -19,21 +15,13 @@ import { useDraftCommentAction } from "./use-draft-comment-action";
 import { useTicketCommentComposer } from "./use-ticket-comment-composer";
 import { useAddReaction, useRemoveReaction } from "@/hooks/api/build/reactions";
 import { useCan } from "@/hooks/api/access";
+import { useTicketFileAttachment } from "./use-ticket-file-attachment";
+import { useCreateIssueFromComment } from "./use-create-issue-from-comment";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { isApiError } from "@/lib/api-envelope";
 import type { TicketComment } from "@/types/projects";
 import type { MentionUser } from "@/features/build/comments/mention-textarea";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
-import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
-import {
-  MAX_PROJECT_FILE_BYTES,
-  PROJECT_FILE_TYPES_LABEL,
-  isAllowedProjectFileType,
-  useDeleteProjectFile,
-  useUploadProjectFile,
-} from "@/hooks/api/build/project-files";
-import { validatePreUpload } from "@/lib/build-upload-validator";
 
 const COMMENT_RENDER_PAGE_SIZE = 20;
 
@@ -59,8 +47,7 @@ export function useActivityFeed({
   const [replyText, setReplyText] = useState("");
   const [editingSaveId, setEditingSaveId] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [commentNotFoundDismissed, setCommentNotFoundDismissed] =
-    useState(false);
+  const [commentNotFoundDismissed, setCommentNotFoundDismissed] = useState(false);
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
   const commentRefs = useRef<Map<number, HTMLDivElement>>(new Map());
@@ -81,24 +68,13 @@ export function useActivityFeed({
   const canCreate = useCan("build:tickets:create");
   const canAi = useCan("build:ai:use");
   const canAttachFiles = useCan("build:files:manage") && canUpdate;
-  const uploadProjectFile = useUploadProjectFile(projectId);
-  const deleteProjectFile = useDeleteProjectFile(projectId);
-  const addAttachment = useAddAttachment();
-  const router = useRouter();
-  const queryClient = useQueryClient();
+  const { isAttachingFiles, handleAttachFiles } = useTicketFileAttachment({ ticketId, projectId });
+  const { handleCreateIssue } = useCreateIssueFromComment({ ticketId, projectId, projectKey, ticketNumber });
 
-  const commentPermalink = useCallback(
-    (commentId: number) => {
-      if (ticketNumber == null) return undefined;
-      return getTicketDetailHref(
-        projectId,
-        projectKey,
-        ticketNumber,
-        commentId,
-      );
-    },
-    [projectId, projectKey, ticketNumber],
-  );
+  function commentPermalink(commentId: number) {
+    if (ticketNumber == null) return undefined;
+    return getTicketDetailHref(projectId, projectKey, ticketNumber, commentId);
+  }
 
   const commentNotFound =
     !commentNotFoundDismissed &&
@@ -133,7 +109,7 @@ export function useActivityFeed({
   const addReaction = useAddReaction(projectId, ticketId);
   const removeReaction = useRemoveReaction(projectId, ticketId);
 
-  const handleSubmitInner = useCallback(async () => {
+  async function handleSubmitInner() {
     const content = newComment.trim();
     if (!content) return;
     const optimisticAuthor = session?.user?.id
@@ -144,262 +120,132 @@ export function useActivityFeed({
         }
       : undefined;
     return addComment.mutateAsync({ ticketId, projectId, content, optimisticAuthor });
-  }, [newComment, ticketId, projectId, addComment, session]);
+  }
   const commentSubmitGuard = useSubmitGuard(handleSubmitInner);
   const isPostingComment = addComment.isPending || commentSubmitGuard.isSubmitting;
 
-  const handleSubmit = useCallback(() => {
+  function handleSubmit() {
     void commentSubmitGuard.submit().catch(() => {});
-  }, [commentSubmitGuard]);
+  }
 
-  const handleReplySubmit = useCallback(
-    (commentId: number) => {
-      const content = replyText.trim();
-      if (!content) return;
-      const optimisticAuthor = session?.user?.id
-        ? {
-            id: session.user.id,
-            name: session.user.name ?? null,
-            image: session.user.image ?? null,
-          }
-        : undefined;
-      addReply.mutate({
-        ticketId,
-        projectId,
-        content,
-        parentCommentId: commentId,
-        optimisticAuthor,
-      });
-    },
-    [replyText, ticketId, projectId, addReply, session],
-  );
+  function handleReplySubmit(commentId: number) {
+    const content = replyText.trim();
+    if (!content) return;
+    const optimisticAuthor = session?.user?.id
+      ? {
+          id: session.user.id,
+          name: session.user.name ?? null,
+          image: session.user.image ?? null,
+        }
+      : undefined;
+    addReply.mutate({
+      ticketId,
+      projectId,
+      content,
+      parentCommentId: commentId,
+      optimisticAuthor,
+    });
+  }
 
-  const handleSaveEdit = useCallback(
-    (commentId: number, content: string) => {
-      setEditingSaveId(commentId);
-      updateComment.mutate(
-        { commentId, ticketId, projectId, content },
-        {
-          onSuccess: () => toast.success("Comment updated"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-          onSettled: () => setEditingSaveId(null),
-        },
-      );
-    },
-    [updateComment, ticketId, projectId],
-  );
+  function handleSaveEdit(commentId: number, content: string) {
+    setEditingSaveId(commentId);
+    updateComment.mutate(
+      { commentId, ticketId, projectId, content },
+      {
+        onSuccess: () => toast.success("Comment updated"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+        onSettled: () => setEditingSaveId(null),
+      },
+    );
+  }
 
-  const handleDeleteComment = useCallback(
-    (commentId: number) => {
-      setDeletingId(commentId);
-      deleteComment.mutate(
-        { commentId, ticketId, projectId },
-        {
-          onSuccess: () => toast.success("Comment deleted"),
-          onError: (err) => toast.error(getErrorMessage(err)),
-          onSettled: () => setDeletingId(null),
-        },
-      );
-    },
-    [deleteComment, ticketId, projectId],
-  );
+  function handleDeleteComment(commentId: number) {
+    setDeletingId(commentId);
+    deleteComment.mutate(
+      { commentId, ticketId, projectId },
+      {
+        onSuccess: () => toast.success("Comment deleted"),
+        onError: (err) => toast.error(getErrorMessage(err)),
+        onSettled: () => setDeletingId(null),
+      },
+    );
+  }
 
-  const handleTopKeyDown = useCallback(
-    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault();
-        handleSubmit();
-      }
-    },
-    [handleSubmit],
-  );
+  function handleTopKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  }
 
-  const handleReplyKeyDown = useCallback(
-    (parentId: number) => (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  function handleReplyKeyDown(parentId: number) {
+    return (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
         handleReplySubmit(parentId);
       }
-    },
-    [handleReplySubmit],
-  );
+    };
+  }
 
-  const handleReply = useCallback((commentId: number) => {
+  function handleReply(commentId: number) {
     setReplyingTo(commentId);
-  }, []);
-  const handleReact = useCallback(
-    (commentId: number, emoji: string) => {
-      if (!currentUserId) return;
-      addReaction.mutate({ commentId, emoji, userId: currentUserId });
-    },
-    [addReaction, currentUserId],
-  );
-  const handleUnreact = useCallback(
-    (commentId: number, emoji: string) => {
-      if (!currentUserId) return;
-      removeReaction.mutate({ commentId, emoji, userId: currentUserId });
-    },
-    [removeReaction, currentUserId],
-  );
-  const handleCancelReply = useCallback(() => {
+  }
+
+  function handleReact(commentId: number, emoji: string) {
+    if (!currentUserId) return;
+    addReaction.mutate({ commentId, emoji, userId: currentUserId });
+  }
+
+  function handleUnreact(commentId: number, emoji: string) {
+    if (!currentUserId) return;
+    removeReaction.mutate({ commentId, emoji, userId: currentUserId });
+  }
+
+  function handleCancelReply() {
     setReplyingTo(null);
     setReplyText("");
-  }, []);
-  const handleDismissNotFound = useCallback(
-    () => setCommentNotFoundDismissed(true),
-    [],
-  );
+  }
 
-  const createTicket = useCreateTicket({
-    onSuccess: (ticket) => {
-      void queryClient.invalidateQueries({
-        queryKey: accountingAndSupportQueryKeys.ticketActivity.list(ticketId),
-        exact: true,
-        refetchType: "none",
-      });
-      toast.success("Issue created");
-      if (ticket.projectId != null && ticket.ticketNumber != null) {
-        router.push(
-          getTicketDetailHref(
-            ticket.projectId,
-            ticket.project?.key ?? projectKey,
-            ticket.ticketNumber,
-          ),
-        );
-      }
-    },
-    onError: (error) => toast.error(getErrorMessage(error)),
-  });
+  function handleDismissNotFound() {
+    setCommentNotFoundDismissed(true);
+  }
 
-  const handleCreateIssue = useCallback(
-    (commentId: number, content: string) => {
-      if (!projectId) return;
-      const sourceRef =
-        ticketNumber != null && projectKey
-          ? `${projectKey}-${ticketNumber}`
-          : `ticket #${ticketId}`;
-      createTicket.mutate({
-        projectId,
-        title: `Issue from comment on ${sourceRef}`,
-        description: `${content}\n\n---\nCreated from a comment on ${sourceRef} (comment #${commentId}).`,
-        type: "TASK",
-      });
-    },
-    [createTicket, projectId, ticketId, ticketNumber, projectKey],
-  );
+  const draftAction = useDraftCommentAction(ticketId, (text) => setNewComment(text));
 
-  const handleApplyDraft = useCallback(
-    (text: string) => setNewComment(text),
-    [setNewComment],
-  );
-  const draftAction = useDraftCommentAction(ticketId, handleApplyDraft);
-  const handleRetryDraft = useCallback(() => {
-    void retryDraft();
-  }, [retryDraft]);
-  const handleRetryPersistence = useCallback(() => {
-    void retryPersistence();
-  }, [retryPersistence]);
-  const handleAttachFiles = useCallback(
-    async (files: File[]) => {
-      for (const file of files) {
-        const error = validatePreUpload(file, (f) => isAllowedProjectFileType(f.type), PROJECT_FILE_TYPES_LABEL);
-        if (error) {
-          toast.error(error);
-          return;
-        }
-      }
-      const oversized = files.find(
-        (file) => file.size > MAX_PROJECT_FILE_BYTES,
-      );
-      if (oversized) {
-        toast.error(`${oversized.name} exceeds the 2 MB file limit.`);
-        return;
-      }
-      let attachedCount = 0;
-      const failedNames: string[] = [];
-      const cleanupFailedNames: string[] = [];
-      for (const file of files) {
-        let uploadedFileId: number | null = null;
-        try {
-          const uploaded = await uploadProjectFile.mutateAsync(file);
-          uploadedFileId = uploaded.id;
-          await addAttachment.mutateAsync({
-            ticketId,
-            projectId,
-            fileId: uploaded.id,
-          });
-          attachedCount += 1;
-        } catch (err) {
-          if (isApiError(err) && err.status === 400) {
-            toast.error(getErrorMessage(err));
-          } else {
-            failedNames.push(file.name);
-          }
-          if (uploadedFileId !== null) {
-            try {
-              await deleteProjectFile.mutateAsync(uploadedFileId);
-            } catch {
-              cleanupFailedNames.push(file.name);
-            }
-          }
-        }
-      }
-      if (attachedCount > 0) {
-        toast.success(
-          attachedCount === 1
-            ? "File attached"
-            : `${attachedCount} files attached`,
-        );
-      }
-      if (failedNames.length > 0) {
-        toast.error(`Failed to attach ${failedNames.join(", ")}. Try again.`);
-      }
-      if (cleanupFailedNames.length > 0) {
-        toast.error(
-          `Uploaded ${cleanupFailedNames.join(", ")} remains in Project files and can be removed there.`,
-        );
-      }
-    },
-    [addAttachment, deleteProjectFile, projectId, ticketId, uploadProjectFile],
-  );
+  const handleRetryDraft = () => void retryDraft();
+  const handleRetryPersistence = () => void retryPersistence();
 
-  const { repliesMap, sortedTopLevel } = useMemo(() => {
-    const topLevel = comments.filter((c) => !c.parentCommentId);
-    const built = comments.reduce<Record<number, TicketComment[]>>((acc, r) => {
-      const parentId = r.parentCommentId;
-      if (!parentId) return acc;
-      if (!acc[parentId]) acc[parentId] = [];
-      acc[parentId].push(r);
-      return acc;
-    }, {});
-    const sortedTopLevel = [...topLevel].sort(
-      (a, b) =>
-        new Date(b.createdAt || 0).getTime() -
-        new Date(a.createdAt || 0).getTime(),
-    );
-    return { repliesMap: built, sortedTopLevel };
-  }, [comments]);
+  const topLevel = comments.filter((c) => !c.parentCommentId);
+  const repliesMap = comments.reduce<Record<number, TicketComment[]>>((acc, r) => {
+    const parentId = r.parentCommentId;
+    if (!parentId) return acc;
+    if (!acc[parentId]) acc[parentId] = [];
+    acc[parentId].push(r);
+    return acc;
+  }, {});
+  const sortedTopLevel = [...topLevel].sort(
+    (a, b) =>
+      new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime(),
+  );
 
   const [visibleCount, setVisibleCount] = useState(COMMENT_RENDER_PAGE_SIZE);
-  const handleShowOlderComments = useCallback(
-    () => setVisibleCount((count) => count + COMMENT_RENDER_PAGE_SIZE),
-    [],
-  );
 
-  const visibleTopLevel = useMemo(() => {
-    let count = visibleCount;
-    if (highlightCommentId) {
-      const index = sortedTopLevel.findIndex(
-        (comment) =>
-          comment.id === highlightCommentId ||
-          (repliesMap[comment.id] ?? []).some(
-            (reply) => reply.id === highlightCommentId,
-          ),
-      );
-      if (index >= count) count = index + 1;
-    }
-    return sortedTopLevel.slice(0, count);
-  }, [sortedTopLevel, repliesMap, visibleCount, highlightCommentId]);
+  function handleShowOlderComments() {
+    setVisibleCount((count) => count + COMMENT_RENDER_PAGE_SIZE);
+  }
+
+  let count = visibleCount;
+  if (highlightCommentId) {
+    const index = sortedTopLevel.findIndex(
+      (comment) =>
+        comment.id === highlightCommentId ||
+        (repliesMap[comment.id] ?? []).some(
+          (reply) => reply.id === highlightCommentId,
+        ),
+    );
+    if (index >= count) count = index + 1;
+  }
+  const visibleTopLevel = sortedTopLevel.slice(0, count);
 
   return {
     newComment,
@@ -440,14 +286,10 @@ export function useActivityFeed({
     handleCancelReply,
     handleDismissNotFound,
     handleCreateIssue,
-    handleApplyDraft,
     handleRetryDraft,
     handleRetryPersistence,
     canAttachFiles,
-    isAttachingFiles:
-      uploadProjectFile.isPending ||
-      addAttachment.isPending ||
-      deleteProjectFile.isPending,
+    isAttachingFiles,
     handleAttachFiles,
     handleShowOlderComments,
   };

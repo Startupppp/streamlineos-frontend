@@ -1,10 +1,25 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RequireModule } from "@/components/auth/require-module";
 import ProjectWikiPageDocument from "@/features/wiki/components/project-wiki-page-document";
+import { prefetchWikiPage } from "@/lib/prefetch/build-project-extras";
+import ProjectWikiPageLoading from "./loading";
 
 interface ProjectWikiDocPageProps {
   params: Promise<{ projectId: string; pageId: string }>;
+}
+
+async function WikiPageHydrated({ projectId, pageId }: { projectId: number; pageId: number }) {
+  const state = await prefetchWikiPage(pageId);
+  return (
+    <HydrationBoundary state={state}>
+      <RequireModule module="kb">
+        <ProjectWikiPageDocument projectId={projectId} pageId={pageId} />
+      </RequireModule>
+    </HydrationBoundary>
+  );
 }
 
 export default async function ProjectWikiDocPage({ params }: ProjectWikiDocPageProps) {
@@ -16,8 +31,8 @@ export default async function ProjectWikiDocPage({ params }: ProjectWikiDocPageP
     notFound();
   }
   return (
-    <RequireModule module="kb">
-      <ProjectWikiPageDocument projectId={projectId} pageId={pageId} />
-    </RequireModule>
+    <Suspense fallback={<ProjectWikiPageLoading />}>
+      <WikiPageHydrated projectId={projectId} pageId={pageId} />
+    </Suspense>
   );
 }

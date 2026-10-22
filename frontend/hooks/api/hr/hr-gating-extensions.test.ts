@@ -142,7 +142,15 @@ function hookSource(subPath: string, hookName: string): string {
   const start = source.indexOf(marker);
   expect(start).toBeGreaterThanOrEqual(0);
   const next = source.indexOf("\nexport function ", start + marker.length);
-  return source.slice(start, next === -1 ? undefined : next);
+  const body = source.slice(start, next === -1 ? undefined : next);
+  const factories = [...body.matchAll(/\.\.\.(\w+QueryOptions)\(/g)].map((match) => {
+    const factoryMarker = `export const ${match[1]} =`;
+    const factoryStart = source.indexOf(factoryMarker);
+    expect(factoryStart).toBeGreaterThanOrEqual(0);
+    const factoryEnd = source.indexOf("\nexport ", factoryStart + factoryMarker.length);
+    return source.slice(factoryStart, factoryEnd === -1 ? undefined : factoryEnd);
+  });
+  return [body, ...factories].join("\n");
 }
 
 describe("RBAC gating extensions — query hooks", () => {

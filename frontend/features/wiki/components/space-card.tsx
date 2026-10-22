@@ -20,7 +20,7 @@ import {
   KbUsersIcon,
 } from "@/features/wiki/lib/kb-icons";
 import type { KbAudience } from "@/types/kb";
-import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
+import type { KbSpaceListItem } from "@/hooks/api/kb/kb-spaces-settings-schema";
 
 export type { KbSpaceListItem as SpaceCardItem };
 

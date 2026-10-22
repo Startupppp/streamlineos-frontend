@@ -84,14 +84,20 @@ export function useRichDocuments(params?: RichDocumentListParams) {
   });
 }
 
+export function richDocumentDetailQueryOptions(documentId: number) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.richDocumentDetail(documentId),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useRichDocument(documentId: number) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.richDocumentDetail(documentId),
+    ...richDocumentDetailQueryOptions(documentId),
     queryFn: ({ signal }) =>
       apiClient.get<RichDocument>(`/hr/rich-documents/${documentId}`, undefined, signal, richDocumentDetailC),
-    staleTime: 2 * 60_000,
     enabled: hrEnabled && documentId > 0 && canView,
   });
 }

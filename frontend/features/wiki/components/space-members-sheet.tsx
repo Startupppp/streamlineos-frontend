@@ -46,7 +46,7 @@ import {
   useRemoveKbSpaceMember,
   useUpdateKbSpaceMemberRole,
 } from "@/hooks/api/kb/spaces";
-import type { KbSpaceMember } from "@/hooks/api/kb/spaces";
+import type { KbSpaceMember } from "@/hooks/api/kb/kb-spaces-settings-schema";
 import { useCan } from "@/hooks/api/access";
 import { KbUsersIcon } from "@/features/wiki/lib/kb-icons";
 import { PageState } from "@/components/shared/page-state";

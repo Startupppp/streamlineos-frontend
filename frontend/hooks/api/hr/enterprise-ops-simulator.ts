@@ -47,11 +47,17 @@ const _compareSimulationContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-ops-schema").then((m) => m.compareSimulationContract),
 );
 
+export function simulationHistoryQueryOptions(params: { cursor?: string; type?: SimulationType } = {}) {
+  return {
+    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history(params),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useSimulationHistory(params: { cursor?: string; type?: SimulationType } = {}) {
   return useGatedQuery("hr:policies:manage", {
-    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history(params),
+    ...simulationHistoryQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get(`${BASE}/history`, params, signal, _listSimulationsContract),
-    staleTime: 30_000,
   });
 }
 

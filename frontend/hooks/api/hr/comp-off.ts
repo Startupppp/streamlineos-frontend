@@ -15,13 +15,19 @@ export interface CompOffRecord {
   usedDays: string;
 }
 
+export function compOffQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.compOff(),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useCompOff() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CompOffRecord[]>({
-    queryKey: humanResourcesQueryKeys.hr.compOff(),
+    ...compOffQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<CompOffRecord[]>("/hr/overtime/comp-off", undefined, signal, compOffBalanceListLazy),
-    staleTime: 60_000,
     enabled: hrEnabled && canView,
   });
 }

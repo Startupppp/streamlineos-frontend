@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { TablePagination } from "@/components/ui/table-pagination";
@@ -9,11 +10,25 @@ import { pmSnappy, viewSwap, viewSwapReduced } from "@/lib/motion-presets";
 import type { AllWorkTicket } from "@/types/projects";
 import { AllWorkListSection } from "./all-work-list-section";
 import { AllWorkTableSection } from "./all-work-table-section";
-import { AllWorkBoardSection } from "./all-work-board-section";
-import { AllWorkCalendarSection } from "./all-work-calendar-section";
-import { AllWorkTimelineSection } from "./all-work-timeline-section";
+import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { TicketGroup } from "./all-work-ticket-utils";
 import type { AllWorkView } from "./all-work-view-switcher";
+
+const AllWorkBoardSection = dynamic(
+  () => import("./all-work-board-section").then((m) => m.AllWorkBoardSection),
+  { ssr: false, loading: () => <KanbanBoardSkeleton /> },
+);
+
+const AllWorkCalendarSection = dynamic(
+  () => import("./all-work-calendar-section").then((m) => m.AllWorkCalendarSection),
+  { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-xl" /> },
+);
+
+const AllWorkTimelineSection = dynamic(
+  () => import("./all-work-timeline-section").then((m) => m.AllWorkTimelineSection),
+  { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-xl" /> },
+);
 
 interface AllWorkViewContentProps {
   view: AllWorkView;

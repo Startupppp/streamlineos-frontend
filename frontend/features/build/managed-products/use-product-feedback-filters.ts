@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useTransition } from "react";
+import { useRef, useTransition } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import {
@@ -69,20 +69,17 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const searchParams = listFilters.searchParams;
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
-  const writePaneParams = useCallback(
-    (updates: Record<string, string | null>) => {
-      const next = new URLSearchParams(searchParams.toString());
-      for (const [key, value] of Object.entries(updates)) {
-        if (value === null) next.delete(key);
-        else next.set(key, value);
-      }
-      const query = next.toString();
-      startTransition(() => {
-        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-      });
-    },
-    [pathname, router, searchParams],
-  );
+  function writePaneParams(updates: Record<string, string | null>) {
+    const next = new URLSearchParams(searchParams.toString());
+    for (const [key, value] of Object.entries(updates)) {
+      if (value === null) next.delete(key);
+      else next.set(key, value);
+    }
+    const query = next.toString();
+    startTransition(() => {
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
+  }
 
   const pageRaw = searchParams.get("page");
   const page = Math.max(1, parseInt(pageRaw ?? "1", 10) || 1);
@@ -105,102 +102,61 @@ export function useProductFeedbackFilters(managedProductId: number) {
   const ticketIdRaw = listFilters.value("ticket");
   const ticketProjectIdRaw = listFilters.value("ticketProject");
 
-  const typedType = useMemo(() => TYPE_OPTIONS.find((v) => v === typeValue), [typeValue]);
-  const typedStatuses = useMemo(() => {
-    const vals = splitMulti(statusValue)
-      .filter((v) => (STATUS_OPTIONS_VALUES as readonly string[]).includes(v)) as typeof STATUS_OPTIONS_VALUES[number][];
-    return vals.length > 0 ? vals : undefined;
-  }, [statusValue]);
-  const typedLinked = useMemo(
-    () => linkedValue === "linked" || linkedValue === "unlinked" ? linkedValue : undefined,
-    [linkedValue],
-  );
-  const typedAssigneeIds = useMemo(() => {
-    const vals = splitMulti(assigneeIdValue).filter((v) => v !== BUILD_FILTER_ALL);
-    return vals.length > 0 ? vals : undefined;
-  }, [assigneeIdValue]);
-  const typedDuplicate = useMemo(
-    () => duplicateValue === "true" || duplicateValue === "false" ? duplicateValue : undefined,
-    [duplicateValue],
-  );
+  const typedType = TYPE_OPTIONS.find((v) => v === typeValue);
+  const typedStatusVals = splitMulti(statusValue)
+    .filter((v) => (STATUS_OPTIONS_VALUES as readonly string[]).includes(v)) as typeof STATUS_OPTIONS_VALUES[number][];
+  const typedStatuses = typedStatusVals.length > 0 ? typedStatusVals : undefined;
+  const typedLinked = linkedValue === "linked" || linkedValue === "unlinked" ? linkedValue : undefined;
+  const typedAssigneeVals = splitMulti(assigneeIdValue).filter((v) => v !== BUILD_FILTER_ALL);
+  const typedAssigneeIds = typedAssigneeVals.length > 0 ? typedAssigneeVals : undefined;
+  const typedDuplicate = duplicateValue === "true" || duplicateValue === "false" ? duplicateValue : undefined;
   const typedFrom = isoDateParam(fromValue, listFilters.isActive("from"));
   const typedTo = isoDateParam(toValue, listFilters.isActive("to"));
   const dateRangeReversed = Boolean(typedFrom && typedTo && typedFrom > typedTo);
 
-  const typedSourceChannel = useMemo(() => {
-    const vals = splitMulti(sourceChannelRaw)
-      .filter((v) => SOURCE_CHANNEL_VALUES.includes(v as FeedbucketSourceChannel)) as FeedbucketSourceChannel[];
-    return vals.length > 0 ? vals : undefined;
-  }, [sourceChannelRaw]);
+  const scVals = splitMulti(sourceChannelRaw)
+    .filter((v) => SOURCE_CHANNEL_VALUES.includes(v as FeedbucketSourceChannel)) as FeedbucketSourceChannel[];
+  const typedSourceChannel = scVals.length > 0 ? scVals : undefined;
 
-  const typedTheme = useMemo(() => {
-    const vals = splitMulti(themeRaw);
-    if (vals.length === 0) return undefined;
-    return vals.map((v) => (v === "untagged" ? "" : v));
-  }, [themeRaw]);
+  const themeVals = splitMulti(themeRaw);
+  const typedTheme = themeVals.length > 0 ? themeVals.map((v) => (v === "untagged" ? "" : v)) : undefined;
 
-  const typedSentiment = useMemo(() => {
-    const vals = splitMulti(sentimentRaw)
-      .filter((v) => SENTIMENT_VALUES.includes(v as FeedbucketSentiment)) as FeedbucketSentiment[];
-    return vals.length > 0 ? vals : undefined;
-  }, [sentimentRaw]);
+  const sentimentVals = splitMulti(sentimentRaw)
+    .filter((v) => SENTIMENT_VALUES.includes(v as FeedbucketSentiment)) as FeedbucketSentiment[];
+  const typedSentiment = sentimentVals.length > 0 ? sentimentVals : undefined;
 
-  const typedConsentStatus = useMemo(
-    () => CONSENT_VALUES.includes(consentStatusValue as FeedbucketConsentStatus)
-      ? [consentStatusValue as FeedbucketConsentStatus]
-      : undefined,
-    [consentStatusValue],
-  );
-  const typedLinkedToOpportunity = useMemo(
-    () => linkedToOpportunityValue === "true" || linkedToOpportunityValue === "false"
-      ? linkedToOpportunityValue
-      : undefined,
-    [linkedToOpportunityValue],
-  );
+  const typedConsentStatus = CONSENT_VALUES.includes(consentStatusValue as FeedbucketConsentStatus)
+    ? [consentStatusValue as FeedbucketConsentStatus]
+    : undefined;
+  const typedLinkedToOpportunity = linkedToOpportunityValue === "true" || linkedToOpportunityValue === "false"
+    ? linkedToOpportunityValue
+    : undefined;
 
-  const typedSegment = useMemo(() => {
-    const vals = splitMulti(segmentRaw);
-    return vals.length > 0 ? vals : undefined;
-  }, [segmentRaw]);
+  const segVals = splitMulti(segmentRaw);
+  const typedSegment = segVals.length > 0 ? segVals : undefined;
 
-  const typedCrmOrgId = useMemo(() => {
-    const ids = splitMulti(crmOrgIdRaw)
-      .map((v) => parseInt(v, 10))
-      .filter((n) => Number.isFinite(n) && n > 0);
-    return ids.length > 0 ? ids : undefined;
-  }, [crmOrgIdRaw]);
+  const crmIds = splitMulti(crmOrgIdRaw)
+    .map((v) => parseInt(v, 10))
+    .filter((n) => Number.isFinite(n) && n > 0);
+  const typedCrmOrgId = crmIds.length > 0 ? crmIds : undefined;
 
-  const paneSubmissionId = useMemo(() => {
-    const n = submissionIdRaw ? parseInt(submissionIdRaw, 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : null;
-  }, [submissionIdRaw]);
-  const paneTicketId = useMemo(() => {
-    const n = ticketIdRaw ? parseInt(ticketIdRaw, 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : null;
-  }, [ticketIdRaw]);
-  const paneTicketProjectId = useMemo(() => {
-    const n = ticketProjectIdRaw ? parseInt(ticketProjectIdRaw, 10) : NaN;
-    return Number.isFinite(n) && n > 0 ? n : null;
-  }, [ticketProjectIdRaw]);
+  const subN = submissionIdRaw ? parseInt(submissionIdRaw, 10) : NaN;
+  const paneSubmissionId = Number.isFinite(subN) && subN > 0 ? subN : null;
+  const tickN = ticketIdRaw ? parseInt(ticketIdRaw, 10) : NaN;
+  const paneTicketId = Number.isFinite(tickN) && tickN > 0 ? tickN : null;
+  const projN = ticketProjectIdRaw ? parseInt(ticketProjectIdRaw, 10) : NaN;
+  const paneTicketProjectId = Number.isFinite(projN) && projN > 0 ? projN : null;
 
   const [selected, setSelected] = useSourceOverride(listFilters.resetKey, new Set<string | number>());
 
-  const isFiltered = useMemo(
-    () => !!(
-      typedType || typedStatuses || typedLinked || typedAssigneeIds || typedDuplicate ||
-      typedFrom || typedTo || typedSourceChannel || typedTheme || typedSentiment ||
-      typedConsentStatus || typedLinkedToOpportunity || typedSegment || typedCrmOrgId ||
-      listFilters.debouncedSearch.trim()
-    ),
-    [
-      typedType, typedStatuses, typedLinked, typedAssigneeIds, typedDuplicate,
-      typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
-      typedConsentStatus, typedLinkedToOpportunity, typedSegment, typedCrmOrgId,
-      listFilters.debouncedSearch,
-    ],
+  const isFiltered = !!(
+    typedType || typedStatuses || typedLinked || typedAssigneeIds || typedDuplicate ||
+    typedFrom || typedTo || typedSourceChannel || typedTheme || typedSentiment ||
+    typedConsentStatus || typedLinkedToOpportunity || typedSegment || typedCrmOrgId ||
+    listFilters.debouncedSearch.trim()
   );
 
-  const filterCore = useMemo((): FeedbucketSubmissionFilters => ({
+  const filterCore: FeedbucketSubmissionFilters = {
     managedProductId,
     ...(typedType && { type: typedType }),
     ...(typedStatuses && { status: typedStatuses }),
@@ -217,85 +173,55 @@ export function useProductFeedbackFilters(managedProductId: number) {
     ...(typedSegment && { segment: typedSegment }),
     ...(typedCrmOrgId && { crmOrganizationId: typedCrmOrgId }),
     ...(listFilters.debouncedSearch.trim() && { search: listFilters.debouncedSearch.trim() }),
-  }), [
-    managedProductId, typedType, typedStatuses, typedLinked, typedAssigneeIds, typedDuplicate,
-    dateRangeReversed, typedFrom, typedTo, typedSourceChannel, typedTheme, typedSentiment,
-    typedConsentStatus, typedLinkedToOpportunity, typedSegment, typedCrmOrgId,
-    listFilters.debouncedSearch,
-  ]);
+  };
 
-  const queryParams = useMemo(
-    (): ListFeedbucketSubmissionsQuery => ({ ...filterCore, page, limit: PAGE_SIZE }),
-    [filterCore, page],
-  );
-
+  const queryParams: ListFeedbucketSubmissionsQuery = { ...filterCore, page, limit: PAGE_SIZE };
   const bulkFilters = filterCore;
 
-  const handleTypeChange = useCallback((v: string) => listFilters.setValue("type", v), [listFilters]);
-  const handleLinkedChange = useCallback((v: string) => listFilters.setValue("linked", v), [listFilters]);
-  const handleStatusValuesChange = useCallback(
-    (vals: string[]) => listFilters.setValue("status", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleAssigneeValuesChange = useCallback(
-    (vals: string[]) => listFilters.setValue("assigneeId", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleDuplicateChange = useCallback((v: string) => listFilters.setValue("duplicate", v), [listFilters]);
-  const handleConsentStatusChange = useCallback((v: string) => listFilters.setValue("consentStatus", v), [listFilters]);
-  const handleLinkedToOpportunityChange = useCallback((v: string) => listFilters.setValue("linkedToOpportunity", v), [listFilters]);
-  const handleClearSelection = useCallback(() => setSelected(new Set()), [setSelected]);
-  const handleOpenSubmission = useCallback(
-    (submissionId: number) => writePaneParams({ submission: String(submissionId) }),
-    [writePaneParams],
-  );
-  const handleCloseSubmissionPane = useCallback(
-    () => writePaneParams({ submission: null }),
-    [writePaneParams],
-  );
-  const handleOpenTicket = useCallback(
-    (ticketId: number, projectId: number) => {
-      writePaneParams({ ticket: String(ticketId), ticketProject: String(projectId) });
-    },
-    [writePaneParams],
-  );
-  const handleCloseTicketPane = useCallback(
-    () => writePaneParams({ ticket: null, ticketProject: null }),
-    [writePaneParams],
-  );
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      const next = new URLSearchParams(searchParams.toString());
-      if (newPage <= 1) next.delete("page");
-      else next.set("page", String(newPage));
-      const query = next.toString();
-      startTransition(() => {
-        router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
-      });
-    },
-    [pathname, router, searchParams],
-  );
-
-  const handleSourceChannelValuesChange = useCallback(
-    (vals: string[]) => listFilters.setValue("sourceChannel", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleThemeValuesChange = useCallback(
-    (vals: string[]) => listFilters.setValue("theme", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleSentimentValuesChange = useCallback(
-    (vals: string[]) => listFilters.setValue("sentiment", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleSegmentValuesChange = useCallback(
-    (vals: string[]) => listFilters.setValue("segment", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleCrmOrgValuesChange = useCallback(
-    (vals: string[]) => listFilters.setValue("crmOrganizationId", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
+  function handleTypeChange(v: string) { listFilters.setValue("type", v); }
+  function handleLinkedChange(v: string) { listFilters.setValue("linked", v); }
+  function handleStatusValuesChange(vals: string[]) {
+    listFilters.setValue("status", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL);
+  }
+  function handleAssigneeValuesChange(vals: string[]) {
+    listFilters.setValue("assigneeId", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL);
+  }
+  function handleDuplicateChange(v: string) { listFilters.setValue("duplicate", v); }
+  function handleConsentStatusChange(v: string) { listFilters.setValue("consentStatus", v); }
+  function handleLinkedToOpportunityChange(v: string) { listFilters.setValue("linkedToOpportunity", v); }
+  function handleClearSelection() { setSelected(new Set()); }
+  function handleOpenSubmission(submissionId: number) {
+    writePaneParams({ submission: String(submissionId) });
+  }
+  function handleCloseSubmissionPane() { writePaneParams({ submission: null }); }
+  function handleOpenTicket(ticketId: number, projectId: number) {
+    writePaneParams({ ticket: String(ticketId), ticketProject: String(projectId) });
+  }
+  function handleCloseTicketPane() { writePaneParams({ ticket: null, ticketProject: null }); }
+  function handlePageChange(newPage: number) {
+    const next = new URLSearchParams(searchParams.toString());
+    if (newPage <= 1) next.delete("page");
+    else next.set("page", String(newPage));
+    const query = next.toString();
+    startTransition(() => {
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    });
+  }
+  function handleSourceChannelValuesChange(vals: string[]) {
+    listFilters.setValue("sourceChannel", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL);
+  }
+  function handleThemeValuesChange(vals: string[]) {
+    listFilters.setValue("theme", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL);
+  }
+  function handleSentimentValuesChange(vals: string[]) {
+    listFilters.setValue("sentiment", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL);
+  }
+  function handleSegmentValuesChange(vals: string[]) {
+    listFilters.setValue("segment", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL);
+  }
+  function handleCrmOrgValuesChange(vals: string[]) {
+    listFilters.setValue("crmOrganizationId", vals.length > 0 ? vals.join(",") : BUILD_FILTER_ALL);
+  }
 
   return {
     listFilters,

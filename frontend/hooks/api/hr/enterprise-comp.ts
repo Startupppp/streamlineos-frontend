@@ -8,7 +8,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { queryKeyBase } from "@/lib/query-keys/base";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 export interface TimeDevice {
@@ -98,8 +97,6 @@ export interface CursorPaginatedResponse<T> {
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
-const DEVICES_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "devices"] as const;
-const SYNC_LOGS_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "syncLogs"] as const;
 
 const _listDevicesContract = lazyContract(() =>
   import("@/hooks/api/hr/enterprise-comp-schema").then((m) => m.listDevicesContract),
@@ -174,29 +171,29 @@ export function useTimeDevices(params?: Record<string, unknown>) {
 export function useCreateTimeDevice() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:biometric:manage", {
-    mutationKey: [...DEVICES_KEY, "create"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrDevicesAll, "create"],
     mutationFn: (data: { name: string; serialNumber: string; type: string; locationId?: number; effectiveFrom?: string; effectiveTo?: string }) =>
       apiClient.post("/hr/enterprise/comp/devices", data, undefined, _createDeviceContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: DEVICES_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrDevicesAll }),
   });
 }
 
 export function useUpdateTimeDevice() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:biometric:manage", {
-    mutationKey: [...DEVICES_KEY, "update"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrDevicesAll, "update"],
     mutationFn: ({ deviceId, ...data }: { deviceId: number } & Record<string, unknown>) =>
       apiClient.patch(`/hr/enterprise/comp/devices/${deviceId}`, data, undefined, _updateDeviceContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: DEVICES_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrDevicesAll }),
   });
 }
 
 export function useDeleteTimeDevice() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:biometric:manage", {
-    mutationKey: [...DEVICES_KEY, "delete"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrDevicesAll, "delete"],
     mutationFn: (deviceId: number) => apiClient.delete(`/hr/enterprise/comp/devices/${deviceId}`, undefined, undefined, _voidContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: DEVICES_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrDevicesAll }),
   });
 }
 
@@ -222,17 +219,20 @@ export function useFailedSyncs() {
   });
 }
 
-const COMP_CYCLES_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "cycles"] as const;
-const COMP_RECS_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "recommendations"] as const;
-const COMP_BUDGET_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "budgetPools"] as const;
+
+export const compCyclesQueryOptions = (params?: Record<string, unknown>) =>
+  queryOptions({
+    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCompCyclesAll, params],
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/enterprise/comp/planning/cycles", params, signal, _listCompCyclesContract),
+    staleTime: 2 * 60_000,
+  });
 
 export function useCompCycles(params?: Record<string, unknown>) {
   const canManage = useCan("hr:compensation:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCompCyclesAll, params],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/planning/cycles", params, signal, _listCompCyclesContract),
-    staleTime: 2 * 60_000,
+    ...compCyclesQueryOptions(params),
     enabled: canManage && hrEnabled,
   });
 }
@@ -251,10 +251,10 @@ export function useCompCycle(cycleId: number) {
 export function useCreateCompCycle() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compensation:manage", {
-    mutationKey: [...COMP_CYCLES_KEY, "create"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCompCyclesAll, "create"],
     mutationFn: (data: { name: string; fiscalYear: number; budgetPoolCents: number; meritMatrix?: Record<string, number> }) =>
       apiClient.post("/hr/enterprise/comp/planning/cycles", data, undefined, _createCompCycleContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: COMP_CYCLES_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrEnterpriseCompCyclesAll }),
   });
 }
 
@@ -272,10 +272,10 @@ export function useCompRecommendations(cycleId?: number, params?: Record<string,
 export function useCalibrateRecommendation() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:compensation:manage", {
-    mutationKey: [...COMP_RECS_KEY, "calibrate"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrEnterpriseCompRecsAll, "calibrate"],
     mutationFn: ({ recommendationId, hrCalibratedCents }: { recommendationId: number; hrCalibratedCents: number }) =>
       apiClient.patch(`/hr/enterprise/comp/planning/recommendations/${recommendationId}/calibrate`, { hrCalibratedCents }, undefined, _calibrateRecommendationContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: COMP_RECS_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrEnterpriseCompRecsAll }),
   });
 }
 
@@ -291,15 +291,20 @@ export function useBudgetPools(cycleId: number) {
   });
 }
 
-const EQUITY_GRANTS_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "equityGrants"] as const;
+
+export const equityGrantsQueryOptions = (params?: Record<string, unknown>) =>
+  queryOptions({
+    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll, params],
+    queryFn: ({ signal }) =>
+      apiClient.get("/hr/enterprise/comp/equity/grants", params, signal, _listGrantsContract),
+    staleTime: 5 * 60_000,
+  });
 
 export function useEquityGrants(params?: Record<string, unknown>) {
   const canView = useCan("hr:equity:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll, params],
-    queryFn: ({ signal }) => apiClient.get("/hr/enterprise/comp/equity/grants", params, signal, _listGrantsContract),
-    staleTime: 5 * 60_000,
+    ...equityGrantsQueryOptions(params),
     enabled: canView && hrEnabled,
   });
 }
@@ -307,10 +312,10 @@ export function useEquityGrants(params?: Record<string, unknown>) {
 export function useCreateEquityGrant() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:equity:manage", {
-    mutationKey: [...EQUITY_GRANTS_KEY, "create"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll, "create"],
     mutationFn: (data: { userId: string; grantType: string; units: number; strikePriceCents?: number; grantDate: string; cliffMonths: number; vestingMonths: number; documentUrl?: string; notes?: string }) =>
       apiClient.post("/hr/enterprise/comp/equity/grants", data, undefined, _createGrantContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: EQUITY_GRANTS_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll }),
   });
 }
 
@@ -329,14 +334,13 @@ export function useVestingSchedule(grantId: number) {
 export function useRecordExercise() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:equity:manage", {
-    mutationKey: [...EQUITY_GRANTS_KEY, "exercise"],
+    mutationKey: [...humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll, "exercise"],
     mutationFn: (data: { grantId: number; exerciseDate: string; units: number; amountCents: number; notes?: string }) =>
       apiClient.post("/hr/enterprise/comp/equity/exercises", data, undefined, _recordExerciseContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: EQUITY_GRANTS_KEY }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrEnterpriseEquityGrantsAll }),
   });
 }
 
-const COSTING_KEY = [...queryKeyBase, "hr", "enterprise", "comp", "costing"] as const;
 
 export const workforceCostSummaryQueryOptions = () =>
   queryOptions({

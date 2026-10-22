@@ -207,21 +207,26 @@ export function useFindExpert(params: FindExpertParams) {
   });
 }
 
+export function skillsMatrixQueryOptions(params?: { cursor?: string; limit?: number }) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.skillsMatrix({ cursor: params?.cursor, limit: params?.limit ?? 20 }),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useSkillsMatrix(params: SkillsMatrixParams = {}) {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   const { cursor, limit = 20, enabled = true } = params;
-  const requestParams = { cursor, limit };
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.skillsMatrix(requestParams),
+    ...skillsMatrixQueryOptions({ cursor, limit }),
     queryFn: ({ signal }) =>
       apiClient.get<SkillsMatrixData>(
         "/hr/employees/skills-matrix",
-        requestParams,
+        { cursor, limit },
         signal,
         skillsMatrixLazy,
       ),
-    staleTime: 60_000,
     enabled: hrEnabled && canView && enabled,
   });
 }

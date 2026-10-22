@@ -31,13 +31,19 @@ export interface BackgroundVerification {
   user?: { id: string; name: string | null; email: string | null } | null;
 }
 
+export function bgvListQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.bgvList(),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useBackgroundVerifications() {
   const canView = useCan("hr:sensitive:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.bgvList(),
+    ...bgvListQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<BackgroundVerification[]>("/hr/background-verification", undefined, signal, bgvListC),
-    staleTime: 2 * 60_000,
     enabled: canView && hrEnabled,
   });
 }

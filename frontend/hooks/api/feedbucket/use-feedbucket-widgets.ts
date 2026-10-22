@@ -85,3 +85,10 @@ export function useRotateFeedbucketWidgetKey() {
     },
   });
 }
+
+export function feedbucketWidgetsQueryOptions() {
+  return {
+    queryKey: growthAndSignQueryKeys.feedbucket.widgets(),
+    staleTime: 30_000,
+  } as const;
+}

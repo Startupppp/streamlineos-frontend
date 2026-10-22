@@ -27,6 +27,13 @@ type ModulePage = {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
+export function modulesQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.modules(projectId),
+    staleTime: 60_000,
+  };
+}
+
 export function useModules(
   projectId: number,
   options?: Omit<UseQueryOptions<Module[]>, "queryKey" | "queryFn" | "enabled">

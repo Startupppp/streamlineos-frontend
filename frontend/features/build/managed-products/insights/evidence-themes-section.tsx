@@ -1,12 +1,17 @@
 "use client";
 
-import { useMemo } from "react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Lightbulb, TrendingUp } from "lucide-react";
-import { BarChart, Bar, ResponsiveContainer } from "recharts";
 import type { DiscoveryReviewsGetEvidenceThemesResponse } from "@/contracts/build-contracts.generated";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { ErrorState } from "@/components/shared/error-state";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const TrendBar = dynamic(
+  () => import("./evidence-trend-bar").then((m) => m.TrendBar),
+  { ssr: false, loading: () => <Skeleton className="h-6 w-20 rounded" /> },
+);
 
 const PERIOD_OPTIONS = [
   { label: "Last 30 days", value: "30d" },
@@ -33,36 +38,6 @@ function SentimentBar({ breakdown }: { breakdown: ThemeRow["sentimentBreakdown"]
   );
 }
 
-function deriveTrendSummary(trend: ThemeRow["trend"]): string {
-  const mid = Math.ceil(trend.length / 2);
-  const firstHalf = trend.slice(0, mid).reduce((s, t) => s + t.count, 0);
-  const secondHalf = trend.slice(mid).reduce((s, t) => s + t.count, 0);
-  if (secondHalf > firstHalf * 1.1) return "Trending up";
-  if (secondHalf < firstHalf * 0.9) return "Trending down";
-  return "Stable";
-}
-
-function TrendBar({ trend }: { trend: ThemeRow["trend"] }) {
-  const data = useMemo(() => trend.slice(-8).map((t) => ({ count: t.count })), [trend]);
-  if (trend.length === 0) {
-    return <span className="text-xs text-muted-foreground" aria-label="No trend data">—</span>;
-  }
-  return (
-    <div className="flex flex-col gap-0.5">
-      <div className="h-6 w-20" aria-hidden>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} barCategoryGap={2} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
-            <Bar dataKey="count" fill="var(--chart-1)" radius={[1, 1, 0, 0]} isAnimationActive={false} />
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-      {trend.length >= 2 && (
-        <span className="text-xs text-muted-foreground">{deriveTrendSummary(trend)}</span>
-      )}
-    </div>
-  );
-}
-
 interface EvidenceThemesSectionProps {
   managedProductId: number;
   themes: ThemeRow[];
@@ -82,10 +57,7 @@ export function EvidenceThemesSection({
   isError,
   onRetry,
 }: EvidenceThemesSectionProps) {
-  const sortedThemes = useMemo(
-    () => [...themes].sort((a, b) => b.count - a.count),
-    [themes],
-  );
+  const sortedThemes = [...themes].sort((a, b) => b.count - a.count);
 
   return (
     <section aria-labelledby="evidence-themes-heading" className="space-y-4">

@@ -24,14 +24,20 @@ interface ListParams {
   limit?: number;
 }
 
+export function hrTemplatesQueryOptions(params?: ListParams) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.hrTemplates(params),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useHrTemplates(params?: ListParams) {
   const canView = useCan("hr:templates:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.hrTemplates(params),
+    ...hrTemplatesQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<TemplateListResponse>("/hr/templates", params, signal, lazyContract(() => import("@/hooks/api/hr/hr-templates-schema").then(m => m.hrTemplateListContract))),
-    staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canView,
     ...INLINE_READ_ERROR,

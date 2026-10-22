@@ -15,6 +15,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type { KbPageKind } from "./page-types";
+import { kbPageTemplatesQueryOptions } from "./kb-read-options";
 
 export type KbPageTemplate = {
   id: number;
@@ -60,7 +61,7 @@ export function useKbPageTemplates(q?: string) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageTemplates(q),
+    ...kbPageTemplatesQueryOptions(q),
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => {
       const params = {
@@ -77,7 +78,6 @@ export function useKbPageTemplates(q?: string) {
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     select: selectFlatPages,
     enabled: canViewPages,
-    staleTime: 300_000,
   });
 }
 

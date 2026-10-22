@@ -9,6 +9,7 @@ jest.mock("@tanstack/react-query", () => ({
   useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
   useMutation: jest.fn(),
   keepPreviousData: undefined,
+  queryOptions: jest.requireActual("@tanstack/react-query").queryOptions,
 }));
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),

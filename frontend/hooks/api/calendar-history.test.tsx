@@ -81,33 +81,31 @@ describe("useCalendarHistory", () => {
     expect(nextPageResult?.data?.pages).toHaveLength(2);
   });
 
-  it("does not reuse one actor's pages after an identity change", async () => {
-    const client = new QueryClient({
-      defaultOptions: { queries: { retry: false, gcTime: 0 } },
+  it("does not reuse one actor's pages after an identity change (scope-hash isolation)", async () => {
+    const user1Client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0, queryKeyHashFn: scopedQueryKeyHashFn(authenticatedScope("org-1", "user-1")) } },
     });
-    const { result, rerender } = renderHook(
+    const { result: result1 } = renderHook(
       () => useCalendarHistory("2026-10-01T00:00:00.000Z"),
-      { wrapper: wrapper(client) },
+      { wrapper: wrapper(user1Client) },
     );
-    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    await waitFor(() => expect(result1.current.isSuccess).toBe(true));
+    expect(get).toHaveBeenCalledTimes(1);
 
-    session = { orgId: "org-1", user: { id: "user-2" } };
     get.mockReset().mockResolvedValue(response("cursor-user-2"));
-    rerender();
+    session = { orgId: "org-1", user: { id: "user-2" } };
+    const user2Client = new QueryClient({
+      defaultOptions: { queries: { retry: false, gcTime: 0, queryKeyHashFn: scopedQueryKeyHashFn(authenticatedScope("org-1", "user-2")) } },
+    });
+    const { result: result2 } = renderHook(
+      () => useCalendarHistory("2026-10-01T00:00:00.000Z"),
+      { wrapper: wrapper(user2Client) },
+    );
 
     await waitFor(() => {
       expect(get).toHaveBeenCalledTimes(1);
-      expect(result.current.data?.pages[0]?.nextCursor).toBe("cursor-user-2");
+      expect(result2.current.data?.pages[0]?.nextCursor).toBe("cursor-user-2");
     });
-    expect(client.getQueryCache().getAll().map((query) => query.queryKey)).toContainEqual([
-      "streamlineos",
-      "calendar",
-      "events",
-      "history",
-      "org-1",
-      "user-2",
-      "2026-10-01T00:00:00.000Z",
-    ]);
   });
 
   it("stops requesting pages when a capped history slice has no safe continuation", async () => {

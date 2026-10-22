@@ -69,6 +69,22 @@ export function useIncidents(projectId?: number, filters?: IncidentFilters) {
   });
 }
 
+export function incidentsListQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.incidents.list(projectId),
+    staleTime: 60_000,
+  } as const;
+}
+
+export function incidentDetailQueryOptions(projectId: number, incidentId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.incidents.detail(projectId, incidentId),
+    initialPageParam: INITIAL_INCIDENT_PAGE_PARAM,
+    getNextPageParam: () => undefined as IncidentPageParam | undefined,
+    staleTime: 15_000,
+  };
+}
+
 export function useIncident(projectId?: number, incidentId?: number) {
   const canView = useCan("build:incidents:view");
   const query = useInfiniteQuery({

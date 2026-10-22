@@ -1,6 +1,6 @@
 "use client";
 
-import { useQueryClient, keepPreviousData, type QueryClient } from "@tanstack/react-query";
+import { queryOptions, useQueryClient, keepPreviousData, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -475,4 +475,14 @@ export function useUnlinkGoalProduct() {
       },
     },
   );
+}
+
+export function goalsListQueryOptions(params?: GoalsParams) {
+  const queryParams = toQueryParams(params);
+  return queryOptions<GoalListItem[]>({
+    queryKey: accountingAndSupportQueryKeys.goals.list(queryParams),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
+    staleTime: 30_000,
+  });
 }

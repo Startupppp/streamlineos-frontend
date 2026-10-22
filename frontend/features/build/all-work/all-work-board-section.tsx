@@ -1,10 +1,10 @@
 "use client";
 
-import { useMemo, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { KanbanBoard } from "@/features/build/views/kanban-board";
+import { KanbanBoardSkeleton } from "@/components/ui/kanban-skeleton";
 import type { ListSelection } from "@/features/build/views/list-view-shared";
 import { PmPanel } from "@/components/pm-chrome";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -12,6 +12,12 @@ import { cn } from "@/lib/utils";
 import { toKanbanTicket, type TicketGroup } from "./all-work-ticket-utils";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 import { useNavigationLeave } from "@/components/shared/dirty-state-context";
+
+const KanbanBoard = dynamic(
+  () =>
+    import("@/features/build/views/kanban-board").then((m) => m.KanbanBoard),
+  { ssr: false, loading: () => <KanbanBoardSkeleton /> },
+);
 
 function BoardGroupSection({
   group,
@@ -24,20 +30,19 @@ function BoardGroupSection({
 }) {
   const router = useRouter();
   const requestLeave = useNavigationLeave();
-  const kanbanTickets = useMemo(() => group.tickets.map(toKanbanTicket), [group.tickets]);
+  const kanbanTickets = group.tickets.map(toKanbanTicket);
   const projectId = group.projectId;
   const projectKey = group.projectKey ?? "";
 
-  const handleTicketSelect = useCallback(
-    (id: number) => {
-      const ticket = group.tickets.find((t) => t.id === id);
-      if (!ticket || projectId === undefined) return;
-      requestLeave(() =>
-        router.push(getTicketDetailHref(projectId, projectKey, ticket.ticketNumber)),
-      );
-    },
-    [router, requestLeave, projectId, projectKey, group.tickets],
-  );
+  function handleTicketSelect(id: number) {
+    const ticket = group.tickets.find((t) => t.id === id);
+    if (!ticket || projectId === undefined) return;
+    requestLeave(() =>
+      router.push(
+        getTicketDetailHref(projectId, projectKey, ticket.ticketNumber),
+      ),
+    );
+  }
 
   if (projectId === undefined) return null;
 
@@ -59,12 +64,16 @@ function BoardGroupSection({
         >
           {projectKey}
         </Link>
-        <TruncatedText text={group.label} className="text-label font-medium text-foreground" />
+        <TruncatedText
+          text={group.label}
+          className="text-label font-medium text-foreground"
+        />
         <Badge
           variant="secondary"
           className="h-5 shrink-0 rounded-md bg-primary/10 px-1.5 text-micro font-normal tabular-nums text-primary"
         >
-          {group.tickets.length}{hasMore ? "+" : ""}
+          {group.tickets.length}
+          {hasMore ? "+" : ""}
         </Badge>
       </div>
       <div className="flex min-h-0 flex-1 flex-col px-2 pt-2 pb-0 sm:px-3 sm:pt-3">
@@ -101,7 +110,12 @@ export function AllWorkBoardSection({
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
       {groups.map((group) => (
-        <BoardGroupSection key={group.id} group={group} hasMore={hasMore} selection={selection} />
+        <BoardGroupSection
+          key={group.id}
+          group={group}
+          hasMore={hasMore}
+          selection={selection}
+        />
       ))}
     </div>
   );

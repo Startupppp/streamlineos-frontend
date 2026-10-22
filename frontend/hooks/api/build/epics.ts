@@ -23,7 +23,7 @@ export interface EpicListFilters {
   limit?: number;
 }
 
-function epicPageQuery(projectId: number, filters?: EpicListFilters) {
+export function epicPageQueryOptions(projectId: number, filters?: EpicListFilters) {
   const queryParams: Record<string, string> = {};
   for (const [key, value] of Object.entries(filters ?? {}))
     if (value !== undefined && value !== "") queryParams[key] = String(value);
@@ -47,7 +47,7 @@ export function useEpicPage(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<EpicPage>({
-    ...epicPageQuery(projectId, filters),
+    ...epicPageQueryOptions(projectId, filters),
     ...options,
     enabled: canView && !!projectId,
   });
@@ -62,7 +62,7 @@ export function useEpics(
 ) {
   const canView = useCan("build:tickets:view");
   return useQuery<EpicPage, Error, EpicItem[]>({
-    ...epicPageQuery(projectId),
+    ...epicPageQueryOptions(projectId),
     select: (page) => page.data,
     ...options,
     enabled: canView && !!projectId,

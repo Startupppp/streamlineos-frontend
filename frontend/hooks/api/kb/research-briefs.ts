@@ -14,6 +14,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { kbResearchBriefsQueryOptions, kbResearchBriefQueryOptions } from "./kb-read-options";
 
 const RESEARCH_BRIEFS_PAGE_SIZE = 20;
 
@@ -44,7 +45,7 @@ const kbResearchBriefApproveContract = lazyContract(() =>
 export function useKbResearchBriefs() {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.researchBriefs(),
+    ...kbResearchBriefsQueryOptions,
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: RESEARCH_BRIEFS_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -53,7 +54,6 @@ export function useKbResearchBriefs() {
     initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages,
-    staleTime: 30_000,
     ...INLINE_READ_ERROR,
   });
 }
@@ -71,10 +71,9 @@ export function researchBriefPollInterval(
 export function useKbResearchBrief(briefId: number | undefined) {
   const canViewPages = useCan("kb:pages:view");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.researchBrief(briefId ?? 0),
+    ...kbResearchBriefQueryOptions(briefId ?? 0),
     queryFn: ({ signal }) => apiClient.get<KbResearchBrief>(`/kb/research-briefs/${briefId}`, undefined, signal, kbResearchBriefDetailContract),
     enabled: canViewPages && briefId !== undefined,
-    staleTime: 10_000,
     ...INLINE_READ_ERROR,
     refetchInterval: (query) => researchBriefPollInterval(query.state.data?.status),
   });
@@ -134,7 +133,7 @@ export function useConvertResearchBriefToPage() {
         kbConvertBriefToPageContract,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(), exact: true });
     },
   });
 }

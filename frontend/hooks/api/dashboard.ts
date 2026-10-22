@@ -95,15 +95,42 @@ export type TeamAttendance = z.infer<typeof teamAttendanceContractDef>;
 type CreatedAnnouncement = z.infer<typeof announcementContractDef>;
 type PersonalDashboard = z.infer<typeof personalDashboardContractDef>;
 
+export function dashboardStatsQueryOptions() {
+  return {
+    queryKey: collaborationQueryKeys.dashboard.stats(),
+    staleTime: 5 * 60_000,
+  };
+}
+
+export function myIssuesQueryOptions() {
+  return {
+    queryKey: collaborationQueryKeys.dashboard.myIssues(),
+    staleTime: 5 * 60_000,
+  };
+}
+
+export function personalDashboardQueryOptions() {
+  return {
+    queryKey: collaborationQueryKeys.dashboard.personal(),
+    staleTime: 2 * 60_000,
+  };
+}
+
+export function publicDocumentsQueryOptions(limit: number) {
+  return {
+    queryKey: collaborationQueryKeys.dashboard.publicDocuments(limit),
+    staleTime: 5 * 60_000,
+  };
+}
+
 export const useDashboardStats = (
   options?: Omit<UseQueryOptions<DashboardStats, Error>, "queryKey" | "queryFn">
 ) => {
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<DashboardStats, Error>({
-    queryKey: collaborationQueryKeys.dashboard.stats(),
+    ...dashboardStatsQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<DashboardStats>("/dashboard/stats", undefined, signal, dashboardStatsContract),
-    staleTime: 5 * 60 * 1000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
   });
@@ -114,9 +141,8 @@ export const useMyIssues = (
 ) => {
   const buildEnabled = useModuleEnabled("build");
   return useQuery<MyIssue[], Error>({
-    queryKey: collaborationQueryKeys.dashboard.myIssues(),
+    ...myIssuesQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<MyIssue[]>("/dashboard/my-issues", undefined, signal, myIssuesContract),
-    staleTime: 5 * 60 * 1000,
     ...options,
     enabled: buildEnabled && (options?.enabled ?? true),
   });
@@ -399,9 +425,8 @@ export const usePersonalDashboard = (
   const { data: session } = useSession();
   const orgId = session?.orgId ?? "";
   return useQuery<PersonalDashboard, Error>({
-    queryKey: collaborationQueryKeys.dashboard.personal(),
+    ...personalDashboardQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<PersonalDashboard>("/dashboard/personal", undefined, signal, personalDashboardContract),
-    staleTime: 2 * 60_000,
     ...options,
     enabled: !!orgId && (options?.enabled ?? true),
   });
@@ -451,12 +476,11 @@ export const usePublicDocuments = (limit = 6, enabled = true) => {
   const hrEnabled = useModuleEnabled(homeSectionModule("public-documents") ?? "hr");
   const canView = useCan("hr:documents:view");
   return useQuery<PublicDoc[]>({
-    queryKey: collaborationQueryKeys.dashboard.publicDocuments(limit),
+    ...publicDocumentsQueryOptions(limit),
     queryFn: async ({ signal }) => {
       const res = await apiClient.get<{ data: PublicDoc[] }>("/hr/documents", { limit }, signal, hrDocumentsListContract);
       return res.data;
     },
-    staleTime: 5 * 60_000,
     enabled: !!orgId && hrEnabled && canView && enabled,
   });
 };

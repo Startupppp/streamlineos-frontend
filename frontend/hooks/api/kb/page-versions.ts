@@ -10,6 +10,7 @@ import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type { KbPage, KbPageVersion } from "./page-types";
+import { kbPageVersionsQueryOptions } from "./kb-read-options";
 
 type CursorPage<T> = {
   data: T[];
@@ -36,7 +37,7 @@ export function useKbPageVersionsInfinite(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageVersions(pageId),
+    ...kbPageVersionsQueryOptions(pageId),
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = {};
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -49,7 +50,6 @@ export function useKbPageVersionsInfinite(pageId: number) {
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
-    staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }

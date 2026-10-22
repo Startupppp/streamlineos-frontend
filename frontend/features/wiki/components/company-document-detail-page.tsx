@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ExternalLink } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -101,12 +101,12 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
   });
   const entry = pageState.kind === "ready" ? data : undefined;
 
-  const handleRetry = useCallback(() => {
+  function handleRetry() {
     if (configFailed) void refetchConfig();
     else void refetch();
-  }, [configFailed, refetchConfig, refetch]);
+  }
   const [openFailure, setOpenFailure] = useState<unknown>(null);
-  const handleOpen = useCallback(async () => {
+  async function handleOpen() {
     setOpenFailure(null);
     try {
       const { url } = await requestOpen(linkedDocumentId);
@@ -115,7 +115,7 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
     } catch (failure) {
       setOpenFailure(failure);
     }
-  }, [linkedDocumentId, requestOpen, forgetOpen]);
+  }
 
   const notFound = (
     <EmptyState

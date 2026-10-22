@@ -31,13 +31,19 @@ export const hrWebhookKeys = {
   events: () => [...BASE, "events"] as const,
 };
 
+export function hrWebhooksQueryOptions(params?: { page?: number; limit?: number }) {
+  return {
+    queryKey: hrWebhookKeys.list(params),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useHrWebhooks(params?: { page?: number; limit?: number }) {
   const canManage = useCan("hr:integrations:manage");
   return useQuery({
-    queryKey: hrWebhookKeys.list(params),
+    ...hrWebhooksQueryOptions(params),
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<HrWebhookSubscription>>("/hr/webhooks", params, signal, lazyContract(() => import("@/hooks/api/hr/hr-webhooks-schema").then(m => m.hrWebhookSubscriptionListContract)))).items,
-    staleTime: 30_000,
     enabled: canManage,
   });
 }

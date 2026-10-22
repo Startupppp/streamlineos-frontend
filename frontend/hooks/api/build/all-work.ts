@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  queryOptions,
   useQuery,
   keepPreviousData,
   useInfiniteQuery,
@@ -129,5 +130,19 @@ export function useAllWorkIds(
     staleTime: 30_000,
     ...restOptions,
     enabled: canView && (enabledOption ?? true),
+  });
+}
+
+export function allWorkQueryOptions(filters?: AllWorkFilters) {
+  return queryOptions<CursorPaginatedResponse<AllWorkTicket>>({
+    queryKey: buildWorkQueryKeys.projects.allWork(filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginatedResponse<AllWorkTicket>>(
+        "/build/all-work",
+        filters as Record<string, unknown>,
+        signal,
+        allWorkPageContract,
+      ),
+    staleTime: 30_000,
   });
 }

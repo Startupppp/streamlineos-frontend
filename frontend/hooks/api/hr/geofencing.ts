@@ -26,13 +26,19 @@ export interface Geofence {
   isActive: boolean;
 }
 
+export function geofencesQueryOptions() {
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"] as const,
+    staleTime: 5 * 60_000,
+  } as const;
+}
+
 export function useGeofences() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "geofences"],
+    ...geofencesQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<Geofence[]>("/hr/geofencing", undefined, signal, geofenceListLazy),
-    staleTime: 5 * 60_000,
     enabled: hrEnabled && canView,
   });
 }

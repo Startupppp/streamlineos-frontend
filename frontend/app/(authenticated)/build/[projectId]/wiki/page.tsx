@@ -1,18 +1,32 @@
+import { Suspense } from "react";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RequireModule } from "@/components/auth/require-module";
 import WikiHomePage from "@/features/wiki/components/wiki-home-page";
+import { prefetchProjectWiki } from "@/lib/prefetch/build-project-extras";
+import ProjectWikiLoading from "./loading";
 
 interface ProjectWikiPageProps {
   params: Promise<{ projectId: string }>;
 }
 
+async function WikiHydrated({ projectId }: { projectId: number }) {
+  const state = await prefetchProjectWiki();
+  return (
+    <HydrationBoundary state={state}>
+      <RequireModule module="kb">
+        <WikiHomePage projectId={Number.isFinite(projectId) && projectId > 0 ? projectId : undefined} />
+      </RequireModule>
+    </HydrationBoundary>
+  );
+}
+
 export default async function ProjectWikiPage({ params }: ProjectWikiPageProps) {
   await enforceRouteAccess("/build/[projectId]/wiki");
   const { projectId } = await params;
-  const parsedProjectId = Number(projectId);
   return (
-    <RequireModule module="kb">
-      <WikiHomePage projectId={Number.isFinite(parsedProjectId) && parsedProjectId > 0 ? parsedProjectId : undefined} />
-    </RequireModule>
+    <Suspense fallback={<ProjectWikiLoading />}>
+      <WikiHydrated projectId={parseInt(projectId, 10)} />
+    </Suspense>
   );
 }

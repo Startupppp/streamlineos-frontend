@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  queryOptions,
   useQuery,
   useQueryClient,
   keepPreviousData,
@@ -436,5 +437,20 @@ export function usePublishRoadmapItem() {
         roadmapItemContract,
       ),
     onSuccess: (result) => patchRoadmapItemInCache(qc, result),
+  });
+}
+
+export function roadmapItemsQueryOptions(filters: RoadmapItemFilters = {}) {
+  const params: Record<string, unknown> = { ...filters };
+  return queryOptions<CursorPaginated<ScoredRoadmapItem>>({
+    queryKey: knowledgeAndSurveysQueryKeys.roadmap.items(params),
+    queryFn: ({ signal }) =>
+      apiClient.get<CursorPaginated<ScoredRoadmapItem>>(
+        "/build/roadmap",
+        params,
+        signal,
+        roadmapPageContract,
+      ),
+    staleTime: 30_000,
   });
 }

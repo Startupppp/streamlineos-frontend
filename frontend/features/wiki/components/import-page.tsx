@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { PageWrapper, PageSection } from "@/components/ui/page-wrapper";
@@ -165,21 +165,16 @@ export default function ImportPage() {
     cancelPendingReads,
   ]);
 
-  const titleCounts = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const item of items) {
-      counts.set(item.title, (counts.get(item.title) ?? 0) + 1);
-    }
-    return counts;
-  }, [items]);
+  const titleCounts = new Map<string, number>();
+  for (const item of items) {
+    titleCounts.set(item.title, (titleCounts.get(item.title) ?? 0) + 1);
+  }
 
-  const titleExists = useCallback(
-    (title: string) => (titleCounts.get(title) ?? 0) > 1,
-    [titleCounts],
-  );
+  function titleExists(title: string) {
+    return (titleCounts.get(title) ?? 0) > 1;
+  }
 
-  const handleFilesChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
+  function handleFilesChange(e: React.ChangeEvent<HTMLInputElement>) {
       const files = Array.from(e.target.files ?? []);
       if (files.length === 0) return;
 
@@ -252,9 +247,7 @@ export default function ImportPage() {
       });
 
       if (fileInputRef.current) fileInputRef.current.value = "";
-    },
-    [items.length],
-  );
+  }
 
   function handleChooseFiles() {
     fileInputRef.current?.click();

@@ -47,12 +47,26 @@ export interface UpdateDocumentTemplateInput {
 }
 
 
+export function documentTemplatesQueryOptions(params?: { type?: string }) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.documentTemplates(params),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
+export function documentTemplateDetailQueryOptions(templateId: number) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.documentTemplate(templateId),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useDocumentTemplates(type?: string) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   const params = type ? { type } : undefined;
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.documentTemplates(params),
+    ...documentTemplatesQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplate[]>(
         "/hr/documents/templates",
@@ -60,7 +74,6 @@ export function useDocumentTemplates(type?: string) {
         signal,
         documentTemplateListLazy,
       ),
-    staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
 }
@@ -69,10 +82,9 @@ export function useDocumentTemplate(templateId: number) {
   const canView = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.documentTemplate(templateId),
+    ...documentTemplateDetailQueryOptions(templateId),
     queryFn: ({ signal }) =>
       apiClient.get<DocumentTemplate>(`/hr/documents/templates/${templateId}`, undefined, signal, documentTemplateLazy),
-    staleTime: 2 * 60_000,
     enabled: hrEnabled && templateId > 0 && canView,
   });
 }

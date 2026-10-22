@@ -7,7 +7,6 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useCan } from "@/hooks/api/access";
 import type {
   ProjectForm,
-  FormSubmission,
   FormSubmissionPage,
   CreateFormInput,
   UpdateFormInput,
@@ -51,10 +50,7 @@ export function useForms(projectId: number, filters?: FormFilters) {
   if (filters?.limit) params["limit"] = String(filters.limit);
 
   return useQuery({
-    queryKey: buildWorkQueryKeys.projects.forms.list(
-      projectId,
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
+    ...formsListQueryOptions(projectId, params),
     queryFn: ({ signal }) =>
       apiClient.get<{ data: ProjectForm[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } }>(
         `/build/${projectId}/forms`,
@@ -63,17 +59,15 @@ export function useForms(projectId: number, filters?: FormFilters) {
         formListContract,
       ),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 
 export function useForm(projectId: number, formId: number) {
   const canView = useCan("build:forms:view");
   return useQuery<ProjectForm>({
-    queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, formId),
+    ...formDetailQueryOptions(projectId, formId),
     queryFn: ({ signal }) => apiClient.get<ProjectForm>(`/build/${projectId}/forms/${formId}`, undefined, signal, formRowContract),
     enabled: canView && !!projectId && !!formId,
-    staleTime: 60_000,
   });
 }
 
@@ -164,5 +158,22 @@ export function useSubmitForm(projectId: number, formId: number) {
       });
     },
   });
+}
+
+export function formsListQueryOptions(projectId: number, params?: Record<string, string>) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.forms.list(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
+    staleTime: 60_000,
+  };
+}
+
+export function formDetailQueryOptions(projectId: number, formId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.forms.detail(projectId, formId),
+    staleTime: 60_000,
+  } as const;
 }
 

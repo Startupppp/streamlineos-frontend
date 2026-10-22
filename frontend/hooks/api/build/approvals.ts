@@ -364,3 +364,13 @@ export function useDeleteApproval(projectId: number) {
     },
   );
 }
+
+export function projectApprovalsListQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.approvals.list(projectId),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
+      last.pagination.nextCursor ?? undefined,
+    staleTime: 60_000,
+  };
+}

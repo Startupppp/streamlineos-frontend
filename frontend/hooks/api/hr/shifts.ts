@@ -62,13 +62,19 @@ export interface ShiftSwap {
   createdAt: string;
 }
 
+export function hrShiftsQueryOptions() {
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"] as const,
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useHrShifts() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "shifts"],
+    ...hrShiftsQueryOptions(),
     queryFn: ({ signal }) => apiClient.get("/hr/shifts", undefined, signal, shiftListContract),
-    staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
     ...INLINE_READ_ERROR,
   });

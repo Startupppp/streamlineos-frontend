@@ -1,6 +1,6 @@
 "use client";
 
-import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -149,5 +149,24 @@ export function useDeleteProgram() {
         refetchType: "none",
       });
     },
+  });
+}
+
+export function programsListQueryOptions(filters?: ProgramListFilters) {
+  const params: Record<string, string> = {};
+  if (filters?.cursor) params["cursor"] = filters.cursor;
+  if (filters?.limit) params["limit"] = String(filters.limit);
+  if (filters?.q) params["q"] = filters.q;
+  if (filters?.ownerId) params["ownerId"] = filters.ownerId;
+  if (filters?.health) params["health"] = filters.health;
+  if (filters?.status) params["status"] = filters.status;
+  if (filters?.sort) params["sort"] = filters.sort;
+  return queryOptions<ProgramsPage>({
+    queryKey: buildWorkQueryKeys.projects.programs.list(
+      Object.keys(params).length > 0 ? params : undefined,
+    ),
+    queryFn: ({ signal }) =>
+      apiClient.get<ProgramsPage>("/build/programs", params, signal, programPageContract),
+    staleTime: 30_000,
   });
 }

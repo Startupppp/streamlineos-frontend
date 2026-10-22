@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
+import { queryOptions, useQuery, useInfiniteQuery } from "@tanstack/react-query";
 import type {
   UseInfiniteQueryOptions,
   InfiniteData,
@@ -246,3 +246,42 @@ export function useManagedProductFacets() {
   });
 }
 
+
+export function managedProductsListQueryOptions(params?: ListManagedProductsParams) {
+  const queryParams: Record<string, string> = {};
+  if (params?.cursor) queryParams["cursor"] = params.cursor;
+  if (params?.status) queryParams["status"] = params.status;
+  if (params?.search) queryParams["search"] = params.search;
+  if (params?.limit) queryParams["limit"] = String(params.limit);
+  if (params?.ownerId) queryParams["ownerId"] = params.ownerId;
+  if (params?.sort) queryParams["sort"] = params.sort;
+  return queryOptions<ManagedProductsPage>({
+    queryKey: buildWorkQueryKeys.projects.managedProducts.list(
+      Object.keys(queryParams).length > 0 ? queryParams : undefined,
+    ),
+    queryFn: async ({ signal }) => {
+      try {
+        return await apiClient.get<ManagedProductsPage>(
+          "/build/managed-products",
+          queryParams,
+          signal,
+          managedProductPageContract,
+        );
+      } catch (error) {
+        if (!isApiError(error) || error.status !== 400) throw error;
+        const {
+          ownerId: _ownerId,
+          sort: _sort,
+          ...compatibleParams
+        } = queryParams;
+        return apiClient.get<ManagedProductsPage>(
+          "/build/managed-products",
+          compatibleParams,
+          signal,
+          managedProductPageContract,
+        );
+      }
+    },
+    staleTime: 60_000,
+  });
+}

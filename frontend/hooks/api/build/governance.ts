@@ -76,13 +76,9 @@ export function useProjectRisks(projectId: number, filters?: ListFilters) {
   if (filters?.search) params["search"] = filters.search;
 
   return useQuery<IdCursorPage<Risk>>({
-    queryKey: buildWorkQueryKeys.projects.risks.list(
-      projectId,
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
+    ...projectRisksListQueryOptions(projectId, params),
     queryFn: ({ signal }) => apiClient.get<IdCursorPage<Risk>>(`/build/${projectId}/risks`, params, signal, riskPageContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 
@@ -144,13 +140,9 @@ export function useProjectDecisions(projectId: number, filters?: ListFilters) {
   if (filters?.search) params["search"] = filters.search;
 
   return useQuery<IdCursorPage<Decision>>({
-    queryKey: buildWorkQueryKeys.projects.decisions.list(
-      projectId,
-      Object.keys(params).length > 0 ? params : undefined,
-    ),
+    ...projectDecisionsListQueryOptions(projectId, params),
     queryFn: ({ signal }) => apiClient.get<IdCursorPage<Decision>>(`/build/${projectId}/decisions`, params, signal, decisionPageContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 
@@ -189,4 +181,24 @@ export function useDeleteDecision(projectId: number) {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.decisions.list(projectId) });
     },
   });
+}
+
+export function projectRisksListQueryOptions(projectId: number, params?: Record<string, string>) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.risks.list(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
+    staleTime: 60_000,
+  };
+}
+
+export function projectDecisionsListQueryOptions(projectId: number, params?: Record<string, string>) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.decisions.list(
+      projectId,
+      params && Object.keys(params).length > 0 ? params : undefined,
+    ),
+    staleTime: 60_000,
+  };
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -44,7 +44,7 @@ export function KbFileViewer({ pageId }: KbFileViewerProps) {
     error,
   });
 
-  const handleRetry = useCallback(() => void refetch(), [refetch]);
+  function handleRetry() { void refetch(); }
 
   return (
     <PageState
@@ -72,45 +72,42 @@ function KbFileReadyView({ pageId, detail }: KbFileReadyViewProps) {
   const [previewSrc, setPreviewSrc] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleDownload = useCallback(async () => {
+  async function handleDownload() {
     try {
       const result = await downloadMutation.mutateAsync({ pageId });
       window.open(result.url, "_blank", "noopener,noreferrer");
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
-  }, [downloadMutation, pageId]);
+  }
 
-  const handlePreview = useCallback(async () => {
+  async function handlePreview() {
     try {
       const result = await previewMutation.mutateAsync({ pageId });
       setPreviewSrc(result.url);
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
-  }, [previewMutation, pageId]);
+  }
 
-  const handleUploadClick = useCallback(() => {
+  function handleUploadClick() {
     fileInputRef.current?.click();
-  }, []);
+  }
 
-  const handleFileChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      e.target.value = "";
-      appendVersion.mutate(
-        { file },
-        {
-          onError: (err) => toast.error(getErrorMessage(err)),
-          onSuccess: () => toast.success("New version uploaded"),
-        },
-      );
-    },
-    [appendVersion],
-  );
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = "";
+    appendVersion.mutate(
+      { file },
+      {
+        onError: (err) => toast.error(getErrorMessage(err)),
+        onSuccess: () => toast.success("New version uploaded"),
+      },
+    );
+  }
 
-  const handleVersionSheetOpen = useCallback(() => setVersionSheetOpen(true), []);
+  function handleVersionSheetOpen() { setVersionSheetOpen(true); }
 
   const { currentVersion, scanState, previewKind } = detail;
   const isQuarantined = scanState === "infected" || previewKind === "quarantined";

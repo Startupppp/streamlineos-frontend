@@ -155,3 +155,10 @@ export function useUpdateProjectMemberRole(
     },
   });
 }
+
+export function projectMembersQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.members(projectId),
+    staleTime: 30_000,
+  } as const;
+}

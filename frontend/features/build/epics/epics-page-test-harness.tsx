@@ -176,7 +176,12 @@ jest.mock("framer-motion", () => ({
   ),
 }));
 
-import { useProject, useProjectBoardTickets, useUpdateTicket, useDeleteTicket, useCreateTicket, useBulkUpdateTickets, useCycles } from "@/hooks/api/build";
+import { useProject } from "@/hooks/api/build/projects";
+import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
+import { useUpdateTicket } from "@/hooks/api/build/ticket-update-mutation";
+import { useDeleteTicket, useCreateTicket } from "@/hooks/api/build/ticket-create-rank-mutations";
+import { useBulkUpdateTickets } from "@/hooks/api/build/ticket-bulk-update-mutation";
+import { useCycles } from "@/hooks/api/build/cycles";
 import { useCan, useAccess } from "@/hooks/api/access";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { useBuildListFilters } from "@/features/build/shared/use-build-list-filters";

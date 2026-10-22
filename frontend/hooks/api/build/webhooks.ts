@@ -71,6 +71,13 @@ const noContentContract = lazyContract(() =>
 );
 export type { ProjectWebhook } from "@/types/projects";
 
+export function webhooksListQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.webhooks(projectId),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useWebhooks(projectId: number, filters?: WebhookListFilters) {
   const canManage = useCan("build:manage");
   const hasFilters =

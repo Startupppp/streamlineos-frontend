@@ -1,11 +1,41 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RequireModule } from "@/components/auth/require-module";
 import PageHistoryPage from "@/features/wiki/components/page-history-page";
+import { prefetchWikiPageHistory } from "@/lib/prefetch/build-project-extras";
+import WikiPageHistoryLoading from "./loading";
 
 interface ProjectWikiHistoryPageProps {
   params: Promise<{ projectId: string; pageId: string }>;
   searchParams?: Promise<{ version?: string; compare?: string }>;
+}
+
+async function WikiHistoryHydrated({
+  projectId,
+  pageId,
+  initialVersion,
+  initialCompare,
+}: {
+  projectId: number;
+  pageId: number;
+  initialVersion: number | undefined;
+  initialCompare: number | undefined;
+}) {
+  const state = await prefetchWikiPageHistory(pageId);
+  return (
+    <HydrationBoundary state={state}>
+      <RequireModule module="kb">
+        <PageHistoryPage
+          pageId={pageId}
+          projectId={projectId}
+          initialVersion={initialVersion}
+          initialCompare={initialCompare}
+        />
+      </RequireModule>
+    </HydrationBoundary>
+  );
 }
 
 export default async function ProjectWikiHistoryPage({
@@ -30,13 +60,13 @@ export default async function ProjectWikiHistoryPage({
   const initialVersion = Number.isFinite(rawVersion) && rawVersion > 0 ? rawVersion : undefined;
   const initialCompare = Number.isFinite(rawCompare) && rawCompare > 0 ? rawCompare : undefined;
   return (
-    <RequireModule module="kb">
-      <PageHistoryPage
-        pageId={pageId}
+    <Suspense fallback={<WikiPageHistoryLoading />}>
+      <WikiHistoryHydrated
         projectId={projectId}
+        pageId={pageId}
         initialVersion={initialVersion}
         initialCompare={initialCompare}
       />
-    </RequireModule>
+    </Suspense>
   );
 }

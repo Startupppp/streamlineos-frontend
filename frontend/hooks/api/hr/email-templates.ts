@@ -61,6 +61,13 @@ export interface GenerateAiEmailTemplateInput {
   category?: string;
 }
 
+export function emailTemplatesListQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.emailTemplatesList(),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useEmailTemplates(
   options?: Omit<UseQueryOptions<EmailTemplate[], Error>, "queryKey" | "queryFn">,
 ) {
@@ -68,10 +75,9 @@ export function useEmailTemplates(
   const orgId = session?.orgId ?? "";
   const canManage = useCan("hr:email-templates:manage");
   return useQuery<EmailTemplate[], Error>({
-    queryKey: humanResourcesQueryKeys.hr.emailTemplatesList(),
+    ...emailTemplatesListQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get<EmailTemplate[]>("/hr/email-templates", undefined, signal, emailTemplateListLazy),
-    staleTime: 60_000,
     ...options,
     enabled: canManage && !!orgId && (options?.enabled ?? true),
   });

@@ -18,6 +18,13 @@ const onboardingDocRowLazy = lazyContract(() =>
 
 const REVIEW_DOCS_PAGE_SIZE = 20;
 
+export function hrOnboardingDocAdminListQueryOptions(params?: { limit?: number; cursor?: string }) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocs({ limit: params?.limit ?? REVIEW_DOCS_PAGE_SIZE, ...(params?.cursor ? { cursor: params.cursor } : {}) }),
+    staleTime: 30_000,
+  } as const;
+}
+
 export type EmployeeOnboardingDoc = z.infer<typeof onboardingDocListContractDef>["data"][number];
 
 export type EmployeeOnboardingDocsResponse = z.infer<typeof onboardingDocListContractDef>;

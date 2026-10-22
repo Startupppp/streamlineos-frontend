@@ -89,6 +89,13 @@ export interface AttendanceHistoryResponse {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
+export function attendanceStatusQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.attendanceStatus(),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useHrAttendanceStatus(
   options?: Omit<
     import("@tanstack/react-query").UseQueryOptions<
@@ -104,10 +111,9 @@ export function useHrAttendanceStatus(
   const hrEnabled = useModuleEnabled("hr");
   const { enabled: optEnabled, ...restOptions } = options ?? {};
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.attendanceStatus(),
+    ...attendanceStatusQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get<AttendanceStatusResult>("/me/attendance/status", undefined, signal, attendanceStatusC),
-    staleTime: 2 * 60_000,
     refetchInterval: (query) => activeAttendancePollInterval(query.state.data),
     refetchIntervalInBackground: false,
     ...restOptions,

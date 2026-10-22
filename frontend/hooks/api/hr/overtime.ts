@@ -47,17 +47,23 @@ export interface OvertimeRequestsResponse {
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
 }
 
+export function overtimeRequestsQueryOptions(params?: { cursor?: string; pageSize?: number }) {
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests", params ?? {}] as const,
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useOvertimeRequests(params?: { cursor?: string; pageSize?: number }) {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "overtimeRequests", params ?? {}],
+    ...overtimeRequestsQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<OvertimeRequestsResponse>(
         "/hr/overtime",
         params, signal, overtimeListC,
       ),
-    staleTime: 30_000,
     placeholderData: (prev) => prev,
     enabled: hrEnabled && canView,
   });

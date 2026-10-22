@@ -23,7 +23,7 @@ const portalPreviewContract = lazyContract(() =>
 
 export function usePortalSettings(projectId: number) {
   return useGatedQuery<PortalSettings>("build:clientvisibility:manage", {
-    queryKey: buildWorkQueryKeys.projects.clientPortal.settings(projectId),
+    ...portalSettingsQueryOptions(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<PortalSettings>(
         `/build/${projectId}/client-portal/settings`,
@@ -32,7 +32,6 @@ export function usePortalSettings(projectId: number) {
         portalSettingsContract,
       ),
     enabled: !!projectId,
-    staleTime: 30_000,
     retry: false,
     ...INLINE_READ_ERROR,
   });
@@ -82,6 +81,13 @@ export function useUnpublishPortal(projectId: number) {
       });
     },
   });
+}
+
+export function portalSettingsQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.clientPortal.settings(projectId),
+    staleTime: 30_000,
+  } as const;
 }
 
 export function usePortalPreview(projectId: number, forPortalMembershipId?: string) {

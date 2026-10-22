@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
+import { Suspense } from "react";
+import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { TicketPanelInner } from "@/features/build/ticket-details/ticket-panel-inner";
 import { decodeRouteSegment } from "@/features/build/ticket-details/build-ticket-detail-url";
+import { parseTicketKey } from "@/components/shared/format-ticket-key";
+import { prefetchProjectTicketByKey } from "@/lib/prefetch/build";
+import ProjectTicketPanelLoading from "./loading";
 
 interface PageProps {
   params: Promise<{ projectId: string; ticketKey: string }>;
@@ -19,11 +24,19 @@ export default async function TicketDetailPanePage({
   if (!Number.isFinite(parsedProjectId) || parsedProjectId <= 0) return null;
   const decodedTicketKey = decodeRouteSegment(ticketKey);
   if (decodedTicketKey === null) notFound();
+  const parsed = parseTicketKey(decodedTicketKey);
+  const state = parsed
+    ? await prefetchProjectTicketByKey(parsedProjectId, parsed.ticketNumber)
+    : undefined;
   return (
-    <TicketPanelInner
-      projectId={parsedProjectId}
-      ticketKey={decodedTicketKey}
-      returnTo={returnTo ?? null}
-    />
+    <Suspense fallback={<ProjectTicketPanelLoading />}>
+      <HydrationBoundary state={state}>
+        <TicketPanelInner
+          projectId={parsedProjectId}
+          ticketKey={decodedTicketKey}
+          returnTo={returnTo ?? null}
+        />
+      </HydrationBoundary>
+    </Suspense>
   );
 }

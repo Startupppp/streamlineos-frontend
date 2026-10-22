@@ -46,11 +46,18 @@ export function useModuleAccessCatalog(
   });
 }
 
+export function moduleMyPermissionsQueryOptions(moduleKey: string) {
+  return {
+    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.myPermissions(moduleKey),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useModuleMyPermissions(moduleKey: string) {
   const canView = useCan(viewKey(moduleKey));
   return useQuery<ModuleMyPermissions, Error>({
     ...INLINE_READ_ERROR,
-    queryKey: directoryAndOwnershipQueryKeys.moduleAccess.myPermissions(moduleKey),
+    ...moduleMyPermissionsQueryOptions(moduleKey),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/module-access/${moduleKey}/me/permissions`,
@@ -59,7 +66,6 @@ export function useModuleMyPermissions(moduleKey: string) {
         myPermissionsContract,
       ),
     enabled: canView,
-    staleTime: 30_000,
   });
 }
 

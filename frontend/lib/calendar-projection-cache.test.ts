@@ -15,8 +15,8 @@ describe("calendar projection cache", () => {
 
   it("invalidates every cached organization window when the old date is unknown", async () => {
     const client = new QueryClient();
-    const orgOne = platformHierarchyQueryKeys.calendar.events("org-1", "user-1", START, END);
-    const orgTwo = platformHierarchyQueryKeys.calendar.events("org-2", "user-2", START, END);
+    const orgOne = platformHierarchyQueryKeys.calendar.events(START, END);
+    const orgTwo = platformHierarchyQueryKeys.calendar.events(START, END, ["tasks"]);
     const hr = platformHierarchyQueryKeys.calendar.hrSupplemental("org-1", "2026-10-01", "2026-10-31");
     const external = platformHierarchyQueryKeys.calendar.externalEvents("org-1", "user-1", START, END);
     const search = platformHierarchyQueryKeys.calendar.search("org-1", "user-1", 7, 1, "all", true, { start: START, end: END });

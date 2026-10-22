@@ -57,6 +57,16 @@ export interface AutomationsFilters {
   search?: string;
 }
 
+export function automationsListQueryOptions(projectId: number) {
+  return {
+    queryKey: [...queryKeys.projects.automations(projectId), {}] as const,
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
+      last.pagination.nextCursor ?? undefined,
+    staleTime: 60_000,
+  };
+}
+
 export function useAutomations(
   projectId: number,
   filters?: AutomationsFilters,

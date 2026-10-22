@@ -42,15 +42,21 @@ export function useReportingLine(employeeUserId: string) {
   });
 }
 
+export function managerCoverageQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.managerCoverage(),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useManagerCoverage() {
   const canView = useCan("hr:employees:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.managerCoverage(),
+    ...managerCoverageQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get<ManagerCoverageReport>("/hr/reporting-lines/coverage", undefined, signal, managerCoverageLazy),
     enabled: hrEnabled && canView,
-    staleTime: 60_000,
     ...INLINE_READ_ERROR,
   });
 }

@@ -29,3 +29,6 @@ Repo: `D:\projects\personal\Streamlineos\backend` — NestJS 11, Drizzle, Postgr
 
 ## Targeted invalidation (user rule, overrides anything above)
 Invalidate ONLY what the write actually changed — never blanket-clear. Detail reads use a per-entity namespace (org + entity id), so updating one record evicts only that record. List/count namespaces are bumped only by writes that change list membership, ordering or a listed field. Aggregates are bumped only by writers of their source rows. Never bump a namespace "to be safe", and never fan one write out to every namespace in a module.
+
+## No forwarding functions (user rule)
+Never write a function or method whose body only returns another function called with its own arguments (`findX(id) { return this.getX(id) }`). Keep one under the canonical name, point callers at it, delete the alias. Predicates over a module-private Set/Map/regex are exempt.

@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { InboxShell } from "@/features/notifications/unified-inbox";
-import { prefetchInboxCount } from "@/lib/prefetch/inbox";
+import { prefetchInbox } from "@/lib/prefetch/inbox";
 import InboxLoading from "./loading";
 
 async function InboxHydrated() {
-  const state = await prefetchInboxCount();
+  const state = await prefetchInbox();
   return (
     <HydrationBoundary state={state}>
       <InboxShell />

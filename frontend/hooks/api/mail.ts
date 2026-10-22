@@ -36,7 +36,7 @@ const mailActionSuccessContract = lazyContract(() =>
   import("@/hooks/api/mail-schema").then((m) => m.mailActionSuccessContract),
 );
 import { directoryAndOwnershipQueryKeys, mailListingSearchParams } from "@/lib/query-keys/directory-and-ownership";
-import { mailAccountsQueryOptions } from "@/hooks/api/mail-read-options";
+import { mailAccountsQueryOptions, mailMessagesQueryOptions } from "@/hooks/api/mail-read-options";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { useCan } from "@/hooks/api/access";
 import type {
@@ -66,14 +66,13 @@ export function useMailAccounts(options?: { enabled?: boolean }) {
 export function useMailMessages(params: MailMessagesParams, options?: { enabled?: boolean }) {
   const can = useCan("mail:inbox:view");
   return useInfiniteQuery({
-    queryKey: directoryAndOwnershipQueryKeys.mail.messages(params),
+    ...mailMessagesQueryOptions(params),
     queryFn: ({ pageParam, signal }) => {
       const searchParams = mailListingSearchParams(params, pageParam);
       return apiClient.get<MailListResponse>(`/mail/messages?${searchParams.toString()}`, undefined, signal, mailListResponseContract);
     },
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
-    staleTime: 30_000,
     refetchOnMount: "always",
     enabled: can && options?.enabled !== false,
   });
@@ -112,9 +111,9 @@ export function useSendMail() {
     mutationKey: ["mail", "send"],
     mutationFn: (body: SendMailBody) =>
       apiClient.post<{ sent: true }>("/mail/send", body, operation.configFor(body), mailSendResultContract),
-    onSuccess: () => {
+    onSuccess: (_data, body) => {
       operation.settle();
-      invalidateAfterMailSend(qc);
+      invalidateAfterMailSend(qc, { accountId: body.accountId });
     },
   });
 }
@@ -126,9 +125,9 @@ export function useReplyMail() {
     mutationKey: ["mail", "reply"],
     mutationFn: (body: ReplyMailBody) =>
       apiClient.post<{ sent: true }>("/mail/reply", body, operation.configFor(body), mailSendResultContract),
-    onSuccess: () => {
+    onSuccess: (_data, body) => {
       operation.settle();
-      invalidateAfterMailSend(qc);
+      invalidateAfterMailSend(qc, { accountId: body.accountId, threadId: body.threadId });
     },
   });
 }

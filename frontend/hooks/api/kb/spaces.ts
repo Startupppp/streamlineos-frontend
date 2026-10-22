@@ -1,6 +1,7 @@
 "use client";
 
 import { useInfiniteQuery, useQuery, useQueryClient } from "@tanstack/react-query";
+import { kbSpacesListQueryOptions, kbSpaceQueryOptions } from "./kb-read-options";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -15,10 +16,6 @@ import type {
   KbSpaceArchiveImpact,
 } from "@/hooks/api/kb/kb-spaces-settings-schema";
 
-export type { KbSpaceListItem } from "@/hooks/api/kb/kb-spaces-settings-schema";
-export type { KbSpaceListPage } from "@/hooks/api/kb/kb-spaces-settings-schema";
-export type { KbSpaceArchiveImpact } from "@/hooks/api/kb/kb-spaces-settings-schema";
-export type { KbSpaceMember } from "@/hooks/api/kb/kb-spaces-settings-schema";
 
 export interface KbSpacesListParams {
   q?: string;
@@ -67,10 +64,9 @@ export function useKbSpaces(params?: KbSpacesListParams) {
 
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.spacesList(queryParams),
+    ...kbSpacesListQueryOptions(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceListPage>("/kb/spaces", queryParams, signal, kbSpaceListPageContract),
-    staleTime: 60_000,
     enabled: canView,
   });
 }
@@ -79,11 +75,10 @@ export function useKbSpace(spaceId: number) {
   const canView = useCan("kb:spaces:view");
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.space(spaceId),
+    ...kbSpaceQueryOptions(spaceId),
     queryFn: ({ signal }) =>
       apiClient.get<KbSpace>(`/kb/spaces/${spaceId}`, undefined, signal, kbSpaceFullContract),
     enabled: canView && Number.isFinite(spaceId) && spaceId > 0,
-    staleTime: 60_000,
   });
 }
 

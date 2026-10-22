@@ -77,11 +77,17 @@ export type ListIncidentsParams = {
   toDate?: string;
 };
 
+export function safetyIncidentsQueryOptions(params: ListIncidentsParams = {}) {
+  return {
+    queryKey: directoryAndOwnershipQueryKeys.hrSafety.incidents(params),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useSafetyIncidents(params: ListIncidentsParams = {}) {
   return useGatedQuery("hr:safety:view", {
-    queryKey: directoryAndOwnershipQueryKeys.hrSafety.incidents(params),
+    ...safetyIncidentsQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get("/hr/safety/incidents", params, signal, incidentListContract),
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 }

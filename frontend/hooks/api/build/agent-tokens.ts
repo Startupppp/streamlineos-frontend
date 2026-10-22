@@ -20,13 +20,19 @@ const noContentContract = lazyContract(() =>
 );
 
 
+export function agentTokensQueryOptions() {
+  return {
+    queryKey: buildWorkQueryKeys.projects.agentTokens(),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useAgentTokens() {
   const canView = useCan("settings:api-tokens:read");
   return useQuery<AgentToken[]>({
-    queryKey: buildWorkQueryKeys.projects.agentTokens(),
+    ...agentTokensQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<AgentToken[]>("/agent-tokens", undefined, signal, agentTokenListContract),
     enabled: canView,
-    staleTime: 60_000,
   });
 }
 

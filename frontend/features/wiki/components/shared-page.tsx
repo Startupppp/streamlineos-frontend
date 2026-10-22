@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { WikiPageCollectionTable } from "./wiki-page-collection-table";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
@@ -71,39 +71,26 @@ function buildSharedColumns(
 export default function SharedPage() {
   const [rows, setRows] = useState<readonly KbPageCollectionItem[]>([]);
 
-  const ownerUserIds = useMemo(
-    () =>
-      [...new Set(rows.map((r) => r.ownerUserId).filter((id): id is string => id !== null))],
-    [rows],
-  );
+  const ownerUserIds = [...new Set(rows.map((r) => r.ownerUserId).filter((id): id is string => id !== null))];
 
   const { data: ownersPage } = useOrgMembersByIds(ownerUserIds);
   const { data: spacesPage } = useKbSpaces();
 
-  const membershipToName = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const member of ownersPage?.data ?? []) {
-      map.set(member.membershipId, getUserDisplayName({ name: member.name, email: member.email }));
-    }
-    return map;
-  }, [ownersPage]);
+  const membershipToName = new Map<number, string>();
+  for (const member of ownersPage?.data ?? []) {
+    membershipToName.set(member.membershipId, getUserDisplayName({ name: member.name, email: member.email }));
+  }
 
-  const spaceNameById = useMemo(() => {
-    const map = new Map<number, string>();
-    for (const space of spacesPage?.data ?? []) {
-      map.set(space.id, space.name);
-    }
-    return map;
-  }, [spacesPage]);
+  const spaceNameById = new Map<number, string>();
+  for (const space of spacesPage?.data ?? []) {
+    spaceNameById.set(space.id, space.name);
+  }
 
-  const sharedColumns = useMemo(
-    () => buildSharedColumns(membershipToName, spaceNameById),
-    [membershipToName, spaceNameById],
-  );
+  const sharedColumns = buildSharedColumns(membershipToName, spaceNameById);
 
-  const handleRowsChange = useCallback((nextRows: readonly KbPageCollectionItem[]) => {
+  function handleRowsChange(nextRows: readonly KbPageCollectionItem[]) {
     setRows(nextRows);
-  }, []);
+  }
 
   return (
     <PageWrapper

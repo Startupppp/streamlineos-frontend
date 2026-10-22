@@ -37,15 +37,27 @@ export interface ReportingManagerRequestFilters {
   limit?: number;
 }
 
+export function reportingManagerRequestsQueryOptions(params: {
+  status: ReportingManagerRequestStatus | null;
+  cursor: string | null;
+  limit: number | null;
+}) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.reportingManagerRequests(params),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useReportingManagerRequests(filters: ReportingManagerRequestFilters) {
   const canReview = useCan("hr:reporting-lines:review");
   const hrEnabled = useModuleEnabled("hr");
+  const params = {
+    status: filters.status ?? null,
+    cursor: filters.cursor ?? null,
+    limit: filters.limit ?? null,
+  };
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.reportingManagerRequests({
-      status: filters.status ?? null,
-      cursor: filters.cursor ?? null,
-      limit: filters.limit ?? null,
-    }),
+    ...reportingManagerRequestsQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<HrReportingManagerRequestPage>(
         "/hr/reporting-manager-requests",
@@ -58,7 +70,6 @@ export function useReportingManagerRequests(filters: ReportingManagerRequestFilt
         pageLazy,
       ),
     enabled: hrEnabled && canReview,
-    staleTime: 30_000,
     placeholderData: (previous) => previous,
     ...INLINE_READ_ERROR,
   });

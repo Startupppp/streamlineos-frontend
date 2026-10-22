@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
@@ -29,16 +28,15 @@ export function KbAnalyticsTab() {
     error,
   });
 
-  const stats = useMemo(() => {
-    if (!data) return null;
-    return {
-      total: data.totalCount,
-      published: data.publishedCount,
-      aiAnswers: data.aiAnswers,
-      aiNoContext: data.aiNoContext,
-      suppressionReasons: data.suppressionReasons,
-    };
-  }, [data]);
+  const stats = data
+    ? {
+        total: data.totalCount,
+        published: data.publishedCount,
+        aiAnswers: data.aiAnswers,
+        aiNoContext: data.aiNoContext,
+        suppressionReasons: data.suppressionReasons,
+      }
+    : null;
 
   function handleRetry() {
     void refetch();

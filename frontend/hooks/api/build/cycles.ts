@@ -36,7 +36,7 @@ export type CyclePage = {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-function cyclePageQuery(projectId: number, filters?: CycleListFilters) {
+export function cyclesQueryOptions(projectId: number, filters?: CycleListFilters) {
   const activeFilters = filters ?? {};
   const queryParams: Record<string, string> = {};
   for (const [key, value] of Object.entries(activeFilters))
@@ -61,7 +61,7 @@ export function useCyclePage(
 ) {
   const canView = useCan("build:cycles:view");
   return useQuery<CyclePage>({
-    ...cyclePageQuery(projectId, filters),
+    ...cyclesQueryOptions(projectId, filters),
     ...options,
     enabled: canView && !!projectId,
   });
@@ -77,7 +77,7 @@ export function useCycles(
 ) {
   const canView = useCan("build:cycles:view");
   return useQuery<CyclePage, Error, Cycle[]>({
-    ...cyclePageQuery(projectId, filters),
+    ...cyclesQueryOptions(projectId, filters),
     select: (page) => page.data,
     ...options,
     enabled: canView && !!projectId,

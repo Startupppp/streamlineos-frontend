@@ -215,13 +215,18 @@ export function useDeleteWorkAuth() {
   });
 }
 
+export const complianceRequirementsQueryOptions = (params?: ComplianceRequirementsParams) => ({
+  queryKey: humanResourcesQueryKeys.hr.complianceRequirements(params),
+  queryFn: ({ signal }: { signal?: AbortSignal }) =>
+    apiClient.get<CursorResult<ComplianceRequirement>>("/hr/global/compliance/requirements", params, signal, _listComplianceRequirementsContract),
+  staleTime: 120_000,
+}) as const;
+
 export function useComplianceRequirements(params?: ComplianceRequirementsParams) {
   const canManage = useCan("hr:compliance:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<ComplianceRequirement>>({
-    queryKey: humanResourcesQueryKeys.hr.complianceRequirements(params),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/compliance/requirements", params, signal, _listComplianceRequirementsContract),
-    staleTime: 120_000,
+    ...complianceRequirementsQueryOptions(params),
     enabled: canManage && hrEnabled,
   });
 }
@@ -331,13 +336,18 @@ export function useSeedCountryPack() {
   });
 }
 
+export const contractsQueryOptions = (params?: ContractsParams) => ({
+  queryKey: humanResourcesQueryKeys.hr.contracts(params),
+  queryFn: ({ signal }: { signal?: AbortSignal }) =>
+    apiClient.get<CursorResult<HrContract>>("/hr/global/contracts", params, signal, _listContractsContract),
+  staleTime: 60_000,
+}) as const;
+
 export function useContracts(params?: ContractsParams) {
   const canView = useCan("hr:contracts:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<CursorResult<HrContract>>({
-    queryKey: humanResourcesQueryKeys.hr.contracts(params),
-    queryFn: ({ signal }) => apiClient.get("/hr/global/contracts", params, signal, _listContractsContract),
-    staleTime: 60_000,
+    ...contractsQueryOptions(params),
     enabled: canView && hrEnabled,
   });
 }

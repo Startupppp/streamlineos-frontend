@@ -1,13 +1,15 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { motion, useReducedMotion } from "framer-motion";
 import { useQueryClient } from "@tanstack/react-query";
 import { BookOpenTextIcon } from "@animateicons/react/lucide";
 import { ChevronUp, Loader2, MessageSquare, Send, SlidersHorizontal } from "lucide-react";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { PageState } from "@/components/shared/page-state";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -59,19 +61,24 @@ export default function KnowledgeBasePage() {
   const reduce = useReducedMotion();
   const qc = useQueryClient();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const [input, setInput] = useState("");
   const [conversationsOpen, setConversationsOpen] = useState(false);
   const [conversationsSearch, setConversationsSearch] = useState("");
-  const [activeConversationId, setActiveConversationId] = useState<number | null>(null);
   const [sourcesSheet, setSourcesSheet] = useState<SourcesSheetState>({ kind: "closed" });
   const [noteOpen, setNoteOpen] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const initializedRef = useRef(false);
 
   const { data: session } = useSession();
   const currentUserId = session?.user?.id;
+
+  const rawConversation = searchParams.get("conversation");
+  const activeConversationId: number | null =
+    rawConversation !== null && Number.isFinite(Number(rawConversation)) && Number(rawConversation) > 0
+      ? Number(rawConversation)
+      : null;
 
   const conversationMessages = useKbConversationMessages(activeConversationId, true);
   const { hasNextPage, isFetchingNextPage, fetchNextPage, isLoading } = conversationMessages;
@@ -89,50 +96,28 @@ export default function KnowledgeBasePage() {
     scopeSheetOpen: sourcesSheet.kind === "scope",
   });
 
-  const setConversation = useCallback(
-    (id: number | null) => {
-      setActiveConversationId(id);
-      if (typeof window === "undefined") return;
-      const params = new URLSearchParams(window.location.search);
-      if (id === null) params.delete("conversation");
-      else params.set("conversation", String(id));
-      const qs = params.toString();
-      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
-    },
-    [router, pathname],
-  );
+  function setConversation(id: number | null) {
+    const params = new URLSearchParams(searchParams.toString());
+    if (id === null) params.delete("conversation");
+    else params.set("conversation", String(id));
+    const qs = params.toString();
+    router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+  }
 
-  useEffect(() => {
-    if (initializedRef.current) return;
-    initializedRef.current = true;
-    if (typeof window === "undefined") return;
-    const raw = new URLSearchParams(window.location.search).get("conversation");
-    if (!raw) return;
-    const id = Number(raw);
-    if (Number.isFinite(id) && id > 0) setActiveConversationId(id);
-  }, []);
+  const persisted: ChatMessage[] = (conversationMessages.data?.pages ?? [])
+    .flatMap((page) => page.messages)
+    .slice()
+    .reverse()
+    .map((m) => ({
+      id: String(m.id),
+      role: m.role,
+      content: m.content,
+      citations: m.citations ?? undefined,
+      createdAt: m.createdAt,
+    }));
 
-  const persisted = useMemo<ChatMessage[]>(
-    () =>
-      (conversationMessages.data?.pages ?? [])
-        .flatMap((page) => page.messages)
-        .slice()
-        .reverse()
-        .map((m) => ({
-          id: String(m.id),
-          role: m.role,
-          content: m.content,
-          citations: m.citations ?? undefined,
-          createdAt: m.createdAt,
-        })),
-    [conversationMessages.data],
-  );
-
-  const rows = useMemo(() => buildKbHistoryRows(persisted), [persisted]);
-  const questionByAssistantId = useMemo(
-    () => questionForAssistantId(persisted),
-    [persisted],
-  );
+  const rows = buildKbHistoryRows(persisted);
+  const questionByAssistantId = questionForAssistantId(persisted);
 
   const {
     scrollRef,
@@ -163,16 +148,10 @@ export default function KnowledgeBasePage() {
     scrollToBottomIfNear();
   }, [pending, ask.isPending, scrollToBottomIfNear]);
 
-  const sources = useMemo(
-    () => (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data),
-    [sourcesQuery.data],
-  );
+  const sources = (sourcesQuery.data?.pages ?? []).flatMap((page) => page.data);
   const readyCount = sources.filter((s) => s.status === "published").length;
 
-  const allConversations = useMemo(
-    () => (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations),
-    [conversationsQuery.data],
-  );
+  const allConversations = (conversationsQuery.data?.pages ?? []).flatMap((p) => p.conversations);
 
   function handleInputChange(e: React.ChangeEvent<HTMLInputElement>) {
     setInput(e.target.value);
@@ -277,7 +256,10 @@ export default function KnowledgeBasePage() {
     };
   }
 
+  const pageState = usePageState({ permission: "kb:ask:view" });
+
   return (
+    <PageState resolution={pageState}>
     <PageWrapper
       title="Ask documents"
       subtitle="Ask across your files and docs. Every answer stays grounded in content you can access."
@@ -669,5 +651,6 @@ export default function KnowledgeBasePage() {
 
       <KbNoteSheet open={noteOpen} onOpenChange={setNoteOpen} />
     </PageWrapper>
+    </PageState>
   );
 }

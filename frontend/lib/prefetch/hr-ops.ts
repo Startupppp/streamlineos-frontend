@@ -4,8 +4,6 @@ import type { z } from "zod";
 
 import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
 import { serverGet } from "@/lib/server-fetch";
 import {
   listAccommodationsContract,
@@ -21,6 +19,8 @@ import { accommodationsListQueryOptions } from "@/hooks/api/hr/enterprise-ops-ac
 import { emergencyEventsListQueryOptions } from "@/hooks/api/hr/enterprise-ops-emergency";
 import { hrEventsListQueryOptions } from "@/hooks/api/hr/enterprise-ops-event-stream";
 import { accessProvisioningQueryOptions } from "@/hooks/api/hr/enterprise-ops-identity";
+import { simulationHistoryQueryOptions } from "@/hooks/api/hr/enterprise-ops-simulator";
+import { complianceRequirementsQueryOptions, contractsQueryOptions } from "@/hooks/api/hr/global";
 import { unionMembershipsListQueryOptions } from "@/features/hr/governance/hooks/use-labor";
 import { legalHoldsListQueryOptions } from "@/features/hr/governance/hooks/use-legal-holds";
 
@@ -46,9 +46,8 @@ export async function prefetchHrAccommodations() {
 export async function prefetchHrCompliance() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: humanResourcesQueryKeys.hr.complianceRequirements(),
+    ...complianceRequirementsQueryOptions(),
     queryFn: () => serverGet<ComplianceRequirementsResponse>("/hr/global/compliance/requirements", listComplianceRequirementsContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -56,9 +55,8 @@ export async function prefetchHrCompliance() {
 export async function prefetchHrContingent() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: humanResourcesQueryKeys.hr.contracts(),
+    ...contractsQueryOptions(),
     queryFn: () => serverGet<ContractsListResponse>("/hr/global/contracts", listContractsContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -102,9 +100,8 @@ export async function prefetchHrLegalHolds() {
 export async function prefetchHrSimulator() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: directoryAndOwnershipQueryKeys.hrSimulations.history({}),
+    ...simulationHistoryQueryOptions(),
     queryFn: () => serverGet<SimulationsListResponse>("/hr/enterprise/ops/simulator/history", listSimulationsContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }

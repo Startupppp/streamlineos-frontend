@@ -46,13 +46,19 @@ export interface RosterEntry {
   notes: string | null;
 }
 
+export function rostersQueryOptions() {
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"] as const,
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useRosters() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "rosters"],
+    ...rostersQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<Roster[]>("/hr/rosters", undefined, signal, rostersListC),
-    staleTime: 2 * 60_000,
     enabled: hrEnabled && canView,
   });
 }

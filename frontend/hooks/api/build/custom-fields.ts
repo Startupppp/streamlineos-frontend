@@ -59,14 +59,20 @@ function applyFieldValues(
   return next;
 }
 
+export function projectCustomFieldsQueryOptions(projectId: number) {
+  return {
+    queryKey: queryKeys.projects.customFields(projectId),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useProjectCustomFields(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<ProjectCustomField[]>({
-    queryKey: queryKeys.projects.customFields(projectId),
+    ...projectCustomFieldsQueryOptions(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectCustomField[]>(`/build/${projectId}/custom-fields`, undefined, signal, cfListLazy),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 

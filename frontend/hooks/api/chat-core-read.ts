@@ -11,7 +11,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract, type ContractSource } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { chatUnreadTotalQueryOptions } from "@/hooks/api/chat-read-options";
+import { chatUnreadTotalQueryOptions, chatChannelsQueryOptions } from "@/hooks/api/chat-read-options";
 import { reportError } from "@/lib/observability/error-reporter";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan, useModuleEnabled } from "@/hooks/api/access";
@@ -173,10 +173,10 @@ export function useChatChannels(enabled = true): ChannelListResult<Channel> {
   const canRead = useCan("chat:channels:read");
   const chatEnabled = useModuleEnabled("chat");
   return useChannelPages<Channel>({
-    queryKey: collaborationQueryKeys.chat.myChannels(),
+    queryKey: chatChannelsQueryOptions.queryKey,
     fetchPage: (signal, cursor) =>
       fetchChannelPage<Channel>("/chat/channels", signal, myChannelsContract, cursor),
-    staleTime: 300_000,
+    staleTime: chatChannelsQueryOptions.staleTime,
     refetchOnWindowFocus: true,
     enabled: !!orgId && enabled && chatEnabled && canRead,
   });

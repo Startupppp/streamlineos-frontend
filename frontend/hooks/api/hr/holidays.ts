@@ -31,12 +31,18 @@ interface UpdateHolidayInput extends Partial<CreateHolidayInput> {
   expected?: Pick<Holiday, "name" | "date" | "recurring">;
 }
 
+export function holidaysQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.holidays(),
+    staleTime: 300_000,
+  } as const;
+}
+
 export function useHolidays() {
   const canView = useCan("self:attendance");
   return useQuery<Holiday[]>({
-    queryKey: humanResourcesQueryKeys.hr.holidays(),
+    ...holidaysQueryOptions(),
     queryFn: ({ signal }) => apiClient.get<Holiday[]>("/me/attendance/holidays", undefined, signal, lazyContract(() => import("@/hooks/api/hr/holidays-schema").then(m => m.holidayListContract))),
-    staleTime: 300_000,
     enabled: canView,
   });
 }

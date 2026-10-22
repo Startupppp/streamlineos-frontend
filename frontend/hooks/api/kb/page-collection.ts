@@ -7,6 +7,7 @@ import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-sur
 import { useCan } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { kbPageCollectionQueryOptions } from "./kb-read-options";
 import type { KbPageCollectionResponse } from "./kb-page-collection-schema";
 
 export type { KbPageCollectionItem } from "./kb-page-collection-schema";
@@ -84,7 +85,7 @@ export function useKbPageCollection(
 
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(params),
+    ...kbPageCollectionQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageCollectionResponse>(
         "/kb/pages",
@@ -92,7 +93,6 @@ export function useKbPageCollection(
         signal,
         kbPageCollectionContract,
       ),
-    staleTime: 30_000,
     enabled: canView && (options?.enabled ?? true),
   });
 }

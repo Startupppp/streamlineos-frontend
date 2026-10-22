@@ -18,13 +18,20 @@ const iterationSettingsContract = lazyContract(() =>
   ),
 );
 
+export function iterationSettingsQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.iterationSettings(projectId),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useIterationSettings(
   projectId: number,
   options?: Omit<UseQueryOptions<IterationSettings>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("build:view");
   return useQuery<IterationSettings>({
-    queryKey: buildWorkQueryKeys.projects.iterationSettings(projectId),
+    ...iterationSettingsQueryOptions(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<IterationSettings>(
         `/build/${projectId}/settings/iterations`,
@@ -32,7 +39,6 @@ export function useIterationSettings(
         signal,
         iterationSettingsContract,
       ),
-    staleTime: 60_000,
     throwOnError: false,
     retry: false,
     ...options,

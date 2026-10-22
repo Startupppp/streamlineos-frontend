@@ -32,15 +32,21 @@ export interface MarkAssetReturnedInput {
   condition: string;
 }
 
+export function assetReturnsQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.assetReturnsList(),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useAssetReturns(
   options?: Omit<UseQueryOptions<AssetReturn[], Error>, "queryKey" | "queryFn">,
 ) {
   const canView = useCan("hr:assets:view");
   return useQuery<AssetReturn[], Error>({
-    queryKey: humanResourcesQueryKeys.hr.assetReturnsList(),
+    ...assetReturnsQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get<AssetReturn[]>("/hr/asset-returns", undefined, signal, assetReturnListC),
-    staleTime: 60_000,
     ...options,
     enabled: canView && (options?.enabled ?? true),
   });

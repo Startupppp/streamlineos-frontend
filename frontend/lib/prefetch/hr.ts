@@ -5,9 +5,6 @@ import type { z } from "zod";
 import { dehydrate } from "@tanstack/react-query";
 import { createServerQueryClient } from "./server-query-client";
 import { resolvePrefetchGate } from "./prefetch-gate";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import { directoryAndOwnershipQueryKeys } from "@/lib/query-keys/directory-and-ownership";
-import { employeeSupportQueryKeys } from "@/lib/query-keys/employee-support";
 import { serverGet } from "@/lib/server-fetch";
 import { hrDocumentListContract } from "@/lib/prefetch/prefetch-schema";
 import { assetListPageContract } from "@/hooks/api/hr/assets-schema";
@@ -22,7 +19,13 @@ import { assetReturnListContract } from "@/hooks/api/hr/asset-returns-schema";
 import { expensePageDataQueryOptions } from "@/hooks/api/hr/expenses";
 import { reimbursementsListQueryOptions } from "@/hooks/api/hr/reimbursements";
 import { hrCasesListQueryOptions } from "@/hooks/api/hr/cases";
-import { serviceDeliveryKeys } from "@/hooks/api/hr/service-delivery";
+import { hrDocumentListQueryOptions } from "@/hooks/api/hr/documents";
+import { hrAssetListQueryOptions } from "@/hooks/api/hr/assets";
+import { travelMineQueryOptions, travelApprovalsQueryOptions } from "@/hooks/api/hr/travel";
+import { safetyIncidentsQueryOptions } from "@/hooks/api/hr/safety";
+import { helpdeskQueueListQueryOptions } from "@/hooks/api/hr/helpdesk";
+import { serviceDeliveryOpsInboxQueryOptions, serviceDeliveryMyItemsQueryOptions } from "@/hooks/api/hr/service-delivery";
+import { assetReturnsQueryOptions } from "@/hooks/api/hr/asset-returns";
 
 type HrDocumentListResponse = z.infer<typeof hrDocumentListContract>;
 type HrAssetListResponse = z.infer<typeof assetListPageContract>;
@@ -39,9 +42,8 @@ type AssetReturnListResponse = z.infer<typeof assetReturnListContract>;
 export async function prefetchHrDocuments() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: humanResourcesQueryKeys.hr.documents({ limit: 20 }),
+    ...hrDocumentListQueryOptions(),
     queryFn: () => serverGet<HrDocumentListResponse>("/hr/documents?limit=20", hrDocumentListContract),
-    staleTime: 60_000,
   });
   return dehydrate(queryClient);
 }
@@ -49,9 +51,8 @@ export async function prefetchHrDocuments() {
 export async function prefetchHrAssets() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: humanResourcesQueryKeys.hr.assets({ limit: 20 }),
+    ...hrAssetListQueryOptions(),
     queryFn: () => serverGet<HrAssetListResponse>("/hr/assets?limit=20", assetListPageContract),
-    staleTime: 60_000,
   });
   return dehydrate(queryClient);
 }
@@ -83,9 +84,8 @@ export async function prefetchHrReimbursements() {
 export async function prefetchHrTravel() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: humanResourcesQueryKeys.hr.travelMine(),
+    ...travelMineQueryOptions(),
     queryFn: () => serverGet<TravelListResponse>("/hr/travel", travelRequestListContract),
-    staleTime: 60_000,
   });
   return dehydrate(queryClient);
 }
@@ -93,9 +93,8 @@ export async function prefetchHrTravel() {
 export async function prefetchHrTravelApprovals() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: humanResourcesQueryKeys.hr.travelApprovals(),
+    ...travelApprovalsQueryOptions(),
     queryFn: () => serverGet<TravelListResponse>("/hr/travel/approvals", travelRequestListContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -112,9 +111,8 @@ export async function prefetchHrCases() {
 export async function prefetchHrSafety() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: directoryAndOwnershipQueryKeys.hrSafety.incidents({}),
+    ...safetyIncidentsQueryOptions(),
     queryFn: () => serverGet<SafetyIncidentListResponse>("/hr/safety/incidents", safetyIncidentListContract),
-    staleTime: 30_000,
   });
   return dehydrate(queryClient);
 }
@@ -122,9 +120,8 @@ export async function prefetchHrSafety() {
 export async function prefetchHrHelpdesk() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: employeeSupportQueryKeys.employeeSupport.queueList({}),
+    ...helpdeskQueueListQueryOptions({}),
     queryFn: () => serverGet<HelpdeskTicketListResponse>("/hr/helpdesk", helpdeskTicketListContract),
-    staleTime: 15_000,
   });
   return dehydrate(queryClient);
 }
@@ -135,16 +132,14 @@ export async function prefetchHrServiceDelivery() {
   await Promise.all([
     gate.can("hr:cases:view")
       ? queryClient.prefetchQuery({
-          queryKey: serviceDeliveryKeys.opsInbox,
+          ...serviceDeliveryOpsInboxQueryOptions(),
           queryFn: () => serverGet<OpsInboxResponse>("/hr/service-delivery/ops-inbox", opsInboxContract),
-          staleTime: 30_000,
         })
       : Promise.resolve(),
     gate.can("hr:helpdesk:view")
       ? queryClient.prefetchQuery({
-          queryKey: serviceDeliveryKeys.myItems,
+          ...serviceDeliveryMyItemsQueryOptions(),
           queryFn: () => serverGet<MyItemsResponse>("/hr/service-delivery/my-items", myItemsContract),
-          staleTime: 30_000,
         })
       : Promise.resolve(),
   ]);
@@ -154,9 +149,8 @@ export async function prefetchHrServiceDelivery() {
 export async function prefetchHrAssetReturns() {
   const queryClient = await createServerQueryClient();
   await queryClient.prefetchQuery({
-    queryKey: humanResourcesQueryKeys.hr.assetReturnsList(),
+    ...assetReturnsQueryOptions(),
     queryFn: () => serverGet<AssetReturnListResponse>("/hr/asset-returns", assetReturnListContract),
-    staleTime: 60_000,
   });
   return dehydrate(queryClient);
 }

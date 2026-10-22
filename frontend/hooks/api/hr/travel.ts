@@ -42,19 +42,31 @@ export interface TravelRequest {
   updatedAt: string;
 }
 
+export function travelMineQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.travelMine(),
+    staleTime: 60_000,
+  } as const;
+}
+
+export function travelApprovalsQueryOptions() {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.travelApprovals(),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useMyTravelRequests() {
   return useGatedQuery("hr:travel:view", {
-    queryKey: humanResourcesQueryKeys.hr.travelMine(),
+    ...travelMineQueryOptions(),
     queryFn: ({ signal }) => apiClient.get("/hr/travel", undefined, signal, travelListContract),
-    staleTime: 60_000,
   });
 }
 
 export function usePendingTravelApprovals() {
   return useGatedQuery("hr:travel:manage", {
-    queryKey: humanResourcesQueryKeys.hr.travelApprovals(),
+    ...travelApprovalsQueryOptions(),
     queryFn: ({ signal }) => apiClient.get("/hr/travel/approvals", undefined, signal, travelListContract),
-    staleTime: 30_000,
   });
 }
 

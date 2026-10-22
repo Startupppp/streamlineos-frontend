@@ -1,11 +1,11 @@
 import { Suspense } from "react";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { MailShell } from "@/features/mail";
-import { prefetchMailAccounts } from "@/lib/prefetch/mail";
+import { prefetchMail } from "@/lib/prefetch/mail";
 import MailLoading from "./loading";
 
 async function MailHydrated() {
-  const state = await prefetchMailAccounts();
+  const state = await prefetchMail();
   return (
     <HydrationBoundary state={state}>
       <MailShell />

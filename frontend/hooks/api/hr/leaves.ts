@@ -17,7 +17,7 @@ import {
 } from "@/hooks/api/hr/leaves-contracts";
 import {
   LEAVE_TYPES_KEY,
-  leaveContextKey,
+  leaveContextQueryOptions,
   leaveMyRequestsKey,
   leaveMyRequestsPagesKey,
   leaveTeamKey,
@@ -72,9 +72,8 @@ export function useHrLeaveContext() {
   const hrEnabled = useModuleEnabled("hr");
   const identity = useLeaveQueryIdentity();
   return useQuery({
-    queryKey: leaveContextKey(identity),
+    ...leaveContextQueryOptions(identity.orgId, identity.userId, identity.accessVersion),
     queryFn: ({ signal }) => apiClient.get<LeaveContextResult>("/me/time-off", undefined, signal, leaveContextC),
-    staleTime: 2 * 60_000,
     enabled: Boolean(identity.orgId && identity.userId) && hrEnabled && canSelf,
     ...INLINE_READ_ERROR,
   });

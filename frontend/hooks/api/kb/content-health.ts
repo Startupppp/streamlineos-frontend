@@ -13,6 +13,7 @@ import type {
 } from "@/hooks/api/kb/content-health-schema";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import { kbContentHealthCountsQueryOptions } from "./kb-read-options";
 
 const contentHealthSignalsContract = lazyContract(() =>
   import("@/hooks/api/kb/content-health-schema").then(
@@ -60,7 +61,7 @@ export function useContentHealthSignals(params: ContentHealthSignalsParams) {
 export function useContentHealthCounts() {
   const canManage = useCan("kb:pages:manage");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.contentHealthCounts(),
+    ...kbContentHealthCountsQueryOptions,
     queryFn: ({ signal }) =>
       apiClient.get(
         "/kb/wiki/content-health/counts",
@@ -68,7 +69,6 @@ export function useContentHealthCounts() {
         signal,
         contentHealthCountsContract,
       ),
-    staleTime: 2 * 60_000,
     enabled: canManage,
   });
 }

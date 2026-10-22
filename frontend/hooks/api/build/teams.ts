@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { UseQueryOptions } from "@tanstack/react-query";
 import type { z } from "zod";
 import { apiClient } from "@/lib/api-client";
@@ -232,5 +233,25 @@ export function useRemoveTeamProject(teamId: number) {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.teams.teamProjects(teamId) });
     },
+  });
+}
+
+export function teamsListQueryOptions(params?: {
+  cursor?: string;
+  search?: string;
+  pageSize?: number;
+  leadId?: string;
+  memberId?: string;
+}) {
+  const query: Record<string, string> = {};
+  if (params?.cursor) query["cursor"] = params.cursor;
+  if (params?.pageSize) query["pageSize"] = String(params.pageSize);
+  if (params?.search) query["search"] = params.search;
+  if (params?.leadId) query["leadId"] = params.leadId;
+  if (params?.memberId) query["memberId"] = params.memberId;
+  return queryOptions<TeamListResponse>({
+    queryKey: buildWorkQueryKeys.projects.teams.list(Object.keys(query).length ? query : undefined),
+    queryFn: ({ signal }) => apiClient.get<TeamListResponse>("/build/teams", query, signal, teamPageContract),
+    staleTime: 60_000,
   });
 }

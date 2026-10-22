@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { BuildListSurface } from "@/features/build/shared/build-list-surface";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -59,7 +59,6 @@ export function ProductFeedbackPage({
   const canDeleteSubmission = useCan("feedbucket:submissions:delete");
   const canRouteToIntake = useCan("feedbucket:submissions:manage");
   const feedbucketEnabled = useModuleEnabled("build");
-  const feedbucketGate = usePageState({ module: "build", isLoading: false, isError: false });
   const canCapture = useCan("feedbucket:submissions:manage") && feedbucketEnabled;
   const intakeRouting = useRouteToIntake();
 
@@ -89,37 +88,23 @@ export function ProductFeedbackPage({
   );
   const { data: crmOrgsData } = useCrmOrganizationsForPicker();
 
-  const handleRetry = useCallback(() => { void refetch(); }, [refetch]);
-  const rows = useMemo(() => data?.data ?? [], [data]);
-  const visibleRows = useMemo(
-    () => (dateRangeReversed ? [] : rows),
-    [dateRangeReversed, rows],
-  );
-  const selectedIds = useMemo(
-    () => [...selected].map(Number).filter((id) => Number.isFinite(id)),
-    [selected],
-  );
+  const feedbucketGate = usePageState({ module: "build", isLoading, isError, error });
+
+  function handleRetry() { void refetch(); }
+  const rows = data?.data ?? [];
+  const visibleRows = dateRangeReversed ? [] : rows;
+  const selectedIds = [...selected].map(Number).filter((id) => Number.isFinite(id));
   const selectionEnabled = canUpdateSubmission || canDeleteSubmission;
 
-  const openSubmissionPane = useCallback(
-    (row: SubmissionRow) => filterState.handleOpenSubmission(row.id),
-    [filterState],
-  );
-  const handleOpenFocused = useCallback(
-    (index: number) => {
-      const row = visibleRows[index];
-      if (row) openSubmissionPane(row);
-    },
-    [visibleRows, openSubmissionPane],
-  );
-  const feedbackColumns = useMemo(
-    () =>
-      buildCraftedFeedbackColumns({
-        canRouteToIntake,
-        onRouteToIntake: intakeRouting.handleRouteToIntake,
-      }),
-    [canRouteToIntake, intakeRouting.handleRouteToIntake],
-  );
+  function openSubmissionPane(row: SubmissionRow) { filterState.handleOpenSubmission(row.id); }
+  function handleOpenFocused(index: number) {
+    const row = visibleRows[index];
+    if (row) openSubmissionPane(row);
+  }
+  const feedbackColumns = buildCraftedFeedbackColumns({
+    canRouteToIntake,
+    onRouteToIntake: intakeRouting.handleRouteToIntake,
+  });
 
   useBuildListKeyboard({
     itemCount: visibleRows.length,
@@ -130,37 +115,27 @@ export function ProductFeedbackPage({
     enabled: true,
   });
 
-  const renderMobileCard = useCallback(
-    (row: SubmissionRow) => <ProductFeedbackMobileCard row={row} />,
-    [],
-  );
-  const getSubmissionRowLabel = useCallback(
-    (row: SubmissionRow): string => row.message.slice(0, 80),
-    [],
-  );
-  const getSubmissionRowKey = useCallback((row: SubmissionRow) => row.id, []);
-  const handleOpenCapture = useCallback(() => setCaptureOpen(true), []);
-  const handleOpenFeedbucket = useCallback(() => setFeedbucketOpen(true), []);
+  function renderMobileCard(row: SubmissionRow) { return <ProductFeedbackMobileCard row={row} />; }
+  function getSubmissionRowLabel(row: SubmissionRow): string { return row.message.slice(0, 80); }
+  function getSubmissionRowKey(row: SubmissionRow) { return row.id; }
+  function handleOpenCapture() { setCaptureOpen(true); }
+  function handleOpenFeedbucket() { setFeedbucketOpen(true); }
 
-  const feedbackEmptyState = useMemo(
-    () =>
-      isFiltered ? (
-        <EmptyState
-          illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-          title={dateRangeReversed ? "End date is before the start date" : "No feedback matches your filters"}
-          description={dateRangeReversed ? "Choose a start date on or before the end date." : "Try adjusting or clearing your filters."}
-          action={{ label: "Clear filters", onClick: listFilters.clearAll }}
-          className={CONTENT_FILL_PANEL}
-        />
-      ) : (
-        <EmptyState
-          illustration={<EmptyInboxIllustration className="h-24 w-24" />}
-          title="No feedback submissions"
-          description="Submissions from widgets linked to this product will appear here."
-          className={CONTENT_FILL_PANEL}
-        />
-      ),
-    [isFiltered, dateRangeReversed, listFilters.clearAll],
+  const feedbackEmptyState = isFiltered ? (
+    <EmptyState
+      illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+      title={dateRangeReversed ? "End date is before the start date" : "No feedback matches your filters"}
+      description={dateRangeReversed ? "Choose a start date on or before the end date." : "Try adjusting or clearing your filters."}
+      action={{ label: "Clear filters", onClick: listFilters.clearAll }}
+      className={CONTENT_FILL_PANEL}
+    />
+  ) : (
+    <EmptyState
+      illustration={<EmptyInboxIllustration className="h-24 w-24" />}
+      title="No feedback submissions"
+      description="Submissions from widgets linked to this product will appear here."
+      className={CONTENT_FILL_PANEL}
+    />
   );
 
   if (productQuery.isSuccess && productQuery.data === null) return <ManagedProductNotFound />;

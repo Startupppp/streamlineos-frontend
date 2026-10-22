@@ -318,8 +318,6 @@ describe("19 — invalidateTicketUpdateViews narrows report eviction per cache-p
 
 describe("build calendar projection invalidation", () => {
   const calendarKey = platformHierarchyQueryKeys.calendar.events(
-    "org-1",
-    "user-1",
     "2026-10-01T00:00:00.000Z",
     "2026-11-01T00:00:00.000Z",
   );

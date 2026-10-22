@@ -1,13 +1,8 @@
 ﻿"use client";
 
-import { useState, useCallback, useRef, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { motion, useReducedMotion } from "framer-motion";
-import { Loader2 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
 import { fadeIn } from "@/lib/motion-variants";
-import { viewFile, downloadFile } from "@/hooks/common/use-file-url";
 import { TicketSubtasks } from "./ticket-subtasks";
 import { TicketRelations } from "./ticket-relations";
 import { ActivityFeed } from "./activity-feed";
@@ -21,16 +16,10 @@ import {
   TicketDetailAiActivityActions,
   useTicketDetailAi,
 } from "@/features/build/ai/ticket-detail-ai";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { NonImageAttachmentButton, AttachmentContextMenu } from "./ticket-attachment-items";
+import { TicketDetailTitleSection } from "./ticket-detail-title-section";
 import type { ProjectMember } from "./types";
 import type { Ticket } from "@/types/projects";
-import { TICKET_TITLE_MAX } from "@/lib/validation/projects";
 
 const TiptapEditorDynamic = dynamic(
   () =>
@@ -64,84 +53,6 @@ interface TicketDetailMainSectionProps {
   canUpdate: boolean;
 }
 
-interface AttachmentItem {
-  id: number;
-  fileUrl: string;
-  fileName: string;
-  mimeType?: string | null;
-}
-
-interface NonImageAttachmentButtonProps {
-  attachment: AttachmentItem;
-}
-
-function NonImageAttachmentButton({ attachment }: NonImageAttachmentButtonProps) {
-  const [pending, setPending] = useState(false);
-  const [itemError, setItemError] = useState(false);
-
-  function handleClick() {
-    if (pending) return;
-    setPending(true);
-    setItemError(false);
-    void viewFile(attachment.fileUrl)
-      .then(() => { setPending(false); })
-      .catch(() => { setPending(false); setItemError(true); });
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={pending}
-      className="group relative aspect-video rounded-md overflow-hidden bg-muted border hover:border-foreground/40 transition-all text-left disabled:opacity-60"
-    >
-      <div className="flex items-center justify-center h-full text-muted-foreground text-micro p-1 text-center">
-        {pending ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : itemError ? (
-          <span className="text-status-danger-ink">Couldn&apos;t open attachment</span>
-        ) : (
-          attachment.fileName
-        )}
-      </div>
-    </button>
-  );
-}
-
-interface AttachmentContextMenuProps {
-  attachment: AttachmentItem;
-  children: React.ReactNode;
-}
-
-function AttachmentContextMenu({
-  attachment,
-  children,
-}: AttachmentContextMenuProps) {
-  function handleView() {
-    void viewFile(attachment.fileUrl);
-  }
-
-  function handleDownload() {
-    void downloadFile(attachment.fileUrl, attachment.fileName);
-  }
-
-  function handleCopyLink() {
-    void navigator.clipboard.writeText(attachment.fileUrl);
-  }
-
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>{children}</DropdownMenuTrigger>
-      <DropdownMenuContent align="start">
-        <DropdownMenuItem onSelect={handleView}>View image</DropdownMenuItem>
-        <DropdownMenuItem onSelect={handleDownload}>Download</DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={handleCopyLink}>Copy link</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
 export function TicketDetailMainSection({
   ticket,
   ticketId,
@@ -162,56 +73,6 @@ export function TicketDetailMainSection({
 }: TicketDetailMainSectionProps) {
   const isPreview = variant === "preview";
   const reduceMotion = useReducedMotion();
-  const [editingTitle, setEditingTitle] = useState(false);
-  const [titleError, setTitleError] = useState<string | null>(null);
-  const skipTitleBlurRef = useRef(false);
-  const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
-  const titleAtEditStartRef = useRef(localTitle);
-
-  useEffect(() => {
-    if (!editingTitle) return;
-    const id = requestAnimationFrame(() => {
-      const el = titleInputRef.current;
-      if (!el) return;
-      el.focus({ preventScroll: true });
-      const end = el.value.length;
-      el.setSelectionRange(end, end);
-    });
-    return () => cancelAnimationFrame(id);
-  }, [editingTitle]);
-
-  const finishTitleEdit = useCallback(
-    (commit: boolean) => {
-      if (commit) {
-        const error = onCommitTitle(localTitle);
-        if (error) {
-          setTitleError(error);
-          return;
-        }
-      } else {
-        skipTitleBlurRef.current = true;
-        onRevertTitle();
-      }
-      setTitleError(null);
-      setEditingTitle(false);
-    },
-    [localTitle, onCommitTitle, onRevertTitle],
-  );
-
-  const handleTitleKeyDown = useCallback(
-    (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (event.key === "Escape") {
-        event.preventDefault();
-        finishTitleEdit(false);
-        return;
-      }
-      if (event.key === "Enter" && !event.shiftKey) {
-        event.preventDefault();
-        finishTitleEdit(true);
-      }
-    },
-    [finishTitleEdit],
-  );
   const ticketDetailAi = useTicketDetailAi({
     projectId,
     ticketId,
@@ -220,17 +81,6 @@ export function TicketDetailMainSection({
     commentCount: ticket.comments?.length ?? 0,
     onApplyDescription,
   });
-
-  useEffect(() => {
-    if (!editingTitle) return;
-    function handleBeforeUnload(e: BeforeUnloadEvent) {
-      if (localTitle !== titleAtEditStartRef.current) {
-        e.preventDefault();
-      }
-    }
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [editingTitle, localTitle]);
 
   return (
     <motion.div
@@ -241,95 +91,15 @@ export function TicketDetailMainSection({
       animate={isPreview || reduceMotion ? undefined : "visible"}
       variants={reduceMotion ? undefined : fadeIn}
     >
-      {canUpdate && editingTitle && !isPreview ? (
-        <div className="flex justify-start">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 px-2 text-xs text-muted-foreground hover:bg-transparent hover:text-foreground"
-            aria-expanded={editingTitle}
-            aria-controls={`ticket-title-${ticketId}`}
-            onMouseDown={() => {
-              skipTitleBlurRef.current = true;
-            }}
-            onClick={() => finishTitleEdit(true)}
-          >
-            Done editing
-          </Button>
-        </div>
-      ) : null}
-      {editingTitle && canUpdate ? (
-        <div className="flex min-w-0 flex-col gap-2">
-          <label htmlFor={`ticket-title-${ticketId}`} className="sr-only">
-            Title
-          </label>
-          <Textarea
-            id={`ticket-title-${ticketId}`}
-            ref={titleInputRef}
-            value={localTitle}
-            onChange={(event) => {
-              setTitleError(null);
-              onTitleChange(event);
-            }}
-            rows={2}
-            maxLength={TICKET_TITLE_MAX}
-            aria-invalid={titleError ? true : undefined}
-            aria-describedby={
-              titleError ? `ticket-title-error-${ticketId}` : undefined
-            }
-            className="h-auto min-h-12 w-full max-w-full resize-none break-words rounded-md border-border bg-card px-3 py-2 text-base font-medium leading-snug shadow-none transition-colors duration-200 [overflow-wrap:anywhere] [word-break:break-word] hover:border-foreground/30 focus-visible:ring-1"
-            placeholder="Ticket title"
-            onKeyDown={handleTitleKeyDown}
-            onBlur={(event) => {
-              if (skipTitleBlurRef.current) {
-                skipTitleBlurRef.current = false;
-                return;
-              }
-              const next = event.relatedTarget;
-              if (
-                next instanceof Node &&
-                event.currentTarget.parentElement?.contains(next)
-              ) {
-                return;
-              }
-              if (localTitle === titleAtEditStartRef.current) {
-                setEditingTitle(false);
-                setTitleError(null);
-                return;
-              }
-              finishTitleEdit(true);
-            }}
-          />
-          {titleError ? (
-            <p
-              id={`ticket-title-error-${ticketId}`}
-              className="text-xs text-status-danger-ink"
-              role="alert"
-            >
-              {titleError}
-            </p>
-          ) : null}
-        </div>
-      ) : canUpdate ? (
-        <button
-          type="button"
-          className="group min-w-0 text-left"
-          aria-label="Edit title"
-          onClick={() => {
-            titleAtEditStartRef.current = localTitle;
-            setEditingTitle(true);
-          }}
-        >
-          <h2 className="break-words text-xl font-semibold leading-snug text-foreground [overflow-wrap:anywhere] group-hover:text-foreground/90">
-            {localTitle || "Untitled"}
-          </h2>
-        </button>
-      ) : (
-        <h2 className="break-words text-xl font-semibold leading-snug text-foreground [overflow-wrap:anywhere]">
-          {localTitle || "Untitled"}
-        </h2>
-      )}
+      <TicketDetailTitleSection
+        ticketId={ticketId}
+        localTitle={localTitle}
+        canUpdate={canUpdate}
+        isPreview={isPreview}
+        onTitleChange={onTitleChange}
+        onCommitTitle={onCommitTitle}
+        onRevertTitle={onRevertTitle}
+      />
 
       <div className="min-w-0 border-b border-border pb-6">
         {isPreview || !canUpdate ? (

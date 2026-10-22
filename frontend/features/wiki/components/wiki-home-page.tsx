@@ -1,7 +1,7 @@
 "use client";
 
 import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create-kb-page";
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { SearchInput } from "@/components/ui/search-input";
@@ -64,13 +64,11 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const canCreate = useCan("kb:pages:create");
   const canImport = useCan("kb:pages:import");
 
-  const resolveHref = useCallback(
-    (pageId: number): string =>
-      projectId !== undefined && projectId > 0
-        ? projectPageHref(projectId, pageId)
-        : pageHref(pageId),
-    [projectId],
-  );
+  function resolveHref(pageId: number): string {
+    return projectId !== undefined && projectId > 0
+      ? projectPageHref(projectId, pageId)
+      : pageHref(pageId);
+  }
   const createPage = useGuardedCreateKbPage((page) =>
     router.push(resolveHref(page.id)),
   );
@@ -101,28 +99,27 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     void favoritesQuery.refetch();
   }
 
-  const handleShortcutHelp = useCallback(() => setShortcutHelpOpen(true), []);
+  function handleShortcutHelp() {
+    setShortcutHelpOpen(true);
+  }
 
   const recentPreview = recentPages.slice(0, HOME_SHORTCUT_LIMIT);
   const favoritePreview = favoritePages.slice(0, HOME_SHORTCUT_LIMIT);
-  const handleClearSelection = useCallback(() => {}, []);
+  function handleClearSelection() {}
 
-  const handleOpenPage = useCallback(
-    (index: number) => {
-      const row = allPagesRowsRef.current[index];
-      if (!row) return;
-      router.push(resolveHref(row.id));
-    },
-    [router, resolveHref],
-  );
+  function handleOpenPage(index: number) {
+    const row = allPagesRowsRef.current[index];
+    if (!row) return;
+    router.push(resolveHref(row.id));
+  }
 
-  const handleRowsChange = useCallback((rows: readonly { id: number }[]) => {
+  function handleRowsChange(rows: readonly { id: number }[]) {
     allPagesRowsRef.current = [...rows];
-  }, []);
+  }
 
-  const handleItemCountChange = useCallback((count: number) => {
+  function handleItemCountChange(count: number) {
     setPageItemCount(count);
-  }, []);
+  }
 
   useBuildListKeyboard({
     itemCount: pageItemCount,

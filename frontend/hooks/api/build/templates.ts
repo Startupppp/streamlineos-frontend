@@ -4,6 +4,7 @@ import type { templateRowContract as templateRowContractDef } from "@/hooks/api/
 
 import {
   keepPreviousData,
+  queryOptions,
   useInfiniteQuery,
   useQueryClient,
 } from "@tanstack/react-query";
@@ -163,5 +164,18 @@ export function useApplyProjectTemplate() {
         refetchType: "all",
       });
     },
+  });
+}
+
+export function templatesListQueryOptions(filters?: TemplateFilters) {
+  const params: Record<string, string> = {};
+  if (filters?.q) params["q"] = filters.q;
+  if (filters?.category) params["category"] = filters.category;
+  if (filters?.sort) params["sort"] = filters.sort;
+  return queryOptions<TemplateListPage>({
+    queryKey: buildWorkQueryKeys.projects.templates(),
+    queryFn: ({ signal }) =>
+      apiClient.get<TemplateListPage>("/build/templates", params, signal, templateListContract),
+    staleTime: 60_000,
   });
 }

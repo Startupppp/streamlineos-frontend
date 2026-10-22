@@ -125,6 +125,16 @@ export function useCreateProjectUpdate(projectId: number) {
   });
 }
 
+export function projectUpdatesListQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.updates.list(projectId),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
+      last.pagination.nextCursor ?? undefined,
+    staleTime: 30_000,
+  };
+}
+
 export function useDeleteProjectUpdate(projectId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:updates:manage", {

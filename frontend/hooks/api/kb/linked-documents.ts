@@ -6,6 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
+import { kbLinkedDocumentsQueryOptions, kbLinkedDocumentQueryOptions } from "./kb-read-options";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const listLazy = lazyContract(() => import("@/hooks/api/kb/linked-documents-schema").then((m) => m.linkedDocumentListContract));
@@ -63,9 +64,8 @@ export function useLinkedDocuments(
     ...(params?.q ? { q: params.q } : {}),
   };
   return useGatedQuery("kb:pages:view", {
-    queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocuments(queryParams),
+    ...kbLinkedDocumentsQueryOptions(queryParams),
     queryFn: ({ signal }) => apiClient.get<LinkedDocumentList>("/kb/linked-documents", queryParams, signal, listLazy),
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
     retry: false,
     throwOnError: readErrorExceptNotFoundReachesBoundary,
@@ -75,9 +75,8 @@ export function useLinkedDocuments(
 
 export function useLinkedDocument(linkedDocumentId: number, options?: { enabled?: boolean }) {
   return useGatedQuery("kb:pages:view", {
-    queryKey: knowledgeAndSurveysQueryKeys.kb.linkedDocument(linkedDocumentId),
+    ...kbLinkedDocumentQueryOptions(linkedDocumentId),
     queryFn: ({ signal }) => apiClient.get<LinkedDocumentDetail>(`/kb/linked-documents/${linkedDocumentId}`, undefined, signal, detailLazy),
-    staleTime: 60_000,
     retry: false,
     throwOnError: readErrorExceptNotFoundReachesBoundary,
     ...options,

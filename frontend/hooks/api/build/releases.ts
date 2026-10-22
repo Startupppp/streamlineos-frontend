@@ -66,10 +66,9 @@ export function useOrgReleases(filters?: OrgReleaseFilters) {
 export function useReleases(projectId: number, query: ReleaseListQuery = {}) {
   const canViewState = useCanState("build:view");
   return useQuery({
-    queryKey: releaseKey(projectId, query),
+    ...releasesListQueryOptions(projectId, query),
     queryFn: ({ signal }) => apiClient.get(`/build/${projectId}/releases`, query, signal, projectReleaseListContract),
     enabled: canViewState !== "denied" && !!projectId,
-    staleTime: 60_000,
   });
 }
 
@@ -116,4 +115,11 @@ export function useDeleteRelease(projectId: number) {
       );
     },
   });
+}
+
+export function releasesListQueryOptions(projectId: number, query?: ReleaseListQuery) {
+  return {
+    queryKey: releaseKey(projectId, query ?? {}),
+    staleTime: 60_000,
+  };
 }

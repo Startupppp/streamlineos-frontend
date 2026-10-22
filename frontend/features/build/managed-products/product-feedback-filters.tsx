@@ -1,35 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BuildFilterSelect } from "@/features/build/shared/build-filter-select";
 import { BuildMultiFilterSelect } from "@/features/build/shared/build-multi-filter-select";
 import { FilterChip } from "@/features/build/shared/filter-chip";
 import { DateRangePicker } from "@/components/ui/date-range-picker";
-import { useManagedProductMembers } from "@/hooks/api/build/managed-product-members";
-import { getUserDisplayName } from "@/lib/person-display";
 import {
   TYPE_FILTER_OPTIONS,
-  STATUS_FILTER_OPTIONS,
   LINKED_FILTER_OPTIONS,
   DUPLICATE_FILTER_OPTIONS,
-  SOURCE_CHANNEL_FILTER_OPTIONS,
-  SENTIMENT_FILTER_OPTIONS,
   CONSENT_FILTER_OPTIONS,
   LINKED_OPP_FILTER_OPTIONS,
 } from "./product-feedback-columns";
-import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
+import { useProductFeedbackFilterOptions, SOURCE_CHANNEL_OPTIONS_MULTI, SENTIMENT_OPTIONS_MULTI, STATUS_OPTIONS_MULTI } from "./use-product-feedback-filter-options";
 import type { useProductFeedbackFilters } from "./use-product-feedback-filters";
-
-const SOURCE_CHANNEL_OPTIONS_MULTI = SOURCE_CHANNEL_FILTER_OPTIONS.filter(
-  (o) => o.value !== BUILD_FILTER_ALL,
-);
-const SENTIMENT_OPTIONS_MULTI = SENTIMENT_FILTER_OPTIONS.filter(
-  (o) => o.value !== BUILD_FILTER_ALL,
-);
-const STATUS_OPTIONS_MULTI = STATUS_FILTER_OPTIONS.filter(
-  (o) => o.value !== BUILD_FILTER_ALL,
-);
 
 interface FacetsData {
   themes?: Array<{ value: string | null; count: number }>;
@@ -46,13 +30,6 @@ interface ProductFeedbackFiltersProps {
   crmOrgsData: CrmOrgsData | undefined;
 }
 
-interface ActiveChip {
-  id: string;
-  label: string;
-  value: string;
-  onRemove: () => void;
-}
-
 export function ProductFeedbackFilters({
   filterState,
   facetsData,
@@ -61,7 +38,6 @@ export function ProductFeedbackFilters({
   const {
     listFilters,
     searchInputRef,
-    managedProductId,
     typeValue,
     linkedValue,
     duplicateValue,
@@ -92,138 +68,8 @@ export function ProductFeedbackFilters({
     handleDateRangeChange,
   } = filterState;
 
-  const { data: membersData } = useManagedProductMembers(managedProductId);
-  const memberOptions = useMemo(
-    () => (membersData?.data ?? []).flatMap((m) =>
-      m.member ? [{ value: m.member.id, label: getUserDisplayName(m.member) }] : [],
-    ),
-    [membersData],
-  );
-
-  const themeOptionsMulti = useMemo(() => {
-    const opts = [
-      { value: "untagged", label: "Untagged" },
-      ...(facetsData?.themes ?? [])
-        .filter((t): t is { value: string; count: number } => t.value !== null)
-        .map((t) => ({ value: t.value, label: t.value })),
-    ];
-    for (const applied of appliedThemes ?? []) {
-      if (applied !== "untagged" && !opts.some((o) => o.value === applied)) {
-        opts.push({ value: applied, label: applied });
-      }
-    }
-    return opts;
-  }, [appliedThemes, facetsData?.themes]);
-
-  const segmentOptionsMulti = useMemo(() => {
-    const opts = [
-      ...(facetsData?.segments ?? [])
-        .filter((s): s is { value: string; count: number } => s.value !== null)
-        .map((s) => ({ value: s.value, label: s.value })),
-    ];
-    for (const applied of appliedSegments ?? []) {
-      if (!opts.some((o) => o.value === applied)) {
-        opts.push({ value: applied, label: applied });
-      }
-    }
-    return opts;
-  }, [appliedSegments, facetsData?.segments]);
-
-  const customerOptionsMulti = useMemo(() => {
-    const opts = (crmOrgsData?.organizations ?? []).map((o) => ({
-      value: String(o.id),
-      label: o.name,
-    }));
-    for (const applied of appliedCrmOrgIds ?? []) {
-      if (!opts.some((o) => o.value === applied)) {
-        opts.push({ value: applied, label: `Customer ${applied}` });
-      }
-    }
-    return opts;
-  }, [appliedCrmOrgIds, crmOrgsData?.organizations]);
-
-  const chips = useMemo((): ActiveChip[] => {
-    const result: ActiveChip[] = [];
-    for (const st of appliedStatuses ?? []) {
-      const label = STATUS_OPTIONS_MULTI.find((o) => o.value === st)?.label ?? st;
-      result.push({
-        id: `status:${st}`,
-        label: "Status",
-        value: label,
-        onRemove: () => handleStatusValuesChange((appliedStatuses ?? []).filter((v) => v !== st)),
-      });
-    }
-    for (const uid of appliedAssigneeIds ?? []) {
-      const opt = memberOptions.find((o) => o.value === uid);
-      result.push({
-        id: `assignee:${uid}`,
-        label: "Owner",
-        value: opt?.label ?? uid,
-        onRemove: () => handleAssigneeValuesChange((appliedAssigneeIds ?? []).filter((v) => v !== uid)),
-      });
-    }
-    for (const ch of appliedSourceChannels ?? []) {
-      const label = SOURCE_CHANNEL_OPTIONS_MULTI.find((o) => o.value === ch)?.label ?? ch;
-      result.push({
-        id: `channel:${ch}`,
-        label: "Channel",
-        value: label,
-        onRemove: () => handleSourceChannelValuesChange((appliedSourceChannels ?? []).filter((v) => v !== ch)),
-      });
-    }
-    for (const th of appliedThemes ?? []) {
-      result.push({
-        id: `theme:${th}`,
-        label: "Theme",
-        value: th,
-        onRemove: () => handleThemeValuesChange((appliedThemes ?? []).filter((v) => v !== th)),
-      });
-    }
-    for (const se of appliedSentiments ?? []) {
-      const label = SENTIMENT_OPTIONS_MULTI.find((o) => o.value === se)?.label ?? se;
-      result.push({
-        id: `sentiment:${se}`,
-        label: "Sentiment",
-        value: label,
-        onRemove: () => handleSentimentValuesChange((appliedSentiments ?? []).filter((v) => v !== se)),
-      });
-    }
-    for (const sg of appliedSegments ?? []) {
-      result.push({
-        id: `segment:${sg}`,
-        label: "Segment",
-        value: sg,
-        onRemove: () => handleSegmentValuesChange((appliedSegments ?? []).filter((v) => v !== sg)),
-      });
-    }
-    for (const cid of appliedCrmOrgIds ?? []) {
-      const label = customerOptionsMulti.find((o) => o.value === cid)?.label ?? `Customer ${cid}`;
-      result.push({
-        id: `customer:${cid}`,
-        label: "Customer",
-        value: label,
-        onRemove: () => handleCrmOrgValuesChange((appliedCrmOrgIds ?? []).filter((v) => v !== cid)),
-      });
-    }
-    return result;
-  }, [
-    appliedStatuses,
-    appliedAssigneeIds,
-    memberOptions,
-    appliedSourceChannels,
-    appliedThemes,
-    appliedSentiments,
-    appliedSegments,
-    appliedCrmOrgIds,
-    customerOptionsMulti,
-    handleStatusValuesChange,
-    handleAssigneeValuesChange,
-    handleSourceChannelValuesChange,
-    handleThemeValuesChange,
-    handleSentimentValuesChange,
-    handleSegmentValuesChange,
-    handleCrmOrgValuesChange,
-  ]);
+  const { memberOptions, themeOptionsMulti, segmentOptionsMulti, customerOptionsMulti, chips } =
+    useProductFeedbackFilterOptions(filterState, facetsData, crmOrgsData);
 
   return (
     <div className="flex flex-col gap-1">

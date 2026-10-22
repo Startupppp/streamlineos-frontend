@@ -50,3 +50,4 @@ Touch only the cache entries the mutation changed (FE-148): `setQueryData` on th
 - **Slots:** a slot prop invoked as a function (`slot?.(props)`) must receive a named render function, never a component (that runs the component's hooks inside the caller and breaks hook order).
 - **No comments**, including "changelog" comments in digest/test files.
 - Do not edit docs/perf-program/TODO.md.
+- **No forwarding functions (user rule):** never write a function whose body only returns another function called with the same arguments (e.g. `cyclesQueryOptions(id) { return cyclePageQuery(id) }`). If a builder already exists, export and use it under one canonical name; delete any such alias you find in your files. Predicates over a module-private Set/Map/regex are exempt.

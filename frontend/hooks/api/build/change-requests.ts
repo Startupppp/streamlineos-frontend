@@ -60,14 +60,10 @@ export function useChangeRequests(projectId: number, filters?: CrFilters) {
   if (filters?.cursor) activeFilters.cursor = filters.cursor;
 
   return useQuery<ChangeRequestPage>({
-    queryKey: buildWorkQueryKeys.projects.changeRequests.list(
-      projectId,
-      Object.keys(activeFilters).length > 0 ? activeFilters : undefined,
-    ),
+    ...changeRequestsListQueryOptions(projectId, activeFilters),
     queryFn: ({ signal }) =>
       apiClient.get<ChangeRequestPage>(`/build/${projectId}/change-requests`, params, signal, changeRequestListContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 
@@ -108,4 +104,14 @@ export function useDeleteChangeRequest(projectId: number) {
       qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.changeRequests.list(projectId) });
     },
   });
+}
+
+export function changeRequestsListQueryOptions(projectId: number, filters?: CrFilters) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.changeRequests.list(
+      projectId,
+      filters && Object.keys(filters).length > 0 ? filters : undefined,
+    ),
+    staleTime: 60_000,
+  };
 }

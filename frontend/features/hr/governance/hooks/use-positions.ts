@@ -79,19 +79,24 @@ export interface ReorgScenario {
 }
 
 
+export function positionsQueryOptions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
+  const p: Record<string, unknown> = {};
+  if (params?.status) p["status"] = params.status;
+  if (params?.departmentId) p["departmentId"] = params.departmentId;
+  if (params?.page) p["page"] = params.page;
+  if (params?.limit) p["limit"] = params.limit;
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, params] as const,
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get("/hr/governance/positions", p, signal, positionListContract),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function usePositions(params?: { status?: string; departmentId?: number; page?: number; limit?: number }) {
   const canViewPositions = useCan("hr:positions:view");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrPositionsAll, params],
-    queryFn: ({ signal }) => {
-      const p: Record<string, unknown> = {};
-      if (params?.status) p["status"] = params.status;
-      if (params?.departmentId) p["departmentId"] = params.departmentId;
-      if (params?.page) p["page"] = params.page;
-      if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get("/hr/governance/positions", p, signal, positionListContract);
-    },
-    staleTime: 30_000,
+    ...positionsQueryOptions(params),
     enabled: canViewPositions,
   });
 }

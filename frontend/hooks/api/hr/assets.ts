@@ -34,6 +34,18 @@ export interface HrAssetListResponse {
 
 export const hrAssetListPrefix = [...humanResourcesQueryKeys.hr.all, "assets"] as const;
 
+export function hrAssetListQueryOptions(params?: HrAssetListParams) {
+  const queryParams: Record<string, unknown> = {
+    limit: params?.limit ?? 20,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
+    ...(params?.status ? { status: params.status } : {}),
+  };
+  return {
+    queryKey: humanResourcesQueryKeys.hr.assets(queryParams),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useHrAssetList(params?: HrAssetListParams, options?: { enabled?: boolean }) {
   const canAssets = useCan("hr:assets:view");
   const queryParams: Record<string, unknown> = {
@@ -42,9 +54,8 @@ export function useHrAssetList(params?: HrAssetListParams, options?: { enabled?:
     ...(params?.status ? { status: params.status } : {}),
   };
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.assets(queryParams),
+    ...hrAssetListQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get<HrAssetListResponse>("/hr/assets", queryParams, signal, assetListPageC),
-    staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canAssets && (options?.enabled ?? true),
     ...INLINE_READ_ERROR,

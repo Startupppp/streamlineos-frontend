@@ -65,6 +65,17 @@ export interface UseTerminationsParams {
 }
 
 
+export function terminationListQueryOptions(params: {
+  cursor: string;
+  limit: number;
+  status: string;
+}) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.terminationList(params),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useTerminations(params: UseTerminationsParams = {}) {
   const canView = useCan("hr:exit:manage");
   const hrEnabled = useModuleEnabled("hr");
@@ -74,17 +85,12 @@ export function useTerminations(params: UseTerminationsParams = {}) {
   if (cursor) search.set("cursor", cursor);
   if (params.status) search.set("status", params.status);
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.terminationList({
-      cursor,
-      limit,
-      status: params.status ?? "ALL",
-    }),
+    ...terminationListQueryOptions({ cursor, limit, status: params.status ?? "ALL" }),
     queryFn: ({ signal }) =>
       apiClient.get(
         `/hr/termination?${search.toString()}`, undefined, signal, terminationListContract,
       ),
     enabled: hrEnabled && canView,
-    staleTime: 2 * 60_000,
   });
 }
 

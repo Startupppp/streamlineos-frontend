@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { KbAskCitation } from "@/types/kb";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { kbConversationsQueryOptions } from "./kb-read-options";
 
 export interface KbChatHistoryMessage {
   id: number;
@@ -55,7 +56,7 @@ const kbChatHistoryPageContract = lazyContract(() =>
 export function useKbConversations(enabled: boolean) {
   const canViewPages = useCan("kb:pages:view");
   return useInfiniteQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations(),
+    ...kbConversationsQueryOptions,
     queryFn: ({ pageParam, signal }) => {
       const params: Record<string, unknown> = { limit: HISTORY_PAGE_SIZE };
       if (pageParam !== undefined) params.cursor = pageParam;
@@ -64,7 +65,6 @@ export function useKbConversations(enabled: boolean) {
     initialPageParam: NO_ID_CURSOR_YET,
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled,
-    staleTime: 30_000,
   });
 }
 

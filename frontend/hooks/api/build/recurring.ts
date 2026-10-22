@@ -1,11 +1,12 @@
 "use client";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ProjectsTicketsUpdateTicketResponse } from "@/contracts/build-contracts.generated";
 import { apiClient } from "@/lib/api-client";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 import { queryKeyBase } from "@/lib/query-keys/base";
-
+import type { Ticket } from "@/types/projects";
 
 const ticketUpdateResultLazy = lazyContract(() =>
   import("@/hooks/api/build/build-tickets-subresource-schema").then((m) => m.ticketUpdateResultContract),
@@ -33,6 +34,11 @@ export function useSetRecurrence(projectId: number, ticketId: number) {
         isRecurring: rule !== null,
         recurrenceRule: rule,
       }, undefined, ticketUpdateResultLazy),
-    onSuccess: () => qc.invalidateQueries({ queryKey: buildWorkQueryKeys.projects.ticket(projectId, ticketId) }),
+    onSuccess: (response: ProjectsTicketsUpdateTicketResponse) => {
+      qc.setQueryData<Ticket | null>(
+        buildWorkQueryKeys.projects.ticket(projectId, ticketId),
+        (current) => current ? { ...current, updatedAt: response.updatedAt, version: response.version } : current,
+      );
+    },
   });
 }

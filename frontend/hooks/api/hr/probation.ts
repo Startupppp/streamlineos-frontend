@@ -51,18 +51,24 @@ export interface ProbationListResponse {
   };
 }
 
+export function probationListQueryOptions(params: ProbationListParams = {}) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.probationList(params),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useProbationList(params: ProbationListParams = {}) {
   const canProbation = useCan("hr:probation:view");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery<ProbationListResponse>({
-    queryKey: humanResourcesQueryKeys.hr.probationList(params),
+    ...probationListQueryOptions(params),
     queryFn: ({ signal }) => {
       const searchParams = new URLSearchParams();
       searchParams.set("limit", String(params.limit ?? 20));
       if (params.cursor) searchParams.set("cursor", params.cursor);
       return apiClient.get<ProbationListResponse>(`/hr/probation?${searchParams.toString()}`, undefined, signal, probationListC);
     },
-    staleTime: 60_000,
     enabled: hrEnabled && canProbation,
   });
 }

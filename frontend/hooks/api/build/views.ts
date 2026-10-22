@@ -30,6 +30,13 @@ const noContentLazy = lazyContract(() =>
 
 type ViewPage = { data: ProjectView[]; pagination: { limit: number; hasMore: boolean; nextCursor: string | null } };
 
+export function viewsListQueryOptions(projectId: number) {
+  return {
+    queryKey: [...buildWorkQueryKeys.projects.views(projectId), {}] as const,
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useViews(
   projectId: number,
   params?: { cursor?: string | null; search?: string },

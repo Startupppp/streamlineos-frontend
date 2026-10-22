@@ -22,10 +22,17 @@ const noContentContract = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
+export function retentionSettingsQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.retentionSettings(projectId),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useProjectRetentionSettings(projectId: number) {
   const canView = useCan("build:view");
   return useQuery<ProjectsRetentionSettingsGetSettingsResponse>({
-    queryKey: buildWorkQueryKeys.projects.retentionSettings(projectId),
+    ...retentionSettingsQueryOptions(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<ProjectsRetentionSettingsGetSettingsResponse>(
         `/build/${projectId}/settings/retention`,
@@ -34,7 +41,6 @@ export function useProjectRetentionSettings(projectId: number) {
         retentionSettingsContract,
       ),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
     throwOnError: false,
     retry: false,
   });

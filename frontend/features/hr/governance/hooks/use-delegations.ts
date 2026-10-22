@@ -35,6 +35,25 @@ export interface ProxyAccess {
 
 const DELEGATIONS_KEY = ["hr", "governance", "delegations"] as const;
 
+export function orgDelegationsQueryOptions(params?: {
+  scope?: string;
+  active?: boolean;
+  cursor?: string;
+  limit?: number;
+}) {
+  const p: Record<string, unknown> = {};
+  if (params?.scope) p["scope"] = params.scope;
+  if (params?.active !== undefined) p["active"] = params.active;
+  if (params?.cursor) p["cursor"] = params.cursor;
+  if (params?.limit) p["limit"] = params.limit;
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.hrDelegationsAll, "org", params] as const,
+    queryFn: ({ signal }: { signal?: AbortSignal }) =>
+      apiClient.get("/hr/governance/delegations", p, signal, delegationsListContract),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useOrgDelegations(params?: {
   scope?: string;
   active?: boolean;
@@ -43,21 +62,7 @@ export function useOrgDelegations(params?: {
 }) {
   const canManageDelegations = useCan("hr:workflows:manage");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.hrDelegationsAll, "org", params],
-    queryFn: ({ signal }) => {
-      const p: Record<string, unknown> = {};
-      if (params?.scope) p["scope"] = params.scope;
-      if (params?.active !== undefined) p["active"] = params.active;
-      if (params?.cursor) p["cursor"] = params.cursor;
-      if (params?.limit) p["limit"] = params.limit;
-      return apiClient.get(
-        "/hr/governance/delegations",
-        p,
-        signal,
-        delegationsListContract,
-      );
-    },
-    staleTime: 30_000,
+    ...orgDelegationsQueryOptions(params),
     enabled: canManageDelegations,
   });
 }

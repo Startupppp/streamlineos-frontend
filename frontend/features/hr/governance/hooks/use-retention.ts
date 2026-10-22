@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
@@ -59,9 +59,8 @@ const RETENTION_KEY = ["hr", "governance", "retention"] as const;
 const POLICIES_KEY = [...RETENTION_KEY, "policies"] as const;
 const REQUESTS_KEY = [...RETENTION_KEY, "requests"] as const;
 
-export function useRetentionPolicies(params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) {
-  const canManageRetention = useCan("hr:retention:manage");
-  return useQuery({
+export const retentionPoliciesQueryOptions = (params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) =>
+  queryOptions({
     queryKey: [...humanResourcesQueryKeys.hr.hrRetentionPoliciesAll, params],
     queryFn: ({ signal }) => {
       const p: Record<string, unknown> = {};
@@ -72,6 +71,12 @@ export function useRetentionPolicies(params?: { recordType?: string; active?: bo
       return apiClient.get("/hr/governance/retention/policies", p, signal, retentionPolicyListContract);
     },
     staleTime: 60_000,
+  });
+
+export function useRetentionPolicies(params?: { recordType?: string; active?: boolean; page?: number; limit?: number }) {
+  const canManageRetention = useCan("hr:retention:manage");
+  return useQuery({
+    ...retentionPoliciesQueryOptions(params),
     enabled: canManageRetention,
   });
 }

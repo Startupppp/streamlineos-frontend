@@ -25,6 +25,13 @@ export function leaveContextKey(identity: LeaveIdentity) {
   return humanResourcesQueryKeys.hr.leaves(identity.orgId, identity.userId, identity.accessVersion);
 }
 
+export function leaveContextQueryOptions(orgId: string, userId: string, accessVersion: number) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.leaves(orgId, userId, accessVersion),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function leaveTeamKey(identity: LeaveIdentity, params?: QueryKeyParams) {
   const prefix = humanResourcesQueryKeys.hr.leavesTeam(identity.orgId, identity.userId, identity.accessVersion);
   return params === undefined ? prefix : ([...prefix, params] as const);

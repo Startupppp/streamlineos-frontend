@@ -41,6 +41,23 @@ export interface HrDocumentListResponse {
 
 export const hrDocumentListPrefix = humanResourcesQueryKeys.hr.documentsAll;
 
+export function hrDocumentListQueryOptions(params?: HrDocumentListParams) {
+  const queryParams: Record<string, unknown> = {
+    limit: params?.limit ?? 20,
+    ...(params?.cursor ? { cursor: params.cursor } : {}),
+    ...(params?.userId ? { userId: params.userId } : {}),
+    ...(params?.type ? { type: params.type } : {}),
+    ...(params?.search ? { search: params.search } : {}),
+    ...(params?.category && params.category !== "All Files"
+      ? { category: params.category }
+      : {}),
+  };
+  return {
+    queryKey: humanResourcesQueryKeys.hr.documents(queryParams),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useHrDocumentList(params?: HrDocumentListParams) {
   const canDocs = useCan("hr:documents:view");
   const hrEnabled = useModuleEnabled("hr");
@@ -55,9 +72,8 @@ export function useHrDocumentList(params?: HrDocumentListParams) {
       : {}),
   };
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.documents(queryParams),
+    ...hrDocumentListQueryOptions(params),
     queryFn: ({ signal }) => apiClient.get<HrDocumentListResponse>("/hr/documents", queryParams, signal, documentListLazy),
-    staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: hrEnabled && canDocs,
   });
@@ -149,6 +165,13 @@ export interface MyOnboardingDocsParams {
   status?: MyOnboardingDocStatus;
 }
 
+export function myOnboardingDocsQueryOptions(params: { limit: number; cursor?: string; status?: MyOnboardingDocStatus }) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.onboardingDocs(params),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useMyOnboardingDocs(
   options?: { enabled?: boolean } & MyOnboardingDocsParams,
 ) {
@@ -159,10 +182,9 @@ export function useMyOnboardingDocs(
     ...(options?.status ? { status: options.status } : {}),
   };
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.onboardingDocs(params),
+    ...myOnboardingDocsQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<MyOnboardingDocsResponse>("/hr/onboarding-docs/me", params, signal, myOnboardingDocsLazy),
-    staleTime: 60_000,
     placeholderData: keepPreviousData,
     enabled: canView && (options?.enabled ?? true),
   });

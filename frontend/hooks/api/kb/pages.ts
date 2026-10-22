@@ -17,6 +17,12 @@ import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation"
 import { useKbSpaces } from "./spaces";
 import { kbPageTreeLevelContract } from "./kb-page-tree-schema";
 import { invalidateKbPageChange } from "./page-invalidation";
+import {
+  kbPagesRecentQueryOptions,
+  kbPagesFavoritesQueryOptions,
+  kbPagesTrashQueryOptions,
+  kbPageQueryOptions,
+} from "./kb-read-options";
 import type { KbSpaceListPage } from "./spaces";
 import type { KbPageTrashPurgeImpact } from "./kb-pages-schema";
 import type {
@@ -194,7 +200,7 @@ export function useKbPagesRecent() {
   const canView = useCan("kb:pages:view");
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesRecent(),
+    ...kbPagesRecentQueryOptions,
     queryFn: ({ signal }) =>
       apiClient.get<KbPageListItem[]>(
         "/kb/pages/recent",
@@ -202,7 +208,6 @@ export function useKbPagesRecent() {
         signal,
         kbPageListContract,
       ),
-    staleTime: 30_000,
     enabled: canView,
   });
 }
@@ -211,7 +216,7 @@ export function useKbPagesFavorites() {
   const canView = useCan("kb:pages:view");
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesFavorites(),
+    ...kbPagesFavoritesQueryOptions,
     initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<Page<KbPageListItem>>(
@@ -222,7 +227,6 @@ export function useKbPagesFavorites() {
       ),
     getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     select: selectFlatPages,
-    staleTime: 30_000,
     enabled: canView,
   });
 }
@@ -245,7 +249,7 @@ export type KbTrashCursorPage = {
 export function useKbPagesTrash(params?: TrashPageParams) {
   const canView = useCan("kb:pages:view");
   return useQuery({
-    queryKey: knowledgeAndSurveysQueryKeys.kb.pagesTrash(params),
+    ...kbPagesTrashQueryOptions(params),
     queryFn: ({ signal }) =>
       apiClient.get<KbTrashCursorPage>(
         "/kb/pages/trash",
@@ -253,7 +257,6 @@ export function useKbPagesTrash(params?: TrashPageParams) {
         signal,
         kbTrashPageListContract,
       ),
-    staleTime: 30_000,
     enabled: canView,
   });
 }
@@ -389,7 +392,7 @@ export function useKbPage(pageId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.page(pageId),
+    ...kbPageQueryOptions(pageId),
     queryFn: ({ signal }) =>
       apiClient.get<KbPageDetail>(
         `/kb/pages/${pageId}`,
@@ -397,7 +400,6 @@ export function useKbPage(pageId: number) {
         signal,
         kbPageWithAncestorsContract,
       ),
-    staleTime: 15_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }

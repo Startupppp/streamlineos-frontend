@@ -65,13 +65,26 @@ export const serviceDeliveryKeys = {
   myItems: ["hr", "service-delivery", "my-items"] as const,
 };
 
+export function serviceDeliveryOpsInboxQueryOptions() {
+  return {
+    queryKey: serviceDeliveryKeys.opsInbox,
+    staleTime: 30_000,
+  } as const;
+}
+
+export function serviceDeliveryMyItemsQueryOptions() {
+  return {
+    queryKey: serviceDeliveryKeys.myItems,
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useServiceDeliveryOpsInbox(enabled = true) {
   const canCases = useCan("hr:cases:view");
   return useQuery({
-    queryKey: serviceDeliveryKeys.opsInbox,
+    ...serviceDeliveryOpsInboxQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get("/hr/service-delivery/ops-inbox", undefined, signal, opsInboxContract),
-    staleTime: 30_000,
     enabled: canCases && enabled,
   });
 }
@@ -79,10 +92,9 @@ export function useServiceDeliveryOpsInbox(enabled = true) {
 export function useServiceDeliveryMyItems(enabled = true) {
   const canHelpdesk = useCan("hr:helpdesk:view");
   return useQuery({
-    queryKey: serviceDeliveryKeys.myItems,
+    ...serviceDeliveryMyItemsQueryOptions(),
     queryFn: ({ signal }) =>
       apiClient.get("/hr/service-delivery/my-items", undefined, signal, myItemsContract),
-    staleTime: 30_000,
     enabled: canHelpdesk && enabled,
   });
 }

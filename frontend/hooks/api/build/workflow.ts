@@ -39,14 +39,20 @@ function customStateKeys(projectId: number) {
   return ["projects", projectId, "custom-states"] as const;
 }
 
+export function workflowTransitionsQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId),
+    staleTime: 60_000,
+  } as const;
+}
+
 export function useWorkflowTransitions(projectId: number) {
   const canView = useCan("build:workflow:view");
   return useQuery<WorkflowTransition[]>({
-    queryKey: buildWorkQueryKeys.projects.workflow.transitions(projectId),
+    ...workflowTransitionsQueryOptions(projectId),
     queryFn: ({ signal }) =>
       apiClient.get<WorkflowTransition[]>(`/build/${projectId}/workflow/transitions`, undefined, signal, workflowTransitionListContract),
     enabled: canView && !!projectId,
-    staleTime: 60_000,
   });
 }
 

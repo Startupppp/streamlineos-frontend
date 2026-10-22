@@ -13,13 +13,13 @@ import type {
 } from "./calendar-admin-schema";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { calendarAdminPolicyQueryOptions } from "@/hooks/api/calendar-read-options";
 
 const policyContract = lazyContract(() => import("./calendar-admin-schema").then((module) => module.calendarAdminPolicyContract));
 const analyticsContract = lazyContract(() => import("./calendar-admin-schema").then((module) => module.calendarAnalyticsContract));
 const revocationContract = lazyContract(() => import("./calendar-admin-schema").then((module) => module.calendarLinkRevocationContract));
 
 const keys = {
-  policy: ["calendar", "admin", "governance"] as const,
   analytics: ["calendar", "admin", "analytics"] as const,
 };
 
@@ -42,9 +42,8 @@ export interface CalendarAdminPolicyInput {
 
 export function useCalendarAdminPolicy() {
   return useGatedQuery("calendar:admin:manage", {
-    queryKey: keys.policy,
+    ...calendarAdminPolicyQueryOptions,
     queryFn: ({ signal }) => apiClient.get<CalendarAdminPolicy>("/calendar/admin/governance", undefined, signal, policyContract),
-    staleTime: 30_000,
     ...INLINE_READ_ERROR,
   });
 }
@@ -64,7 +63,7 @@ export function useUpdateCalendarAdminPolicy() {
     mutationKey: ["calendar", "admin", "update-governance"],
     mutationFn: (input: CalendarAdminPolicyInput) => apiClient.patch<CalendarAdminPolicy>("/calendar/admin/governance", input, undefined, policyContract),
     onSuccess: (policy) => {
-      queryClient.setQueryData(keys.policy, policy);
+      queryClient.setQueryData(calendarAdminPolicyQueryOptions.queryKey, policy);
       void queryClient.invalidateQueries({ queryKey: keys.analytics });
       void queryClient.invalidateQueries({ queryKey: platformHierarchyQueryKeys.calendar.all });
     },

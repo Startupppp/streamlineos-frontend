@@ -79,6 +79,13 @@ function milestoneKey(projectId: number, query?: MilestoneListQuery) {
   return [...milestoneBaseKey(projectId), query ?? {}] as const;
 }
 
+export function milestonesQueryOptions(projectId: number) {
+  return {
+    queryKey: milestoneKey(projectId),
+    staleTime: 30_000,
+  };
+}
+
 export function useProjectMilestones(
   projectId: number,
   query: MilestoneListQuery = {},

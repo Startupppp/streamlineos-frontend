@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -122,5 +122,21 @@ export function useSaveDashboardLayout() {
     onSettled: () => {
       pendingSaves.current = Math.max(pendingSaves.current - 1, 0);
     },
+  });
+}
+
+export function commandCenterLayoutQueryOptions() {
+  return queryOptions<DashboardLayoutGetLayoutResponse>({
+    queryKey: buildWorkQueryKeys.commandCenter.layout(),
+    queryFn: ({ signal }) =>
+      optionalSignalRead(
+        apiClient.get<DashboardLayoutGetLayoutResponse>(
+          "/build/command-center/layout",
+          {},
+          signal,
+          dashboardLayoutLazy,
+        ),
+      ),
+    staleTime: 60_000,
   });
 }

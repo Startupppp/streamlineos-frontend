@@ -28,7 +28,7 @@ import {
   useArchiveKbSpace,
   useRestoreKbSpace,
 } from "@/hooks/api/kb/spaces";
-import type { KbSpaceListItem } from "@/hooks/api/kb/spaces";
+import type { KbSpaceListItem } from "@/hooks/api/kb/kb-spaces-settings-schema";
 import { LayoutGrid, LayoutList } from "lucide-react";
 import { ViewToggle } from "@/components/ui/view-toggle";
 import {

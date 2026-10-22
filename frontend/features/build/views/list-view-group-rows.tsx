@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useState } from "react";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   LIST_RENDER_PAGE_SIZE,
@@ -21,10 +21,9 @@ interface GroupRenderLimit {
 
 export function useGroupRenderLimit(total: number): GroupRenderLimit {
   const [visibleCount, setVisibleCount] = useState(LIST_RENDER_PAGE_SIZE);
-  const showMore = useCallback(
-    () => setVisibleCount((count) => count + LIST_RENDER_PAGE_SIZE),
-    [],
-  );
+  function showMore() {
+    setVisibleCount((count) => count + LIST_RENDER_PAGE_SIZE);
+  }
   return {
     visibleCount,
     hiddenCount: Math.max(0, total - visibleCount),

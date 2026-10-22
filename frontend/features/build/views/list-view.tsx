@@ -1,6 +1,5 @@
 "use client";
 
-import { memo } from "react";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   Accordion,
@@ -25,7 +24,7 @@ import { OuterGroupHeader, NestedGroup, DroppableGroup, formatGroupLabel } from 
 import { EmptyState } from "@/components/ui/empty-state";
 import { useListView } from "./use-list-view";
 
-export const ListView = memo(function ListView({
+export function ListView({
   tickets,
   onTicketClick,
   groupBy,
@@ -254,4 +253,4 @@ export const ListView = memo(function ListView({
       )}
     </div>
   );
-});
+}

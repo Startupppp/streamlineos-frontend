@@ -8,6 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { kbAnalyticsOverviewQueryOptions } from "./kb-read-options";
 import type {
   KbAnalyticsOverview,
   KbAnalyticsRange,
@@ -66,9 +67,8 @@ export function useKbAnalyticsOverview(
   };
   return useQuery({
     ...INLINE_READ_ERROR,
-    queryKey: knowledgeAndSurveysQueryKeys.kb.analyticsOverview(queryParams),
+    ...kbAnalyticsOverviewQueryOptions(queryParams),
     queryFn: ({ signal }) => apiClient.get<KbAnalyticsOverview>("/kb/analytics/overview", queryParams, signal, kbAnalyticsOverviewContract),
-    staleTime: 5 * 60_000,
     enabled: canViewAnalytics,
   });
 }

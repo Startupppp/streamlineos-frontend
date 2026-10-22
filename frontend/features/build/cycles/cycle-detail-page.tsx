@@ -1,8 +1,7 @@
 "use client";
 
 import { notFound } from "next/navigation";
-import { KanbanBoard } from "@/features/build/views/kanban-board";
-import { ListView } from "@/features/build/views/list-view";
+import dynamic from "next/dynamic";
 import { ViewSwitcher } from "@/features/build/views/view-switcher";
 import { DisplayOptionsPanel } from "@/features/build/views/display-options-panel";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -18,6 +17,17 @@ import { cn } from "@/lib/utils";
 import { BuildListToolbar } from "@/features/build/shared/build-list-toolbar";
 import { BulkActionBar } from "@/features/build/shared/bulk-action-bar";
 import { useCycleDetail } from "./use-cycle-detail";
+import { Skeleton } from "@/components/ui/skeleton";
+
+const KanbanBoard = dynamic(
+  () => import("@/features/build/views/kanban-board").then((m) => m.KanbanBoard),
+  { ssr: false, loading: () => <KanbanBoardSkeleton /> },
+);
+
+const ListView = dynamic(
+  () => import("@/features/build/views/list-view").then((m) => m.ListView),
+  { ssr: false, loading: () => <Skeleton className="flex-1 min-h-[200px] rounded-xl" /> },
+);
 
 interface CycleDetailPageProps {
   projectId: string;

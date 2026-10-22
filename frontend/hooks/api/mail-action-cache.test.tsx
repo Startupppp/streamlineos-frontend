@@ -150,20 +150,36 @@ describe("applyMailActionToCaches — unified count entry must not crash the upd
 });
 
 describe("invalidateAfterMailSend — cache policy owns the send/reply invalidation prefix", () => {
-  it("marks the mail prefix stale so list hooks refetch", () => {
+  it("marks the sent folder stale so list hooks refetch", () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const spy = jest.spyOn(qc, "invalidateQueries");
     invalidateAfterMailSend(qc);
     const keys = spy.mock.calls.map((c) => (c[0] as { queryKey?: unknown }).queryKey);
-    expect(keys).toContainEqual(directoryAndOwnershipQueryKeys.mail.all);
+    expect(keys).toContainEqual(directoryAndOwnershipQueryKeys.mail.messages({ folder: "sent" }));
   });
 
-  it("marks the inbox prefix stale so the unified inbox refetches", () => {
+  it("marks the inbox count stale so the unified inbox count refetches", () => {
     const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     const spy = jest.spyOn(qc, "invalidateQueries");
     invalidateAfterMailSend(qc);
     const keys = spy.mock.calls.map((c) => (c[0] as { queryKey?: unknown }).queryKey);
-    expect(keys).toContainEqual(platformCoreQueryKeys.inbox.all);
+    expect(keys).toContainEqual(platformCoreQueryKeys.inbox.unified({ count: true }));
+  });
+
+  it("marks the thread stale when replying to an existing thread", () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const spy = jest.spyOn(qc, "invalidateQueries");
+    invalidateAfterMailSend(qc, { accountId: 1, threadId: "thread-abc" });
+    const keys = spy.mock.calls.map((c) => (c[0] as { queryKey?: unknown }).queryKey);
+    expect(keys).toContainEqual(directoryAndOwnershipQueryKeys.mail.thread(1, "thread-abc"));
+  });
+
+  it("does not invalidate the thread when no threadId is provided", () => {
+    const qc = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+    const spy = jest.spyOn(qc, "invalidateQueries");
+    invalidateAfterMailSend(qc, { accountId: 1 });
+    const keys = spy.mock.calls.map((c) => (c[0] as { queryKey?: unknown }).queryKey);
+    expect(keys).not.toContainEqual(expect.arrayContaining([...directoryAndOwnershipQueryKeys.mail.all, "thread"]));
   });
 });
 

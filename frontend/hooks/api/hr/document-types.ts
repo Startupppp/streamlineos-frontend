@@ -65,15 +65,22 @@ export function useHrDocumentTypes(options?: { enabled?: boolean; limit?: number
   });
 }
 
+export function hrDocumentTypesPageQueryOptions(cursor: string | undefined, limit: number) {
+  const params = cursor ? { cursor, limit } : { limit };
+  return {
+    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), params] as const,
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useHrDocumentTypesPage(cursor: string | undefined, limit: number) {
   const canManageDocuments = useCan("hr:documents:manage");
   const params = cursor ? { cursor, limit } : { limit };
   return useQuery<PaginatedHrDocumentTypes>({
-    queryKey: [...humanResourcesQueryKeys.hr.documentTypes(), params] as const,
+    ...hrDocumentTypesPageQueryOptions(cursor, limit),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedHrDocumentTypes>("/hr/document-types", params, signal, documentTypeListPageLazy),
     enabled: canManageDocuments,
-    staleTime: 30_000,
     placeholderData: keepPreviousData,
   });
 }

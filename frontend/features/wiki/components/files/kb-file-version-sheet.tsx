@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -49,7 +48,7 @@ function VersionRow({ version, pageId, canEdit }: VersionRowProps) {
   const downloadMutation = useKbFileDownloadUrl();
   const restoreMutation = useRestoreKbFileVersion(pageId);
 
-  const handleDownload = useCallback(async () => {
+  async function handleDownload() {
     try {
       const result = await downloadMutation.mutateAsync({
         pageId,
@@ -59,9 +58,9 @@ function VersionRow({ version, pageId, canEdit }: VersionRowProps) {
     } catch (err) {
       toast.error(getErrorMessage(err));
     }
-  }, [downloadMutation, pageId, version.id]);
+  }
 
-  const handleRestore = useCallback(() => {
+  function handleRestore() {
     restoreMutation.mutate(
       { versionId: version.id },
       {
@@ -69,7 +68,7 @@ function VersionRow({ version, pageId, canEdit }: VersionRowProps) {
         onSuccess: () => toast.success(`Restored to version ${version.versionNumber}`),
       },
     );
-  }, [restoreMutation, version.id, version.versionNumber]);
+  }
 
   return (
     <div className="flex items-start gap-3 rounded-xl border bg-card p-3">
@@ -135,8 +134,8 @@ export function KbFileVersionSheet({
   } = useKbFileVersions(pageId);
   const canEdit = useCan("kb:pages:update");
 
-  const handleRetry = useCallback(() => void refetch(), [refetch]);
-  const handleLoadMore = useCallback(() => void fetchNextPage(), [fetchNextPage]);
+  function handleRetry() { void refetch(); }
+  function handleLoadMore() { void fetchNextPage(); }
 
   const versions = data?.pages.flatMap((p) => p.data) ?? [];
 

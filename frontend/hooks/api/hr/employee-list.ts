@@ -113,6 +113,13 @@ export function normalizeEmployeeCursorResponse(
   };
 }
 
+export function employeeListQueryOptions(params?: HrEmployeesParams) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.employees(params),
+    staleTime: 2 * 60_000,
+  } as const;
+}
+
 export function useHrEmployees(
   params?: HrEmployeesParams,
   options?: { enabled?: boolean },
@@ -121,7 +128,7 @@ export function useHrEmployees(
   const hrEnabled = useModuleEnabled("hr");
   const limit = params?.limit ?? 20;
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.employees(params),
+    ...employeeListQueryOptions(params),
     queryFn: async ({ signal }): Promise<EmployeeCursorPage> => {
       const res = await apiClient.get<EmployeeCursorPage>(
         "/hr/employees",
@@ -131,7 +138,6 @@ export function useHrEmployees(
       );
       return normalizeEmployeeCursorResponse(res, limit);
     },
-    staleTime: 2 * 60_000,
     enabled: hrEnabled && canView && (options?.enabled ?? true),
   });
 }

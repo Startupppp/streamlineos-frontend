@@ -2,7 +2,6 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { LogTimeInput } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
@@ -26,9 +25,6 @@ export function useLogTime(options?: Parameters<typeof useMutation>[0]) {
         timeEntryRowLazy,
       ),
     onSuccess: (_: unknown, variables: LogTimeInput) => {
-      queryClient.invalidateQueries({
-        queryKey: buildWorkQueryKeys.projects.timeEntries(),
-      });
       invalidateBuildViews(queryClient, variables.projectId, [variables.ticketId]);
     },
   });

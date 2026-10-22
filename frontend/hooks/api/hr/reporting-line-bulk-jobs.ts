@@ -26,11 +26,25 @@ const jobPageLazy = lazyContract(() =>
   import("@/hooks/api/hr/reporting-line-bulk-jobs-schema").then((m) => m.bulkJobPageContract),
 );
 
+export function reportingLineBulkJobsQueryOptions(params: { cursor: string | null }) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.reportingLineBulkJobs(params),
+    staleTime: 30_000,
+  } as const;
+}
+
+export function reportingLineBulkJobQueryOptions(jobId: string, rowCursor?: string) {
+  return {
+    queryKey: humanResourcesQueryKeys.hr.reportingLineBulkJob(jobId, rowCursor),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useReportingLineBulkJobs(cursor?: string) {
   const canManage = useCan("hr:reporting-lines:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.reportingLineBulkJobs({ cursor: cursor ?? null }),
+    ...reportingLineBulkJobsQueryOptions({ cursor: cursor ?? null }),
     queryFn: ({ signal }) =>
       apiClient.get<BulkJobPage>(
         "/hr/reporting-lines/bulk-jobs",
@@ -39,7 +53,6 @@ export function useReportingLineBulkJobs(cursor?: string) {
         jobPageLazy,
       ),
     enabled: hrEnabled && canManage,
-    staleTime: 30_000,
     placeholderData: (previous) => previous,
     ...INLINE_READ_ERROR,
   });
@@ -49,7 +62,7 @@ export function useReportingLineBulkJob(jobId: string, rowCursor?: string) {
   const canManage = useCan("hr:reporting-lines:manage");
   const hrEnabled = useModuleEnabled("hr");
   return useQuery({
-    queryKey: humanResourcesQueryKeys.hr.reportingLineBulkJob(jobId, rowCursor),
+    ...reportingLineBulkJobQueryOptions(jobId, rowCursor),
     queryFn: ({ signal }) =>
       apiClient.get<BulkJob>(
         `/hr/reporting-lines/bulk-jobs/${jobId}`,
@@ -58,7 +71,6 @@ export function useReportingLineBulkJob(jobId: string, rowCursor?: string) {
         jobLazy,
       ),
     enabled: hrEnabled && canManage && jobId !== "",
-    staleTime: 30_000,
     placeholderData: (previous) => previous,
     ...INLINE_READ_ERROR,
   });

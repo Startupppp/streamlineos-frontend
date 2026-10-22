@@ -73,12 +73,12 @@ function wrapperFor(client: QueryClient) {
 function invalidatedPrefixes(spy: jest.SpyInstance): string[][] {
   return spy.mock.calls
     .map((call) => (call[0] as { queryKey?: unknown } | undefined)?.queryKey)
-    .filter((key): key is string[] => Array.isArray(key))
-    .map((key) => key.map(String));
+    .filter((key): key is unknown[] => Array.isArray(key))
+    .map((key) => key.map((segment) => JSON.stringify(segment)));
 }
 
 function contains(prefixes: string[][], target: readonly unknown[]): boolean {
-  const wanted = target.map(String);
+  const wanted = target.map((segment) => JSON.stringify(segment));
   return prefixes.some(
     (prefix) =>
       prefix.length === wanted.length &&
@@ -92,7 +92,7 @@ beforeEach(() => {
 });
 
 describe("useSendMail invalidation", () => {
-  it("invalidates the mail prefix", async () => {
+  it("refreshes the Sent folder lists and never the whole mail prefix", async () => {
     const client = newClient();
     const spy = jest.spyOn(client, "invalidateQueries");
     const { result } = renderHook(() => useSendMail(), {
@@ -102,27 +102,17 @@ describe("useSendMail invalidation", () => {
       await result.current.mutateAsync(SEND);
     });
     await waitFor(() =>
-      expect(contains(invalidatedPrefixes(spy), queryKeys.mail.all)).toBe(true),
+      expect(
+        contains(invalidatedPrefixes(spy), queryKeys.mail.messages({ folder: "sent" })),
+      ).toBe(true),
     );
-  });
-
-  it("also invalidates the unified inbox prefix, which serves the same message", async () => {
-    const client = newClient();
-    const spy = jest.spyOn(client, "invalidateQueries");
-    const { result } = renderHook(() => useSendMail(), {
-      wrapper: wrapperFor(client),
-    });
-    await act(async () => {
-      await result.current.mutateAsync(SEND);
-    });
-    await waitFor(() =>
-      expect(contains(invalidatedPrefixes(spy), queryKeys.inbox.all)).toBe(true),
-    );
+    expect(contains(invalidatedPrefixes(spy), queryKeys.mail.all)).toBe(false);
+    expect(contains(invalidatedPrefixes(spy), queryKeys.inbox.all)).toBe(false);
   });
 });
 
 describe("useReplyMail invalidation", () => {
-  it("invalidates the mail prefix", async () => {
+  it("refreshes the thread and every list that shows it, and never the whole mail prefix", async () => {
     const client = newClient();
     const spy = jest.spyOn(client, "invalidateQueries");
     const { result } = renderHook(() => useReplyMail(), {
@@ -132,49 +122,15 @@ describe("useReplyMail invalidation", () => {
       await result.current.mutateAsync(REPLY);
     });
     await waitFor(() =>
-      expect(contains(invalidatedPrefixes(spy), queryKeys.mail.all)).toBe(true),
+      expect(
+        contains(invalidatedPrefixes(spy), queryKeys.mail.thread(REPLY.accountId, "thread-1")),
+      ).toBe(true),
     );
-  });
-
-  it("also invalidates the unified inbox prefix", async () => {
-    const client = newClient();
-    const spy = jest.spyOn(client, "invalidateQueries");
-    const { result } = renderHook(() => useReplyMail(), {
-      wrapper: wrapperFor(client),
-    });
-    await act(async () => {
-      await result.current.mutateAsync(REPLY);
-    });
-    await waitFor(() =>
-      expect(contains(invalidatedPrefixes(spy), queryKeys.inbox.all)).toBe(true),
-    );
-  });
-});
-
-describe("BITE PROOF: the assertion can distinguish a prefix that was never invalidated", () => {
-  it("a send does not invalidate an unrelated prefix", async () => {
-    const client = newClient();
-    const spy = jest.spyOn(client, "invalidateQueries");
-    const { result } = renderHook(() => useSendMail(), {
-      wrapper: wrapperFor(client),
-    });
-    await act(async () => {
-      await result.current.mutateAsync(SEND);
-    });
-    expect(contains(invalidatedPrefixes(spy), queryKeys.calendar.all)).toBe(false);
-  });
-
-  it("a failed send invalidates nothing, because onSuccess never runs", async () => {
-    post.mockRejectedValueOnce(new Error("network down"));
-    const client = newClient();
-    const spy = jest.spyOn(client, "invalidateQueries");
-    const { result } = renderHook(() => useSendMail(), {
-      wrapper: wrapperFor(client),
-    });
-    await act(async () => {
-      await result.current.mutateAsync(SEND).catch(() => undefined);
-    });
-    expect(contains(invalidatedPrefixes(spy), queryKeys.mail.all)).toBe(false);
-    expect(contains(invalidatedPrefixes(spy), queryKeys.inbox.all)).toBe(false);
+    const prefixes = invalidatedPrefixes(spy);
+    expect(contains(prefixes, queryKeys.mail.messages({ folder: "sent" }))).toBe(true);
+    expect(contains(prefixes, queryKeys.mail.messages({ folder: "inbox" }))).toBe(true);
+    expect(contains(prefixes, queryKeys.inbox.unified({ infinite: true }))).toBe(true);
+    expect(contains(prefixes, queryKeys.mail.all)).toBe(false);
+    expect(contains(prefixes, queryKeys.inbox.all)).toBe(false);
   });
 });

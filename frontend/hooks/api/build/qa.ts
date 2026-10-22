@@ -195,6 +195,27 @@ export function useTestRunDetail(projectId?: number, runId?: number) {
   });
 }
 
+export function testSuitesQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.qa.suites(projectId),
+    staleTime: 60_000,
+  } as const;
+}
+
+export function testCasesQueryOptions(projectId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.qa.cases(projectId),
+    staleTime: 60_000,
+  } as const;
+}
+
+export function testRunDetailQueryOptions(projectId: number, runId: number) {
+  return {
+    queryKey: buildWorkQueryKeys.projects.qa.run(projectId, runId),
+    staleTime: 30_000,
+  } as const;
+}
+
 export function useCreateTestRun() {
   const qc = useQueryClient();
   return useAuthorizedMutation("build:qa:manage", {

@@ -4,6 +4,7 @@ import {
   endOfMonth,
   endOfWeek,
   format,
+  parseISO,
   startOfMonth,
   startOfWeek,
   subMonths,
@@ -11,7 +12,6 @@ import {
 import {
   HR_CALENDAR_MAX_WINDOW_DAYS,
   clampToHrCalendarWindow,
-  parseHrCalendarDay,
   splitHrCalendarWindow,
   useHrCalendarEventsMapped,
 } from "./use-hr-calendar-events";
@@ -119,7 +119,7 @@ function anchors(): Date[] {
 
 describe("the /hr/calendar window this caller asks for", () => {
   it("keeps a date-only HR event on the browser's local calendar day", () => {
-    expect(parseHrCalendarDay("2026-10-14")).toEqual(new Date(2026, 9, 14));
+    expect(parseISO("2026-10-14")).toEqual(new Date(2026, 9, 14));
   });
 
   it("the unclamped view window is what 400s today — the regression this guards", () => {
