@@ -8,7 +8,7 @@ import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
-import { releaseBaseKey } from "@/hooks/api/build/releases";
+import { releaseBaseKey } from "@/hooks/api/build/releases-read-options";
 import type { BuildMembersResponse } from "@/hooks/api/build/build-members";
 import type { GoalListItem } from "@/hooks/api/goals";
 import type {

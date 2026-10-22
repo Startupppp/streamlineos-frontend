@@ -11,8 +11,8 @@ import {
   useCyclePage,
   useDeleteCycle,
   useUpdateCycle,
-  type CycleListFilters,
 } from "@/hooks/api/build/cycles";
+import type { CycleListFilters } from "@/hooks/api/build/cycles-read-options";
 import { useProject } from "@/hooks/api/build/projects";
 import { isCompletedTicketStatus } from "@/features/build/shared/completed-status";
 import { useCan } from "@/hooks/api/access";

@@ -11,7 +11,11 @@ import type {
   ProjectBudgetUpdate,
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { milestonesQueryOptions, milestoneBaseKey } from "./milestones-read-options";
+import {
+  milestonesQueryOptions,
+  milestoneBaseKey,
+  projectBudgetQueryOptions,
+} from "./milestones-read-options";
 import type { MilestoneListQuery } from "./milestones-read-options";
 
 export type ProjectMilestone = ProjectMilestoneBase & {
@@ -142,13 +146,6 @@ export function useDeleteMilestone(projectId: number) {
       );
     },
   });
-}
-
-export function projectBudgetQueryOptions(projectId: number) {
-  return {
-    queryKey: buildWorkQueryKeys.projects.budget(projectId),
-    staleTime: 60_000,
-  };
 }
 
 export function useProjectBudget(projectId: number) {

@@ -7,6 +7,11 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import type { EpicPage, EpicItem } from "@/hooks/api/build/execution-schema";
+import {
+  epicPageQueryOptions,
+  buildEpicsParams,
+  type EpicListFilters,
+} from "./epics-read-options";
 
 export type { EpicPage, EpicItem };
 
@@ -14,40 +19,22 @@ const epicPageContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.epicPageContract),
 );
 
-export interface EpicListFilters {
-  q?: string;
-  status?: string;
-  ownerId?: string;
-  health?: "on_track" | "at_risk" | "off_track";
-  cursor?: string;
-  limit?: number;
-}
-
-export function epicPageQueryOptions(projectId: number, filters?: EpicListFilters) {
-  const queryParams: Record<string, string> = {};
-  for (const [key, value] of Object.entries(filters ?? {}))
-    if (value !== undefined && value !== "") queryParams[key] = String(value);
-  return {
-    queryKey: [...buildWorkQueryKeys.projects.epics(projectId), filters ?? {}],
-    queryFn: ({ signal }: { signal: AbortSignal }) =>
-      apiClient.get<EpicPage>(
-        `/build/${projectId}/epics`,
-        Object.keys(queryParams).length > 0 ? queryParams : undefined,
-        signal,
-        epicPageContract,
-      ),
-    staleTime: 30_000,
-  };
-}
-
 export function useEpicPage(
   projectId: number,
   filters?: EpicListFilters,
   options?: Omit<UseQueryOptions<EpicPage>, "queryKey" | "queryFn" | "enabled">,
 ) {
   const canView = useCan("build:tickets:view");
+  const queryParams = buildEpicsParams(filters);
   return useQuery<EpicPage>({
     ...epicPageQueryOptions(projectId, filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<EpicPage>(
+        `/build/${projectId}/epics`,
+        Object.keys(queryParams).length > 0 ? queryParams : undefined,
+        signal,
+        epicPageContract,
+      ),
     ...options,
     enabled: canView && !!projectId,
   });
@@ -61,8 +48,16 @@ export function useEpics(
   >,
 ) {
   const canView = useCan("build:tickets:view");
+  const queryParams = buildEpicsParams();
   return useQuery<EpicPage, Error, EpicItem[]>({
     ...epicPageQueryOptions(projectId),
+    queryFn: ({ signal }) =>
+      apiClient.get<EpicPage>(
+        `/build/${projectId}/epics`,
+        Object.keys(queryParams).length > 0 ? queryParams : undefined,
+        signal,
+        epicPageContract,
+      ),
     select: (page) => page.data,
     ...options,
     enabled: canView && !!projectId,

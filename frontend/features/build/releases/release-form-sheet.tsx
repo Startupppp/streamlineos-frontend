@@ -20,10 +20,10 @@ import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import {
-  releaseBaseKey,
   useCreateRelease,
   useUpdateRelease,
 } from "@/hooks/api/build/releases";
+import { releaseBaseKey } from "@/hooks/api/build/releases-read-options";
 import type { Release } from "@/types/projects";
 import { toast } from "sonner";
 import { getApiErrorCode, isApiError } from "@/lib/api-envelope";

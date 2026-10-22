@@ -37,36 +37,36 @@ import {
   kbPageWithAncestorsContract,
   kbPageVersionListContract,
 } from "@/hooks/api/kb/kb-pages-schema";
-import { changeRequestsListQueryOptions } from "@/hooks/api/build/change-requests";
-import { projectRisksListQueryOptions, projectDecisionsListQueryOptions } from "@/hooks/api/build/governance";
-import { meetingsListQueryOptions, meetingDetailQueryOptions } from "@/hooks/api/build/meetings";
-import { releasesListQueryOptions } from "@/hooks/api/build/releases";
-import { projectApprovalsListQueryOptions } from "@/hooks/api/build/approvals";
-import { projectFilesListQueryOptions } from "@/hooks/api/build/project-files";
-import { formsListQueryOptions, formDetailQueryOptions } from "@/hooks/api/build/forms";
-import { incidentsListQueryOptions, incidentDetailQueryOptions } from "@/hooks/api/build/incidents";
-import { intakeRequestsQueryOptions } from "@/hooks/api/build/intake";
-import { testSuitesQueryOptions, testCasesQueryOptions, testRunDetailQueryOptions } from "@/hooks/api/build/qa";
-import { projectUpdatesListQueryOptions } from "@/hooks/api/build/project-updates";
-import { portalSettingsQueryOptions } from "@/hooks/api/build/client-portal-management";
-import { feedbucketWidgetsQueryOptions } from "@/hooks/api/feedbucket/use-feedbucket-widgets";
-import { feedbucketSubmissionQueryOptions } from "@/hooks/api/feedbucket/use-feedbucket-submissions";
-import { projectMembersQueryOptions } from "@/hooks/api/build/project-members";
-import { agentTokensQueryOptions } from "@/hooks/api/build/agent-tokens";
-import { automationsListQueryOptions } from "@/hooks/api/build/automations";
-import { projectCustomFieldsQueryOptions } from "@/hooks/api/build/custom-fields";
-import { webhooksListQueryOptions } from "@/hooks/api/build/webhooks";
-import { iterationSettingsQueryOptions } from "@/hooks/api/build/iteration-settings";
-import { retentionSettingsQueryOptions } from "@/hooks/api/build/project-retention-settings";
-import { viewsListQueryOptions } from "@/hooks/api/build/views";
-import { workflowTransitionsQueryOptions } from "@/hooks/api/build/workflow";
+import { changeRequestsListQueryOptions } from "@/hooks/api/build/change-requests-read-options";
+import { projectRisksListQueryOptions, projectDecisionsListQueryOptions } from "@/hooks/api/build/governance-read-options";
+import { meetingsListQueryOptions, meetingDetailQueryOptions } from "@/hooks/api/build/meetings-read-options";
+import { releasesListQueryOptions } from "@/hooks/api/build/releases-read-options";
+import { projectApprovalsListQueryOptions } from "@/hooks/api/build/approvals-read-options";
+import { projectFilesListQueryOptions } from "@/hooks/api/build/project-files-read-options";
+import { formsListQueryOptions, formDetailQueryOptions } from "@/hooks/api/build/forms-read-options";
+import { incidentsListQueryOptions, incidentDetailQueryOptions } from "@/hooks/api/build/incidents-read-options";
+import { intakeRequestsQueryOptions } from "@/hooks/api/build/intake-read-options";
+import { testSuitesQueryOptions, testCasesQueryOptions, testRunDetailQueryOptions } from "@/hooks/api/build/qa-read-options";
+import { projectUpdatesListQueryOptions } from "@/hooks/api/build/project-updates-read-options";
+import { portalSettingsQueryOptions } from "@/hooks/api/build/client-portal-management-read-options";
+import { feedbucketWidgetsQueryOptions } from "@/hooks/api/feedbucket/use-feedbucket-widgets-read-options";
+import { feedbucketSubmissionQueryOptions } from "@/hooks/api/feedbucket/use-feedbucket-submissions-read-options";
+import { projectMembersQueryOptions } from "@/hooks/api/build/project-members-read-options";
+import { agentTokensQueryOptions } from "@/hooks/api/build/agent-tokens-read-options";
+import { automationsListQueryOptions } from "@/hooks/api/build/automations-read-options";
+import { projectCustomFieldsQueryOptions } from "@/hooks/api/build/custom-fields-read-options";
+import { webhooksListQueryOptions } from "@/hooks/api/build/webhooks-read-options";
+import { iterationSettingsQueryOptions } from "@/hooks/api/build/iteration-settings-read-options";
+import { retentionSettingsQueryOptions } from "@/hooks/api/build/project-retention-settings-read-options";
+import { viewsListQueryOptions } from "@/hooks/api/build/views-read-options";
+import { workflowTransitionsQueryOptions } from "@/hooks/api/build/workflow-read-options";
 import {
   kbPagesRecentQueryOptions,
   kbPagesFavoritesQueryOptions,
   kbPageQueryOptions,
   kbPageVersionsQueryOptions,
 } from "@/hooks/api/kb/kb-read-options";
-import { projectBudgetQueryOptions } from "@/hooks/api/build/milestones";
+import { projectBudgetQueryOptions } from "@/hooks/api/build/milestones-read-options";
 import { projectBudgetContract } from "@/hooks/api/build/workspace-schema";
 
 export async function prefetchProjectBudget(projectId: number) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef } from "react";
-import { queryOptions, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
@@ -12,6 +12,7 @@ import {
 } from "@/lib/query-error-policy";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { DashboardLayoutGetLayoutResponse } from "@/contracts/build-contracts.generated";
+import { commandCenterLayoutQueryOptions } from "./dashboard-layout-read-options";
 
 const dashboardLayoutLazy = lazyContract(() =>
   import("@/contracts/build-contracts.generated").then(
@@ -45,6 +46,15 @@ export function useDashboardLayout() {
   const canView = useCan("build:dashboard:view");
   return useQuery({
     ...commandCenterLayoutQueryOptions(),
+    queryFn: ({ signal }) =>
+      optionalSignalRead(
+        apiClient.get<DashboardLayoutGetLayoutResponse>(
+          "/build/command-center/layout",
+          {},
+          signal,
+          dashboardLayoutLazy,
+        ),
+      ),
     enabled: canView,
     ...INLINE_READ_ERROR,
   });
@@ -114,18 +124,3 @@ export function useSaveDashboardLayout() {
   });
 }
 
-export function commandCenterLayoutQueryOptions() {
-  return queryOptions<DashboardLayoutGetLayoutResponse>({
-    queryKey: buildWorkQueryKeys.commandCenter.layout(),
-    queryFn: ({ signal }) =>
-      optionalSignalRead(
-        apiClient.get<DashboardLayoutGetLayoutResponse>(
-          "/build/command-center/layout",
-          {},
-          signal,
-          dashboardLayoutLazy,
-        ),
-      ),
-    staleTime: 60_000,
-  });
-}

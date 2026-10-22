@@ -1,6 +1,6 @@
 "use client";
 
-import { queryOptions, useQueryClient, keepPreviousData, type QueryClient } from "@tanstack/react-query";
+import { useQueryClient, keepPreviousData, type QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 
@@ -31,6 +31,11 @@ const noContentContract = lazyContract(() =>
 import { accountingAndSupportQueryKeys } from "@/lib/query-keys/accounting-and-support";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import {
+  goalsListQueryOptions,
+  toGoalsQueryParams,
+  type GoalsParams,
+} from "@/hooks/api/goals-read-options";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { z } from "zod";
 import type {
@@ -66,20 +71,6 @@ export interface GoalStats {
   staleCheckIns: number;
 }
 
-interface GoalsParams {
-  status?: GoalStatus | GoalStatus[];
-  level?: GoalLevel;
-  ownerId?: string | string[];
-  projectId?: number;
-  managedProductId?: number;
-  search?: string;
-  page?: number;
-  limit?: number;
-  health?: string | string[];
-  due?: string;
-  scope?: string;
-  metricType?: KeyResultMetric;
-}
 
 export interface KeyResultInput {
   title: string;
@@ -128,27 +119,6 @@ interface AddGoalLinkInput {
   projectId?: number;
 }
 
-function toQueryParams(params?: GoalsParams): Record<string, unknown> | undefined {
-  if (!params) return undefined;
-  const { status, health, ownerId, ...rest } = params;
-  const result: Record<string, unknown> = { ...rest };
-  if (Array.isArray(status)) {
-    if (status.length > 0) result["status"] = status.join(",");
-  } else if (status) {
-    result["status"] = status;
-  }
-  if (Array.isArray(health)) {
-    if (health.length > 0) result["health"] = health.join(",");
-  } else if (health) {
-    result["health"] = health;
-  }
-  if (Array.isArray(ownerId)) {
-    if (ownerId.length > 0) result["ownerId"] = ownerId.join(",");
-  } else if (ownerId) {
-    result["ownerId"] = ownerId;
-  }
-  return result;
-}
 
 type GoalsListCache = GoalListItem[] | GoalsListPage;
 
@@ -184,8 +154,11 @@ function forEachGoalList(
 }
 
 export function useGoals(params?: GoalsParams, options?: { enabled?: boolean }) {
+  const queryParams = toGoalsQueryParams(params);
   return useGatedQuery("build:goals:view", {
     ...goalsListQueryOptions(params),
+    queryFn: async ({ signal }) =>
+      (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
     enabled: options?.enabled ?? true,
     placeholderData: keepPreviousData,
     ...INLINE_READ_ERROR,
@@ -193,7 +166,7 @@ export function useGoals(params?: GoalsParams, options?: { enabled?: boolean }) 
 }
 
 export function useGoalsPage(params?: GoalsParams) {
-  const queryParams = toQueryParams(params);
+  const queryParams = toGoalsQueryParams(params);
   return useGatedQuery("build:goals:view", {
     queryKey: [...accountingAndSupportQueryKeys.goals.list(queryParams), "full-page"],
     queryFn: async ({ signal }) =>
@@ -473,12 +446,3 @@ export function useUnlinkGoalProduct() {
   );
 }
 
-export function goalsListQueryOptions(params?: GoalsParams) {
-  const queryParams = toQueryParams(params);
-  return queryOptions<GoalListItem[]>({
-    queryKey: accountingAndSupportQueryKeys.goals.list(queryParams),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<GoalsListPage>("/goals", queryParams, signal, goalsListContract)).items,
-    staleTime: 30_000,
-  });
-}

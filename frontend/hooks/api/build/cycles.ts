@@ -8,6 +8,11 @@ import { lazyContract } from "@/lib/api-envelope";
 import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type { Cycle, CreateCycleInput } from "@/types/projects";
+import {
+  cyclesQueryOptions,
+  buildCyclesParams,
+  type CycleListFilters,
+} from "./cycles-read-options";
 
 const cycleListContract = lazyContract(() =>
   import("@/hooks/api/build/execution-schema").then((m) => m.cycleListContract),
@@ -22,37 +27,11 @@ const noContentLazy = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
 );
 
-export interface CycleListFilters {
-  status?: "draft" | "active" | "completed";
-  q?: string;
-  from?: string;
-  to?: string;
-  cursor?: string;
-  limit?: number;
-}
-
 export type CyclePage = {
   data: Cycle[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 };
 
-export function cyclesQueryOptions(projectId: number, filters?: CycleListFilters) {
-  const activeFilters = filters ?? {};
-  const queryParams: Record<string, string> = {};
-  for (const [key, value] of Object.entries(activeFilters))
-    if (value !== undefined && value !== "") queryParams[key] = String(value);
-  return {
-    queryKey: [...buildWorkQueryKeys.projects.cycles(projectId), activeFilters],
-    queryFn: ({ signal }: { signal: AbortSignal }) =>
-      apiClient.get<CyclePage>(
-        `/build/${projectId}/cycles`,
-        Object.keys(queryParams).length > 0 ? queryParams : undefined,
-        signal,
-        cycleListContract,
-      ),
-    staleTime: 60_000,
-  };
-}
 
 export function useCyclePage(
   projectId: number,
@@ -60,8 +39,16 @@ export function useCyclePage(
   options?: Omit<UseQueryOptions<CyclePage>, "queryKey" | "queryFn" | "enabled">
 ) {
   const canView = useCan("build:cycles:view");
+  const queryParams = buildCyclesParams(filters);
   return useQuery<CyclePage>({
     ...cyclesQueryOptions(projectId, filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<CyclePage>(
+        `/build/${projectId}/cycles`,
+        Object.keys(queryParams).length > 0 ? queryParams : undefined,
+        signal,
+        cycleListContract,
+      ),
     ...options,
     enabled: canView && !!projectId,
   });
@@ -76,8 +63,16 @@ export function useCycles(
   >
 ) {
   const canView = useCan("build:cycles:view");
+  const queryParams = buildCyclesParams(filters);
   return useQuery<CyclePage, Error, Cycle[]>({
     ...cyclesQueryOptions(projectId, filters),
+    queryFn: ({ signal }) =>
+      apiClient.get<CyclePage>(
+        `/build/${projectId}/cycles`,
+        Object.keys(queryParams).length > 0 ? queryParams : undefined,
+        signal,
+        cycleListContract,
+      ),
     select: (page) => page.data,
     ...options,
     enabled: canView && !!projectId,

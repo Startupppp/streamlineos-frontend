@@ -7,10 +7,8 @@ import {
 } from "@/hooks/api/build/ticket-create-rank-mutations";
 import { useBulkUpdateTickets } from "@/hooks/api/build/ticket-bulk-update-mutation";
 import { useProjectBoardTickets } from "@/hooks/api/build/ticket-queries";
-import {
-  useEpicPage,
-  type EpicListFilters,
-} from "@/hooks/api/build/epics";
+import { useEpicPage } from "@/hooks/api/build/epics";
+import type { EpicListFilters } from "@/hooks/api/build/epics-read-options";
 import { useCycles } from "@/hooks/api/build/cycles";
 import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useExportTickets } from "@/hooks/api/build/ticket-import-export";
