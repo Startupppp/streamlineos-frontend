@@ -612,6 +612,15 @@ const nextConfig: NextConfig = {
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
       ],
     },
+    {
+      source: "/sign/:recipientToken([0-9a-fA-F]{64})",
+      headers: [
+        {
+          key: "Permissions-Policy",
+          value: "camera=(), microphone=(), geolocation=()",
+        },
+      ],
+    },
   ],
 };
 
