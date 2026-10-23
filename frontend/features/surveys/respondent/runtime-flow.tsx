@@ -77,7 +77,7 @@ export function RuntimeFlow({
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current.id, saving, answers]);
+  }, [current?.id, saving, answers]);
 
   if (!current) {
     return null;

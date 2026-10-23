@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { CollectorEmbedSettings } from "./collector-embed-settings";
 import { useCollectors, useCreateCollector, usePatchCollector, type CollectorType, type CollectorStatus } from "@/hooks/api/surveys/collectors";
 
 const COLLECTOR_TYPES = [
@@ -113,6 +114,9 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
                   {collector.status === "active" ? "Pause" : "Activate"}
                 </Button>
               </div>
+              {(collector.collectorType === "embed" || collector.collectorType === "popup") && (
+                <CollectorEmbedSettings surveyId={surveyId} collector={collector} />
+              )}
             </div>
           ))
         )}
