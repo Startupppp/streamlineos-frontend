@@ -237,7 +237,7 @@ export function WebhooksPage() {
             <WebhookCardSkeleton key={i} />
           ))}
         </div>
-      ) : isError ? (
+      ) : isError && !data ? (
         <ErrorState
           title="Couldn't load webhooks"
           description={getErrorMessage(error)}
