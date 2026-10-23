@@ -467,6 +467,52 @@ describe("wiki autosave — a 409 must not be silent", () => {
     expect(hook.result.current.conflict).toBeNull();
   });
 
+  it("Load theirs is not undone by a save that was still in flight, and the next edit saves", async () => {
+    let rejectFirst: (error: unknown) => void = () => {};
+    const sent: SavePayload[] = [];
+    const save = jest.fn((payload: SavePayload) => {
+      sent.push(payload);
+      if (sent.length === 1)
+        return new Promise<{ contentRevision: number }>((_resolve, reject) => {
+          rejectFirst = reject;
+        });
+      return Promise.resolve({ contentRevision: 9 });
+    });
+    const onConflict = jest.fn();
+    const hook = renderHook(
+      ({ contentRevision }: { contentRevision: number }) =>
+        usePageAutosave({ pageId: 12, contentRevision, save, onConflict, onSaveError: jest.fn(), delayMs: 1500 }),
+      { initialProps: { contentRevision: 4 } },
+    );
+
+    act(() => {
+      hook.result.current.schedule({ title: "mine" });
+    });
+    await settle();
+    expect(sent).toHaveLength(1);
+
+    act(() => {
+      hook.result.current.discardLocalEdits();
+    });
+    hook.rerender({ contentRevision: 8 });
+    await act(async () => {
+      rejectFirst(new ApiError("conflict", 409));
+    });
+
+    expect(hook.result.current.conflict).toBeNull();
+    expect(onConflict).not.toHaveBeenCalled();
+
+    act(() => {
+      hook.result.current.schedule({ title: "after reload" });
+    });
+    await settle();
+    await drain();
+
+    expect(sent).toHaveLength(2);
+    expect(sent[1]!.expectedContentRevision).toBe(8);
+    expect(hook.result.current.conflict).toBeNull();
+  });
+
   it("reports an ordinary failure without latching the editor shut", async () => {
     const { hook, onConflict, onSaveError } = harness({
       failWith: new ApiError("Internal server error", 500),

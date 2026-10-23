@@ -48,6 +48,7 @@ export function usePageAutosave({
   const isOffline = !useOnlineStatus();
   const [pendingFields, setPendingFields] = useState<readonly string[]>([]);
 
+  const discardGenerationRef = useRef(0);
   const conflictRef = useRef<KbPageEditConflict | null>(null);
   const pendingPatchRef = useRef<PageAutosavePatch | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -121,9 +122,11 @@ export function usePageAutosave({
         ...patch,
         expectedContentRevision: known.value,
       };
+      const savedGeneration = discardGenerationRef.current;
 
       function handleSaved(data: { contentRevision: number }) {
         inFlightRef.current = false;
+        if (discardGenerationRef.current !== savedGeneration) return;
         adoptRevision(targetPageId, data.contentRevision);
         setStateIfMounted("saved");
         if (mountedRef.current) setSavedAt(new Date());
@@ -139,6 +142,7 @@ export function usePageAutosave({
 
       function handleFailed(error: unknown) {
         inFlightRef.current = false;
+        if (discardGenerationRef.current !== savedGeneration) return;
         pendingPatchRef.current = { ...patch, ...(pendingPatchRef.current ?? {}) };
         if (mountedRef.current) setPendingFields(Object.keys(pendingPatchRef.current));
         if (isApiError(error) && error.status === 409) {
@@ -238,6 +242,7 @@ export function usePageAutosave({
 
   const discardLocalEdits = useCallback(() => {
     clearTimer();
+    discardGenerationRef.current++;
     conflictRef.current = null;
     setConflict(null);
     pendingPatchRef.current = null;
