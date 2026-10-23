@@ -68,6 +68,8 @@ export function useEventCreateDialog({
   );
   const [dateTimeError, setDateTimeError] = useState("");
   const [titleError, setTitleError] = useState("");
+  const [formDirty, setFormDirty] = useState(false);
+  const dialogWasOpenRef = useRef(false);
   const [descriptionTouched, setDescriptionTouched] = useState(false);
   const [linkedTicket, setLinkedTicket] = useState<TicketSearchResult | null>(null);
   const [existingEntityId, setExistingEntityId] = useState<string | null>(null);
@@ -92,12 +94,18 @@ export function useEventCreateDialog({
   }, [isEdit, descriptionTouched, editingDetail, event?.id, form]);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) {
+      dialogWasOpenRef.current = false;
+      return;
+    }
+    if (dialogWasOpenRef.current) return;
+    dialogWasOpenRef.current = true;
     const base = isEdit && event ? toEditForm(event, rrule, timeZone) : toDefaultForm(defaultSlot, timeZone);
     setForm(isEdit ? base : { ...base, syncConnectionId: "none" });
     setShowEndDate(needsEndDateField(base));
     setDateTimeError("");
     setTitleError("");
+    setFormDirty(false);
     setDescriptionTouched(false);
     setLinkedTicket(null);
     setExistingEntityId(
@@ -122,6 +130,7 @@ export function useEventCreateDialog({
   const handleClose = useCallback(() => onOpenChange(false), [onOpenChange]);
 
   const set = useCallback(<K extends keyof FormState>(key: K, value: FormState[K]) => {
+    setFormDirty(true);
     setForm((prev) => ({ ...prev, [key]: value }));
   }, []);
 
@@ -182,12 +191,14 @@ export function useEventCreateDialog({
       set("location", value);
       const locationError =
         value && /^https?:\/\//i.test(value) && !isValidUrl(value) ? "Invalid URL format" : "";
+      setFormDirty(true);
       setForm((prev) => ({ ...prev, locationError }));
     },
     [set],
   );
 
   const handleAllDayChange = useCallback((v: boolean) => {
+    setFormDirty(true);
     setForm((prev) => {
       const next = { ...prev, allDay: v };
       setDateTimeError(getDateTimeError(next, showEndDate));
@@ -196,10 +207,19 @@ export function useEventCreateDialog({
   }, [showEndDate]);
 
   const handleStartDateChange = useCallback((v: string) => {
+    setFormDirty(true);
     setForm((prev) => {
       const dayOfMonth = parseInt(v.split("-")[2] ?? "1", 10);
       const recurrence = { ...prev.recurrence, byMonthDay: Number.isNaN(dayOfMonth) ? 1 : dayOfMonth };
-      const next = { ...prev, startDate: v, endDate: showEndDate ? prev.endDate : v, recurrence };
+      let endDate = showEndDate ? prev.endDate : v;
+      if (showEndDate && v > prev.endDate) {
+        const prevStart = parseISO(prev.startDate);
+        const prevEnd = parseISO(prev.endDate);
+        const newStartD = parseISO(v);
+        const deltaMs = newStartD.getTime() - prevStart.getTime();
+        endDate = format(new Date(prevEnd.getTime() + deltaMs), "yyyy-MM-dd");
+      }
+      const next = { ...prev, startDate: v, endDate, recurrence };
       setDateTimeError(getDateTimeError(next, showEndDate));
       return next;
     });
@@ -207,6 +227,7 @@ export function useEventCreateDialog({
 
   const handleStartTimeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    setFormDirty(true);
     setForm((prev) => {
       const next = { ...prev, startTime: value };
       setDateTimeError(getDateTimeError(next, showEndDate));
@@ -215,6 +236,7 @@ export function useEventCreateDialog({
   }, [showEndDate]);
 
   const handleEndDateChange = useCallback((v: string) => {
+    setFormDirty(true);
     setForm((prev) => {
       const next = { ...prev, endDate: v };
       setDateTimeError(getDateTimeError(next, showEndDate));
@@ -224,6 +246,7 @@ export function useEventCreateDialog({
 
   const handleEndTimeChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
+    setFormDirty(true);
     setForm((prev) => {
       const next = { ...prev, endTime: value };
       setDateTimeError(getDateTimeError(next, showEndDate));
@@ -232,6 +255,7 @@ export function useEventCreateDialog({
   }, [showEndDate]);
 
   const handleShowEndDate = useCallback(() => {
+    setFormDirty(true);
     setShowEndDate(true);
     setForm((prev) => {
       const start = prev.allDay
@@ -253,13 +277,14 @@ export function useEventCreateDialog({
   const handleColorChange = useCallback((v: string) => set("color", v), [set]);
 
   const handleSyncConnectionChange = useCallback((v: string) => {
+    setFormDirty(true);
     setForm((f) => ({ ...f, syncConnectionId: v, addConference: v === "none" ? false : f.addConference }));
   }, []);
 
-  const handleAddConferenceChange = useCallback(
-    (v: boolean) => setForm((f) => ({ ...f, addConference: v })),
-    [],
-  );
+  const handleAddConferenceChange = useCallback((v: boolean) => {
+    setFormDirty(true);
+    setForm((f) => ({ ...f, addConference: v }));
+  }, []);
 
   const handleSave = useCallback(async (times: { startTime?: string; endTime?: string } = {}) => {
     if (submittingRef.current) return;
@@ -298,8 +323,11 @@ export function useEventCreateDialog({
         const res = await createEvent.mutateAsync(result.payload);
         if (res.syncQueued) toast.success("Event created — syncing to your calendar");
         else toast.success("Event created");
-        const conflictNotice = describeEventConflicts(res, timeZone);
-        const conflictUrl = eventConflictViewUrl(res, window.location.search, timeZone);
+        const conflictInput = result.payload.allDay
+          ? { oooConflicts: res.oooConflicts }
+          : res;
+        const conflictNotice = describeEventConflicts(conflictInput, timeZone);
+        const conflictUrl = result.payload.allDay ? null : eventConflictViewUrl(res, window.location.search, timeZone);
         if (conflictNotice)
           toast.warning(
             `Event created, but ${conflictNotice}.`,
@@ -341,7 +369,7 @@ export function useEventCreateDialog({
   return {
     form: effectiveForm, titleError, dateTimeError, showEndDate, members, connections,
     linkedTicket, existingEntityId, ticketPickerOpen, setTicketPickerOpen,
-    isPending, isEdit,
+    isPending, isEdit, formDirty,
     handleClose, handleTitleChange, handleDescriptionChange, handleLocationChange,
     handleAllDayChange, handleStartDateChange, handleStartTimeChange,
     handleEndDateChange, handleEndTimeChange, handleShowEndDate,

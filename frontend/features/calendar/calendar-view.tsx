@@ -752,8 +752,10 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
     viewMode,
   ]);
   useEffect(() => {
-    if (selected && selectedResolutionReady && !selectedListEvent)
+    if (selected && selectedResolutionReady && !selectedListEvent) {
+      toast.warning("This event was deleted or you no longer have access.");
       handleCloseSelected();
+    }
   }, [
     handleCloseSelected,
     selected,

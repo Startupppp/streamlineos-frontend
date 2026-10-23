@@ -58,6 +58,7 @@ type EventCreateFormProps = {
   onSave: (times: { startTime?: string; endTime?: string }) => void;
   recurrence: RecurrenceState;
   onRecurrenceChange: (next: RecurrenceState) => void;
+  isDirty?: boolean;
 };
 
 export function EventCreateForm({
@@ -99,6 +100,7 @@ export function EventCreateForm({
   onSave,
   recurrence,
   onRecurrenceChange,
+  isDirty,
 }: EventCreateFormProps) {
   const formId = React.useId();
   const [discardOpen, setDiscardOpen] = useState(false);
@@ -113,12 +115,12 @@ export function EventCreateForm({
   );
 
   const handleOpenChange = useCallback((nextOpen: boolean) => {
-    if (!nextOpen && !isPending && form.title.trim()) {
+    if (!nextOpen && !isPending && (isDirty ?? !!form.title.trim())) {
       setDiscardOpen(true);
     } else {
       onOpenChange(nextOpen);
     }
-  }, [isPending, form.title, onOpenChange]);
+  }, [isPending, isDirty, form.title, onOpenChange]);
 
   const handleConfirmDiscard = useCallback(() => {
     setDiscardOpen(false);
@@ -144,7 +146,7 @@ export function EventCreateForm({
       footer={
         <div className="grid w-full grid-cols-2 gap-2">
           <Button type="button" variant="outline" size="sm" className="w-full" onClick={onClose} disabled={isPending}>Discard</Button>
-          <LoadingButton form={formId} type="submit" size="sm" className="w-full" disabled={!form.title.trim() || !!dateTimeError} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
+          <LoadingButton form={formId} type="submit" size="sm" className="w-full" disabled={!form.title.trim() || form.title.trim().length > 100 || !!dateTimeError} isPending={isPending} loadingText={isEdit ? "Saving…" : "Creating…"}>Save</LoadingButton>
         </div>
       }
     >

@@ -33,6 +33,7 @@ export function EventCreateDialog({
     setTicketPickerOpen,
     isPending,
     isEdit,
+    formDirty,
     seriesScopeOpen,
     seriesPending,
     handleClose,
@@ -103,6 +104,7 @@ export function EventCreateDialog({
         onSave={handleSave}
         recurrence={form.recurrence}
         onRecurrenceChange={handleRecurrenceChange}
+        isDirty={formDirty}
       />
       <EventSeriesScopeDialog
         open={seriesScopeOpen}

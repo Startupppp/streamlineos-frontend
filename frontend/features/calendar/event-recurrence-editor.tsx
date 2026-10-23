@@ -23,6 +23,7 @@ import {
   RECURRENCE_FREQ_OPTIONS,
   MONTHLY_MODES,
   RRULE_END_TYPES,
+  isoDateToWeekDay,
 } from "./event-recurrence-schema";
 
 interface RecurrenceEditorProps {
@@ -80,7 +81,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
       if (!freq) return;
       const next: RecurrenceState = { ...state, freq };
       if (freq === "WEEKLY" && next.byDay.length === 0) {
-        next.byDay = ["MO"];
+        next.byDay = startDate ? [isoDateToWeekDay(startDate)] : ["MO"];
       }
       if (freq === "MONTHLY" && startDate) {
         const day = parseInt(startDate.split("-")[2] ?? "1", 10);

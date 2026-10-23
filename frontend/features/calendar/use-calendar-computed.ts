@@ -195,7 +195,7 @@ export function toBigCalEvent(
       event.time.kind === "date"
         ? new Date(`${event.time.endDate}T23:59:59.999`)
         : zonedWallClock(new Date(event.end), timeZone),
-    allDay: event.allDay ?? false,
+    allDay: (event.allDay ?? false) || event.time.kind === "date",
     resource: {
       color:
         family === "external"

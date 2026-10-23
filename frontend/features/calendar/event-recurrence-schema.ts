@@ -35,6 +35,13 @@ export const WEEKDAY_LABELS: Record<WeekDay, string> = {
   SU: "Sun",
 };
 
+const WEEKDAY_BY_JS_DAY: WeekDay[] = ["SU", "MO", "TU", "WE", "TH", "FR", "SA"];
+
+export function isoDateToWeekDay(dateStr: string): WeekDay {
+  const d = new Date(`${dateStr}T12:00:00`);
+  return WEEKDAY_BY_JS_DAY[d.getDay()] ?? "MO";
+}
+
 export const BYSETPOS_LABELS: Record<number, string> = {
   1: "First",
   2: "Second",
@@ -47,10 +54,11 @@ export function defaultRecurrenceState(startDate?: string): RecurrenceState {
   const dayOfMonth = startDate
     ? parseInt(startDate.split("-")[2] ?? "1", 10)
     : 1;
+  const byDay: WeekDay[] = startDate ? [isoDateToWeekDay(startDate)] : [];
   return {
     freq: "none",
     interval: 1,
-    byDay: [],
+    byDay,
     monthlyMode: "bymonthday",
     byMonthDay: dayOfMonth,
     bySetPos: 1,

@@ -1,4 +1,4 @@
-import { buildRrule, parseRrule, defaultRecurrenceState } from "./event-recurrence-schema";
+import { buildRrule, parseRrule, defaultRecurrenceState, isoDateToWeekDay } from "./event-recurrence-schema";
 import type { RecurrenceState } from "./event-recurrence-schema";
 
 function round(state: RecurrenceState): RecurrenceState | null {
@@ -213,6 +213,37 @@ describe("buildRrule / parseRrule round-trip", () => {
       expect(parsed.freq).toBe("WEEKLY");
       expect(parsed.byDay).toEqual(["MO", "FR"]);
     });
+  });
+});
+
+describe("defaultRecurrenceState — byDay derives from the start date weekday", () => {
+  it("defaults byDay to FR for a Friday start date", () => {
+    const state = defaultRecurrenceState("2024-03-15");
+    expect(state.byDay).toEqual(["FR"]);
+  });
+
+  it("defaults byDay to MO for a Monday start date", () => {
+    const state = defaultRecurrenceState("2024-03-11");
+    expect(state.byDay).toEqual(["MO"]);
+  });
+
+  it("defaults byDay to empty when no start date is given", () => {
+    const state = defaultRecurrenceState();
+    expect(state.byDay).toEqual([]);
+  });
+});
+
+describe("isoDateToWeekDay — maps ISO date strings to RRULE weekday codes", () => {
+  it("maps a Friday to FR", () => {
+    expect(isoDateToWeekDay("2024-03-15")).toBe("FR");
+  });
+
+  it("maps a Monday to MO", () => {
+    expect(isoDateToWeekDay("2024-03-11")).toBe("MO");
+  });
+
+  it("maps a Sunday to SU", () => {
+    expect(isoDateToWeekDay("2024-03-10")).toBe("SU");
   });
 });
 
