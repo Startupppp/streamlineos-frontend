@@ -318,34 +318,45 @@ export default function KnowledgeBasePage() {
       <div className="flex w-full flex-1 min-h-0 flex-col">
         <div className="flex w-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm">
           {conversationsOpen ? (
-            <KbConversationList
-              conversations={allConversations}
-              hasNextPage={conversationsQuery.hasNextPage}
-              isFetchingNextPage={conversationsQuery.isFetchingNextPage}
-              onLoadMore={handleLoadMoreConversations}
-              onSelect={handleSelectConversation}
-              onNewChat={handleNewChat}
-              onRename={handleRenameConversation}
-              onDelete={handleDeleteConversation}
-              onClose={handleToggleConversations}
-              search={conversationsSearch}
-              onSearchChange={handleConversationsSearchChange}
-              activeConversationId={activeConversationId}
-            />
+            <div className="min-h-0 flex-1 overflow-hidden">
+              <KbConversationList
+                conversations={allConversations}
+                hasNextPage={conversationsQuery.hasNextPage}
+                isFetchingNextPage={conversationsQuery.isFetchingNextPage}
+                onLoadMore={handleLoadMoreConversations}
+                onSelect={handleSelectConversation}
+                onNewChat={handleNewChat}
+                onRename={handleRenameConversation}
+                onDelete={handleDeleteConversation}
+                onClose={handleToggleConversations}
+                search={conversationsSearch}
+                onSearchChange={handleConversationsSearchChange}
+                activeConversationId={activeConversationId}
+              />
+            </div>
           ) : (
-            <>
-              <ScrollArea
-                hideScrollbar
-                className="flex-1 min-h-0"
-                viewportRef={scrollRef}
-                onViewportScroll={handleScroll}
-              >
-                <div className="overscroll-contain space-y-4 p-4">
-                  {isLoading ? (
-                    <div className="flex h-full items-center justify-center">
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    </div>
-                  ) : rows.length === 0 && !pending ? (
+            <ScrollArea
+              hideScrollbar
+              className="flex-1 min-h-0"
+              viewportRef={scrollRef}
+              onViewportScroll={handleScroll}
+            >
+              <div className="overscroll-contain space-y-4 p-4">
+                {conversationMessages.isError && activeConversationId !== null ? (
+                  <div className="flex h-full flex-col items-center justify-center gap-3 py-10 text-center">
+                    <p className="text-sm font-semibold text-foreground">Conversation not found</p>
+                    <p className="text-xs text-muted-foreground">
+                      This conversation no longer exists or could not be loaded.
+                    </p>
+                    <Button variant="outline" size="sm" onClick={handleNewChat}>
+                      Start a new conversation
+                    </Button>
+                  </div>
+                ) : isLoading ? (
+                  <div className="flex h-full items-center justify-center">
+                    <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  </div>
+                ) : rows.length === 0 && !pending ? (
                     <EmptyChat onSuggestion={handleSuggestion} />
                   ) : (
                     <>
@@ -511,63 +522,69 @@ export default function KnowledgeBasePage() {
                     </>
                   )}
                 </div>
-              </ScrollArea>
-
-              <div className="shrink-0 border-t border-border bg-background/60 p-3">
-                <div className="flex items-center gap-2">
-                  <Input
-                    value={input}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder="Ask anything about your files, notes and wiki…"
-                    className="h-9 min-w-0 flex-1 rounded-xl text-sm"
-                    autoFocus
-                  />
-                  {ask.isPending && (
-                    <Button variant="outline" onClick={handleStop}>
-                      Stop
-                    </Button>
-                  )}
-                  <Button
-                    onClick={handleSend}
-                    disabled={ask.isPending || !input.trim()}
-                    className="h-9 w-9 shrink-0 rounded-xl p-0"
-                    aria-label="Send"
-                  >
-                    <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
-                      <Send className="h-4 w-4" />
-                    </motion.span>
-                  </Button>
-                </div>
-                <p className="mt-1.5 text-micro text-muted-foreground">
-                  {scope.scopeActive
-                    ? scope.scopeItemCount > 0
-                      ? `Searching ${scope.scopeItemCount} selected item${scope.scopeItemCount === 1 ? "" : "s"}.`
-                      : "Searching with selected filters."
-                    : "Searching all accessible knowledge."}{" "}
-                  <button
-                    type="button"
-                    onClick={handleScopeClick}
-                    className="underline hover:text-foreground"
-                  >
-                    Edit
-                  </button>
-                  {scope.scopeActive && (
-                    <>
-                      {" · "}
-                      <button
-                        type="button"
-                        onClick={scope.clearScope}
-                        className="underline hover:text-foreground"
-                      >
-                        Clear
-                      </button>
-                    </>
-                  )}
-                </p>
-              </div>
-            </>
+            </ScrollArea>
           )}
+          <div className="shrink-0 border-t border-border bg-background/60 p-3">
+            <div className="flex items-center gap-2">
+              <Input
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Ask anything about your files, notes and wiki…"
+                className="h-9 min-w-0 flex-1 rounded-xl text-sm"
+                autoFocus
+                maxLength={1000}
+              />
+              {ask.isPending && (
+                <Button variant="outline" onClick={handleStop}>
+                  Stop
+                </Button>
+              )}
+              <Button
+                onClick={handleSend}
+                disabled={ask.isPending || !input.trim()}
+                className="h-9 w-9 shrink-0 rounded-xl p-0"
+                aria-label="Send"
+              >
+                <motion.span whileTap={reduce ? undefined : { scale: 0.85 }}>
+                  <Send className="h-4 w-4" />
+                </motion.span>
+              </Button>
+            </div>
+            <div className="mt-1.5 flex items-baseline justify-between gap-2">
+              <p className="text-micro text-muted-foreground">
+                {scope.scopeActive
+                  ? scope.scopeItemCount > 0
+                    ? `Searching ${scope.scopeItemCount} selected item${scope.scopeItemCount === 1 ? "" : "s"}.`
+                    : "Searching with selected filters."
+                  : "Searching all accessible knowledge."}{" "}
+                <button
+                  type="button"
+                  onClick={handleScopeClick}
+                  className="underline hover:text-foreground"
+                >
+                  Edit
+                </button>
+                {scope.scopeActive && (
+                  <>
+                    {" · "}
+                    <button
+                      type="button"
+                      onClick={scope.clearScope}
+                      className="underline hover:text-foreground"
+                    >
+                      Clear
+                    </button>
+                  </>
+                )}
+              </p>
+              {input.length >= 800 && (
+                <p className={`shrink-0 text-right text-micro ${input.length >= 1000 ? "text-destructive" : "text-muted-foreground"}`}>
+                  {input.length >= 1000 ? "Questions can be up to 1,000 characters." : `${input.length} / 1,000`}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

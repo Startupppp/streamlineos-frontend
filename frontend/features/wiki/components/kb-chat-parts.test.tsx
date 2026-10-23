@@ -91,11 +91,14 @@ describe("AnswerFeedbackBar", () => {
     expect(await screen.findByText(/thanks for the feedback/i)).toBeInTheDocument();
   });
 
-  it("reports a wrong-or-stale answer as not_helpful with a distinguishing comment", async () => {
+  it("reports a wrong-or-stale answer as not_helpful with a distinguishing comment after confirmation", async () => {
     mockMutate.mockImplementation((_input, options) => options.onSuccess());
     render(<AnswerFeedbackBar question="How many leave days do I get?" />);
 
     await userEvent.click(screen.getByRole("button", { name: /report answer as wrong or stale/i }));
+
+    expect(await screen.findByRole("button", { name: /send report/i })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /send report/i }));
 
     expect(mockMutate).toHaveBeenCalledWith(
       {

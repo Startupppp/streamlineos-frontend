@@ -1,6 +1,6 @@
 "use client";
 
-import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
+import { useInfiniteQuery, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
@@ -72,8 +72,22 @@ export function useRenameKbConversation() {
     mutationKey: ["kb", "chatConversations", "rename"],
     mutationFn: ({ conversationId, title }: { conversationId: number; title: string }) =>
       apiClient.patch<KbConversation>(`/kb/ask/conversations/${conversationId}`, { title }, undefined, kbConversationResponseContract),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.chatConversations() });
+    onSuccess: (data) => {
+      qc.setQueryData<InfiniteData<KbConversationListPage>>(
+        knowledgeAndSurveysQueryKeys.kb.chatConversations(),
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) => ({
+              ...page,
+              conversations: page.conversations.map((c) =>
+                c.id === data.id ? { ...c, title: data.title, updatedAt: data.updatedAt } : c,
+              ),
+            })),
+          };
+        },
+      );
     },
   });
 }
@@ -108,5 +122,6 @@ export function useKbConversationMessages(conversationId: number | null, enabled
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled && conversationId !== null,
     staleTime: 30_000,
+    throwOnError: false,
   });
 }

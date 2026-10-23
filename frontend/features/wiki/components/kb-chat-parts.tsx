@@ -4,6 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { AlertTriangle, CheckCircle2, Clock, Copy, Flag, HelpCircle, MessageSquareWarning, ThumbsDown, ThumbsUp } from "lucide-react";
 import { toast } from "sonner";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { Input } from "@/components/ui/input";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useKbAiAnswerFeedback, useCreateKbKnowledgeGap } from "@/hooks/api/kb/ask";
@@ -363,6 +365,8 @@ export function AnswerFeedbackBar({
 }) {
   const feedback = useKbAiAnswerFeedback();
   const [given, setGiven] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
+  const [reportReason, setReportReason] = useState("");
 
   function submit(rating: AnswerFeedbackRating, comment?: string) {
     feedback.mutate(
@@ -386,8 +390,25 @@ export function AnswerFeedbackBar({
     submit("not_helpful");
   }
 
-  function handleReportWrongOrStale() {
-    submit("not_helpful", "Reported as wrong or stale");
+  function handleOpenReportDialog() {
+    setReportOpen(true);
+  }
+
+  function handleReportDialogOpenChange(open: boolean) {
+    if (!open) {
+      setReportOpen(false);
+      setReportReason("");
+    }
+  }
+
+  function handleReportReasonChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setReportReason(e.target.value);
+  }
+
+  function handleReportConfirm() {
+    submit("not_helpful", reportReason.trim() || "Reported as wrong or stale");
+    setReportOpen(false);
+    setReportReason("");
   }
 
   if (given) {
@@ -395,36 +416,55 @@ export function AnswerFeedbackBar({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-1 pt-1">
-      <span className="mr-1 text-micro text-muted-foreground">Helpful?</span>
-      <button
-        type="button"
-        onClick={handleHelpful}
-        disabled={feedback.isPending}
-        aria-label="Mark answer as helpful"
-        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ThumbsUp className="h-3 w-3 shrink-0" aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        onClick={handleNotHelpful}
-        disabled={feedback.isPending}
-        aria-label="Mark answer as not helpful"
-        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <ThumbsDown className="h-3 w-3 shrink-0" aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        onClick={handleReportWrongOrStale}
-        disabled={feedback.isPending}
-        aria-label="Report answer as wrong or stale"
-        className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
-      >
-        <Flag className="h-3 w-3 shrink-0" aria-hidden="true" />
-        Report wrong or stale
-      </button>
-    </div>
+    <>
+      <div className="flex flex-wrap items-center gap-1 pt-1">
+        <span className="mr-1 text-micro text-muted-foreground">Helpful?</span>
+        <button
+          type="button"
+          onClick={handleHelpful}
+          disabled={feedback.isPending}
+          aria-label="Mark answer as helpful"
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ThumbsUp className="h-3 w-3 shrink-0" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={handleNotHelpful}
+          disabled={feedback.isPending}
+          aria-label="Mark answer as not helpful"
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ThumbsDown className="h-3 w-3 shrink-0" aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          onClick={handleOpenReportDialog}
+          disabled={feedback.isPending}
+          aria-label="Report answer as wrong or stale"
+          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <Flag className="h-3 w-3 shrink-0" aria-hidden="true" />
+          Report wrong or stale
+        </button>
+      </div>
+      <ConfirmDialog
+        open={reportOpen}
+        onOpenChange={handleReportDialogOpenChange}
+        title="Report this answer"
+        description="Tell us what's wrong with this answer."
+        confirmLabel="Send report"
+        isPending={feedback.isPending}
+        content={
+          <Input
+            value={reportReason}
+            onChange={handleReportReasonChange}
+            placeholder="Describe the issue (optional)"
+            className="mt-2"
+          />
+        }
+        onConfirm={handleReportConfirm}
+      />
+    </>
   );
 }
