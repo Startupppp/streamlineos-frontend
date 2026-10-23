@@ -11,6 +11,8 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
   useKbPageCollection: jest.fn(),
 }));
 
+jest.mock("@/hooks/api/kb/pages", () => jest.requireMock("@/hooks/api/kb"));
+
 jest.mock("@/hooks/api/kb", () => ({
   useKbSpaces: jest.fn(() =>
     jest

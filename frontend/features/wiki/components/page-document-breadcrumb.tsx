@@ -28,13 +28,9 @@ interface PageDocumentBreadcrumbProps {
   workbookSaveHostRef?: (node: HTMLElement | null) => void;
 }
 
-interface SpaceBreadcrumbProps {
-  spaceName: string;
-}
-
-export function SpaceBreadcrumb({ spaceName }: SpaceBreadcrumbProps) {
+export function SpaceBreadcrumb() {
   return (
-    <nav className="flex min-w-0 flex-1 items-center gap-1 text-sm text-muted-foreground">
+    <nav aria-label="Team folder" className="flex min-w-0 items-center gap-1 text-sm text-muted-foreground">
       <Link href={KNOWLEDGE_BASE} className="shrink-0 transition-colors hover:text-foreground">
         Docs
       </Link>
@@ -42,8 +38,6 @@ export function SpaceBreadcrumb({ spaceName }: SpaceBreadcrumbProps) {
       <Link href={KB_SPACES} className="shrink-0 transition-colors hover:text-foreground">
         Team folders
       </Link>
-      <KbChevronRightIcon className="h-3 w-3 shrink-0" />
-      <span className="min-w-0 truncate font-medium text-foreground">{spaceName}</span>
     </nav>
   );
 }

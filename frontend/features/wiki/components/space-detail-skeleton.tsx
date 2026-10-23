@@ -19,7 +19,7 @@ export function SpaceDetailSkeleton() {
         </div>
       </div>
       <div className="flex min-h-0 min-w-0 flex-1 gap-4">
-        <div className="hidden w-56 shrink-0 flex-col gap-2 overflow-hidden rounded-xl border border-border bg-card/50 p-3 md:flex">
+        <div className="hidden w-56 shrink-0 flex-col gap-2 overflow-hidden rounded-xl border border-border bg-card/50 p-3 lg:flex">
           <Skeleton className="h-4 w-24 shrink-0" />
           <div className="grid min-h-0 flex-1 auto-rows-[minmax(2rem,1fr)] gap-2 overflow-hidden">
             {Array.from({ length: 20 }, (_, index) => (
@@ -28,7 +28,7 @@ export function SpaceDetailSkeleton() {
           </div>
         </div>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
-          <Skeleton className="h-9 w-full shrink-0 rounded-md md:hidden" />
+          <Skeleton className="h-9 w-full shrink-0 rounded-md lg:hidden" />
           <div className="flex w-full min-w-0 shrink-0 items-center gap-2">
             <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:max-w-xs" />
             <Skeleton className="h-9 w-24 shrink-0 rounded-md" />

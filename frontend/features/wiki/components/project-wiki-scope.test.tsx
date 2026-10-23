@@ -78,6 +78,9 @@ function treeLevel(nodes: KbPageTreeNode[]) {
   };
 }
 
+jest.mock("@/hooks/api/kb/pages", () => jest.requireMock("@/hooks/api/kb"));
+jest.mock("@/hooks/api/kb/page-versions", () => jest.requireMock("@/hooks/api/kb"));
+
 jest.mock("@/hooks/api/kb", () => ({
   useToggleFavoriteKbPage: () => ({ mutate: jest.fn() }),
   useDuplicateKbPage: () => ({ mutate: duplicateMutate }),

@@ -29,6 +29,25 @@ jest.mock("@/hooks/api/kb", () => ({
   ),
 }));
 
+jest.mock("@/hooks/api/kb/spaces", () => ({
+  useKbSpaces: jest.fn(() =>
+    jest
+      .requireActual<typeof import("@/test-utils/kb-spaces-fixture")>(
+        "@/test-utils/kb-spaces-fixture",
+      )
+      .kbSpacesQueryStub(),
+  ),
+}));
+
+jest.mock("@/hooks/api/kb/pages", () => ({
+  useToggleFavoriteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDuplicateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useDeleteKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useArchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUnarchiveKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+  useUpdateKbPage: jest.fn(() => ({ mutate: jest.fn(), isPending: false })),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
 }));

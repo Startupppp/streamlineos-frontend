@@ -60,6 +60,17 @@ jest.mock("./wiki-page-collection-table", () => ({
     mockPageCollection(props);
     return <div data-testid="page-collection" />;
   },
+  collectionCountSubtitle: (description: string | null | undefined, countLabel: string | null) => {
+    const text = description?.trim() ?? "";
+    if (!text && !countLabel) return undefined;
+    return (
+      <>
+        {text || null}
+        {text && countLabel ? " · " : null}
+        {countLabel ? <span className="tabular-nums">{countLabel}</span> : null}
+      </>
+    );
+  },
 }));
 
 const mockPageTree = jest.fn();

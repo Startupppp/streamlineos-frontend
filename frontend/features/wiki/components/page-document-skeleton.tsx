@@ -60,7 +60,7 @@ export function PageDocumentSkeleton() {
     <div className="wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden" aria-label="Loading file">
       <div className="flex min-h-0 min-w-0 flex-1">
         <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col", WIKI_DOCUMENT_COLUMN)}>
-          <div className="wiki-document-chrome shrink-0 border-b border-border">
+          <div className="wiki-document-chrome shrink-0">
             <div className="flex min-w-0 flex-col gap-2 py-2.5 sm:flex-row sm:items-center">
               <Skeleton className="h-5 w-36 max-w-full" />
               <div className="flex gap-1.5 sm:ml-auto">
@@ -70,14 +70,16 @@ export function PageDocumentSkeleton() {
                 <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
               </div>
             </div>
-            <div className="flex gap-2 overflow-x-auto border-t border-border py-2">
-              {Array.from({ length: 5 }, (_, index) => (
-                <Skeleton key={index} className="h-7 w-7 shrink-0 rounded-md" />
-              ))}
-            </div>
+          </div>
+          <div className="flex shrink-0 items-center py-2">
+            <Skeleton className="h-9 w-full max-w-64" />
+          </div>
+          <div className="flex shrink-0 gap-2 overflow-x-auto border-t border-border py-2">
+            {Array.from({ length: 5 }, (_, index) => (
+              <Skeleton key={index} className="h-7 w-7 shrink-0 rounded-md" />
+            ))}
           </div>
           <div className="flex min-h-0 w-full flex-1 flex-col gap-5 overflow-hidden py-2">
-            <Skeleton className="h-9 w-3/4 shrink-0" />
             <Skeleton className="h-4 w-40 max-w-full shrink-0" />
             <div className="grid min-h-0 flex-1 auto-rows-[minmax(1rem,1fr)] gap-3 overflow-hidden">
               {Array.from({ length: 48 }, (_, index) => (

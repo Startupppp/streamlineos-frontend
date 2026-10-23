@@ -420,20 +420,13 @@ export default function PageDocument({
                 projectId={projectId}
               />
             </div>
-            {isEditable ? (
-              <div
-                ref={handleToolbarHost}
-                data-slot="wiki-document-toolbar"
-                className="border-t border-border"
-              />
-            ) : null}
           </div>
 
-          <div className="wiki-document-body flex min-h-0 w-full flex-1 flex-col py-2">
+          <div className="shrink-0">
             {pendingPresentation && (
               <div
                 role="alert"
-                className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink"
+                className="mb-3 mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink"
               >
                 <span className="min-w-0 flex-1">
                   The page changed before your{" "}
@@ -460,7 +453,7 @@ export default function PageDocument({
               </div>
             )}
             {conflict ? (
-              <div className="mb-5">
+              <div className="mb-3 mt-3">
                 <PageEditConflict
                   key={`${pageId}:${conflict.currentContentRevision}`}
                   conflict={conflict}
@@ -476,13 +469,13 @@ export default function PageDocument({
             ) : null}
 
             {page.isLocked && !canManage ? (
-              <div className="mb-5 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+              <div className="mb-3 mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
                 <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
                 <span>This file is locked and is read-only.</span>
               </div>
             ) : null}
 
-            <div className="group/title mb-2 flex items-center gap-2">
+            <div className="group/title flex items-center gap-2 py-2">
               {page.icon ? (
                 <PageIconPicker
                   icon={page.icon}
@@ -512,7 +505,22 @@ export default function PageDocument({
                 onOpenCover={handleOpenCover}
               />
             </div>
+          </div>
 
+          {isEditable ? (
+            <div
+              ref={handleToolbarHost}
+              data-slot="wiki-document-toolbar"
+              className="shrink-0 border-t border-border"
+            />
+          ) : null}
+
+          <div
+            className={cn(
+              "wiki-document-body flex min-h-0 w-full flex-1 flex-col py-2",
+              !isEditable && "wiki-document-body-solo",
+            )}
+          >
             <PageDocumentOutline
               content={editorValue ?? storedContent}
               containerRef={editorContainerRef}

@@ -225,7 +225,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
     <PageWrapper
       title={headerSpace?.name ?? "Team folder"}
       subtitle={collectionCountSubtitle(headerSpace?.description, documentCountLabel)}
-      leading={<SpaceBreadcrumb spaceName={headerSpace?.name ?? "Team folder"} />}
+      leading={<SpaceBreadcrumb />}
       actions={headerActions}
     >
       <PageState
@@ -345,14 +345,14 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="w-full md:hidden"
+            className="w-full lg:hidden"
             onClick={handleOpenHierarchy}
           >
             Browse hierarchy
           </Button>
 
           <div className="flex min-h-0 flex-1 gap-4">
-            <div className="hidden w-56 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card/50 p-2 md:flex">
+            <div className="hidden w-56 shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card/50 p-2 lg:flex">
               <p className="px-2 py-1 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                 Hierarchy
               </p>

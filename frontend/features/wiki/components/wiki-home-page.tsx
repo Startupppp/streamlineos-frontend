@@ -146,12 +146,11 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     <>
       <PageWrapper
         title="Docs"
-        subtitle={collectionCountSubtitle(
+        subtitle={
           isProjectScoped
-            ? "Docs and decisions for this project"
-            : "Files, documents and decisions for your team",
-          documentCountLabel,
-        )}
+            ? collectionCountSubtitle("Docs and decisions for this project", documentCountLabel)
+            : "Files, documents and decisions for your team"
+        }
         actions={headerActions}
       >
         <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -244,9 +243,16 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             )}
             <section className="flex min-h-0 min-w-0 flex-1 flex-col">
               {!isProjectScoped && (
-                <h2 className="mb-3 text-sm font-semibold text-foreground">
-                  All documents
-                </h2>
+                <div className="mb-3 flex min-w-0 items-baseline gap-2">
+                  <h2 className="text-sm font-semibold text-foreground">
+                    All documents
+                  </h2>
+                  {documentCountLabel ? (
+                    <p className="text-sm text-muted-foreground tabular-nums">
+                      {documentCountLabel}
+                    </p>
+                  ) : null}
+                </div>
               )}
               <WikiPageCollectionTable
                 fixedParams={{

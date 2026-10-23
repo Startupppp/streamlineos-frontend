@@ -92,7 +92,7 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     <TooltipProvider delayDuration={0}>
       <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
         <aside
-          className={`relative hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-card/50 transition-[width] duration-300 ease-in-out md:flex ${
+          className={`relative hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-card/50 transition-[width] duration-300 ease-in-out lg:flex ${
             collapsed ? "w-10" : "w-[260px]"
           }`}
         >
