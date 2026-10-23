@@ -133,6 +133,7 @@ const PROTECTED_ROUTES = [
   "/post-invite",
   "/org-setup",
   "/access-suspended",
+  "/removed-from-org",
   "/owner",
   "/billing",
   "/timesheets",
