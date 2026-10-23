@@ -67,7 +67,6 @@ const minimalTicket = {
   ticketNumber: 1,
   dueDate: "2026-09-25T00:00:00.000Z",
   startDate: null,
-  points: null,
   estimate: null,
   rank: "a0",
   version: 1,

@@ -28,6 +28,7 @@ const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
   {
+    files: ["**/*.{js,jsx,mjs,ts,tsx,mts,cts}"],
     rules: {
       "react-hooks/preserve-manual-memoization": "off",
       "react-hooks/static-components": "off",

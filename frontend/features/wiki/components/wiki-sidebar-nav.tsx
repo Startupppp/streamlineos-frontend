@@ -38,6 +38,7 @@ interface WikiNavItem {
 interface WikiSidebarNavProps {
   isCollapsed?: boolean;
   canViewSpaces: boolean;
+  variant?: "rail" | "bar";
 }
 
 function buildNavItems(canViewSpaces: boolean): WikiNavItem[] {
@@ -69,10 +70,12 @@ function WikiNavLink({
   item,
   isActive,
   isCollapsed,
+  compact = false,
 }: {
   item: WikiNavItem;
   isActive: boolean;
   isCollapsed?: boolean;
+  compact?: boolean;
 }) {
   const { iconRef, animatedNavHoverHandlers } = useAnimatedNavIconHover();
 
@@ -106,7 +109,8 @@ function WikiNavLink({
       aria-current={isActive ? "page" : undefined}
       {...animatedNavHoverHandlers}
       className={cn(
-        "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
+        "flex items-center gap-2 rounded-md text-sm transition-colors",
+        compact ? "h-9 shrink-0 px-2.5" : "px-2 py-1.5",
         isActive
           ? "bg-muted text-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",
@@ -125,9 +129,32 @@ function WikiNavLink({
 export default function WikiSidebarNav({
   isCollapsed = false,
   canViewSpaces,
+  variant = "rail",
 }: WikiSidebarNavProps) {
   const pathname = usePathname();
   const navItems = useMemo(() => buildNavItems(canViewSpaces), [canViewSpaces]);
+
+  if (variant === "bar") {
+    return (
+      <nav
+        aria-label="Documents"
+        className="flex min-w-0 flex-1 items-center gap-0.5 overflow-x-auto scrollbar-hide"
+      >
+        {navItems.map((item) => {
+          const isActive = isNavItemActive(pathname, item.href, item.exact);
+          return (
+            <WikiNavLink
+              key={item.href}
+              item={item}
+              isActive={isActive}
+              isCollapsed={false}
+              compact
+            />
+          );
+        })}
+      </nav>
+    );
+  }
 
   if (isCollapsed) {
     return (

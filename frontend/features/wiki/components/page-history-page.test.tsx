@@ -330,8 +330,8 @@ describe("PageHistoryPage — page states", () => {
 
     render(<PageHistoryPage pageId={1} />);
 
-    expect(screen.getByText("Failed to load file.")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Retry" })).toBeInTheDocument();
+    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Try again" })).toBeInTheDocument();
   });
 
   it("shows an empty state when the page has no versions", () => {

@@ -27,8 +27,7 @@ const DETAIL_RESPONSE = {
   epicId: null,
   assigneeMembershipId: 4,
   reporterId: "user-a",
-  points: null,
-  
+
   link: null,
   rank: "1000",
   parentTicketId: null,

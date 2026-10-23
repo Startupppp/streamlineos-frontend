@@ -6,11 +6,10 @@ import { OrgSetupShell } from "./org-setup-shell";
 function renderShell(syncStatus: "error" | "saving" | "synced", onRetrySave?: () => void, currentIndex = 1) {
   return render(
     <OrgSetupShell
-      sequence={["workspace", "products", "invite"]}
+      sequence={["workspace", "invite", "invite"]}
       currentIndex={currentIndex}
       title="Modules"
       direction={1}
-      saveState="idle"
       syncStatus={syncStatus}
       data={{ ...DEFAULT_DATA }}
       onRetrySave={onRetrySave}

@@ -4,7 +4,7 @@ import { epicPageContract } from "@/hooks/api/build/execution-schema";
 const row = {
   id: 1, orgId: "o", title: "Epic", description: null, type: "EPIC" as const, status: "TODO",
   priority: "MEDIUM" as const, health: null, projectId: 3, ticketNumber: 1, epicId: null,
-  assigneeMembershipId: null, points: null, rank: "1000",
+  assigneeMembershipId: null, rank: "1000",
   timeSpent: "0", startDate: null, dueDate: null, cycleId: null, estimate: null,
   completionPercentage: 0, version: 2, dependencyCount: 4,
   deletedAt: null, createdAt: "2026-09-01T00:00:00.000Z", updatedAt: "2026-09-01T00:00:00.000Z",

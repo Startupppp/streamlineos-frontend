@@ -99,7 +99,7 @@ export function KnowledgeAnalyticsGapsList({
               />
             ) : (
               <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-                <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                <div className="hidden items-center gap-3 border-b border-border px-3 py-2 sm:flex">
                   <span className="flex-1 text-xs font-medium text-muted-foreground">
                     Query
                   </span>

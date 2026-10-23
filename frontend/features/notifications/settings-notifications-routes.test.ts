@@ -86,7 +86,7 @@ describe("Settings → Notifications route access declarations", () => {
   });
 
   describe("Administration nav Notifications group removed from sidebar", () => {
-    const adminGroups = NAV_GROUPS.filter((g) => g.product === "administration");
+    const adminGroups = NAV_GROUPS.filter((g) => g.module === "administration");
     const notificationsGroup = adminGroups.find((g) => g.label === "Notifications");
     const adminHrefs = new Set(
       adminGroups.flatMap((g) => g.routes.map((r) => r.href)),

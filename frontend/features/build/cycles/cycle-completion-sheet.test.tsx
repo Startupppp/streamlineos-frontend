@@ -30,7 +30,6 @@ const ticket: Ticket = {
   ticketNumber: 1,
   epicId: null,
   reporterId: null,
-  points: null,
   link: null,
   rank: null,
   parentTicketId: null,

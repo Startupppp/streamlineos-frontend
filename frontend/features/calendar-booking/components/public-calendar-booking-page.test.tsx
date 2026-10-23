@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axe } from "jest-axe";
-import { useSearchParams } from "next/navigation";
+import { ReadonlyURLSearchParams, useSearchParams } from "next/navigation";
 import { apiClient } from "@/lib/api-client";
 import { ApiError } from "@/lib/api-envelope";
 import { readErrorReachesBoundary } from "@/lib/query-error-policy";
@@ -15,6 +15,7 @@ jest.mock("@/lib/api-client", () => ({
 }));
 
 jest.mock("next/navigation", () => ({
+  ReadonlyURLSearchParams: jest.requireActual("next/navigation").ReadonlyURLSearchParams,
   useParams: () => ({ token: "booking-token-value-long-enough" }),
   useSearchParams: jest.fn(() => new URLSearchParams("state=customer-state&utm_source=partner")),
 }));
@@ -137,7 +138,7 @@ function renderPage() {
 describe("public calendar booking page", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockedSearchParams.mockReturnValue(new URLSearchParams("state=customer-state&utm_source=partner"));
+    mockedSearchParams.mockReturnValue(new ReadonlyURLSearchParams("state=customer-state&utm_source=partner"));
     mockedRequest.mockRejectedValue(new ApiError("Booking receipt not found", 404));
     mockedGet.mockImplementation(async (path) => {
       if (String(path).includes("/callback"))
@@ -204,7 +205,7 @@ describe("public calendar booking page", () => {
   });
 
   it("ignores malformed locale query text so a valid booking link still opens", async () => {
-    mockedSearchParams.mockReturnValue(new URLSearchParams("state=customer-state&locale=hi-IN%21"));
+    mockedSearchParams.mockReturnValue(new ReadonlyURLSearchParams("state=customer-state&locale=hi-IN%21"));
     mockedPost.mockImplementation(async (path, input) => {
       if (String(path).endsWith("/sessions")) {
         if ((input as { locale: string | null }).locale === "hi-IN!") throw new ApiError("Invalid locale", 400);

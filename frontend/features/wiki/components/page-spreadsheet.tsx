@@ -12,11 +12,10 @@ import { useKbPage, useUpdateKbPage, useRecordKbPageVisit } from "@/hooks/api/kb
 import { useKbWorkbook } from "@/hooks/api/kb/workbook";
 import { ErrorState } from "@/components/shared/error-state";
 import { useCan, useCanState } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { pageHref } from "@/lib/knowledge-routes";
 import { toFortuneSheets, type FortuneSheet } from "@/features/wiki/lib/kb-workbook-convert";
 import { exportSpreadsheet } from "@/features/wiki/lib/kb-spreadsheet-file";
-import { KbPageNotFound } from "./kb-page-not-found";
+import { DocumentRecordGate, documentRecordResolution } from "./document-record-gate";
 import PageCover from "./page-cover";
 import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageDocumentHeader from "./page-document-header";
@@ -175,17 +174,36 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
   function handleOpenDetails() { setDetailsMobileOpen(true); }
   function handleDetailsMobileOpenChange(open: boolean) { setDetailsMobileOpen(open); }
 
-  if (viewAccess === "loading" || isLoading) {
+  const recordResolution = documentRecordResolution({
+    access: viewAccess,
+    isLoading,
+    isError,
+    error,
+    hasRecord: page !== undefined,
+  });
+
+  if (recordResolution.kind !== "ready" || !page) {
     return (
-      <div className="w-full px-3 py-4 space-y-4">
-        <Skeleton className="h-4 w-3/4" />
-        <Skeleton className="h-4 w-1/2" />
-        <Skeleton className="h-96 w-full" />
-      </div>
+      <DocumentRecordGate
+        resolution={
+          recordResolution.kind === "ready"
+            ? { kind: "error", error }
+            : recordResolution
+        }
+        loading={
+          <div className="w-full px-3 py-4 space-y-4">
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-96 w-full" />
+          </div>
+        }
+        error={error}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
     );
   }
-  if (viewAccess === "denied") return <NoPermissionState permission="kb:pages:view" />;
-  if (isError || !page) return <KbPageNotFound error={error} onRetry={refetch} />;
 
   const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
 

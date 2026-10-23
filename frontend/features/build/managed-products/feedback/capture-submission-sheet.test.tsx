@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { CaptureSubmissionSheet } from "./capture-submission-sheet";
 
@@ -22,7 +23,7 @@ jest.mock("sonner", () => ({ toast: { success: jest.fn(), error: jest.fn() } }))
 
 let capturedOpen: boolean | undefined;
 jest.mock("@/components/shared", () => ({
-  EntityFormSheet: ({ open, children }: { open: boolean; children: (form: unknown) => unknown }) => {
+  EntityFormSheet: ({ open, children }: { open: boolean; children: (form: unknown) => ReactNode }) => {
     capturedOpen = open;
     return open ? <div data-testid="sheet-open">{children({ control: {} })}</div> : null;
   },

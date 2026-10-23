@@ -12,6 +12,7 @@ import { useShellSidebarCollapse } from "@/components/layout/shell-sidebar-colla
 import PageTree from "./page-tree";
 import WikiSidebarNav from "./wiki-sidebar-nav";
 import { WikiCollapsedSidebarChrome } from "./wiki-sidebar-chrome";
+import { WikiMobileChrome } from "./wiki-mobile-chrome";
 import {
   KNOWLEDGE_BASE,
   pageHref,
@@ -120,6 +121,11 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+          <WikiMobileChrome
+            canViewSpaces={canViewSpaces}
+            createPending={createPage.isSubmitting}
+            onNewPage={handleNewDocument}
+          />
           <ScrollArea fill hideScrollbar className="min-h-0 flex-1" viewportClassName="scroll-pt-28">
             <div className="flex h-full min-h-full flex-1 flex-col overscroll-contain">
               {children}

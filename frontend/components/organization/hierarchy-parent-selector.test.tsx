@@ -26,7 +26,7 @@ function renderSelector() {
   const onValueChange = jest.fn();
   render(
     <HierarchyParentSelector
-      parentKind="branch"
+      parentKind="BRANCH"
       value=""
       onValueChange={onValueChange}
       label="Branch"

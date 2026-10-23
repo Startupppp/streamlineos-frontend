@@ -160,7 +160,7 @@ const ACCESS_GRANTED = {
 const EPIC_A: EpicItem = {
   id: 1, orgId: "o1", projectId: 1, title: "Epic Alpha", description: null, type: "EPIC", status: "TODO",
   priority: "MEDIUM", health: null, ticketNumber: 1, cycleId: null, epicId: null, assigneeMembershipId: null,
-  points: null, startDate: null, dueDate: null, estimate: null, completionPercentage: 0,
+  startDate: null, dueDate: null, estimate: null, completionPercentage: 0,
   rank: "1000", timeSpent: "", version: 1, dependencyCount: 0, deletedAt: null,
   createdAt: "2026-09-01", updatedAt: "2026-09-01", assignee: null,
 };

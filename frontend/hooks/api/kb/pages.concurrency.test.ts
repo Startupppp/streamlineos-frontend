@@ -237,8 +237,8 @@ describe("KB page visibility and status revision requests", () => {
     const { apiClient } = jest.requireMock("@/lib/api-client") as { apiClient: { patch: jest.Mock } };
     apiClient.patch.mockResolvedValueOnce({ id: 1 });
     const { result } = renderHook(() => useSetKbPageVisibility(), { wrapper: wrapper(makeClient()) });
-    await act(async () => { await result.current.mutateAsync({ pageId: 1, visibility: "public", expectedContentRevision: 4 }); });
-    expect(apiClient.patch).toHaveBeenCalledWith("/kb/pages/1/visibility", { visibility: "public", expectedContentRevision: 4 }, undefined, expect.any(Function));
+    await act(async () => { await result.current.mutateAsync({ pageId: 1, visibility: "org", expectedContentRevision: 4 }); });
+    expect(apiClient.patch).toHaveBeenCalledWith("/kb/pages/1/visibility", { visibility: "org", expectedContentRevision: 4 }, undefined, expect.any(Function));
   });
 
   it("writes the saved visibility into the open page at once, so the share badge does not lag behind a refetch", async () => {

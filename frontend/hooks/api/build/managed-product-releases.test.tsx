@@ -40,6 +40,7 @@ const DRAFT: ManagedProductRelease = {
   releaseDate: null,
   recordRevision: 1,
   ownerUserId: null,
+  ownerUser: null,
   qaState: null,
   deploymentEvidenceUrl: null,
   createdBy: null,

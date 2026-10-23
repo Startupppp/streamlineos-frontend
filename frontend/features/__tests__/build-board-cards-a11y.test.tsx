@@ -61,7 +61,7 @@ const ticket = {
   status: "TODO",
   type: "TASK",
   ticketNumber: 12,
-  points: 3,
+  estimate: 3,
   version: 4,
 };
 

@@ -55,6 +55,8 @@ const baseForm: FormState = {
   syncConnectionId: "none",
   addConference: false,
   attendeeIds: [],
+  guestEmails: null,
+  reminder: null,
   recurrence: defaultRecurrenceState(),
 };
 
@@ -88,6 +90,9 @@ const baseProps = {
   onAddConferenceChange: jest.fn(),
   onShowEndDate: jest.fn(),
   onToggleAttendee: jest.fn(),
+  onAddGuest: jest.fn(),
+  onRemoveGuest: jest.fn(),
+  onReminderChange: jest.fn(),
   onOpenTicketPicker: jest.fn(),
   onTicketSelect: jest.fn(),
   onRemoveLinkedTicket: jest.fn(),

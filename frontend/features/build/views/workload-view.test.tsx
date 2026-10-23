@@ -185,7 +185,6 @@ describe("WorkloadView — the unassigned row keeps the same fixed columns as a 
     ticketNumber: 41,
     status: "TODO",
     assigneeId: null,
-    points: null,
     dueDate: null,
     version: 1,
   } as unknown as KanbanTicket;

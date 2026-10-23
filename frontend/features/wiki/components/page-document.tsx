@@ -22,7 +22,7 @@ import {
 } from "@/features/wiki/lib/wiki-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { KbPageNotFound } from "./kb-page-not-found";
+import { DocumentRecordGate, documentRecordResolution } from "./document-record-gate";
 import PageEditConflict from "./page-edit-conflict";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
 import { usePagePresentationUpdate } from "./use-page-presentation-update";
@@ -34,7 +34,6 @@ import {
   useRecordKbPageVisit,
 } from "@/hooks/api/kb/pages";
 import { useCan, useCanState } from "@/hooks/api/access";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { pageHref } from "@/lib/knowledge-routes";
 import PageCover from "./page-cover";
 import { PageCoverPickerDialog } from "./page-cover-picker";
@@ -349,16 +348,29 @@ export default function PageDocument({
     setToolbarHost(node);
   }
 
-  if (viewAccess === "loading" || isLoading) {
-    return <PageDocumentSkeleton />;
-  }
+  const recordResolution = documentRecordResolution({
+    access: viewAccess,
+    isLoading,
+    isError,
+    error,
+    hasRecord: page !== undefined,
+  });
 
-  if (viewAccess === "denied") {
-    return <NoPermissionState permission="kb:pages:view" />;
-  }
-
-  if (isError || !page) {
-    return <KbPageNotFound error={error} onRetry={refetch} />;
+  if (recordResolution.kind !== "ready" || !page) {
+    return (
+      <DocumentRecordGate
+        resolution={
+          recordResolution.kind === "ready"
+            ? { kind: "error", error }
+            : recordResolution
+        }
+        loading={<PageDocumentSkeleton />}
+        error={error}
+        onRetry={() => {
+          void refetch();
+        }}
+      />
+    );
   }
 
   if (page.kind === "spreadsheet")

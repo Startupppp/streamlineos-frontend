@@ -161,7 +161,7 @@ describe("CAL-B-016 a failed calendar read stays inside its own panel", () => {
     ["event detail", () => useCalendarEvent(7)],
     ["attendees", () => useEventAttendees(7)],
     ["sync status", () => useEventSyncStatus(7)],
-  ])("%s never throws its error to the page boundary", (_name, hook) => {
+  ])("%s never throws its error to the page boundary", (_name, hook: () => unknown) => {
     renderHook(hook);
     const options = mockQuery.mock.calls.at(-1)?.[0] as { throwOnError?: unknown; queryKey: unknown };
     expect(options.queryKey).toBeDefined();

@@ -33,7 +33,7 @@ function makeClient(): QueryClient { return new QueryClient(CONFIG); }
 function makeQcWithCountAndInfinite(): QueryClient {
   const qc = makeClient();
   qc.setQueryData<UnifiedInboxCount>(platformCoreQueryKeys.inbox.unified({ count: true }), {
-    notification: 1, mail: 3, approval: 1, total: 5, mailExact: true, approvalExact: true,
+    notification: 1, mail: 3, approval: 1, task: 0, total: 5, mailExact: true, approvalExact: true,
   });
   qc.setQueryData(platformCoreQueryKeys.inbox.unified({ limit: 25 }), {
     pages: [{ items: [{ kind: "mail" as const, id: "msg-1", accountId: 1, isRead: false }], nextCursor: null }],

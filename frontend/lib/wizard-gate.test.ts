@@ -642,7 +642,7 @@ describe("onboardingGateYieldsToDenial (QA 2026-10-13: denial wins over the onbo
   });
 
   it("yields to the route's own guard when the access read failed instead of detouring to the wizard", () => {
-    expect(onboardingGateYieldsToDenial("/hr", { ok: false, error: new Error("access down") })).toBe(true);
+    expect(onboardingGateYieldsToDenial("/hr", { ok: false })).toBe(true);
   });
 
   it("yields on the HR hub for a member with no HR grant so the denial is what they see", () => {

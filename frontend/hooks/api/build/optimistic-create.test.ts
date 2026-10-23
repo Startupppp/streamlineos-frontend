@@ -53,8 +53,7 @@ function makeTicket(id: number, overrides?: Partial<Ticket>): Ticket {
     ticketNumber: id,
     epicId: null,
     reporterId: null,
-    points: null,
-    
+
     link: null,
     rank: "",
     parentTicketId: null,

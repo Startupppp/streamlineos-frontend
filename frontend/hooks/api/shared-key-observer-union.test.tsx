@@ -11,7 +11,7 @@ jest.mock("next/link", () => ({
     children,
   }: {
     href: string;
-    children: unknown;
+    children: ReactNode;
   }) => {
     const React = require("react") as typeof import("react");
     return React.createElement("a", { href }, children);

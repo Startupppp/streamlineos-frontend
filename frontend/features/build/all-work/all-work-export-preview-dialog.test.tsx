@@ -24,8 +24,6 @@ function ticket(id: number, projectId: number, projectName: string): AllWorkTick
     projectName,
     ticketNumber: id,
     epicId: null,
-    assigneeId: null,
-    points: null,
     estimate: null,
     rank: null,
     version: 1,

@@ -54,8 +54,9 @@ beforeEach(() => {
 it("renders one focused navigation rail without duplicating the home Favorites collection", () => {
   render(<WikiShell><div>Wiki body</div></WikiShell>);
 
-  expect(screen.getByText("Wiki navigation")).toBeInTheDocument();
+  expect(screen.getAllByText("Wiki navigation")).toHaveLength(2);
   expect(screen.getByText("Folder tree")).toBeInTheDocument();
+  expect(screen.getByRole("button", { name: "Files" })).toBeInTheDocument();
   expect(screen.getByText("Wiki body")).toBeInTheDocument();
   expect(screen.queryByText("Favorites")).not.toBeInTheDocument();
 });

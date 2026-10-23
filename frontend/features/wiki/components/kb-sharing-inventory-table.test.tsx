@@ -65,14 +65,14 @@ beforeEach(() => {
 describe("KbSharingInventoryTable — renders inventory items", () => {
   it("shows both a guest row and a link row from the inventory response", () => {
     render(<KbSharingInventoryTable />);
-    expect(screen.getByText("guest1@example.com")).toBeInTheDocument();
-    expect(screen.getByText("Share link")).toBeInTheDocument();
+    expect(screen.getAllByText("guest1@example.com").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Share link").length).toBeGreaterThan(0);
   });
 
   it("shows the page title for each row", () => {
     render(<KbSharingInventoryTable />);
-    expect(screen.getByText("Page 1")).toBeInTheDocument();
-    expect(screen.getByText("Page 2")).toBeInTheDocument();
+    expect(screen.getAllByText("Page 1").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("Page 2").length).toBeGreaterThan(0);
   });
 });
 

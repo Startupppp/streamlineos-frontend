@@ -606,7 +606,7 @@ it("creating a ticket patches the project detail cache then replaces the temp wi
   const client = createAppQueryClient();
   const detail = queryKeys.projects.detail(42);
   client.setQueryData(detail, { name: "Proj", tickets: [{ id: 99, title: "Existing", version: 1 }] });
-  const serverTicket = { id: 55, title: "New ticket", version: 1, status: "TODO", projectId: 42, priority: null, type: "TASK", orgId: "", ticketNumber: 1, epicId: null, reporterId: null, points: null, link: null, rank: "", parentTicketId: null, originalEstimate: null, timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null, sequenceId: null, estimate: null, createdAt: null, updatedAt: null, assignee: null };
+  const serverTicket = { id: 55, title: "New ticket", version: 1, status: "TODO", projectId: 42, priority: null, type: "TASK", orgId: "", ticketNumber: 1, epicId: null, reporterId: null, link: null, rank: "", parentTicketId: null, originalEstimate: null, timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null, sequenceId: null, estimate: null, createdAt: null, updatedAt: null, assignee: null };
   jest.mocked(apiClient.post).mockResolvedValue(serverTicket);
   const wrapper = ({ children }: { children: ReactNode }) => createElement(QueryClientProvider, { client }, children);
   const { result } = renderHook(() => useCreateTicket(), { wrapper });

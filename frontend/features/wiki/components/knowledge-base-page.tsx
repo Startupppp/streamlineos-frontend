@@ -256,7 +256,7 @@ export default function KnowledgeBasePage() {
     };
   }
 
-  const pageState = usePageState({ permission: "kb:ai:generate" });
+  const pageState = usePageState({ permission: "kb:ai:generate", isLoading: false, isError: false });
 
   return (
     <PageState resolution={pageState} loading={null}>
@@ -266,7 +266,7 @@ export default function KnowledgeBasePage() {
       noInternalScroll
       contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Button
             variant="outline"
             size="sm"

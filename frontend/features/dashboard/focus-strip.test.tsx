@@ -140,7 +140,7 @@ describe("FocusStrip — actionable items", () => {
   });
 
   it("shows assigned module tasks with a link that filters the inbox to them", () => {
-    mockInboxCount.data = { notification: 0, mail: 0, approval: 0, task: 3, total: 3, mailExact: true };
+    mockInboxCount.data = { notification: 0, mail: 0, approval: 0, task: 3, total: 3, mailExact: true, approvalExact: true };
     mockApprovals.data = emptyData.approvals;
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);
@@ -149,7 +149,7 @@ describe("FocusStrip — actionable items", () => {
   });
 
   it("CONTROL: renders no task chip when the task count is zero", () => {
-    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true };
+    mockInboxCount.data = { notification: 5, mail: 0, approval: 0, task: 0, total: 5, mailExact: true, approvalExact: true };
     mockApprovals.data = emptyData.approvals;
     mockPersonal.data = emptyData.personal;
     render(<FocusStrip access={baseAccess} />);

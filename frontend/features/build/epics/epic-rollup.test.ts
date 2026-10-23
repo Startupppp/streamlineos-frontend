@@ -13,7 +13,6 @@ const BASE_TICKET: Ticket = {
   ticketNumber: 1,
   epicId: 10,
   reporterId: null,
-  points: null,
   link: null,
   rank: "a0",
   parentTicketId: null,
@@ -31,7 +30,7 @@ const BASE_TICKET: Ticket = {
 };
 
 function makeChild(id: number, type: string, status: string, points?: number): Ticket {
-  return { ...BASE_TICKET, id, type, status, points: points ?? null };
+  return { ...BASE_TICKET, id, type, status, estimate: points ?? null };
 }
 
 const BASE_STATUS: ProjectStatusRecord = {

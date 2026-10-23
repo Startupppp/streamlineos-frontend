@@ -40,10 +40,10 @@ function ImportPendingRow({
   }
 
   return (
-    <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-x-3 px-3 py-2 text-sm">
-      <TruncatedText text={item.title || "Untitled"} className="font-medium" />
-      <span className="text-xs text-muted-foreground">{sizeLabel(item.sizeBytes)}</span>
-      <span className="w-20">
+    <div className="flex items-center gap-2 px-3 py-2 text-sm">
+      <TruncatedText text={item.title || "Untitled"} className="min-w-0 flex-1 font-medium" />
+      <span className="shrink-0 text-xs text-muted-foreground">{sizeLabel(item.sizeBytes)}</span>
+      <span className="shrink-0">
         {isDuplicate ? (
           <span className="flex items-center gap-1 text-xs text-status-warning-ink">
             <KbTriangleAlertIcon className="h-3 w-3" />
@@ -91,11 +91,10 @@ export function ImportPendingList({
       </div>
 
       <div className="overflow-hidden rounded-lg border border-border">
-        <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-3 bg-muted/30 px-3 py-1.5 text-dense font-medium text-muted-foreground">
-          <span>Title</span>
+        <div className="hidden items-center gap-2 bg-muted/30 px-3 py-1.5 text-dense font-medium text-muted-foreground sm:flex">
+          <span className="flex-1">Title</span>
           <span>Size</span>
           <span>Status</span>
-          <span />
         </div>
         <div className="divide-y divide-border">
           {items.map((item, index) => (

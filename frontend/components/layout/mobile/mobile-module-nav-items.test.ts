@@ -32,8 +32,8 @@ describe("mobile module nav items", () => {
 
     it("deduplicates routes with the same href across groups", () => {
       const dupNav: NavGroup[] = [
-        { label: "G1", product: "build", routes: [{ label: "A", icon: LayoutDashboard, href: "/a" }] },
-        { label: "G2", product: "build", routes: [{ label: "A-dup", icon: Inbox, href: "/a" }] },
+        { label: "G1", module: "build", routes: [{ label: "A", icon: LayoutDashboard, href: "/a" }] },
+        { label: "G2", module: "build", routes: [{ label: "A-dup", icon: Inbox, href: "/a" }] },
       ];
       expect(getAllMobileModuleTabs(dupNav)).toHaveLength(1);
     });
@@ -69,7 +69,7 @@ describe("mobile module nav items", () => {
       const nav: NavGroup[] = [
         {
           label: "G",
-          product: "build",
+          module: "build",
           routes: [
             { label: "A", icon: LayoutDashboard, href: "/a" },
             { label: "B", icon: Inbox, href: "/b" },
@@ -120,7 +120,7 @@ describe("mobile module nav items", () => {
       const multiGroupNav: NavGroup[] = [
         {
           label: "Group A",
-          product: "build",
+          module: "build",
           routes: [
             { label: "A1", icon: LayoutDashboard, href: "/a1" },
             { label: "A2", icon: Inbox, href: "/a2" },
@@ -130,7 +130,7 @@ describe("mobile module nav items", () => {
         },
         {
           label: "Group B",
-          product: "build",
+          module: "build",
           routes: [
             { label: "B1", icon: Users, href: "/b1" },
             { label: "B2", icon: Timer, href: "/b2" },
@@ -149,7 +149,7 @@ describe("mobile module nav items", () => {
       const tabs = getMobileModuleBottomTabs([
         {
           label: "Projects",
-          product: "build",
+          module: "build",
           routes: [
             { label: "Projects", icon: Briefcase, href: "/build/projects", exact: true },
             { label: "Inbox", icon: Inbox, href: "/build/inbox" },
@@ -164,7 +164,7 @@ describe("mobile module nav items", () => {
       const tabs = getMobileModuleBottomTabs([
         {
           label: "Timesheets",
-          product: "build",
+          module: "timesheets",
           routes: [
             { label: "My Time", icon: Timer, href: "/timesheets", exact: true },
             { label: "Team", icon: Users, href: "/timesheets/team" },
@@ -178,7 +178,7 @@ describe("mobile module nav items", () => {
       const tabs = getMobileModuleBottomTabs([
         {
           label: "People",
-          product: "build",
+          module: "hrms",
           routes: [
             {
               label: "Directory",
@@ -253,7 +253,7 @@ describe("mobile module nav items", () => {
       const single: NavGroup[] = [
         {
           label: "Overview",
-          product: "build",
+          module: "build",
           routes: [
             { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
           ],

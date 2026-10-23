@@ -4,12 +4,8 @@ import { useGuardedCreateKbPage } from "@/features/wiki/hooks/use-guarded-create
 import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { ErrorState } from "@/components/shared/error-state";
 import { isApiError } from "@/lib/api-envelope";
-import {
-  StatCard,
-  StatCardGrid,
-} from "@/components/ui/stat-card";
+import { StatCard } from "@/components/ui/stat-card";
 import { Button } from "@/components/ui/button";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
@@ -69,6 +65,10 @@ function overviewValue(value: number | null, reason?: string, percent = false): 
   if (value === null) return "Unavailable";
   return percent ? formatRatioAsPercent(value) : value;
 }
+
+const OVERVIEW_NEVER_ARRIVED = new Error(
+  "The request was interrupted before the figures arrived, so nothing here would be accurate.",
+);
 
 function overviewHint(reason?: string): string | undefined {
   if (reason === "minimum_cohort") return "Fewer than 3 records in this cohort";
@@ -236,12 +236,12 @@ export default function KnowledgeAnalyticsPage() {
     createGapFix.mutate({ query, ...(spaceId !== undefined ? { spaceId } : {}) });
   }
 
+  const overviewMissing = !overviewLoading && !overviewError && overview == null;
   const pageState = usePageState({
     permission: "kb:analytics:view",
     isLoading: overviewLoading,
-    isError: overviewError,
-    error: overviewQueryError,
-    isEmpty: !overview,
+    isError: overviewError || overviewMissing,
+    error: overviewQueryError ?? (overviewMissing ? OVERVIEW_NEVER_ARRIVED : undefined),
   });
 
   return (
@@ -251,18 +251,10 @@ export default function KnowledgeAnalyticsPage() {
         className="flex-1"
         onRetry={handleRetry}
         loading={<AnalyticsSkeleton />}
-        empty={
-          <ErrorState
-            title="Analytics didn't finish loading"
-            description="The request was interrupted before the figures arrived, so nothing here would be accurate."
-            onRetry={handleRetry}
-            className="flex-1"
-          />
-        }
       >
         <div className="flex flex-wrap items-center gap-2 mb-4">
           <Select value={rangePreset} onValueChange={handleRangeChange}>
-            <SelectTrigger className="w-44" aria-label="Date range">
+            <SelectTrigger className="w-full sm:w-44" aria-label="Date range">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -277,7 +269,7 @@ export default function KnowledgeAnalyticsPage() {
             value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
             onValueChange={handleSpaceChange}
           >
-            <SelectTrigger className="w-52" aria-label="Team folder">
+            <SelectTrigger className="w-full sm:w-52" aria-label="Team folder">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -287,7 +279,7 @@ export default function KnowledgeAnalyticsPage() {
                   {space.name}
                 </SelectItem>
               ))}
-              {spacesPage?.pagination.hasMore ? (
+              {spacesPage?.pagination?.hasMore ? (
                 <SelectItem value="" disabled>
                   And more — use the search page to filter by folder
                 </SelectItem>
@@ -318,7 +310,7 @@ export default function KnowledgeAnalyticsPage() {
         </div>
 
         {overview ? (
-          <StatCardGrid cols={4} className="mb-4">
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard
               label="Article views"
               value={overviewValue(overview.totalViews, overview.suppressionReasons.totalViews)}
@@ -347,7 +339,7 @@ export default function KnowledgeAnalyticsPage() {
               icon={KbBarChart2Icon}
               tone="amber"
             />
-          </StatCardGrid>
+          </div>
         ) : null}
 
         {spaceId !== undefined && overview && !overview.searchScopeComplete ? (
@@ -357,7 +349,7 @@ export default function KnowledgeAnalyticsPage() {
         ) : null}
 
         {(reviewSla || citationReuse) && (
-          <StatCardGrid cols={2} className="mb-4">
+          <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
             {reviewSla ? (
               <StatCard
                 label="Review SLA met"
@@ -374,7 +366,7 @@ export default function KnowledgeAnalyticsPage() {
                 tone="violet"
               />
             ) : null}
-          </StatCardGrid>
+          </div>
         )}
         <InfiniteScrollSentinel
           hasNextPage={!!hasNextCitationReuse}

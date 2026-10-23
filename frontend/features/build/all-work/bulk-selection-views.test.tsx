@@ -75,8 +75,6 @@ const TICKET: AllWorkTicket = {
   projectName: "Project A",
   ticketNumber: 10,
   epicId: null,
-  assigneeId: null,
-  points: null,
   estimate: null,
   version: 1,
   rank: null,

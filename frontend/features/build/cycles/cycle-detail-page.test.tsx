@@ -311,7 +311,7 @@ it("renders the error state with the backend message when the cycles query fails
 
 const makeTicket = (id: number, title: string, status = "TODO") => ({
   id, title, status, ticketNumber: id, cycleId: 5, rank: "0",
-  epicId: null, assigneeId: null, priority: null, points: null,
+  epicId: null, assigneeId: null, priority: null,
   timeSpent: null, dueDate: null, startDate: null, sequenceId: `T-${id}`,
   labels: [], assignee: null, cycle: null,
 });

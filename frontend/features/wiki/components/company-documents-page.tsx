@@ -41,6 +41,29 @@ function NameCell(row: LinkedDocumentItem) {
   );
 }
 
+function CompanyDocumentMobileCard(row: LinkedDocumentItem) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1">
+      <div className="flex min-w-0 items-center gap-2">
+        <Link href={companyDocumentHref(row.id)} className="truncate font-medium text-foreground hover:underline">
+          {linkedDocumentTitle(row)}
+        </Link>
+        <SourceBadge kind="hr-document" />
+        {row.status !== "active" ? <SemanticBadge tone="warning" size="xs" label={STATUS_LABELS[row.status]} /> : null}
+      </div>
+      <p className="text-xs text-muted-foreground">
+        {row.category ?? "No category"}
+        {" · "}
+        {row.effectiveDate ? kbFormatDate(row.effectiveDate) : "No effective date"}
+        {" · "}
+        {row.version === null ? "No version" : `v${row.version}`}
+        {" · "}
+        {kbTimeAgo(row.publishedAt)}
+      </p>
+    </div>
+  );
+}
+
 const COLUMNS: DataTableColumn<LinkedDocumentItem>[] = [
   { key: "name", header: "Name", cell: NameCell },
   { key: "category", header: "Category", cell: (row) => row.category ?? "—" },
@@ -178,6 +201,7 @@ export default function CompanyDocumentsPage() {
           data={rows}
           columns={COLUMNS}
           getRowKey={getRowKey}
+          mobileCard={CompanyDocumentMobileCard}
           emptyState={empty}
           pagination={{
             mode: "cursor",

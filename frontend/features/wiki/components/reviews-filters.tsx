@@ -119,11 +119,11 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
         placeholder="Search reviewed pages…"
         value={searchDraft}
         onChange={handleSearchChange}
-        className="w-[200px]"
+        className="w-full sm:w-[200px]"
         aria-label="Search reviews"
       />
       <Select value={values.status} onValueChange={handleStatusChange}>
-        <SelectTrigger className="w-[140px]">
+        <SelectTrigger className="w-full sm:w-[140px]">
           <SelectValue placeholder="Status" />
         </SelectTrigger>
         <SelectContent>
@@ -135,7 +135,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
         </SelectContent>
       </Select>
       <Select value={values.type} onValueChange={handleTypeChange}>
-        <SelectTrigger className="w-[130px]">
+        <SelectTrigger className="w-full sm:w-[130px]">
           <SelectValue placeholder="Type" />
         </SelectTrigger>
         <SelectContent>
@@ -150,7 +150,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
             {advancedCount > 0 ? `More filters (${advancedCount})` : "More filters"}
           </Button>
         </ResponsivePopoverTrigger>
-        <ResponsivePopoverContent className="w-[280px] space-y-3 p-3" align="end">
+        <ResponsivePopoverContent className="w-[min(17.5rem,calc(100vw-2rem))] space-y-3 p-3" align="end">
           <div className="space-y-1.5">
             <Label className="text-xs">Team folder</Label>
             <Combobox

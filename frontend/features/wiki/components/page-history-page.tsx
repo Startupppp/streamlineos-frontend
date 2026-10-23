@@ -1,6 +1,8 @@
 "use client";
 
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { PageState } from "@/components/shared/page-state";
+import { resolvePageState } from "@/lib/page-state/resolve-page-state";
 import { useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
@@ -90,6 +92,8 @@ export default function PageHistoryPage({
     data: currentPage,
     isLoading: pageLoading,
     isError: pageError,
+    error: pageReadError,
+    refetch: refetchPage,
   } = useKbPage(pageId);
   const {
     data: versionsData,
@@ -157,6 +161,10 @@ export default function PageHistoryPage({
     void fetchNextPage();
   }
 
+  function handleRetryPage() {
+    void refetchPage();
+  }
+
   function handleRetryVersions() {
     if (isFetchNextPageError) {
       void fetchNextPage();
@@ -182,24 +190,31 @@ export default function PageHistoryPage({
   }, [selectedA, currentPage, pageId, restoreVersion, router, documentHref]);
 
   const backHref = pageLoading || pageError ? unresolvedHref : documentHref;
+  const pageState = resolvePageState({
+    isLoading: pageLoading,
+    isError: pageError || currentPage === undefined,
+    error: pageReadError,
+  });
 
-  if (pageLoading) {
+  if (pageState.kind !== "ready" || !currentPage) {
     return (
-      <PageWrapper title="File history" backHref={backHref} noInternalScroll>
-        <PageHistorySkeleton />
-      </PageWrapper>
-    );
-  }
-
-  if (pageError || !currentPage) {
-    return (
-      <PageWrapper title="File history" backHref={backHref}>
-        <div className="flex flex-col items-center justify-center flex-1 min-h-[40dvh] gap-3">
-          <p className="text-sm text-muted-foreground">Failed to load file.</p>
-          <Button variant="outline" size="sm" onClick={() => router.refresh()}>
-            Retry
-          </Button>
-        </div>
+      <PageWrapper
+        title="File history"
+        backHref={backHref}
+        noInternalScroll={pageState.kind === "loading"}
+      >
+        <PageState
+          resolution={
+            pageState.kind === "ready"
+              ? { kind: "error", error: pageReadError }
+              : pageState
+          }
+          loading={<PageHistorySkeleton />}
+          onRetry={handleRetryPage}
+          className="min-h-[40dvh]"
+        >
+          {null}
+        </PageState>
       </PageWrapper>
     );
   }

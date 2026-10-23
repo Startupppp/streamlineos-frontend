@@ -4,6 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -64,6 +65,15 @@ export function KbSharingInventoryTable({ query = {} }: KbSharingInventoryTableP
 
   function handleSelectionChange(sel: Set<string | number>) {
     setSelected(sel);
+  }
+
+  function handleCardChecked(id: string | number, checked: boolean) {
+    setSelected((current) => {
+      const next = new Set(current);
+      if (checked) next.add(id);
+      else next.delete(id);
+      return next;
+    });
   }
 
   function handleNext() {
@@ -131,6 +141,28 @@ export function KbSharingInventoryTable({ query = {} }: KbSharingInventoryTableP
         columns={COLUMNS}
         getRowKey={(row) => row.id}
         isLoading={isLoading}
+        mobileCard={(row) => (
+          <div className="flex min-w-0 items-start gap-3">
+            <Checkbox
+              checked={selected.has(row.id)}
+              onCheckedChange={(checked) => handleCardChecked(row.id, checked === true)}
+              aria-label={`Select ${row.page.title}`}
+              className="mt-0.5"
+            />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">{row.page.title}</p>
+              <p className="text-xs text-muted-foreground">
+                {row.type === "guest" ? "Guest" : "Link"}
+                {" · "}
+                {row.type === "guest" ? row.recipient.email : "Share link"}
+                {" · "}
+                {row.status}
+                {" · "}
+                {row.expiresAt ? row.expiresAt.slice(0, 10) : "No expiry"}
+              </p>
+            </div>
+          </div>
+        )}
         selection={{
           selected,
           onChange: handleSelectionChange,

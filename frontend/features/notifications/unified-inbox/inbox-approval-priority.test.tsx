@@ -18,6 +18,8 @@ function makeApproval(priority: string): BuildApprovalInboxItem {
     projectId: null,
     ticketId: null,
     dueAt: null,
+    objectType: "build_approval",
+    objectId: String(1),
     sourceModule: "build",
     actor: null,
     subject: "Deployment to production",

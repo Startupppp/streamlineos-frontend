@@ -68,7 +68,7 @@ const ACCENT = {
 
 const INBOX_GROUP: NavGroup = {
   label: "Communication",
-  product: "home",
+  module: "home",
   routes: [
     {
       label: "Inbox",
@@ -81,7 +81,7 @@ const INBOX_GROUP: NavGroup = {
 
 const OTHER_GROUP: NavGroup = {
   label: "Overview",
-  product: "home",
+  module: "home",
   routes: [
     {
       label: "Home",

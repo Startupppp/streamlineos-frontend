@@ -27,8 +27,7 @@ const BASE_DETAIL = {
   epicId: null,
   assigneeMembershipId: null,
   reporterId: "user-a",
-  points: null,
-  
+
   link: null,
   rank: "1000",
   parentTicketId: null,

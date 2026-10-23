@@ -2,7 +2,7 @@ import { ticketListPageContract, ticketRowContract } from "./build-tickets-core-
 import { allWorkPageContract } from "./build-tickets-subresource-schema";
 
 it("parses the actual all-work projection without unreturned tenant or membership fields", () => {
-  const row = { id: 1, title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH", projectId: 42, projectKey: "BUILD", projectName: "Project", ticketNumber: 1, dueDate: null, startDate: null, points: null, estimate: null, rank: "a0", version: 1, cycleId: null, epicId: null, assigneeId: null, assignee: null, labels: [], createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z" };
+  const row = { id: 1, title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH", projectId: 42, projectKey: "BUILD", projectName: "Project", ticketNumber: 1, dueDate: null, startDate: null, estimate: null, rank: "a0", version: 1, cycleId: null, epicId: null, assigneeId: null, assignee: null, labels: [], createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z" };
   const result = allWorkPageContract.parse({ data: [row], limit: 1, nextCursor: "opaque", hasMore: true });
   expect(result.data[0]).toEqual(row);
   expect(result.nextCursor).toBe("opaque");
@@ -10,7 +10,7 @@ it("parses the actual all-work projection without unreturned tenant or membershi
 });
 
 it("rejects an all-work row with no version, because a board inline edit cannot send a token the list never gave it", () => {
-  const row = { id: 1, title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH", projectId: 42, projectKey: "BUILD", projectName: "Project", ticketNumber: 1, dueDate: null, startDate: null, points: null, estimate: null, rank: "a0", cycleId: null, health: null, epicId: null, assigneeId: null, assignee: null, labels: [], createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z" };
+  const row = { id: 1, title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH", projectId: 42, projectKey: "BUILD", projectName: "Project", ticketNumber: 1, dueDate: null, startDate: null, estimate: null, rank: "a0", cycleId: null, health: null, epicId: null, assigneeId: null, assignee: null, labels: [], createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z" };
   expect(allWorkPageContract.safeParse({ data: [row], limit: 1, nextCursor: "opaque", hasMore: true }).success).toBe(false);
 });
 
@@ -19,7 +19,7 @@ it("parses light ticket rows and preserves board assignees, labels and cursor", 
   const row = {
     id: 1, orgId: "org-1", title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH",
     projectId: 42, ticketNumber: 1, epicId: null, assigneeMembershipId: 7,
-    reporterId: null, points: null, link: null, rank: "a0", parentTicketId: null,
+    reporterId: null, link: null, rank: "a0", parentTicketId: null,
     originalEstimate: null, timeSpent: "0", startDate: null, dueDate: null, moduleId: null,
     cycleId: null, health: null, sequenceId: null, estimate: null, version: 1, createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z",
     descriptionExcerpt: "A short plain-text excerpt of the ticket body",
@@ -40,7 +40,7 @@ it("requires descriptionExcerpt on every list row, so the board preview never re
   const row = {
     id: 1, orgId: "org-1", title: "Ticket", type: "BUG", status: "OPEN", priority: "HIGH",
     projectId: 42, ticketNumber: 1, epicId: null, assigneeMembershipId: 7,
-    reporterId: null, points: null, link: null, rank: "a0", parentTicketId: null,
+    reporterId: null, link: null, rank: "a0", parentTicketId: null,
     originalEstimate: null, timeSpent: "0", startDate: null, dueDate: null, moduleId: null,
     cycleId: null, health: null, sequenceId: null, estimate: null, version: 1, createdAt: "2026-09-09T00:00:00Z", updatedAt: "2026-09-09T00:00:00Z",
     assignee: user, assignees: [], labels: [], cycle: null,

@@ -33,7 +33,7 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [x] Coordinator: deleted dead CACHE_KEYS ticketsList/customStates/projectLabels (decision records kept)
 - [x] BA7 Home follow-up: approval writers (build approvals, attention adapters) bump the approver's inbox namespace; 22+ calendar unprojected selects
 - [x] Coordinator: check:cache-invalidation now passes (analytics readers use the literal namespace the 12 writers bump)
-- [x] Deferred (inbox bump now moot: BY removed the inbox read cache): 8 calendar stores still full-row (typed $inferSelect views)
+- [x] Deferred (inbox bump now moot: BY removed the inbox read cache): 8 calendar stores still full-row (typed $inferSelect views) — projected: meeting workspace/content, source-action (+repair) stores; booking-payment list/due kept full (view maps all 31 columns). Coordinator: re-added columns the BA7 projections dropped (poll option startAt/endAt, locked hold id/fencingToken, resource booking lifecycleVersion, lifecycle booking id/orgId/hostMembershipId/providerSyncStatus). UNTESTED
 - [x] Coordinator: travel nav keys aligned to hr:travel:view/manage; nav digest updated
 - [x] Coordinator: index migrations — none needed: users trgm already exist (no RLS); cycles trgm dead under RLS (non-leakproof ILIKE); work_item_relations served by uniq_work_item_relation + idx_..._related (int eq is leakproof, 0999 dropped the dup); modules has no deleted_at and idx_modules_project serves the per-project list
 
@@ -77,5 +77,5 @@ Baseline: root `3d8b74aea` · backend `ff2f38e51`. Commit locally per wave, neve
 - [ ] Frontend type-check · lint · knip · focused jest · next build
 - [x] Coordinator fixes after FS: nav groups computed once (hook applies HR week-one, AppSidebar takes prop); restored named slot renderers (FS passed a dynamic component to a function-called slot → hooks-order crash); removed 3 added comments; getNavGroupsForProduct → getNavGroupsForModule
 - [x] Coordinator (after FH1/FH3): export queryOptions from hr exit/attendance/expenses/documents/manager-home hooks; replace hand-typed keys in lib/prefetch/me.ts; share documentTypes/delegations/positions queryOptions with lib/prefetch/hr-people.ts — done by FQ (10 prefetches, 7 factories); part 2 running: hr.ts, hr-ops.ts, hr-time.ts literal keys
-- [ ] Unwired-module sweep · RBAC gate parity
+- [x] Unwired-module sweep · RBAC gate parity — all BE modules in the graph (EntityReferenceModule via consumers); no lost gates vs 1b789bff6 (backend ff2f38e51): every removed useCan/requirePermission moved to the same path, hr/benefits strengthened. kb:ask:view (not in catalog) → kb:ai:generate (the Ask endpoint key). ../sl-baseline removed
 - [ ] Local commits (root + backend)

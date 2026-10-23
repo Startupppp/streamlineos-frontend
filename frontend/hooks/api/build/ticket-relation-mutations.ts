@@ -81,7 +81,6 @@ async function relatedTicketFrom(ticket: Ticket, projectKey: string | null) {
     status: ticket.status,
     priority: ticket.priority,
     type: ticket.type,
-    points: ticket.points,
     version: ticket.version,
     assigneeMembershipId: null,
     projectId: ticket.projectId,

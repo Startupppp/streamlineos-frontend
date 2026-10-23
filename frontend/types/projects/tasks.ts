@@ -83,7 +83,6 @@ export interface Ticket {
   ticketNumber: number;
   epicId: number | null;
   reporterId: string | null;
-  points: number | null;
   link: string | null;
   rank: string | null;
   parentTicketId: number | null;

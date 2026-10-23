@@ -111,7 +111,7 @@ describe("CAL-B-001 the calendar renders in the account zone whatever the device
 
   it("names the clash time in the account zone", () => {
     expect(describeEventConflicts({
-      eventConflicts: [{ eventId: 1, title: "TZ probe", startDate: "2026-10-21T04:30:00.000Z", endDate: "2026-10-21T05:30:00.000Z", nominalStart: "2026-10-21T04:30:00.000Z", allDay: false, timezone: IST, orgId: "o" }],
+      eventConflicts: [{ eventId: 1, title: "TZ probe", startDate: "2026-10-21T04:30:00.000Z", endDate: "2026-10-21T05:30:00.000Z", allDay: false, timezone: IST }],
     }, IST)).toBe(`it clashes with "TZ probe" at 10:00 AM`);
   });
 });

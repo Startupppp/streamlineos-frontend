@@ -49,29 +49,32 @@ const PageAnalyticsTableRow = memo(function PageAnalyticsTableRow({
   row: KbPageAnalyticsRow;
 }) {
   return (
-    <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_5rem] items-center gap-3 px-3 py-2 hover:bg-muted/40 transition-colors">
+    <div className="grid grid-cols-2 items-center gap-x-3 gap-y-1 px-3 py-2.5 transition-colors hover:bg-muted/40 sm:grid-cols-[minmax(0,1fr)_3rem_3rem_3rem_auto_5.5rem] sm:py-2">
       <Link
         href={pageHref(row.id)}
-        className="text-sm truncate hover:underline text-foreground"
+        className="col-span-2 truncate text-sm text-foreground hover:underline sm:col-span-1"
       >
         {row.title || "Untitled"}
       </Link>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">
+      <span className="text-xs tabular-nums text-muted-foreground sm:text-right">
+        <span className="sm:hidden">Views </span>
         {row.uniqueViewers}
       </span>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">
+      <span className="text-xs tabular-nums text-muted-foreground sm:text-right">
+        <span className="sm:hidden">Comments </span>
         {row.commentCount}
       </span>
-      <span className="text-xs tabular-nums text-muted-foreground text-right">
+      <span className="text-xs tabular-nums text-muted-foreground sm:text-right">
+        <span className="sm:hidden">Versions </span>
         {row.versionCount}
       </span>
       <Badge
         variant={STATUS_VARIANT[row.status] ?? "outline"}
-        className="text-xs capitalize"
+        className="w-fit text-xs capitalize"
       >
         {row.status.replace("_", " ")}
       </Badge>
-      <span className="text-xs text-muted-foreground text-right">
+      <span className="text-xs text-muted-foreground sm:text-right">
         {new Date(row.updatedAt).toLocaleDateString("en", {
           month: "short",
           day: "numeric",
@@ -225,7 +228,7 @@ export function KnowledgeAnalyticsLists({
               />
             ) : (
               <div className="rounded-lg border border-border bg-card divide-y divide-border/60">
-                <div className="grid grid-cols-[1fr_3rem_3rem_3rem_auto_5rem] items-center gap-3 px-3 py-2 border-b border-border">
+                <div className="hidden grid-cols-[minmax(0,1fr)_3rem_3rem_3rem_auto_5.5rem] items-center gap-3 border-b border-border px-3 py-2 sm:grid">
                   <span className="text-xs font-medium text-muted-foreground">
                     Title
                   </span>

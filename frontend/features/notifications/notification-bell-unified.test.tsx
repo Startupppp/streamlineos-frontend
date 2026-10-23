@@ -152,28 +152,28 @@ describe("NotificationBell — unified count badge", () => {
   });
 
   it("marks the badge as a lower bound when the mail lane saturated its scan page", () => {
-    mockUnifiedCount = { notification: 0, mail: 5, approval: 0, total: 5, mailExact: false, approvalExact: true };
+    mockUnifiedCount = { notification: 0, mail: 5, approval: 0, task: 0, total: 5, mailExact: false, approvalExact: true };
     render(<NotificationBell />);
     expect(screen.getByText("5+")).toBeInTheDocument();
     expect(screen.queryByText("5")).not.toBeInTheDocument();
   });
 
   it("marks the badge as a lower bound when the approval lane saturated its scan page, so a capped approval count is not presented as exact", () => {
-    mockUnifiedCount = { notification: 0, mail: 0, approval: 50, total: 50, mailExact: true, approvalExact: false };
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 50, task: 0, total: 50, mailExact: true, approvalExact: false };
     render(<NotificationBell />);
     expect(screen.getByText("50+")).toBeInTheDocument();
     expect(screen.queryByText("50")).not.toBeInTheDocument();
   });
 
   it("CONTROL: renders the same approval count as exact when the scan page was not filled", () => {
-    mockUnifiedCount = { notification: 0, mail: 0, approval: 50, total: 50, mailExact: true, approvalExact: true };
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 50, task: 0, total: 50, mailExact: true, approvalExact: true };
     render(<NotificationBell />);
     expect(screen.getByText("50")).toBeInTheDocument();
     expect(screen.queryByText("50+")).not.toBeInTheDocument();
   });
 
   it("announces a saturated total as a lower bound to screen readers", () => {
-    mockUnifiedCount = { notification: 0, mail: 0, approval: 50, total: 50, mailExact: true, approvalExact: false };
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 50, task: 0, total: 50, mailExact: true, approvalExact: false };
     render(<NotificationBell />);
     expect(screen.getByRole("status")).toHaveTextContent(
       "at least 50 unread items in inbox",
@@ -213,13 +213,13 @@ describe("NotificationBell — unified count badge", () => {
   });
 
   it("shows the badge when task-only count is non-zero, flowing through total", () => {
-    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, task: 3, total: 3, mailExact: true };
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, task: 3, total: 3, mailExact: true, approvalExact: true };
     render(<NotificationBell />);
     expect(screen.getByText("3")).toBeInTheDocument();
   });
 
   it("negative: task count alone does not show if total remains zero", () => {
-    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true };
+    mockUnifiedCount = { notification: 0, mail: 0, approval: 0, task: 0, total: 0, mailExact: true, approvalExact: true };
     render(<NotificationBell />);
     expect(screen.queryByText(/^\d/)).not.toBeInTheDocument();
   });

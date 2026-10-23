@@ -14,7 +14,6 @@ const BASE = {
   assigneeMembershipId: null,
   reporterId: "user-1",
   reporterMembershipId: null,
-  points: null,
   link: null,
   rank: "1000",
   parentTicketId: null,

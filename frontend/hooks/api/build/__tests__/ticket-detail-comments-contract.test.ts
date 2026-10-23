@@ -14,8 +14,7 @@ const TICKET_ROW = {
   assigneeMembershipId: null,
   reporterId: "user-1",
   reporterMembershipId: null,
-  points: null,
-  
+
   link: null,
   rank: "a0",
   parentTicketId: null,

@@ -24,6 +24,8 @@ const detail: CalendarEventDetail = {
   isRecurring: false,
   canManage: true,
   localVersion: 3,
+  guestEmails: [],
+  reminderOffsetsMinutes: null,
 };
 
 beforeAll(() => {

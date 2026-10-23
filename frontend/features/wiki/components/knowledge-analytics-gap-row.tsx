@@ -84,10 +84,10 @@ export const GapTableRow = memo(function GapTableRow({
   }
   return (
     <div>
-      <div className={`flex items-center gap-3 px-3 py-2 transition-colors ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
+      <div className={`flex flex-col gap-2 px-3 py-2.5 transition-colors sm:flex-row sm:items-center sm:gap-3 sm:py-2 ${isSelected ? "bg-muted/60" : "hover:bg-muted/40"}`}>
         <button
           type="button"
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-1 rounded-sm text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           onClick={handleSelectClick}
           disabled={!row.query}
           aria-expanded={isSelected}
@@ -95,12 +95,12 @@ export const GapTableRow = memo(function GapTableRow({
         >
           <TruncatedText
             text={row.query ?? "(empty)"}
-            className="min-w-0 flex-1 text-sm"
+            className="min-w-0 w-full text-sm sm:w-auto sm:flex-1"
           />
           <span className="text-xs tabular-nums text-muted-foreground shrink-0">
             {row.count}
           </span>
-          <span className="text-xs text-muted-foreground shrink-0 w-28 text-right">
+          <span className="text-xs text-muted-foreground shrink-0 sm:w-28 sm:text-right">
             {new Date(row.lastOccurredAt).toLocaleDateString("en", {
               month: "short",
               day: "numeric",
@@ -108,6 +108,7 @@ export const GapTableRow = memo(function GapTableRow({
             })}
           </span>
         </button>
+        <div className="flex flex-wrap items-center gap-1">
         {canManageAnalytics ? (
           <>
             <Button
@@ -161,18 +162,19 @@ export const GapTableRow = memo(function GapTableRow({
             </Button>
           </>
         ) : null}
+        </div>
       </div>
       {assignOpen && (
         <form
           onSubmit={handleAssignSubmit}
           {...propagationShield}
-          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
+          className="flex flex-wrap items-center gap-2 border-t border-border/40 bg-muted/20 px-3 py-2"
         >
           <UserCombobox
             value={assignValue}
             onChange={setAssignValue}
             placeholder="Select member…"
-            className="flex-1"
+            className="w-full min-w-0 flex-1 sm:w-auto"
           />
           <Button
             size="sm"
@@ -200,10 +202,10 @@ export const GapTableRow = memo(function GapTableRow({
         <form
           onSubmit={handleDismissSubmit}
           {...propagationShield}
-          className="flex items-center gap-2 px-3 py-2 bg-muted/20 border-t border-border/40"
+          className="flex flex-wrap items-center gap-2 border-t border-border/40 bg-muted/20 px-3 py-2"
         >
           <Input
-            className="h-7 text-xs flex-1"
+            className="h-7 w-full min-w-0 flex-1 text-xs sm:w-auto"
             placeholder="Reason for dismissal"
             value={dismissValue}
             onChange={(e) => setDismissValue(e.target.value)}

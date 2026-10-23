@@ -151,7 +151,7 @@ function EvidencePopover({ pageId, kind }: EvidencePopoverProps) {
           Evidence
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-3" align="end">
+      <PopoverContent className="w-[min(20rem,calc(100vw-2rem))] p-3" align="end">
         <p className="text-xs font-medium text-foreground mb-2">
           Signal evidence
         </p>
@@ -177,7 +177,7 @@ function HealthTrendWidget() {
   const netChange = data.afterCount - data.beforeCount;
 
   return (
-    <div className="rounded-xl border border-border bg-card/60 px-4 py-3 flex items-center gap-4">
+    <div className="flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card/60 px-4 py-3">
       <div className="flex flex-col">
         <span className="text-xs text-muted-foreground">
           Open 30 days ago (all signals)
@@ -195,7 +195,7 @@ function HealthTrendWidget() {
           {data.afterCount}
         </span>
       </div>
-      <p className="text-xs text-muted-foreground ml-auto text-right">
+      <p className="w-full text-xs text-muted-foreground sm:ml-auto sm:w-auto sm:text-right">
         {netChange > 0 ? "+" : ""}
         {netChange} net change in visible open issues
       </p>
@@ -355,7 +355,7 @@ function AssignPopover({ pageId, kind }: AssignPopoverProps) {
           Assign
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-64 p-3 space-y-2" align="end">
+      <PopoverContent className="w-[min(16rem,calc(100vw-2rem))] space-y-2 p-3" align="end">
         <p className="text-xs font-medium text-foreground">Assign owner</p>
         <UserCombobox
           value={selectedUserId}
@@ -607,7 +607,7 @@ export default function ContentHealthPage() {
                 )}
                 <Select value={activeSignal} onValueChange={handleSignalSelect}>
                   <SelectTrigger
-                    className="w-44 h-8 text-xs"
+                    className="h-8 w-full text-xs sm:w-44"
                     aria-label="Signal type"
                   >
                     <SelectValue />
@@ -641,7 +641,7 @@ export default function ContentHealthPage() {
             ) : (
               <>
                 <div className="rounded-xl border border-border bg-card divide-y divide-border/60">
-                  <div className="flex items-center gap-3 px-3 py-2 border-b border-border">
+                  <div className="hidden items-center gap-3 border-b border-border px-3 py-2 sm:flex">
                     <Checkbox
                       checked={allSelected}
                       onCheckedChange={handleSelectAll}
@@ -662,8 +662,9 @@ export default function ContentHealthPage() {
                   {rows.map((row) => (
                     <div
                       key={row.id}
-                      className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40 transition-colors"
+                      className="flex flex-col gap-2 px-3 py-2.5 transition-colors hover:bg-muted/40 sm:flex-row sm:items-center sm:gap-3"
                     >
+                      <div className="flex min-w-0 items-center gap-3">
                       <Checkbox
                         checked={selectedIds.has(row.id)}
                         onCheckedChange={(checked) =>
@@ -674,17 +675,18 @@ export default function ContentHealthPage() {
                       />
                       <Link
                         href={pageHref(row.id)}
-                        className="flex-1 text-sm truncate hover:underline text-foreground"
+                        className="min-w-0 flex-1 truncate text-sm text-foreground hover:underline"
                       >
                         {row.title || "Untitled"}
                       </Link>
-                      <span className="text-xs text-muted-foreground w-12 text-right tabular-nums font-mono shrink-0">
+                      <span className="w-12 shrink-0 text-right font-mono text-xs tabular-nums text-muted-foreground">
                         {row.impact}
                       </span>
-                      <span className="text-xs text-muted-foreground w-24 text-right tabular-nums shrink-0">
+                      </div>
+                      <div className="flex flex-wrap items-center gap-1 pl-7 sm:ml-auto sm:pl-0">
+                      <span className="mr-auto text-xs tabular-nums text-muted-foreground sm:mr-0 sm:w-24 sm:text-right">
                         {kbFormatDate(row.updatedAt)}
                       </span>
-                      <div className="flex items-center gap-1 shrink-0">
                         <EvidencePopover pageId={row.id} kind={activeSignal} />
                         <AssignPopover pageId={row.id} kind={activeSignal} />
                         <Button

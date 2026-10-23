@@ -187,7 +187,7 @@ export function PageDocumentToolbar({
   }
 
   return (
-    <div className="flex shrink-0 items-center justify-end gap-1.5 self-end sm:self-auto">
+    <div className="flex w-full min-w-0 items-center justify-end gap-1.5 overflow-x-auto self-end scrollbar-hide sm:w-auto sm:self-auto">
       {onOpenDetailsPanel ? (
         <Button
           type="button"

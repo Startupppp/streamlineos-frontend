@@ -337,7 +337,7 @@ it("renders a checkbox per row when the user has build:tickets:update permission
 const SUBMISSION = {
   id: 99, orgId: "org-1", projectId: 1, title: "Bug: button broken",
   type: "BUG", status: "TRIAGE", priority: "HIGH", ticketNumber: 99,
-  epicId: null, reporterId: "user-1", points: null,
+  epicId: null, reporterId: "user-1",
   link: null, rank: "1000", parentTicketId: null, originalEstimate: null,
   timeSpent: null, startDate: null, dueDate: null, moduleId: null, cycleId: null,
   sequenceId: "PROJ-99", estimate: null, createdAt: "2026-09-01", updatedAt: "2026-09-01",

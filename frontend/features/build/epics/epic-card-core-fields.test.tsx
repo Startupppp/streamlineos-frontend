@@ -32,7 +32,6 @@ const EPIC = {
   description: "Replace the legacy funnel",
   status: "IN_PROGRESS",
   priority: "HIGH",
-  points: null,
   version: 2,
   startDate: "2026-02-01",
   dueDate: "2026-03-15",
