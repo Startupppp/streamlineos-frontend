@@ -2552,3 +2552,9 @@ button.goal-everything-chip[aria-checked="true"]::before {
 .journal-article aside.callout > * + * {
   margin-top: 0.75em;
 }
+
+/* Next.js DevTools badge sits above app sheets/dialogs; hide it while a modal
+   locks scroll so it cannot paint over Details / Saved messages / etc. */
+body[data-scroll-locked] nextjs-portal {
+  display: none !important;
+}

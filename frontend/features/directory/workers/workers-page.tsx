@@ -69,6 +69,38 @@ function workerDisplayName(worker: Worker): string {
   return worker.workerNumber ?? "Unnamed worker";
 }
 
+function WorkerMobileCard({ worker }: { worker: Worker }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <div className="min-w-0 flex-1">
+          <span
+            className={cn("font-medium text-foreground", TEXT_ONE_LINE)}
+            title={workerDisplayName(worker)}
+          >
+            {workerDisplayName(worker)}
+          </span>
+          {worker.workEmail ? (
+            <span className={cn("block text-dense text-muted-foreground", TEXT_ONE_LINE)}>
+              {worker.workEmail}
+            </span>
+          ) : null}
+        </div>
+        <SemanticBadge
+          tone={STATUS_TONE[worker.status]}
+          label={worker.status.charAt(0) + worker.status.slice(1).toLowerCase()}
+          size="xs"
+        />
+      </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-2 text-dense text-muted-foreground">
+        <span className="tabular-nums">{worker.workerNumber ?? "—"}</span>
+        {worker.isPayee ? <SemanticBadge tone="info" label="Payee" size="xs" /> : null}
+        <span className="ml-auto shrink-0 tabular-nums">{formatDate(worker.createdAt)}</span>
+      </div>
+    </div>
+  );
+}
+
 function AddWorkerButton({ onClick }: { onClick: () => void }) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
   return (
@@ -307,7 +339,12 @@ export function WorkersPage() {
               description="You no longer hold workforce access, so worker records cannot be listed. The records themselves are unchanged."
             />
           ) : isLoading || workersQuery.access.pending ? (
-            <DataTableSkeleton rows={12} headers={WORKER_SKELETON_HEADERS} className="flex-1" />
+            <DataTableSkeleton
+              rows={12}
+              headers={WORKER_SKELETON_HEADERS}
+              mobileCards
+              className="min-w-0 flex-1"
+            />
           ) : isError || workersQuery.access.unavailable ? (
             <ErrorState className={CONTENT_FILL_PANEL} onRetry={handleRetry} />
           ) : rows.length === 0 ? (
@@ -326,8 +363,9 @@ export function WorkersPage() {
                 data={rows}
                 columns={columns}
                 getRowKey={(row) => row.workerId}
+                mobileCard={(worker) => <WorkerMobileCard worker={worker} />}
                 minWidth="640px"
-                className={CONTENT_FILL_PANEL}
+                className={cn(CONTENT_FILL_PANEL, "min-w-0")}
               />
               {hasHistory || pageInfo?.hasMore ? (
                 <CursorPageControls

@@ -26,6 +26,33 @@ export function personDisplayName(person: OrganizationPerson): string {
   return `${person.firstName} ${person.lastName}`.trim();
 }
 
+export function PersonMobileCard({ person }: { person: OrganizationPerson }) {
+  return (
+    <div className="flex min-w-0 flex-col gap-1.5">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <span
+          className={cn("min-w-0 flex-1 font-medium text-foreground", TEXT_ONE_LINE)}
+          title={personDisplayName(person)}
+        >
+          {personDisplayName(person)}
+        </span>
+        <SemanticBadge
+          tone={getPersonAccessBadgeTone(person)}
+          label={getPersonAccessBadge(person)}
+          size="xs"
+        />
+      </div>
+      <span className={cn("text-dense text-muted-foreground", TEXT_ONE_LINE)}>
+        {person.workEmail ?? "No work email"}
+      </span>
+      <div className="flex min-w-0 items-center justify-between gap-2 text-dense text-muted-foreground">
+        <span className="min-w-0 truncate">{person.phone ?? "No phone"}</span>
+        <span className="shrink-0 tabular-nums">{formatAddedDate(person.createdAt)}</span>
+      </div>
+    </div>
+  );
+}
+
 function formatAddedDate(iso: string): string {
   return new Intl.DateTimeFormat("en-GB", {
     day: "numeric",

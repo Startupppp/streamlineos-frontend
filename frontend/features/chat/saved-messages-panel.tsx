@@ -19,6 +19,11 @@ import { usePanelRenderWindow } from "./panel-render-window";
 import { TablePagination } from "@/components/ui/table-pagination";
 import type { SavedMessage } from "@/types/chat";
 import { getInitials } from "@/lib/format-utils";
+import {
+  CHAT_SIDE_PANEL_HEADER,
+  CHAT_SIDE_PANEL_ROOT,
+  CHAT_SIDE_PANEL_TITLE,
+} from "./chat-side-panel-chrome";
 
 function SavedMessageCard({
   item,
@@ -141,11 +146,11 @@ export function SavedMessagesPanel({
   const handleRetry = useCallback(() => void refetch(), [refetch]);
 
   return (
-    <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
-      <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <Bookmark className="h-4 w-4 text-status-warning-ink fill-amber-500" />
-          <h3 className="text-sm font-bold">Saved messages</h3>
+    <div className={CHAT_SIDE_PANEL_ROOT}>
+      <div className={CHAT_SIDE_PANEL_HEADER}>
+        <div className="flex min-w-0 items-center gap-2">
+          <Bookmark className="h-4 w-4 shrink-0 text-status-warning-ink fill-amber-500" />
+          <h3 className={CHAT_SIDE_PANEL_TITLE}>Saved messages</h3>
         </div>
         <AnimatedIconButton
           type="button"
@@ -153,20 +158,20 @@ export function SavedMessagesPanel({
           iconSize={16}
           variant="ghost"
           onClick={onClose}
-          className="size-8 rounded-lg p-0 text-muted-foreground"
+          className="size-8 shrink-0 rounded-lg p-0 text-muted-foreground"
           aria-label="Close saved messages"
         />
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="min-h-0 flex-1">
         {isLoading ? (
           <div className="space-y-2 p-3" aria-busy="true">
             <span role="status" className="sr-only">Loading saved messages…</span>
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex gap-2.5 p-2">
-                <Skeleton className="h-8 w-8 rounded-full shrink-0" />
-                <div className="flex-1 space-y-1.5">
-                  <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-8 w-8 shrink-0 rounded-full" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-3 w-24 max-w-full" />
                   <Skeleton className="h-3 w-full" />
                   <Skeleton className="h-3 w-3/4" />
                 </div>
@@ -182,12 +187,12 @@ export function SavedMessagesPanel({
             onRetry={handleRetry}
           />
         ) : items.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
-            <div className="h-12 w-12 rounded-xl bg-status-warning-surface flex items-center justify-center mb-3">
+          <div className="flex min-h-[min(28rem,70dvh)] flex-col items-center justify-center px-6 py-10">
+            <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-status-warning-surface">
               <Bookmark className="h-5 w-5 text-status-warning-ink" />
             </div>
-            <h4 className="text-label font-semibold mb-1">No saved messages</h4>
-            <p className="text-dense text-muted-foreground text-center leading-relaxed">
+            <h4 className="mb-1 text-label font-semibold">No saved messages</h4>
+            <p className="max-w-xs text-center text-dense leading-relaxed text-muted-foreground">
               Use <span className="font-medium text-foreground">Save message</span> from a message&apos;s menu.
               Pinning keeps a message in the channel only.
             </p>

@@ -25,11 +25,11 @@ import {
 } from "./chat-notification-preferences";
 
 const MUTE_OPTIONS = [
-  { label: "15 minutes", value: "15m" },
-  { label: "1 hour", value: "1h" },
-  { label: "8 hours", value: "8h" },
-  { label: "24 hours", value: "24h" },
-  { label: "Forever", value: "forever" },
+  { label: "15 min", value: "15m", wide: false },
+  { label: "1 hour", value: "1h", wide: false },
+  { label: "8 hours", value: "8h", wide: false },
+  { label: "24 hours", value: "24h", wide: false },
+  { label: "Forever", value: "forever", wide: true },
 ] as const;
 
 interface ConversationNotificationSettingsProps {
@@ -83,10 +83,13 @@ export function ConversationNotificationSettings({
   );
 
   return (
-    <section className="mt-4 border-t border-border/30 pt-4" aria-labelledby="conversation-notifications-heading">
+    <section
+      className="space-y-3 border-t border-border/40 pt-4"
+      aria-labelledby="conversation-notifications-heading"
+    >
       <h5
         id="conversation-notifications-heading"
-        className="mb-3 flex items-center gap-1.5 px-1 text-dense font-bold uppercase tracking-wider text-muted-foreground"
+        className="flex items-center gap-1.5 text-dense font-semibold uppercase tracking-wider text-muted-foreground"
       >
         {isMuted ? <BellOff className="size-3" /> : <BellRing className="size-3" />}
         Notifications
@@ -94,7 +97,10 @@ export function ConversationNotificationSettings({
 
       <div className="space-y-3">
         <div className="space-y-1.5">
-          <label htmlFor="conversation-notification-preference" className="px-1 text-xs font-medium">
+          <label
+            htmlFor="conversation-notification-preference"
+            className="text-xs font-medium text-foreground"
+          >
             Notify me about
           </label>
           <Select
@@ -102,7 +108,7 @@ export function ConversationNotificationSettings({
             onValueChange={handlePreferenceChange}
             disabled={setPreference.isPending}
           >
-            <SelectTrigger id="conversation-notification-preference" className="w-full">
+            <SelectTrigger id="conversation-notification-preference" className="h-9 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -113,14 +119,14 @@ export function ConversationNotificationSettings({
               ))}
             </SelectContent>
           </Select>
-          <p className="px-1 text-dense text-muted-foreground">
+          <p className="text-dense text-muted-foreground">
             {CHAT_NOTIFICATION_OPTIONS.find((option) => option.value === preference)?.description}
           </p>
         </div>
 
         {isMuted ? (
           <div className="space-y-2">
-            <p className="px-1 text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Muted until{" "}
               {mutedUntil && new Date(mutedUntil).getFullYear() >= 2099
                 ? "forever"
@@ -131,7 +137,7 @@ export function ConversationNotificationSettings({
             <LoadingButton
               variant="outline"
               size="sm"
-              className="h-8 w-full text-xs"
+              className="h-9 w-full text-xs"
               onClick={handleUnmute}
               isPending={unmuteChannel.isPending}
             >
@@ -139,14 +145,18 @@ export function ConversationNotificationSettings({
             </LoadingButton>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-1.5">
+          <div className="grid grid-cols-2 gap-2">
             {MUTE_OPTIONS.map((option) => (
               <button
                 key={option.value}
                 type="button"
                 onClick={() => void handleMute(option.value)}
                 disabled={muteChannel.isPending}
-                className="inline-flex h-8 items-center justify-center rounded-lg border border-border/50 px-2 text-dense font-medium transition-colors hover:bg-muted/40 disabled:opacity-50"
+                className={
+                  option.wide
+                    ? "col-span-2 inline-flex h-9 items-center justify-center rounded-lg border border-border/60 px-3 text-dense font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
+                    : "inline-flex h-9 items-center justify-center rounded-lg border border-border/60 px-2 text-dense font-medium transition-colors hover:bg-muted/50 disabled:opacity-50"
+                }
               >
                 Mute {option.label}
               </button>
@@ -156,7 +166,7 @@ export function ConversationNotificationSettings({
 
         <Link
           href="/settings/notifications/my-preferences"
-          className="flex h-8 items-center justify-center gap-1.5 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/40 hover:text-foreground"
+          className="flex h-9 items-center justify-center gap-1.5 rounded-lg text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
         >
           <UserRoundCog className="size-3.5" />
           Profile notification preferences

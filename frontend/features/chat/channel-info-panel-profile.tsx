@@ -189,7 +189,7 @@ export function ChannelInfoPanelProfile({
   }
 
   return (
-    <div className="flex flex-col items-center text-center mb-6">
+    <div className="flex w-full min-w-0 flex-col items-center text-center">
       <input
         ref={quickAvatarRef}
         type="file"
@@ -200,32 +200,48 @@ export function ChannelInfoPanelProfile({
       />
       {channel?.type === "DIRECT" ? (
         <div className="mb-3">
-          <ChannelAvatar type={channel.type} otherMember={otherMember} className="h-20 w-20" rounded="2xl" />
+          <ChannelAvatar type={channel.type} otherMember={otherMember} className="size-16 sm:size-20" rounded="2xl" />
         </div>
       ) : (
         <button
           type="button"
           onClick={isAdmin ? handleOpenQuickAvatarInput : undefined}
           disabled={!isAdmin || uploadingAvatar}
-          className="relative group mb-3 disabled:cursor-default"
+          className="group relative mb-3 disabled:cursor-default"
           title={isAdmin ? "Change channel photo" : undefined}
           aria-label={isAdmin ? "Change channel photo" : undefined}
         >
-          <ChannelAvatar type={channel?.type} name={channel?.name} avatarUrl={channel?.avatarUrl} className="h-20 w-20" rounded="2xl" iconClassName="h-8 w-8" />
+          <ChannelAvatar
+            type={channel?.type}
+            name={channel?.name}
+            avatarUrl={channel?.avatarUrl}
+            className="size-16 sm:size-20"
+            rounded="2xl"
+            iconClassName="h-7 w-7 sm:h-8 sm:w-8"
+          />
           {isAdmin ? (
-            <div className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-              {uploadingAvatar ? <Loader2 className="h-5 w-5 text-white animate-spin" /> : <Camera className="h-5 w-5 text-white" />}
+            <div className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/40 opacity-0 transition-opacity group-hover:opacity-100">
+              {uploadingAvatar ? (
+                <Loader2 className="h-5 w-5 animate-spin text-white" />
+              ) : (
+                <Camera className="h-5 w-5 text-white" />
+              )}
             </div>
           ) : null}
         </button>
       )}
-      <TruncatedText text={displayName} className="text-base font-bold max-w-[200px]" />
+      <TruncatedText
+        text={displayName}
+        className="w-full max-w-full px-1 text-base font-semibold"
+      />
       {channel?.type === "DIRECT" ? (
-        <p className="text-xs text-muted-foreground mt-0.5">
+        <p className="mt-0.5 text-xs text-muted-foreground">
           {otherMember ? (onlineUserIds.has(otherMember.id) ? "Online" : "Offline") : ""}
         </p>
       ) : channel?.description ? (
-        <p className="text-xs text-muted-foreground mt-1 max-w-[240px]">{channel.description}</p>
+        <p className="mt-1 w-full max-w-full px-1 text-xs text-muted-foreground">
+          {channel.description}
+        </p>
       ) : null}
     </div>
   );

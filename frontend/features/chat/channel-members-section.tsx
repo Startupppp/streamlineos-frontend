@@ -151,9 +151,9 @@ export function ChannelMembersSection({
   const removalName = pendingRemoval?.userName ?? "this member";
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3 px-1">
-        <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider">
+    <section className="space-y-3 border-t border-border/40 pt-4" aria-label="Members">
+      <div className="flex items-center justify-between gap-2">
+        <h5 className="text-dense font-semibold uppercase tracking-wider text-muted-foreground">
           Members ({members.length})
         </h5>
         {isAdmin && isMultiMemberChannel && (
@@ -172,8 +172,8 @@ export function ChannelMembersSection({
       </div>
 
       {onlineMembers.length > 0 && (
-        <div className="mb-3">
-          <p className="text-micro font-bold text-status-success-ink uppercase tracking-wider px-2 mb-1">
+        <div className="space-y-1">
+          <p className="px-1 text-micro font-semibold uppercase tracking-wider text-status-success-ink">
             Online — {onlineMembers.length}
           </p>
           <div role="list" aria-label="Online members" className="space-y-0.5">
@@ -216,8 +216,8 @@ export function ChannelMembersSection({
       )}
 
       {offlineMembers.length > 0 && (
-        <div>
-          <p className="text-micro font-bold text-muted-foreground uppercase tracking-wider px-2 mb-1">
+        <div className="space-y-1">
+          <p className="px-1 text-micro font-semibold uppercase tracking-wider text-muted-foreground">
             Offline — {offlineMembers.length}
           </p>
           <div role="list" aria-label="Offline members" className="space-y-0.5">
@@ -286,6 +286,6 @@ export function ChannelMembersSection({
         existingMemberIds={existingMemberIds}
         isAdmin={isAdmin}
       />
-    </div>
+    </section>
   );
 }

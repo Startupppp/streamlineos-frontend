@@ -11,12 +11,15 @@ export default function InboxLoading() {
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-7 w-24 rounded-full" />
+            <Skeleton
+              key={i}
+              className="h-7 w-20 max-w-full shrink-0 rounded-full sm:w-24"
+            />
           ))}
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col gap-2">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
         <NotificationListSkeleton count={10} />
       </div>
     </PageWrapper>

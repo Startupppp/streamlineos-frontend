@@ -99,15 +99,15 @@ export function ChatShellSkeleton({ notice }: { notice?: ReactNode }) {
             collapsed && "lg:hidden",
           )}
         >
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5">
-              <Skeleton className="h-9 w-9 rounded-xl" />
-              <div className="space-y-1.5">
-                <Skeleton className="h-4 w-24" />
-                <Skeleton className="h-3 w-32" />
+          <div className="flex min-w-0 items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Skeleton className="h-9 w-9 shrink-0 rounded-xl" />
+              <div className="min-w-0 space-y-1.5">
+                <Skeleton className="h-4 w-24 max-w-full" />
+                <Skeleton className="h-3 w-32 max-w-full" />
               </div>
             </div>
-            <Skeleton className="h-8 w-16 rounded-md" />
+            <Skeleton className="h-8 w-16 shrink-0 rounded-md" />
           </div>
           <Skeleton className="h-9 w-full rounded-lg" />
           <div className="flex gap-1">

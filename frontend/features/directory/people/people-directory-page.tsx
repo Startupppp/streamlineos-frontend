@@ -29,6 +29,7 @@ import { CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS } from "@/components/ui/conte
 import { cn } from "@/lib/utils";
 import {
   buildPersonColumns,
+  PersonMobileCard,
   personDisplayName,
 } from "./person-table-columns";
 import { DIRECTORY_SUBTITLE, DIRECTORY_TITLE, PERSON_TABLE_HEADERS } from "./person-table-headers";
@@ -181,7 +182,12 @@ export function PeopleDirectoryPage({
               description="Your access to the people directory was withdrawn. Nothing is missing from the directory itself."
             />
           ) : isLoading || peopleQuery.access.pending ? (
-            <DataTableSkeleton rows={12} headers={PERSON_TABLE_HEADERS} className="min-h-0 w-full flex-1" />
+            <DataTableSkeleton
+              rows={12}
+              headers={PERSON_TABLE_HEADERS}
+              mobileCards
+              className="min-h-0 w-full min-w-0 flex-1"
+            />
           ) : isError || peopleQuery.access.unavailable ? (
             <ErrorState className={cn(CONTENT_FILL_PANEL, PAGE_BODY_EMPTY_CLASS)} onRetry={handleRetry} />
           ) : rows.length === 0 ? (
@@ -200,8 +206,10 @@ export function PeopleDirectoryPage({
                 data={rows}
                 columns={columns}
                 getRowKey={(row) => row.organizationPersonId}
+                onRowClick={handlePeek}
+                mobileCard={(person) => <PersonMobileCard person={person} />}
                 minWidth="760px"
-                className={CONTENT_FILL_PANEL}
+                className={cn(CONTENT_FILL_PANEL, "min-w-0")}
               />
               {pagination.hasPrevious || pageInfo?.hasMore ? (
                 <CursorPageControls

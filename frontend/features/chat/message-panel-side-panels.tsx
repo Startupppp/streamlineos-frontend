@@ -37,7 +37,8 @@ const panelMotion = {
   animate: { opacity: 1, x: 0 },
   exit: { opacity: 0, x: 20 },
   transition: { duration: 0.2, ease: "easeInOut" as const },
-  className: "flex w-80 flex-col overflow-hidden shrink-0",
+  className:
+    "flex w-80 shrink-0 flex-col overflow-hidden border-l border-border/40",
 };
 
 export function MessagePanelSidePanels({

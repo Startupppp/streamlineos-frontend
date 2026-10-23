@@ -11,12 +11,17 @@ export default function DirectoryLoading() {
       subtitle={DIRECTORY_SUBTITLE}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 flex-1 min-w-[12rem] rounded-md" />
+          <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:min-w-[12rem]" />
         </div>
       }
-      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+      actions={<Skeleton className="h-9 w-24 max-w-full rounded-md sm:w-28" />}
     >
-      <DataTableSkeleton rows={12} headers={PERSON_TABLE_HEADERS} />
+      <DataTableSkeleton
+        rows={12}
+        headers={PERSON_TABLE_HEADERS}
+        mobileCards
+        className="min-w-0"
+      />
     </PageWrapper>
   );
 }

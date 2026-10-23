@@ -28,6 +28,12 @@ import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
 import { ConversationNotificationSettings } from "./conversation-notification-settings";
 import { ChatPanelFallback } from "./chat-lazy-fallbacks";
+import {
+  CHAT_SIDE_PANEL_HEADER,
+  CHAT_SIDE_PANEL_ROOT,
+  CHAT_SIDE_PANEL_SECTION_LABEL,
+  CHAT_SIDE_PANEL_TITLE,
+} from "./chat-side-panel-chrome";
 
 const SharedFilesPanel = dynamic(
   () =>
@@ -120,19 +126,19 @@ export function ChannelInfoPanel({
   const confirmName = conversationConfirmName(channel, currentUserId);
 
   return (
-    <div className="flex h-full w-80 min-w-0 flex-col overflow-hidden">
-      <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
-        <h3 className="text-sm font-bold">Details</h3>
-        <div className="flex items-center gap-1">
+    <div className={CHAT_SIDE_PANEL_ROOT}>
+      <div className={CHAT_SIDE_PANEL_HEADER}>
+        <h3 className={CHAT_SIDE_PANEL_TITLE}>Details</h3>
+        <div className="flex shrink-0 items-center gap-0.5">
           {isAdmin && isMultiMemberChannel && !editing && (
             <button
               type="button"
               onClick={handleStartEditing}
-              className="p-1.5 hover:bg-muted rounded-lg"
+              className="flex size-8 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               title="Edit channel"
               aria-label="Edit channel"
             >
-              <Pencil className="h-3.5 w-3.5 text-muted-foreground" />
+              <Pencil className="h-3.5 w-3.5" />
             </button>
           )}
           <AnimatedIconButton
@@ -148,19 +154,23 @@ export function ChannelInfoPanel({
       </div>
 
       <Tabs defaultValue="about" className="flex min-h-0 flex-1 flex-col gap-0">
-        <div className="shrink-0 px-4 pt-3">
-          <TabsList className="w-full">
-            <TabsTrigger value="about">About</TabsTrigger>
-            <TabsTrigger value="files">Files</TabsTrigger>
+        <div className="shrink-0 px-4 pb-3 pt-3">
+          <TabsList className="grid w-full max-w-full grid-cols-2 md:w-full md:max-w-full">
+            <TabsTrigger value="about" className="min-w-0 flex-1">
+              About
+            </TabsTrigger>
+            <TabsTrigger value="files" className="min-w-0 flex-1">
+              Files
+            </TabsTrigger>
           </TabsList>
         </div>
 
         <TabsContent
           value="about"
-          className="mt-0 flex min-h-0 flex-1 flex-col"
+          className="mt-0 flex min-h-0 flex-1 flex-col outline-none"
         >
           <ScrollArea className="min-w-0 flex-1">
-            <div className="min-w-0 w-full max-w-full overflow-x-hidden p-4">
+            <div className="flex min-w-0 flex-col gap-5 overflow-x-hidden px-4 pb-5">
               <ChannelInfoPanelProfile
                 channel={channel}
                 currentUserId={currentUserId}
@@ -171,18 +181,18 @@ export function ChannelInfoPanel({
               />
 
               {pins && pins.length > 0 && (
-                <div className="mb-6">
-                  <h5 className="text-dense font-bold text-muted-foreground uppercase tracking-wider mb-3 px-1 flex items-center gap-1.5">
-                    <Bookmark className="h-3 w-3" />
-                    Pinned Messages ({pins.length})
+                <section className="space-y-3" aria-label="Pinned messages">
+                  <h5 className={CHAT_SIDE_PANEL_SECTION_LABEL}>
+                    <Bookmark className="size-3" />
+                    Pinned ({pins.length})
                   </h5>
                   <div className="space-y-1.5">
                     {pins.map((pin) => (
                       <div
                         key={pin.id}
-                        className="flex items-start gap-2.5 px-2 py-2 rounded-lg bg-muted/20 border border-border/20 hover:bg-muted/30 transition-colors"
+                        className="flex items-start gap-2.5 rounded-lg border border-border/40 bg-muted/20 px-2.5 py-2 transition-colors hover:bg-muted/30"
                       >
-                        <Avatar className="h-6 w-6 shrink-0 mt-0.5">
+                        <Avatar className="mt-0.5 size-6 shrink-0">
                           <AvatarImage
                             src={resolveImageUrl(pin.message.sender?.image)}
                           />
@@ -190,12 +200,12 @@ export function ChannelInfoPanel({
                             {getInitials(pin.message.sender?.name)}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1 min-w-0">
+                        <div className="min-w-0 flex-1">
                           <TruncatedText
                             text={pin.message.sender?.name ?? ""}
                             className="text-dense font-semibold"
                           />
-                          <p className="text-xs text-muted-foreground line-clamp-2 break-words">
+                          <p className="line-clamp-2 break-words text-xs text-muted-foreground">
                             {pin.message.content ??
                               (pin.message.attachments.length > 0
                                 ? `${pin.message.attachments.length} attachment(s)`
@@ -217,7 +227,7 @@ export function ChannelInfoPanel({
                       </div>
                     ))}
                   </div>
-                </div>
+                </section>
               )}
 
               <ChannelMembersSection
@@ -240,27 +250,24 @@ export function ChannelInfoPanel({
                 />
               )}
 
-              {channel?.createdAt && (
-                <div className="mt-6 pt-4 border-t border-border/30">
-                  <p className="text-dense text-muted-foreground text-center">
+              <div className="space-y-3 border-t border-border/40 pt-4">
+                {channel?.createdAt && (
+                  <p className="text-center text-dense text-muted-foreground">
                     {channel.type === "GROUP"
                       ? `Created ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`
                       : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
                   </p>
-                </div>
-              )}
-
-              <div className="mt-4 pt-4 border-t border-border/30">
+                )}
                 {isArchivedForMe ? (
                   <LoadingButton
                     variant="outline"
                     size="sm"
-                    className="w-full h-8 text-xs"
+                    className="h-9 w-full text-xs"
                     onClick={handleUnarchive}
                     isPending={unarchiveChannel.isPending}
                   >
                     {!unarchiveChannel.isPending && (
-                      <ArchiveRestore className="h-3.5 w-3.5 mr-1.5" />
+                      <ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />
                     )}
                     Unarchive chat
                   </LoadingButton>
@@ -268,12 +275,12 @@ export function ChannelInfoPanel({
                   <LoadingButton
                     variant="outline"
                     size="sm"
-                    className="w-full h-8 text-xs"
+                    className="h-9 w-full text-xs"
                     onClick={handleRequestArchive}
                     isPending={archiveChannel.isPending}
                   >
                     {!archiveChannel.isPending && (
-                      <Archive className="h-3.5 w-3.5 mr-1.5" />
+                      <Archive className="mr-1.5 h-3.5 w-3.5" />
                     )}
                     Archive chat
                   </LoadingButton>
@@ -285,7 +292,7 @@ export function ChannelInfoPanel({
 
         <TabsContent
           value="files"
-          className="mt-0 flex min-h-0 flex-1 flex-col"
+          className="mt-0 flex min-h-0 flex-1 flex-col outline-none"
         >
           <SharedFilesPanel channelId={channelId} />
         </TabsContent>

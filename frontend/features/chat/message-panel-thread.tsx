@@ -37,7 +37,7 @@ export function MessagePanelThread({ thread, isPanelNarrow }: MessagePanelThread
             animate={{ width: 320, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="hidden lg:flex flex-col overflow-hidden shrink-0"
+            className="hidden shrink-0 flex-col overflow-hidden border-l border-border/40 lg:flex"
           >
             <ThreadPanel
               channelId={thread.channelId}

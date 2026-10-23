@@ -12,6 +12,12 @@ describe("chat mobile chrome layout", () => {
     expect(getChatMobileBottomNavClassName()).not.toContain("md:hidden");
   });
 
+  it("hides under open sheets and dialogs so chrome cannot paint over them", () => {
+    expect(getChatMobileBottomNavClassName()).toContain(
+      "[[data-scroll-locked]_&]:hidden",
+    );
+  });
+
   it("keeps the five mobile actions evenly reachable", () => {
     expect(getChatMobileBottomNavItemsClassName()).toContain("grid-cols-5");
   });

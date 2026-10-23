@@ -146,7 +146,10 @@ export function BuildProjectChatPage({ projectId }: ProjectChatPageProps) {
                   </AnimatePresence>
                   {isPanelNarrow && (
                     <Sheet open={showInfoPanel} onOpenChange={setShowInfoPanel}>
-                      <SheetContent showCloseButton={false} className="flex w-full flex-col gap-0 overflow-hidden p-0">
+                      <SheetContent
+                        showCloseButton={false}
+                        className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
+                      >
                         <ChannelInfoPanel
                           channelId={channel.id}
                           currentUserId={currentUserId}

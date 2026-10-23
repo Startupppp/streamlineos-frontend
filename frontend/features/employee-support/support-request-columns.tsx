@@ -95,3 +95,38 @@ export const QUEUE_REQUEST_COLUMNS: readonly DataTableColumn<HelpdeskTicket>[] =
 export function requestRowKey(ticket: HelpdeskTicket): number {
   return ticket.id;
 }
+
+export function SupportRequestMobileCard({
+  ticket,
+  showRequester = false,
+}: {
+  ticket: HelpdeskTicket;
+  showRequester?: boolean;
+}) {
+  return (
+    <div className="flex min-w-0 flex-col gap-2">
+      <div className="flex min-w-0 items-start justify-between gap-2">
+        <TruncatedText
+          text={ticket.title}
+          className="min-w-0 flex-1 text-sm font-medium text-foreground"
+        />
+        <RequestStatusBadge status={ticket.status} />
+      </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+        <span className="text-dense text-muted-foreground">
+          {helpdeskCategoryLabel(ticket.category)}
+        </span>
+        <RequestPriorityBadge priority={ticket.priority} />
+        {ticket.isConfidential ? <ConfidentialBadge /> : null}
+      </div>
+      <div className="flex min-w-0 items-center justify-between gap-2 text-dense text-muted-foreground">
+        <span className="min-w-0 truncate">
+          {showRequester
+            ? (ticket.authorName ?? "Employee")
+            : formatShortDate(ticket.createdAt)}
+        </span>
+        <SlaMarker ticket={ticket} />
+      </div>
+    </div>
+  );
+}

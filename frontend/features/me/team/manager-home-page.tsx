@@ -15,8 +15,8 @@ import { TeamRoster } from "./team-roster";
 
 export function ManagerHomeSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <StatCardGridSkeleton cols={3} count={3} />
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4">
+      <StatCardGridSkeleton cols={3} count={3} stackOnMobile={2} />
       <div className={PAGE_BODY_SKELETON_CLASS}>
         <Skeleton className="h-10 w-48 max-w-full rounded-lg" />
         {Array.from({ length: 5 }, (_, i) => (
@@ -73,7 +73,7 @@ export function ManagerHomePage() {
           />
         ) : data ? (
           <RichPageContent>
-            <StatCardGrid cols={3}>
+            <StatCardGrid cols={3} stackOnMobile={2}>
               <StatCard
                 label="On leave today"
                 value={data.reports.filter((report) => report.onLeaveToday).length}

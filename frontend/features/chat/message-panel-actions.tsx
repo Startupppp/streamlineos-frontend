@@ -86,14 +86,26 @@ export function ConversationOverflowMenu({
 
       {canUseAi ? (
         <Sheet open={summary.open} onOpenChange={summary.handleOpenChange}>
-          <SheetContent className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-lg">
-            <SheetHeader className="shrink-0 border-b border-border px-6 py-4">
-              <SheetTitle className="text-base font-medium">{summarizeAction.label}</SheetTitle>
-              <SheetDescription className="text-label text-muted-foreground">
-                AI-generated recap of this conversation. Review before you rely on it.
-              </SheetDescription>
+          <SheetContent
+            showCloseButton
+            className="flex w-full flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
+          >
+            <SheetHeader className="shrink-0 space-y-1.5 border-b border-border/40 px-5 py-4 pr-12 text-left">
+              <div className="flex items-center gap-2.5">
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                  <Sparkles className="size-4 text-primary" aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <SheetTitle className="text-base font-semibold tracking-tight">
+                    {summarizeAction.label}
+                  </SheetTitle>
+                  <SheetDescription className="text-dense text-muted-foreground">
+                    AI recap of key points, decisions, and next steps.
+                  </SheetDescription>
+                </div>
+              </div>
             </SheetHeader>
-            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
+            <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-2">
               <AiActionResultBody
                 state={summary.state}
                 onRetry={summary.retry}

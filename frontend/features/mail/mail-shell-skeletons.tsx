@@ -20,9 +20,9 @@ export function MailListPaneSkeleton() {
   return (
     <div className="flex h-full min-h-0 flex-col bg-card">
       <div className="shrink-0 border-b border-border/40">
-        <div className="flex flex-row flex-nowrap items-center gap-2 px-2 py-1.5">
+        <div className="flex min-w-0 flex-row flex-nowrap items-center gap-2 px-2 py-1.5">
           <Skeleton className="h-9 min-w-0 flex-1 rounded-md" />
-          <Skeleton className="h-9 w-36 min-w-28 shrink-0 rounded-md sm:w-40" />
+          <Skeleton className="h-9 w-24 max-w-[40%] shrink-0 rounded-md sm:w-40 sm:max-w-none sm:min-w-28" />
         </div>
         <div className="flex gap-1 overflow-hidden px-2 pb-1.5">
           {[...Array(5)].map((_, index) => (

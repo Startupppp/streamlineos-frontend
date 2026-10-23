@@ -24,7 +24,11 @@ import { useMySupportRequests } from "@/hooks/api/employee-self-service/support"
 import type { HelpdeskTicket, TicketStatus } from "@/hooks/api/hr/helpdesk-schema";
 import { cn } from "@/lib/utils";
 import { REQUEST_STATUS_LABELS } from "./support-request-badges";
-import { MY_REQUEST_COLUMNS, requestRowKey } from "./support-request-columns";
+import {
+  MY_REQUEST_COLUMNS,
+  requestRowKey,
+  SupportRequestMobileCard,
+} from "./support-request-columns";
 import { SupportRequestsTableSkeleton } from "./support-requests-table-skeleton";
 import { CreateRequestDialog } from "./create-request-dialog";
 import { SupportRequestDetailSheet } from "./support-request-detail-sheet";
@@ -157,10 +161,11 @@ export function MySupportPage() {
           columns={[...MY_REQUEST_COLUMNS]}
           getRowKey={requestRowKey}
           onRowClick={handleRowClick}
+          mobileCard={(ticket) => <SupportRequestMobileCard ticket={ticket} />}
           isLoading={query.isLoading}
           emptyState={emptyState}
           minWidth="760px"
-          className="flex-1 min-h-0"
+          className="flex-1 min-h-0 min-w-0"
           pagination={{
             mode: "cursor",
             pageSize: PAGE_SIZE,

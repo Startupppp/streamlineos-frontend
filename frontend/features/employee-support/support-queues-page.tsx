@@ -34,7 +34,11 @@ import {
 } from "@/lib/employee-support";
 import { cn } from "@/lib/utils";
 import { REQUEST_STATUS_LABELS } from "./support-request-badges";
-import { QUEUE_REQUEST_COLUMNS, requestRowKey } from "./support-request-columns";
+import {
+  QUEUE_REQUEST_COLUMNS,
+  requestRowKey,
+  SupportRequestMobileCard,
+} from "./support-request-columns";
 import { SupportRequestsTableSkeleton } from "./support-requests-table-skeleton";
 import { SupportRequestDetailSheet } from "./support-request-detail-sheet";
 import { SupportQueueSettingsSheet } from "./support-queue-settings-sheet";
@@ -257,10 +261,13 @@ export function SupportQueuesPage() {
           columns={[...QUEUE_REQUEST_COLUMNS]}
           getRowKey={requestRowKey}
           onRowClick={handleRowClick}
+          mobileCard={(ticket) => (
+            <SupportRequestMobileCard ticket={ticket} showRequester />
+          )}
           isLoading={query.isLoading}
           emptyState={emptyState}
           minWidth="1080px"
-          className="flex-1 min-h-0"
+          className="flex-1 min-h-0 min-w-0"
           pagination={{
             mode: "cursor",
             pageSize: PAGE_SIZE,

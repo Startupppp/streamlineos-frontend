@@ -1,14 +1,16 @@
 "use client";
 
+import { AlertCircle, MessagesSquare, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
+import { cn } from "@/lib/utils";
 import { AiDraftCard } from "./ai-draft-card";
 import { AiAdvisoryNotice } from "./ai-advisory-notice";
 import { AiDraftText } from "./ai-draft-text";
 import { AiQuotaEmptyState } from "./ai-quota-empty-state";
 import { AiPermissionDenied } from "./ai-permission-denied";
-import { EmptyState } from "@/components/ui/empty-state";
 import {
   AiCancelledNotice,
   AiOfflineNotice,
@@ -20,6 +22,31 @@ import { AiFieldPopoverFooter } from "./ai-field-popover-layout";
 import type { AiFailureState } from "./ai-error-state";
 import { AiCitationChips, type Citation } from "./ai-citation-chips";
 import type { AiUsageMeta } from "./ai-usage-chip";
+
+function AiResultIcon({
+  icon: Icon,
+  tone = "muted",
+}: {
+  icon: typeof Sparkles;
+  tone?: "muted" | "danger";
+}) {
+  return (
+    <div
+      className={cn(
+        "flex size-12 items-center justify-center rounded-2xl",
+        tone === "danger" ? "bg-status-danger-surface" : "bg-muted",
+      )}
+    >
+      <Icon
+        className={cn(
+          "size-5",
+          tone === "danger" ? "text-status-danger-ink" : "text-muted-foreground",
+        )}
+        aria-hidden
+      />
+    </div>
+  );
+}
 
 export interface AiActionResult {
   text: string;
@@ -159,24 +186,60 @@ export function AiActionResultBody({
       return <p className="text-sm text-muted-foreground">{state.message}</p>;
     }
 
+    if (compact) {
+      return (
+        <div className="flex flex-col items-start gap-3 py-3">
+          <p className="text-sm text-muted-foreground">{state.message}</p>
+          {onRetry ? (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onRetry}
+              className="h-8 text-xs"
+            >
+              Retry
+            </Button>
+          ) : null}
+        </div>
+      );
+    }
+
     return (
-      <div className="flex flex-col items-start gap-3 py-3">
-        <p className="text-sm text-muted-foreground">{state.message}</p>
-        {onRetry ? (
-          <Button type="button" variant="outline" size="sm" onClick={onRetry} className="h-8 text-xs">
-            Retry
-          </Button>
-        ) : null}
-      </div>
+      <EmptyState
+        bare
+        illustrationSize="xs"
+        illustration={<AiResultIcon icon={AlertCircle} tone="danger" />}
+        title="Couldn't finish that"
+        description={state.message}
+        action={onRetry ? { label: "Try again", onClick: onRetry } : undefined}
+        actionVariant="outline"
+        className="min-h-full flex-1 px-2 py-12"
+      />
     );
   }
 
   if (state.result.empty) {
     const panel = state.result.empty;
+    const emptyIcon =
+      /message/i.test(panel.title) || /conversation/i.test(panel.description) ? (
+        <AiResultIcon icon={MessagesSquare} />
+      ) : (
+        <AiResultIcon icon={Sparkles} />
+      );
     return (
       <EmptyState
-        bare compact={compact} illustrationSize="xs"
-        title={panel.title} description={panel.description} className={compact ? undefined : "min-h-full flex-1 py-8"}
+        bare
+        compact={compact}
+        illustrationSize="xs"
+        illustration={emptyIcon}
+        title={panel.title}
+        description={panel.description}
+        className={
+          compact
+            ? undefined
+            : "min-h-full flex-1 px-2 py-12"
+        }
       />
     );
   }

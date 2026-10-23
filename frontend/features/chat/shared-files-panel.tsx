@@ -53,12 +53,14 @@ export function SharedFilesPanel({ channelId }: { channelId: number }) {
             onRetry={handleRetry}
           />
         ) : files.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 px-4">
-            <div className="h-12 w-12 rounded-xl bg-muted flex items-center justify-center mb-3">
+          <div className="flex min-h-[min(28rem,70dvh)] flex-col items-center justify-center px-6 py-10">
+            <div className="mb-3 flex size-12 items-center justify-center rounded-xl bg-muted">
               <Paperclip className="h-5 w-5 text-muted-foreground" />
             </div>
-            <h4 className="text-label font-semibold mb-1">No files yet</h4>
-            <p className="text-dense text-muted-foreground text-center">Files shared in this channel appear here.</p>
+            <h4 className="mb-1 text-label font-semibold">No files yet</h4>
+            <p className="max-w-xs text-center text-dense text-muted-foreground">
+              Files shared in this channel appear here.
+            </p>
           </div>
         ) : (
           <div className="py-2">

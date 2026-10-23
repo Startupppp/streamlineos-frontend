@@ -15,6 +15,11 @@ import { ThreadMessage } from "./thread-message";
 import { panelRevealLabel, usePanelRenderWindow } from "./panel-render-window";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useThreadOutbox } from "./use-chat-offline-queue";
+import {
+  CHAT_SIDE_PANEL_HEADER,
+  CHAT_SIDE_PANEL_ROOT,
+  CHAT_SIDE_PANEL_TITLE,
+} from "./chat-side-panel-chrome";
 
 const MAX_HIGHLIGHT_REPLY_PAGES = 10;
 const HIGHLIGHT_NOT_FOUND_COPY = "That reply is further back in this thread. Scroll up to load older replies.";
@@ -158,11 +163,11 @@ export function ThreadPanel({
   }, [isHighlightedVisible, highlightedReplyId]);
 
   return (
-    <div className="flex flex-col h-full w-80 border-l border-border/40 bg-card/50">
-      <div className="h-[56px] px-4 border-b border-border/40 flex items-center justify-between shrink-0">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          <h3 className="text-sm font-bold">Thread</h3>
+    <div className={CHAT_SIDE_PANEL_ROOT}>
+      <div className={CHAT_SIDE_PANEL_HEADER}>
+        <div className="flex min-w-0 items-center gap-2">
+          <MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <h3 className={CHAT_SIDE_PANEL_TITLE}>Thread</h3>
         </div>
         <AnimatedIconButton
           type="button"
@@ -170,14 +175,14 @@ export function ThreadPanel({
           iconSize={16}
           variant="ghost"
           onClick={onClose}
-          className="size-8 rounded-lg p-0 text-muted-foreground"
+          className="size-8 shrink-0 rounded-lg p-0 text-muted-foreground"
           aria-label="Close thread"
         />
       </div>
 
-      <ScrollArea className="flex-1" viewportRef={viewportRef}>
+      <ScrollArea className="min-h-0 flex-1" viewportRef={viewportRef}>
         {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-10" aria-busy="true">
+          <div className="flex min-h-[12rem] flex-col items-center justify-center py-10" aria-busy="true">
             <span role="status" className="sr-only">Loading thread…</span>
             <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
           </div>
@@ -192,11 +197,11 @@ export function ThreadPanel({
                   resolveUserName={resolveUserName}
                 />
                 <div className="mx-4 my-2 flex items-center gap-2">
-                  <div className="flex-1 h-px bg-border/40" />
-                  <span className="text-micro font-semibold text-muted-foreground whitespace-nowrap">
+                  <div className="h-px flex-1 bg-border/40" />
+                  <span className="whitespace-nowrap text-micro font-semibold text-muted-foreground">
                     {replies.length} {replies.length === 1 ? "reply" : "replies"}
                   </span>
-                  <div className="flex-1 h-px bg-border/40" />
+                  <div className="h-px flex-1 bg-border/40" />
                 </div>
               </>
             )}
@@ -211,11 +216,11 @@ export function ThreadPanel({
             />
 
             {replies.length === 0 && !isLoading && (
-              <div className="flex flex-col items-center justify-center py-8 px-4">
-                <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center mb-2">
+              <div className="flex min-h-[12rem] flex-col items-center justify-center px-6 py-10">
+                <div className="mb-2 flex size-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary/15 to-primary/5">
                   <Send className="h-4 w-4 text-primary" />
                 </div>
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-center text-xs text-muted-foreground">
                   No replies yet. Start the thread.
                 </p>
               </div>
