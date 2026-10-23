@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { apiClient } from "@/lib/api-client";
 import { EnvelopeList } from "./envelope-list";
@@ -129,5 +129,36 @@ describe("EnvelopeList", () => {
     await waitFor(() => expect(get).toHaveBeenCalled());
     const [, params] = get.mock.calls[0] as [string, Record<string, unknown>];
     expect(params).toEqual({ status: undefined, page: 1, limit: 20 });
+  });
+
+  it("sends the search, sort and direction the URL names to the server", async () => {
+    mockSearchParams = new URLSearchParams("search=NDA&sort=sentAt&dir=asc");
+    get.mockResolvedValue(page([envelope(5)], 1, 1, 20));
+
+    renderList();
+
+    await waitFor(() => expect(get).toHaveBeenCalled());
+    const [, params] = get.mock.calls[0] as [string, Record<string, unknown>];
+    expect(params).toMatchObject({ search: "NDA", sort: "sentAt", direction: "asc", page: 1 });
+  });
+
+  it("writes a typed search to the URL and goes back to the first page", async () => {
+    mockSearchParams = new URLSearchParams("page=3");
+    get.mockResolvedValue(page([envelope(5)], 1, 1, 20));
+
+    renderList();
+    fireEvent.change(screen.getByRole("searchbox", { name: "Search envelopes" }), { target: { value: "Asha" } });
+
+    await waitFor(() => expect(mockReplace).toHaveBeenCalledWith("/sign/envelopes?search=Asha", { scroll: false }));
+  });
+
+  it("sorts on the server when a column header is clicked", async () => {
+    get.mockResolvedValue(page([envelope(1), envelope(2)], 2, 1, 20));
+
+    renderList();
+    await waitFor(() => expect(within(screen.getByRole("table")).getByText("Envelope 1")).toBeInTheDocument());
+    fireEvent.click(within(screen.getByRole("table")).getByRole("button", { name: /Sent/ }));
+
+    expect(mockReplace).toHaveBeenCalledWith(expect.stringMatching(/sort=sentAt&dir=(asc|desc)/), { scroll: false });
   });
 });

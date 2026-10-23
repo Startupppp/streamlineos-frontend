@@ -109,3 +109,24 @@ export function envelopeColumns(handlers: Omit<EnvelopeRowActionsProps, "envelop
     },
   ];
 }
+
+export function envelopeMobileCard(envelope: SignEnvelope) {
+  return (
+    <div className="flex flex-col gap-2 p-3 border-b border-border last:border-b-0">
+      <div className="flex items-center justify-between gap-2">
+        <TruncatedText text={envelope.title} className="font-medium text-sm flex-1" />
+        <EnvelopeStatusBadge status={envelope.status} />
+      </div>
+      <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
+        <div>
+          <span className="font-medium">Sent:</span>{" "}
+          {envelope.sentAt ? formatShortDate(envelope.sentAt) : "—"}
+        </div>
+        <div>
+          <span className="font-medium">Expires:</span>{" "}
+          {envelope.expiresAt ? formatShortDate(envelope.expiresAt) : "—"}
+        </div>
+      </div>
+    </div>
+  );
+}
