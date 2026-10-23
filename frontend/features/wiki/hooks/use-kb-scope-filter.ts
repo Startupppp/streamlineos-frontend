@@ -45,7 +45,10 @@ export function useKbScopeFilter({ currentUserId, scopeSheetOpen }: UseKbScopeFi
   const [pageSearchQuery, setPageSearchQuery] = useState("");
   const [scopeOwnerFilter, setScopeOwnerFilter] = useState<OwnerFilter>("all");
 
-  const sourcesQuery = useInfiniteKbPageCollection({ kind: "file" });
+  const sourcesQuery = useInfiniteKbPageCollection(
+    { kind: "file" },
+    { enabled: scopeSheetOpen },
+  );
   const sources = useMemo(
     () => (sourcesQuery.data?.pages ?? []).flatMap((p) => p.data),
     [sourcesQuery.data],
@@ -62,13 +65,14 @@ export function useKbScopeFilter({ currentUserId, scopeSheetOpen }: UseKbScopeFi
 
   const scopeSourcesQuery = useInfiniteKbPageCollection(
     hasScopeFilters ? { kind: "file", ...scopeFilters } : { kind: "file" },
+    { enabled: scopeSheetOpen && hasScopeFilters },
   );
   const scopeSources = useMemo(
     () => (scopeSourcesQuery.data?.pages ?? []).flatMap((p) => p.data),
     [scopeSourcesQuery.data],
   );
 
-  const spacesQuery = useKbSpaces();
+  const spacesQuery = useKbSpaces(undefined, { enabled: scopeSheetOpen });
   const kbSpaces = useMemo(() => spacesQuery.data?.data ?? [], [spacesQuery.data]);
 
   const debouncedOwnerSearch = useDebouncedValue(ownerSearch.trim(), 300);

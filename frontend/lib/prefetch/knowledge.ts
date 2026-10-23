@@ -320,13 +320,13 @@ export async function prefetchKbReviews() {
       createServerQueryClient(),
       resolvePrefetchGate(),
     ]);
-    if (!gate.can("kb:pages:view"))
+    if (!gate.can("kb:reviews:view"))
       return dehydrate(await createServerQueryClient());
     await queryClient.prefetchQuery({
-      ...kbPageReviewsQueryOptions(),
+      ...kbPageReviewsQueryOptions({ limit: 50, sortDir: "asc" }),
       queryFn: () =>
         serverGet<KbPageReviewList>(
-          "/kb/page-reviews",
+          "/kb/page-reviews?limit=50&sortDir=asc",
           kbPageReviewListContract,
         ),
     });

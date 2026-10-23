@@ -130,7 +130,7 @@ export function useConvertResearchBriefToPage() {
         kbConvertBriefToPageContract,
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection(), exact: true });
+      qc.invalidateQueries({ queryKey: knowledgeAndSurveysQueryKeys.kb.pageCollection() });
     },
   });
 }

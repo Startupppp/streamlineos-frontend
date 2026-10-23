@@ -52,7 +52,10 @@ const kbSpaceMemberSuccessContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-spaces-settings-schema").then((m) => m.kbSpaceMemberSuccessContract),
 );
 
-export function useKbSpaces(params?: KbSpacesListParams) {
+export function useKbSpaces(
+  params?: KbSpacesListParams,
+  options?: { enabled?: boolean },
+) {
   const canView = useCan("kb:spaces:view");
   const queryParams: Record<string, unknown> = {};
   if (params?.q) queryParams.q = params.q;
@@ -66,7 +69,7 @@ export function useKbSpaces(params?: KbSpacesListParams) {
     ...kbSpacesListQueryOptions(queryParams),
     queryFn: ({ signal }) =>
       apiClient.get<KbSpaceListPage>("/kb/spaces", queryParams, signal, kbSpaceListPageContract),
-    enabled: canView,
+    enabled: canView && (options?.enabled ?? true),
   });
 }
 

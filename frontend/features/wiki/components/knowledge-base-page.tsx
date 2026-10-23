@@ -87,7 +87,10 @@ export default function KnowledgeBasePage() {
   const renameConversation = useRenameKbConversation();
   const deleteConversation = useDeleteKbConversation();
 
-  const sourcesQuery = useInfiniteKbPageCollection({ kind: "file" });
+  const sourcesQuery = useInfiniteKbPageCollection(
+    { kind: "file" },
+    { enabled: sourcesSheet.kind === "manage" },
+  );
   const uploadFile = useUploadKbFile();
   const deleteSource = useDeleteKbPage();
 
