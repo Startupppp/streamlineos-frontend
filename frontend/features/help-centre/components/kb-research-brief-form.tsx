@@ -70,7 +70,7 @@ export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(handleSubmit)}
-        className="flex items-end gap-3"
+        className="flex flex-col gap-3 sm:flex-row sm:items-end"
       >
         <FormField
           control={form.control}
@@ -94,7 +94,7 @@ export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
             control={form.control}
             name="spaceId"
             render={({ field }) => (
-              <FormItem className="w-[160px]">
+              <FormItem className="w-full sm:w-[160px]">
                 <FormLabel className="text-xs">Space (optional)</FormLabel>
                 <Select
                   onValueChange={selectSpaceId(field.onChange)}
@@ -122,7 +122,7 @@ export function KbResearchBriefForm({ basePath }: KbResearchBriefFormProps) {
           type="submit"
           isPending={createMutation.isPending}
           loadingText="Generating…"
-          className="shrink-0"
+          className="w-full shrink-0 sm:w-auto"
         >
           Generate brief
         </LoadingButton>

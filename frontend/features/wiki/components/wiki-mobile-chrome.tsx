@@ -39,7 +39,7 @@ export function WikiMobileChrome({
   }
 
   return (
-    <div className="flex shrink-0 items-center gap-1.5 border-b border-border bg-card/50 px-2 py-1.5 md:hidden">
+    <div className="flex w-full min-w-0 shrink-0 items-center gap-1.5 border-b border-border bg-card/50 px-2 py-1.5 md:hidden">
       <Button
         type="button"
         variant="outline"

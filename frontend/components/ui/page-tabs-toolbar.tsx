@@ -80,7 +80,7 @@ function FiltersMenu({
       <ResponsivePopoverContent
         title="Filters"
         align="end"
-        className="w-[min(18rem,calc(100vw-2rem))] space-y-2 p-3"
+        className="w-full space-y-2 p-3 sm:w-72"
       >
         <div
           className={cn(

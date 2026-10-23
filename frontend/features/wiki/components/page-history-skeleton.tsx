@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function PageHistorySkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-4 md:flex-row">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 md:flex-row">
       <div className="flex h-56 w-full shrink-0 flex-col overflow-hidden rounded-xl border border-border bg-card md:h-full md:w-72 lg:w-80">
         <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
           <Skeleton className="h-4 w-24" />

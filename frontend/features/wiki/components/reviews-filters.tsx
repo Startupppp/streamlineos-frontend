@@ -119,7 +119,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
         placeholder="Search reviewed pages…"
         value={searchDraft}
         onChange={handleSearchChange}
-        className="w-full sm:w-[200px]"
+        className="col-span-2 w-full sm:col-auto sm:w-[200px]"
         aria-label="Search reviews"
       />
       <Select value={values.status} onValueChange={handleStatusChange}>
@@ -146,11 +146,11 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
       </Select>
       <ResponsivePopover>
         <ResponsivePopoverTrigger asChild>
-          <Button type="button" variant="outline" size="sm">
+          <Button type="button" variant="outline" size="sm" className="col-span-2 w-full sm:col-auto sm:w-auto">
             {advancedCount > 0 ? `More filters (${advancedCount})` : "More filters"}
           </Button>
         </ResponsivePopoverTrigger>
-        <ResponsivePopoverContent className="w-[min(17.5rem,calc(100vw-2rem))] space-y-3 p-3" align="end">
+        <ResponsivePopoverContent className="flex w-full flex-col gap-3 p-3 sm:w-72" align="end">
           <div className="space-y-1.5">
             <Label className="text-xs">Team folder</Label>
             <Combobox
@@ -162,6 +162,7 @@ export function ReviewsFilters({ values, onChange }: ReviewsFiltersProps) {
               placeholder="All team folders"
               searchPlaceholder="Search team folders…"
               emptyText="No matching team folders"
+              className="w-full"
             />
           </div>
           <div className="space-y-1.5">

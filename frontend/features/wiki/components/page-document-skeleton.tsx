@@ -6,21 +6,23 @@ export function PageSpreadsheetSkeleton({ label = "Loading spreadsheet" }: { lab
   return (
     <div className={cn("wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden", WIKI_SPREADSHEET_COLUMN)} aria-label={label}>
       <div className="wiki-document-chrome shrink-0">
-        <div className="flex items-center gap-1.5 py-2.5">
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="ml-auto h-9 w-9 rounded-md" />
-          <Skeleton className="h-9 w-9 rounded-md" />
-          <Skeleton className="h-9 w-9 rounded-md" />
+        <div className="flex min-w-0 flex-col gap-2 py-2.5 sm:flex-row sm:items-center">
+          <Skeleton className="h-4 w-40 max-w-full" />
+          <div className="flex gap-1.5 sm:ml-auto">
+            <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+            <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+            <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+          </div>
         </div>
       </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex shrink-0 items-center py-2">
-          <Skeleton className="h-9 w-64 max-w-[70%]" />
+          <Skeleton className="h-9 w-full max-w-64" />
         </div>
         <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden border-t border-border">
-          <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-2">
+          <div className="flex h-10 shrink-0 items-center gap-1 overflow-hidden border-b border-border px-2">
             {Array.from({ length: 6 }, (_, index) => (
-              <Skeleton key={index} className="h-6 w-14 rounded-md" />
+              <Skeleton key={index} className="h-6 min-w-0 flex-1 rounded-md" />
             ))}
           </div>
           <div className="relative min-h-0 flex-1">
@@ -34,15 +36,17 @@ export function PageSpreadsheetSkeleton({ label = "Loading spreadsheet" }: { lab
 
 export function PageFileSkeleton() {
   return (
-    <div className="flex h-full min-h-0 flex-1 flex-col gap-6 p-8" aria-label="Loading file">
-      <div className="flex shrink-0 flex-wrap items-start gap-3">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-4 p-4 sm:gap-6 sm:p-8" aria-label="Loading file">
+      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-start">
         <div className="min-w-0 flex-1 space-y-2">
-          <Skeleton className="h-5 w-48" />
-          <Skeleton className="h-3 w-72 max-w-full" />
+          <Skeleton className="h-5 w-48 max-w-full" />
+          <Skeleton className="h-3 w-full max-w-sm" />
         </div>
-        <Skeleton className="h-8 w-28 rounded-md" />
-        <Skeleton className="h-8 w-24 rounded-md" />
-        <Skeleton className="h-8 w-20 rounded-md" />
+        <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto">
+          <Skeleton className="h-8 w-full rounded-md sm:w-28" />
+          <Skeleton className="h-8 w-full rounded-md sm:w-24" />
+          <Skeleton className="col-span-2 h-8 w-full rounded-md sm:col-auto sm:w-20" />
+        </div>
       </div>
       <div className="relative min-h-0 flex-1">
         <Skeleton className="absolute inset-0 h-auto w-auto rounded-xl" />
@@ -57,16 +61,18 @@ export function PageDocumentSkeleton() {
       <div className="flex min-h-0 min-w-0 flex-1">
         <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col", WIKI_DOCUMENT_COLUMN)}>
           <div className="wiki-document-chrome shrink-0 border-b border-border">
-            <div className="flex items-center gap-1.5 py-2.5">
-              <Skeleton className="h-5 w-36" />
-              <Skeleton className="ml-auto h-9 w-9 rounded-md" />
-              <Skeleton className="h-9 w-9 rounded-md" />
-              <Skeleton className="h-9 w-9 rounded-md" />
-              <Skeleton className="h-9 w-9 rounded-md" />
+            <div className="flex min-w-0 flex-col gap-2 py-2.5 sm:flex-row sm:items-center">
+              <Skeleton className="h-5 w-36 max-w-full" />
+              <div className="flex gap-1.5 sm:ml-auto">
+                <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+                <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+                <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+                <Skeleton className="h-9 w-9 shrink-0 rounded-md" />
+              </div>
             </div>
-            <div className="flex gap-2 border-t border-border py-2">
+            <div className="flex gap-2 overflow-x-auto border-t border-border py-2">
               {Array.from({ length: 5 }, (_, index) => (
-                <Skeleton key={index} className="h-7 w-7 rounded-md" />
+                <Skeleton key={index} className="h-7 w-7 shrink-0 rounded-md" />
               ))}
             </div>
           </div>

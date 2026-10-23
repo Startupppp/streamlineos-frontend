@@ -593,7 +593,7 @@ export default function ContentHealthPage() {
                   {SIGNAL_DESCRIPTIONS[activeSignal]}
                 </p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex w-full min-w-0 items-center gap-2 sm:w-auto">
                 {someSelected && (
                   <Button
                     type="button"
@@ -607,7 +607,7 @@ export default function ContentHealthPage() {
                 )}
                 <Select value={activeSignal} onValueChange={handleSignalSelect}>
                   <SelectTrigger
-                    className="h-8 w-full text-xs sm:w-44"
+                    className="h-8 min-w-0 flex-1 text-xs sm:w-44 sm:flex-none"
                     aria-label="Signal type"
                   >
                     <SelectValue />

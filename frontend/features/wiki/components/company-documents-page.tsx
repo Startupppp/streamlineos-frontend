@@ -162,7 +162,7 @@ export default function CompanyDocumentsPage() {
 
   const filters = canPublish && !linkOff ? (
     <Select value={status} onValueChange={handleStatusChange}>
-      <SelectTrigger className="h-9 w-44 shrink-0" aria-label="Show entries">
+      <SelectTrigger className="h-9 w-full sm:w-44" aria-label="Show entries">
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

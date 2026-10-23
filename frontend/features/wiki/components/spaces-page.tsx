@@ -305,15 +305,23 @@ export default function SpacesPage() {
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="flex flex-wrap items-center gap-2 shrink-0">
-          <SearchInput
-            value={rawSearch}
-            onValueChange={handleSearchChange}
-            placeholder="Search team folders…"
-            className="h-9 w-48"
-          />
+        <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <div className="col-span-2 flex min-w-0 items-center gap-2 sm:contents">
+            <SearchInput
+              value={rawSearch}
+              onValueChange={handleSearchChange}
+              placeholder="Search team folders…"
+              className="h-9 min-w-0 flex-1 sm:w-48 sm:flex-none"
+            />
+            <ViewToggle
+              value={view}
+              options={[...SPACE_VIEW_OPTIONS]}
+              onChange={handleViewChange}
+              className="shrink-0 sm:order-last sm:ml-auto"
+            />
+          </div>
           <Select value={audienceFilter} onValueChange={handleAudienceChange}>
-            <SelectTrigger className="h-9 w-36">
+            <SelectTrigger className="h-9 w-full sm:w-36">
               <SelectValue placeholder="Audience" />
             </SelectTrigger>
             <SelectContent>
@@ -324,7 +332,7 @@ export default function SpacesPage() {
             </SelectContent>
           </Select>
           <Select value={archivedFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-9 w-36">
+            <SelectTrigger className="h-9 w-full sm:w-36">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -333,13 +341,6 @@ export default function SpacesPage() {
               <SelectItem value="archived">Archived</SelectItem>
             </SelectContent>
           </Select>
-
-          <ViewToggle
-            value={view}
-            options={[...SPACE_VIEW_OPTIONS]}
-            onChange={handleViewChange}
-            className="ml-auto"
-          />
         </div>
 
         <PageState

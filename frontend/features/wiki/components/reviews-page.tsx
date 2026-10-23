@@ -351,7 +351,7 @@ export default function ReviewsPage() {
   );
 
   const filters = (
-    <>
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
       <ReviewsFilters
         values={{
           q: searchFilter,
@@ -365,11 +365,11 @@ export default function ReviewsPage() {
         onChange={handleFilterPatch}
       />
       {canManage && selected.size > 0 && (
-        <Button type="button" size="sm" variant="outline" onClick={handleOpenBulkDecide}>
+        <Button type="button" size="sm" variant="outline" className="col-span-2 w-full sm:col-auto sm:w-auto" onClick={handleOpenBulkDecide}>
           Decide {selected.size} selected
         </Button>
       )}
-    </>
+    </div>
   );
 
   return (

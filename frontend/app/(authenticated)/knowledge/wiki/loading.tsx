@@ -1,7 +1,7 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
 import {
   WIKI_LOADING_CONTENT_CLASS,
+  WikiActionsSkeleton,
   WikiHomeSkeleton,
 } from "@/features/wiki/components/wiki-collection-skeletons";
 
@@ -10,7 +10,7 @@ export default function KnowledgeBaseLoading() {
     <PageWrapper
       title="Docs"
       subtitle="Files, documents and decisions for your team"
-      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+      actions={<WikiActionsSkeleton count={3} />}
       noInternalScroll
       contentClassName={WIKI_LOADING_CONTENT_CLASS}
     >

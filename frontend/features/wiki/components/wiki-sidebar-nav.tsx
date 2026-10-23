@@ -103,14 +103,37 @@ function WikiNavLink({
     );
   }
 
+  if (compact) {
+    return (
+      <Link
+        href={item.href}
+        aria-current={isActive ? "page" : undefined}
+        aria-label={item.label}
+        title={item.label}
+        {...animatedNavHoverHandlers}
+        className={cn(
+          "flex size-9 shrink-0 items-center justify-center rounded-md transition-colors",
+          isActive
+            ? "bg-muted text-foreground"
+            : "text-muted-foreground hover:bg-muted hover:text-foreground",
+        )}
+      >
+        <SidebarAnimatedNavIcon
+          icon={item.icon}
+          iconRef={iconRef}
+          className="size-4 shrink-0"
+        />
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={item.href}
       aria-current={isActive ? "page" : undefined}
       {...animatedNavHoverHandlers}
       className={cn(
-        "flex items-center gap-2 rounded-md text-sm transition-colors",
-        compact ? "h-9 shrink-0 px-2.5" : "px-2 py-1.5",
+        "flex items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-colors",
         isActive
           ? "bg-muted text-foreground"
           : "text-muted-foreground hover:bg-muted hover:text-foreground",

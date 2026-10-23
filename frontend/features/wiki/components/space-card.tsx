@@ -46,9 +46,9 @@ export function SpaceCardSkeleton() {
         </div>
       </div>
       <Skeleton className="h-8 w-full" />
-      <div className="flex gap-2">
-        <Skeleton className="h-7 w-20 rounded-md" />
-        <Skeleton className="h-7 w-24 rounded-md" />
+      <div className="flex min-w-0 gap-2">
+        <Skeleton className="h-7 min-w-0 flex-1 rounded-md" />
+        <Skeleton className="h-7 min-w-0 flex-1 rounded-md" />
       </div>
       <Skeleton className="h-3 w-3/4" />
     </div>

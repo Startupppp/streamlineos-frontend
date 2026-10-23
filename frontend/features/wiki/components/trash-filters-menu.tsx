@@ -71,7 +71,7 @@ export function TrashFiltersMenu({
           type="button"
           variant="outline"
           size="sm"
-          className="h-9 gap-1.5"
+          className="h-9 shrink-0 gap-1.5"
           aria-label={filtersLabel}
         >
           <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -88,7 +88,7 @@ export function TrashFiltersMenu({
         title="Filters"
         description="Narrow deleted files. Changes apply immediately."
         aria-label="Filters"
-        className="flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-3 p-3"
+        className="flex w-full flex-col gap-3 p-3 sm:w-72"
       >
         <div className="space-y-1.5">
           <Label className="text-xs">Deleted by</Label>

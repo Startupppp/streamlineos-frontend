@@ -54,7 +54,7 @@ function buildBriefCitations(citations: KbResearchBriefCitation[]): Citation[] {
 
 export function ResearchBriefDetailSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4">
       <div className="shrink-0 space-y-3 rounded-xl border border-border bg-card p-4">
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1 space-y-2">

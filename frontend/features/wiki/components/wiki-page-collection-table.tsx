@@ -308,7 +308,7 @@ export function WikiPageCollectionTable({
           Offline — data may be stale
         </span>
       )}
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
         {searchPlaceholder !== null && (
           <SearchInput
             value={rawSearch}

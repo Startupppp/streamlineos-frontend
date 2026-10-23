@@ -186,10 +186,10 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const spaceScope = useMemo(() => ({ spaceId }), [spaceId]);
 
   const headerActions = visibleSpace ? (
-    <div className="flex items-center gap-1.5">
-      <KbNewMenu scope={spaceScope} allowFolder={false} />
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-1.5 sm:w-auto sm:flex-nowrap">
+      <KbNewMenu scope={spaceScope} allowFolder={false} className="w-full min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:w-auto sm:basis-auto sm:flex-none" />
       {canManage && (
-        <Button variant="outline" size="sm" onClick={handleOpenMembers}>
+        <Button variant="outline" size="sm" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none" onClick={handleOpenMembers}>
           <KbUsersIcon className="h-4 w-4 mr-1.5" />
           Members
         </Button>
@@ -199,6 +199,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
           <Button
             size="sm"
             variant="outline"
+            className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none"
             onClick={handleRestore}
             disabled={restoreSpace.isPending}
           >
@@ -209,6 +210,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
           <Button
             size="sm"
             variant="outline"
+            className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none"
             onClick={handleOpenArchiveConfirm}
           >
             <KbArchiveIcon className="h-4 w-4 mr-1.5" />
@@ -286,14 +288,15 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                 </p>
               )}
               {canManage && spacePolicy !== undefined && (
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xs text-muted-foreground">External sharing:</span>
+                <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                  <span className="shrink-0 text-xs text-muted-foreground">External sharing:</span>
+                  <div className="w-full min-w-0 sm:w-44">
                   <Select
                     value={spacePolicy.externalSharing ?? "inherit"}
                     onValueChange={handleSharingPolicyChange}
                     disabled={updateSharingPolicy.isPending}
                   >
-                    <SelectTrigger className="h-7 w-44 text-xs">
+                    <SelectTrigger className="h-7 w-full text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -305,6 +308,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                       <SelectItem value="guests_and_links">Guests and links</SelectItem>
                     </SelectContent>
                   </Select>
+                  </div>
                 </div>
               )}
               <div
@@ -340,7 +344,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="self-start md:hidden"
+            className="w-full md:hidden"
             onClick={handleOpenHierarchy}
           >
             Browse hierarchy

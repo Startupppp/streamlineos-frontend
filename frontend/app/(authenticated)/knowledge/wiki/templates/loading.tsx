@@ -13,15 +13,15 @@ export default function TemplatesLoading() {
       noInternalScroll
       contentClassName={WIKI_LOADING_CONTENT_CLASS}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="flex shrink-0 flex-col gap-2 md:flex-row md:items-center">
-          <div className="flex h-9 w-fit items-center gap-1 rounded-lg bg-muted p-1">
-            <Skeleton className="h-7 w-20 rounded-md" />
-            <Skeleton className="h-7 w-16 rounded-md" />
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4">
+        <div className="flex w-full min-w-0 shrink-0 flex-col gap-2 md:flex-row md:items-center">
+          <div className="flex h-9 w-full items-center gap-1 rounded-lg bg-muted p-1 md:w-fit">
+            <Skeleton className="h-7 min-w-0 flex-1 rounded-md md:w-20 md:flex-none" />
+            <Skeleton className="h-7 min-w-0 flex-1 rounded-md md:w-16 md:flex-none" />
           </div>
-          <div className="flex min-w-0 items-center gap-2 md:ml-auto">
-            <Skeleton className="h-9 w-full rounded-md sm:w-64" />
-            <Skeleton className="h-9 w-56 shrink-0 rounded-md" />
+          <div className="flex w-full min-w-0 items-center gap-2 md:ml-auto md:w-auto">
+            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-64 sm:flex-none" />
+            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-56 sm:flex-none" />
           </div>
         </div>
         <WikiTemplatesGridSkeleton />

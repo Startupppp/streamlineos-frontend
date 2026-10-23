@@ -281,6 +281,7 @@ export default function TemplatesPage() {
               onValueChange={handleSearchChange}
               aria-label="Search templates"
               fill
+              className="min-w-0"
             />
           }
           primaryFilters={
@@ -290,7 +291,7 @@ export default function TemplatesPage() {
                 onValueChange={handleCategoryChange}
               >
                 <SelectTrigger
-                  className="h-9 w-full min-w-0 sm:w-56"
+                  className="h-9 min-w-0 flex-1 sm:w-56 sm:flex-none"
                   aria-label="Filter templates by category"
                 >
                   <SelectValue placeholder="All categories" />

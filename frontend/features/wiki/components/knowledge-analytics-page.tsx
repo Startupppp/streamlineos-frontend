@@ -252,7 +252,7 @@ export default function KnowledgeAnalyticsPage() {
         onRetry={handleRetry}
         loading={<AnalyticsSkeleton />}
       >
-        <div className="flex flex-wrap items-center gap-2 mb-4">
+        <div className="mb-4 grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <Select value={rangePreset} onValueChange={handleRangeChange}>
             <SelectTrigger className="w-full sm:w-44" aria-label="Date range">
               <SelectValue />
@@ -292,7 +292,7 @@ export default function KnowledgeAnalyticsPage() {
             size="sm"
             aria-pressed={staleOnly}
             onClick={handleStaleOnlyToggle}
-            className="gap-1"
+            className="col-span-2 w-full gap-1 sm:w-auto"
           >
             <KbClockIcon className="h-3.5 w-3.5" />
             Stale high-use only
@@ -302,6 +302,7 @@ export default function KnowledgeAnalyticsPage() {
               type="button"
               variant="ghost"
               size="sm"
+              className="col-span-2 w-full sm:w-auto"
               onClick={handleClearFilters}
             >
               Clear filters

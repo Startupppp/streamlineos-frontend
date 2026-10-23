@@ -183,7 +183,16 @@ const ResponsivePopoverContent = React.forwardRef<
             className="w-full max-w-none max-h-[min(calc(92dvh-3.5rem),36rem)]"
             viewportClassName="overscroll-contain"
           >
-            <div className={cn(className, "w-full max-w-none")}>{children}</div>
+            <div
+              className={cn(
+                className,
+                "w-full max-w-none",
+                "[&_input]:w-full [&_textarea]:w-full",
+                "[&_[data-slot=select-trigger]]:w-full [&_[role=combobox]]:w-full",
+              )}
+            >
+              {children}
+            </div>
           </ScrollArea>
         )}
       </DrawerContent>

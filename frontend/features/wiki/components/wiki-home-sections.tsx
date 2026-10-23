@@ -43,9 +43,9 @@ export function WikiHomeHeaderActions({
     canManageSharingSettings;
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
       {!isProjectScoped && (
-        <Button asChild variant="outline" size="sm">
+        <Button asChild variant="outline" size="sm" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none">
           <Link href={KB_CHAT}>Ask documents</Link>
         </Button>
       )}
@@ -53,12 +53,13 @@ export function WikiHomeHeaderActions({
         <KbNewMenu
           scope={{ projectId }}
           allowFolder={!isProjectScoped}
+          className="w-full min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:w-auto sm:basis-auto sm:flex-none"
         />
       )}
       {hasManageAccess && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none">
               Manage
             </Button>
           </DropdownMenuTrigger>

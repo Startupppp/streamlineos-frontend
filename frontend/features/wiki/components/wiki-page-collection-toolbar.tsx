@@ -233,7 +233,7 @@ export function WikiPageCollectionToolbar({
             type="button"
             variant="outline"
             size="sm"
-            className="h-9 gap-1.5"
+            className="h-9 shrink-0 gap-1.5"
             aria-label={filtersLabel}
           >
             <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -251,9 +251,9 @@ export function WikiPageCollectionToolbar({
           description="Narrow this list. Changes apply immediately."
           aria-label="Filters"
           drawerClassName="w-full max-w-none"
-          className="flex w-72 max-w-[calc(100vw-2rem)] flex-col gap-0 overflow-hidden p-0"
+          className="flex w-full max-w-none flex-col gap-0 overflow-hidden p-0 sm:w-72"
         >
-          <div className="flex flex-col gap-4 p-4">
+          <div className="flex w-full flex-col gap-4 p-4">
             <FilterFields
               status={status}
               kind={kind}

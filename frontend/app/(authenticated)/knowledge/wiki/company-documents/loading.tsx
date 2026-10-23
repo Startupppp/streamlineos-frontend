@@ -11,7 +11,7 @@ export default function CompanyDocumentsLoading() {
       noInternalScroll
       contentClassName={WIKI_LOADING_CONTENT_CLASS}
       filters={
-        <Skeleton className="h-9 w-44 rounded-md" />
+        <Skeleton className="h-9 w-full rounded-md sm:w-44" />
       }
     >
       <CompanyDocumentsSkeleton />

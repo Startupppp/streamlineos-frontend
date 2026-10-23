@@ -138,6 +138,27 @@ describe("PageDocumentToolbar", () => {
     ).toBeInTheDocument();
   });
 
+  it("hides Lock and Delete on a page the actor cannot manage even when the org key is held", async () => {
+    const user = userEvent.setup();
+    renderToolbar({ can: { view: true, comment: true, edit: true, manage: false, restore: false } });
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.queryByRole("menuitem", { name: /lock file/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Copy link" })).toBeInTheDocument();
+  });
+
+  it("CONTROL: shows Lock and Delete to a page manager", async () => {
+    const user = userEvent.setup();
+    renderToolbar();
+
+    await user.click(screen.getByRole("button", { name: "More options" }));
+
+    expect(screen.getByRole("menuitem", { name: /lock file/i })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
+  });
+
   it("shows Export HTML when the user has kb:pages:export", async () => {
     const user = userEvent.setup();
     mockUseCan.mockImplementation((key: string) => key === "kb:pages:export");

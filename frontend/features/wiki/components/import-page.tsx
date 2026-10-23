@@ -436,10 +436,9 @@ export default function ImportPage() {
           ? `${items.length}/100 files loaded`
           : "Per-file export lives on each file's menu"
       }
-      actionsInline
       actions={
         isImportTab ? (
-          <>
+          <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
             <input
               ref={fileInputRef}
               type="file"
@@ -452,6 +451,7 @@ export default function ImportPage() {
               type="button"
               size="sm"
               variant="outline"
+              className={items.length > 0 ? "w-full sm:w-auto" : "col-span-2 w-full sm:col-auto sm:w-auto"}
               onClick={handleShowPaste}
               disabled={isProcessing}
             >
@@ -463,6 +463,7 @@ export default function ImportPage() {
                 type="button"
                 size="sm"
                 variant="outline"
+                className="w-full sm:w-auto"
                 onClick={handleDryRun}
                 disabled={isProcessing || dryRunMutation.isPending}
               >
@@ -472,12 +473,13 @@ export default function ImportPage() {
             <Button
               type="button"
               size="sm"
+              className="col-span-2 w-full sm:col-auto sm:w-auto"
               onClick={handleChooseFiles}
               disabled={items.length >= 100 || isProcessing}
             >
               Choose files
             </Button>
-          </>
+          </div>
         ) : undefined
       }
     >

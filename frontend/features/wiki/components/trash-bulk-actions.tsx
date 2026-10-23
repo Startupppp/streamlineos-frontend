@@ -108,7 +108,7 @@ export function TrashBulkActions({
   onEmpty,
 }: TrashBulkActionsProps) {
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap">
       {selectedCount > 0 && (
         <>
           {canRestore && (
@@ -116,6 +116,7 @@ export function TrashBulkActions({
               type="button"
               variant="outline"
               size="sm"
+              className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none"
               onClick={onRestore}
               disabled={restoring}
             >
@@ -128,6 +129,7 @@ export function TrashBulkActions({
               type="button"
               variant="destructive"
               size="sm"
+              className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none"
               disabled={purging}
               onClick={onPurge}
             >
@@ -145,6 +147,7 @@ export function TrashBulkActions({
             type="button"
             variant="destructive"
             size="sm"
+            className="min-w-0 flex-1 sm:flex-none"
             onClick={onEmpty}
             disabled={emptying}
           >

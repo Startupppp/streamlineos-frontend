@@ -14,13 +14,17 @@ import { usePageState } from "@/hooks/api/use-page-state";
 
 export function BriefListSkeleton() {
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <div className="flex shrink-0 items-end gap-3">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4">
+      <div className="flex w-full min-w-0 shrink-0 flex-col gap-3 sm:flex-row sm:items-end">
         <div className="min-w-0 flex-1 space-y-1.5">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-9 w-full rounded-md" />
         </div>
-        <Skeleton className="h-9 w-32 shrink-0 rounded-md" />
+        <div className="w-full space-y-1.5 sm:w-40">
+          <Skeleton className="h-3 w-16" />
+          <Skeleton className="h-9 w-full rounded-md" />
+        </div>
+        <Skeleton className="h-9 w-full shrink-0 rounded-md sm:w-32" />
       </div>
       <div className="grid min-h-0 flex-1 auto-rows-[minmax(4.25rem,1fr)] gap-2 overflow-hidden">
         {Array.from({ length: 18 }, (_, index) => (

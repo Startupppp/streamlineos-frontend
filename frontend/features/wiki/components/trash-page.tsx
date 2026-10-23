@@ -308,13 +308,13 @@ export default function TrashPage() {
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
 
-          <div className="flex min-w-0 shrink-0 items-center gap-2">
+          <div className="flex w-full min-w-0 shrink-0 items-center gap-2">
             <Input
               type="search"
               placeholder="Search deleted pages…"
               value={searchDraft}
               onChange={handleSearchChange}
-              className="w-full max-w-sm sm:w-64"
+              className="h-9 min-w-0 flex-1 sm:w-64 sm:flex-none"
               aria-label="Search deleted pages"
             />
             <TrashFiltersMenu

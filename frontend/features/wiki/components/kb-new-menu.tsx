@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -50,9 +51,10 @@ interface KbNewMenuProps {
   onCreated?: (page: KbPage) => void;
   trigger?: React.ReactNode;
   baseHref?: string;
+  className?: string;
 }
 
-export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: KbNewMenuProps) {
+export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, className }: KbNewMenuProps) {
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
   const canManageSpaces = useCan("kb:spaces:manage");
@@ -137,7 +139,7 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref }: 
   }
 
   const triggerEl = trigger ?? (
-    <Button size="sm" className="gap-1">
+    <Button size="sm" className={cn("min-w-0 gap-1", className)}>
       <KbPlusIcon className="h-4 w-4" />
       New
     </Button>

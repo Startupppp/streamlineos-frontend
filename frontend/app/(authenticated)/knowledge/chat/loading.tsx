@@ -5,8 +5,8 @@ const BUBBLES = Array.from({ length: 16 }, (_, index) => BUBBLE_WIDTHS[index % B
 
 export default function KnowledgeChatLoading() {
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="grid min-h-0 flex-1 auto-rows-[minmax(4rem,1fr)] gap-4 overflow-hidden p-4">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col">
+      <div className="grid min-h-0 w-full min-w-0 flex-1 auto-rows-[minmax(4rem,1fr)] gap-4 overflow-hidden p-3 sm:p-4">
         {BUBBLES.map((size, index) => (
           <div
             key={index}

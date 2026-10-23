@@ -157,7 +157,7 @@ export default function KbSharingSettingsPage() {
         resolution={pageState}
         loading={<KbSharingSettingsSkeleton />}
       >
-        <div className="flex flex-col gap-6 max-w-lg">
+        <div className="flex w-full max-w-lg flex-col gap-6">
           {settings && <SharingSettingsForm key={settings.externalSharing} settings={settings} />}
           <div>
             <h2 className="text-sm font-semibold text-foreground mb-3">Sharing inventory</h2>

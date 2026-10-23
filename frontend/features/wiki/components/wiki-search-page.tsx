@@ -324,32 +324,39 @@ export default function WikiSearchPage() {
   return (
     <PageWrapper title="Search">
       <div className="flex min-h-0 w-full flex-1 flex-col gap-4">
-        <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <label htmlFor={searchInputId} className="sr-only">
-              Search files
-            </label>
-            <Input
-              id={searchInputId}
-              type="search"
-              placeholder="Search files…"
-              value={inputValue}
-              onChange={handleInputChange}
-              maxLength={KB_PAGE_SEARCH_MAX_LENGTH}
-              aria-describedby={`${searchInputId}-limit`}
-              autoFocus
-              className="h-9"
+        <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center">
+          <div className="col-span-2 flex min-w-0 items-center gap-2 sm:contents">
+            <div className="relative min-w-0 flex-1">
+              <label htmlFor={searchInputId} className="sr-only">
+                Search files
+              </label>
+              <Input
+                id={searchInputId}
+                type="search"
+                placeholder="Search files…"
+                value={inputValue}
+                onChange={handleInputChange}
+                maxLength={KB_PAGE_SEARCH_MAX_LENGTH}
+                aria-describedby={`${searchInputId}-limit`}
+                autoFocus
+                className="h-9 w-full"
+              />
+              <p
+                id={`${searchInputId}-limit`}
+                className={inputValue.length >= KB_PAGE_SEARCH_MAX_LENGTH ? "mt-1 text-xs text-muted-foreground" : "sr-only"}
+              >
+                Search is limited to {KB_PAGE_SEARCH_MAX_LENGTH} characters.
+              </p>
+            </div>
+            <ViewToggle
+              value={view}
+              options={SEARCH_VIEW_OPTIONS}
+              onChange={handleViewChange}
+              className="shrink-0 sm:order-last sm:ml-auto"
             />
-            <p
-              id={`${searchInputId}-limit`}
-              className={inputValue.length >= KB_PAGE_SEARCH_MAX_LENGTH ? "mt-1 text-xs text-muted-foreground" : "sr-only"}
-            >
-              Search is limited to {KB_PAGE_SEARCH_MAX_LENGTH} characters.
-            </p>
           </div>
-          <div className="flex items-center gap-2">
             <Select value={status ?? "all"} onValueChange={handleStatusChange}>
-              <SelectTrigger className="h-9 w-40">
+              <SelectTrigger className="h-9 w-full sm:w-40">
                 <SelectValue placeholder="Any status" />
               </SelectTrigger>
               <SelectContent>
@@ -368,7 +375,7 @@ export default function WikiSearchPage() {
               </SelectContent>
             </Select>
             <Select value={type ?? "all"} onValueChange={handleTypeChange}>
-              <SelectTrigger className="h-9 w-40">
+              <SelectTrigger className="h-9 w-full sm:w-40">
                 <SelectValue placeholder="Any type" />
               </SelectTrigger>
               <SelectContent>
@@ -390,7 +397,12 @@ export default function WikiSearchPage() {
               value={verifiedParam ?? "all"}
               onValueChange={handleVerifiedChange}
             >
-              <SelectTrigger className="h-9 w-40">
+              <SelectTrigger
+                className={cn(
+                  "h-9 w-full sm:w-40",
+                  facetSpaceCounts.length === 0 && "col-span-2 sm:col-span-1",
+                )}
+              >
                 <SelectValue placeholder="Any trust" />
               </SelectTrigger>
               <SelectContent>
@@ -412,7 +424,7 @@ export default function WikiSearchPage() {
                 value={spaceId !== undefined ? String(spaceId) : "all"}
                 onValueChange={handleSpaceChange}
               >
-                <SelectTrigger className="h-9 w-40">
+                <SelectTrigger className="h-9 w-full sm:w-40">
                   <SelectValue placeholder="Any team folder" />
                 </SelectTrigger>
                 <SelectContent>
@@ -430,16 +442,10 @@ export default function WikiSearchPage() {
                 </SelectContent>
               </Select>
             )}
-            <ViewToggle
-              value={view}
-              options={SEARCH_VIEW_OPTIONS}
-              onChange={handleViewChange}
-            />
-          </div>
         </div>
 
         {queryActive && !isLoading && items.length > 0 && (
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>
               {hasNextPage
                 ? `${items.length}+ results`
