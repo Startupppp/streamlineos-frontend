@@ -117,21 +117,21 @@ describe("CollectionItemMenu — the page's own capabilities gate its actions, n
     expect(screen.queryByRole("menuitem", { name: "Share" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Delete" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Transfer ownership" })).toBeInTheDocument();
-    expect(screen.getByRole("menuitem", { name: "Move" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Move$/ })).toBeInTheDocument();
   });
 
   it("hides Move and Cover on a locked page for an actor who cannot manage it", async () => {
     render(<CollectionItemMenu page={makeItem({ isLocked: true, can: { edit: true, manage: false } })} />);
     await openMenu();
-    expect(screen.queryByRole("menuitem", { name: "Move" })).not.toBeInTheDocument();
-    expect(screen.queryByRole("menuitem", { name: "Add cover" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Move$/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Add cover$/ })).not.toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Copy link" })).toBeInTheDocument();
   });
 
   it("CONTROL: a page manager still sees Move, Share and Delete on a locked page", async () => {
     render(<CollectionItemMenu page={makeItem({ isLocked: true, can: { edit: true, manage: true } })} />);
     await openMenu();
-    expect(screen.getByRole("menuitem", { name: "Move" })).toBeInTheDocument();
+    expect(screen.getByRole("menuitem", { name: /Move$/ })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Share" })).toBeInTheDocument();
     expect(screen.getByRole("menuitem", { name: "Delete" })).toBeInTheDocument();
   });
@@ -139,7 +139,7 @@ describe("CollectionItemMenu — the page's own capabilities gate its actions, n
   it("hides edit actions on a page the actor can only view", async () => {
     render(<CollectionItemMenu page={makeItem({ can: { edit: false, manage: false } })} />);
     await openMenu();
-    expect(screen.queryByRole("menuitem", { name: "Move" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("menuitem", { name: /Move$/ })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Archive" })).not.toBeInTheDocument();
     expect(screen.queryByRole("menuitem", { name: "Transfer ownership" })).not.toBeInTheDocument();
   });

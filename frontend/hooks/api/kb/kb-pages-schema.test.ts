@@ -118,6 +118,16 @@ describe("kbPageWithAncestorsContract — server/client schema parity for wiki p
   });
 });
 
+describe("kbPageWithAncestorsContract — every access route the backend emits parses, so a page opened through a team folder loads", () => {
+  it.each(["team_folder", "team_folder_admin", "inherited_grant"] as const)("accepts access.via = %s", (via) => {
+    expect(kbPageWithAncestorsContract.safeParse({ ...WIRE_FIXTURE, access: { via, grantExpiresAt: null } }).success).toBe(true);
+  });
+
+  it("CONTROL: still rejects an access route the backend never emits", () => {
+    expect(kbPageWithAncestorsContract.safeParse({ ...WIRE_FIXTURE, access: { via: "anyone", grantExpiresAt: null } }).success).toBe(false);
+  });
+});
+
 describe("kbPageBacklinksPageContract — server/client schema parity", () => {
   it("parses the cursor page returned by the backlinks endpoint", () => {
     const result = kbPageBacklinksPageContract.safeParse({

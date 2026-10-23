@@ -80751,30 +80751,6 @@
                                   }
                                 ]
                               },
-                              "points": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "storyPoints": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
                               "startDate": {
                                 "anyOf": [
                                   {
@@ -80936,8 +80912,6 @@
                               "cycleId",
                               "epicId",
                               "assigneeMembershipId",
-                              "points",
-                              "storyPoints",
                               "startDate",
                               "dueDate",
                               "estimate",
@@ -81163,30 +81137,6 @@
                             }
                           ]
                         },
-                        "points": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "storyPoints": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "startDate": {
                           "anyOf": [
                             {
@@ -81348,8 +81298,6 @@
                         "cycleId",
                         "epicId",
                         "assigneeMembershipId",
-                        "points",
-                        "storyPoints",
                         "startDate",
                         "dueDate",
                         "estimate",
@@ -81617,30 +81565,6 @@
                             }
                           ]
                         },
-                        "points": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "storyPoints": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "startDate": {
                           "anyOf": [
                             {
@@ -81802,8 +81726,6 @@
                         "cycleId",
                         "epicId",
                         "assigneeMembershipId",
-                        "points",
-                        "storyPoints",
                         "startDate",
                         "dueDate",
                         "estimate",
@@ -93251,15 +93173,6 @@
             }
           },
           {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "string",
-              "maxLength": 200
-            }
-          },
-          {
             "name": "search",
             "in": "query",
             "required": false,
@@ -100548,7 +100461,7 @@
                                 "status": {
                                   "type": "string"
                                 },
-                                "points": {
+                                "estimate": {
                                   "anyOf": [
                                     {
                                       "type": "integer",
@@ -100565,7 +100478,7 @@
                                 "id",
                                 "title",
                                 "status",
-                                "points"
+                                "estimate"
                               ]
                             }
                           }
@@ -100999,30 +100912,6 @@
                                   }
                                 ]
                               },
-                              "points": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "storyPoints": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
                               "startDate": {
                                 "anyOf": [
                                   {
@@ -101178,8 +101067,6 @@
                               "cycleId",
                               "epicId",
                               "assigneeMembershipId",
-                              "points",
-                              "storyPoints",
                               "startDate",
                               "dueDate",
                               "estimate",
@@ -106203,30 +106090,6 @@
                                   }
                                 ]
                               },
-                              "points": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "storyPoints": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
                               "link": {
                                 "anyOf": [
                                   {
@@ -106361,16 +106224,6 @@
                               },
                               "descriptionExcerpt": {
                                 "type": "string"
-                              },
-                              "assigneeId": {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
                               },
                               "assignee": {
                                 "anyOf": [
@@ -106658,8 +106511,6 @@
                               "epicId",
                               "assigneeMembershipId",
                               "reporterId",
-                              "points",
-                              "storyPoints",
                               "link",
                               "rank",
                               "parentTicketId",
@@ -106676,7 +106527,6 @@
                               "createdAt",
                               "updatedAt",
                               "descriptionExcerpt",
-                              "assigneeId",
                               "assignee",
                               "assignees",
                               "labels",
@@ -106893,30 +106743,6 @@
                             }
                           ]
                         },
-                        "points": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "storyPoints": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
                         "link": {
                           "anyOf": [
                             {
@@ -107122,8 +106948,6 @@
                         "assigneeMembershipId",
                         "reporterId",
                         "reporterMembershipId",
-                        "points",
-                        "storyPoints",
                         "link",
                         "rank",
                         "parentTicketId",
@@ -107462,30 +107286,6 @@
                           ]
                         },
                         "reporterMembershipId": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "points": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "storyPoints": {
                           "anyOf": [
                             {
                               "type": "integer",
@@ -108454,8 +108254,6 @@
                         "assigneeMembershipId",
                         "reporterId",
                         "reporterMembershipId",
-                        "points",
-                        "storyPoints",
                         "link",
                         "rank",
                         "parentTicketId",
@@ -112957,18 +112755,6 @@
                                   "BUG"
                                 ]
                               },
-                              "points": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
                               "version": {
                                 "type": "integer",
                                 "minimum": -9007199254740991,
@@ -113090,7 +112876,6 @@
                               "status",
                               "priority",
                               "type",
-                              "points",
                               "version",
                               "assigneeMembershipId",
                               "projectId",
@@ -113598,30 +113383,6 @@
                               }
                             ]
                           },
-                          "points": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "storyPoints": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
                           "link": {
                             "anyOf": [
                               {
@@ -113756,16 +113517,6 @@
                           },
                           "descriptionExcerpt": {
                             "type": "string"
-                          },
-                          "assigneeId": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
                           },
                           "assignee": {
                             "anyOf": [
@@ -114053,8 +113804,6 @@
                           "epicId",
                           "assigneeMembershipId",
                           "reporterId",
-                          "points",
-                          "storyPoints",
                           "link",
                           "rank",
                           "parentTicketId",
@@ -114071,7 +113820,6 @@
                           "createdAt",
                           "updatedAt",
                           "descriptionExcerpt",
-                          "assigneeId",
                           "assignee",
                           "assignees",
                           "labels",
@@ -116204,30 +115952,6 @@
                                   }
                                 ]
                               },
-                              "points": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
-                              "storyPoints": {
-                                "anyOf": [
-                                  {
-                                    "type": "integer",
-                                    "minimum": -9007199254740991,
-                                    "maximum": 9007199254740991
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
                               "link": {
                                 "anyOf": [
                                   {
@@ -116433,8 +116157,6 @@
                               "assigneeMembershipId",
                               "reporterId",
                               "reporterMembershipId",
-                              "points",
-                              "storyPoints",
                               "link",
                               "rank",
                               "parentTicketId",
@@ -116824,30 +116546,6 @@
                           ]
                         },
                         "reporterMembershipId": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "points": {
-                          "anyOf": [
-                            {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
-                        },
-                        "storyPoints": {
                           "anyOf": [
                             {
                               "type": "integer",
@@ -117816,8 +117514,6 @@
                         "assigneeMembershipId",
                         "reporterId",
                         "reporterMembershipId",
-                        "points",
-                        "storyPoints",
                         "link",
                         "rank",
                         "parentTicketId",
@@ -124752,16 +124448,6 @@
                                   }
                                 ]
                               },
-                              "points": {
-                                "anyOf": [
-                                  {
-                                    "type": "number"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
-                              },
                               "estimate": {
                                 "anyOf": [
                                   {
@@ -124939,7 +124625,6 @@
                               "ticketNumber",
                               "dueDate",
                               "startDate",
-                              "points",
                               "estimate",
                               "rank",
                               "version",
@@ -852647,13 +852332,11 @@
             }
           },
           {
-            "name": "page",
+            "name": "cursor",
             "in": "query",
             "required": false,
             "schema": {
-              "type": "integer",
-              "minimum": 1,
-              "maximum": 9007199254740991
+              "type": "string"
             }
           },
           {
@@ -852704,27 +852387,38 @@
                             "additionalProperties": {}
                           }
                         },
-                        "total": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "limit": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
                         }
                       },
                       "required": [
                         "rows",
-                        "total",
-                        "page",
-                        "limit"
+                        "pagination"
                       ]
                     }
                   },
@@ -859886,6 +859580,14 @@
             }
           },
           {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "search",
             "in": "query",
             "required": false,
@@ -859960,7 +859662,7 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "items": {
+                        "data": {
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -860075,33 +859777,38 @@
                             ]
                           }
                         },
-                        "total": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "pageSize": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "totalPages": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
                         }
                       },
                       "required": [
-                        "items",
-                        "total",
-                        "page",
-                        "pageSize",
-                        "totalPages"
+                        "data",
+                        "pagination"
                       ]
                     }
                   },
@@ -870064,6 +869771,25 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -870081,58 +869807,95 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "caseId": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "orgId": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "url": {
-                            "type": "string"
-                          },
-                          "restricted": {
-                            "type": "boolean"
-                          },
-                          "uploadedBy": {
-                            "anyOf": [
-                              {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "caseId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "orgId": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
+                              "name": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "restricted": {
+                                "type": "boolean"
+                              },
+                              "uploadedBy": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
                               }
+                            },
+                            "required": [
+                              "id",
+                              "caseId",
+                              "orgId",
+                              "name",
+                              "url",
+                              "restricted",
+                              "uploadedBy",
+                              "createdAt"
                             ]
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
                           }
                         },
-                        "required": [
-                          "id",
-                          "caseId",
-                          "orgId",
-                          "name",
-                          "url",
-                          "restricted",
-                          "uploadedBy",
-                          "createdAt"
-                        ]
-                      }
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
                     }
                   },
                   "required": [
@@ -870560,6 +870323,25 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -870577,67 +870359,104 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "caseId": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "orgId": {
-                            "type": "string"
-                          },
-                          "authorId": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "authorMembershipId": {
-                            "anyOf": [
-                              {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
                                 "type": "integer",
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
-                              {
-                                "type": "null"
+                              "caseId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "orgId": {
+                                "type": "string"
+                              },
+                              "authorId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "authorMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "note": {
+                                "type": "string"
+                              },
+                              "isConfidential": {
+                                "type": "boolean"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
                               }
+                            },
+                            "required": [
+                              "id",
+                              "caseId",
+                              "orgId",
+                              "authorId",
+                              "authorMembershipId",
+                              "note",
+                              "isConfidential",
+                              "createdAt"
                             ]
-                          },
-                          "note": {
-                            "type": "string"
-                          },
-                          "isConfidential": {
-                            "type": "boolean"
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
                           }
                         },
-                        "required": [
-                          "id",
-                          "caseId",
-                          "orgId",
-                          "authorId",
-                          "authorMembershipId",
-                          "note",
-                          "isConfidential",
-                          "createdAt"
-                        ]
-                      }
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
                     }
                   },
                   "required": [
@@ -992713,6 +992532,14 @@
               "minimum": 1,
               "maximum": 100
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -992732,7 +992559,7 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "items": {
+                        "data": {
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -992904,33 +992731,38 @@
                             ]
                           }
                         },
-                        "total": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "pageSize": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "totalPages": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
                         }
                       },
                       "required": [
-                        "items",
-                        "total",
-                        "page",
-                        "pageSize",
-                        "totalPages"
+                        "data",
+                        "pagination"
                       ]
                     }
                   },
@@ -1035386,6 +1035218,14 @@
               "minimum": 1,
               "maximum": 100
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1035405,7 +1035245,7 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "items": {
+                        "data": {
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -1035477,33 +1035317,38 @@
                             ]
                           }
                         },
-                        "total": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "pageSize": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "totalPages": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
                         }
                       },
                       "required": [
-                        "items",
-                        "total",
-                        "page",
-                        "pageSize",
-                        "totalPages"
+                        "data",
+                        "pagination"
                       ]
                     }
                   },
@@ -1036142,6 +1035987,14 @@
               "minimum": 1,
               "maximum": 100
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -1036161,7 +1036014,7 @@
                     "data": {
                       "type": "object",
                       "properties": {
-                        "items": {
+                        "data": {
                           "type": "array",
                           "items": {
                             "type": "object",
@@ -1036250,33 +1036103,38 @@
                             ]
                           }
                         },
-                        "total": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "page": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "pageSize": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
-                        },
-                        "totalPages": {
-                          "type": "integer",
-                          "minimum": -9007199254740991,
-                          "maximum": 9007199254740991
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
                         }
                       },
                       "required": [
-                        "items",
-                        "total",
-                        "page",
-                        "pageSize",
-                        "totalPages"
+                        "data",
+                        "pagination"
                       ]
                     }
                   },
@@ -1160810,6 +1160668,24 @@
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
+                              "isLocked": {
+                                "type": "boolean"
+                              },
+                              "can": {
+                                "type": "object",
+                                "properties": {
+                                  "edit": {
+                                    "type": "boolean"
+                                  },
+                                  "manage": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "edit",
+                                  "manage"
+                                ]
+                              },
                               "sharedBy": {
                                 "anyOf": [
                                   {
@@ -1160901,6 +1160777,8 @@
                               "verifiedUntil",
                               "contentRevision",
                               "aclRevision",
+                              "isLocked",
+                              "can",
                               "sharedBy"
                             ]
                           }
@@ -1225150,6 +1225028,64 @@
         }
       }
     },
+    "/onboarding/initiated-user-ids": {
+      "get": {
+        "operationId": "HrOnboardingAdminController_getInitiatedUserIds",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "HrOnboardingAdmin"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "hr:onboarding:manage",
+        "description": "Exposure: permission — hr:onboarding:manage"
+      }
+    },
     "/onboarding/me": {
       "get": {
         "operationId": "OnboardingController_getMyTasks",
@@ -1227023,6 +1226959,294 @@
         ],
         "x-exposure": "universal",
         "description": "Exposure: universal — any authenticated member, subject from the token"
+      }
+    },
+    "/onboarding/progress": {
+      "get": {
+        "operationId": "HrOnboardingAdminController_getProgressPage",
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 25,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "userId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "userName": {
+                                "type": "string"
+                              },
+                              "totalTasks": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "completedTasks": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "percentComplete": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "lastCompletedAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              }
+                            },
+                            "required": [
+                              "userId",
+                              "userName",
+                              "totalTasks",
+                              "completedTasks",
+                              "percentComplete",
+                              "lastCompletedAt"
+                            ]
+                          }
+                        },
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": 1,
+                              "maximum": 100
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "HrOnboardingAdmin"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "hr:onboarding:manage",
+        "description": "Exposure: permission — hr:onboarding:manage"
+      }
+    },
+    "/onboarding/progress/{userId}": {
+      "get": {
+        "operationId": "HrOnboardingAdminController_getUserProgress",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "anyOf": [
+                        {
+                          "type": "object",
+                          "properties": {
+                            "userId": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            },
+                            "userName": {
+                              "type": "string"
+                            },
+                            "totalTasks": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "completedTasks": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "percentComplete": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "lastCompletedAt": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "userId",
+                            "userName",
+                            "totalTasks",
+                            "completedTasks",
+                            "percentComplete",
+                            "lastCompletedAt"
+                          ]
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "HrOnboardingAdmin"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "hr:onboarding:manage",
+        "description": "Exposure: permission — hr:onboarding:manage"
       }
     },
     "/onboarding/reminders": {
@@ -1236457,8 +1236681,6 @@
                   }
                 },
                 "required": [
-                  "industry",
-                  "companySize",
                   "enabledModules"
                 ],
                 "additionalProperties": false

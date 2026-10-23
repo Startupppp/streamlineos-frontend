@@ -74,7 +74,7 @@ export function PageDocumentOutline({ content, containerRef }: PageDocumentOutli
   return (
     <nav
       aria-label="Page outline"
-      className="mb-4 space-y-0.5 rounded-lg border border-border bg-muted/30 px-3 py-2"
+      className="mx-4 mb-4 space-y-0.5 rounded-lg border border-border bg-muted/30 px-3 py-2"
     >
       <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Outline

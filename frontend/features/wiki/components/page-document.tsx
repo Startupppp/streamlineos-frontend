@@ -475,7 +475,7 @@ export default function PageDocument({
               </div>
             ) : null}
 
-            <div className="group/title flex items-center gap-2 py-2">
+            <div className="group/title flex items-center gap-2 px-4 py-2">
               {page.icon ? (
                 <PageIconPicker
                   icon={page.icon}

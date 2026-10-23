@@ -79,7 +79,7 @@ export const kbPageWithAncestorsContract = kbPageBaseContract.extend({
     restore: z.boolean(),
   }),
   access: z.object({
-    via: z.enum(["owner", "admin", "creator", "organization", "public", "space", "project", "grant"]),
+    via: z.enum(["owner", "admin", "creator", "organization", "public", "space", "project", "grant", "team_folder", "team_folder_admin", "inherited_grant"]),
     grantExpiresAt: z.string().nullable(),
   }),
 });
