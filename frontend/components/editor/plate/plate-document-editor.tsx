@@ -61,9 +61,7 @@ export default function PlateDocumentEditor({
   useEffect(() => {
     if (prevKeyRef.current !== contentKey && contentKey !== undefined) {
       prevKeyRef.current = contentKey;
-      const next = normalizePlateValue(value);
-      editor.tf.reset();
-      editor.tf.insertNodes(next);
+      editor.tf.setValue(normalizePlateValue(value));
     }
   }, [contentKey, value, editor]);
 

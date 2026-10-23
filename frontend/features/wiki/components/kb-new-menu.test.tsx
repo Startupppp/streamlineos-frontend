@@ -2,6 +2,15 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { KbNewMenu } from "./kb-new-menu";
 
+const toastSuccess = jest.fn();
+const toastError = jest.fn();
+jest.mock("sonner", () => ({
+  toast: {
+    success: (...args: unknown[]) => toastSuccess(...args),
+    error: (...args: unknown[]) => toastError(...args),
+  },
+}));
+
 const mockPush = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
@@ -18,6 +27,13 @@ jest.mock("@/hooks/api/kb/files", () => ({
 
 const mockMutate = jest.fn();
 jest.mock("@/hooks/api/kb", () => ({
+  useCreateKbPage: () => ({
+    mutate: mockMutate,
+    isPending: false,
+  }),
+}));
+
+jest.mock("@/hooks/api/kb/pages", () => ({
   useCreateKbPage: () => ({
     mutate: mockMutate,
     isPending: false,
@@ -251,5 +267,60 @@ describe("KbNewMenu — Folder", () => {
     await userEvent.click(screen.getByRole("button", { name: /New/i }));
     await userEvent.click(screen.getByRole("menuitem", { name: /Folder/ }));
     expect(screen.getByTestId("space-sheet")).toBeInTheDocument();
+  });
+});
+
+describe("KbNewMenu — file upload (Upload file menu item)", () => {
+  function getFileUploadInput(): HTMLInputElement {
+    const inputs = document.querySelectorAll<HTMLInputElement>('input[type="file"]');
+    const found = Array.from(inputs).find((el) => !el.accept);
+    if (!found) throw new Error("file upload input not found");
+    return found;
+  }
+
+  it("shows a success toast with the file name after a successful upload", async () => {
+    mockUploadMutate.mockImplementation(
+      (_input: unknown, cbs: { onSuccess?: (d: unknown) => void }) => {
+        cbs.onSuccess?.({ page: { id: 9, projectId: null }, version: { id: "v1" } });
+      },
+    );
+
+    render(<KbNewMenu scope={{ spaceId: 5 }} allowFolder={false} />);
+    await userEvent.click(screen.getByRole("button", { name: /New/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Upload file/ }));
+
+    const input = getFileUploadInput();
+    const file = new File(["pdf"], "report.pdf", { type: "application/pdf" });
+    Object.defineProperty(input, "files", { value: [file] });
+    fireEvent.change(input);
+
+    await waitFor(() => {
+      expect(toastSuccess).toHaveBeenCalledWith(
+        expect.stringContaining("report.pdf"),
+      );
+    });
+  });
+
+  it("shows an error toast when upload fails", async () => {
+    mockUploadMutate.mockImplementation(
+      (_input: unknown, cbs: { onError?: (e: unknown) => void }) => {
+        cbs.onError?.(new Error("File validation failed"));
+      },
+    );
+
+    render(<KbNewMenu scope={EMPTY_SCOPE} allowFolder={false} />);
+    await userEvent.click(screen.getByRole("button", { name: /New/i }));
+    fireEvent.click(screen.getByRole("menuitem", { name: /Upload file/ }));
+
+    const input = getFileUploadInput();
+    const file = new File(["pdf"], "bad.pdf", { type: "application/pdf" });
+    Object.defineProperty(input, "files", { value: [file] });
+    fireEvent.change(input);
+
+    await waitFor(() => {
+      expect(toastError).toHaveBeenCalledWith(
+        expect.stringContaining("File validation failed"),
+      );
+    });
   });
 });
