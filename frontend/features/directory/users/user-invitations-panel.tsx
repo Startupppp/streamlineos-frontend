@@ -483,9 +483,10 @@ export function UserInvitationsPanel() {
       <ConfirmDialog
         open={cancellationInvitationId !== null}
         onOpenChange={handleCancelDialogChange}
-        title="Cancel invitation"
+        title="Revoke invitation?"
         description="This will revoke the invitation. The recipient will no longer be able to join using this link."
-        confirmLabel="Cancel invitation"
+        confirmLabel="Revoke"
+        cancelLabel="Keep invitation"
         destructive
         isPending={isCancelling}
         onConfirm={handleCancelConfirm}

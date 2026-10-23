@@ -1,17 +1,26 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { ClockInWidget } from "./clock-in-widget";
 
 const statusQuery = { data: undefined as unknown, isLoading: true };
 const checkIn = { mutate: jest.fn(), isPending: false };
+const checkOut = { mutate: jest.fn(), isPending: false };
 
 jest.mock("@/hooks/api", () => ({
   useHrAttendanceStatus: () => statusQuery,
   useHrCheckIn: () => checkIn,
-  useHrCheckOut: () => ({ mutate: jest.fn(), isPending: false }),
+  useHrCheckOut: () => checkOut,
 }));
 jest.mock("@/hooks/api/org-display", () => ({ useOrgTimeZone: () => "Asia/Kolkata" }));
 
 describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status loads", () => {
+  beforeEach(() => {
+    checkIn.mutate.mockReset();
+    checkOut.mutate.mockReset();
+    checkIn.isPending = false;
+    checkOut.isPending = false;
+  });
+
   it("renders the layout-matching skeleton, not a red spinner button, while the attendance status is unknown", () => {
     statusQuery.isLoading = true;
     statusQuery.data = undefined;
@@ -23,7 +32,7 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
     expect(screen.queryByText("Your location is recorded when you clock in.")).not.toBeInTheDocument();
   });
 
-  it("offers clock-in as an ordinary primary action once the status is known, with the location notice beside it", () => {
+  it("offers a single clock-in primary action once the status is known, with the location notice beside it", () => {
     statusQuery.isLoading = false;
     statusQuery.data = { status: "ABSENT", cooldownRemaining: 0, todayLog: null, dailyStats: null };
 
@@ -33,13 +42,13 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
     expect(button).toBeEnabled();
     expect(button.className).not.toMatch(/(^|\s)bg-(destructive|status-danger)/);
     expect(button.className).toMatch(/(^|\s)bg-primary(\s|$)/);
-    const clockOut = screen.getByRole("button", { name: "WEB CLOCK-OUT" });
-    expect(clockOut).toBeDisabled();
+    expect(screen.queryByRole("button", { name: "WEB CLOCK-OUT" })).not.toBeInTheDocument();
     expect(screen.getByText("Your location is recorded when you clock in.")).toBeInTheDocument();
     expect(screen.queryByTestId("clock-in-widget-skeleton")).not.toBeInTheDocument();
   });
 
-  it("offers clock-out once the person is checked in, and holds clock-in", () => {
+  it("switches the same button to clock-out once the person is checked in", async () => {
+    const user = userEvent.setup();
     statusQuery.isLoading = false;
     statusQuery.data = {
       status: "PRESENT",
@@ -50,7 +59,10 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
 
     render(<ClockInWidget />);
 
-    expect(screen.getByRole("button", { name: "WEB CLOCK-IN" })).toBeDisabled();
-    expect(screen.getByRole("button", { name: "WEB CLOCK-OUT" })).toBeEnabled();
+    const button = screen.getByRole("button", { name: "WEB CLOCK-OUT" });
+    expect(button).toBeEnabled();
+    expect(screen.queryByRole("button", { name: "WEB CLOCK-IN" })).not.toBeInTheDocument();
+    await user.click(button);
+    expect(checkOut.mutate).toHaveBeenCalledTimes(1);
   });
 });

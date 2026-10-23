@@ -105,10 +105,43 @@ function isValidationIssue(
   return typeof message === "string" && message.trim().length > 0;
 }
 
+const ZOD_TOO_SMALL_STR = /^too small: expected string to have >=(\d+) characters?$/i;
+const ZOD_TOO_BIG_STR = /^too big: expected string to have <=(\d+) characters?$/i;
+const ZOD_TOO_SMALL_NUM = /^too small: expected number to be >=(-?\d+(?:\.\d+)?)$/i;
+const ZOD_TOO_BIG_NUM = /^too big: expected number to be <=(-?\d+(?:\.\d+)?)$/i;
+const ZOD_INVALID_TYPE_ABSENT = /^invalid type: expected .+ received (undefined|null)$/i;
+const ZOD_INVALID_TYPE = /^invalid type:/i;
+
+function humanizeZodMessage(message: string): string {
+  const m = message.trim();
+  if (ZOD_INVALID_TYPE_ABSENT.test(m)) return "This field is required";
+  if (ZOD_INVALID_TYPE.test(m)) return "Invalid value";
+  const tooSmallStr = ZOD_TOO_SMALL_STR.exec(m);
+  if (tooSmallStr) {
+    const min = Number(tooSmallStr[1]);
+    return min <= 1 ? "This field is required" : `Must be at least ${min} characters`;
+  }
+  const tooBigStr = ZOD_TOO_BIG_STR.exec(m);
+  if (tooBigStr) return `Must be ${tooBigStr[1]} characters or fewer`;
+  const tooSmallNum = ZOD_TOO_SMALL_NUM.exec(m);
+  if (tooSmallNum) {
+    const min = Number(tooSmallNum[1]);
+    return min === 0 ? "Must be 0 or more" : `Must be at least ${min}`;
+  }
+  const tooBigNum = ZOD_TOO_BIG_NUM.exec(m);
+  if (tooBigNum) return `Must be ${tooBigNum[1]} or less`;
+  if (/^required$/i.test(m)) return "This field is required";
+  if (/^invalid email$/i.test(m)) return "Enter a valid email address";
+  if (/^invalid url$/i.test(m)) return "Enter a valid URL";
+  if (/^invalid uuid$/i.test(m)) return "Enter a valid ID";
+  return m;
+}
+
 function describeIssue(issue: { path?: unknown; message: string }): string {
   const path = typeof issue.path === "string" ? issue.path.trim() : "";
-  if (!path || path === "body") return issue.message.trim();
-  return `${path}: ${issue.message.trim()}`;
+  const human = humanizeZodMessage(issue.message.trim());
+  if (!path || path === "body") return human;
+  return `${path}: ${human}`;
 }
 
 function validationIssues(details: unknown): unknown[] {

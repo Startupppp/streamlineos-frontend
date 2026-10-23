@@ -7,6 +7,7 @@ import type { AccessResponse } from "@/types/access";
 
 export type WizardGate =
   | "/access-suspended"
+  | "/removed-from-org"
   | "/org-setup"
   | "/employee-onboarding"
   | "/owner"
@@ -37,6 +38,8 @@ export function resolveWizardGate(
   if (session.organizationAccess === "suspended") return "/access-suspended";
 
   if (session.isPlatformAdmin === true && !orgId) return "/owner";
+
+  if (!orgId && session.removedFromOrg === true) return "/removed-from-org";
 
   if (!orgId) return "/org-setup";
 

@@ -81,7 +81,7 @@ export function GrantDelegationSheet({
     setValue,
     watch,
     reset,
-    formState: { errors },
+    formState: { errors, isValid },
   } = useForm<DelegationFormValues>({
     resolver: zodResolver(delegationSchema),
     defaultValues: {
@@ -412,7 +412,8 @@ export function GrantDelegationSheet({
                   !!permissionsError ||
                   membersLoading ||
                   !!membersError ||
-                  members.length === 0
+                  members.length === 0 ||
+                  !isValid
                 }
                 loadingText="Delegating…"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground"
@@ -447,7 +448,9 @@ function PermissionItem({ perm, checked, onToggle }: PermissionItemProps) {
         className="mt-0.5 shrink-0"
       />
       <div className="min-w-0">
-        <p className="text-xs font-mono leading-snug truncate">{perm.name}</p>
+        <p className="text-xs leading-snug truncate">
+          {perm.name.split(":").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" › ")}
+        </p>
         <p className="text-micro text-muted-foreground leading-tight">
           {perm.description}
         </p>

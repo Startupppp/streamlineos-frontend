@@ -83,7 +83,6 @@ export function SettingsEditNameForm({ name, onClose }: SettingsEditNameFormProp
           size="icon"
           className="h-9 w-9 shrink-0"
           onClick={handleSave}
-          disabled={!watchedName.trim()}
           isPending={isSaving}
           aria-label="Save name"
         >
@@ -99,11 +98,18 @@ export function SettingsEditNameForm({ name, onClose }: SettingsEditNameFormProp
           aria-label="Cancel editing"
         />
       </div>
-      {nameError ? (
-        <p id="display-name-error" className="text-dense font-medium text-destructive">
-          {nameError}
-        </p>
-      ) : null}
+      <div className="flex items-start justify-between gap-2">
+        {nameError ? (
+          <p id="display-name-error" className="text-dense font-medium text-destructive">
+            {nameError}
+          </p>
+        ) : (
+          <span />
+        )}
+        <span className="text-dense text-muted-foreground tabular-nums">
+          {watchedName.length}/{DISPLAY_NAME_MAX_LENGTH}
+        </span>
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { z } from "zod";
 import { NOTIFICATION_CATEGORY_VALUES } from "@/lib/notification-types";
 
 export const templateSchema = z.object({
-  templateKey: z.string().min(1).regex(/^[a-z0-9_.-]+$/, "Lowercase letters, numbers, dashes, dots only"),
+  templateKey: z.string().min(1, "Template key is required").regex(/^[a-z0-9_.-]+$/, "Lowercase letters, numbers, dashes, dots only"),
   name: z.string().min(1, "Name is required"),
   channel: z.enum(["IN_APP", "EMAIL", "PUSH", "SMS", "WHATSAPP", "WEBHOOK"]),
   category: z.union([z.enum(NOTIFICATION_CATEGORY_VALUES), z.literal("none")]).optional(),

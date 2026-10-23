@@ -59,12 +59,17 @@ export async function authorizeMagicToken(
         timeout: 8_000,
       },
     );
-    const identity = magicLinkVerifyResponseSchema.safeParse(unwrapBackend(raw));
+    const identity = magicLinkVerifyResponseSchema.safeParse(
+      unwrapBackend(raw),
+    );
     if (!identity.success) return null;
     invalidateSessionData(identity.data.userId);
     const sessionData = await fetchSessionData(identity.data.userId);
     if (!sessionData) return null;
-    const magicUser = buildUserFromSessionData(identity.data.userId, sessionData);
+    const magicUser = buildUserFromSessionData(
+      identity.data.userId,
+      sessionData,
+    );
     primeSessionData(identity.data.userId, sessionData, magicUser.orgId);
     return { ...magicUser, sessionId: identity.data.sessionId };
   } catch {
@@ -72,7 +77,11 @@ export async function authorizeMagicToken(
   }
 }
 
-function applyClaimsToSession(session: Session, token: JWT, fresh: SessionData | null): void {
+function applyClaimsToSession(
+  session: Session,
+  token: JWT,
+  fresh: SessionData | null,
+): void {
   const claims = resolveSessionClaims(fresh, token);
   if (session.user) {
     session.user.id = token.id ?? session.user.id;
@@ -93,6 +102,12 @@ function applyClaimsToSession(session: Session, token: JWT, fresh: SessionData |
   session.organizationAccess = claims.organizationAccess;
   session.suspendedOrganizationName = claims.suspendedOrganizationName;
   session.isPlatformAdmin = claims.isPlatformAdmin;
+  if (
+    fresh !== null &&
+    fresh.organizationAccess === "none" &&
+    (token.orgId ?? null) !== null
+  )
+    session.removedFromOrg = true;
 }
 
 export async function resolveAuthSession(
@@ -101,7 +116,11 @@ export async function resolveAuthSession(
 ): Promise<Session> {
   try {
     const fresh = token.id
-      ? await fetchSessionDataCached(token.id, token.orgId, token.claimsRefreshedAt)
+      ? await fetchSessionDataCached(
+          token.id,
+          token.orgId,
+          token.claimsRefreshedAt,
+        )
       : null;
 
     applyClaimsToSession(session, token, fresh);

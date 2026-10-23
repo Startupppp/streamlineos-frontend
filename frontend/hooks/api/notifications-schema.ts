@@ -280,7 +280,7 @@ export const broadcastRowContract = z.object({
 
 export const broadcastListContract = z.object({
   items: z.array(broadcastRowContract),
-  nextCursor: z.number().int().optional(),
+  nextCursor: z.number().int().nullable().optional(),
 });
 
 export const broadcastSuccessContract = z.object({ success: z.literal(true) });

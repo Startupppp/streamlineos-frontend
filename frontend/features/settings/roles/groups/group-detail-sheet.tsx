@@ -4,7 +4,6 @@ import { useState, useCallback } from "react";
 import { Trash2, Users, Shield } from "lucide-react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,12 +16,7 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   Command,
   CommandInput,
@@ -51,7 +45,13 @@ interface GroupDetailSheetProps {
   onOpenChange: (open: boolean) => void;
 }
 
-function MemberSearch({ groupId, existingIds }: { groupId: string; existingIds: Set<string> }) {
+function MemberSearch({
+  groupId,
+  existingIds,
+}: {
+  groupId: string;
+  existingIds: Set<string>;
+}) {
   const [search, setSearch] = useState("");
   const { data: membersPage } = useOrgMembers(1, 20, search || undefined);
   const addMember = useAddGroupMember(groupId);
@@ -88,7 +88,12 @@ function MemberSearch({ groupId, existingIds }: { groupId: string; existingIds: 
                 className="flex items-center gap-2"
               >
                 <Avatar className="h-6 w-6 shrink-0">
-                  {m.image && <AvatarImage src={resolveImageUrl(m.image)} alt={m.name ?? ""} />}
+                  {m.image && (
+                    <AvatarImage
+                      src={resolveImageUrl(m.image)}
+                      alt={m.name ?? ""}
+                    />
+                  )}
                   <AvatarFallback className="text-micro">
                     {getInitials(m.name ?? m.email)}
                   </AvatarFallback>
@@ -105,7 +110,15 @@ function MemberSearch({ groupId, existingIds }: { groupId: string; existingIds: 
   );
 }
 
-function RoleSearch({ groupId, existingIds }: { groupId: string; existingIds: Set<number> }) {
+function RoleSearch({
+  groupId,
+  existingIds,
+  memberCount,
+}: {
+  groupId: string;
+  existingIds: Set<number>;
+  memberCount: number;
+}) {
   const [search, setSearch] = useState("");
   const { data: roles } = useRoles();
   const assignRole = useAssignGroupRole(groupId);
@@ -119,11 +132,11 @@ function RoleSearch({ groupId, existingIds }: { groupId: string; existingIds: Se
   const handleAssign = useCallback(
     (roleId: number) => {
       assignRole.mutate(
-        { roleId },
+        { roleId, memberCount },
         { onError: (err) => toast.error(getErrorMessage(err)) },
       );
     },
-    [assignRole],
+    [assignRole, memberCount],
   );
 
   return (
@@ -153,11 +166,18 @@ function RoleSearch({ groupId, existingIds }: { groupId: string; existingIds: Se
   );
 }
 
-export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheetProps) {
+export function GroupDetailSheet({
+  group,
+  open,
+  onOpenChange,
+}: GroupDetailSheetProps) {
   const groupId = group?.id ?? "";
-  const { data: members, isLoading: membersLoading } = useGroupMembers(groupId, {
-    enabled: open && !!groupId,
-  });
+  const { data: members, isLoading: membersLoading } = useGroupMembers(
+    groupId,
+    {
+      enabled: open && !!groupId,
+    },
+  );
   const { data: groupRoles, isLoading: rolesLoading } = useGroupRoles(groupId, {
     enabled: open && !!groupId,
   });
@@ -189,13 +209,18 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex w-full flex-col gap-0 p-0 sm:max-w-lg">
+      <SheetContent
+        side="right"
+        className="flex w-full flex-col gap-0 p-0 sm:max-w-lg"
+      >
         <SheetHeader className="border-b border-border px-5 py-4">
           <SheetTitle className="truncate">{group?.name ?? "Group"}</SheetTitle>
           <SheetDescription>
             {group?.kind === "ORG_UNIT" ? "Org unit group" : "Custom group"} ·{" "}
-            {group?.memberCount ?? 0} member{group?.memberCount !== 1 ? "s" : ""} ·{" "}
-            {group?.roleCount ?? 0} role{group?.roleCount !== 1 ? "s" : ""}
+            {group?.memberCount ?? 0} member
+            {group?.memberCount !== 1 ? "s" : ""} ·{" "}
+            {groupRoles?.length ?? group?.roleCount ?? 0} role
+            {(groupRoles?.length ?? group?.roleCount ?? 0) !== 1 ? "s" : ""}
           </SheetDescription>
         </SheetHeader>
 
@@ -212,7 +237,9 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
           </TabsList>
 
           <TabsContent value="members" className="gap-3 px-5 pb-5 pt-3">
-            {!!groupId && <MemberSearch groupId={groupId} existingIds={memberUserIds} />}
+            {!!groupId && (
+              <MemberSearch groupId={groupId} existingIds={memberUserIds} />
+            )}
             <ScrollArea className="flex-1">
               {membersLoading ? (
                 <div className="space-y-2">
@@ -232,7 +259,12 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
                       className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-muted/50"
                     >
                       <Avatar className="h-7 w-7 shrink-0">
-                        {m.image && <AvatarImage src={resolveImageUrl(m.image)} alt={m.name ?? ""} />}
+                        {m.image && (
+                          <AvatarImage
+                            src={resolveImageUrl(m.image)}
+                            alt={m.name ?? ""}
+                          />
+                        )}
                         <AvatarFallback className="text-micro">
                           {getInitials(m.name ?? m.email ?? "")}
                         </AvatarFallback>
@@ -242,7 +274,9 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
                           {m.name ?? m.email ?? "Unknown"}
                         </p>
                         {m.email && (
-                          <p className="truncate text-xs text-muted-foreground">{m.email}</p>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {m.email}
+                          </p>
                         )}
                       </div>
                       <Button
@@ -263,7 +297,13 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
           </TabsContent>
 
           <TabsContent value="roles" className="gap-3 px-5 pb-5 pt-3">
-            {!!groupId && <RoleSearch groupId={groupId} existingIds={roleIds} />}
+            {!!groupId && (
+              <RoleSearch
+                groupId={groupId}
+                existingIds={roleIds}
+                memberCount={members?.length ?? 0}
+              />
+            )}
             <ScrollArea className="flex-1">
               {rolesLoading ? (
                 <div className="space-y-2">
@@ -286,7 +326,10 @@ export function GroupDetailSheet({ group, open, onOpenChange }: GroupDetailSheet
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-sm font-medium">{r.name}</p>
                         {r.moduleKey && (
-                          <Badge variant="outline" className="mt-0.5 px-1.5 py-0 text-micro">
+                          <Badge
+                            variant="outline"
+                            className="mt-0.5 px-1.5 py-0 text-micro"
+                          >
                             {r.moduleKey}
                           </Badge>
                         )}

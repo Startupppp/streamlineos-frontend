@@ -96,11 +96,15 @@ export function useRevokeDelegation(
     mutationKey: [...supportAndWorkflowsQueryKeys.delegations.all, "revoke"],
     mutationFn: (id: string) => apiClient.delete<void>(`/access/delegations/${id}`, undefined, undefined, noContentC),
     ...options,
-    onSuccess: (data, variables, context, mutFnCtx) => {
-      void qc.invalidateQueries({
-        queryKey: supportAndWorkflowsQueryKeys.delegations.all,
-      });
-      options?.onSuccess?.(data, variables, context, mutFnCtx);
+    onSuccess: (data, id, context, mutFnCtx) => {
+      qc.setQueriesData<DelegationPage>(
+        { queryKey: supportAndWorkflowsQueryKeys.delegations.all },
+        (page) =>
+          page && Array.isArray(page.data)
+            ? { ...page, data: page.data.filter((d) => d.id !== id) }
+            : page,
+      );
+      options?.onSuccess?.(data, id, context, mutFnCtx);
     },
   });
 }

@@ -144,7 +144,7 @@ describe("getErrorMessage on a validation refusal", () => {
       message: "Required",
     }));
     const result = getErrorMessage(refusal(many));
-    expect(result).toBe("field0: Required; field1: Required; field2: Required (and 3 more)");
+    expect(result).toBe("field0: This field is required; field1: This field is required; field2: This field is required (and 3 more)");
   });
 
   it("keeps a real message and adds the detail to it", () => {
@@ -152,7 +152,7 @@ describe("getErrorMessage on a validation refusal", () => {
       getErrorMessage(
         refusal([{ path: "stage", message: "Required" }], "Stage transition blocked"),
       ),
-    ).toBe("Stage transition blocked stage: Required");
+    ).toBe("Stage transition blocked stage: This field is required");
   });
 
   it("ignores details that carry no readable issue", () => {
@@ -166,13 +166,13 @@ describe("getErrorMessage on a validation refusal", () => {
     );
   });
 
-  it("flags a Zod refusal so the composer can keep the typed message", () => {
+  it("flags a Zod refusal and humanizes the raw size message", () => {
     const error = new ApiError("Validation failed.", 400, "VALIDATION_FAILED", [
       { path: "messages.0.content", message: "Too big: expected string to have <=10000 characters" },
     ]);
     expect(isValidationRefusal(error)).toBe(true);
     expect(getErrorMessage(error)).toBe(
-      "messages.0.content: Too big: expected string to have <=10000 characters",
+      "messages.0.content: Must be 10000 characters or fewer",
     );
   });
 
@@ -180,6 +180,44 @@ describe("getErrorMessage on a validation refusal", () => {
     expect(
       isValidationRefusal(new ApiError("AI credits exhausted", 402, "INSUFFICIENT_CREDITS")),
     ).toBe(false);
+  });
+});
+
+describe("humanizeZodMessage (via getErrorMessage validation details)", () => {
+  function zodRefusal(path: string, message: string) {
+    return Object.assign(new Error("Validation failed."), {
+      status: 400,
+      code: "VALIDATION_FAILED",
+      details: [{ path, message }],
+    });
+  }
+
+  it("maps Too small string >=1 to required, >=N to min-length", () => {
+    expect(getErrorMessage(zodRefusal("name", "Too small: expected string to have >=1 characters"))).toBe("name: This field is required");
+    expect(getErrorMessage(zodRefusal("code", "Too small: expected string to have >=3 characters"))).toBe("code: Must be at least 3 characters");
+  });
+
+  it("maps Too big string <=N to max-length message", () => {
+    expect(getErrorMessage(zodRefusal("title", "Too big: expected string to have <=100 characters"))).toBe("title: Must be 100 characters or fewer");
+  });
+
+  it("maps Too small/big number to bounded range messages", () => {
+    expect(getErrorMessage(zodRefusal("limit", "Too small: expected number to be >=0"))).toBe("limit: Must be 0 or more");
+    expect(getErrorMessage(zodRefusal("count", "Too big: expected number to be <=50"))).toBe("count: Must be 50 or less");
+  });
+
+  it("maps Invalid type received undefined or null to required", () => {
+    expect(getErrorMessage(zodRefusal("url", "Invalid type: expected string, received undefined"))).toBe("url: This field is required");
+    expect(getErrorMessage(zodRefusal("email", "Invalid type: expected string, received null"))).toBe("email: This field is required");
+  });
+
+  it("maps Invalid email and Invalid url to human messages", () => {
+    expect(getErrorMessage(zodRefusal("email", "Invalid email"))).toBe("email: Enter a valid email address");
+    expect(getErrorMessage(zodRefusal("website", "Invalid url"))).toBe("website: Enter a valid URL");
+  });
+
+  it("leaves custom human messages unchanged", () => {
+    expect(getErrorMessage(zodRefusal("name", "Name is already taken"))).toBe("name: Name is already taken");
   });
 });
 

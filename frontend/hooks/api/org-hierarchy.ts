@@ -18,6 +18,10 @@ import type {
   OrgUnitDependencyPreview,
   OrgUnitKind,
 } from "@/types/org-hierarchy";
+import {
+  appendToListCache,
+  replaceInListCache,
+} from "./org-hierarchy-units";
 import type { CursorResponse, ListQuery } from "./org-hierarchy-units";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
@@ -167,9 +171,8 @@ export function useCreateOrgLocation() {
     mutationKey: ["create", "org", "location"],
     mutationFn: (data: { name: string; type?: string; address?: string; latitude?: number; longitude?: number }) =>
       apiClient.post<OrgLocation>("/org-hierarchy/locations", data, undefined, locationContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
-    },
+    onSuccess: (newItem) =>
+      appendToListCache(qc, platformHierarchyQueryKeys.hierarchy.locations(), newItem),
   });
 }
 
@@ -179,9 +182,8 @@ export function useUpdateOrgLocation() {
     mutationKey: ["update", "org", "location"],
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgLocation>(`/org-hierarchy/locations/${id}`, data, undefined, locationContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
-    },
+    onSuccess: (updatedItem) =>
+      replaceInListCache(qc, platformHierarchyQueryKeys.hierarchy.locations(), updatedItem),
   });
 }
 
@@ -209,9 +211,8 @@ export function useCreateOrgCostCenter() {
     meta: { errorToast: false },
     mutationFn: (data: { code: string; name: string; description?: string }) =>
       apiClient.post<OrgCostCenter>("/org-hierarchy/cost-centers", data, undefined, costCenterContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
-    },
+    onSuccess: (newItem) =>
+      appendToListCache(qc, platformHierarchyQueryKeys.hierarchy.costCenters(), newItem),
   });
 }
 
@@ -222,9 +223,8 @@ export function useUpdateOrgCostCenter() {
     meta: { errorToast: false },
     mutationFn: ({ id, ...data }: { id: string } & Record<string, unknown>) =>
       apiClient.patch<OrgCostCenter>(`/org-hierarchy/cost-centers/${id}`, data, undefined, costCenterContract),
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: platformHierarchyQueryKeys.hierarchy.all });
-    },
+    onSuccess: (updatedItem) =>
+      replaceInListCache(qc, platformHierarchyQueryKeys.hierarchy.costCenters(), updatedItem),
   });
 }
 

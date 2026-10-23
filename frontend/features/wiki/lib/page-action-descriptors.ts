@@ -175,7 +175,7 @@ const KB_PAGE_ACTION_DEFINITIONS: readonly KbPageActionDefinition[] = [
     group: "view",
     permission: null,
     destructive: false,
-    label: "File info",
+    label: "File settings",
     icon: KbInfoIcon,
     isPermitted: alwaysPermitted,
   },

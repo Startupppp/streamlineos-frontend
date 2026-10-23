@@ -173,17 +173,19 @@ export function useAssignGroupRole(groupId: string) {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
   const orgId = session?.orgId;
-  return useAuthorizedMutation<{ success: true }, Error, { roleId: number }>("settings:rbac:manage", {
+  return useAuthorizedMutation<{ success: true }, Error, { roleId: number; memberCount?: number }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "assign-role", groupId],
-    mutationFn: (data) =>
-      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, data, undefined, principalGroupSuccessContract),
-    onSuccess: () => {
+    mutationFn: ({ roleId }) =>
+      apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, { roleId }, undefined, principalGroupSuccessContract),
+    onSuccess: (_, { memberCount }) => {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),
       });
       void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
-      void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
-      if (orgId) signalAccessInvalidation(orgId);
+      if ((memberCount ?? 0) > 0) {
+        void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
+        if (orgId) signalAccessInvalidation(orgId);
+      }
     },
   });
 }

@@ -165,7 +165,7 @@ function PanelContent({
   const memberIds = [page.lastEditedById, page.ownerUserId].filter(
     (id): id is string => id !== null && id !== undefined,
   );
-  const { data: membersPage } = useOrgMembersByIds(memberIds);
+  const { data: membersPage, isLoading: membersLoading } = useOrgMembersByIds(memberIds);
   const members = membersPage?.data ?? [];
 
   function handleBacklinkClick(event: React.MouseEvent<HTMLButtonElement>) {
@@ -223,11 +223,20 @@ function PanelContent({
             <span className="tabular-nums">{kbTimeAgo(page.createdAt)}</span>
           </PropertyRow>
           <PropertyRow label="Edited" suppressHydrationWarning>
-            <span className="tabular-nums">{editedValue}</span>
+            {membersLoading && page.lastEditedById !== null ? (
+              <span className="inline-flex items-center gap-1.5 tabular-nums">
+                {kbTimeAgo(page.updatedAt)}
+                <Skeleton className="inline-block h-3.5 w-20" />
+              </span>
+            ) : (
+              <span className="tabular-nums">{editedValue}</span>
+            )}
           </PropertyRow>
           <PropertyRow label="Owner">
-            {ownerValue === "Unassigned" ||
-            ownerValue === "Member unavailable" ? (
+            {membersLoading && page.ownerUserId !== null ? (
+              <Skeleton className="h-4 w-24" />
+            ) : ownerValue === "Unassigned" ||
+              ownerValue === "Member unavailable" ? (
               <span className="text-muted-foreground">{ownerValue}</span>
             ) : (
               <PersonValue name={ownerValue} />

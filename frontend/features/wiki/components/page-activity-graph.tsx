@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 
 const GRANT_ACTION_PREFIX = "kb.page_grant.";
 
-export interface PageActivityEntry {
+interface PageActivityEntry {
   id: number;
   action: string;
   at: string;

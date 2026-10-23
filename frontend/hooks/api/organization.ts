@@ -11,6 +11,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { invalidateCalendarMemberLookups } from "@/hooks/api/users/cache";
 import { lazyContract } from "@/lib/api-envelope";
 import type { OrgMembersPage as MembersResponse } from "@/hooks/api/organization-schema";
+import type { UsersResponse } from "@/hooks/api/users/types";
 
 export {
   useArchivedOrganizations,
@@ -113,12 +114,26 @@ export const useRemoveOrgMember = () => {
     mutationKey: ["organization", "remove-member"],
     mutationFn: (userId) =>
       apiClient.delete<void>(`/organization/members/${userId}`, undefined, undefined, noContentContract),
-    onSuccess: () => {
+    onSuccess: (_, userId) => {
+      queryClient.setQueriesData<UsersResponse>(
+        { queryKey: usersAndCommerceQueryKeys.users.list() },
+        (page) =>
+          page && Array.isArray(page.data)
+            ? { ...page, data: page.data.filter((u) => u.id !== userId) }
+            : page,
+      );
+      queryClient.setQueriesData<MembersResponse>(
+        { queryKey: platformCoreQueryKeys.organization.members() },
+        (page) =>
+          page && Array.isArray(page.data)
+            ? { ...page, data: page.data.filter((m) => m.userId !== userId) }
+            : page,
+      );
       void queryClient.invalidateQueries({
-        queryKey: platformCoreQueryKeys.organization.members(),
+        queryKey: usersAndCommerceQueryKeys.users.stats(),
+        exact: true,
+        refetchType: "none",
       });
-      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.all });
-      void queryClient.invalidateQueries({ queryKey: usersAndCommerceQueryKeys.users.stats() });
       invalidateCalendarMemberLookups(queryClient);
     },
   });

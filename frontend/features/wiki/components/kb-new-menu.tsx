@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -138,11 +139,17 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, cl
     setFolderSheetOpen(false);
   }
 
+  const isPending = createPage.isSubmitting || uploadFile.isPending;
   const triggerEl = trigger ?? (
-    <Button size="sm" className={cn("min-w-0 gap-1", className)}>
+    <LoadingButton
+      size="sm"
+      className={cn("min-w-0 gap-1", className)}
+      isPending={isPending}
+      loadingText="Creating…"
+    >
       <KbPlusIcon className="h-4 w-4" />
       New
-    </Button>
+    </LoadingButton>
   );
 
   return (

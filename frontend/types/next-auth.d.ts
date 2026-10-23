@@ -16,6 +16,7 @@ declare module "next-auth" {
     isPlatformAdmin?: SessionClaims["isPlatformAdmin"];
     backendJwt?: string;
     authProvider?: string;
+    removedFromOrg?: boolean;
     user: {
       id: string;
       role: SessionClaims["role"];

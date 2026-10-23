@@ -69,17 +69,18 @@ export function ClockInWidget() {
   const isInCooldown = localCooldown > 0;
   const canClockIn = !canClockOut && !isInCooldown;
 
-  const handleClockIn = useCallback(() => {
-    if (!canClockIn) return;
-    checkInMutation.mutate({});
-  }, [canClockIn, checkInMutation]);
-
-  const handleClockOut = useCallback(() => {
-    if (!canClockOut) return;
-    checkOutMutation.mutate();
-  }, [canClockOut, checkOutMutation]);
+  const handleToggle = useCallback(() => {
+    if (canClockOut) {
+      checkOutMutation.mutate();
+      return;
+    }
+    if (canClockIn) {
+      checkInMutation.mutate({});
+    }
+  }, [canClockIn, canClockOut, checkInMutation, checkOutMutation]);
 
   const isPending = checkInMutation.isPending || checkOutMutation.isPending;
+  const actionEnabled = canClockIn || canClockOut;
 
   const formatCooldown = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -136,45 +137,29 @@ export function ClockInWidget() {
         )}
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button
-          variant={canClockIn ? "default" : "outline"}
-          disabled={isPending || !canClockIn}
-          onClick={handleClockIn}
-          className={`font-bold px-3 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
-            canClockIn
-              ? ""
-              : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
-          }`}
-        >
-          {checkInMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : isInCooldown && !canClockOut ? (
-            <span className="flex items-center gap-2">
-              <Timer className="h-3.5 w-3.5" />
-              {formatCooldown(localCooldown)}
-            </span>
-          ) : (
-            "WEB CLOCK-IN"
-          )}
-        </Button>
-        <Button
-          variant={canClockOut ? "default" : "outline"}
-          disabled={isPending || !canClockOut}
-          onClick={handleClockOut}
-          className={`font-bold px-3 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
-            canClockOut
-              ? ""
-              : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
-          }`}
-        >
-          {checkOutMutation.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            "WEB CLOCK-OUT"
-          )}
-        </Button>
-      </div>
+      <Button
+        variant={actionEnabled ? "default" : "outline"}
+        disabled={isPending || !actionEnabled}
+        onClick={handleToggle}
+        className={`font-bold px-3 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
+          actionEnabled
+            ? ""
+            : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
+        }`}
+      >
+        {isPending ? (
+          <Loader2 className="h-4 w-4 animate-spin" />
+        ) : isInCooldown && !canClockOut ? (
+          <span className="flex items-center gap-2">
+            <Timer className="h-3.5 w-3.5" />
+            {formatCooldown(localCooldown)}
+          </span>
+        ) : canClockOut ? (
+          "WEB CLOCK-OUT"
+        ) : (
+          "WEB CLOCK-IN"
+        )}
+      </Button>
     </div>
   );
 }

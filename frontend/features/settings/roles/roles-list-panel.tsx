@@ -78,7 +78,7 @@ function RoleListItem({ role, isSelected, onSelect, onDelete, onRename }: RoleLi
         <p className="text-sm font-medium truncate">{role.name}</p>
         <p className="text-dense text-muted-foreground">
           {role.permissionCount} permission
-          {role.permissionCount === 1 ? "" : "s"}
+          {role.permissionCount === 1 ? "" : "s"} configured
         </p>
       </button>
       <div className="flex items-center gap-1 shrink-0 px-2">
@@ -232,6 +232,9 @@ export function RolesListPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
+        <p className="shrink-0 border-b bg-muted/40 px-4 py-2 text-xs text-muted-foreground">
+          System roles can&apos;t be edited. To customise access, create a Group and assign roles.
+        </p>
         <RolesListBody
           isLoading={isLoading}
           rolesError={rolesError}

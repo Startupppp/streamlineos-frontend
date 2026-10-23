@@ -23,7 +23,12 @@ export const providerSchema = z.object({
   enabled: z.boolean(),
   sandboxMode: z.boolean(),
   isDefault: z.boolean(),
-  dailySendLimit: z.string().optional(),
+  dailySendLimit: z
+    .string()
+    .optional()
+    .refine((val) => !val || !val.trim() || Number(val.trim()) >= 0, {
+      message: "Must be 0 or more",
+    }),
   monthlyCostLimit: z.string().optional(),
 });
 

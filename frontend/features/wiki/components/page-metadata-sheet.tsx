@@ -17,7 +17,6 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetFooter,
 } from "@/components/ui/sheet";
 import {
   Select,
@@ -233,10 +232,6 @@ export default function PageMetadataSheet({
   function handleCancelVerify() {
     setVerifyFormOpen(false);
     setIntervalDays("");
-  }
-
-  function handleClose() {
-    onOpenChange(false);
   }
 
   function handleRequestReview() {
@@ -480,12 +475,6 @@ export default function PageMetadataSheet({
             </div>
           </ScrollArea>
         </SheetBody>
-
-        <SheetFooter className="shrink-0 border-t px-6 py-4">
-          <Button variant="outline" className="w-full" onClick={handleClose}>
-            Close
-          </Button>
-        </SheetFooter>
       </SheetContent>
     </Sheet>
     <RequestReviewDialog

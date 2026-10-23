@@ -51,6 +51,7 @@ import {
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
 import { KbFileViewer } from "./files";
+import { KbPageTrashed } from "./kb-page-not-found";
 import { WIKI_DOCUMENT_COLUMN } from "@/features/wiki/lib/wiki-document-column";
 import "../wiki-document.css";
 
@@ -275,7 +276,11 @@ export default function PageDocument({
   }
 
   function handleTitleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
-    if (e.key === "Enter") e.preventDefault();
+    if (e.key === "Enter" || e.key === "Tab") {
+      e.preventDefault();
+      const editorEl = editorContainerRef.current?.querySelector<HTMLElement>('[contenteditable="true"]');
+      editorEl?.focus();
+    }
   }
 
   function handleEditorChange(value: unknown, plainText: string) {
@@ -378,9 +383,12 @@ export default function PageDocument({
 
   if (page.kind === "file") return <KbFileViewer pageId={pageId} />;
 
+  if (page.deletedAt !== null)
+    return <KbPageTrashed onRetry={() => void refetch()} />;
+
   const isEditable =
     canUpdate && page.can.edit === true && (!page.isLocked || canManage);
-  const wordCount = (page.contentText ?? "")
+  const wordCount = currentContentText
     .split(/\s+/)
     .filter(Boolean).length;
 
