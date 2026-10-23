@@ -16,6 +16,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { useSendMail, useReplyMail } from "@/hooks/api/mail";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import { mailComposeSchema, mailReplySchema } from "./mail-compose-schema";
@@ -48,6 +49,7 @@ interface MailComposeSheetProps {
   mode: MailComposeMode;
   accounts: MailAccount[];
   preferredAccountId?: number | "all";
+  onManageAccounts?: () => void;
 }
 
 export function MailComposeSheet({
@@ -56,6 +58,7 @@ export function MailComposeSheet({
   mode,
   accounts,
   preferredAccountId,
+  onManageAccounts,
 }: MailComposeSheetProps) {
   const isReply = mode.type === "reply";
   const [detailsExpanded, setDetailsExpanded] = useState(() =>
@@ -285,9 +288,15 @@ export function MailComposeSheet({
       handleDiscard();
     } catch (err) {
       persistDraft();
-      toast.error(getErrorMessage(err), {
-        action: { label: "Retry", onClick: () => void onSubmitCompose() },
-      });
+      if (isApiError(err) && err.status === 409 && onManageAccounts) {
+        toast.error(getErrorMessage(err), {
+          action: { label: "Manage accounts", onClick: onManageAccounts },
+        });
+      } else {
+        toast.error(getErrorMessage(err), {
+          action: { label: "Retry", onClick: () => void onSubmitCompose() },
+        });
+      }
     }
   });
 
@@ -312,9 +321,15 @@ export function MailComposeSheet({
       handleDiscard();
     } catch (err) {
       persistDraft();
-      toast.error(getErrorMessage(err), {
-        action: { label: "Retry", onClick: () => void onSubmitReply() },
-      });
+      if (isApiError(err) && err.status === 409 && onManageAccounts) {
+        toast.error(getErrorMessage(err), {
+          action: { label: "Manage accounts", onClick: onManageAccounts },
+        });
+      } else {
+        toast.error(getErrorMessage(err), {
+          action: { label: "Retry", onClick: () => void onSubmitReply() },
+        });
+      }
     }
   });
 

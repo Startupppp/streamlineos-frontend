@@ -137,6 +137,7 @@ export function MailShell() {
   const handleGenerateBrief = useCallback(() => { openSummarySheet(); triggerSummary(selectedAccountId); }, [openSummarySheet, triggerSummary, selectedAccountId]);
   const handleRecentDrawerOpenChange = useCallback((open: boolean) => { if (!open) closeRecentDrawer(); }, [closeRecentDrawer]);
   const handleRetryAccounts = useCallback(() => { void refetchAccounts(); }, [refetchAccounts]);
+  const handleComposeManageAccounts = useCallback(() => { void refetchAccounts(); openAccountsSheet(); }, [refetchAccounts, openAccountsSheet]);
 
   const effectiveAccountsSheetOpen = accountsSheetOpen || (deepLinkStatus === "needs_reauth" && !accountsSheetDismissed);
   const hasAccounts = accounts.length > 0;
@@ -219,6 +220,7 @@ export function MailShell() {
           mode={composeMode}
           accounts={accounts}
           preferredAccountId={selectedAccountId}
+          onManageAccounts={handleComposeManageAccounts}
         />
       )}
       {summarySheetOpen && (

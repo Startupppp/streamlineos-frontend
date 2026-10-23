@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MailComposeSheet } from "./mail-compose-sheet";
+import { ApiError } from "@/lib/api-envelope";
 import type { MailComposeMode } from "./mail-compose-schema";
 import type { MailAccount } from "@/types/mail";
 
@@ -68,7 +69,7 @@ const REPLY_MODE: MailComposeMode = {
 const COMPOSE_DRAFT_KEY = "mail:draft:compose:7";
 const REPLY_DRAFT_KEY = "mail:draft:reply:7:m1";
 
-function Harness({ mode }: { mode: MailComposeMode }) {
+function Harness({ mode, onManageAccounts }: { mode: MailComposeMode; onManageAccounts?: () => void }) {
   const [open, setOpen] = useState(true);
   const handleClose = useCallback(() => setOpen(false), []);
   const handleReopen = useCallback(() => setOpen(true), []);
@@ -82,6 +83,7 @@ function Harness({ mode }: { mode: MailComposeMode }) {
         onClose={handleClose}
         mode={mode}
         accounts={ACCOUNTS}
+        onManageAccounts={onManageAccounts}
       />
     </div>
   );
@@ -228,6 +230,23 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
     });
     const options = toastError.mock.calls[0]?.[1];
     expect(options).toMatchObject({ action: { label: "Retry" } });
+  });
+
+  it("a send failure that needs account reconnect offers a manage-accounts action", async () => {
+    const onManageAccounts = jest.fn();
+    replyMutateAsync.mockRejectedValue(
+      new ApiError("This mail account needs to be reconnected before it can send.", 409, "CONFLICT"),
+    );
+    render(<Harness mode={REPLY_MODE} onManageAccounts={onManageAccounts} />);
+
+    typeBody("<p>reconnect test</p>");
+    fireEvent.click(screen.getByRole("button", { name: /send reply/i }));
+
+    await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
+    const options = toastError.mock.calls[0]?.[1];
+    expect(options).toMatchObject({ action: { label: "Manage accounts" } });
+    options?.action?.onClick();
+    expect(onManageAccounts).toHaveBeenCalledTimes(1);
   });
 
   it("uses equal-width mobile actions and a single-row scrollable AI toolbar", () => {
