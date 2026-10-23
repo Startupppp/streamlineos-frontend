@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { act, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -64,23 +64,24 @@ describe("Avatar DropdownMenu flat Light (F1)", () => {
     });
   });
 
-  it("clicks Light in the real avatar menu tree, survives menu unmount, leaves html light", async () => {
+  it("presses Light in the avatar menu appearance row, survives menu unmount, leaves html light", async () => {
     render(<Harness />);
 
     expect(
       screen.queryByRole("menuitem", { name: /interface theme/i }),
     ).not.toBeInTheDocument();
 
-    const light = screen.getByRole("menuitem", { name: /^light$/i });
+    const appearance = screen.getByRole("group", { name: "Appearance" });
+    const light = within(appearance).getByRole("button", { name: /light/i });
     act(() => {
       fireEvent.pointerDown(light);
       fireEvent.click(light);
     });
+    expect(light).toHaveAttribute("aria-pressed", "true");
 
+    fireEvent.keyDown(document.activeElement ?? document.body, { key: "Escape" });
     await waitFor(() => {
-      expect(
-        screen.queryByRole("menuitem", { name: /^light$/i }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByRole("group", { name: "Appearance" })).not.toBeInTheDocument();
     });
 
     expect(window.localStorage.getItem(APP_THEME_MODE_STORAGE_KEY)).toBe("light");

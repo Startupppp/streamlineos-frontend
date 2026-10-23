@@ -234,7 +234,7 @@ describe("mobile module nav items", () => {
 
     it("clears the Ask OS launcher on desktop", () => {
       expect(ASK_OS_CONTENT_PADDING_CLASS).toContain("lg:pb-[");
-      expect(ASK_OS_CONTENT_PADDING_CLASS).toContain("3.5rem");
+      expect(ASK_OS_CONTENT_PADDING_CLASS).toContain("1.5rem");
       expect(ASK_OS_CONTENT_PADDING_CLASS).toContain("safe-area-inset-bottom");
     });
 

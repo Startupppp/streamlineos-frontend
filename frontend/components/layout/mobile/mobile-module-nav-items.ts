@@ -12,7 +12,7 @@ export const MOBILE_MODULE_CONTENT_PADDING_CLASS =
   "max-lg:pb-[calc(2.75rem+env(safe-area-inset-bottom,0px))]";
 
 export const ASK_OS_CONTENT_PADDING_CLASS =
-  "lg:pb-[calc(1.2rem+env(safe-area-inset-bottom,0px))]";
+  "lg:pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]";
 
 export function getAllMobileModuleTabs(navGroups: NavGroup[]): NavRoute[] {
   const tabs: NavRoute[] = [];
