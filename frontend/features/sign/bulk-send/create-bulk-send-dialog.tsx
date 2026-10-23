@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useSignTemplates } from "@/hooks/api/sign/templates";
 import { useCreateBulkSendJob } from "@/hooks/api/sign/bulk-send";
+import { matchingHeader } from "./bulk-send-row-utils";
 
 const bulkSendSchema = z.object({
   templateId: z.string().min(1, "Select a template"),
@@ -67,10 +68,11 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
       skipEmptyLines: true,
       complete: (result) => {
         setRows(result.data);
-        setHeaders(result.meta.fields ?? []);
-        form.setValue("nameColumn", "");
-        form.setValue("emailColumn", "");
-        form.setValue("phoneColumn", "");
+        const fields = result.meta.fields ?? [];
+        setHeaders(fields);
+        form.setValue("nameColumn", matchingHeader(fields, "name"));
+        form.setValue("emailColumn", matchingHeader(fields, "email"));
+        form.setValue("phoneColumn", matchingHeader(fields, "phone"));
       },
       error: (error) => toast.error(error.message),
     });
