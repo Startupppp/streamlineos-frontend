@@ -109,6 +109,8 @@ const TARGET_TYPE_LABELS: Record<string, string> = {
   expense: "Expense",
   payroll: "Payroll",
   member: "Member",
+  kb_page: "KB page",
+  principal_group: "Principal group",
 };
 
 export function formatTargetType(targetType: string | null): string {

@@ -353,7 +353,10 @@ function AiCreditsPageContent() {
                         usageLoading
                           ? "—"
                           : formatCredits(
-                              usageByModel.reduce((s, r) => s + r.credits, 0),
+                              usageByFeature.reduce(
+                                (s, r) => s + Math.round(r.credits * 100) / 100,
+                                0,
+                              ),
                             )
                       }
                       onUsageDaysChange={handleUsageDaysChange}

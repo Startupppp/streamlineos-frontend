@@ -16,6 +16,7 @@ import type {
   BillingProfile,
   CouponValidationResult,
   CreateOrderResult,
+  PaymentReceipt,
   SeatInfo,
   SubscriptionPlan,
   SubscriptionResponse,
@@ -38,6 +39,7 @@ export type {
   CreateOrderResult,
   VerifySubscriptionRequest,
   VerifySubscriptionResult,
+  PaymentReceipt,
 } from "@/hooks/api/subscription-schema";
 
 export type BillingCycle = "monthly" | "annual";
@@ -75,6 +77,22 @@ const updateBillingProfileContract = lazyContract(() =>
 const verifySubscriptionRequestContract = lazyContract(() =>
   import("@/hooks/api/subscription-schema").then((m) => m.verifySubscriptionRequestContract),
 );
+
+const paymentReceiptContractSource = lazyContract(() =>
+  import("@/hooks/api/subscription-schema").then((m) => m.paymentReceiptContract),
+);
+
+export async function fetchPaymentReceipt(
+  paymentId: number,
+  signal?: AbortSignal,
+): Promise<PaymentReceipt> {
+  return apiClient.get(
+    `/billing/payments/${paymentId}/receipt`,
+    undefined,
+    signal,
+    paymentReceiptContractSource,
+  );
+}
 
 export function useSubscription() {
   const { data: session } = useSession();

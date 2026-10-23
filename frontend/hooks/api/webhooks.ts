@@ -140,7 +140,12 @@ export function useCreateWebhook() {
     mutationKey: ["webhooks", "create"] as const,
     mutationFn: (data: CreateWebhookInput) =>
       apiClient.post<WebhookEndpoint & WebhookSecretReveal>("/webhooks", data, undefined, webhookCreateContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
+    onSuccess: (newWebhook) => {
+      qc.setQueriesData<WebhooksPageResponse>(
+        { queryKey: supportAndWorkflowsQueryKeys.webhooks.list() },
+        (old) => old ? { ...old, data: [newWebhook, ...old.data] } : old,
+      );
+    },
   });
 }
 

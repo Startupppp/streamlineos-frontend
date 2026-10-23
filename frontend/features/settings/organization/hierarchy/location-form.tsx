@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import type { LocationType } from "@/types/org-hierarchy";
 import { LOCATION_TYPE_ENUM, formSchema, type FormValues } from "./location-form-schema";
+import { submitWithFieldErrors } from "./submit-with-field-errors";
 
 export function LocationForm({
   defaultValues,
@@ -29,7 +30,7 @@ export function LocationForm({
   isPending: _,
 }: {
   defaultValues?: FormValues;
-  onSubmit: (v: FormValues) => void;
+  onSubmit: (v: FormValues) => Promise<void>;
   isPending: boolean;
 }) {
   const form = useForm<FormValues>({
@@ -37,9 +38,13 @@ export function LocationForm({
     defaultValues: defaultValues ?? { name: "", type: "OFFICE" as const, address: "" },
   });
 
+  async function handleFormSubmit(values: FormValues) {
+    await submitWithFieldErrors(form, ["name"], () => onSubmit(values));
+  }
+
   return (
     <Form {...form}>
-      <form id="location-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form id="location-form" onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-4">
         <FormField
           control={form.control}
           name="name"

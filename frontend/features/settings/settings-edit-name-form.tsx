@@ -28,6 +28,7 @@ export function SettingsEditNameForm({ name, onClose }: SettingsEditNameFormProp
   const form = useForm<SettingsDisplayNameValues>({
     resolver: zodResolver(settingsDisplayNameSchema),
     defaultValues: { name },
+    mode: "onTouched",
   });
 
   const watchedName = form.watch("name");

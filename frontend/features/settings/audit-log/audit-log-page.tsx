@@ -39,6 +39,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import {
   DEFAULT_AUDIT_LOG_PAGE_SIZE,
   formatActionLabel,
+  formatTargetType,
   PAGE_SIZE_OPTIONS,
   readAuditLogFilters,
   readAuditLogPageSize,
@@ -193,7 +194,7 @@ export function AuditLogPage() {
           <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
             <SelectItem value="all">All Types</SelectItem>
             {targetTypes?.map((t) => (
-              <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+              <SelectItem key={t} value={t}>{formatTargetType(t)}</SelectItem>
             ))}
           </SelectContent>
         </Select>

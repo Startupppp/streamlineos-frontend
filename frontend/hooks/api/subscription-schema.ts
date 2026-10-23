@@ -145,6 +145,18 @@ export const verifySubscriptionContract = z.object({
   alreadyActivated: z.boolean(),
 });
 
+export const paymentReceiptContract = z.object({
+  id: z.number(),
+  razorpayPaymentId: z.string().nullable(),
+  razorpayOrderId: z.string().nullable(),
+  amount: z.string().nullable(),
+  amountPaise: z.number(),
+  currency: z.string(),
+  status: z.string(),
+  paidAt: z.string().nullable(),
+  createdAt: z.string(),
+});
+
 export type SubscriptionPlan = z.infer<typeof subscriptionPlanContract>;
 export type SubscriptionStatus = z.infer<typeof subscriptionStatusContract>;
 export type SubscriptionPayment = z.infer<typeof subscriptionPaymentContract>;
@@ -159,3 +171,4 @@ export type CouponValidationResult = z.infer<typeof couponValidationContract>;
 export type CreateOrderResult = z.infer<typeof createOrderContract>;
 export type VerifySubscriptionRequest = z.infer<typeof verifySubscriptionRequestContract>;
 export type VerifySubscriptionResult = z.infer<typeof verifySubscriptionContract>;
+export type PaymentReceipt = z.infer<typeof paymentReceiptContract>;

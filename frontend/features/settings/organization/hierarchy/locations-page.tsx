@@ -77,34 +77,24 @@ export function OrgLocationsPage() {
   const displayed = locations?.data ?? [];
 
   const handleCreate = useCallback(
-    (values: FormValues) => {
-      create.mutate(
+    async (values: FormValues) => {
+      await create.mutateAsync(
         { name: values.name, type: values.type, address: values.address || undefined },
-        {
-          onSuccess: () => {
-            toast.success("Location created");
-            setShowCreate(false);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
       );
+      toast.success("Location created");
+      setShowCreate(false);
     },
     [create],
   );
 
   const handleUpdate = useCallback(
-    (values: FormValues) => {
+    async (values: FormValues) => {
       if (!editing) return;
-      update.mutate(
+      await update.mutateAsync(
         { id: editing.id, name: values.name, type: values.type, address: values.address || null },
-        {
-          onSuccess: () => {
-            toast.success("Location updated");
-            setEditing(null);
-          },
-          onError: (err) => toast.error(getErrorMessage(err)),
-        },
       );
+      toast.success("Location updated");
+      setEditing(null);
     },
     [editing, update],
   );
