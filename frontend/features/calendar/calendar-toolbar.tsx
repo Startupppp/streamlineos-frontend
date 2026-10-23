@@ -78,50 +78,68 @@ export function CalendarModeTabs({
   onValueChange,
   showResourceApprovals = false,
   showCalendarModes = true,
+  hideCalendarGrid = false,
 }: {
   value: ViewMode | "resource-approvals";
   onValueChange: (value: ViewMode | "resource-approvals") => void;
   showResourceApprovals?: boolean;
   showCalendarModes?: boolean;
+  hideCalendarGrid?: boolean;
 }) {
+  const modeOptions = hideCalendarGrid
+    ? VIEW_MODE_OPTIONS.filter((option) => option.value !== "calendar")
+    : VIEW_MODE_OPTIONS;
+  const resolvedValue =
+    hideCalendarGrid && value === "calendar" ? "list" : value;
+
   return (
-    <Tabs
-      value={value}
-      onValueChange={(next) =>
-        onValueChange(next === "resource-approvals" ? next : parseViewMode(next))
-      }
-      className="min-w-0 flex-1 overflow-hidden gap-0 sm:flex-none"
-    >
-      <TabsList aria-label="Calendar modes">
-        {showCalendarModes
-          ? VIEW_MODE_OPTIONS.map((option) => {
-              const Icon = option.icon;
-              return (
-                <TabsTrigger
-                  key={option.value}
-                  value={option.value}
-                  aria-controls={undefined}
-                  className="flex-none shrink-0 px-2.5"
-                >
-                  <Icon className="h-4 w-4" aria-hidden />
-                  <span className="sr-only">{option.label}</span>
-                </TabsTrigger>
-              );
-            })
-          : null}
-        {showResourceApprovals ? (
-          <TabsTrigger
-            value="resource-approvals"
-            aria-controls={undefined}
-            title="Resource approvals"
-            className="flex-none shrink-0 px-2.5"
-          >
-            <ListChecks className="h-4 w-4" aria-hidden />
-            <span className="sr-only">Resource approvals</span>
-          </TabsTrigger>
-        ) : null}
-      </TabsList>
-    </Tabs>
+    <div className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain sm:flex-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <Tabs
+        value={resolvedValue}
+        onValueChange={(next) =>
+          onValueChange(
+            next === "resource-approvals" ? next : parseViewMode(next),
+          )
+        }
+        className="w-max max-w-none gap-0"
+      >
+        <TabsList
+          aria-label="Calendar modes"
+          className="w-max max-w-none overflow-x-visible md:w-fit"
+        >
+          {showCalendarModes
+            ? modeOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <TabsTrigger
+                    key={option.value}
+                    value={option.value}
+                    aria-controls={undefined}
+                    className={cn(
+                      "flex-none shrink-0 px-2 sm:px-2.5",
+                      option.value === "calendar" && "max-md:hidden",
+                    )}
+                  >
+                    <Icon className="h-4 w-4" aria-hidden />
+                    <span className="sr-only">{option.label}</span>
+                  </TabsTrigger>
+                );
+              })
+            : null}
+          {showResourceApprovals ? (
+            <TabsTrigger
+              value="resource-approvals"
+              aria-controls={undefined}
+              title="Resource approvals"
+              className="flex-none shrink-0 px-2 sm:px-2.5"
+            >
+              <ListChecks className="h-4 w-4" aria-hidden />
+              <span className="sr-only">Resource approvals</span>
+            </TabsTrigger>
+          ) : null}
+        </TabsList>
+      </Tabs>
+    </div>
   );
 }
 
@@ -214,36 +232,38 @@ interface CalendarToolbarProps {
   scenarioCount?: number;
   hidePrimaryActions?: boolean;
   navigationDisabled?: boolean;
+  hideCalendarGrid?: boolean;
   filters?: ReactNode;
 }
 
 export const CalendarToolbar = memo(function CalendarToolbar({
   view,
+  filters,
   viewMode,
-  hrEventsVisible,
-  crmEventsVisible,
-  attendanceEventsVisible,
   isHrEnabled,
   isCrmEnabled,
-  isAttendanceEnabled,
   sourceFailures,
+  hrEventsVisible,
+  crmEventsVisible,
+  isAttendanceEnabled,
+  attendanceEventsVisible,
   onPrev,
   onNext,
   onToday,
-  onViewChange,
-  onViewModeChange,
-  onOpenResourceApprovals,
-  onOpenCreate,
-  onToggleHrEvents,
-  onToggleCrmEvents,
-  onToggleAttendanceEvents,
-  onOpenCapacity,
   onOpenCoach,
+  onOpenCreate,
+  onViewChange,
+  onOpenCapacity,
   onOpenScenario,
+  onToggleHrEvents,
+  onViewModeChange,
+  onToggleCrmEvents,
+  onOpenResourceApprovals,
+  onToggleAttendanceEvents,
   scenarioCount = 0,
   hidePrimaryActions = false,
   navigationDisabled = false,
-  filters,
+  hideCalendarGrid = false,
 }: CalendarToolbarProps) {
   const handleViewChange = useCallback(
     (v: string) => onViewChange(v as View),
@@ -268,6 +288,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
         <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
           <CalendarModeTabs
             value={viewMode}
+            hideCalendarGrid={hideCalendarGrid}
             onValueChange={handleViewModeValueChange}
             showResourceApprovals={Boolean(onOpenResourceApprovals)}
           />
@@ -431,7 +452,10 @@ export const CalendarToolbar = memo(function CalendarToolbar({
                   iconSize={16}
                   variant="outline"
                   size="icon"
-                  className={cn("rounded-r-none border-r-0", OUTLINE_CONTROL_CLASS)}
+                  className={cn(
+                    "rounded-r-none border-r-0",
+                    OUTLINE_CONTROL_CLASS,
+                  )}
                   aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
                   aria-keyshortcuts="ArrowLeft"
                   title={`Previous ${VIEW_PERIOD_LABEL[view]} (←)`}
@@ -484,7 +508,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
             </Button>
           ) : null}
           {filters ? (
-            <div className="w-full min-w-0 basis-full sm:w-auto sm:basis-auto">
+            <div className="w-full min-w-0 basis-full sm:min-w-0 sm:flex-1 sm:basis-0">
               {filters}
             </div>
           ) : null}

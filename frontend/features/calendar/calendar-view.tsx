@@ -1080,6 +1080,7 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
           onOpenScenario={openScenario}
           scenarioCount={scenarioDrafts.length}
           hidePrimaryActions
+          hideCalendarGrid={isMobile}
           navigationDisabled={Boolean(selectedSavedView)}
           filters={
             toolbarViewMode !== "history" ? (

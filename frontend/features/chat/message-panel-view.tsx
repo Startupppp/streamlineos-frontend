@@ -94,10 +94,16 @@ export function MessagePanelView({
   } = header;
   const isPanelNarrow = useIsChatPanelNarrow();
   const searchButton = (
-    <button type="button" aria-label="Search messages, channels and people"
-      className="inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      onClick={() => window.dispatchEvent(new CustomEvent("chat:open-search"))}>
-      <Search className="size-5" /></button>
+    <button
+      type="button"
+      aria-label="Search messages, channels and people"
+      className="inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted/50 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      onClick={() =>
+        window.dispatchEvent(new CustomEvent("chat:open-search"))
+      }
+    >
+      <Search className="size-4" aria-hidden />
+    </button>
   );
   const dropdownTriggerRef = React.useRef<HTMLButtonElement>(null);
   function handleSkipToComposer(event: React.MouseEvent<HTMLButtonElement>) {
@@ -117,23 +123,36 @@ export function MessagePanelView({
           </button>
         )}
         {isPanelNarrow && (
-        <div className="flex min-h-14 shrink-0 items-center gap-2 border-b border-border/40 bg-card/80 px-3">
-          <button
-            type="button"
-            className="flex size-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={onBack}
-            aria-label="Back to conversations"
-          >
-            <ArrowLeft className="size-5" />
-          </button>
-          <div className="min-w-0 flex-1">
-            <TruncatedText
-              text={displayName}
-              className="text-sm font-semibold"
+          <div className="flex min-h-14 shrink-0 items-center gap-1.5 border-b border-border/40 bg-card/80 px-2">
+            <button
+              type="button"
+              className="flex size-9 shrink-0 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              onClick={onBack}
+              aria-label="Back to conversations"
+            >
+              <ArrowLeft className="size-5" aria-hidden />
+            </button>
+            <div className="min-w-0 flex-1">
+              <TruncatedText
+                text={displayName}
+                className="text-sm font-semibold"
+              />
+            </div>
+            <ChatNarrowThreadActions
+              activeHuddle={activeHuddle}
+              isInHuddle={isInHuddle}
+              onHuddle={onHuddle}
+              huddleStartPending={huddleStartPending}
+              huddleJoinPending={huddleJoinPending}
+              canUseAi={canUseAi}
+              summarizeAction={summarizeAction}
+              onToggleSaved={onToggleSaved}
+              onToggleInfo={onToggleInfo}
+              showInfoPanel={showInfoPanel}
+              dropdownTriggerRef={dropdownTriggerRef}
             />
+            {searchButton}
           </div>
-          {searchButton}
-        </div>
         )}
         {!isPanelNarrow && (
         <div className="flex h-14 shrink-0 items-center gap-3 border-b border-border/40 bg-card/80 px-4 sticky top-0 z-20">
@@ -273,21 +292,6 @@ export function MessagePanelView({
           </div>
         ) : null}
         <MessageList {...workspace.messageList} />
-        {isPanelNarrow ? (
-          <ChatNarrowThreadActions
-            activeHuddle={activeHuddle}
-            isInHuddle={isInHuddle}
-            onHuddle={onHuddle}
-            huddleStartPending={huddleStartPending}
-            huddleJoinPending={huddleJoinPending}
-            canUseAi={canUseAi}
-            summarizeAction={summarizeAction}
-            onToggleSaved={onToggleSaved}
-            onToggleInfo={onToggleInfo}
-            showInfoPanel={showInfoPanel}
-            dropdownTriggerRef={dropdownTriggerRef}
-          />
-        ) : null}
         {workspace.messageList.joinRequired ? null : <MessageInput {...workspace.messageInput} />}
         {workspace.huddle ? <HuddlePanel {...workspace.huddle} /> : null}
       </div>

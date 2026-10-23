@@ -174,27 +174,29 @@ export function InboxToolbar({
   return (
     <div className="flex w-full min-w-0 flex-col gap-2 shrink-0">
       <div className="flex w-full min-w-0 items-center gap-2">
-        <Tabs
-          value={state.view}
-          onValueChange={handleViewValueChange}
-          className="min-w-0 flex-1 overflow-hidden gap-0"
-        >
-          <TabsList aria-label="Inbox views">
-            {VIEWS.map((view) => {
-              const Icon = view.icon;
-              return (
-                <TabsTrigger
-                  key={view.value}
-                  value={view.value}
-                  className="flex-none shrink-0 px-2.5"
-                >
-                  <Icon className="h-4 w-4" aria-hidden />
-                  <span className="sr-only md:not-sr-only">{view.label}</span>
-                </TabsTrigger>
-              );
-            })}
-          </TabsList>
-        </Tabs>
+        <div className="min-w-0 flex-1 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <Tabs
+            value={state.view}
+            onValueChange={handleViewValueChange}
+            className="w-max max-w-none gap-0"
+          >
+            <TabsList aria-label="Inbox views" className="w-max max-w-none overflow-x-visible md:w-fit">
+              {VIEWS.map((view) => {
+                const Icon = view.icon;
+                return (
+                  <TabsTrigger
+                    key={view.value}
+                    value={view.value}
+                    className="flex-none shrink-0 px-2 sm:px-2.5"
+                  >
+                    <Icon className="h-4 w-4" aria-hidden />
+                    <span className="sr-only md:not-sr-only">{view.label}</span>
+                  </TabsTrigger>
+                );
+              })}
+            </TabsList>
+          </Tabs>
+        </div>
         <Button
           asChild
           variant="default"

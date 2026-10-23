@@ -2,13 +2,18 @@
 
 import { useSearchParams } from "next/navigation";
 import { PageWrapper } from "@/components/ui/page-wrapper";
+import { useShellVariant } from "@/components/layout/shell-variant-context";
 import { useCan } from "@/hooks/api/access";
+import { useIsMobile } from "@/hooks/common/use-mobile";
 import { CalendarResourceApprovalQueue } from "./calendar-resource-approval-queue";
 import { CalendarModeTabs } from "./calendar-toolbar";
 import { CalendarView } from "./calendar-view";
 
 export function CalendarWorkspace() {
   const searchParams = useSearchParams();
+  const shellVariant = useShellVariant();
+  const narrowViewport = useIsMobile();
+  const hideCalendarGrid = shellVariant === "mobile" || narrowViewport;
   const canRead = useCan("calendar:read");
   const canApproveCalendar = useCan("calendar:admin:manage");
   const canApproveAssets = useCan("hr:assets:manage");
@@ -37,6 +42,7 @@ export function CalendarWorkspace() {
                 }
               }}
               showResourceApprovals
+              hideCalendarGrid={hideCalendarGrid}
             />
           </div>
         ) : null}

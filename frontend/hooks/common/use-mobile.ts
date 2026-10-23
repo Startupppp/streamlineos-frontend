@@ -12,19 +12,11 @@ function subscribeMediaQuery(query: string, onStoreChange: () => void) {
 }
 
 export function useIsMobile() {
-  const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
-
-  React.useEffect(() => {
-    const mql = window.matchMedia(MQ_MAX)
-    const onChange = () => {
-      setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    }
-    mql.addEventListener("change", onChange)
-    setIsMobile(window.innerWidth < MOBILE_BREAKPOINT)
-    return () => mql.removeEventListener("change", onChange)
-  }, [])
-
-  return !!isMobile
+  return React.useSyncExternalStore(
+    (onStoreChange) => subscribeMediaQuery(MQ_MAX, onStoreChange),
+    () => window.matchMedia(MQ_MAX).matches,
+    () => false,
+  )
 }
 
 export function useIsBelowLg() {

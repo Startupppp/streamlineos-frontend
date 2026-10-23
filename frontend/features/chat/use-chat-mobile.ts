@@ -1,23 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 
 const CHAT_PANEL_NARROW_QUERY = "(max-width: 1023px)";
 
-function useMediaQueryMatches(query: string): boolean {
-  const [matches, setMatches] = useState(false);
-
-  useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-    const handleChange = () => setMatches(mediaQuery.matches);
-    handleChange();
-    mediaQuery.addEventListener("change", handleChange);
-    return () => mediaQuery.removeEventListener("change", handleChange);
-  }, [query]);
-
-  return matches;
+function subscribeMediaQuery(query: string, onStoreChange: () => void) {
+  const mediaQuery = window.matchMedia(query);
+  mediaQuery.addEventListener("change", onStoreChange);
+  return () => mediaQuery.removeEventListener("change", onStoreChange);
 }
 
 export function useIsChatPanelNarrow(): boolean {
-  return useMediaQueryMatches(CHAT_PANEL_NARROW_QUERY);
+  return useSyncExternalStore(
+    (onStoreChange) => subscribeMediaQuery(CHAT_PANEL_NARROW_QUERY, onStoreChange),
+    () => window.matchMedia(CHAT_PANEL_NARROW_QUERY).matches,
+    () => false,
+  );
 }

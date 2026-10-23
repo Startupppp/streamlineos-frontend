@@ -22,7 +22,7 @@ interface ChatNarrowThreadActionsProps {
   dropdownTriggerRef: RefObject<HTMLButtonElement | null>;
 }
 
-const NARROW_ACTION_CLASS = "h-11 min-w-11 flex-1 flex-col gap-0.5 text-dense";
+const NARROW_ICON_CLASS = "size-9 shrink-0 rounded-lg p-0 text-muted-foreground hover:text-foreground";
 
 export function ChatNarrowThreadActions({
   activeHuddle,
@@ -41,43 +41,44 @@ export function ChatNarrowThreadActions({
     <div
       role="toolbar"
       aria-label="Conversation actions"
-      className="flex shrink-0 items-stretch gap-1 border-t border-border/40 bg-background px-2 py-1"
+      className="flex shrink-0 items-center gap-0.5"
     >
       {!isInHuddle && (
         <AnimatedIconButton
           type="button"
           icon={MicIcon}
-          iconSize={18}
+          iconSize={16}
+          iconClassName="mr-0"
           variant="ghost"
-          className={cn(NARROW_ACTION_CLASS, activeHuddle && "text-status-success-ink")}
+          size="icon"
+          className={cn(
+            NARROW_ICON_CLASS,
+            activeHuddle && "text-status-success-ink hover:text-status-success-ink",
+          )}
           onClick={onHuddle}
           disabled={huddleStartPending || huddleJoinPending}
           aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
-        >
-          {activeHuddle ? "Join" : "Huddle"}
-        </AnimatedIconButton>
+        />
       )}
       <AnimatedIconButton
         type="button"
         icon={InfoIcon}
-        iconSize={18}
+        iconSize={16}
+        iconClassName="mr-0"
         variant="ghost"
-        className={NARROW_ACTION_CLASS}
+        size="icon"
+        className={cn(NARROW_ICON_CLASS, showInfoPanel && "bg-muted text-foreground")}
         onClick={onToggleInfo}
         aria-label="Conversation details"
         aria-expanded={showInfoPanel}
-      >
-        Details
-      </AnimatedIconButton>
+      />
       <ConversationOverflowMenu
         canUseAi={canUseAi}
         summarizeAction={summarizeAction}
         onOpenSaved={onToggleSaved}
-        triggerClassName={NARROW_ACTION_CLASS}
+        triggerClassName={NARROW_ICON_CLASS}
         triggerRef={dropdownTriggerRef}
-      >
-        More
-      </ConversationOverflowMenu>
+      />
     </div>
   );
 }

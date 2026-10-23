@@ -27,8 +27,14 @@ import type { CalendarSavedView } from "@/hooks/api/calendar-saved-view-schema";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { calendarUrl } from "./calendar-url-state";
 import { CalendarSavedViewDialog } from "./calendar-saved-view-dialog";
-import { calendarSavedViewFormSchema, type CalendarSavedViewFormValues } from "./calendar-saved-view-form-schema";
-import { calendarSavedViewDefinition, calendarSavedViewFormValues } from "./calendar-saved-view-definition";
+import {
+  calendarSavedViewFormSchema,
+  type CalendarSavedViewFormValues,
+} from "./calendar-saved-view-form-schema";
+import {
+  calendarSavedViewDefinition,
+  calendarSavedViewFormValues,
+} from "./calendar-saved-view-definition";
 
 export function CalendarSavedViewControls({
   selectedId,
@@ -54,7 +60,8 @@ export function CalendarSavedViewControls({
   const canWrite = useCan("calendar:read");
   const canManageTeam = useCan("calendar:admin:manage");
   const query = useCalendarSavedViews();
-  const { hasNextPage, isFetchingNextPage, dataUpdatedAt, fetchNextPage } = query;
+  const { hasNextPage, isFetchingNextPage, dataUpdatedAt, fetchNextPage } =
+    query;
   const create = useCreateCalendarSavedView();
   const update = useUpdateCalendarSavedView();
   const remove = useDeleteCalendarSavedView();
@@ -77,23 +84,26 @@ export function CalendarSavedViewControls({
   });
 
   useEffect(() => {
-    if (
-      !selectOpen ||
-      !hasNextPage ||
-      isFetchingNextPage ||
-      !dataUpdatedAt
-    ) return;
+    if (!selectOpen || !hasNextPage || isFetchingNextPage || !dataUpdatedAt)
+      return;
     const sentinel = nextPageSentinelRef.current;
     if (!sentinel || typeof IntersectionObserver === "undefined") return;
     const update = dataUpdatedAt;
     const observer = new IntersectionObserver(([entry]) => {
-      if (!entry?.isIntersecting || lastRequestedUpdateRef.current === update) return;
+      if (!entry?.isIntersecting || lastRequestedUpdateRef.current === update)
+        return;
       lastRequestedUpdateRef.current = update;
       void fetchNextPage();
     });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [selectOpen, hasNextPage, isFetchingNextPage, dataUpdatedAt, fetchNextPage]);
+  }, [
+    selectOpen,
+    hasNextPage,
+    isFetchingNextPage,
+    dataUpdatedAt,
+    fetchNextPage,
+  ]);
 
   const selectView = (id: string | null) => {
     onSearchChange?.("");
@@ -103,7 +113,11 @@ export function CalendarSavedViewControls({
   };
 
   const openCreate = () => {
-    form.reset({ ...calendarSavedViewFormValues(selected, actorMembershipId), name: "", scope: "personal" });
+    form.reset({
+      ...calendarSavedViewFormValues(selected, actorMembershipId),
+      name: "",
+      scope: "personal",
+    });
     setDialogMode("create");
   };
 
@@ -122,7 +136,12 @@ export function CalendarSavedViewControls({
           name: values.name,
         });
       } else {
-        const definition = calendarSavedViewDefinition(values, currentDate, actorMembershipId, mode);
+        const definition = calendarSavedViewDefinition(
+          values,
+          currentDate,
+          actorMembershipId,
+          mode,
+        );
         const created = await create.mutateAsync({
           name: values.name,
           scope: values.scope,
@@ -156,12 +175,14 @@ export function CalendarSavedViewControls({
       >
         <SelectTrigger
           aria-label="Saved calendar view"
-          className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-40 sm:flex-none sm:basis-auto"
+          className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-40 sm:max-w-40 sm:flex-none sm:basis-auto"
         >
           <SelectValue placeholder="Saved views" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="none">{mode === "my-day" ? "My Day" : "All events"}</SelectItem>
+          <SelectItem value="none">
+            {mode === "my-day" ? "My Day" : "All events"}
+          </SelectItem>
           {views.map((view: CalendarSavedView) => (
             <SelectItem key={view.id} value={view.id}>
               {view.name}
@@ -169,8 +190,14 @@ export function CalendarSavedViewControls({
             </SelectItem>
           ))}
           {query.hasNextPage ? (
-            <div ref={nextPageSentinelRef} className="px-2 py-1 text-xs text-muted-foreground" role="status">
-              {query.isFetchingNextPage ? "Loading more views…" : "Scroll to see more views"}
+            <div
+              ref={nextPageSentinelRef}
+              className="px-2 py-1 text-xs text-muted-foreground"
+              role="status"
+            >
+              {query.isFetchingNextPage
+                ? "Loading more views…"
+                : "Scroll to see more views"}
             </div>
           ) : null}
         </SelectContent>
@@ -181,7 +208,7 @@ export function CalendarSavedViewControls({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search events"
           aria-label="Search calendar events"
-          className="h-9 w-full min-w-0 flex-1 basis-[12rem] bg-card text-sm sm:min-w-40 sm:max-w-64 sm:basis-auto"
+          className="h-9 w-full min-w-0 flex-1 basis-full bg-card text-sm sm:min-w-[18rem] sm:basis-0 sm:grow"
           maxLength={200}
         />
       ) : null}
@@ -189,7 +216,7 @@ export function CalendarSavedViewControls({
         <Select value={source || "all"} onValueChange={onSourceChange}>
           <SelectTrigger
             aria-label="Filter by calendar source"
-            className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-44 sm:flex-none sm:basis-auto"
+            className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-44 sm:max-w-44 sm:flex-none sm:basis-auto"
           >
             <SelectValue placeholder="All sources" />
           </SelectTrigger>
@@ -206,7 +233,14 @@ export function CalendarSavedViewControls({
       {query.isError ? (
         <div role="alert" className="w-full text-xs text-destructive sm:w-auto">
           Saved views are unavailable.{" "}
-          <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              void query.refetch();
+            }}
+          >
             Retry
           </Button>
         </div>
@@ -228,7 +262,13 @@ export function CalendarSavedViewControls({
       {canWrite &&
       selected &&
       (selected.scope === "personal" || canManageTeam) ? (
-        <Button type="button" size="sm" variant="ghost" className="shrink-0" onClick={openRename}>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          className="shrink-0"
+          onClick={openRename}
+        >
           Rename
         </Button>
       ) : null}

@@ -124,11 +124,11 @@ export function MessageInput({
 
       <div
         className={cn(
-          "relative shrink-0 border-t border-border/40 bg-card/50 px-3 pt-2 pb-2 sm:px-5",
+          "relative min-w-0 shrink-0 border-t border-border/40 bg-card/50 px-2 pt-2 pb-2 sm:px-5",
           getChatMobileComposerInsetClassName(),
         )}
       >
-        <div className="max-w-[900px] mx-auto">
+        <div className="mx-auto w-full min-w-0 max-w-[900px]">
           <ChatMentionSuggestionsOverlay
             showMentions={showMentions}
             flagNonMembers={channelType !== "PUBLIC"}
