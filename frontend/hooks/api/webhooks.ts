@@ -175,7 +175,12 @@ export function useDeleteWebhook() {
     mutationKey: ["webhooks", "delete"] as const,
     mutationFn: (id: number) =>
       apiClient.delete(`/webhooks/${id}`, undefined, undefined, webhookDeleteContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.all }),
+    onSuccess: (_, id) => {
+      qc.setQueriesData<WebhooksPageResponse>(
+        { queryKey: supportAndWorkflowsQueryKeys.webhooks.list() },
+        (old) => old ? { ...old, data: old.data.filter((w) => w.id !== id) } : old,
+      );
+    },
   });
 }
 
@@ -196,6 +201,7 @@ export function useRetryDelivery(endpointId: number) {
 }
 
 export function useSendTestWebhook() {
+  const qc = useQueryClient();
   return useAuthorizedMutation("settings:webhooks:manage", {
     mutationKey: ["webhooks", "send-test"] as const,
     mutationFn: (id: number) =>
@@ -205,6 +211,9 @@ export function useSendTestWebhook() {
         undefined,
         webhookTestContract,
       ),
+    onSuccess: (_, id) => {
+      void qc.invalidateQueries({ queryKey: supportAndWorkflowsQueryKeys.webhooks.logs(id) });
+    },
   });
 }
 

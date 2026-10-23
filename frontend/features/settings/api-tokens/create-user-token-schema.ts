@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const userTokenFormSchema = z.object({
-  name: z.string().trim().min(1, "Name is required").max(100),
+  name: z.string().trim().min(1, "Name is required").max(100, "Name must be 100 characters or fewer"),
   scopes: z.array(z.string()).min(1, "Select at least one permission"),
   expiresAt: z
     .string()

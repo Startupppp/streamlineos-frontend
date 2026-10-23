@@ -94,3 +94,29 @@ export function actionBadgeClass(action: string): string {
   }
   return "bg-muted text-muted-foreground border-border";
 }
+
+const TARGET_TYPE_LABELS: Record<string, string> = {
+  user: "User",
+  org: "Organization",
+  org_unit: "Org unit",
+  webhook_endpoint: "Webhook",
+  api_key: "API key",
+  role: "Role",
+  workflow: "Workflow",
+  document: "Document",
+  announcement: "Announcement",
+  leave: "Leave",
+  expense: "Expense",
+  payroll: "Payroll",
+  member: "Member",
+};
+
+export function formatTargetType(targetType: string | null): string {
+  if (!targetType) return "—";
+  const lower = targetType.toLowerCase();
+  const known = TARGET_TYPE_LABELS[lower];
+  if (known !== undefined) return known;
+  return targetType
+    .replace(/_/g, " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}

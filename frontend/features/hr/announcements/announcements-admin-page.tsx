@@ -95,6 +95,7 @@ function AnnouncementsContent() {
 
   const handleFormSuccess = useCallback(() => {
     setEditTarget(null);
+    setActiveTab("all");
   }, []);
 
   const handleConfirmDelete = useCallback(() => {

@@ -9,7 +9,7 @@ import { resolveImageUrl } from "@/lib/utils";
 import { getInitials } from "@/lib/format-utils";
 import { formatDateTimeInOrgTz } from "@/lib/date-utils";
 import { useOrgTimeZone } from "@/hooks/api/org-display";
-import { actionBadgeClass, formatActionLabel } from "./audit-log-constants";
+import { actionBadgeClass, formatActionLabel, formatTargetType } from "./audit-log-constants";
 import type { AuditLogRow } from "@/hooks/api/audit-log";
 
 function AuditTimestampCell({ createdAt }: { createdAt: string }) {
@@ -57,8 +57,8 @@ export const AUDIT_LOG_COLUMNS: DataTableColumn<AuditLogRow>[] = [
     key: "entity",
     header: "Entity",
     cell: (log) => (
-      <span className="text-xs text-muted-foreground capitalize whitespace-nowrap">
-        {log.targetType ?? "—"}
+      <span className="text-xs text-muted-foreground whitespace-nowrap">
+        {formatTargetType(log.targetType)}
       </span>
     ),
     className: "w-[110px]",

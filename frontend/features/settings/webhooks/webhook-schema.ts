@@ -41,13 +41,12 @@ export const webhookCreateSchema = z.object({
     .refine(
       (u) => {
         try {
-          const parsed = new URL(u);
-          return parsed.protocol === "http:" || parsed.protocol === "https:";
+          return new URL(u).protocol === "https:";
         } catch {
           return false;
         }
       },
-      { message: "Must be an http(s) URL pointing to a public host" },
+      { message: "Webhook URL must use https://" },
     ),
   description: z.string().max(500).optional(),
   events: z.array(z.string()),
