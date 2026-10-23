@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ErrorState } from "@/components/shared/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import { useSignPublicSession } from "@/hooks/api/sign/public";
 import { TerminalStateScreen } from "./terminal-state-screen";
 import { AuthScreen } from "./auth-screen";
@@ -21,6 +22,17 @@ export function PublicSessionView({ token }: { token: string }) {
 
   function handleCompleted(everyoneDone: boolean) {
     setJustCompleted({ everyoneDone });
+  }
+
+  if (isError && isApiError(error) && error.status === 404) {
+    return (
+      <div className="min-h-dvh flex items-center justify-center bg-background p-6">
+        <ErrorState
+          title="This signing link no longer works"
+          description="It may have been replaced by a newer email, or the sender may have changed or withdrawn the document. Open the latest email from the sender, or ask them to send the link again."
+        />
+      </div>
+    );
   }
 
   if (isError) {
