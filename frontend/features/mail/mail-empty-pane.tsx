@@ -15,10 +15,11 @@ import { cn } from "@/lib/utils";
 import { resolvePageState } from "@/lib/page-state/resolve-page-state";
 import { useMailMessages } from "@/hooks/api/mail";
 import { groupMailMessages } from "./mail-group-messages";
-import type { MailMessageSummary } from "@/types/mail";
+import type { MailFolder, MailMessageSummary } from "@/types/mail";
 
 interface MailEmptyPaneProps {
   variant: "select" | "connect" | "not_found" | "needs_reauth";
+  folder?: MailFolder;
   selectedAccountId?: number | "all";
   onConnect?: () => void;
   onReconnect?: () => void;
@@ -108,11 +109,21 @@ function CalmPlaceholder({
   );
 }
 
+const FOLDER_EMPTY_COPY: Record<MailFolder, { title: string; description: string }> = {
+  inbox: { title: "Inbox is clear", description: "New mail will appear here when it arrives." },
+  sent: { title: "Nothing sent yet", description: "Messages you send will appear here." },
+  archive: { title: "Archive is empty", description: "Archived messages will appear here." },
+  trash: { title: "Trash is empty", description: "Deleted messages will appear here." },
+  starred: { title: "No starred messages", description: "Star messages to find them quickly." },
+};
+
 function SelectEmptySurface({
+  folder = "inbox",
   selectedAccountId,
   onSelectMessage,
   className,
 }: {
+  folder?: MailFolder;
   selectedAccountId: number | "all";
   onSelectMessage?: (message: MailMessageSummary) => void;
   className?: string;
@@ -165,12 +176,13 @@ function SelectEmptySurface({
     </div>
   );
 
+  const folderCopy = FOLDER_EMPTY_COPY[folder] ?? FOLDER_EMPTY_COPY.inbox;
   const empty = (
     <CalmPlaceholder
-      title={allMessages.length === 0 ? "Inbox is clear" : "Select a message"}
+      title={allMessages.length === 0 ? folderCopy.title : "Select a message"}
       description={
         allMessages.length === 0
-          ? "New mail will appear here when it arrives."
+          ? folderCopy.description
           : "Choose a thread from the list to read and reply."
       }
     />
@@ -269,6 +281,7 @@ function SelectEmptySurface({
 
 export function MailEmptyPane({
   variant,
+  folder,
   selectedAccountId = "all",
   onConnect,
   onReconnect,
@@ -341,6 +354,7 @@ export function MailEmptyPane({
 
   return (
     <SelectEmptySurface
+      folder={folder}
       selectedAccountId={selectedAccountId}
       onSelectMessage={onSelectMessage}
       className={className}

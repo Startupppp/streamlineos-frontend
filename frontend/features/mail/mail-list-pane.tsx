@@ -107,6 +107,7 @@ interface MailListPaneProps {
   selectedAccountId: number | "all";
   onSelectMessage: (message: MailMessageSummary) => void;
   onOpenAccountsSheet: () => void;
+  onFolderChange?: (folder: MailFolder) => void;
   accounts: MailAccount[];
 }
 
@@ -115,6 +116,7 @@ export function MailListPane({
   selectedAccountId,
   onSelectMessage,
   onOpenAccountsSheet,
+  onFolderChange,
   accounts,
 }: MailListPaneProps) {
   const [activeFolder, setActiveFolder] = useState<MailFolder>("inbox");
@@ -232,7 +234,8 @@ export function MailListPane({
   const handleFolderSelect = useCallback((folder: MailFolder) => {
     setActiveFolder(folder);
     setSearch("");
-  }, []);
+    onFolderChange?.(folder);
+  }, [onFolderChange]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);

@@ -21,6 +21,7 @@ import { useMailInboxSummarySheet } from "./use-mail-inbox-summary";
 import { MailContentSkeleton, MailReadingPaneSkeleton, MailSheetSkeleton } from "./mail-shell-skeletons";
 import type { MailReplyParams } from "./mail-reading-ai-actions";
 import type { PageStateResolution } from "@/lib/page-state/resolve-page-state";
+import type { MailFolder } from "@/types/mail";
 
 const MailReadingPane = dynamic(
   () => import("./mail-reading-pane").then((m) => ({ default: m.MailReadingPane })),
@@ -77,6 +78,7 @@ export function MailShell() {
 
   const [requestedAccountId, setRequestedAccountId] = useState<number | "all">("all");
   const selectedAccountId = requestedAccountId === "all" || accounts.some((a) => a.id === requestedAccountId) ? requestedAccountId : "all";
+  const [activeFolder, setActiveFolder] = useState<MailFolder>("inbox");
 
   const { summaryState, triggerSummary } = useMailInboxSummarySheet(selectedAccountId);
   const composeParamConsumedRef = useRef(false);
@@ -128,6 +130,7 @@ export function MailShell() {
     handleSelectMessage(message);
   }, [closeRecentDrawer, handleSelectMessage]);
 
+  const handleFolderChange = useCallback((folder: MailFolder) => { setActiveFolder(folder); }, []);
   const handleBackToList = useCallback(() => { clear(); presentBackToList(); }, [clear, presentBackToList]);
   const handleOpenCompose = useCallback(() => openCompose({ type: "compose" }), [openCompose]);
   const handleReply = useCallback((params: MailReplyParams) => openCompose({ type: "reply", ...params }), [openCompose]);
@@ -178,6 +181,7 @@ export function MailShell() {
               selectedAccountId={selectedAccountId}
               onSelectMessage={handleSelectMessage}
               onOpenAccountsSheet={openAccountsSheet}
+              onFolderChange={handleFolderChange}
               accounts={accounts}
             />
           </div>
@@ -196,6 +200,7 @@ export function MailShell() {
             ) : (
               <MailEmptyPane
                 variant="select"
+                folder={activeFolder}
                 selectedAccountId={selectedAccountId}
                 onSelectMessage={handleSelectMessage}
               />

@@ -238,6 +238,25 @@ export function MailComposeSheet({
     resetSheet();
   }, [draftKey, resetSheet]);
 
+  useEffect(() => {
+    if (!open) return;
+    const handleBeforeUnload = () => { persistDraft(); };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => { window.removeEventListener("beforeunload", handleBeforeUnload); };
+  }, [open, persistDraft]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key !== draftKey || event.newValue === null) return;
+      toast.warning("Another tab updated this draft — your changes may be overwritten.", {
+        id: `draft-conflict-${draftKey}`,
+      });
+    };
+    window.addEventListener("storage", handleStorage);
+    return () => { window.removeEventListener("storage", handleStorage); };
+  }, [open, draftKey]);
+
   const handleOpenChange = useCallback(
     (v: boolean) => {
       if (!v) handleClose();

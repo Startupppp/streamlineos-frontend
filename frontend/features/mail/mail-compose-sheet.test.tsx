@@ -187,7 +187,7 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
     expect(String(toastError.mock.calls[0]?.[0])).toMatch(/offline/i);
     expect(readStoredDraft(REPLY_DRAFT_KEY)).toEqual({
       bodyHtml: "<p>reply while the tunnel eats the wifi</p>",
-      accountId: 7, to: ["them@example.com"], cc: [],
+      accountId: 7, to: ["them@example.com"], cc: [], savedAt: expect.any(Number),
     });
   });
 
@@ -224,7 +224,7 @@ describe("MailComposeSheet — draft lifecycle and offline sending", () => {
     await waitFor(() => expect(toastError).toHaveBeenCalledTimes(1));
     expect(readStoredDraft(REPLY_DRAFT_KEY)).toEqual({
       bodyHtml: "<p>please survive the failure</p>",
-      accountId: 7, to: ["them@example.com"], cc: [],
+      accountId: 7, to: ["them@example.com"], cc: [], savedAt: expect.any(Number),
     });
     const options = toastError.mock.calls[0]?.[1];
     expect(options).toMatchObject({ action: { label: "Retry" } });

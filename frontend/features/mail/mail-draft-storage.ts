@@ -11,6 +11,7 @@ export interface MailDraft {
   to?: string[];
   cc?: string[];
   bcc?: string[];
+  savedAt?: number;
 }
 
 export function mailDraftKey(mode: MailComposeMode, composeAccountId?: number): string {
@@ -40,6 +41,7 @@ export function readMailDraft(key: string): MailDraft | null {
         const addresses = record[field];
         return Array.isArray(addresses) && addresses.every((address) => typeof address === "string") ? [[field, addresses]] : [];
       })),
+      ...(typeof record.savedAt === "number" ? { savedAt: record.savedAt } : {}),
     };
   } catch {
     return null;
@@ -52,7 +54,7 @@ export function writeMailDraft(key: string, draft: MailDraft): void {
       window.localStorage.removeItem(key);
       return;
     }
-    window.localStorage.setItem(key, JSON.stringify(draft));
+    window.localStorage.setItem(key, JSON.stringify({ ...draft, savedAt: Date.now() }));
   } catch {
     return;
   }

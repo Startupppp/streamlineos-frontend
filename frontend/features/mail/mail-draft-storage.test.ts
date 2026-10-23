@@ -38,7 +38,7 @@ describe("a draft survives the round trip", () => {
   it("preserves recipients and sending account, including a recipient-only draft", () => {
     const draft = { bodyHtml: "", accountId: 7, to: ["to@example.com"], cc: ["cc@example.com"], bcc: ["private@example.com"] };
     writeMailDraft(mailDraftKey(COMPOSE), draft);
-    expect(readMailDraft(mailDraftKey(COMPOSE))).toEqual(draft);
+    expect(readMailDraft(mailDraftKey(COMPOSE))).toEqual(expect.objectContaining(draft));
   });
 
   it("does not share a reply draft between accounts with the same message ID", () => {
@@ -50,18 +50,29 @@ describe("a draft survives the round trip", () => {
     const body = '<p>Hello &amp; welcome — "quoted", éàü</p>';
     writeMailDraft(key, { bodyHtml: body, subject: "Q3 plan" });
 
-    expect(readMailDraft(key)).toEqual({ bodyHtml: body, subject: "Q3 plan" });
+    expect(readMailDraft(key)).toEqual(expect.objectContaining({ bodyHtml: body, subject: "Q3 plan" }));
   });
 
   it("restores a reply draft with no subject", () => {
     const key = mailDraftKey(REPLY);
     writeMailDraft(key, { bodyHtml: "<p>Sounds good</p>" });
 
-    expect(readMailDraft(key)).toEqual({ bodyHtml: "<p>Sounds good</p>" });
+    expect(readMailDraft(key)).toEqual(expect.objectContaining({ bodyHtml: "<p>Sounds good</p>" }));
   });
 
   it("returns null when nothing was ever saved", () => {
     expect(readMailDraft(mailDraftKey(COMPOSE))).toBeNull();
+  });
+
+  it("writes a numeric savedAt timestamp on every write", () => {
+    const before = Date.now();
+    const key = mailDraftKey(COMPOSE);
+    writeMailDraft(key, { bodyHtml: "<p>timestamped</p>" });
+    const after = Date.now();
+    const result = readMailDraft(key);
+    expect(typeof result?.savedAt).toBe("number");
+    expect(result?.savedAt).toBeGreaterThanOrEqual(before);
+    expect(result?.savedAt).toBeLessThanOrEqual(after);
   });
 });
 

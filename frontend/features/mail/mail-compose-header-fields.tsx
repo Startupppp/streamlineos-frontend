@@ -1,6 +1,6 @@
 "use client";
 
-import { useId } from "react";
+import { useId, useState } from "react";
 import { ChevronDown, MailOpen } from "lucide-react";
 import { Controller } from "react-hook-form";
 import type { UseFormReturn } from "react-hook-form";
@@ -48,6 +48,8 @@ export function MailComposeHeaderFields({
   const ccFieldId = useId();
   const bccFieldId = useId();
   const subjectFieldId = useId();
+
+  const [chipToError, setChipToError] = useState<string | null>(null);
 
   const activeErrors = isReply
     ? replyForm.formState.errors
@@ -167,7 +169,8 @@ export function MailComposeHeaderFields({
                       id={toFieldId}
                       value={field.value}
                       onChange={field.onChange}
-                      hasError={!!replyForm.formState.errors.to}
+                      onInputError={setChipToError}
+                      hasError={!!replyForm.formState.errors.to || !!chipToError}
                       placeholder="Recipients..."
                     />
                   )}
@@ -181,20 +184,23 @@ export function MailComposeHeaderFields({
                       id={toFieldId}
                       value={field.value}
                       onChange={field.onChange}
-                      hasError={!!composeForm.formState.errors.to}
+                      onInputError={setChipToError}
+                      hasError={!!composeForm.formState.errors.to || !!chipToError}
                       placeholder="Recipients..."
                     />
                   )}
                 />
               )}
-              {activeErrors.to && (
+              {chipToError ? (
+                <p className="text-dense text-destructive mt-1">{chipToError}</p>
+              ) : activeErrors.to ? (
                 <p className="text-dense text-destructive mt-1">
                   {activeErrors.to.message ??
                     (Array.isArray(activeErrors.to)
                       ? activeErrors.to[0]?.message
                       : undefined)}
                 </p>
-              )}
+              ) : null}
             </div>
             <div className="flex items-center gap-1 pt-1">
               <Button

@@ -103,6 +103,15 @@ describe("MailEmptyPane select surface", () => {
     expect(screen.getByText("New mail will appear here when it arrives.")).toBeInTheDocument();
   });
 
+  it("shows folder-specific empty copy for non-inbox folders", () => {
+    queryState.data = { pages: [{ messages: [] }] };
+
+    render(<MailEmptyPane variant="select" folder="sent" onSelectMessage={jest.fn()} />);
+
+    expect(screen.getByText("Nothing sent yet")).toBeInTheDocument();
+    expect(screen.getByText("Messages you send will appear here.")).toBeInTheDocument();
+  });
+
   it("uses PageState error handling and retries the message query", () => {
     queryState = {
       isLoading: false,

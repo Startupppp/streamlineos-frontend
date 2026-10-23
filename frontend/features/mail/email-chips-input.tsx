@@ -11,6 +11,7 @@ function isValidEmail(value: string): boolean {
 interface EmailChipsInputProps {
   value: string[];
   onChange: (emails: string[]) => void;
+  onInputError?: (message: string | null) => void;
   placeholder?: string;
   disabled?: boolean;
   hasError?: boolean;
@@ -21,6 +22,7 @@ interface EmailChipsInputProps {
 export function EmailChipsInput({
   value,
   onChange,
+  onInputError,
   placeholder = "Add email...",
   disabled = false,
   hasError = false,
@@ -39,18 +41,21 @@ export function EmailChipsInput({
       if (!trimmed) return;
       if (!isValidEmail(trimmed)) {
         setInputError(true);
+        onInputError?.(`"${trimmed}" is not a valid email address.`);
         return;
       }
       if (value.includes(trimmed)) {
         setInputValue("");
         setInputError(false);
+        onInputError?.(null);
         return;
       }
       onChange([...value, trimmed]);
       setInputValue("");
       setInputError(false);
+      onInputError?.(null);
     },
-    [value, onChange],
+    [value, onChange, onInputError],
   );
 
   const removeEmail = useCallback(
@@ -70,17 +75,23 @@ export function EmailChipsInput({
       if (e.key === "Backspace" && inputValue === "" && value.length > 0) {
         removeEmail(value[value.length - 1] ?? "");
       }
-      if (inputError) setInputError(false);
+      if (inputError) {
+        setInputError(false);
+        onInputError?.(null);
+      }
     },
-    [inputValue, value, addEmail, removeEmail, inputError],
+    [inputValue, value, addEmail, removeEmail, inputError, onInputError],
   );
 
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setInputValue(e.target.value);
-      if (inputError) setInputError(false);
+      if (inputError) {
+        setInputError(false);
+        onInputError?.(null);
+      }
     },
-    [inputError],
+    [inputError, onInputError],
   );
 
   const handlePaste = useCallback(
