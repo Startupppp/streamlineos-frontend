@@ -15,7 +15,7 @@ export default function PrivatePage() {
       subtitle="Files you own"
       actions={<KbNewMenu scope={MY_FILES_SCOPE} allowFolder={false} />}
     >
-      <div className="flex flex-col gap-6">
+      <div className="flex min-h-0 flex-1 flex-col gap-6">
         <ShortcutsSection />
         <WikiPageCollectionTable
           fixedParams={MY_PAGES_PARAMS}

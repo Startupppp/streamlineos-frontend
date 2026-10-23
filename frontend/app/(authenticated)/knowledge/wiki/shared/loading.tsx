@@ -1,18 +1,31 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import {
+  CollectionToolbarSkeleton,
+  WIKI_LOADING_CONTENT_CLASS,
+  WIKI_PAGE_TABLE_HEADERS,
+  WikiFillTable,
+} from "@/features/wiki/components/wiki-collection-skeletons";
+
+const SHARED_HEADERS = [
+  ...WIKI_PAGE_TABLE_HEADERS,
+  "Shared by",
+  "Shared",
+  "Expires",
+  "Location",
+  "Access",
+] as const;
 
 export default function SharedFilesLoading() {
   return (
-    <PageWrapper title="Shared with me" subtitle="Files explicitly shared with you">
+    <PageWrapper
+      title="Shared with me"
+      subtitle="Files explicitly shared with you"
+      noInternalScroll
+      contentClassName={WIKI_LOADING_CONTENT_CLASS}
+    >
       <div className="flex min-h-0 flex-1 flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Skeleton className="h-9 w-full rounded-md sm:w-72" />
-          <Skeleton className="h-9 w-24 rounded-md" />
-          <Skeleton className="h-9 w-24 rounded-md" />
-          <Skeleton className="ml-auto h-9 w-20 rounded-md" />
-        </div>
-        <DataTableSkeleton columns={8} mobileCards fill />
+        <CollectionToolbarSkeleton />
+        <WikiFillTable headers={SHARED_HEADERS} />
       </div>
     </PageWrapper>
   );

@@ -202,6 +202,7 @@ export default function PageHistoryPage({
         title="File history"
         backHref={backHref}
         noInternalScroll={pageState.kind === "loading"}
+        contentClassName={pageState.kind === "loading" ? "flex min-h-0 flex-1 flex-col" : undefined}
       >
         <PageState
           resolution={
@@ -211,7 +212,7 @@ export default function PageHistoryPage({
           }
           loading={<PageHistorySkeleton />}
           onRetry={handleRetryPage}
-          className="min-h-[40dvh]"
+          className="min-h-0 flex-1"
         >
           {null}
         </PageState>
@@ -230,6 +231,7 @@ export default function PageHistoryPage({
         subtitle={currentPage.title || "Untitled"}
         backHref={documentHref}
         noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
       >
         <div className="h-full flex flex-col md:flex-row gap-4">
           <div className="w-full md:w-72 lg:w-80 shrink-0 flex flex-col">

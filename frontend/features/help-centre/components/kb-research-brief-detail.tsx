@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { LoadingState } from "@/components/shared/loading-state";
+import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AiCitationChips, type Citation } from "@/components/ai/ai-citation-chips";
@@ -50,6 +50,32 @@ function buildBriefCitations(citations: KbResearchBriefCitation[]): Citation[] {
     href: c.href ?? undefined,
     freshness: c.updatedAt ?? undefined,
   }));
+}
+
+export function ResearchBriefDetailSkeleton() {
+  return (
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="shrink-0 space-y-3 rounded-xl border border-border bg-card p-4">
+        <div className="flex items-start gap-3">
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-5 w-3/4" />
+            <Skeleton className="h-3 w-32" />
+          </div>
+          <Skeleton className="h-5 w-20 shrink-0 rounded-full" />
+        </div>
+        <Skeleton className="h-3 w-40" />
+        <div className="flex gap-2">
+          <Skeleton className="h-7 w-16 rounded-md" />
+          <Skeleton className="h-7 w-16 rounded-md" />
+        </div>
+      </div>
+      <div className="grid min-h-0 flex-1 auto-rows-[minmax(1rem,1fr)] gap-3 overflow-hidden rounded-xl border border-border bg-card p-4">
+        {Array.from({ length: 28 }, (_, index) => (
+          <Skeleton key={index} className={index % 5 === 4 ? "h-4 w-2/3" : "h-4 w-full"} />
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function BriefFeedback({ briefId, currentRating }: { briefId: number; currentRating: "helpful" | "not_helpful" | null }) {
@@ -186,7 +212,7 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
     return (
       <PageState
         resolution={pageState}
-        loading={<LoadingState variant="form" rows={6} />}
+        loading={<ResearchBriefDetailSkeleton />}
         onRetry={handleRefetch}
       >
         <EmptyState
@@ -203,7 +229,7 @@ export function KbResearchBriefDetail({ briefId, basePath }: KbResearchBriefDeta
   return (
     <PageState
       resolution={pageState}
-      loading={<LoadingState variant="form" rows={6} />}
+      loading={<ResearchBriefDetailSkeleton />}
       onRetry={handleRefetch}
     >
     <div className="space-y-4">

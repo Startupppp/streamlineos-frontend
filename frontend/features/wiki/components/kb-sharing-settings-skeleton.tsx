@@ -1,10 +1,10 @@
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { Skeleton } from "@/components/ui/skeleton";
+import { WikiFillTable } from "./wiki-collection-skeletons";
 
 export function KbSharingSettingsSkeleton() {
   return (
-    <div className="flex max-w-lg flex-col gap-6">
-      <div className="flex flex-col gap-4">
+    <div className="flex min-h-0 w-full max-w-lg flex-1 flex-col gap-6">
+      <div className="flex shrink-0 flex-col gap-4">
         {Array.from({ length: 3 }, (_, index) => (
           <div key={index} className="space-y-2">
             <Skeleton className="h-4 w-40" />
@@ -19,9 +19,9 @@ export function KbSharingSettingsSkeleton() {
         ))}
         <Skeleton className="h-9 w-32 rounded-md" />
       </div>
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-36" />
-        <DataTableSkeleton columns={5} mobileCards />
+      <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <Skeleton className="h-4 w-36 shrink-0" />
+        <WikiFillTable headers={["Page", "Type", "Recipient / Created by", "Status", "Expires"]} />
       </div>
     </div>
   );

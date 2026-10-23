@@ -16,6 +16,7 @@ import { pageHref } from "@/lib/knowledge-routes";
 import { toFortuneSheets, type FortuneSheet } from "@/features/wiki/lib/kb-workbook-convert";
 import { exportSpreadsheet } from "@/features/wiki/lib/kb-spreadsheet-file";
 import { DocumentRecordGate, documentRecordResolution } from "./document-record-gate";
+import { PageSpreadsheetSkeleton } from "./page-document-skeleton";
 import PageCover from "./page-cover";
 import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageDocumentHeader from "./page-document-header";
@@ -37,27 +38,6 @@ interface PageSpreadsheetProps {
 
 function nextReload(current: number): number {
   return current + 1;
-}
-
-function PageSpreadsheetSkeleton() {
-  return (
-    <div className="wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden" aria-label="Loading spreadsheet">
-      <div className="wiki-document-chrome shrink-0">
-        <div className={cn(WIKI_SPREADSHEET_COLUMN, "flex items-center gap-1.5 py-2.5")}>
-          <Skeleton className="h-4 w-40" />
-          <Skeleton className="ml-auto h-9 w-9 rounded-md" />
-          <Skeleton className="h-9 w-9 rounded-md" />
-          <Skeleton className="h-9 w-9 rounded-md" />
-        </div>
-      </div>
-      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-        <div className={cn(WIKI_SPREADSHEET_COLUMN, "py-2")}>
-          <Skeleton className="h-8 w-48" />
-        </div>
-        <Skeleton className="min-h-0 w-full flex-1 rounded-none" />
-      </div>
-    </div>
-  );
 }
 
 export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }: PageSpreadsheetProps) {
@@ -300,7 +280,9 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
                 onRetry={handleRetryWorkbook}
               />
             ) : (
-              <Skeleton className="min-h-0 w-full flex-1 rounded-none" />
+              <div className="relative min-h-0 flex-1">
+                <Skeleton className="absolute inset-0 h-auto w-auto rounded-none" />
+              </div>
             )}
           </div>
         </div>

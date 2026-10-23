@@ -302,7 +302,7 @@ export default function TrashPage() {
         subtitle="Deleted pages can be restored or permanently removed"
         actions={actions}
       >
-        <div className="space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
 
           <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
@@ -353,7 +353,7 @@ export default function TrashPage() {
 
           <PageState
             resolution={pageState}
-            loading={<WikiTableRowsSkeleton />}
+            loading={<WikiTableRowsSkeleton headers={["Page", "Deleted"]} />}
             empty={
               cursorState.hasPrevious ? (
                 <EmptyState

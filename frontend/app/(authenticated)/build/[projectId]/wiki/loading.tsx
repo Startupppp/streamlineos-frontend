@@ -1,17 +1,20 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  WIKI_LOADING_CONTENT_CLASS,
+  WikiHomeSkeleton,
+} from "@/features/wiki/components/wiki-collection-skeletons";
 
-export default function WikiLoading() {
+export default function ProjectWikiLoading() {
   return (
-    <PageWrapper title="">
-      <div className="space-y-4">
-        <Skeleton className="h-6 w-1/3" />
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-4">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={String(i)} className="h-[72px] rounded-lg" />
-          ))}
-        </div>
-      </div>
+    <PageWrapper
+      title="Docs"
+      noInternalScroll
+      subtitle="Docs and decisions for this project"
+      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+      contentClassName={WIKI_LOADING_CONTENT_CLASS}
+    >
+      <WikiHomeSkeleton />
     </PageWrapper>
   );
 }

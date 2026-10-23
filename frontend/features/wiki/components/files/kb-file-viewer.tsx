@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { toast } from "sonner";
 import { PageState } from "@/components/shared/page-state";
-import { Skeleton } from "@/components/ui/skeleton";
+import { PageFileSkeleton } from "@/features/wiki/components/page-document-skeleton";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -49,13 +49,7 @@ export function KbFileViewer({ pageId }: KbFileViewerProps) {
   return (
     <PageState
       resolution={pageState}
-      loading={
-        <div className="flex flex-1 flex-col gap-4 p-8">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-4 w-72" />
-          <Skeleton className="h-64 w-full rounded-xl" />
-        </div>
-      }
+      loading={<PageFileSkeleton />}
       onRetry={handleRetry}
     >
       {data ? <KbFileReadyView pageId={pageId} detail={data} /> : null}

@@ -12,15 +12,30 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { useKbResearchBriefs } from "@/hooks/api/kb/research-briefs";
 import { usePageState } from "@/hooks/api/use-page-state";
 
-function BriefListSkeleton() {
+export function BriefListSkeleton() {
   return (
-    <div className="space-y-2">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <div key={i} className="rounded-xl border border-border/60 p-3 space-y-2">
-          <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-3 w-1/3" />
+    <div className="flex min-h-0 flex-1 flex-col gap-4">
+      <div className="flex shrink-0 items-end gap-3">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <Skeleton className="h-3 w-24" />
+          <Skeleton className="h-9 w-full rounded-md" />
         </div>
-      ))}
+        <Skeleton className="h-9 w-32 shrink-0 rounded-md" />
+      </div>
+      <div className="grid min-h-0 flex-1 auto-rows-[minmax(4.25rem,1fr)] gap-2 overflow-hidden">
+        {Array.from({ length: 12 }, (_, index) => (
+          <div
+            key={index}
+            className="flex h-full min-h-0 items-start gap-3 rounded-xl border border-border bg-card p-3"
+          >
+            <div className="min-w-0 flex-1 space-y-2">
+              <Skeleton className="h-4 w-2/3" />
+              <Skeleton className="h-5 w-20 rounded-full" />
+            </div>
+            <Skeleton className="h-3 w-20 shrink-0" />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

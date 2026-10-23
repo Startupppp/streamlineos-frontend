@@ -1,7 +1,7 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Lock } from "lucide-react";
+import { CalendarIcon, Lock } from "lucide-react";
 import { TruncatedText } from "@/components/ui/truncated-text";
 
 interface FieldPreviewProps {
@@ -45,6 +45,11 @@ export function FieldPreview({
             <div className="h-4 w-7 rounded-full bg-muted border" />
             <span className="text-xs text-muted-foreground">Yes / No</span>
           </div>
+        ) : fieldType === "date" ? (
+          <div className="flex h-9 items-center gap-2 rounded-md border border-input bg-card px-3 text-sm text-muted-foreground">
+            <CalendarIcon className="h-4 w-4 shrink-0" />
+            <span className="truncate">{placeholder || "Pick a date"}</span>
+          </div>
         ) : (fieldType === "select" || fieldType === "multi_select") &&
           options &&
           options.length > 0 ? (
@@ -55,11 +60,9 @@ export function FieldPreview({
           <div className="h-7 border rounded px-2 flex items-center text-xs text-muted-foreground bg-background">
             {placeholder ||
               `Enter ${
-                fieldType === "date"
-                  ? "a date"
-                  : fieldType === "number" || fieldType === "currency"
-                    ? "a number"
-                    : "text"
+                fieldType === "number" || fieldType === "currency"
+                  ? "a number"
+                  : "text"
               }...`}
           </div>
         )}

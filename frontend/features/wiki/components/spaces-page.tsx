@@ -36,6 +36,7 @@ import {
   KbPlusIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { SpaceCard, SpaceCardSkeleton } from "./space-card";
+import { WikiFillTable } from "./wiki-collection-skeletons";
 import { SpacesListTable } from "./spaces-list-table";
 import { SpaceArchiveImpact } from "./space-archive-impact";
 import { SpaceDeleteDialog } from "./space-delete-dialog";
@@ -346,11 +347,17 @@ export default function SpacesPage() {
           onRetry={handleRetry}
           className={CONTENT_FILL_PANEL}
           loading={
-            <SpacesGrid>
-              {Array.from({ length: 6 }).map((_, i) => (
-                <SpaceCardSkeleton key={i} />
-              ))}
-            </SpacesGrid>
+            view === "list" ? (
+              <WikiFillTable
+                headers={["Team folder", "Audience", "Files", "Members", "Owner", "Updated", ""]}
+              />
+            ) : (
+              <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(11rem,1fr)]">
+                {Array.from({ length: 9 }, (_, index) => (
+                  <SpaceCardSkeleton key={index} />
+                ))}
+              </div>
+            )
           }
           empty={emptyNode}
         >

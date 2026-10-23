@@ -37,7 +37,7 @@ const AUDIENCE_BADGE_CLASS: Record<KbAudience, string> = {
 
 export function SpaceCardSkeleton() {
   return (
-    <div className={cn(CONTENT_PANEL_SOLID, "flex flex-col gap-3 p-4")}>
+    <div className={cn(CONTENT_PANEL_SOLID, "flex h-full flex-col gap-3 p-4")}>
       <div className="flex items-start gap-3">
         <Skeleton className="size-10 shrink-0 rounded-lg" />
         <div className="flex min-w-0 flex-1 flex-col gap-2">

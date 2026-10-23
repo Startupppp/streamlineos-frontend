@@ -1,5 +1,5 @@
-import { PageDocumentSkeleton } from "@/features/wiki/components/page-document-skeleton";
+import { WikiFileRouteSkeleton } from "@/features/wiki/components/wiki-file-route-skeleton";
 
 export default function WikiDocumentLoading() {
-  return <PageDocumentSkeleton />;
+  return <WikiFileRouteSkeleton />;
 }

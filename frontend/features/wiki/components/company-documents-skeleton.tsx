@@ -1,5 +1,7 @@
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { WikiFillTable } from "./wiki-collection-skeletons";
+
+const COMPANY_DOCUMENT_HEADERS = ["Name", "Category", "Effective from", "Version", "Added"] as const;
 
 export function CompanyDocumentsSkeleton() {
-  return <DataTableSkeleton columns={5} mobileCards fill />;
+  return <WikiFillTable headers={COMPANY_DOCUMENT_HEADERS} />;
 }

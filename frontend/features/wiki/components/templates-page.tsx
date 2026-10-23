@@ -261,7 +261,6 @@ export default function TemplatesPage() {
     <PageWrapper
       title="Templates"
       subtitle={subtitle}
-      contentClassName="flex min-h-0 flex-1 flex-col"
     >
       <Tabs
         value={activeTab}

@@ -40,7 +40,8 @@ import { PageCoverPickerDialog } from "./page-cover-picker";
 import PageIconPicker from "./page-icon-picker";
 import PageDocumentHeader from "./page-document-header";
 import PageRightPanel from "./page-right-panel";
-import { PageDocumentSkeleton } from "./page-document-skeleton";
+import { PageSpreadsheetSkeleton } from "./page-document-skeleton";
+import { WikiFileRouteSkeleton } from "./wiki-file-route-skeleton";
 import { PageDocumentPropertyActions } from "./page-document-property-actions";
 import { PageDocumentOutline } from "./page-document-outline";
 import {
@@ -55,7 +56,7 @@ import "../wiki-document.css";
 
 const PageSpreadsheet = dynamic(() => import("./page-spreadsheet"), {
   ssr: false,
-  loading: () => <Skeleton className="h-full w-full" />,
+  loading: () => <PageSpreadsheetSkeleton />,
 });
 
 function loadedEditorSnapshot(storedContent: unknown): string {
@@ -67,7 +68,7 @@ const PlateDocumentEditor = dynamic(
   () => import("@/components/editor/plate/plate-document-editor"),
   {
     ssr: false,
-    loading: () => <Skeleton className="h-64 w-full rounded-lg" />,
+    loading: () => <Skeleton className="h-full min-h-0 w-full flex-1 rounded-lg" />,
   },
 );
 
@@ -363,7 +364,7 @@ export default function PageDocument({
             ? { kind: "error", error }
             : recordResolution
         }
-        loading={<PageDocumentSkeleton />}
+        loading={<WikiFileRouteSkeleton />}
         error={error}
         onRetry={() => {
           void refetch();

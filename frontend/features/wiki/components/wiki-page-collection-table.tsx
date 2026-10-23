@@ -16,7 +16,7 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { WikiFillTable, WikiPageCardsSkeleton } from "./wiki-collection-skeletons";
 import { SearchInput } from "@/components/ui/search-input";
 import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
@@ -340,7 +340,13 @@ export function WikiPageCollectionTable({
       </div>
       <PageState
         resolution={pageState}
-        loading={<DataTableSkeleton columns={columns.length} />}
+        loading={
+          view === "card" ? (
+            <WikiPageCardsSkeleton />
+          ) : (
+            <WikiFillTable headers={columns.map((column) => column.header)} />
+          )
+        }
         empty={emptyNode}
         onRetry={handleRetry}
         className={CONTENT_FILL_PANEL}

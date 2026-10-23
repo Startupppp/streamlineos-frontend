@@ -10,7 +10,7 @@ import { PageState } from "@/components/shared/page-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { WikiSearchResultsSkeleton } from "./wiki-collection-skeletons";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -66,7 +66,7 @@ const SEARCH_VIEW_OPTIONS: { value: ViewMode; icon: typeof LayoutList; label: st
 ];
 
 function SearchSkeleton() {
-  return <DataTableSkeleton columns={3} rows={6} />;
+  return <WikiSearchResultsSkeleton />;
 }
 
 interface SearchResultRowProps {
@@ -323,7 +323,7 @@ export default function WikiSearchPage() {
 
   return (
     <PageWrapper title="Search">
-      <div className="flex flex-col gap-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <label htmlFor={searchInputId} className="sr-only">
@@ -483,6 +483,7 @@ export default function WikiSearchPage() {
 
         <PageState
           resolution={pageState}
+          className="min-h-0 flex-1"
           loading={<SearchSkeleton />}
           empty={
             <EmptyState

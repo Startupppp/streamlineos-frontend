@@ -398,7 +398,7 @@ export default function ReviewsPage() {
       <PageWrapper title="Reviews" filters={filters}>
         <PageState
           resolution={pageState}
-          loading={<WikiTableRowsSkeleton />}
+          loading={<WikiTableRowsSkeleton headers={["Page", "Type", "Status", "Reviewer", "Due date", "Requested by", ""]} />}
           empty={emptyNode}
           onRetry={refetch}
           className="flex-1 min-h-0"

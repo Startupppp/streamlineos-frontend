@@ -18,7 +18,10 @@ import {
 } from "@/components/ui/tabs";
 import { useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { LoadingState } from "@/components/shared/loading-state";
+import {
+  WIKI_LOADING_CONTENT_CLASS,
+  WikiImportSkeleton,
+} from "@/features/wiki/components/wiki-collection-skeletons";
 import {
   useImportKbPages,
   useKbImportJob,
@@ -393,8 +396,12 @@ export default function ImportPage() {
 
   if (importAccess === "loading" || exportAccess === "loading") {
     return (
-      <PageWrapper title="Import & Export">
-        <LoadingState variant="form" rows={3} />
+      <PageWrapper
+        title="Import & Export"
+        noInternalScroll
+        contentClassName={WIKI_LOADING_CONTENT_CLASS}
+      >
+        <WikiImportSkeleton />
       </PageWrapper>
     );
   }
@@ -430,7 +437,6 @@ export default function ImportPage() {
           : "Per-file export lives on each file's menu"
       }
       actionsInline
-      contentClassName="flex min-h-0 flex-1 flex-col"
       actions={
         isImportTab ? (
           <>
