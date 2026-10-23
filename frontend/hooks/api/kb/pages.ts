@@ -217,7 +217,6 @@ export function useKbPagesFavorites() {
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     ...kbPagesFavoritesQueryOptions,
-    initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) =>
       apiClient.get<Page<KbPageListItem>>(
         "/kb/pages/favorites",
@@ -225,7 +224,6 @@ export function useKbPagesFavorites() {
         signal,
         kbFavoritePageListContract,
       ),
-    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     select: selectFlatPages,
     enabled: canView,
   });

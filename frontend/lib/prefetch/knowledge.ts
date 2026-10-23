@@ -88,13 +88,14 @@ export async function prefetchKbHome() {
         queryFn: () =>
           serverGet<KbPageList>("/kb/pages/recent", kbPageListContract),
       }),
-      queryClient.prefetchQuery({
+      queryClient.prefetchInfiniteQuery({
         ...kbPagesFavoritesQueryOptions,
         queryFn: () =>
           serverGet<KbFavoritePageList>(
             "/kb/pages/favorites",
             kbFavoritePageListContract,
           ),
+        pages: 1,
       }),
     ]);
     return dehydrate(queryClient);
@@ -343,13 +344,14 @@ export async function prefetchKbTemplates() {
     ]);
     if (!gate.can("kb:pages:view"))
       return dehydrate(await createServerQueryClient());
-    await queryClient.prefetchQuery({
+    await queryClient.prefetchInfiniteQuery({
       ...kbPageTemplatesQueryOptions(),
       queryFn: () =>
         serverGet<KbPageTemplateListPage>(
           "/kb/page-templates",
           kbPageTemplateListPageContract,
         ),
+      pages: 1,
     });
     return dehydrate(queryClient);
   } catch {
@@ -387,13 +389,14 @@ export async function prefetchKbResearchBriefs() {
     ]);
     if (!gate.can("kb:pages:view"))
       return dehydrate(await createServerQueryClient());
-    await queryClient.prefetchQuery({
+    await queryClient.prefetchInfiniteQuery({
       ...kbResearchBriefsQueryOptions,
       queryFn: () =>
         serverGet<KbResearchBriefList>(
           "/kb/research-briefs?limit=20",
           kbResearchBriefListContract,
         ),
+      pages: 1,
     });
     return dehydrate(queryClient);
   } catch {
@@ -431,13 +434,14 @@ export async function prefetchKbConversations() {
     ]);
     if (!gate.can("kb:ai:generate"))
       return dehydrate(await createServerQueryClient());
-    await queryClient.prefetchQuery({
+    await queryClient.prefetchInfiniteQuery({
       ...kbConversationsQueryOptions,
       queryFn: () =>
         serverGet<KbConversationListPage>(
-          "/kb/ask/conversations?limit=20",
+          "/kb/ask/conversations?limit=30",
           kbConversationListPageContract,
         ),
+      pages: 1,
     });
     return dehydrate(queryClient);
   } catch {
@@ -475,13 +479,14 @@ export async function prefetchKbPageHistory(pageId: number) {
     ]);
     if (!gate.can("kb:pages:view"))
       return dehydrate(await createServerQueryClient());
-    await queryClient.prefetchQuery({
+    await queryClient.prefetchInfiniteQuery({
       ...kbPageVersionsQueryOptions(pageId),
       queryFn: () =>
         serverGet<KbPageVersionList>(
           `/kb/pages/${pageId}/versions`,
           kbPageVersionListContract,
         ),
+      pages: 1,
     });
     return dehydrate(queryClient);
   } catch {

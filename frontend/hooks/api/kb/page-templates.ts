@@ -1,7 +1,6 @@
 "use client";
 
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { selectFlatPages, type Page } from "@/lib/api/select-flat-pages";
@@ -62,7 +61,6 @@ export function useKbPageTemplates(q?: string) {
   return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     ...kbPageTemplatesQueryOptions(q),
-    initialPageParam: NO_CURSOR_YET,
     queryFn: ({ signal, pageParam }) => {
       const params = {
         ...(pageParam !== undefined ? { cursor: pageParam } : {}),
@@ -75,7 +73,6 @@ export function useKbPageTemplates(q?: string) {
         kbPageTemplateListPageContract,
       );
     },
-    getNextPageParam: (last) => last.pagination.nextCursor ?? undefined,
     select: selectFlatPages,
     enabled: canViewPages,
   });

@@ -62,8 +62,6 @@ export function useKbConversations(enabled: boolean) {
       if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbConversationListPage>("/kb/ask/conversations", params, signal, kbConversationListPageContract);
     },
-    initialPageParam: NO_ID_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages && enabled,
   });
 }

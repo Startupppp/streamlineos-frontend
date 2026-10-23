@@ -31,12 +31,6 @@ import {
 } from "@/hooks/api/build/build-project-schema";
 import { agentTokenListContract } from "@/hooks/api/build/agent-tokens-schema";
 import { workflowTransitionListContract } from "@/hooks/api/build/workflow-schema";
-import {
-  kbPageListContract,
-  kbFavoritePageListContract,
-  kbPageWithAncestorsContract,
-  kbPageVersionListContract,
-} from "@/hooks/api/kb/kb-pages-schema";
 import { changeRequestsListQueryOptions } from "@/hooks/api/build/change-requests-read-options";
 import { projectRisksListQueryOptions, projectDecisionsListQueryOptions } from "@/hooks/api/build/governance-read-options";
 import { meetingsListQueryOptions, meetingDetailQueryOptions } from "@/hooks/api/build/meetings-read-options";
@@ -60,12 +54,6 @@ import { iterationSettingsQueryOptions } from "@/hooks/api/build/iteration-setti
 import { retentionSettingsQueryOptions } from "@/hooks/api/build/project-retention-settings-read-options";
 import { viewsListQueryOptions } from "@/hooks/api/build/views-read-options";
 import { workflowTransitionsQueryOptions } from "@/hooks/api/build/workflow-read-options";
-import {
-  kbPagesRecentQueryOptions,
-  kbPagesFavoritesQueryOptions,
-  kbPageQueryOptions,
-  kbPageVersionsQueryOptions,
-} from "@/hooks/api/kb/kb-read-options";
 import { projectBudgetQueryOptions } from "@/hooks/api/build/milestones-read-options";
 import { projectBudgetContract } from "@/hooks/api/build/workspace-schema";
 
@@ -554,64 +542,6 @@ export async function prefetchProjectWorkflow(projectId: number) {
         ...workflowTransitionsQueryOptions(projectId),
         queryFn: () =>
           serverGet(`/build/${projectId}/workflow/transitions`, workflowTransitionListContract),
-      });
-    }
-    return dehydrate(queryClient);
-  } catch {
-    return dehydrate(await createServerQueryClient());
-  }
-}
-
-export async function prefetchProjectWiki() {
-  try {
-    const gate = await resolvePrefetchGate();
-    const queryClient = await createServerQueryClient();
-    if (gate.can("kb:pages:view")) {
-      await Promise.all([
-        queryClient.prefetchQuery({
-          ...kbPagesRecentQueryOptions,
-          queryFn: () => serverGet("/kb/pages/recent", kbPageListContract),
-        }),
-        queryClient.prefetchQuery({
-          ...kbPagesFavoritesQueryOptions,
-          queryFn: () => serverGet("/kb/pages/favorites", kbFavoritePageListContract),
-        }),
-      ]);
-    }
-    return dehydrate(queryClient);
-  } catch {
-    return dehydrate(await createServerQueryClient());
-  }
-}
-
-export async function prefetchWikiPage(pageId: number) {
-  try {
-    const gate = await resolvePrefetchGate();
-    const queryClient = await createServerQueryClient();
-    if (gate.can("kb:pages:view")) {
-      await queryClient.prefetchQuery({
-        ...kbPageQueryOptions(pageId),
-        queryFn: () => serverGet(`/kb/pages/${pageId}`, kbPageWithAncestorsContract),
-      });
-    }
-    return dehydrate(queryClient);
-  } catch {
-    return dehydrate(await createServerQueryClient());
-  }
-}
-
-export async function prefetchWikiPageHistory(pageId: number) {
-  try {
-    const gate = await resolvePrefetchGate();
-    const queryClient = await createServerQueryClient();
-    if (gate.can("kb:pages:view")) {
-      await queryClient.prefetchInfiniteQuery({
-        ...kbPageVersionsQueryOptions(pageId),
-        initialPageParam: undefined as string | undefined,
-        getNextPageParam: (last: { pagination: { nextCursor: string | null } }) =>
-          last.pagination.nextCursor ?? undefined,
-        queryFn: () => serverGet(`/kb/pages/${pageId}/versions`, kbPageVersionListContract),
-        pages: 1,
       });
     }
     return dehydrate(queryClient);

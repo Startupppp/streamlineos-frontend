@@ -4,7 +4,7 @@ import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RequireModule } from "@/components/auth/require-module";
 import PageHistoryPage from "@/features/wiki/components/page-history-page";
-import { prefetchWikiPageHistory } from "@/lib/prefetch/build-project-extras";
+import { prefetchKbPageHistory } from "@/lib/prefetch/knowledge";
 import WikiPageHistoryLoading from "./loading";
 
 interface ProjectWikiHistoryPageProps {
@@ -23,7 +23,7 @@ async function WikiHistoryHydrated({
   initialVersion: number | undefined;
   initialCompare: number | undefined;
 }) {
-  const state = await prefetchWikiPageHistory(pageId);
+  const state = await prefetchKbPageHistory(pageId);
   return (
     <HydrationBoundary state={state}>
       <RequireModule module="kb">

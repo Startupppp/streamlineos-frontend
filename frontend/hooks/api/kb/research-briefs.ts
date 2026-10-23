@@ -11,7 +11,6 @@ import type {
   CreateResearchBriefInput,
 } from "@/types/kb";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { kbResearchBriefsQueryOptions, kbResearchBriefQueryOptions } from "./kb-read-options";
@@ -51,8 +50,6 @@ export function useKbResearchBriefs() {
       if (pageParam !== undefined) params.cursor = pageParam;
       return apiClient.get<KbResearchBriefListPage>("/kb/research-briefs", params, signal, kbResearchBriefListContract);
     },
-    initialPageParam: NO_ID_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: canViewPages,
     ...INLINE_READ_ERROR,
   });

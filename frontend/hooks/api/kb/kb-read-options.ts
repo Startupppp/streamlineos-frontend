@@ -1,6 +1,13 @@
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
+import { NO_CURSOR_YET, NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 
 const kb = knowledgeAndSurveysQueryKeys.kb;
+
+const nextCursorOf = (last: { pagination: { nextCursor: string | null } }) =>
+  last.pagination.nextCursor ?? undefined;
+
+const nextIdCursorOf = (last: { nextCursor: number | null }) =>
+  last.nextCursor ?? undefined;
 
 export const kbPagesRecentQueryOptions = {
   queryKey: kb.pagesRecent(),
@@ -10,6 +17,8 @@ export const kbPagesRecentQueryOptions = {
 export const kbPagesFavoritesQueryOptions = {
   queryKey: kb.pagesFavorites(),
   staleTime: 30_000,
+  initialPageParam: NO_CURSOR_YET,
+  getNextPageParam: nextCursorOf,
 } as const;
 
 export function kbSpacesListQueryOptions(params?: Record<string, unknown>) {
@@ -51,12 +60,19 @@ export function kbPageReviewsQueryOptions(params?: Record<string, unknown>) {
 }
 
 export function kbPageTemplatesQueryOptions(q?: string) {
-  return { queryKey: kb.pageTemplates(q), staleTime: 300_000 } as const;
+  return {
+    queryKey: kb.pageTemplates(q),
+    staleTime: 300_000,
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: nextCursorOf,
+  } as const;
 }
 
 export const kbResearchBriefsQueryOptions = {
   queryKey: kb.researchBriefs(),
   staleTime: 30_000,
+  initialPageParam: NO_ID_CURSOR_YET,
+  getNextPageParam: nextIdCursorOf,
 } as const;
 
 export function kbResearchBriefQueryOptions(briefId: number) {
@@ -66,6 +82,8 @@ export function kbResearchBriefQueryOptions(briefId: number) {
 export const kbConversationsQueryOptions = {
   queryKey: kb.chatConversations(),
   staleTime: 30_000,
+  initialPageParam: NO_ID_CURSOR_YET,
+  getNextPageParam: nextIdCursorOf,
 } as const;
 
 export function kbPageQueryOptions(pageId: number) {
@@ -73,7 +91,12 @@ export function kbPageQueryOptions(pageId: number) {
 }
 
 export function kbPageVersionsQueryOptions(pageId: number) {
-  return { queryKey: kb.pageVersions(pageId), staleTime: 60_000 } as const;
+  return {
+    queryKey: kb.pageVersions(pageId),
+    staleTime: 60_000,
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: nextCursorOf,
+  } as const;
 }
 
 export function kbSpaceQueryOptions(spaceId: number) {

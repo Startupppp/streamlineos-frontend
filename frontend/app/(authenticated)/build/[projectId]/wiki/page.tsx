@@ -3,7 +3,7 @@ import { HydrationBoundary } from "@tanstack/react-query";
 import { enforceRouteAccess } from "@/lib/rbac/route-access/enforce-route-access";
 import { RequireModule } from "@/components/auth/require-module";
 import WikiHomePage from "@/features/wiki/components/wiki-home-page";
-import { prefetchProjectWiki } from "@/lib/prefetch/build-project-extras";
+import { prefetchKbHome } from "@/lib/prefetch/knowledge";
 import ProjectWikiLoading from "./loading";
 
 interface ProjectWikiPageProps {
@@ -11,7 +11,7 @@ interface ProjectWikiPageProps {
 }
 
 async function WikiHydrated({ projectId }: { projectId: number }) {
-  const state = await prefetchProjectWiki();
+  const state = await prefetchKbHome();
   return (
     <HydrationBoundary state={state}>
       <RequireModule module="kb">

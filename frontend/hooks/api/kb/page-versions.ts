@@ -6,7 +6,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import type { KbPage, KbPageVersion } from "./page-types";
@@ -48,8 +47,6 @@ export function useKbPageVersionsInfinite(pageId: number) {
         kbPageVersionListContract,
       );
     },
-    initialPageParam: NO_CURSOR_YET,
-    getNextPageParam: (lastPage) => lastPage.pagination.nextCursor ?? undefined,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });
 }
