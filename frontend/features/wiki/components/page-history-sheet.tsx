@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { ArrowLeft } from "lucide-react";
 import {
   KbChevronRightIcon,
   KbHistoryIcon,
@@ -18,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageState } from "@/components/shared/page-state";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useKbPageVersionsInfinite, useKbPageVersionDetail } from "@/hooks/api/kb/page-versions";
 import type { KbPageVersion } from "@/hooks/api/kb/page-types";
@@ -94,22 +96,36 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="p-0 flex flex-col gap-0 overflow-hidden sm:max-w-md">
-        <SheetHeader className="shrink-0 px-6 py-4 border-b">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="flex items-center gap-2">
-              <KbHistoryIcon className="h-4 w-4" />
-              {selectedVersion ? `Version ${selectedVersion}` : "File history"}
-            </SheetTitle>
-            {selectedVersion && (
-              <Button variant="ghost" size="sm" onClick={handleBackToList} className="text-xs h-7">
-                ← All versions
+      <SheetContent side="right" className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-3xl">
+        <SheetHeader className="border-b px-4 py-3 pr-12">
+          <div className="flex min-w-0 items-center gap-2">
+            {selectedVersion ? (
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={handleBackToList}
+                aria-label="All versions"
+                className="shrink-0"
+              >
+                <ArrowLeft className="h-4 w-4" />
               </Button>
+            ) : (
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted text-muted-foreground">
+                <KbHistoryIcon className="size-4" />
+              </span>
             )}
+            <div className="min-w-0 flex-1">
+              <SheetTitle className="truncate text-base leading-tight">
+                {selectedVersion ? `Version ${selectedVersion}` : "File history"}
+              </SheetTitle>
+              <SheetDescription className="mt-0.5 text-xs leading-snug">
+                {selectedVersion
+                  ? "Read-only snapshot of this file."
+                  : "Earlier saved versions of this file, newest first."}
+              </SheetDescription>
+            </div>
           </div>
-          <SheetDescription className="text-xs mt-0.5">
-            Earlier saved versions of this file, newest first.
-          </SheetDescription>
         </SheetHeader>
 
         {!selectedVersion ? (
@@ -210,29 +226,33 @@ export default function PageHistorySheet({ pageId, open, onOpenChange, projectId
                 )}
               </div>
             )}
-            <SheetBody className="px-6 py-4">
-              <PageState resolution={detailState} compact onRetry={listAccessLost ? handleRetryList : handleRetryDetail} loading={<Skeleton className="h-64 w-full" />}>
-                {hasContent && versionDetail ? (
-                  Array.isArray(versionDetail.content) &&
-                  versionDetail.content.length > 0 &&
-                  typeof (versionDetail.content[0] as Record<string, unknown>).celldata !== "undefined" ? (
-                    <p className="text-xs text-muted-foreground">Spreadsheet version preview available on the full history page.</p>
-                  ) : (
-                    <PlateDocumentEditor
-                      value={versionDetail.content}
-                      contentKey={`${pageId}-v${selectedVersion}`}
-                      editable={false}
-                    />
-                  )
-                ) : (
-                  <EmptyState
-                    title="Empty version"
-                    description="No content was saved in this version."
-                    compact
-                    className="flex-1 min-h-[40dvh]"
-                  />
-                )}
-              </PageState>
+            <SheetBody className="flex flex-col overflow-hidden p-0">
+              <ScrollArea fill className="min-h-0 flex-1">
+                <div className="px-6 py-4">
+                  <PageState resolution={detailState} compact onRetry={listAccessLost ? handleRetryList : handleRetryDetail} loading={<Skeleton className="h-64 w-full" />}>
+                    {hasContent && versionDetail ? (
+                      Array.isArray(versionDetail.content) &&
+                      versionDetail.content.length > 0 &&
+                      typeof (versionDetail.content[0] as Record<string, unknown>).celldata !== "undefined" ? (
+                        <p className="text-xs text-muted-foreground">Spreadsheet version preview available on the full history page.</p>
+                      ) : (
+                        <PlateDocumentEditor
+                          value={versionDetail.content}
+                          contentKey={`${pageId}-v${selectedVersion}`}
+                          editable={false}
+                        />
+                      )
+                    ) : (
+                      <EmptyState
+                        title="Empty version"
+                        description="No content was saved in this version."
+                        compact
+                        className="flex-1 min-h-[40dvh]"
+                      />
+                    )}
+                  </PageState>
+                </div>
+              </ScrollArea>
             </SheetBody>
             {!detailError && !listAccessLost && <SheetFooter className="border-t px-6 py-4">
               {hasContent ? (

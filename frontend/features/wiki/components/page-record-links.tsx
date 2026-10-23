@@ -42,10 +42,6 @@ const TARGET_TYPE_LABELS: Record<KbRecordTargetType, string> = {
   hr_employee: "HR Employee",
 };
 
-const FIELD_CLASS = "h-9 w-full text-label bg-card border-input shadow-xs";
-const ACTION_BTN_CLASS =
-  "h-9 w-full text-label bg-card border border-input shadow-xs hover:bg-muted/50";
-
 const TARGET_TYPE_OPTIONS = Object.entries(TARGET_TYPE_LABELS).map(([value, label]) => ({
   value: value as KbRecordTargetType,
   label,
@@ -212,7 +208,7 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
       {canUpdate && (listState.kind === "ready" || listState.kind === "empty") && (
         <div className="space-y-2 pt-1">
           <Select value={targetType} onValueChange={handleTargetTypeChange}>
-            <SelectTrigger className={FIELD_CLASS}>
+            <SelectTrigger>
               <SelectValue placeholder="Record type" />
             </SelectTrigger>
             <SelectContent>
@@ -227,7 +223,6 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
             placeholder="Label (e.g. Related lead)"
             value={label}
             onChange={handleLabelChange}
-            className={FIELD_CLASS}
           />
           <KbRecordTargetCombobox
             targetType={targetType}
@@ -235,11 +230,11 @@ export function PageRecordLinks({ pageId }: PageRecordLinksProps) {
             onChange={handleTargetIdChange}
             placeholder="Search record…"
             disabled={!targetType}
-            className={FIELD_CLASS}
+            className="w-full"
           />
           <Button
             variant="outline"
-            className={ACTION_BTN_CLASS}
+            className="w-full"
             onClick={handleAdd}
             disabled={!targetType || !targetId.trim() || !label.trim() || addLink.isPending}
           >

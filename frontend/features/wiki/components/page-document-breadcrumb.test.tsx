@@ -54,6 +54,25 @@ describe("PageDocumentBreadcrumb — global wiki context", () => {
     expect(screen.queryByRole("link", { name: "Project" })).toBeNull();
   });
 
+  it("shows locked and starred badges when the file has those states", () => {
+    render(
+      <PageDocumentBreadcrumb
+        page={makePage({ isLocked: true, isFavorite: true, trustState: "unverified" })}
+        saveState="idle"
+      />,
+    );
+
+    expect(screen.getByText("Locked")).toBeInTheDocument();
+    expect(screen.getByText("Starred")).toBeInTheDocument();
+  });
+
+  it("hides locked and starred badges when the file is neither", () => {
+    render(<PageDocumentBreadcrumb page={makePage()} saveState="idle" />);
+
+    expect(screen.queryByText("Locked")).not.toBeInTheDocument();
+    expect(screen.queryByText("Starred")).not.toBeInTheDocument();
+  });
+
   it("renders ancestor links with global page hrefs", () => {
     render(
       <PageDocumentBreadcrumb

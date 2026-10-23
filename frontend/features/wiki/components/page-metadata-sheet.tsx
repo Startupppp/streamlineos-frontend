@@ -8,10 +8,11 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { UserCombobox } from "@/components/ui/user-combobox";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { UserCombobox } from "@/components/ui/user-combobox";
 import {
   Sheet,
+  SheetBody,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -41,6 +42,7 @@ import { RequestReviewDialog } from "./reviews-decision-dialogs";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { AccessReasonBanner } from "./page-access-reason-banner";
+import { PageFlagBadges } from "./page-flag-badges";
 
 const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "archived"; label: string }> = [
   { value: "draft", label: "Draft" },
@@ -48,13 +50,6 @@ const STATUS_OPTIONS: Array<{ value: "draft" | "in_review" | "published" | "arch
   { value: "published", label: "Published" },
   { value: "archived", label: "Archived" },
 ];
-
-const FIELD_CLASS = "h-9 w-full text-label bg-card border-input shadow-xs";
-const ACTION_BTN_BASE = "h-9 w-full text-label";
-const ACTION_BTN_NEUTRAL = `${ACTION_BTN_BASE} bg-card border border-input shadow-xs hover:bg-muted/50`;
-const ACTION_BTN_DANGER = `${ACTION_BTN_BASE} text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive`;
-const ACTION_BTN_WARNING = `${ACTION_BTN_BASE} text-status-warning-ink border-status-warning-rule hover:bg-status-warning-surface hover:text-status-warning-ink`;
-
 
 const CONTENT_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
   { value: "note", label: "Note" },
@@ -256,17 +251,20 @@ export default function PageMetadataSheet({
   return (
     <>
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="gap-0 sm:max-w-md p-0 flex flex-col bg-background">
-        <SheetHeader className="px-5 py-4 border-b shrink-0 bg-background">
-          <SheetTitle className="text-sm">File settings</SheetTitle>
-          <SheetDescription className="text-xs mt-0.5">
+      <SheetContent side="right" className="flex flex-col gap-0 p-0 sm:max-w-md">
+        <SheetHeader className="shrink-0 border-b px-6 py-4">
+          <div className="flex min-w-0 items-center gap-1.5">
+            <SheetTitle className="truncate">File settings</SheetTitle>
+            <AccessReasonBanner access={page.access} />
+          </div>
+          <SheetDescription className="mt-0.5 text-xs">
             Visibility, review schedule and other properties of this file.
           </SheetDescription>
         </SheetHeader>
 
-        <ScrollArea className="flex-1 min-h-0">
-          <div className="min-h-full px-5 py-4 space-y-5 bg-muted">
-            <AccessReasonBanner access={page.access} />
+        <SheetBody className="flex flex-col overflow-hidden p-0">
+          <ScrollArea fill className="min-h-0 flex-1">
+            <div className="space-y-5 px-6 py-5">
             {pendingScope?.pageId === pageId && (
               <div role="alert" className="space-y-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
                 <p>The page changed before your {pendingScope.field === "spaceId" ? "team folder" : "owner"} choice was saved. Your choice is ready to retry.</p>
@@ -285,7 +283,7 @@ export default function PageMetadataSheet({
                 onValueChange={handleSpaceChange}
                 disabled={!isEditable}
               >
-                <SelectTrigger className={FIELD_CLASS} aria-label="Team folder">
+                <SelectTrigger aria-label="Team folder">
                   <SelectValue placeholder="No team folder" />
                 </SelectTrigger>
                 <SelectContent>
@@ -300,9 +298,12 @@ export default function PageMetadataSheet({
             </div>
 
             <div className="space-y-2">
-              <p className="text-label font-medium text-foreground">Status</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-label font-medium text-foreground">Status</p>
+                <PageFlagBadges isLocked={page.isLocked} isFavorite={page.isFavorite} />
+              </div>
               <Select value={status} onValueChange={handleStatusChange} disabled={!isEditable}>
-                <SelectTrigger className={FIELD_CLASS} aria-label="Status">
+                <SelectTrigger aria-label="Status">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -323,7 +324,7 @@ export default function PageMetadataSheet({
                 >
                   {showPublish && (
                     <LoadingButton
-                      className={ACTION_BTN_BASE}
+                      className="w-full"
                       onClick={handlePublish}
                       isPending={publishPage.isPending}
                     >
@@ -332,8 +333,8 @@ export default function PageMetadataSheet({
                   )}
                   {status !== "archived" ? (
                     <LoadingButton
-                      variant="outline"
-                      className={ACTION_BTN_DANGER}
+                      variant="destructive"
+                      className="w-full"
                       onClick={handleArchive}
                       isPending={archivePage.isPending}
                     >
@@ -341,7 +342,8 @@ export default function PageMetadataSheet({
                     </LoadingButton>
                   ) : (
                     <LoadingButton
-                      className={ACTION_BTN_BASE}
+                      variant="outline"
+                      className="w-full"
                       onClick={handleUnarchive}
                       isPending={unarchivePage.isPending}
                     >
@@ -355,7 +357,7 @@ export default function PageMetadataSheet({
             <div className="space-y-2">
               <p className="text-label font-medium text-foreground">Content type</p>
               <Select value={page.contentType ?? ""} onValueChange={handleContentTypeChange} disabled={!isEditable}>
-                <SelectTrigger className={FIELD_CLASS} aria-label="Content type">
+                <SelectTrigger aria-label="Content type">
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -377,7 +379,7 @@ export default function PageMetadataSheet({
                 placeholder="Select owner…"
                 allowUnassigned
                 disabled={!canChangeOwner}
-                className={FIELD_CLASS}
+                className="py-0"
               />
             </div>
 
@@ -417,15 +419,12 @@ export default function PageMetadataSheet({
                 )}
                 {!verifyFormOpen ? (
                   <div className="grid grid-cols-2 gap-2">
-                    <Button
-                      className={ACTION_BTN_BASE}
-                      onClick={handleOpenVerifyForm}
-                    >
+                    <Button className="w-full" onClick={handleOpenVerifyForm}>
                       Verify
                     </Button>
                     <LoadingButton
-                      variant="outline"
-                      className={ACTION_BTN_WARNING}
+                      variant="warning"
+                      className="w-full"
                       onClick={handleMarkStale}
                       isPending={markStalePage.isPending}
                     >
@@ -440,11 +439,10 @@ export default function PageMetadataSheet({
                       placeholder="Review interval (days)"
                       value={intervalDays}
                       onChange={handleIntervalDaysChange}
-                      className={FIELD_CLASS}
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <LoadingButton
-                        className={ACTION_BTN_BASE}
+                        className="w-full"
                         onClick={handleConfirmVerify}
                         isPending={verifyPage.isPending}
                       >
@@ -452,7 +450,7 @@ export default function PageMetadataSheet({
                       </LoadingButton>
                       <Button
                         variant="outline"
-                        className={ACTION_BTN_NEUTRAL}
+                        className="w-full"
                         onClick={handleCancelVerify}
                       >
                         Cancel
@@ -472,18 +470,19 @@ export default function PageMetadataSheet({
             {canManageReviews && (
               <div className="space-y-2">
                 <p className="text-label font-medium text-foreground">Reviews</p>
-                <Button type="button" variant="outline" className={ACTION_BTN_NEUTRAL} onClick={handleRequestReview}>
+                <Button type="button" variant="outline" className="w-full" onClick={handleRequestReview}>
                   Request review
                 </Button>
               </div>
             )}
 
             <PageRecordLinks pageId={pageId} />
-          </div>
-        </ScrollArea>
+            </div>
+          </ScrollArea>
+        </SheetBody>
 
-        <SheetFooter className="px-5 py-4 border-t shrink-0 bg-background">
-          <Button variant="outline" className={ACTION_BTN_NEUTRAL} onClick={handleClose}>
+        <SheetFooter className="shrink-0 border-t px-6 py-4">
+          <Button variant="outline" className="w-full" onClick={handleClose}>
             Close
           </Button>
         </SheetFooter>

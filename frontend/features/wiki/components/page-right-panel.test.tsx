@@ -421,7 +421,8 @@ describe("PageRightPanel — Activity section", () => {
 
     renderPanel();
     const dialog = await openDetailsDialog();
-    expect(within(dialog).getByText(/Version restored · Alice/)).toBeInTheDocument();
+    expect(within(dialog).getByText("Version restored")).toBeInTheDocument();
+    expect(within(dialog).getByText(/Alice/)).toBeInTheDocument();
     expect(within(dialog).queryByText(/kb\.page/)).not.toBeInTheDocument();
   });
 

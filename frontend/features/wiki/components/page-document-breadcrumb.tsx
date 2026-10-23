@@ -17,6 +17,7 @@ import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,
 } from "@/features/wiki/lib/kb-page-status";
+import { PageFlagBadges } from "./page-flag-badges";
 
 interface PageDocumentBreadcrumbProps {
   page: KbPageDetail;
@@ -168,6 +169,7 @@ export function PageDocumentBreadcrumb({
                 Verified
               </Badge>
             ) : null}
+            <PageFlagBadges isLocked={page.isLocked} isFavorite={page.isFavorite} />
           </>
         ) : null}
       </div>

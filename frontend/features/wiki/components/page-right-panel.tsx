@@ -29,7 +29,9 @@ import {
   KB_STATUS_LABELS,
   KB_STATUS_BADGE_CLASS,
 } from "@/features/wiki/lib/kb-page-status";
+import { PageActivityGraph } from "./page-activity-graph";
 import { TrustBadge } from "./kb-collection-badges";
+import { PageFlagBadges } from "./page-flag-badges";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 
@@ -127,15 +129,6 @@ function PersonValue({ name }: { name: string }) {
   );
 }
 
-const GRANT_ACTION_PREFIX = "kb.page_grant.";
-
-function activityLabel(action: string): string {
-  const isGrant = action.startsWith(GRANT_ACTION_PREFIX);
-  const verb = action.slice(action.lastIndexOf(".") + 1).replaceAll("_", " ");
-  const label = isGrant ? `access ${verb}` : verb;
-  return label.charAt(0).toUpperCase() + label.slice(1);
-}
-
 function PanelContent({
   pageId,
   page,
@@ -217,6 +210,7 @@ function PanelContent({
               {page.trustState ? (
                 <TrustBadge trustState={page.trustState} />
               ) : null}
+              <PageFlagBadges isLocked={page.isLocked} isFavorite={page.isFavorite} />
             </div>
           </PropertyRow>
           <PropertyRow label="Visibility">{visibilityValue}</PropertyRow>
@@ -354,33 +348,7 @@ function PanelContent({
         ) : activityEntries.length === 0 ? (
           <p className="text-xs text-muted-foreground">No recent activity.</p>
         ) : (
-          <ul className="relative flex flex-col gap-0">
-            {activityEntries.map((entry, index) => (
-              <li
-                key={entry.id}
-                className="relative flex gap-2.5 rounded-md px-1 py-1.5 text-xs transition-colors hover:bg-muted"
-              >
-                <span className="relative mt-1.5 flex h-2 w-2 shrink-0">
-                  {index < activityEntries.length - 1 ? (
-                    <span
-                      aria-hidden
-                      className="absolute left-1/2 top-2 h-[calc(100%+0.375rem)] w-px -translate-x-1/2 bg-border"
-                    />
-                  ) : null}
-                  <span className="relative z-[1] h-2 w-2 rounded-full bg-muted-foreground/40 ring-2 ring-background" />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-medium text-foreground">
-                    {activityLabel(entry.action)}
-                    {entry.actor ? ` · ${entry.actor.name}` : ""}
-                  </p>
-                  <p className="mt-0.5 tabular-nums text-muted-foreground">
-                    {kbTimeAgo(entry.at)}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
+          <PageActivityGraph entries={activityEntries} />
         )}
       </section>
     </div>
