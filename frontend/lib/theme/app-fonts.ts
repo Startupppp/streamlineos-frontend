@@ -12,6 +12,7 @@ const appMono = IBM_Plex_Mono({
   weight: ["400", "500", "600"],
   variable: "--font-plex-mono",
   display: "swap",
+  preload: false,
 });
 
 export const APP_FONT_CLASS = `${appSans.variable} ${appMono.variable}`;

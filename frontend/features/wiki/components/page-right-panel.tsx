@@ -1,10 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useStoredFlag } from "@/hooks/common/use-stored-flag";
 import {
   KbFileTextIcon,
-  KbPanelRightCloseIcon,
   KbPanelRightOpenIcon,
 } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
@@ -38,7 +36,6 @@ import { TrustBadge } from "./kb-collection-badges";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 
-const STORAGE_KEY = "wiki-right-panel-collapsed";
 const BACKLINK_DISPLAY_LIMIT = 20;
 const RECORD_LINK_DISPLAY_LIMIT = 20;
 
@@ -55,6 +52,7 @@ interface PageRightPanelProps {
   onNavigate: (pageId: number) => void;
   mobileOpen?: boolean;
   onMobileOpenChange?: (open: boolean) => void;
+  railActionsHostRef?: (node: HTMLElement | null) => void;
 }
 
 interface PanelContentProps {
@@ -400,8 +398,8 @@ export default function PageRightPanel({
   onNavigate,
   mobileOpen,
   onMobileOpenChange,
+  railActionsHostRef,
 }: PageRightPanelProps) {
-  const [collapsed, setCollapsed] = useStoredFlag(STORAGE_KEY);
   const [uncontrolledMobileOpen, setUncontrolledMobileOpen] = useState(false);
   const title = page.title || "Untitled";
   const isMobileControlled = onMobileOpenChange !== undefined;
@@ -409,8 +407,8 @@ export default function PageRightPanel({
     ? Boolean(mobileOpen)
     : uncontrolledMobileOpen;
 
-  function handleToggle() {
-    setCollapsed(!collapsed);
+  function handleOpenSheet() {
+    handleMobileSheetChange(true);
   }
 
   function handleMobileSheetChange(open: boolean) {
@@ -421,7 +419,7 @@ export default function PageRightPanel({
   return (
     <>
       <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
-        <SheetContent side="right" className="gap-0 p-0 xl:hidden sm:max-w-sm">
+        <SheetContent side="right" className="gap-0 p-0 sm:max-w-sm">
           <SheetHeader className="border-b border-border px-4 py-3 pr-12">
             <SheetDescription className="text-xs">
               Page details
@@ -441,52 +439,20 @@ export default function PageRightPanel({
         </SheetContent>
       </Sheet>
 
-      <div className="hidden shrink-0 flex-col xl:flex">
-        {!collapsed ? (
-          <aside className="flex h-full w-72 flex-col border-l border-border bg-muted/20">
-            <div className="flex items-start justify-between gap-2 border-b border-border/80 px-4 py-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-micro font-semibold uppercase tracking-[0.08em] text-muted-foreground">
-                  Details
-                </p>
-                <p className="mt-0.5 truncate text-sm font-medium leading-snug text-foreground">
-                  {title}
-                </p>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 shrink-0 text-muted-foreground hover:text-foreground"
-                onClick={handleToggle}
-                aria-label="Close details panel"
-              >
-                <KbPanelRightCloseIcon className="h-4 w-4" />
-              </Button>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto">
-              <PanelContent
-                pageId={pageId}
-                page={page}
-                wordCount={wordCount}
-                onNavigate={onNavigate}
-              />
-            </div>
-          </aside>
-        ) : (
-          <div className="sticky top-0 border-l border-border bg-muted/20 px-2 pt-3">
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground hover:text-foreground"
-              onClick={handleToggle}
-              aria-label="Open details panel"
-            >
-              <KbPanelRightOpenIcon className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
+      <div className="hidden h-full w-12 shrink-0 flex-col items-center gap-1.5 border-l border-border bg-muted/20 px-1.5 pt-2.5 xl:flex">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-9 w-9"
+          onClick={handleOpenSheet}
+          aria-label="Open details panel"
+        >
+          <KbPanelRightOpenIcon className="h-4 w-4" />
+        </Button>
+        {railActionsHostRef ? (
+          <span ref={railActionsHostRef} className="flex flex-col items-center" />
+        ) : null}
       </div>
     </>
   );

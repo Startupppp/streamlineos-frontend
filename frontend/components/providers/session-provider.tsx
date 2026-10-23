@@ -63,7 +63,8 @@ export function SessionProvider({
   session?: Session | null;
 }) {
   useState(() => {
-    if (typeof window !== "undefined" && session?.backendJwt) seedBackendToken(session.backendJwt);
+    if (typeof window !== "undefined" && session?.backendJwt)
+      seedBackendToken(session.backendJwt);
   });
   return (
     <NextAuthSessionProvider

@@ -36,10 +36,9 @@ function ScrollArea({
   ) : (
     children
   );
-  const showVertical =
-    !hideScrollbar && (orientation === "vertical" || orientation === "both");
-  const showHorizontal =
-    !hideScrollbar && (orientation === "horizontal" || orientation === "both");
+
+  const showVertical = orientation === "vertical" || orientation === "both";
+  const showHorizontal = orientation === "horizontal" || orientation === "both";
 
   return (
     <ScrollAreaPrimitive.Root
@@ -68,10 +67,16 @@ function ScrollArea({
         {content}
       </ScrollAreaPrimitive.Viewport>
       {showVertical ? (
-        <ScrollBar orientation="vertical" className={scrollbarClassName} />
+        <ScrollBar
+          orientation="vertical"
+          className={cn(hideScrollbar && "hidden", scrollbarClassName)}
+        />
       ) : null}
       {showHorizontal ? (
-        <ScrollBar orientation="horizontal" className={scrollbarClassName} />
+        <ScrollBar
+          orientation="horizontal"
+          className={cn(hideScrollbar && "hidden", scrollbarClassName)}
+        />
       ) : null}
       <ScrollAreaPrimitive.Corner />
     </ScrollAreaPrimitive.Root>

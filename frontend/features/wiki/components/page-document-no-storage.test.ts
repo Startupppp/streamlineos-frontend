@@ -107,7 +107,7 @@ describe("Wiki page body must not reach Web Storage", () => {
 
   const STORAGE_ACCESS_PATTERN =
     /(?:(?:localStorage|sessionStorage)\s*\.\s*(?:setItem|getItem|removeItem)|useStoredFlag)\s*\(\s*([A-Za-z_$][\w$]*|['"`][^'"`]*['"`])/g;
-  const ALLOWED_STORAGE_KEYS = ["wiki-right-panel-collapsed"];
+  const ALLOWED_STORAGE_KEYS: string[] = [];
 
   function collectStorageKeys(): string[] {
     const keys = new Set<string>();
@@ -132,10 +132,13 @@ describe("Wiki page body must not reach Web Storage", () => {
     expect(collectStorageKeys()).toEqual(ALLOWED_STORAGE_KEYS);
   });
 
-  it("(h) control: the extractor resolves the allowlisted key to its literal, so the equality above cannot pass by finding nothing at all", () => {
-    const keys = collectStorageKeys();
-    expect(keys).toHaveLength(ALLOWED_STORAGE_KEYS.length);
-    expect(keys.every((key) => key.startsWith("wiki-"))).toBe(true);
+  it("(h) control: the extractor resolves a literal key, so an empty live set is not a broken scanner", () => {
+    const sample = `useStoredFlag("wiki-example-key")`;
+    const keys = [...sample.matchAll(STORAGE_ACCESS_PATTERN)].map((match) =>
+      match[1].slice(1, -1),
+    );
+    expect(keys).toEqual(["wiki-example-key"]);
+    expect(collectStorageKeys()).toEqual(ALLOWED_STORAGE_KEYS);
   });
 
   it("(g) access-revocation transition — no wiki source writes localStorage or sessionStorage with a dynamic or org-scoped key: a mid-session 403 cannot cause page content to persist in storage", () => {

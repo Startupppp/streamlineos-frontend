@@ -50,14 +50,13 @@ import {
   prependPlateValue,
 } from "@/components/editor/plate/plate-value-convert";
 import { KbFileViewer } from "./files";
+import { WIKI_DOCUMENT_COLUMN } from "@/features/wiki/lib/wiki-document-column";
 import "../wiki-document.css";
 
 const PageSpreadsheet = dynamic(() => import("./page-spreadsheet"), {
   ssr: false,
   loading: () => <Skeleton className="h-full w-full" />,
 });
-
-const WIKI_DOCUMENT_COLUMN = "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
 
 function loadedEditorSnapshot(storedContent: unknown): string {
   const loaded = normalizePlateValue(storedContent);
@@ -150,6 +149,7 @@ export default function PageDocument({
   const editorValue = editorDraft?.pageId === pageId ? editorDraft.value : null;
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
   const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
+  const [moreOptionsHost, setMoreOptionsHost] = useState<HTMLElement | null>(null);
 
   const handleSavePage = useCallback(
     (
@@ -344,6 +344,10 @@ export default function PageDocument({
     setCoverPickerOpen(open);
   }
 
+  function handleMoreOptionsHost(node: HTMLElement | null) {
+    setMoreOptionsHost(node);
+  }
+
   function handleToolbarHost(node: HTMLDivElement | null) {
     setToolbarHost(node);
   }
@@ -385,7 +389,7 @@ export default function PageDocument({
     .filter(Boolean).length;
 
   return (
-    <div className="wiki-document flex h-full min-h-full flex-1 flex-col">
+    <div className="wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <PageCover
         coverImage={page.coverImage}
         isEditable={isEditable}
@@ -418,6 +422,7 @@ export default function PageDocument({
                 onOpenCover={handleOpenCover}
                 onOpenDetailsPanel={() => setDetailsMobileOpen(true)}
                 projectId={projectId}
+                moreOptionsHost={moreOptionsHost}
               />
             </div>
             {isEditable ? (
@@ -550,6 +555,7 @@ export default function PageDocument({
           onNavigate={handleNavigateToPage}
           mobileOpen={detailsMobileOpen}
           onMobileOpenChange={setDetailsMobileOpen}
+          railActionsHostRef={handleMoreOptionsHost}
         />
       </div>
     </div>

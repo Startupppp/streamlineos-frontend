@@ -1,6 +1,7 @@
 .wiki-document {
   background: var(--background);
   color: var(--foreground);
+  overflow: hidden;
 }
 
 .wiki-document-chrome {
@@ -17,6 +18,9 @@
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: var(--card);
   color: var(--foreground);
   border: 1px solid var(--border);
@@ -35,4 +39,27 @@
   background: transparent;
   color: var(--foreground);
   box-shadow: none;
+}
+
+.wiki-spreadsheet-grid > .fortune-container {
+  height: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  width: 100%;
+}
+
+.wiki-spreadsheet-grid .fortune-sheet-container {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.wiki-spreadsheet-grid .fortune-sheet-canvas-placeholder {
+  flex: 1 1 auto;
+  height: 100%;
+  min-height: 0;
+}
+
+/* Fortune always paints this over the last rows in edit mode. Rows are added from the row menu. */
+.wiki-spreadsheet-grid #luckysheet-bottom-controll-row {
+  display: none !important;
 }

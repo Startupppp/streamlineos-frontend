@@ -27,8 +27,7 @@ import PageSpreadsheetGrid from "./page-spreadsheet-grid";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
 import { usePagePresentationUpdate } from "./use-page-presentation-update";
 import type { KbPageEditConflict } from "@/features/wiki/lib/wiki-schema";
-
-const WIKI_DOCUMENT_COLUMN = "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
+import { WIKI_SPREADSHEET_COLUMN } from "@/features/wiki/lib/wiki-document-column";
 
 interface PageSpreadsheetProps {
   pageId: number;
@@ -57,9 +56,19 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
   const [isReloading, setIsReloading] = useState(false);
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
+  const [workbookSaveHost, setWorkbookSaveHost] = useState<HTMLElement | null>(null);
+  const [moreOptionsHost, setMoreOptionsHost] = useState<HTMLElement | null>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const sheetsRef = useRef<FortuneSheet[] | null>(null);
+
+  const handleWorkbookSaveHost = useCallback((node: HTMLElement | null) => {
+    setWorkbookSaveHost(node);
+  }, []);
+
+  const handleMoreOptionsHost = useCallback((node: HTMLElement | null) => {
+    setMoreOptionsHost(node);
+  }, []);
 
   const handleSavePage = useCallback(
     (payload: PageAutosavePatch & { pageId: number; expectedContentRevision: number }) =>
@@ -191,7 +200,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
             : recordResolution
         }
         loading={
-          <div className="w-full px-3 py-4 space-y-4">
+          <div className={cn(WIKI_SPREADSHEET_COLUMN, "space-y-4 py-4")}>
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
             <Skeleton className="h-96 w-full" />
@@ -208,22 +217,25 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
   const isEditable = canUpdate && page.can.edit === true && (!page.isLocked || canManage);
 
   return (
-    <div className="wiki-document flex h-full min-h-full flex-1 flex-col">
+    <div className="wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden">
       <PageCover coverImage={page.coverImage} isEditable={isEditable} onCoverChange={handleCoverChange} onChangeCover={handleOpenCover} />
       <PageCoverPickerDialog open={coverPickerOpen} onOpenChange={handleCoverPickerOpenChange} onCoverChange={handleCoverChange} pageId={pageId} />
       <div className="flex min-h-0 min-w-0 flex-1">
         <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
           <div className="wiki-document-chrome sticky top-0 z-40 shrink-0">
-            <div className={cn(WIKI_DOCUMENT_COLUMN, "py-2.5")}>
+            <div className={cn(WIKI_SPREADSHEET_COLUMN, "py-2.5")}>
               <PageDocumentHeader
                 page={page} pageId={pageId} saveState={saveState} savedAt={savedAt} isOffline={isOffline}
                 onRetrySave={retry} isEditable={isEditable} onNavigate={handleNavigateToPage}
                 onOpenCover={handleOpenCover} onOpenDetailsPanel={handleOpenDetails}
                 onSpreadsheetExport={handleExportSpreadsheet} projectId={projectId}
+                workbookSaveHostRef={handleWorkbookSaveHost}
+                moreOptionsHost={moreOptionsHost}
               />
             </div>
           </div>
-          <div className={cn("flex min-h-0 flex-1 flex-col py-4", WIKI_DOCUMENT_COLUMN)}>
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+            <div className={cn(WIKI_SPREADSHEET_COLUMN, "shrink-0 pt-3")}>
             {pendingPresentation && (
               <div role="alert" className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
                 <span className="min-w-0 flex-1">The page changed before your {pendingPresentation.field === "icon" ? "icon" : "cover"} change was saved. Your choice is ready to retry.</span>
@@ -256,6 +268,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
               />
               <PageDocumentPropertyActions icon={page.icon} hasCover={Boolean(page.coverImage)} isEditable={isEditable} onIconChange={handleIconChange} onOpenCover={handleOpenCover} />
             </div>
+            </div>
             {workbook ? (
               <PageSpreadsheetGrid
                 key={`${pageId}:${reloadNonce}`}
@@ -268,6 +281,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
                 isReloading={isReloading}
                 onReload={handleReloadWorkbook}
                 onRefetchRevision={handleRefetchRevision}
+                saveStatusHost={workbookSaveHost}
               />
             ) : workbookQuery.isError ? (
               <ErrorState
@@ -277,11 +291,11 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
                 onRetry={handleRetryWorkbook}
               />
             ) : (
-              <Skeleton className="min-h-[400px] w-full flex-1 rounded-xl" />
+              <Skeleton className="min-h-0 w-full flex-1" />
             )}
           </div>
         </div>
-        <PageRightPanel pageId={pageId} page={page} onNavigate={handleNavigateToPage} mobileOpen={detailsMobileOpen} onMobileOpenChange={handleDetailsMobileOpenChange} />
+        <PageRightPanel pageId={pageId} page={page} onNavigate={handleNavigateToPage} mobileOpen={detailsMobileOpen} onMobileOpenChange={handleDetailsMobileOpenChange} railActionsHostRef={handleMoreOptionsHost} />
       </div>
     </div>
   );

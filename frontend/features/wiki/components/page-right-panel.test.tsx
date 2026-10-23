@@ -92,6 +92,10 @@ function renderPanel(overrides: Partial<KbPageDetail> = {}) {
   return render(<PanelHarness overrides={overrides} />);
 }
 
+function openDetailsTrigger() {
+  return screen.getAllByRole("button", { name: "Open details panel" })[0];
+}
+
 describe("PageRightPanel — mobile path for linked records", () => {
   it("marks the loaded linked-record count as partial when another cursor page exists", async () => {
     mockUseKbPageRecordLinks.mockReturnValue({
@@ -100,7 +104,7 @@ describe("PageRightPanel — mobile path for linked records", () => {
     });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     expect(within(screen.getByRole("dialog")).getByText("1+")).toBeInTheDocument();
   });
@@ -109,14 +113,14 @@ describe("PageRightPanel — mobile path for linked records", () => {
     renderPanel();
 
     expect(
-      screen.getByRole("button", { name: "Open details panel" }),
+      openDetailsTrigger(),
     ).toBeInTheDocument();
   });
 
   it("the parent trigger has an aria-label so keyboard users can identify it (FE-117)", () => {
     renderPanel();
 
-    const trigger = screen.getByRole("button", { name: "Open details panel" });
+    const trigger = openDetailsTrigger();
     expect(trigger).toHaveAttribute("aria-label", "Open details panel");
   });
 
@@ -124,7 +128,7 @@ describe("PageRightPanel — mobile path for linked records", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
   });
@@ -133,7 +137,7 @@ describe("PageRightPanel — mobile path for linked records", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("Linked records")).toBeInTheDocument();
@@ -143,7 +147,7 @@ describe("PageRightPanel — mobile path for linked records", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("No linked records.")).toBeInTheDocument();
@@ -155,7 +159,7 @@ describe("PageRightPanel — backlinks section", () => {
     mockUseKbPageBacklinks.mockReturnValue({ data: undefined, isLoading: true, isError: false, error: null, refetch: jest.fn() });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
@@ -166,7 +170,7 @@ describe("PageRightPanel — backlinks section", () => {
     mockUseKbPageBacklinks.mockReturnValue({ data: undefined, isLoading: false, isError: true, error: new ApiError("Offline", 503, "UNAVAILABLE", { correlationId: "kb-backlinks-1" }), refetch });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).queryByText("No files link here.")).not.toBeInTheDocument();
@@ -180,7 +184,7 @@ describe("PageRightPanel — backlinks section", () => {
     mockUseKbPageBacklinks.mockReturnValue({ data: [{ id: 2, title: "Related runbook", icon: null }], isLoading: false, isError: true, error: new Error("offline"), refetch });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByRole("button", { name: /Related runbook/ })).toBeInTheDocument();
@@ -192,7 +196,7 @@ describe("PageRightPanel — backlinks section", () => {
     mockUseKbPageBacklinks.mockReturnValue({ data: [{ id: 2, title: "Private runbook", icon: null }], isLoading: false, isError: true, error: new ApiError("Denied", 403), refetch: jest.fn() });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).queryByRole("button", { name: /Private runbook/ })).not.toBeInTheDocument();
@@ -203,7 +207,7 @@ describe("PageRightPanel — backlinks section", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("Backlinks")).toBeInTheDocument();
@@ -213,7 +217,7 @@ describe("PageRightPanel — backlinks section", () => {
     const user = userEvent.setup();
     renderPanel();
 
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
 
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("No files link here.")).toBeInTheDocument();
@@ -230,7 +234,7 @@ describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112
     mockUseKbPageBacklinks.mockReturnValue({ data: manyBacklinks });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
     const dialog = screen.getByRole("dialog");
     const backlinkButtons = within(dialog).getAllByRole("button");
     const navButtons = backlinkButtons.filter(
@@ -248,7 +252,7 @@ describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112
     mockUseKbPageBacklinks.mockReturnValue({ data: manyBacklinks });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
     const dialog = screen.getByRole("dialog");
     expect(within(dialog).getByText("+5 more")).toBeInTheDocument();
   });
@@ -262,7 +266,7 @@ describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112
     mockUseKbPageBacklinks.mockReturnValue({ data: exactLimit });
     const user = userEvent.setup();
     renderPanel();
-    await user.click(screen.getByRole("button", { name: "Open details panel" }));
+    await user.click(openDetailsTrigger());
     const dialog = screen.getByRole("dialog");
     const navButtons = within(dialog)
       .getAllByRole("button")
@@ -274,7 +278,7 @@ describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112
 
 async function openDetailsDialog() {
   const user = userEvent.setup();
-  await user.click(screen.getByRole("button", { name: "Open details panel" }));
+  await user.click(openDetailsTrigger());
   return screen.getByRole("dialog");
 }
 

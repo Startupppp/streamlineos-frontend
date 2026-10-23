@@ -53,6 +53,8 @@ interface PageDocumentHeaderProps {
   onOpenDetailsPanel?: () => void;
   onSpreadsheetExport?: (format: "xlsx" | "csv") => void;
   projectId?: number;
+  workbookSaveHostRef?: (node: HTMLElement | null) => void;
+  moreOptionsHost?: HTMLElement | null;
 }
 
 export default function PageDocumentHeader({
@@ -71,6 +73,8 @@ export default function PageDocumentHeader({
   onOpenDetailsPanel,
   onSpreadsheetExport,
   projectId,
+  workbookSaveHostRef,
+  moreOptionsHost,
 }: PageDocumentHeaderProps) {
   const router = useRouter();
   const deletePage = useDeleteKbPage();
@@ -179,6 +183,7 @@ export default function PageDocumentHeader({
           isOffline={isOffline}
           onRetrySave={onRetrySave}
           projectId={projectId}
+          workbookSaveHostRef={workbookSaveHostRef}
         />
         <PageDocumentToolbar
           page={page}
@@ -198,6 +203,7 @@ export default function PageDocumentHeader({
           onNavigate={onNavigate}
           onOpenDetailsPanel={onOpenDetailsPanel}
           onSpreadsheetExport={onSpreadsheetExport}
+          moreOptionsHost={moreOptionsHost}
         />
       </div>
 

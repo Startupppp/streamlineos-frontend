@@ -66,7 +66,7 @@ export function useCompanionPreferences() {
     staleTime: PREFERENCES_REFRESH_MS,
     refetchInterval: PREFERENCES_REFRESH_MS,
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: "always",
+    refetchOnWindowFocus: true,
     refetchOnReconnect: true,
     enabled: status === "authenticated",
     retry: 1,

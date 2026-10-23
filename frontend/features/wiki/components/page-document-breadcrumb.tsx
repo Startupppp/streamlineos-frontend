@@ -25,6 +25,7 @@ interface PageDocumentBreadcrumbProps {
   isOffline?: boolean;
   onRetrySave?: () => void;
   projectId?: number;
+  workbookSaveHostRef?: (node: HTMLElement | null) => void;
 }
 
 interface SpaceBreadcrumbProps {
@@ -58,6 +59,7 @@ export function PageDocumentBreadcrumb({
   isOffline,
   onRetrySave,
   projectId,
+  workbookSaveHostRef,
 }: PageDocumentBreadcrumbProps) {
   const ancestors = page.ancestors ?? [];
   const isProjectScoped = projectId !== undefined && projectId > 0;
@@ -124,6 +126,9 @@ export function PageDocumentBreadcrumb({
       </nav>
 
       <div className="flex shrink-0 flex-wrap items-center gap-1.5">
+        {workbookSaveHostRef ? (
+          <span ref={workbookSaveHostRef} className="contents" />
+        ) : null}
         {isOffline && (
           <span className="flex items-center gap-1 text-xs text-status-warning-ink">
             <KbAlertCircleIcon className="h-3 w-3" />

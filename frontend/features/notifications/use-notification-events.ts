@@ -41,6 +41,7 @@ interface ActiveStream {
 
 const committedOwners = new Map<symbol, StreamOwner>();
 let selectedOwnerKey: string | null = null;
+let backendTokenOwnerKey: string | null = null;
 let activeStream: ActiveStream | null = null;
 let tokenFetch: { ownerKey: string; promise: Promise<string | null> } | null = null;
 let tokenGeneration = 0;
@@ -203,7 +204,12 @@ export function useNotificationEvents(): void {
   useLayoutEffect(() => {
     const id = subscription.current;
     if (!ownerKey || !identity.success) { clearStreamToken(); return; }
-    if (selectedOwnerKey !== ownerKey) { clearStreamToken(); clearBackendTokenCache(); selectedOwnerKey = ownerKey; }
+    if (selectedOwnerKey !== ownerKey) {
+      clearStreamToken();
+      if (backendTokenOwnerKey !== null && backendTokenOwnerKey !== ownerKey) clearBackendTokenCache();
+      backendTokenOwnerKey = ownerKey;
+      selectedOwnerKey = ownerKey;
+    }
     committedOwners.set(id, { key: ownerKey, identity: identity.data, queryClient, router });
     return () => { committedOwners.delete(id); };
   }, [ownerKey, identity, queryClient, router]);

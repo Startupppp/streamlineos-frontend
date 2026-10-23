@@ -1,25 +1,25 @@
 import { Skeleton } from "@/components/ui/skeleton";
-
-const DOCUMENT_COLUMN = "mx-auto w-full min-w-0 max-w-4xl px-4 sm:px-8";
+import { WIKI_DOCUMENT_COLUMN } from "@/features/wiki/lib/wiki-document-column";
+import { cn } from "@/lib/utils";
 
 export function PageDocumentSkeleton() {
   return (
-    <div className="wiki-document flex h-full min-h-full flex-1 flex-col" aria-label="Loading file">
+    <div className="wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden" aria-label="Loading file">
       <div className="flex min-h-0 min-w-0 flex-1">
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
           <div className="wiki-document-chrome shrink-0 border-b border-border">
-            <div className={`${DOCUMENT_COLUMN} flex items-center gap-3 py-2.5`}>
+            <div className={cn(WIKI_DOCUMENT_COLUMN, "flex items-center gap-3 py-2.5")}>
               <Skeleton className="h-5 w-36" />
               <Skeleton className="ml-auto h-9 w-24 rounded-md" />
               <Skeleton className="h-9 w-9 rounded-md" />
             </div>
-            <div className={`${DOCUMENT_COLUMN} flex gap-2 border-t border-border py-2`}>
+            <div className={cn(WIKI_DOCUMENT_COLUMN, "flex gap-2 border-t border-border py-2")}>
               {Array.from({ length: 5 }, (_, index) => (
                 <Skeleton key={index} className="h-7 w-7 rounded-md" />
               ))}
             </div>
           </div>
-          <div className={`${DOCUMENT_COLUMN} flex min-h-0 flex-1 flex-col gap-5 py-4`}>
+          <div className={cn(WIKI_DOCUMENT_COLUMN, "flex min-h-0 flex-1 flex-col gap-5 py-4")}>
             <Skeleton className="h-9 w-3/4" />
             <Skeleton className="h-4 w-40" />
             <div className="space-y-3">

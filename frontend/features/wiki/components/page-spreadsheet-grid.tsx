@@ -1,11 +1,13 @@
 "use client";
 
 import "@fortune-sheet/react/dist/index.css";
-import { useCallback, useState, type MutableRefObject } from "react";
+import { useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import { createPortal } from "react-dom";
 import dynamic from "next/dynamic";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { KbLoader2Icon } from "@/features/wiki/lib/kb-icons";
 import type { KbWorkbook } from "@/hooks/api/kb/kb-pages-schema";
 import {
   snapshotWorkbook,
@@ -14,6 +16,7 @@ import {
 } from "@/features/wiki/lib/kb-workbook-convert";
 import PageEditConflict from "./page-edit-conflict";
 import { useWorkbookAutosave } from "./use-workbook-autosave";
+import "../wiki-document.css";
 
 const FortuneWorkbook = dynamic(
   () => import("@fortune-sheet/react").then((m) => m.Workbook),
@@ -44,6 +47,7 @@ interface PageSpreadsheetGridProps {
   isReloading: boolean;
   onReload: () => void;
   onRefetchRevision: () => Promise<number | null>;
+  saveStatusHost?: HTMLElement | null;
 }
 
 export default function PageSpreadsheetGrid({
@@ -56,7 +60,9 @@ export default function PageSpreadsheetGrid({
   isReloading,
   onReload,
   onRefetchRevision,
+  saveStatusHost,
 }: PageSpreadsheetGridProps) {
+  const gridRef = useRef<HTMLDivElement>(null);
   const [initialSheets] = useState(() => toFortuneSheets(workbook.sheets));
   const [baseline] = useState(() => snapshotWorkbook(initialSheets));
   const { saveState, conflict, schedule, retry, overwrite } =
@@ -103,13 +109,30 @@ export default function PageSpreadsheetGrid({
     sheetsRef,
   ]);
 
+  useEffect(() => {
+    const node = gridRef.current;
+    if (!node) return;
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        window.dispatchEvent(new Event("resize"));
+      });
+    });
+    observer.observe(node);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, []);
+
   const handleCompare = useCallback(
     () => Promise.resolve({ title: pageTitle, body: "" }),
     [pageTitle],
   );
 
   return (
-    <>
+    <div className="flex min-h-0 flex-1 flex-col">
       {conflict ? (
         <div className="mb-5">
           <PageEditConflict
@@ -124,20 +147,35 @@ export default function PageSpreadsheetGrid({
           />
         </div>
       ) : null}
-      {isEditable && saveState !== "idle" ? (
-        <div
-          className="mb-2 flex items-center justify-end gap-2 text-xs text-muted-foreground"
-          aria-live="polite"
-        >
-          <span>{SAVE_LABELS[saveState]}</span>
-          {saveState === "error" && !conflict ? (
-            <Button type="button" size="sm" variant="ghost" onClick={retry}>
-              Retry
-            </Button>
-          ) : null}
-        </div>
-      ) : null}
-      <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-border">
+      {saveStatusHost && isEditable && saveState !== "idle"
+        ? createPortal(
+            <span
+              className={`flex items-center gap-1 text-xs ${saveState === "error" ? "text-status-danger-ink" : "text-muted-foreground"}`}
+              aria-live="polite"
+            >
+              {saveState === "saving" ? (
+                <KbLoader2Icon className="h-3 w-3 animate-spin" />
+              ) : null}
+              <span>{SAVE_LABELS[saveState]}</span>
+              {saveState === "error" && !conflict ? (
+                <Button
+                  type="button"
+                  variant="link"
+                  size="sm"
+                  className="h-auto p-0 text-xs"
+                  onClick={retry}
+                >
+                  Retry
+                </Button>
+              ) : null}
+            </span>,
+            saveStatusHost,
+          )
+        : null}
+      <div
+        ref={gridRef}
+        className="wiki-spreadsheet-grid relative flex min-h-0 w-full flex-1 flex-col overflow-hidden border-t border-border"
+      >
         <FortuneWorkbook
           data={initialSheets}
           onChange={handleChange}
@@ -147,6 +185,6 @@ export default function PageSpreadsheetGrid({
           showSheetTabs
         />
       </div>
-    </>
+    </div>
   );
 }
