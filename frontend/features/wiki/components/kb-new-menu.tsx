@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
@@ -90,6 +89,7 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, cl
       {
         onError: (err: unknown) => toast.error(getErrorMessage(err)),
         onSuccess: (data) => {
+          toast.success(`${file.name} uploaded.`);
           const href = baseHref
             ? `${baseHref}/${data.page.id}`
             : scope.projectId != null
