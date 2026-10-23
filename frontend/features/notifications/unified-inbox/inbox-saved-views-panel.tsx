@@ -114,11 +114,11 @@ export function InboxSavedViewsPanel({
           type="button"
           variant="outline"
           size="sm"
-          className="bg-card data-[state=open]:border-primary"
+          className="size-9 shrink-0 bg-card px-0 data-[state=open]:border-primary sm:h-9 sm:w-auto sm:gap-1.5 sm:px-3"
           aria-label="Saved views"
         >
-          <Bookmark className="h-3.5 w-3.5 mr-1.5" />
-          Views
+          <Bookmark className="h-3.5 w-3.5" aria-hidden />
+          <span className="hidden sm:inline">Views</span>
         </Button>
       </ResponsivePopoverTrigger>
       <ResponsivePopoverContent

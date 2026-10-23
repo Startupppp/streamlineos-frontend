@@ -148,7 +148,7 @@ export function CalendarSavedViewControls({
   };
 
   return (
-    <div className="flex shrink-0 flex-nowrap items-center gap-2">
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
       <Select
         value={selectedId ?? "none"}
         onOpenChange={setSelectOpen}
@@ -156,7 +156,7 @@ export function CalendarSavedViewControls({
       >
         <SelectTrigger
           aria-label="Saved calendar view"
-          className="h-9 w-40 bg-card text-sm"
+          className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-40 sm:flex-none sm:basis-auto"
         >
           <SelectValue placeholder="Saved views" />
         </SelectTrigger>
@@ -181,7 +181,7 @@ export function CalendarSavedViewControls({
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder="Search events"
           aria-label="Search calendar events"
-          className="h-9 min-w-40 max-w-64 bg-card text-sm"
+          className="h-9 w-full min-w-0 flex-1 basis-[12rem] bg-card text-sm sm:min-w-40 sm:max-w-64 sm:basis-auto"
           maxLength={200}
         />
       ) : null}
@@ -189,7 +189,7 @@ export function CalendarSavedViewControls({
         <Select value={source || "all"} onValueChange={onSourceChange}>
           <SelectTrigger
             aria-label="Filter by calendar source"
-            className="h-9 w-44 bg-card text-sm"
+            className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-44 sm:flex-none sm:basis-auto"
           >
             <SelectValue placeholder="All sources" />
           </SelectTrigger>
@@ -203,7 +203,14 @@ export function CalendarSavedViewControls({
           </SelectContent>
         </Select>
       ) : null}
-      {query.isError ? <div role="alert" className="text-xs text-destructive">Saved views are unavailable. <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>Retry</Button></div> : null}
+      {query.isError ? (
+        <div role="alert" className="w-full text-xs text-destructive sm:w-auto">
+          Saved views are unavailable.{" "}
+          <Button type="button" size="sm" variant="ghost" onClick={() => { void query.refetch(); }}>
+            Retry
+          </Button>
+        </div>
+      ) : null}
       {canWrite ? (
         <Button
           type="button"
@@ -212,7 +219,7 @@ export function CalendarSavedViewControls({
           disabled={query.isError}
           onClick={openCreate}
           aria-label="Save view"
-          className="bg-card px-2.5 data-[state=open]:border-primary sm:px-3"
+          className="size-9 shrink-0 bg-card px-0 data-[state=open]:border-primary sm:h-9 sm:w-auto sm:px-3"
         >
           <BookmarkPlus className="size-4 sm:hidden" aria-hidden />
           <span className="sr-only sm:not-sr-only">Save view</span>
@@ -221,7 +228,7 @@ export function CalendarSavedViewControls({
       {canWrite &&
       selected &&
       (selected.scope === "personal" || canManageTeam) ? (
-        <Button type="button" size="sm" variant="ghost" onClick={openRename}>
+        <Button type="button" size="sm" variant="ghost" className="shrink-0" onClick={openRename}>
           Rename
         </Button>
       ) : null}
@@ -232,6 +239,7 @@ export function CalendarSavedViewControls({
           type="button"
           size="sm"
           variant="ghost"
+          className="shrink-0"
           onClick={() => setDeleteOpen(true)}
         >
           Remove

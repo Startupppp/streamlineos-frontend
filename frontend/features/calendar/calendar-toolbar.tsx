@@ -90,7 +90,7 @@ export function CalendarModeTabs({
       onValueChange={(next) =>
         onValueChange(next === "resource-approvals" ? next : parseViewMode(next))
       }
-      className="min-w-0 gap-0"
+      className="min-w-0 flex-1 overflow-hidden gap-0 sm:flex-none"
     >
       <TabsList aria-label="Calendar modes">
         {showCalendarModes
@@ -101,6 +101,7 @@ export function CalendarModeTabs({
                   key={option.value}
                   value={option.value}
                   aria-controls={undefined}
+                  className="flex-none shrink-0 px-2.5"
                 >
                   <Icon className="h-4 w-4" aria-hidden />
                   <span className="sr-only">{option.label}</span>
@@ -113,6 +114,7 @@ export function CalendarModeTabs({
             value="resource-approvals"
             aria-controls={undefined}
             title="Resource approvals"
+            className="flex-none shrink-0 px-2.5"
           >
             <ListChecks className="h-4 w-4" aria-hidden />
             <span className="sr-only">Resource approvals</span>
@@ -263,7 +265,7 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   return (
     <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
       <div className="flex min-w-0 select-none flex-col gap-2 border-b border-border pb-2">
-        <div className="flex min-w-0 flex-wrap items-center justify-between gap-2">
+        <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
           <CalendarModeTabs
             value={viewMode}
             onValueChange={handleViewModeValueChange}
@@ -481,7 +483,11 @@ export const CalendarToolbar = memo(function CalendarToolbar({
               What if ({scenarioCount})
             </Button>
           ) : null}
-          {filters}
+          {filters ? (
+            <div className="w-full min-w-0 basis-full sm:w-auto sm:basis-auto">
+              {filters}
+            </div>
+          ) : null}
         </motion.div>
       </div>
 

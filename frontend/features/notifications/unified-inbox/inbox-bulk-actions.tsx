@@ -101,8 +101,8 @@ export function BulkActionsBar({
   if (selectedKeys.size === 0) return null;
 
   return (
-    <div className="shrink-0 flex items-center gap-2 rounded-lg border border-border bg-muted/50 px-4 py-2 flex-wrap">
-      <span className="text-sm font-medium text-foreground shrink-0">
+    <div className="flex shrink-0 flex-wrap items-center gap-2 rounded-lg border border-border bg-muted/50 px-3 py-2 sm:px-4">
+      <span className="shrink-0 text-sm font-medium text-foreground">
         {selectedKeys.size} selected
       </span>
       {hasNotificationActions && (
@@ -164,7 +164,7 @@ export function BulkActionsBar({
         type="button"
         variant="ghost"
         size="sm"
-        className="ml-auto"
+        className="ml-auto shrink-0"
         onClick={onClearSelection}
       >
         Clear

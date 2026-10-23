@@ -172,18 +172,22 @@ export function InboxToolbar({
   ].filter(Boolean).length;
 
   return (
-    <div className="flex flex-col gap-2 shrink-0">
-      <div className="flex min-w-0 items-center gap-2">
+    <div className="flex w-full min-w-0 flex-col gap-2 shrink-0">
+      <div className="flex w-full min-w-0 items-center gap-2">
         <Tabs
           value={state.view}
           onValueChange={handleViewValueChange}
-          className="min-w-0 flex-1 gap-0"
+          className="min-w-0 flex-1 overflow-hidden gap-0"
         >
           <TabsList aria-label="Inbox views">
             {VIEWS.map((view) => {
               const Icon = view.icon;
               return (
-                <TabsTrigger key={view.value} value={view.value}>
+                <TabsTrigger
+                  key={view.value}
+                  value={view.value}
+                  className="flex-none shrink-0 px-2.5"
+                >
                   <Icon className="h-4 w-4" aria-hidden />
                   <span className="sr-only md:not-sr-only">{view.label}</span>
                 </TabsTrigger>
@@ -195,7 +199,7 @@ export function InboxToolbar({
           asChild
           variant="default"
           size="sm"
-          className="ml-auto size-9 shrink-0 px-0 xl:h-9 xl:w-auto xl:gap-1.5 xl:px-3"
+          className="size-9 shrink-0 px-0 xl:h-9 xl:w-auto xl:gap-1.5 xl:px-3"
         >
           <Link
             href="/settings/notifications/my-preferences"
@@ -207,12 +211,12 @@ export function InboxToolbar({
           </Link>
         </Button>
       </div>
-      <div className="flex min-w-0 items-center gap-2">
+      <div className="flex w-full min-w-0 items-center gap-2">
         <SearchInput
           value={rawSearch}
           onValueChange={handleSearchValueChange}
           placeholder="Search inbox…"
-          className="min-w-0 flex-1 md:max-w-sm"
+          className="min-w-0 flex-1 basis-0 md:max-w-sm md:basis-auto"
           inputClassName="bg-card"
         />
         <DropdownMenu>
@@ -221,7 +225,7 @@ export function InboxToolbar({
               type="button"
               variant="outline"
               size="sm"
-              className="relative shrink-0 gap-1.5 bg-card data-[state=open]:border-primary"
+              className="relative size-9 shrink-0 gap-1.5 bg-card px-0 data-[state=open]:border-primary sm:h-9 sm:w-auto sm:px-3"
               aria-label={
                 activeFilterCount > 0
                   ? `Open inbox filters (${activeFilterCount} active)`
@@ -231,7 +235,7 @@ export function InboxToolbar({
               <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
               <span className="hidden sm:inline">Filters</span>
               {activeFilterCount > 0 ? (
-                <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-medium text-primary-foreground">
+                <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-micro font-medium text-primary-foreground sm:static sm:ml-0">
                   {activeFilterCount}
                 </span>
               ) : null}
