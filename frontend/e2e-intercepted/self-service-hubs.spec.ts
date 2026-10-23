@@ -231,7 +231,7 @@ for (const viewport of VIEWPORTS) {
     await installBrowserFixtures(page);
     await page.setViewportSize(viewport);
     await page.goto("/calendar?section=approvals", { waitUntil: "domcontentloaded" });
-    await expect(page.getByRole("heading", { name: "Calendar & resource approvals" })).toBeVisible({ timeout: 60_000 });
+    await expect(page.getByRole("heading", { name: /Resource approvals/i })).toBeVisible({ timeout: 60_000 });
     await expect(page.getByRole("tablist", { name: "Calendar modes" }).getByRole("tab", { name: "Resource approvals" })).toHaveAttribute("data-state", "active");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
     expect(overflow).toBeLessThanOrEqual(1);

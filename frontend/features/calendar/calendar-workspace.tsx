@@ -25,28 +25,40 @@ export function CalendarWorkspace() {
   if (showApprovals) {
     return (
       <PageWrapper
-        title="Calendar & resource approvals"
-        subtitle="Review pending room and equipment requests."
-      >
-        {canRead ? (
-          <div className="mb-3 flex min-w-0 items-center border-b border-border pb-2">
-            <CalendarModeTabs
-              value="resource-approvals"
-              onValueChange={(mode) => {
-                if (mode !== "resource-approvals") {
-                  window.history.pushState(
-                    null,
-                    "",
-                    mode === "calendar" ? "/calendar" : `/calendar?mode=${mode}`,
-                  );
-                }
-              }}
-              showResourceApprovals
-              hideCalendarGrid={hideCalendarGrid}
-            />
+        noInternalScroll
+        actionsInline
+        title={
+          <div className="flex flex-col">
+            <span>Resource approvals</span>
+            <span className="text-sm font-normal text-muted-foreground">
+              Review pending room and equipment requests
+            </span>
           </div>
-        ) : null}
-        <CalendarResourceApprovalQueue />
+        }
+      >
+        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col gap-3">
+          {canRead ? (
+            <div className="flex min-w-0 select-none flex-col gap-2 border-b border-border pb-2">
+              <div className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
+                <CalendarModeTabs
+                  value="resource-approvals"
+                  onValueChange={(mode) => {
+                    if (mode !== "resource-approvals") {
+                      window.history.pushState(
+                        null,
+                        "",
+                        mode === "calendar" ? "/calendar" : `/calendar?mode=${mode}`,
+                      );
+                    }
+                  }}
+                  showResourceApprovals
+                  hideCalendarGrid={hideCalendarGrid}
+                />
+              </div>
+            </div>
+          ) : null}
+          <CalendarResourceApprovalQueue />
+        </div>
       </PageWrapper>
     );
   }

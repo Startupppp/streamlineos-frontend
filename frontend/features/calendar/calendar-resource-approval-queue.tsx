@@ -51,10 +51,14 @@ function ApprovalRow({ allocation }: { allocation: PendingBookingAllocation }) {
   }
 
   return (
-    <div className="space-y-2 rounded-md border p-3 text-sm">
-      <div className="flex items-center justify-between gap-2">
-        <span className="font-medium">{allocation.resourceName}</span>
-        <span className="capitalize">{allocation.state}</span>
+    <div className="space-y-2 rounded-lg border border-border bg-card p-3 text-sm">
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <span className="min-w-0 truncate font-medium">
+          {allocation.resourceName}
+        </span>
+        <span className="shrink-0 capitalize text-muted-foreground">
+          {allocation.state}
+        </span>
       </div>
       <p className="text-muted-foreground">
         {new Intl.DateTimeFormat(undefined, {
@@ -130,7 +134,7 @@ export function CalendarResourceApprovalQueue({ onBack }: { onBack?: () => void 
     : queryState;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
       {onBack ? (
         <Button variant="outline" onClick={onBack} className="self-start">
           Back to booking pages
@@ -139,11 +143,18 @@ export function CalendarResourceApprovalQueue({ onBack }: { onBack?: () => void 
       <PageState
         resolution={resolution}
         onRetry={() => void pending.refetch()}
-        className="min-h-0 flex-1"
+        className="min-h-0 min-w-0 flex-1"
         loading={
-          <div className="space-y-2" role="status" aria-label="Loading resource approvals">
+          <div
+            className="space-y-2"
+            role="status"
+            aria-label="Loading resource approvals"
+          >
             {Array.from({ length: 3 }, (_, index) => (
-              <div key={index} className="space-y-3 rounded-md border p-3">
+              <div
+                key={index}
+                className="space-y-3 rounded-lg border border-border bg-card p-3"
+              >
                 <Skeleton className="h-5 w-1/2" />
                 <Skeleton className="h-4 w-1/3" />
                 <div className="flex gap-2">
