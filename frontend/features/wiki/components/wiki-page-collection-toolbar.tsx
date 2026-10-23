@@ -5,6 +5,12 @@ import { LayoutGrid, LayoutList, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import { cn } from "@/lib/utils";
+import {
   ResponsivePopover,
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
@@ -228,23 +234,28 @@ export function WikiPageCollectionToolbar({
   return (
     <>
       <ResponsivePopover open={filtersOpen} onOpenChange={setFiltersOpen}>
-        <ResponsivePopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-9 shrink-0 gap-1.5"
-            aria-label={filtersLabel}
-          >
-            <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
-            Filters
-            {activeFilterCount > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-normal tabular-nums text-foreground">
-                {activeFilterCount}
-              </span>
-            ) : null}
-          </Button>
-        </ResponsivePopoverTrigger>
+        <MobileOnlyLabelTooltip label={filtersLabel}>
+          <ResponsivePopoverTrigger asChild>
+            <Button
+              type="button"
+              variant="outline"
+              className={cn(
+                RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+                "max-md:overflow-hidden",
+                activeFilterCount > 0 && "w-auto px-2 md:px-2.5",
+              )}
+              aria-label={filtersLabel}
+            >
+              <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <ResponsiveIconLabelText>Filters</ResponsiveIconLabelText>
+              {activeFilterCount > 0 ? (
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-normal tabular-nums text-foreground">
+                  {activeFilterCount}
+                </span>
+              ) : null}
+            </Button>
+          </ResponsivePopoverTrigger>
+        </MobileOnlyLabelTooltip>
         <ResponsivePopoverContent
           align="end"
           title="Filters"
@@ -288,7 +299,7 @@ export function WikiPageCollectionToolbar({
         value={view}
         options={VIEW_OPTIONS}
         onChange={onViewChange}
-        className="ml-auto"
+        className="shrink-0"
       />
     </>
   );

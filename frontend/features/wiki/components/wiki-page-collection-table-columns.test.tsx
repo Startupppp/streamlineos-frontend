@@ -345,7 +345,8 @@ describe("WikiPageCollectionTable — offline indicator", () => {
 });
 
 describe("WikiPageCollectionTable — document count display", () => {
-  it("renders the exact page count when boundedCount.isExact is true", () => {
+  it("reports the exact page count when boundedCount.isExact is true", () => {
+    const handleDocumentCountLabel = jest.fn();
     useKbPageCollection.mockReturnValue({
       data: makeResponse([makeItem(1), makeItem(2)], {}, { count: 2, isExact: true }),
       isLoading: false,
@@ -354,12 +355,20 @@ describe("WikiPageCollectionTable — document count display", () => {
       refetch: jest.fn(),
     });
 
-    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{}}
+        emptyTitle="No pages"
+        onDocumentCountLabelChange={handleDocumentCountLabel}
+      />,
+    );
 
-    expect(screen.getByText("2 documents")).toBeInTheDocument();
+    expect(handleDocumentCountLabel).toHaveBeenCalledWith("2 documents");
+    expect(screen.queryByText("2 documents")).not.toBeInTheDocument();
   });
 
-  it("renders the bounded count with a plus sign when boundedCount.isExact is false", () => {
+  it("reports the bounded count with a plus sign when boundedCount.isExact is false", () => {
+    const handleDocumentCountLabel = jest.fn();
     useKbPageCollection.mockReturnValue({
       data: makeResponse([makeItem(1)], {}, { count: 50, isExact: false }),
       isLoading: false,
@@ -368,9 +377,16 @@ describe("WikiPageCollectionTable — document count display", () => {
       refetch: jest.fn(),
     });
 
-    render(<WikiPageCollectionTable fixedParams={{}} emptyTitle="No pages" />);
+    render(
+      <WikiPageCollectionTable
+        fixedParams={{}}
+        emptyTitle="No pages"
+        onDocumentCountLabelChange={handleDocumentCountLabel}
+      />,
+    );
 
-    expect(screen.getByText("50+ documents")).toBeInTheDocument();
+    expect(handleDocumentCountLabel).toHaveBeenCalledWith("50+ documents");
+    expect(screen.queryByText("50+ documents")).not.toBeInTheDocument();
   });
 });
 

@@ -158,7 +158,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="flex gap-2">
                     <Skeleton className="h-6 w-6 rounded-full shrink-0" />
-                    <div className="flex-1 space-y-1">
+                    <div className="min-w-0 flex-1 space-y-1">
                       <Skeleton className="h-3 w-24" />
                       <Skeleton className="h-4 w-full" />
                     </div>

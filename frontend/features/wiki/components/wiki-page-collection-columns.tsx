@@ -147,7 +147,7 @@ export function buildMobileCard(
         <StatusBadge status={row.status} />
         <TrustBadge trustState={row.trustState} />
         {row.ownerUserId ? (
-          <span className="text-xs text-muted-foreground">
+          <span className="max-w-full min-w-0 truncate text-xs text-muted-foreground">
             {ownerNames.get(row.ownerUserId) ?? "—"}
           </span>
         ) : (

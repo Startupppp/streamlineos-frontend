@@ -353,7 +353,7 @@ export default function SpacesPage() {
                 headers={["Team folder", "Audience", "Files", "Members", "Owner", "Updated", ""]}
               />
             ) : (
-              <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(11rem,1fr)]">
+              <div className="grid min-h-0 w-full min-w-0 flex-1 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(11rem,1fr)]">
                 {Array.from({ length: 18 }, (_, index) => (
                   <SpaceCardSkeleton key={index} />
                 ))}

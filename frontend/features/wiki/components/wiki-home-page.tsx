@@ -14,7 +14,7 @@ import { KB_IMPORT, KB_SEARCH, KB_TEMPLATES, pageHref, projectPageHref } from "@
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { KbClockIcon, KbStarIcon } from "@/features/wiki/lib/kb-icons";
 import { WikiPageCard } from "@/features/wiki/components/wiki-page-card";
-import { WikiPageCollectionTable, KB_PAGE_CURSOR_PARAM } from "./wiki-page-collection-table";
+import { WikiPageCollectionTable, KB_PAGE_CURSOR_PARAM, collectionCountSubtitle } from "./wiki-page-collection-table";
 import { WikiHomeHeaderActions } from "./wiki-home-sections";
 import { useBuildListKeyboard } from "@/hooks/common/use-build-list-keyboard";
 import { ShortcutHelpDialog } from "@/components/shared/shortcut-help-dialog";
@@ -37,6 +37,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
   const [searchValue, setSearchValue] = useState(urlQuery);
   const [shortcutHelpOpen, setShortcutHelpOpen] = useState(false);
   const [pageItemCount, setPageItemCount] = useState(0);
+  const [documentCountLabel, setDocumentCountLabel] = useState<string | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const allPagesRowsRef = useRef<{ id: number }[]>([]);
 
@@ -145,11 +146,12 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
     <>
       <PageWrapper
         title="Docs"
-        subtitle={
+        subtitle={collectionCountSubtitle(
           isProjectScoped
             ? "Docs and decisions for this project"
-            : "Files, documents and decisions for your team"
-        }
+            : "Files, documents and decisions for your team",
+          documentCountLabel,
+        )}
         actions={headerActions}
       >
         <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -268,6 +270,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                     : undefined
                 }
                 onItemCountChange={handleItemCountChange}
+                onDocumentCountLabelChange={setDocumentCountLabel}
                 onRowsChange={handleRowsChange}
               />
             </section>

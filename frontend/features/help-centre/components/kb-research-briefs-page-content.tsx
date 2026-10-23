@@ -30,7 +30,7 @@ export function BriefListSkeleton() {
         {Array.from({ length: 18 }, (_, index) => (
           <div
             key={index}
-            className="flex h-full min-h-0 items-start gap-3 rounded-xl border border-border bg-card p-3"
+            className="flex h-full min-h-0 min-w-0 items-start gap-3 rounded-xl border border-border bg-card p-3"
           >
             <div className="min-w-0 flex-1 space-y-2">
               <Skeleton className="h-4 w-2/3" />

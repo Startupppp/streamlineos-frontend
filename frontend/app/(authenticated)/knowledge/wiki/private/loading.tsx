@@ -17,9 +17,9 @@ export default function MyFilesLoading() {
       noInternalScroll
       contentClassName={WIKI_LOADING_CONTENT_CLASS}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-6">
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-6">
         <WikiShortcutRowsSkeleton />
-        <div className="flex min-h-0 flex-1 flex-col gap-3">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
           <CollectionToolbarSkeleton />
           <WikiFillTable headers={WIKI_PAGE_TABLE_HEADERS} />
         </div>

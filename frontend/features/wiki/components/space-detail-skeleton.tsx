@@ -30,7 +30,7 @@ export function SpaceDetailSkeleton() {
         <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-3">
           <Skeleton className="h-9 w-full shrink-0 rounded-md md:hidden" />
           <div className="flex w-full min-w-0 shrink-0 items-center gap-2">
-            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-64 sm:flex-none" />
+            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:max-w-xs" />
             <Skeleton className="h-9 w-24 shrink-0 rounded-md" />
             <Skeleton className="h-9 w-16 shrink-0 rounded-md" />
           </div>

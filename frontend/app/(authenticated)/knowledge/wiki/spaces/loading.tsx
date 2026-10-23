@@ -18,7 +18,7 @@ export default function TeamFoldersLoading() {
       <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4">
         <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
           <div className="col-span-2 flex min-w-0 items-center gap-2 sm:contents">
-            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-48 sm:flex-none" />
+            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:max-w-48" />
             <Skeleton className="h-9 w-16 shrink-0 rounded-md sm:order-last sm:ml-auto" />
           </div>
           <Skeleton className="h-9 w-full rounded-md sm:w-36" />

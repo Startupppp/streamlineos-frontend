@@ -186,7 +186,7 @@ export function WikiShortcutRowsSkeleton() {
     <div className="space-y-1">
       <Skeleton className="h-4 w-24" />
       {Array.from({ length: 3 }, (_, index) => (
-        <div key={index} className="flex items-center gap-2 px-2 py-1.5">
+        <div key={index} className="flex min-w-0 items-center gap-2 px-2 py-1.5">
           <Skeleton className="h-3.5 w-3.5 rounded-sm" />
           <Skeleton className="h-4 min-w-0 flex-1" />
         </div>
@@ -198,7 +198,7 @@ export function WikiShortcutRowsSkeleton() {
 export function CollectionToolbarSkeleton({ search = true }: { search?: boolean }) {
   return (
     <div className="flex w-full min-w-0 shrink-0 items-center gap-2">
-      {search ? <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-72 sm:flex-none" /> : null}
+      {search ? <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:max-w-xs" /> : null}
       <Skeleton className={search ? "h-9 w-24 shrink-0 rounded-md" : "h-9 min-w-0 flex-1 rounded-md sm:w-24 sm:flex-none"} />
       <Skeleton className="h-9 w-16 shrink-0 rounded-md" />
     </div>

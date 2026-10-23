@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { WikiPageCollectionTable } from "./wiki-page-collection-table";
+import { WikiPageCollectionTable, collectionCountSubtitle } from "./wiki-page-collection-table";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { kbFormatDate } from "@/features/wiki/lib/kb-date-utils";
@@ -70,6 +70,7 @@ function buildSharedColumns(
 
 export default function SharedPage() {
   const [rows, setRows] = useState<readonly KbPageCollectionItem[]>([]);
+  const [documentCountLabel, setDocumentCountLabel] = useState<string | null>(null);
 
   const sharerUserIds = [
     ...new Set(
@@ -104,7 +105,7 @@ export default function SharedPage() {
   return (
     <PageWrapper
       title="Shared with me"
-      subtitle="Files explicitly shared with you"
+      subtitle={collectionCountSubtitle("Files explicitly shared with you", documentCountLabel)}
     >
       <WikiPageCollectionTable
         fixedParams={SHARED_WITH_ME_PARAMS}
@@ -114,6 +115,7 @@ export default function SharedPage() {
         accessLostTitle="Your access may have changed"
         accessLostDescription="Some files you had access to may no longer be shared with you."
         onRowsChange={handleRowsChange}
+        onDocumentCountLabelChange={setDocumentCountLabel}
       />
     </PageWrapper>
   );

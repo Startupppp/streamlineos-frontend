@@ -84,16 +84,22 @@ export function WikiPageCard({
       ) : (
         cover
       )}
-      <div className="flex items-start gap-3 p-3">
-        {href ? (
-          <Link href={href} className="flex min-w-0 flex-1 items-start gap-3">
-            {identity}
-          </Link>
-        ) : (
-          <div className="flex min-w-0 flex-1 items-start gap-3">{identity}</div>
-        )}
-        {children}
-        {menu}
+      <div className="flex min-w-0 items-start gap-2 p-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          {href ? (
+            <Link href={href} className="flex min-w-0 items-start gap-3">
+              {identity}
+            </Link>
+          ) : (
+            <div className="flex min-w-0 items-start gap-3">{identity}</div>
+          )}
+          {children ? (
+            <div className="flex min-w-0 flex-wrap items-center gap-1.5 pl-8">
+              {children}
+            </div>
+          ) : null}
+        </div>
+        {menu ? <div className="shrink-0">{menu}</div> : null}
       </div>
     </div>
   );

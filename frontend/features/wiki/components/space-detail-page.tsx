@@ -47,7 +47,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { WikiPageCollectionTable } from "./wiki-page-collection-table";
+import { WikiPageCollectionTable, collectionCountSubtitle } from "./wiki-page-collection-table";
 import { SpaceMembersSheet } from "./space-members-sheet";
 import { SpaceManagerHealthSummary } from "./space-manager-health-summary";
 import { SpaceArchiveImpact } from "./space-archive-impact";
@@ -109,6 +109,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   const { data: spacePolicy } = useKbSpaceSharingPolicy(spaceId, canManage);
   const updateSharingPolicy = useUpdateKbSpaceSharingPolicy(spaceId);
   const [membersOpen, setMembersOpen] = useState(false);
+  const [documentCountLabel, setDocumentCountLabel] = useState<string | null>(null);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
 
@@ -223,7 +224,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
   return (
     <PageWrapper
       title={headerSpace?.name ?? "Team folder"}
-      subtitle={headerSpace?.description ?? undefined}
+      subtitle={collectionCountSubtitle(headerSpace?.description, documentCountLabel)}
       leading={<SpaceBreadcrumb spaceName={headerSpace?.name ?? "Team folder"} />}
       actions={headerActions}
     >
@@ -256,7 +257,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             <span className="text-3xl shrink-0">{space?.icon || "📚"}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-base font-semibold text-foreground">
+                <span className="min-w-0 break-words text-base font-semibold text-foreground">
                   {space?.name}
                 </span>
                 <Badge
@@ -364,6 +365,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
                 fixedParams={{ spaceId }}
                 emptyTitle="No files in this team folder yet"
                 emptyDescription="Move or create files inside this team folder to see them here."
+                onDocumentCountLabelChange={setDocumentCountLabel}
               />
             </div>
           </div>

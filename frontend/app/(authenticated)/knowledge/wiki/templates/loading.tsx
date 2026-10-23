@@ -20,8 +20,8 @@ export default function TemplatesLoading() {
             <Skeleton className="h-7 min-w-0 flex-1 rounded-md md:w-16 md:flex-none" />
           </div>
           <div className="flex w-full min-w-0 items-center gap-2 md:ml-auto md:w-auto">
-            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-64 sm:flex-none" />
-            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-56 sm:flex-none" />
+            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:max-w-xs" />
+            <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:max-w-56" />
           </div>
         </div>
         <WikiTemplatesGridSkeleton />

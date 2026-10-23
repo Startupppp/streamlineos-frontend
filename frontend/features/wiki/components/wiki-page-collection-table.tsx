@@ -32,6 +32,21 @@ import {
   WikiPageCollectionToolbar,
 } from "./wiki-page-collection-toolbar";
 
+export function collectionCountSubtitle(
+  description: string | null | undefined,
+  countLabel: string | null,
+) {
+  const text = description?.trim() ?? "";
+  if (!text && !countLabel) return undefined;
+  return (
+    <>
+      {text || null}
+      {text && countLabel ? " · " : null}
+      {countLabel ? <span className="tabular-nums">{countLabel}</span> : null}
+    </>
+  );
+}
+
 export const KB_PAGE_CURSOR_PARAM = "cursor";
 
 const PAGE_LIMIT = 50;
@@ -53,6 +68,7 @@ export interface WikiPageCollectionTableProps {
   accessLostDescription?: string;
   onRowsChange?: (rows: readonly KbPageCollectionItem[]) => void;
   onItemCountChange?: (count: number) => void;
+  onDocumentCountLabelChange?: (label: string | null) => void;
 }
 
 export function WikiPageCollectionTable({
@@ -68,6 +84,7 @@ export function WikiPageCollectionTable({
   accessLostDescription,
   onRowsChange,
   onItemCountChange,
+  onDocumentCountLabelChange,
 }: WikiPageCollectionTableProps) {
   const searchParams = useSearchParams();
   const { update } = useUrlFilters({ pageParam: KB_PAGE_CURSOR_PARAM });
@@ -240,6 +257,10 @@ export function WikiPageCollectionTable({
         : `${data.boundedCount.count}+ documents`
       : null;
 
+  useEffect(() => {
+    onDocumentCountLabelChange?.(documentCountLabel);
+  }, [documentCountLabel, onDocumentCountLabelChange]);
+
   const handleNext = useCallback(() => {
     pager.goNext(data?.pagination.nextCursor);
   }, [pager, data?.pagination.nextCursor]);
@@ -308,38 +329,37 @@ export function WikiPageCollectionTable({
           Offline — data may be stale
         </span>
       )}
-      <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+      <div className="flex w-full min-w-0 items-center gap-2">
         {searchPlaceholder !== null && (
           <SearchInput
             value={rawSearch}
             onValueChange={handleSearchChange}
             placeholder={searchPlaceholder}
-            className="h-9 min-w-0 flex-1 sm:max-w-xs sm:flex-none"
+            className="h-9 !w-auto !min-w-0 max-w-full flex-1 basis-0 sm:max-w-xs"
           />
         )}
-        <WikiPageCollectionToolbar
-          status={status}
-          kind={kind}
-          owner={owner}
-          showOwnerFilter={fixedParams.owner === undefined}
-          spaceParam={spaceParam}
-          spaces={spaces}
-          showSpaceFilter={fixedParams.spaceId === undefined}
-          sort={sort}
-          view={view}
-          activeFilterCount={activeFilterCount}
-          onStatusChange={handleStatusChange}
-          onKindChange={handleKindChange}
-          onOwnerChange={handleOwnerChange}
-          onSpaceChange={handleSpaceChange}
-          onSortChange={handleSortChange}
-          onViewChange={handleViewChange}
-          onClearFilters={handleClearFilters}
-        />
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <WikiPageCollectionToolbar
+            status={status}
+            kind={kind}
+            owner={owner}
+            showOwnerFilter={fixedParams.owner === undefined}
+            spaceParam={spaceParam}
+            spaces={spaces}
+            showSpaceFilter={fixedParams.spaceId === undefined}
+            sort={sort}
+            view={view}
+            activeFilterCount={activeFilterCount}
+            onStatusChange={handleStatusChange}
+            onKindChange={handleKindChange}
+            onOwnerChange={handleOwnerChange}
+            onSpaceChange={handleSpaceChange}
+            onSortChange={handleSortChange}
+            onViewChange={handleViewChange}
+            onClearFilters={handleClearFilters}
+          />
+        </div>
       </div>
-      {documentCountLabel !== null ? (
-        <p className="text-sm text-muted-foreground tabular-nums">{documentCountLabel}</p>
-      ) : null}
       <PageState
         resolution={pageState}
         loading={

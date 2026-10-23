@@ -23,7 +23,7 @@ export default function SharedFilesLoading() {
       noInternalScroll
       contentClassName={WIKI_LOADING_CONTENT_CLASS}
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-3">
         <CollectionToolbarSkeleton />
         <WikiFillTable headers={SHARED_HEADERS} />
       </div>
