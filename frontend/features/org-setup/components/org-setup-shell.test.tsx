@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { DEFAULT_DATA } from "../lib/constants";
 import { OrgSetupShell } from "./org-setup-shell";
 
-function renderShell(syncStatus: "error" | "saving" | "synced", onRetrySave?: () => void, currentIndex = 1) {
+function renderShell(syncStatus: "error" | "saving" | "synced" | "unsynced", onRetrySave?: () => void, currentIndex = 1) {
   return render(
     <OrgSetupShell
       sequence={["workspace", "invite", "invite"]}
@@ -42,6 +42,29 @@ describe("OrgSetupShell — ONB-B-004 save status", () => {
 
     expect(screen.getByText("Saving…")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Retry" })).not.toBeInTheDocument();
+  });
+});
+
+describe("OrgSetupShell — save status does not flicker while typing", () => {
+  it("shows Saving… for an edit that is waiting to be saved, the same as one being saved", () => {
+    renderShell("unsynced");
+
+    expect(screen.getByText("Saving…")).toBeInTheDocument();
+    expect(screen.queryByText("Unsaved")).not.toBeInTheDocument();
+  });
+
+  it("keeps the status in place as Saved once the save has finished", () => {
+    const { rerender } = renderShell("saving");
+    const status = screen.getByText("Saving…");
+
+    rerender(
+      <OrgSetupShell sequence={["workspace", "invite", "invite"]} currentIndex={1} title="Modules" direction={1} syncStatus="synced" data={{ ...DEFAULT_DATA }}>
+        <p>body</p>
+      </OrgSetupShell>,
+    );
+
+    expect(status).toHaveTextContent("Saved");
+    expect(status).toBeInTheDocument();
   });
 });
 
