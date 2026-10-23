@@ -131,7 +131,7 @@ describe("Import and Export tabs are gated separately", () => {
 
     const view = render(<ImportPage />);
 
-    expect(screen.getByRole("status", { name: /loading/i })).toBeInTheDocument();
+    expect(screen.getByTestId("wiki-import-skeleton")).toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
     expect(screen.queryByText(/access restricted/i)).not.toBeInTheDocument();
 
@@ -151,7 +151,7 @@ describe("Import and Export tabs are gated separately", () => {
 
     const view = render(<ImportPage />);
 
-    expect(screen.getByRole("status", { name: /loading/i })).toBeInTheDocument();
+    expect(screen.getByTestId("wiki-import-skeleton")).toBeInTheDocument();
     expect(screen.queryByRole("tab")).not.toBeInTheDocument();
 
     loadingPermissions = [];

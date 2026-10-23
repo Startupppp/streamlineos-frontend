@@ -212,11 +212,11 @@ export function AskOsBubble({
         {showCurrentSuggestions && directivesOf(directives, "action-plan").map((directive, index) => (
           <AskOsPlanCard key={`plan-${index}`} directive={directive} />
         ))}
-        {showCurrentSuggestions && directivesOf(directives, "clarify").map((directive) => (
+        {directivesOf(directives, "clarify").map((directive) => (
           <AskOsClarifyCard
             key={directive.clarificationId}
             directive={directive}
-            onAnswer={onClarify}
+            onAnswer={showCurrentSuggestions ? onClarify : undefined}
           />
         ))}
         {confirmDirectives.map((directive) => (

@@ -69,6 +69,11 @@ jest.mock("@/hooks/api/access", () => ({
     denied: false,
     pending: false,
   }),
+  useAccess: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/api/integrations", () => ({

@@ -10,6 +10,7 @@ const mockAskResetAttempt = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/knowledge/chat",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -88,6 +89,11 @@ jest.mock("@/hooks/api/kb/files", () => ({
   useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
 }));
 
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, isLoading: false }),
+}));
+
 Object.assign(navigator, { clipboard: { writeText: jest.fn().mockResolvedValue(undefined) } });
 
 import KnowledgeBasePage from "./knowledge-base-page";
@@ -140,6 +146,7 @@ describe("KnowledgeBasePage — Copy and feedback controls on the real Ask KB ch
     renderPage();
 
     await userEvent.click(screen.getByRole("button", { name: /report answer as wrong or stale/i }));
+    await userEvent.click(screen.getByRole("button", { name: /send report/i }));
 
     expect(mockFeedbackMutate).toHaveBeenCalledWith(
       {

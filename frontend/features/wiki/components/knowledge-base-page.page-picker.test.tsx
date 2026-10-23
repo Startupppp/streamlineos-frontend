@@ -8,6 +8,7 @@ const mockPageSearch = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/knowledge/chat",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -74,6 +75,11 @@ jest.mock("@/hooks/api/kb/spaces", () => ({
 jest.mock("@/hooks/api/kb/pages", () => ({
   ...jest.requireActual("@/hooks/api/kb/pages"),
   useKbPagesSearch: (q: string) => mockPageSearch(q),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, isLoading: false }),
 }));
 
 import KnowledgeBasePage from "./knowledge-base-page";

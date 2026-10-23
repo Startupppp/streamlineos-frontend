@@ -19,6 +19,7 @@ jest.mock("@/hooks/api/ai-confirm-action", () => ({
   ...jest.requireActual<typeof import("@/hooks/api/ai-confirm-action")>("@/hooks/api/ai-confirm-action"),
   useConfirmAction: () => ({ mutate: jest.fn(), isPending: false }),
   useDeclineProposal: () => ({ mutate: jest.fn(), isPending: false }),
+  useRecoverProposal: () => ({ data: undefined, isPending: false, isError: false }),
 }));
 
 function Providers({ children }: { children: ReactNode }) {
@@ -195,7 +196,7 @@ describe("AskOsChatView — a just-finished proposal stays confirmable", () => {
       { wrapper: Providers },
     );
 
-    expect(await screen.findByText("Past proposal — view only.")).toBeInTheDocument();
+    expect(await screen.findByText("This proposal could not be restored. Try reloading or ask for a new preview.")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Move" })).toBeNull();
   });
 });

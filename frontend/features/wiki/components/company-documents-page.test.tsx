@@ -161,7 +161,7 @@ describe("CompanyDocumentsPage", () => {
 
     render(<CompanyDocumentsPage />);
 
-    expect(screen.getByText("Loading results…")).toBeInTheDocument();
+    expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Code of Conduct" })).not.toBeInTheDocument();
     expect(screen.queryByText("No company documents yet")).not.toBeInTheDocument();
   });
@@ -225,7 +225,7 @@ describe("CompanyDocumentsPage", () => {
 
     render(<CompanyDocumentsPage />);
 
-    expect(screen.getByText("Loading results…")).toBeInTheDocument();
+    expect(screen.getByTestId("loading-skeleton")).toBeInTheDocument();
     expect(screen.queryByText("Company documents are not turned on")).not.toBeInTheDocument();
     expect(screen.queryByText("No company documents yet")).not.toBeInTheDocument();
     expect(mockList).toHaveBeenCalledWith(expect.anything(), { enabled: false });

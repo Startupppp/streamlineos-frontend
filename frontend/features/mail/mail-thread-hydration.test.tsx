@@ -56,6 +56,11 @@ jest.mock("@/hooks/api/access", () => ({
     denied: key !== "mail:inbox:view",
     pending: false,
   }),
+  useAccess: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
 }));
 
 jest.mock("@/hooks/common/use-mobile", () => ({

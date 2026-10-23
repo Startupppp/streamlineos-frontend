@@ -258,8 +258,8 @@ export function MailListPane({
     isLoading || isFetched === false || (isFetching && pages.length === 0);
   const listPageState = usePageState({
     isLoading: initialLoading,
-    isError,
-    error,
+    isError: isOnline ? isError : false,
+    error: isOnline ? error : undefined,
     isEmpty: visibleMessages.length === 0 && !hasNextPage,
   });
 

@@ -6,6 +6,7 @@ const FIVE_DAYS_AGO = new Date(Date.now() - 5 * 86_400_000).toISOString();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/knowledge/chat",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -99,6 +100,11 @@ jest.mock("@/hooks/api/kb/page-collection", () => ({
 
 jest.mock("@/hooks/api/kb/files", () => ({
   useUploadKbFile: () => ({ mutate: jest.fn(), isPending: false }),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, isLoading: false }),
 }));
 
 import KnowledgeBasePage from "./knowledge-base-page";

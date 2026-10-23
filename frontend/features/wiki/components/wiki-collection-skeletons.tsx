@@ -139,7 +139,7 @@ export function WikiPageCardsSkeleton() {
 
 export function WikiImportSkeleton() {
   return (
-    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4">
+    <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4" data-testid="wiki-import-skeleton">
       <div className="flex h-9 w-full shrink-0 items-center gap-1 rounded-lg bg-muted p-1 md:w-fit">
         <Skeleton className="h-7 min-w-0 flex-1 rounded-md md:w-20 md:flex-none" />
         <Skeleton className="h-7 min-w-0 flex-1 rounded-md md:w-20 md:flex-none" />

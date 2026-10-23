@@ -26,7 +26,14 @@ const base: MailMessageSummary = {
 const messages = [base, { ...base, id: "attachment", subject: "Attachment message", isRead: true, hasAttachments: true }];
 let mailPages = [{ messages, accountErrors: [] }];
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  usePermissionGate: (key: string) => ({ permission: key, allowed: true, denied: false, pending: false }),
+  useAccess: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
+}));
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
 jest.mock("@/hooks/common/use-online-status", () => ({ useOnlineStatus: () => true }));
 jest.mock("@/hooks/api/mail", () => ({
   useMailMessages: () => ({ data: { pages: mailPages }, isLoading: false, isError: false, fetchNextPage, hasNextPage: true, isFetchingNextPage: false }),

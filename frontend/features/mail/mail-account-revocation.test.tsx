@@ -8,9 +8,28 @@ import type { MailAccount } from "@/types/mail";
 const initiateMutateAsync = jest.fn().mockResolvedValue({ redirectUrl: "https://provider/oauth" });
 let connections: IntegrationConnection[] = [];
 
+const realLocation = window.location;
+beforeAll(() => {
+  Object.defineProperty(window, "location", {
+    configurable: true,
+    value: { ...realLocation, assign: jest.fn() },
+  });
+});
+afterAll(() => {
+  Object.defineProperty(window, "location", { configurable: true, value: realLocation });
+});
+
 jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => false }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  usePermissionGate: (key: string) => ({ permission: key, allowed: true, denied: false, pending: false }),
+  useAccess: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
 
 jest.mock("@/hooks/api/integrations", () => ({
   useIntegrationConnections: () => ({
@@ -136,7 +155,7 @@ describe("MailListPane — a revoked account explains itself in the list", () =>
     );
 
     expect(screen.getByText("revoked@example.com")).toBeInTheDocument();
-    expect(screen.getByText("Reauthentication required")).toBeInTheDocument();
+    expect(screen.getByText("Authentication expired — please reconnect this account.")).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Reconnect" }));
     expect(onOpenAccountsSheet).toHaveBeenCalledTimes(1);

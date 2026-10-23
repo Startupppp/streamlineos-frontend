@@ -15,7 +15,15 @@ let listState = {
   hasNextPage: false,
 };
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({
+  useCan: () => true,
+  usePermissionGate: (key: string) => ({ permission: key, allowed: true, denied: false, pending: false }),
+  useAccess: () => ({ data: undefined, isLoading: false, isError: false, error: null }),
+}));
+
+jest.mock("@/hooks/api/entitlements", () => ({
+  useEntitlements: () => ({ data: undefined }),
+}));
 
 jest.mock("@/hooks/api/inbox", () => ({
   useUnifiedInboxCount: () => ({ data: undefined }),
@@ -91,7 +99,7 @@ describe("MailListPane — offline and reconnect", () => {
 
     setOnline(false);
 
-    expect(screen.getByText("You're offline")).toBeInTheDocument();
+    expect(screen.getByText(/You're offline/)).toBeInTheDocument();
     expect(screen.queryByText(NETWORK_ERROR_TEXT)).toBeNull();
   });
 
@@ -120,7 +128,7 @@ describe("MailListPane — offline and reconnect", () => {
     listState.error = new Error("Failed to fetch");
     renderPane();
 
-    expect(screen.queryByText("You're offline")).toBeNull();
+    expect(screen.queryByText(/You're offline/)).toBeNull();
     expect(screen.getByText(NETWORK_ERROR_TEXT)).toBeInTheDocument();
   });
 
@@ -167,10 +175,10 @@ describe("MailListPane — offline and reconnect", () => {
     renderPane();
 
     setOnline(false);
-    expect(screen.getByText("You're offline")).toBeInTheDocument();
+    expect(screen.getByText(/You're offline/)).toBeInTheDocument();
 
     setOnline(true);
-    expect(screen.queryByText("You're offline")).toBeNull();
+    expect(screen.queryByText(/You're offline/)).toBeNull();
     expect(screen.getByText(NETWORK_ERROR_TEXT)).toBeInTheDocument();
   });
 });

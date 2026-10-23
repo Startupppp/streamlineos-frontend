@@ -8,6 +8,7 @@ const mockCreateGapMutate = jest.fn();
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn() }),
   usePathname: () => "/knowledge/chat",
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 jest.mock("next-auth/react", () => ({
@@ -38,7 +39,7 @@ jest.mock("@/hooks/api/kb/ask", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
-  useAccess: () => ({ data: { permissions: ["kb:ai:generate"] }, refetch: jest.fn() }),
+  useAccess: () => ({ data: { isOrgOwner: true, scopes: {} }, isLoading: false }),
 }));
 
 jest.mock("@/hooks/api/kb/chat-history", () => ({
