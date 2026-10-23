@@ -17,6 +17,7 @@ let projectData: unknown = {
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: accessData }),
   useCan: jest.fn(),
+  useModuleEnabled: () => false,
 }));
 
 jest.mock("@/hooks/api/access/org-modules", () => ({
