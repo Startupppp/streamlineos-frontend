@@ -57,7 +57,7 @@ const kbPageGrantListContract = lazyContract(() =>
 );
 
 const kbPageGrantContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantContract),
+  import("@/hooks/api/kb/kb-page-grants-schema").then((m) => m.kbPageGrantItemContract),
 );
 
 const kbPageGrantCandidatesContract = lazyContract(() =>

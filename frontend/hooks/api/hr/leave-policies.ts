@@ -10,10 +10,10 @@ const leavePoliciesListC = lazyContract(() =>
   import("@/hooks/api/hr/leave-policies-schema").then((m) => m.leavePoliciesListContract),
 );
 const createLeavePolicyC = lazyContract(() =>
-  import("@/hooks/api/hr/leave-policies-schema").then((m) => m.createLeavePolicyContract),
+  import("@/hooks/api/hr/leave-policies-schema").then((m) => m.leavePolicyRowContract),
 );
 const updateLeavePolicyC = lazyContract(() =>
-  import("@/hooks/api/hr/leave-policies-schema").then((m) => m.updateLeavePolicyContract),
+  import("@/hooks/api/hr/leave-policies-schema").then((m) => m.leavePolicyRowContract),
 );
 const deleteLeavePolicyC = lazyContract(() =>
   import("@/hooks/api/hr/leave-policies-schema").then((m) => m.deleteLeavePolicyContract),

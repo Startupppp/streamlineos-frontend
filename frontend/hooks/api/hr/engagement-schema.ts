@@ -88,7 +88,6 @@ export const pollContract = z.object({
 });
 
 export const listPollsContract = z.array(pollContract);
-export const createPollContract = pollContract;
 
 const pollVoteContract = z.object({
   id: z.number().int(),
@@ -138,8 +137,6 @@ export const listCommunitiesContract = z.object({
   nextCursor: z.string().nullable(),
 });
 
-export const createCommunityContract = communityBaseContract;
-
 export const campaignContract = z.object({
   id: z.number().int(),
   orgId: z.string(),
@@ -156,8 +153,6 @@ export const campaignContract = z.object({
 });
 
 export const listCampaignsContract = z.array(campaignContract);
-export const createCampaignContract = campaignContract;
-export const updateCampaignContract = campaignContract;
 
 export const successContract = z.object({ success: z.boolean() });
 export const voteIdContract = z.object({ id: z.number().int() });

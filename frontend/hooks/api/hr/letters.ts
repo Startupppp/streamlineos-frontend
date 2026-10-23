@@ -15,7 +15,7 @@ const renderLetterC = lazyContract(() =>
   import("@/hooks/api/hr/letters-schema").then((m) => m.renderLetterContract),
 );
 const saveLetterC = lazyContract(() =>
-  import("@/hooks/api/hr/letters-schema").then((m) => m.saveLetterContract),
+  import("@/hooks/api/hr/letters-schema").then((m) => m.letterRenderRowSchema),
 );
 
 export interface LetterRender {

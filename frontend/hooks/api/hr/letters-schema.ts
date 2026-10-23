@@ -25,4 +25,3 @@ export const renderLetterContract = z.object({
   employmentId: z.number().int().optional(),
 });
 
-export const saveLetterContract = letterRenderRowSchema;

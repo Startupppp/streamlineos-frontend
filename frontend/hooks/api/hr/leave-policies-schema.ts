@@ -22,8 +22,4 @@ export const leavePolicyRowContract = z.object({
 
 export const leavePoliciesListContract = z.array(leavePolicyRowContract);
 
-export const createLeavePolicyContract = leavePolicyRowContract;
-
-export const updateLeavePolicyContract = leavePolicyRowContract;
-
 export const deleteLeavePolicyContract = z.undefined();

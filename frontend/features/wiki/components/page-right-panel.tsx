@@ -124,7 +124,7 @@ function PersonValue({ name }: { name: string }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-2">
       <Avatar className="h-5 w-5 shrink-0">
-        <AvatarFallback className="bg-muted text-[0.625rem] font-medium text-muted-foreground">
+        <AvatarFallback className="bg-muted text-micro font-medium text-muted-foreground">
           {getUserInitials({ name })}
         </AvatarFallback>
       </Avatar>

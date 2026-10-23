@@ -26,16 +26,16 @@ const hrPolicyListC = lazyContract(() =>
   import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyListContract),
 );
 const createHrPolicyC = lazyContract(() =>
-  import("@/hooks/api/hr/policies-schema").then((m) => m.createHrPolicyContract),
+  import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyRowContract),
 );
 const updateHrPolicyC = lazyContract(() =>
-  import("@/hooks/api/hr/policies-schema").then((m) => m.updateHrPolicyContract),
+  import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyRowContract),
 );
 const createPolicyVersionC = lazyContract(() =>
-  import("@/hooks/api/hr/policies-schema").then((m) => m.createPolicyVersionContract),
+  import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyRowContract),
 );
 const activatePolicyC = lazyContract(() =>
-  import("@/hooks/api/hr/policies-schema").then((m) => m.activatePolicyContract),
+  import("@/hooks/api/hr/policies-schema").then((m) => m.hrPolicyRowContract),
 );
 const policyConflictsC = lazyContract(() =>
   import("@/hooks/api/hr/policies-schema").then((m) => m.policyConflictsContract),

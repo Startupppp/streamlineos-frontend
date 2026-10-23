@@ -66,14 +66,6 @@ export const hrPolicyListContract = z.object({
   pagination: cursorPaginationContract,
 });
 
-export const createHrPolicyContract = hrPolicyRowContract;
-
-export const updateHrPolicyContract = hrPolicyRowContract;
-
-export const createPolicyVersionContract = hrPolicyRowContract;
-
-export const activatePolicyContract = hrPolicyRowContract;
-
 const policyConflictSchema = z.object({
   severity: z.enum(["blocking", "warning"]),
   reason: z.string(),

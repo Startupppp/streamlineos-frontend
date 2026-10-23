@@ -47,10 +47,6 @@ export const jobPostingsPageContract = z.object({
   }),
 });
 
-export const jobPostingDetailContract = jobPostingRowContract;
-
-export const createJobPostingContract = jobPostingRowContract;
-
 export const updateJobPostingContract = z.object({ success: z.literal(true) });
 
 export const jobBoardOutcomeContract = z.discriminatedUnion("status", [
@@ -79,8 +75,6 @@ export const publishJobContract = z.object({
   blockedCount: z.number().int(),
   failedCount: z.number().int(),
 });
-
-export const duplicateJobPostingContract = jobPostingRowContract;
 
 const sourcePortalRowSchema = z.object({
   id: z.number().int(),

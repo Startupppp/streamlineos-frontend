@@ -81,4 +81,3 @@ export type KbPageCollectionResponse = z.infer<
   typeof kbPageCollectionResponseSchema
 >;
 
-export const kbPageCollectionContract = kbPageCollectionResponseSchema;

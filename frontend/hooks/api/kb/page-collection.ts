@@ -49,7 +49,7 @@ export type KbPageCollectionParams = {
 
 const kbPageCollectionContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-page-collection-schema").then(
-    (m) => m.kbPageCollectionContract,
+    (m) => m.kbPageCollectionResponseSchema,
   ),
 );
 

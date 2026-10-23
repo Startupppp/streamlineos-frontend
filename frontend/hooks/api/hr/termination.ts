@@ -52,12 +52,6 @@ export interface TerminationPagination {
   hasMore: boolean;
 }
 
-export interface TerminationListResponse {
-  data: Termination[];
-  pagination: TerminationPagination;
-  statusCounts: Record<string, number>;
-}
-
 export interface UseTerminationsParams {
   cursor?: string;
   limit?: number;

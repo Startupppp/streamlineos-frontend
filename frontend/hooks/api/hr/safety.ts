@@ -41,27 +41,6 @@ export type IncidentStatus = "open" | "investigating" | "mitigated" | "closed";
 
 export type SafetyIncident = z.infer<typeof safetyIncidentContract>;
 
-export interface WellnessCheckin {
-  id: number;
-  userId: string;
-  date: string;
-  score: number;
-  flags: string[] | null;
-  createdAt: string;
-}
-
-export interface WellnessTrendPoint {
-  date: string;
-  avgScore: number | null;
-  respondents: number;
-}
-
-export interface BurnoutFlag {
-  userId: string;
-  avgScore: number;
-  checkCount: number;
-}
-
 interface CursorPage<T> {
   data: T[];
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };

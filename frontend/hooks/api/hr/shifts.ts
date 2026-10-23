@@ -43,26 +43,6 @@ export interface ShiftTemplate {
   createdAt: string;
 }
 
-export interface ShiftAssignment {
-  id: number;
-  userId: string;
-  shiftId: number;
-  effectiveFrom: string;
-  effectiveTo: string | null;
-  isActive: boolean;
-}
-
-export interface ShiftSwap {
-  id: number;
-  requesterId: string;
-  targetUserId: string;
-  requestDate: string;
-  targetDate: string;
-  reason: string | null;
-  status: string;
-  createdAt: string;
-}
-
 export function useHrShifts() {
   const canView = useCan("hr:attendance:view");
   const hrEnabled = useModuleEnabled("hr");

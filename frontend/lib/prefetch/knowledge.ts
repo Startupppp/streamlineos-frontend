@@ -43,7 +43,7 @@ import {
   linkedDocumentDetailContract,
 } from "@/hooks/api/kb/linked-documents-schema";
 import { hrKbLinkFlagsContract } from "@/hooks/api/kb/hr-link-config-schema";
-import { kbPageCollectionContract } from "@/hooks/api/kb/kb-page-collection-schema";
+import { kbPageCollectionResponseSchema } from "@/hooks/api/kb/kb-page-collection-schema";
 import { contentHealthCountsContract } from "@/hooks/api/kb/content-health-schema";
 import { kbPageReviewListContract } from "@/hooks/api/kb/kb-reviews-schema";
 import { kbPageTemplateListPageContract } from "@/hooks/api/kb/kb-templates-schema";
@@ -61,7 +61,7 @@ type KbAnalyticsOverview = z.infer<typeof kbAnalyticsOverviewContract>;
 type LinkedDocumentList = z.infer<typeof linkedDocumentListContract>;
 type LinkedDocumentDetail = z.infer<typeof linkedDocumentDetailContract>;
 type HrKbLinkFlags = z.infer<typeof hrKbLinkFlagsContract>;
-type KbPageCollection = z.infer<typeof kbPageCollectionContract>;
+type KbPageCollection = z.infer<typeof kbPageCollectionResponseSchema>;
 type KbTrashPageList = z.infer<typeof kbTrashPageListContract>;
 type ContentHealthCounts = z.infer<typeof contentHealthCountsContract>;
 type KbPageReviewList = z.infer<typeof kbPageReviewListContract>;
@@ -231,7 +231,7 @@ export async function prefetchKbPrivatePages() {
         queryFn: () =>
           serverGet<KbPageCollection>(
             "/kb/pages?owner=me&sort=updated_desc&limit=50",
-            kbPageCollectionContract,
+            kbPageCollectionResponseSchema,
           ),
       }),
     ]);
@@ -262,7 +262,7 @@ export async function prefetchKbSharedPages() {
         queryFn: () =>
           serverGet<KbPageCollection>(
             "/kb/pages?sharedWithMe=1&sort=updated_desc&limit=50",
-            kbPageCollectionContract,
+            kbPageCollectionResponseSchema,
           ),
       }),
     ]);

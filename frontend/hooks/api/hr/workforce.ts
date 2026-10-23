@@ -31,40 +31,10 @@ const createHeadcountPlanContract = lazyContract(() =>
   import("@/hooks/api/hr/workforce-schema").then((m) => m.createHeadcountPlanContract),
 );
 const updateHeadcountPlanContract = lazyContract(() =>
-  import("@/hooks/api/hr/workforce-schema").then((m) => m.updateHeadcountPlanContract),
+  import("@/hooks/api/hr/workforce-schema").then((m) => m.headcountPlanRowContract),
 );
 
 export type HeadcountPlan = z.infer<typeof workforcePlansContractDef>[number];
-
-export interface BudgetVsActual {
-  planId: number;
-  fiscalYear: number;
-  departmentId: number | null;
-  departmentName: string;
-  budgeted: number;
-  actual: number;
-  variance: number;
-}
-
-export interface SkillsGap {
-  skillName: string;
-  required: number;
-  covered: number;
-  gap: number;
-}
-
-export interface SuccessionRisk {
-  roleName: string;
-  incumbentId: string | null;
-  readiness: string | null;
-  hasSuccessor: boolean;
-}
-
-export interface AttritionForecast {
-  historical: { month: string; rate: number }[];
-  forecast: { month: string; projectedRate: number }[];
-  disclaimer: string;
-}
 
 const workforceKeys = {
   all: [...humanResourcesQueryKeys.hr.all, "workforce"] as const,

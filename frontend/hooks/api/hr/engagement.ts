@@ -77,7 +77,7 @@ const _listPollsContract = lazyContract(() =>
   import("@/hooks/api/hr/engagement-schema").then((m) => m.listPollsContract),
 );
 const _createPollContract = lazyContract(() =>
-  import("@/hooks/api/hr/engagement-schema").then((m) => m.createPollContract),
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.pollContract),
 );
 const _successContract = lazyContract(() =>
   import("@/hooks/api/hr/engagement-schema").then((m) => m.successContract),
@@ -92,16 +92,16 @@ const _listCommunitiesContract = lazyContract(() =>
   import("@/hooks/api/hr/engagement-schema").then((m) => m.listCommunitiesContract),
 );
 const _createCommunityContract = lazyContract(() =>
-  import("@/hooks/api/hr/engagement-schema").then((m) => m.createCommunityContract),
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.communityBaseContract),
 );
 const _listCampaignsContract = lazyContract(() =>
   import("@/hooks/api/hr/engagement-schema").then((m) => m.listCampaignsContract),
 );
 const _createCampaignContract = lazyContract(() =>
-  import("@/hooks/api/hr/engagement-schema").then((m) => m.createCampaignContract),
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.campaignContract),
 );
 const _updateCampaignContract = lazyContract(() =>
-  import("@/hooks/api/hr/engagement-schema").then((m) => m.updateCampaignContract),
+  import("@/hooks/api/hr/engagement-schema").then((m) => m.campaignContract),
 );
 export function useEngagementOverview() {
   const canView = useCan("hr:engagement:view");

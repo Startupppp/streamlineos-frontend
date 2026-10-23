@@ -27,8 +27,6 @@ export const headcountPlanRowContract = z.object({
 
 export const createHeadcountPlanContract = z.array(headcountPlanRowContract);
 
-export const updateHeadcountPlanContract = headcountPlanRowContract;
-
 export const budgetVsActualContract = z.array(
   z.object({
     planId: z.number().int(),

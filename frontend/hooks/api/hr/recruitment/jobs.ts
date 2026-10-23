@@ -33,16 +33,16 @@ const jobPostingsPageC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.jobPostingsPageContract),
 );
 const createJobPostingC = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.createJobPostingContract),
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.jobPostingRowContract),
 );
 const updateJobPostingC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.updateJobPostingContract),
 );
 const duplicateJobPostingC = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.duplicateJobPostingContract),
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.jobPostingRowContract),
 );
 const jobPostingDetailC = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.jobPostingDetailContract),
+  import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.jobPostingRowContract),
 );
 const publishJobC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/jobs-schema").then((m) => m.publishJobContract),

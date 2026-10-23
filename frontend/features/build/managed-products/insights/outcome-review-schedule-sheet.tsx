@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   FormControl,
@@ -76,27 +76,29 @@ export function OutcomeReviewScheduleSheet({
     debouncedOpSearch,
     open,
   );
-  const opsItems = useMemo(
-    () => opsQ.data?.pages.flatMap((p) => p.data) ?? [],
-    [opsQ.data],
-  );
+  const opsItems = opsQ.data?.pages.flatMap((p) => p.data) ?? [];
 
   const goalsQ = useGoals(
     { managedProductId, search: debouncedGoalsSearch || undefined },
     { enabled: open },
   );
-  const goalsItems = useMemo(() => goalsQ.data ?? [], [goalsQ.data]);
+  const goalsItems = goalsQ.data ?? [];
 
-  const handleOpSearch = useCallback((v: string) => setOpSearch(v), []);
-  const handleGoalsSearch = useCallback((v: string) => setGoalsSearch(v), []);
-  const handleFetchOpsNext = useCallback(() => {
+  function handleOpSearch(v: string) {
+    setOpSearch(v);
+  }
+  function handleGoalsSearch(v: string) {
+    setGoalsSearch(v);
+  }
+  function handleFetchOpsNext() {
     if (opsQ.hasNextPage && !opsQ.isFetchingNextPage) void opsQ.fetchNextPage();
-  }, [opsQ.fetchNextPage, opsQ.hasNextPage, opsQ.isFetchingNextPage]);
-  const handleRetryOps = useCallback(() => void opsQ.refetch(), [opsQ.refetch]);
-  const handleRetryGoals = useCallback(
-    () => void goalsQ.refetch(),
-    [goalsQ.refetch],
-  );
+  }
+  function handleRetryOps() {
+    void opsQ.refetch();
+  }
+  function handleRetryGoals() {
+    void goalsQ.refetch();
+  }
 
   function handleSubmit(values: ScheduleOutcomeReviewValues) {
     const data: CreateOutcomeReviewInput = {
