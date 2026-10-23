@@ -26,6 +26,7 @@ interface PlanCardProps {
   billingCycle: BillingCycle;
   currentPlan: SubscriptionPlan | null;
   currentStatus: string | null;
+  currentMonthlyPrice: number | null;
   upgradingPlan: SubscriptionPlan | null;
   isBusy: boolean;
   isConfigured: boolean | undefined;
@@ -40,6 +41,7 @@ export function PlanCard({
   billingCycle,
   currentPlan,
   currentStatus,
+  currentMonthlyPrice,
   upgradingPlan,
   isBusy,
   isConfigured,
@@ -55,8 +57,12 @@ export function PlanCard({
   const tone = PLAN_TONE[plan];
   const isUpgrading = upgradingPlan === plan && isBusy;
   const isSelected = selectedPlan === plan;
-  const displayPrice =
-    billingCycle === "annual" ? config.annualPrice : config.monthlyPrice;
+  const isDowngrade =
+    !isLocked &&
+    !isTrialPlan &&
+    currentStatus === "ACTIVE" &&
+    currentMonthlyPrice !== null &&
+    config.monthlyPrice < currentMonthlyPrice;
   const annualTotal = Math.round(config.annualTotalPaise / 100);
 
   function handleCardClick() {
@@ -107,12 +113,14 @@ export function PlanCard({
           <h3 className="text-sm font-semibold text-foreground">{config.label}</h3>
         </div>
         <p className="text-2xl font-bold text-foreground tabular-nums">
-          ₹{displayPrice.toLocaleString("en-IN")}
-          <span className="text-sm font-normal text-muted-foreground">/mo</span>
+          ₹{(billingCycle === "annual" ? annualTotal : config.monthlyPrice).toLocaleString("en-IN")}
+          <span className="text-sm font-normal text-muted-foreground">
+            {billingCycle === "annual" ? "/yr" : "/mo"}
+          </span>
         </p>
         {billingCycle === "annual" && (
           <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
-            ₹{annualTotal.toLocaleString("en-IN")} billed annually
+            ≈₹{config.annualPrice.toLocaleString("en-IN")}/mo
           </p>
         )}
       </div>
@@ -135,7 +143,7 @@ export function PlanCard({
           onClick={handleUpgrade}
           className="w-full"
         >
-          {isLocked ? "Current Plan" : isTrialPlan ? "Subscribe" : "Upgrade"}
+          {isLocked ? "Current Plan" : isTrialPlan ? "Subscribe" : isDowngrade ? "Downgrade" : "Upgrade"}
         </LoadingButton>
       ) : (
         <p className="text-xs text-muted-foreground">

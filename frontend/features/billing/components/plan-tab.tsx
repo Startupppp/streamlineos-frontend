@@ -275,6 +275,7 @@ export function PlanTab() {
   const [now] = useState(Date.now);
   const currentPlan = data?.subscription?.plan ?? null;
   const currentStatus = data?.subscription?.status ?? null;
+  const currentMonthlyPrice = currentPlan ? (planConfigById[currentPlan]?.monthlyPrice ?? null) : null;
   const statusInfo = currentStatus ? STATUS_BADGE[currentStatus] : null;
   const isBusy = isCreatingOrder || isVerifying || isReconciling;
   const trialEndsAt = data?.subscription?.trialEndsAt;
@@ -433,6 +434,7 @@ export function PlanTab() {
                 billingCycle={billingCycle}
                 currentPlan={currentPlan}
                 currentStatus={currentStatus}
+                currentMonthlyPrice={currentMonthlyPrice}
                 upgradingPlan={upgradingPlan}
                 isBusy={isBusy}
                 isConfigured={paymentsReady}

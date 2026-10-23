@@ -13,15 +13,16 @@ interface Payment {
   id: number;
   razorpayPaymentId: string | null;
   amount: string | number | null;
+  amountPaise: number;
   currency: string;
   paidAt: string | null;
   status: string;
 }
 
-function fmtAmount(amount: string | number | null, currency: string): string {
-  if (amount === null) return "—";
+function fmtAmount(amount: string | number | null, amountPaise: number, currency: string): string {
+  const value = amount !== null ? Number(amount) : amountPaise / 100;
   const symbol = currency === "INR" ? "₹" : currency;
-  return `${symbol}${Number(amount).toLocaleString("en-IN")}`;
+  return `${symbol}${value.toLocaleString("en-IN")}`;
 }
 
 const PAYMENT_COLUMNS: DataTableColumn<Payment>[] = [
@@ -35,7 +36,7 @@ const PAYMENT_COLUMNS: DataTableColumn<Payment>[] = [
     key: "amount",
     header: "Amount",
     className: "text-xs font-medium text-foreground",
-    cell: (row): ReactNode => fmtAmount(row.amount, row.currency),
+    cell: (row): ReactNode => fmtAmount(row.amount, row.amountPaise, row.currency),
   },
   {
     key: "date",

@@ -180,6 +180,7 @@ describe("NewInvoiceForm", () => {
 
 describe("PlanCard", () => {
   const config = { monthlyPrice: 999, annualPrice: 9590, annualTotalPaise: 115080, label: "Professional", features: ["Everything"] };
+  const starterConfig = { monthlyPrice: 499, annualPrice: 4790, annualTotalPaise: 57480, label: "Starter", features: ["Basic"] };
 
   function planCard(overrides?: Partial<ComponentProps<typeof PlanCard>>) {
     return (
@@ -189,6 +190,7 @@ describe("PlanCard", () => {
         billingCycle="monthly"
         currentPlan="STARTER"
         currentStatus="ACTIVE"
+        currentMonthlyPrice={499}
         upgradingPlan={null}
         isBusy={false}
         isConfigured
@@ -213,6 +215,21 @@ describe("PlanCard", () => {
     render(planCard());
 
     expect(screen.getByRole("button", { name: /upgrade/i })).toBeInTheDocument();
+  });
+
+  it("shows Downgrade when the selected plan costs less than the active plan", () => {
+    grantOnly("billing:subscription:manage");
+    render(
+      planCard({
+        plan: "STARTER",
+        config: starterConfig,
+        currentPlan: "PROFESSIONAL",
+        currentMonthlyPrice: 999,
+      }),
+    );
+
+    expect(screen.getByRole("button", { name: /downgrade/i })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /^upgrade$/i })).not.toBeInTheDocument();
   });
 
   it("disables the upgrade button for every plan while isBusy is true", () => {
