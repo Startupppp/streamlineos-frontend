@@ -77,24 +77,27 @@ describe("useCalendarViewState — UX notes", () => {
 
   it("moves by one period with the arrow keys and returns to today with t", () => {
     mockSearch = "date=2027-03-10&view=week";
+    const pushState = jest.spyOn(window.history, "pushState");
     renderHook(() => useCalendarViewState());
 
     act(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight" }));
     });
-    expect(mockPush).toHaveBeenLastCalledWith(expect.stringContaining("date=2027-03-17"));
+    expect(pushState).toHaveBeenLastCalledWith(null, "", expect.stringContaining("date=2027-03-15"));
     act(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }));
     });
-    expect(mockPush).toHaveBeenLastCalledWith(expect.stringContaining("date=2027-03-03"));
+    expect(pushState).toHaveBeenLastCalledWith(null, "", expect.stringContaining("date=2027-03-01"));
     act(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "t" }));
     });
-    expect(mockPush).toHaveBeenCalledTimes(3);
+    expect(pushState).toHaveBeenCalledTimes(3);
+    pushState.mockRestore();
   });
 
   it("ignores the shortcuts while the user types in a field", () => {
     mockSearch = "date=2027-03-10&view=week";
+    const pushState = jest.spyOn(window.history, "pushState");
     renderHook(() => useCalendarViewState());
     const input = document.createElement("input");
     document.body.appendChild(input);
@@ -102,7 +105,8 @@ describe("useCalendarViewState — UX notes", () => {
     act(() => {
       input.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowRight", bubbles: true }));
     });
-    expect(mockPush).not.toHaveBeenCalled();
+    expect(pushState).not.toHaveBeenCalled();
+    pushState.mockRestore();
     input.remove();
   });
 });

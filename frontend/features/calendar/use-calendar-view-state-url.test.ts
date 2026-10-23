@@ -47,22 +47,24 @@ describe("useCalendarViewState URL navigation", () => {
 
   it("writes date, view, and source filter changes without dropping saved state", () => {
     params = new URLSearchParams("filter=leadership&mode=list");
+    window.history.replaceState(null, "", `/calendar?${params.toString()}`);
     const { result } = renderHook(() => useCalendarViewState());
 
     act(() => result.current.setView("month"));
-    expect(push).toHaveBeenLastCalledWith(
+    expect(window.location.pathname + window.location.search).toBe(
       "/calendar?filter=leadership&mode=list&view=month",
     );
 
     act(() => result.current.setSourceVisibility("attendance", false));
-    expect(push).toHaveBeenLastCalledWith(
-      "/calendar?filter=leadership&mode=list&attendance=0",
+    expect(window.location.pathname + window.location.search).toBe(
+      "/calendar?filter=leadership&mode=list&view=month&attendance=0",
     );
 
     act(() => result.current.setViewMode("calendar"));
-    expect(push).toHaveBeenLastCalledWith(
-      "/calendar?mode=calendar",
+    expect(window.location.pathname + window.location.search).toBe(
+      "/calendar?mode=calendar&view=month&attendance=0",
     );
+    expect(push).not.toHaveBeenCalled();
   });
 
   it("keeps a selected external item in the URL and removes it safely on close", () => {
@@ -83,18 +85,19 @@ describe("useCalendarViewState URL navigation", () => {
     replace.mockClear();
 
     act(() => result.current.handleSelectEvent(event));
-    expect(window.location.pathname + window.location.search).toBe(
-      "/calendar?mode=history&historyPages=3&event=external%3A4%3Aprovider-8&eventSource=external",
-    );
+    const selected = new URLSearchParams(window.location.search);
+    expect(selected.get("mode")).toBe("history");
+    expect(selected.get("historyPages")).toBe("3");
+    expect(selected.get("event")).toBe("external:4:provider-8");
+    expect(selected.get("eventSource")).toBe("external");
     expect(push).not.toHaveBeenCalled();
 
-    params = new URLSearchParams(
-      "mode=history&historyPages=3&event=external%3A4%3Aprovider-8&eventSource=external",
-    );
     act(() => result.current.handleCloseSelected());
-    expect(window.location.pathname + window.location.search).toBe(
-      "/calendar?mode=history&historyPages=3",
-    );
+    const closed = new URLSearchParams(window.location.search);
+    expect(closed.get("mode")).toBe("history");
+    expect(closed.get("historyPages")).toBe("3");
+    expect(closed.has("event")).toBe(false);
+    expect(closed.has("eventSource")).toBe(false);
     expect(replace).not.toHaveBeenCalled();
   });
 
@@ -112,9 +115,11 @@ describe("useCalendarViewState URL navigation", () => {
       },
     };
 
+    const pushState = jest.spyOn(window.history, "pushState");
     act(() => result.current.handleSelectEvent(event));
 
-    expect(push).not.toHaveBeenCalled();
+    expect(pushState).not.toHaveBeenCalled();
+    pushState.mockRestore();
   });
 
   it("accountsOpen is true on the first render when the URL carries ?accounts=1 without waiting for an effect", () => {
@@ -125,12 +130,13 @@ describe("useCalendarViewState URL navigation", () => {
 
   it("handleCloseAccounts navigates to remove ?accounts=1 and accountsOpen becomes false once the URL updates", () => {
     params = new URLSearchParams("mode=list&accounts=1");
+    window.history.replaceState(null, "", `/calendar?${params.toString()}`);
     const { result, rerender } = renderHook(() => useCalendarViewState());
     expect(result.current.accountsOpen).toBe(true);
 
     act(() => result.current.handleCloseAccounts());
 
-    expect(replace).toHaveBeenLastCalledWith("/calendar?mode=list");
+    expect(window.location.pathname + window.location.search).toBe("/calendar?mode=list");
 
     params = new URLSearchParams("mode=list");
     rerender();
@@ -142,8 +148,10 @@ describe("useCalendarViewState URL navigation", () => {
     const { result } = renderHook(() => useCalendarViewState());
     expect(result.current.accountsOpen).toBe(false);
 
+    const replaceState = jest.spyOn(window.history, "replaceState");
     act(() => result.current.handleCloseAccounts());
 
-    expect(replace).not.toHaveBeenCalled();
+    expect(replaceState).not.toHaveBeenCalled();
+    replaceState.mockRestore();
   });
 });

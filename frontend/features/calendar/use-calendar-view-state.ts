@@ -8,7 +8,7 @@ import {
   useEffect,
   type SetStateAction,
 } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import {
   addMonths,
   subMonths,
@@ -20,6 +20,8 @@ import {
   isSameDay,
   setHours,
   startOfDay,
+  startOfWeek,
+  startOfMonth,
 } from "date-fns";
 import type { View, SlotInfo, BigCalEvent } from "./big-calendar-wrapper";
 import { useCalendarSlotSelectionGuard } from "./use-calendar-slot-selection-guard";
@@ -32,7 +34,6 @@ import {
 import { readerTimeZone, zonedWallClock } from "@/lib/date-utils";
 
 export function useCalendarViewState(timeZone: string = readerTimeZone()) {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [mountedAt] = useState(() => new Date());
   const urlState = useMemo(
@@ -63,11 +64,11 @@ export function useCalendarViewState(timeZone: string = readerTimeZone()) {
       changes: Record<string, string | null>,
       method: "push" | "replace" = "push",
     ) => {
-      router[method](
-        calendarUrl(new URLSearchParams(searchParams.toString()), changes),
-      );
+      const url = calendarUrl(new URLSearchParams(window.location.search), changes);
+      if (method === "push") window.history.pushState(null, "", url);
+      else window.history.replaceState(null, "", url);
     },
-    [router, searchParams],
+    [],
   );
 
   const isCreateOpen = createRequested || createOpenState;
@@ -84,11 +85,17 @@ export function useCalendarViewState(timeZone: string = readerTimeZone()) {
   const setCurrentDate = useCallback(
     (next: SetStateAction<Date>) => {
       const resolved = typeof next === "function" ? next(currentDate) : next;
-      if (format(resolved, "yyyy-MM-dd") === format(currentDate, "yyyy-MM-dd"))
+      const normalized =
+        view === "week"
+          ? startOfWeek(resolved, { weekStartsOn: 1 })
+          : view === "month"
+            ? startOfMonth(resolved)
+            : resolved;
+      if (format(normalized, "yyyy-MM-dd") === format(currentDate, "yyyy-MM-dd"))
         return;
-      navigate({ date: format(resolved, "yyyy-MM-dd") });
+      navigate({ date: format(normalized, "yyyy-MM-dd") });
     },
-    [currentDate, navigate],
+    [currentDate, navigate, view],
   );
 
   const setView = useCallback(
@@ -197,16 +204,9 @@ export function useCalendarViewState(timeZone: string = readerTimeZone()) {
           : event.resource?.source === "hr"
             ? "hr"
             : "calendar")) as CalendarSelectionSource;
-      window.history.pushState(
-        null,
-        "",
-        calendarUrl(new URLSearchParams(window.location.search), {
-          event: String(event.id),
-          eventSource: source,
-        }),
-      );
+      navigate({ event: String(event.id), eventSource: source });
     },
-    [],
+    [navigate],
   );
 
   const handlePrev = useCallback(() => {
@@ -252,16 +252,10 @@ export function useCalendarViewState(timeZone: string = readerTimeZone()) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handleNext, handlePrev, handleToday, isCalendarOverlayOpen, viewMode]);
 
-  const handleCloseSelected = useCallback(() => {
-    window.history.replaceState(
-      null,
-      "",
-      calendarUrl(new URLSearchParams(window.location.search), {
-        event: null,
-        eventSource: null,
-      }),
-    );
-  }, []);
+  const handleCloseSelected = useCallback(
+    () => navigate({ event: null, eventSource: null }, "replace"),
+    [navigate],
+  );
   const handleOpenAccounts = useCallback(() => setAccountsOpenState(true), []);
   const handleCloseAccounts = useCallback(() => {
     setAccountsOpenState(false);

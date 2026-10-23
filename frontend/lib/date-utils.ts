@@ -178,13 +178,13 @@ export function formatEventTimeRange(
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return "";
   const reader = readerZone ?? readerTimeZone();
   const zone = resolveTimeZone(timezone, reader);
-  const date = new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: zone }).format(from);
-  const fromTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: zone }).format(from);
-  const toTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: zone }).format(to);
-  const authored = `${date}, ${fromTime} – ${toTime} · ${zone}`;
-  if (zone === reader) return authored;
-  const readerTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: reader }).format(from);
-  return `${authored} (${readerTime} ${reader})`;
+  const date = new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: reader }).format(from);
+  const fromTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: reader }).format(from);
+  const toTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: reader }).format(to);
+  const primary = `${date}, ${fromTime} – ${toTime} · ${reader}`;
+  if (zone === reader) return primary;
+  const sourceTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: zone }).format(from);
+  return `${primary} (${sourceTime} ${zone})`;
 }
 
 export function formatEventDate(value: string | Date, timezone?: string | null): string {

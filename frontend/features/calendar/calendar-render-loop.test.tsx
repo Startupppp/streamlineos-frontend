@@ -332,9 +332,8 @@ describe("/calendar render stability", () => {
   });
 
   it("keeps the week grid on a desktop-width window", async () => {
-    mockPush.mockClear();
     await renderCalendar();
-    expect(mockPush).not.toHaveBeenCalledWith(expect.stringContaining("mode=list"));
+    expect(window.location.search).not.toContain("mode=list");
   });
 
   it("actually reaches the grid data path it is asserting about", async () => {

@@ -173,8 +173,8 @@ function externalAuthoredAllDay(): ExternalBigCalEvent {
   };
 }
 
-describe("ExternalEventDetailSheet — the provider's authored zone leads, the reader's follows", () => {
-  it("renders the authored wall clock and names the authored zone", () => {
+describe("ExternalEventDetailSheet — the reader's zone leads, the authored zone follows as secondary", () => {
+  it("shows the authored zone as secondary alongside the reader's primary time", () => {
     render(<ExternalEventDetailSheet event={externalAuthoredTimed()} onClose={jest.fn()} />);
 
     const text = detailText();
@@ -182,7 +182,7 @@ describe("ExternalEventDetailSheet — the provider's authored zone leads, the r
     expect(text).toContain("6:30");
   });
 
-  it("still shows the reader their own reading of a foreign-zone provider event", () => {
+  it("shows the reader's primary time first for a foreign-zone provider event", () => {
     render(<ExternalEventDetailSheet event={externalAuthoredTimed()} onClose={jest.fn()} />);
 
     const text = detailText();
@@ -218,8 +218,8 @@ describe("HrEventDetailSheet — HR aggregate items are zone-less calendar dates
   });
 });
 
-describe("CalendarAgendaPreview — the authored zone leads, the reader's follows", () => {
-  it("renders the authored wall clock and names the authored zone", () => {
+describe("CalendarAgendaPreview — the reader's zone leads, the authored zone follows as secondary", () => {
+  it("shows the authored zone as secondary alongside the reader's primary time", () => {
     render(<CalendarAgendaPreview events={[agendaTimed()]} />);
 
     const row = screen.getByText("Standup").parentElement;
@@ -227,7 +227,7 @@ describe("CalendarAgendaPreview — the authored zone leads, the reader's follow
     expect(row?.textContent).toContain("7:30");
   });
 
-  it("still shows the reader their own reading of a foreign-zone event", () => {
+  it("shows the reader's primary time for a foreign-zone event", () => {
     render(<CalendarAgendaPreview events={[agendaTimed()]} />);
 
     const row = screen.getByText("Standup").parentElement;
