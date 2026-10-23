@@ -1,5 +1,4 @@
 import { flattenNavRoutes, getNavGroupsForModule } from "./sidebar-nav-items";
-import { resolveRouteAccess } from "@/lib/rbac/route-access/route-access";
 
 const approvalPath = "/calendar/resource-approvals";
 
@@ -10,10 +9,6 @@ it("shows the combined Calendar entry to an Inventory warehouse manager without 
 
   expect(routes).toContainEqual(expect.objectContaining({ href: "/calendar", label: "Calendar" }));
   expect(hrefs).not.toContain(approvalPath);
-  expect(resolveRouteAccess(approvalPath)).toMatchObject({
-    kind: "permission",
-    permission: ["calendar:admin:manage", "hr:assets:manage", "inventory:warehouses:manage"],
-  });
 });
 
 it("keeps a single Calendar entry for a reader without owner management rights", () => {

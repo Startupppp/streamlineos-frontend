@@ -46,7 +46,6 @@ const NAV_ORPHANS: ReadonlyArray<{ route: string; reason: string }> = [
   { route: "inventory/quality/recalls", reason: "in-page — a /inventory/quality tab and stat card" },
   { route: "inventory/replenishment/rules", reason: "in-page — the rules link on the replenishment client" },
 
-  { route: "inventory/pick-lists", reason: "alias — redirects to /inventory/operations/picking, which IS in nav as \"Pick lists\" (inventory.md:1358)" },
   { route: "inventory/rf/pick", reason: "in-page — the RF queue filtered to picks; reached by backing out of a runner or by a truncated deep link, not by browsing" },
   { route: "inventory/rf/putaway", reason: "in-page — the RF queue filtered to putaway; reached by backing out of a runner or by a truncated deep link, not by browsing" },
 ];

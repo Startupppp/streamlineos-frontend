@@ -12,8 +12,10 @@ import type { NavGroup, NavRoute, ModuleKey } from "./sidebar-nav-types";
 const EVERY_MODULE = [...Object.keys(ORG_MODULE_NAME), "timesheets", "workflows"];
 const DECLARED_GROUPS: NavGroup[] = [...NAV_GROUPS, ...HOME_NAV_GROUPS];
 
+const ALL_PERMISSIONS = new Proxy<Record<string, unknown>>({}, { has: () => true });
+
 function groupsShownFor(product: ModuleKey): NavGroup[] {
-  return getNavGroupsForModule(product, "OWNER", {}, EVERY_MODULE);
+  return getNavGroupsForModule(product, "MEMBER", ALL_PERMISSIONS, EVERY_MODULE);
 }
 
 function leavesOf(group: NavGroup): NavRoute[] {

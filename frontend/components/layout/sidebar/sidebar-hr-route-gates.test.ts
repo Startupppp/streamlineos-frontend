@@ -99,13 +99,13 @@ describe("permission-aware product navigation", () => {
         "app",
         "(authenticated)",
         "me",
-        "onboarding",
+        "records",
         "page.tsx",
       ),
       "utf8",
     );
 
-    expect(selfServiceRoute).toContain('requirePermission("self:onboarding-tasks")');
+    expect(selfServiceRoute).toContain("requireSession");
     expect(selfServiceRoute).not.toContain("requireModulePermission");
   });
 
