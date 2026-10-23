@@ -6,7 +6,7 @@ export default function SignReportsLoading() {
   return (
     <PageWrapper
       title="Reports"
-      subtitle="Envelope activity, completion rates, and usage across SignOS."
+      subtitle="Envelope activity, completion rates, and usage across Sign OS."
     >
       <div className="flex flex-col gap-4">
         <StatCardGridSkeleton cols={4} count={4} />

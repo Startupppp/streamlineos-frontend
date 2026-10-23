@@ -5,7 +5,7 @@ import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 export default function SignDashboardLoading() {
   return (
     <PageWrapper
-      title="SignOS"
+      title="Sign OS"
       subtitle="Envelopes, signatures, and completion status at a glance."
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >

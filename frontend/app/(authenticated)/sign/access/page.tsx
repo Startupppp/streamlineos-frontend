@@ -3,5 +3,5 @@ import { ModuleAccessPage } from "@/features/module-access/module-access-page";
 
 export default async function SignAccessRoute() {
   await requirePermission("sign:access:view");
-  return <ModuleAccessPage moduleKey="sign" title="SignOS Access" />;
+  return <ModuleAccessPage moduleKey="sign" title="Sign OS Access" />;
 }

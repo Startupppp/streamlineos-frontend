@@ -59,7 +59,7 @@ function getCategoryLabel(category: NotificationCategory): string {
     PAYROLL: "Payroll",
     RECRUITMENT: "Recruitment",
     KNOWLEDGE: "Knowledge",
-    SIGN: "SignOS",
+    SIGN: "Sign OS",
     INVENTORY: "Inventory",
     SURVEYS: "Surveys",
     CALENDAR: "Calendar",
