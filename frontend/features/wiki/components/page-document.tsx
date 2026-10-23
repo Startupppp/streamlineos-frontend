@@ -383,8 +383,7 @@ export default function PageDocument({
 
   if (page.kind === "file") return <KbFileViewer pageId={pageId} />;
 
-  if (page.deletedAt !== null)
-    return <KbPageTrashed onRetry={() => void refetch()} />;
+  if (page.deletedAt !== null) return <KbPageTrashed />;
 
   const isEditable =
     canUpdate && page.can.edit === true && (!page.isLocked || canManage);

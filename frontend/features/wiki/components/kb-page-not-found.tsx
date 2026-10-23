@@ -12,17 +12,13 @@ import {
   KNOWLEDGE_BASE,
 } from "@/lib/knowledge-routes";
 
-interface KbPageTrashedProps {
-  onRetry: () => void;
-}
-
-export function KbPageTrashed({ onRetry: _onRetry }: KbPageTrashedProps) {
+export function KbPageTrashed() {
   return (
     <div className="flex h-full flex-1 flex-col items-center justify-center px-6 py-16 text-center">
       <StateIllustration preset="knowledge" className="h-32 w-32 mb-6 opacity-80" />
-      <h2 className="text-lg font-semibold text-foreground">This file is in the Trash</h2>
+      <h2 className="text-lg font-semibold text-foreground">This page is in the Trash</h2>
       <p className="mt-2 max-w-sm text-sm text-muted-foreground leading-relaxed">
-        This file was moved to Trash and is no longer editable. Restore it to continue editing.
+        This page was moved to Trash and is no longer editable. Restore it to continue editing.
       </p>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
         <Button asChild className="gap-2">

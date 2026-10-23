@@ -106,6 +106,7 @@ function makePage(): KbPageDetail {
     updatedAt: "2026-09-01T00:00:00Z",
     lastEditedById: "user-1",
     ownerUserId: "user-1",
+    deletedAt: null,
   } as unknown as KbPageDetail;
 }
 
