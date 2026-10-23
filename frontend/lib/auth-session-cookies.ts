@@ -16,9 +16,9 @@ export function isSessionCookieName(name: string): boolean {
   );
 }
 
-export function signInPathForMissingSession(callbackUrl?: string): string {
+export function signInPathForMissingSession(callbackUrl?: string, expired = true): string {
   const params = new URLSearchParams();
-  params.set(SESSION_EXPIRED_QUERY, SESSION_EXPIRED_VALUE);
+  if (expired) params.set(SESSION_EXPIRED_QUERY, SESSION_EXPIRED_VALUE);
   if (
     callbackUrl &&
     callbackUrl.startsWith("/") &&
@@ -28,7 +28,8 @@ export function signInPathForMissingSession(callbackUrl?: string): string {
   ) {
     params.set("callbackUrl", callbackUrl);
   }
-  return `/signin?${params.toString()}`;
+  const query = params.toString();
+  return query ? `/signin?${query}` : "/signin";
 }
 
 export function withExpiredSessionCookies(
