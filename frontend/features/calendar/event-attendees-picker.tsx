@@ -163,7 +163,7 @@ export function EventAttendeesPicker({
           maxLength={320}
           className="h-9 flex-1 text-sm"
         />
-        <Button type="button" variant="outline" size="sm" disabled={!guestDraftValid} onClick={handleAddGuestDraft}>
+        <Button type="button" variant="outline" size="sm" className="h-9 shrink-0" disabled={!guestDraftValid} onClick={handleAddGuestDraft}>
           Add guest
         </Button>
       </div>

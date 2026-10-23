@@ -245,11 +245,11 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
   );
 
   const connectActions = canManage ? (
-    <div className="flex flex-row flex-wrap gap-2">
+    <>
       <LoadingButton
         variant="outline"
         size="sm"
-        className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
+        className="h-11 min-w-0 flex-1 basis-0 justify-center gap-2 bg-card px-3 text-xs"
         disabled={pendingToolkit !== null && pendingToolkit !== "googlecalendar"}
         isPending={pendingToolkit === "googlecalendar"}
         onClick={handleConnectGoogle}
@@ -274,12 +274,12 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
             />
           </svg>
         )}
-        Google Calendar
+        <span className="truncate">Google Calendar</span>
       </LoadingButton>
       <LoadingButton
         variant="outline"
         size="sm"
-        className="flex-1 h-11 px-4 text-xs bg-card justify-center gap-2 min-w-[9rem]"
+        className="h-11 min-w-0 flex-1 basis-0 justify-center gap-2 bg-card px-3 text-xs"
         disabled={pendingToolkit !== null && pendingToolkit !== "outlook"}
         isPending={pendingToolkit === "outlook"}
         onClick={handleConnectOutlook}
@@ -292,9 +292,9 @@ export function CalendarAccountsSheet({ open, onClose }: CalendarAccountsSheetPr
             <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
           </svg>
         )}
-        Microsoft Outlook
+        <span className="truncate">Microsoft Outlook</span>
       </LoadingButton>
-    </div>
+    </>
   ) : null;
 
   return (

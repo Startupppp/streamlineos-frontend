@@ -133,7 +133,7 @@ export function CalendarCoachSheet({ onClose }: { onClose: () => void }) {
         />
       ) : undefined}
     >
-      <div className="space-y-4 bg-background">
+      <div className="space-y-4">
         {coach.isLoading ? (
           <div role="status" aria-label="Loading your preference" className="grid grid-cols-2 gap-3">
             <Skeleton className="h-20 w-full rounded-xl" />

@@ -281,6 +281,9 @@ export const CalendarToolbar = memo(function CalendarToolbar({
   const showCapacity = viewMode === "calendar" && Boolean(onOpenCapacity);
   const showInsights =
     (viewMode === "calendar" || viewMode === "my-day") && Boolean(onOpenCoach);
+  const showScenario =
+    viewMode === "calendar" && scenarioCount > 0 && Boolean(onOpenScenario);
+  const showToolRow = showDateNav || showScenario || Boolean(filters);
 
   return (
     <div className="flex w-full min-w-0 shrink-0 flex-col gap-2">
@@ -418,101 +421,99 @@ export const CalendarToolbar = memo(function CalendarToolbar({
           </div>
         </div>
 
-        <motion.div
-          key={viewMode}
-          className="flex min-h-9 min-w-0 flex-wrap items-center gap-1.5 sm:gap-2"
-          initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { duration: 0.2, ease: TOOL_ROW_EASE }
-          }
-        >
-          {showDateNav ? (
-            <>
+        {showToolRow ? (
+          <motion.div
+            key={viewMode}
+            className="flex min-h-9 min-w-0 flex-wrap items-center gap-1.5 sm:gap-2"
+            initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={
+              reduceMotion
+                ? { duration: 0 }
+                : { duration: 0.2, ease: TOOL_ROW_EASE }
+            }
+          >
+            {showDateNav ? (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={cn("shrink-0 px-2.5 sm:px-3", OUTLINE_CONTROL_CLASS)}
+                  onClick={onToday}
+                  disabled={navigationDisabled}
+                  aria-keyshortcuts="T"
+                  title="Today (T)"
+                >
+                  Today
+                </Button>
+                <div
+                  role="group"
+                  aria-label="Date navigation"
+                  className="flex shrink-0 items-center"
+                >
+                  <AnimatedIconButton
+                    icon={ChevronLeftIcon}
+                    iconSize={16}
+                    variant="outline"
+                    size="icon"
+                    className={cn(
+                      "rounded-r-none border-r-0",
+                      OUTLINE_CONTROL_CLASS,
+                    )}
+                    aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
+                    aria-keyshortcuts="ArrowLeft"
+                    title={`Previous ${VIEW_PERIOD_LABEL[view]} (←)`}
+                    disabled={navigationDisabled}
+                    onClick={onPrev}
+                  />
+                  <AnimatedIconButton
+                    icon={ChevronRightIcon}
+                    iconSize={16}
+                    variant="outline"
+                    size="icon"
+                    className={cn("rounded-l-none", OUTLINE_CONTROL_CLASS)}
+                    aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
+                    aria-keyshortcuts="ArrowRight"
+                    title={`Next ${VIEW_PERIOD_LABEL[view]} (→)`}
+                    disabled={navigationDisabled}
+                    onClick={onNext}
+                  />
+                </div>
+                <Select value={view} onValueChange={handleViewChange}>
+                  <SelectTrigger
+                    aria-label="Calendar view"
+                    className={cn(
+                      "w-fit min-w-[4.5rem] bg-card",
+                      FILTER_SELECT_TRIGGER,
+                    )}
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+                    <SelectItem value="day">Day</SelectItem>
+                    <SelectItem value="week">Week</SelectItem>
+                    <SelectItem value="month">Month</SelectItem>
+                  </SelectContent>
+                </Select>
+              </>
+            ) : null}
+            {showScenario ? (
               <Button
                 variant="outline"
                 size="sm"
-                className={cn("shrink-0 px-2.5 sm:px-3", OUTLINE_CONTROL_CLASS)}
-                onClick={onToday}
-                disabled={navigationDisabled}
-                aria-keyshortcuts="T"
-                title="Today (T)"
+                className={cn("shrink-0 px-2.5", OUTLINE_CONTROL_CLASS)}
+                onClick={onOpenScenario}
               >
-                Today
+                What if ({scenarioCount})
               </Button>
-              <div
-                role="group"
-                aria-label="Date navigation"
-                className="flex shrink-0 items-center"
-              >
-                <AnimatedIconButton
-                  icon={ChevronLeftIcon}
-                  iconSize={16}
-                  variant="outline"
-                  size="icon"
-                  className={cn(
-                    "rounded-r-none border-r-0",
-                    OUTLINE_CONTROL_CLASS,
-                  )}
-                  aria-label={`Previous ${VIEW_PERIOD_LABEL[view]}`}
-                  aria-keyshortcuts="ArrowLeft"
-                  title={`Previous ${VIEW_PERIOD_LABEL[view]} (←)`}
-                  disabled={navigationDisabled}
-                  onClick={onPrev}
-                />
-                <AnimatedIconButton
-                  icon={ChevronRightIcon}
-                  iconSize={16}
-                  variant="outline"
-                  size="icon"
-                  className={cn("rounded-l-none", OUTLINE_CONTROL_CLASS)}
-                  aria-label={`Next ${VIEW_PERIOD_LABEL[view]}`}
-                  aria-keyshortcuts="ArrowRight"
-                  title={`Next ${VIEW_PERIOD_LABEL[view]} (→)`}
-                  disabled={navigationDisabled}
-                  onClick={onNext}
-                />
+            ) : null}
+            {filters ? (
+              <div className="w-full min-w-0 basis-full sm:min-w-0 sm:flex-1 sm:basis-0">
+                {filters}
               </div>
-              <Select value={view} onValueChange={handleViewChange}>
-                <SelectTrigger
-                  aria-label="Calendar view"
-                  className={cn(
-                    "w-fit min-w-[4.5rem] bg-card",
-                    FILTER_SELECT_TRIGGER,
-                  )}
-                >
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
-                  <SelectItem value="day">Day</SelectItem>
-                  <SelectItem value="week">Week</SelectItem>
-                  <SelectItem value="month">Month</SelectItem>
-                </SelectContent>
-              </Select>
-            </>
-          ) : viewMode === "history" ? (
-            <span className="px-1 text-sm text-muted-foreground">
-              Newest to oldest
-            </span>
-          ) : null}
-          {viewMode === "calendar" && scenarioCount > 0 && onOpenScenario ? (
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn("shrink-0 px-2.5", OUTLINE_CONTROL_CLASS)}
-              onClick={onOpenScenario}
-            >
-              What if ({scenarioCount})
-            </Button>
-          ) : null}
-          {filters ? (
-            <div className="w-full min-w-0 basis-full sm:min-w-0 sm:flex-1 sm:basis-0">
-              {filters}
-            </div>
-          ) : null}
-        </motion.div>
+            ) : null}
+          </motion.div>
+        ) : null}
       </div>
 
       <SourceFailureBanner failures={sourceFailures ?? NO_SOURCE_FAILURES} />

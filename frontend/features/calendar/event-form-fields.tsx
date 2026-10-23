@@ -167,13 +167,13 @@ export function EventFormFields({
         <div className="flex items-start gap-2.5">
           <Clock className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
           <div className="flex-1 min-w-0 space-y-2">
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-h-9 flex-wrap items-center gap-2">
               <DatePicker
                 value={startDate}
                 onChange={onStartDateChange}
                 placeholder="Start date"
                 dateFormat="MMM d, yyyy"
-                className="min-w-0 flex-1 text-xs"
+                className="min-w-0 flex-1"
                 fromDate={startBounds.fromDate}
                 fromYear={startBounds.fromYear}
                 toYear={startBounds.toYear}
@@ -182,7 +182,7 @@ export function EventFormFields({
                 <Input
                   type="time"
                   name="startTime"
-                  className="w-28 min-w-[7rem] shrink-0 text-xs"
+                  className="h-9 w-28 min-w-[7rem] shrink-0"
                   value={startTime}
                   onChange={onStartTimeChange}
                 />
@@ -192,7 +192,7 @@ export function EventFormFields({
                   type="button"
                   variant="outline"
                   size="icon-sm"
-                  className="shrink-0"
+                  className="size-9 shrink-0"
                   onClick={onShowEndDate}
                   aria-label="Add end date"
                 >
@@ -208,7 +208,7 @@ export function EventFormFields({
                   toYear={endBounds.toYear}
                   placeholder="End date"
                   dateFormat="MMM d, yyyy"
-                  className={cn("min-w-0 flex-1 text-xs", dateTimeError && "border-destructive")}
+                  className={cn("min-w-0 flex-1", dateTimeError && "border-destructive")}
                 />
               )}
               {showEndDate && !allDay && (
@@ -216,7 +216,7 @@ export function EventFormFields({
                   type="time"
                   name="endTime"
                   className={cn(
-                    "w-28 min-w-[7rem] shrink-0 text-xs",
+                    "h-9 w-28 min-w-[7rem] shrink-0",
                     dateTimeError && "border-destructive",
                   )}
                   value={endTime}
@@ -270,33 +270,33 @@ export function EventFormFields({
       </div>
 
       <div className="flex items-center gap-2.5">
-        <Lock className="h-4 w-4 text-muted-foreground shrink-0" />
-        <div className="flex flex-1 min-w-0 flex-row gap-2">
-          <div className="flex-1 min-w-0">
+        <Lock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <div className="flex min-h-9 min-w-0 flex-1 flex-row gap-2">
+          <div className="min-w-0 flex-1">
             <Select value={category} onValueChange={onCategoryChange}>
-              <SelectTrigger className="w-full text-xs">
+              <SelectTrigger className="h-9 w-full">
                 <SelectValue placeholder="Select privacy / category" />
               </SelectTrigger>
               <SelectContent>
                 {EVENT_CATEGORIES.map((cat) => (
-                  <SelectItem key={cat} value={cat} className="text-xs">
+                  <SelectItem key={cat} value={cat}>
                     {eventCategoryLabel(cat)}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             <Select value={color} onValueChange={onColorChange}>
-              <SelectTrigger className="w-full text-xs">
+              <SelectTrigger className="h-9 w-full">
                 <SelectValue placeholder="Select busy status" />
               </SelectTrigger>
               <SelectContent>
                 {Object.entries(EVENT_COLORS).map(([key, hex]) => (
-                  <SelectItem key={key} value={key} className="text-xs">
+                  <SelectItem key={key} value={key}>
                     <span className="flex items-center gap-2">
                       <span
-                        className="h-2.5 w-2.5 rounded-full shrink-0"
+                        className="h-2.5 w-2.5 shrink-0 rounded-full"
                         style={{ backgroundColor: hex }}
                       />
                       <span className="capitalize">{key}</span>
@@ -316,15 +316,15 @@ export function EventFormFields({
       />
 
       <div className="flex items-start gap-2.5">
-        <FileText className="h-4 w-4 text-muted-foreground shrink-0 mt-2.5" />
-        <div className="flex-1">
+        <FileText className="mt-2.5 h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+        <div className="min-w-0 flex-1">
           <Textarea
             id="ev-desc"
             value={description}
             onChange={onDescriptionChange}
             placeholder="Notes"
             maxLength={2000}
-            className="min-h-20"
+            className="min-h-24"
           />
         </div>
       </div>
@@ -340,7 +340,7 @@ export function EventFormFields({
           <div className="space-y-1.5">
             <Label className="text-xs font-medium">Sync to calendar account</Label>
             <Select value={syncConnectionId} onValueChange={onSyncConnectionChange}>
-              <SelectTrigger className="">
+              <SelectTrigger className="h-9 w-full">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

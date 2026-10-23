@@ -168,6 +168,16 @@ export function CalendarSavedViewControls({
 
   return (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+      {search !== undefined && onSearchChange ? (
+        <Input
+          value={search}
+          onChange={(event) => onSearchChange(event.target.value)}
+          placeholder="Search events"
+          aria-label="Search calendar events"
+          className="h-9 w-full min-w-0 flex-1 basis-full bg-card text-sm sm:min-w-[18rem] sm:basis-0 sm:grow"
+          maxLength={200}
+        />
+      ) : null}
       <Select
         value={selectedId ?? "none"}
         onOpenChange={setSelectOpen}
@@ -202,16 +212,6 @@ export function CalendarSavedViewControls({
           ) : null}
         </SelectContent>
       </Select>
-      {search !== undefined && onSearchChange ? (
-        <Input
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search events"
-          aria-label="Search calendar events"
-          className="h-9 w-full min-w-0 flex-1 basis-full bg-card text-sm sm:min-w-[18rem] sm:basis-0 sm:grow"
-          maxLength={200}
-        />
-      ) : null}
       {sources && onSourceChange ? (
         <Select value={source || "all"} onValueChange={onSourceChange}>
           <SelectTrigger
@@ -253,10 +253,10 @@ export function CalendarSavedViewControls({
           disabled={query.isError}
           onClick={openCreate}
           aria-label="Save view"
-          className="size-9 shrink-0 bg-card px-0 data-[state=open]:border-primary sm:h-9 sm:w-auto sm:px-3"
+          title="Save view"
+          className="size-9 shrink-0 bg-card px-0 data-[state=open]:border-primary"
         >
-          <BookmarkPlus className="size-4 sm:hidden" aria-hidden />
-          <span className="sr-only sm:not-sr-only">Save view</span>
+          <BookmarkPlus className="size-4" aria-hidden />
         </Button>
       ) : null}
       {canWrite &&

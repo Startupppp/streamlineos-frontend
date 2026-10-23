@@ -182,7 +182,7 @@ export function EventCreateForm({
         <div className="flex items-start gap-2.5">
           <MapPin className="h-4 w-4 text-muted-foreground shrink-0 mt-2" />
           <div className="flex-1 min-w-0 space-y-1">
-            <Input id="ev-location" value={form.location} onChange={onLocationChange} placeholder="Room or Location" className={cn("h-8 text-xs flex-1 min-w-0", form.locationError && "border-destructive")} />
+            <Input id="ev-location" value={form.location} onChange={onLocationChange} placeholder="Room or Location" className={cn("h-9 min-w-0 flex-1", form.locationError && "border-destructive")} />
             {form.locationError && <p className="text-micro text-destructive">{form.locationError}</p>}
           </div>
         </div>
@@ -197,7 +197,7 @@ export function EventCreateForm({
                 <AnimatedIconButton icon={XIcon} iconSize={14} type="button" variant="ghost" size="icon" onClick={onRemoveLinkedTicket} className="h-6 w-6 shrink-0" aria-label="Remove linked ticket" />
               </div>
             ) : (
-              <Button type="button" variant="outline" onClick={onOpenTicketPicker} className="w-full justify-start border-dashed text-muted-foreground hover:text-foreground">
+              <Button type="button" variant="outline" size="sm" onClick={onOpenTicketPicker} className="h-9 w-full justify-start border-dashed text-muted-foreground hover:text-foreground">
                 <Ticket className="size-4" />
                 Link a ticket…
               </Button>

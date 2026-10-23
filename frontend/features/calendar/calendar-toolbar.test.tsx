@@ -312,9 +312,9 @@ describe("CalendarToolbar — controls follow the active tab", () => {
     expect(screen.queryByRole("button", { name: "My time insights" })).toBeNull();
   });
 
-  it("replaces date controls with the history order", () => {
+  it("hides date controls and planning tools on the history tab", () => {
     renderMode("history");
-    expect(screen.getByText("Newest to oldest")).toBeInTheDocument();
+    expect(screen.queryByText("Newest to oldest")).toBeNull();
     expect(screen.queryByRole("button", { name: "Today" })).toBeNull();
     expect(screen.queryByRole("combobox", { name: "Calendar view" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Capacity" })).toBeNull();

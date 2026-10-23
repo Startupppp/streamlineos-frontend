@@ -160,12 +160,12 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
         <Repeat className="h-4 w-4 text-muted-foreground shrink-0" aria-hidden />
         <div className="flex-1 min-w-0">
           <Select value={state.freq} onValueChange={handleFreqChange}>
-            <SelectTrigger className="w-full text-xs">
+            <SelectTrigger className="h-9 w-full">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
               {FREQ_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                <SelectItem key={opt.value} value={opt.value}>
                   {opt.label}
                 </SelectItem>
               ))}
@@ -184,7 +184,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
               max={99}
               value={state.interval}
               onChange={handleIntervalChange}
-              className="w-16 text-xs px-2"
+              className="h-9 w-16 px-2"
             />
             <span className="text-xs text-muted-foreground">{freqLabel}(s)</span>
           </div>
@@ -207,28 +207,28 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
             <div className="space-y-1.5">
               <div className="flex items-center gap-2">
                 <Select value={state.monthlyMode} onValueChange={handleMonthlyModeChange}>
-                  <SelectTrigger className="text-xs w-fit min-w-[9rem]">
+                  <SelectTrigger className="h-9 w-fit min-w-[9rem]">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="bymonthday" className="text-xs">
+                    <SelectItem value="bymonthday">
                       Day {state.byMonthDay} of month
                     </SelectItem>
-                    <SelectItem value="bysetpos" className="text-xs">
+                    <SelectItem value="bysetpos">
                       Day of week
                     </SelectItem>
                   </SelectContent>
                 </Select>
               </div>
               {state.monthlyMode === "bysetpos" && (
-                <div className="flex items-center gap-2">
+                <div className="flex min-h-9 items-center gap-2">
                   <Select value={String(state.bySetPos)} onValueChange={handleBySetPosChange}>
-                    <SelectTrigger className="text-xs w-24">
+                    <SelectTrigger className="h-9 w-24">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {Object.entries(BYSETPOS_LABELS).map(([val, label]) => (
-                        <SelectItem key={val} value={val} className="text-xs">
+                        <SelectItem key={val} value={val}>
                           {label}
                         </SelectItem>
                       ))}
@@ -238,12 +238,12 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
                     value={state.byDay[0] ?? "MO"}
                     onValueChange={handleByDayForMonthly}
                   >
-                    <SelectTrigger className="text-xs w-24">
+                    <SelectTrigger className="h-9 w-24">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
                       {WEEKDAYS.map((day) => (
-                        <SelectItem key={day} value={day} className="text-xs">
+                        <SelectItem key={day} value={day}>
                           {WEEKDAY_LABELS[day]}
                         </SelectItem>
                       ))}
@@ -276,7 +276,7 @@ export function RecurrenceEditor({ state, onChange, startDate }: RecurrenceEdito
                             max={999}
                             value={state.count}
                             onChange={handleCountChange}
-                            className="w-14 px-1.5"
+                            className="h-9 w-14 px-1.5"
                           />
                         )}
                         occurrences
