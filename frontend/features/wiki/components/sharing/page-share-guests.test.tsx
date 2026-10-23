@@ -42,7 +42,8 @@ describe("PageShareGuests — form submission", () => {
     renderEnabled();
 
     await user.type(screen.getByRole("textbox", { name: /guest email/i }), "alice@example.com");
-    await user.type(screen.getByDisplayValue(""), "2027-01-01");
+    await user.click(screen.getByRole("button", { name: /^expires$/i }));
+    await user.click(await screen.findByRole("gridcell", { name: "15" }));
     await user.click(screen.getByRole("button", { name: /invite guest/i }));
 
     await waitFor(() => {
@@ -59,7 +60,8 @@ describe("PageShareGuests — form submission", () => {
     renderEnabled();
 
     await user.type(screen.getByRole("textbox", { name: /guest email/i }), "bob@example.com");
-    await user.type(screen.getByDisplayValue(""), "2027-01-01");
+    await user.click(screen.getByRole("button", { name: /^expires$/i }));
+    await user.click(await screen.findByRole("gridcell", { name: "15" }));
     await user.click(screen.getByRole("button", { name: /invite guest/i }));
 
     await waitFor(() => expect(createGrantMutate).toHaveBeenCalled());
@@ -73,7 +75,8 @@ describe("PageShareGuests — form submission", () => {
     renderEnabled();
 
     await user.type(screen.getByRole("textbox", { name: /guest email/i }), "carol@example.com");
-    await user.type(screen.getByDisplayValue(""), "2027-01-01");
+    await user.click(screen.getByRole("button", { name: /^expires$/i }));
+    await user.click(await screen.findByRole("gridcell", { name: "15" }));
     await user.click(screen.getByRole("button", { name: /invite guest/i }));
 
     await waitFor(() => expect(createGrantMutate).toHaveBeenCalled());

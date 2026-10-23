@@ -23,7 +23,7 @@ const FortuneWorkbook = dynamic(
   {
     ssr: false,
     loading: () => (
-      <Skeleton className="h-full min-h-[400px] w-full rounded-lg" />
+      <Skeleton className="h-full min-h-0 w-full flex-1 rounded-none" />
     ),
   },
 );

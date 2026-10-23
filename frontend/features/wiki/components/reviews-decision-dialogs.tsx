@@ -13,7 +13,7 @@ import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { UserCombobox } from "@/components/ui/user-combobox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -43,8 +43,8 @@ export function RequestReviewDialog({ pageId, pageTitle, open, onOpenChange }: R
     setType(value === "freshness" ? "freshness" : "approval");
   }
 
-  function handleDueDateChange(event: React.ChangeEvent<HTMLInputElement>) {
-    setDueDate(event.target.value);
+  function handleDueDateChange(value: string) {
+    setDueDate(value);
   }
 
   function handleNoteChange(event: React.ChangeEvent<HTMLTextAreaElement>) {
@@ -107,7 +107,15 @@ export function RequestReviewDialog({ pageId, pageTitle, open, onOpenChange }: R
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="review-request-due">Due date (optional)</Label>
-            <Input id="review-request-due" type="date" value={dueDate} onChange={handleDueDateChange} />
+            <DatePicker
+              id="review-request-due"
+              value={dueDate}
+              onChange={handleDueDateChange}
+              placeholder="Pick a date"
+              dateFormat="dd MMM yyyy"
+              clearable
+              ariaLabel="Due date"
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="review-request-note">Note (optional)</Label>

@@ -8,7 +8,7 @@ import { addDays, format } from "date-fns";
 import { LogOut } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Select,
   SelectContent,
@@ -176,7 +176,12 @@ export function AdminResignationFormSheet({ open, onOpenChange }: AdminResignati
             <FormItem>
               <FormLabel>Last Working Date</FormLabel>
               <FormControl>
-                <Input type="date" {...field} />
+                <DatePicker
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  dateFormat="dd MMM yyyy"
+                  ariaLabel="Last Working Date"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

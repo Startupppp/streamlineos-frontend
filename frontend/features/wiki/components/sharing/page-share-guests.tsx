@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
   Form,
   FormControl,
@@ -91,7 +92,15 @@ export function PageShareGuests({ pageId, externalSharingEnabled }: PageShareGue
             <FormItem>
               <FormLabel className="text-xs">Expires</FormLabel>
               <FormControl>
-                <Input {...field} type="date" className="h-8 text-xs" />
+                <DatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Pick a date"
+                  dateFormat="dd MMM yyyy"
+                  className="h-8 text-xs"
+                  compactCalendar
+                  ariaLabel="Expires"
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

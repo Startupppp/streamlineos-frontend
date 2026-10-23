@@ -39,6 +39,27 @@ function nextReload(current: number): number {
   return current + 1;
 }
 
+function PageSpreadsheetSkeleton() {
+  return (
+    <div className="wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden" aria-label="Loading spreadsheet">
+      <div className="wiki-document-chrome shrink-0">
+        <div className={cn(WIKI_SPREADSHEET_COLUMN, "flex items-center gap-1.5 py-2.5")}>
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="ml-auto h-9 w-9 rounded-md" />
+          <Skeleton className="h-9 w-9 rounded-md" />
+          <Skeleton className="h-9 w-9 rounded-md" />
+        </div>
+      </div>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div className={cn(WIKI_SPREADSHEET_COLUMN, "py-2")}>
+          <Skeleton className="h-8 w-48" />
+        </div>
+        <Skeleton className="min-h-0 w-full flex-1 rounded-none" />
+      </div>
+    </div>
+  );
+}
+
 export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }: PageSpreadsheetProps) {
   const router = useRouter();
   const { data: page, isLoading, isError, error, refetch } = useKbPage(pageId);
@@ -194,13 +215,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
             ? { kind: "error", error }
             : recordResolution
         }
-        loading={
-          <div className={cn(WIKI_SPREADSHEET_COLUMN, "space-y-4 py-4")}>
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-96 w-full" />
-          </div>
-        }
+        loading={<PageSpreadsheetSkeleton />}
         error={error}
         onRetry={() => {
           void refetch();
@@ -229,16 +244,16 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
             </div>
           </div>
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-            <div className={cn(WIKI_SPREADSHEET_COLUMN, "shrink-0 pt-3")}>
+            <div className="shrink-0">
             {pendingPresentation && (
-              <div role="alert" className="mb-5 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
+              <div role="alert" className="mx-4 mb-3 mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink sm:mx-6 lg:mx-8">
                 <span className="min-w-0 flex-1">The page changed before your {pendingPresentation.field === "icon" ? "icon" : "cover"} change was saved. Your choice is ready to retry.</span>
                 <Button size="sm" onClick={handleRetryPresentation} disabled={isRetryingPresentation || !isEditable}>{isRetryingPresentation ? "Retrying…" : `Retry ${pendingPresentation.field === "icon" ? "icon" : "cover"} change`}</Button>
                 <Button size="sm" variant="outline" onClick={discardPresentation} disabled={isRetryingPresentation}>Discard choice</Button>
               </div>
             )}
             {conflict ? (
-              <div className="mb-5">
+              <div className="mx-4 mb-3 mt-3 sm:mx-6 lg:mx-8">
                 <PageEditConflict
                   key={`${pageId}:${conflict.currentContentRevision}`} conflict={conflict} isReloading={isReloading}
                   pendingFields={pendingFields} localTitle={localTitle} localBody="" onKeepMine={keepLocalEdits}
@@ -247,12 +262,12 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
               </div>
             ) : null}
             {page.isLocked && !canManage ? (
-              <div className="mb-5 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
+              <div className="mx-4 mb-3 mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground sm:mx-6 lg:mx-8">
                 <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
                 <span>This page is locked and is read-only.</span>
               </div>
             ) : null}
-            <div className="group/title mb-2 flex items-center gap-2">
+            <div className="group/title flex items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
               {page.icon ? <PageIconPicker icon={page.icon} isEditable={isEditable} onIconChange={handleIconChange} variant="inline" /> : null}
               <textarea
                 ref={titleRef} value={localTitle} onChange={handleTitleChange} onKeyDown={handleTitleKeyDown}
@@ -285,7 +300,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
                 onRetry={handleRetryWorkbook}
               />
             ) : (
-              <Skeleton className="min-h-0 w-full flex-1" />
+              <Skeleton className="min-h-0 w-full flex-1 rounded-none" />
             )}
           </div>
         </div>

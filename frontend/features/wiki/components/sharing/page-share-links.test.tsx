@@ -66,8 +66,8 @@ describe("PageShareLinks — enabled state", () => {
     const user = userEvent.setup();
     renderEnabled();
 
-    const dateInput = screen.getByLabelText(/expires/i);
-    await user.type(dateInput, "2027-06-01");
+    await user.click(screen.getByRole("button", { name: /^expires$/i }));
+    await user.click(await screen.findByRole("gridcell", { name: "15" }));
     await user.click(screen.getByRole("button", { name: /create link/i }));
 
     await waitFor(() => expect(createLinkMutate).toHaveBeenCalledTimes(1));
@@ -78,8 +78,8 @@ describe("PageShareLinks — enabled state", () => {
     const user = userEvent.setup();
     renderEnabled();
 
-    const dateInput = screen.getByLabelText(/expires/i);
-    await user.type(dateInput, "2027-06-01");
+    await user.click(screen.getByRole("button", { name: /^expires$/i }));
+    await user.click(await screen.findByRole("gridcell", { name: "15" }));
     await user.click(screen.getByRole("button", { name: /create link/i }));
 
     await waitFor(() => expect(createLinkMutate).toHaveBeenCalled());

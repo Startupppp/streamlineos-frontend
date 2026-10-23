@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { format, addDays, differenceInCalendarDays, parseISO, startOfDay } from "date-fns";
 import { FileText, Download, CheckCircle2, LogOut, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
@@ -103,8 +104,8 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
     [],
   );
 
-  const handleLastWorkingDateChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setLastWorkingDate(e.target.value);
+  const handleLastWorkingDateChange = useCallback((value: string) => {
+    setLastWorkingDate(value);
   }, []);
 
   const handleDownloadTemplate = useCallback(() => {
@@ -250,14 +251,14 @@ export function ResignationFormSheet({ open, onOpenChange }: ResignationFormShee
             </TooltipContent>
           </Tooltip>
         </div>
-        <Input
+        <DatePicker
           id="resignation-last-working-date"
-          type="date"
           value={lastWorkingDate}
-          min={todayMin}
+          fromDate={startOfDay(new Date())}
           onChange={handleLastWorkingDateChange}
-          required
+          dateFormat="dd MMM yyyy"
           aria-describedby="resignation-notice-hint"
+          ariaLabel="Last working date"
         />
         <p id="resignation-notice-hint" className="text-dense text-muted-foreground">
           {noticePeriodDays === 1
