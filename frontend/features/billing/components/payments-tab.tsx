@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { useState } from "react";
 import { Download } from "lucide-react";
 import { toast } from "sonner";
@@ -49,13 +49,12 @@ export function PaymentsTab() {
     void refetch();
   }
 
-  async function handleDownloadReceipt(payment: Payment) {
-    setDownloadingId(payment.id);
+  async function handleDownloadReceipt(paymentId: number) {
+    setDownloadingId(paymentId);
     try {
-      const receipt = await fetchPaymentReceipt(payment.id);
+      const receipt = await fetchPaymentReceipt(paymentId);
       const { default: jsPDF } = await import("jspdf");
       const doc = new jsPDF();
-      const currencySymbol = receipt.currency === "INR" ? "₹" : receipt.currency;
       const amountValue =
         receipt.amount !== null ? Number(receipt.amount) : receipt.amountPaise / 100;
       const formattedDate = receipt.paidAt
@@ -95,7 +94,7 @@ export function PaymentsTab() {
       doc.setTextColor(0);
       doc.setFontSize(13);
       doc.text(
-        `Amount Paid: ${currencySymbol}${amountValue.toLocaleString("en-IN")}`,
+        `Amount Paid: ${receipt.currency} ${amountValue.toLocaleString("en-IN", { minimumFractionDigits: 2 })}`,
         20,
         106,
       );
@@ -109,6 +108,10 @@ export function PaymentsTab() {
     } finally {
       setDownloadingId(null);
     }
+  }
+
+  function handleReceiptClick(event: MouseEvent<HTMLButtonElement>) {
+    void handleDownloadReceipt(Number(event.currentTarget.dataset.paymentId));
   }
 
   const columns: DataTableColumn<Payment>[] = [
@@ -158,9 +161,8 @@ export function PaymentsTab() {
             size="sm"
             isPending={downloadingId === row.id}
             aria-label={`Download receipt for payment ${row.razorpayPaymentId ?? row.id}`}
-            onClick={() => {
-              void handleDownloadReceipt(row);
-            }}
+            data-payment-id={row.id}
+            onClick={handleReceiptClick}
           >
             <Download className="h-3.5 w-3.5" aria-hidden="true" />
             Receipt
