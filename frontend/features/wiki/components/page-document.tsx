@@ -400,9 +400,9 @@ export default function PageDocument({
       />
 
       <div className="flex min-h-0 min-w-0 flex-1">
-        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+        <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col", WIKI_DOCUMENT_COLUMN)}>
           <div className="wiki-document-chrome sticky top-0 z-40 shrink-0">
-            <div className={cn(WIKI_DOCUMENT_COLUMN, "py-2.5")}>
+            <div className="py-2.5">
               <PageDocumentHeader
                 page={page}
                 pageId={pageId}
@@ -424,17 +424,12 @@ export default function PageDocument({
               <div
                 ref={handleToolbarHost}
                 data-slot="wiki-document-toolbar"
-                className={cn(WIKI_DOCUMENT_COLUMN, "border-t border-border")}
+                className="border-t border-border"
               />
             ) : null}
           </div>
 
-          <div
-            className={cn(
-              "wiki-document-body flex min-h-0 flex-1 flex-col py-4",
-              WIKI_DOCUMENT_COLUMN,
-            )}
-          >
+          <div className="wiki-document-body flex min-h-0 w-full flex-1 flex-col py-2">
             {pendingPresentation && (
               <div
                 role="alert"

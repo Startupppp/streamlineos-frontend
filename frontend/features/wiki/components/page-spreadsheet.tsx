@@ -211,9 +211,9 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
       <PageCover coverImage={page.coverImage} isEditable={isEditable} onCoverChange={handleCoverChange} onChangeCover={handleOpenCover} />
       <PageCoverPickerDialog open={coverPickerOpen} onOpenChange={handleCoverPickerOpenChange} onCoverChange={handleCoverChange} pageId={pageId} />
       <div className="flex min-h-0 min-w-0 flex-1">
-        <div className="flex h-full min-h-0 min-w-0 flex-1 flex-col">
+        <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col", WIKI_SPREADSHEET_COLUMN)}>
           <div className="wiki-document-chrome sticky top-0 z-40 shrink-0">
-            <div className={cn(WIKI_SPREADSHEET_COLUMN, "py-2.5")}>
+            <div className="py-2.5">
               <PageDocumentHeader
                 page={page} pageId={pageId} saveState={saveState} savedAt={savedAt} isOffline={isOffline}
                 onRetrySave={retry} isEditable={isEditable} onNavigate={handleNavigateToPage}
@@ -226,14 +226,14 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
           <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
             <div className="shrink-0">
             {pendingPresentation && (
-              <div role="alert" className="mx-4 mb-3 mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink sm:mx-6 lg:mx-8">
+              <div role="alert" className="mb-3 mt-3 flex flex-wrap items-center gap-2 rounded-lg border border-status-warning-rule bg-status-warning-surface p-3 text-sm text-status-warning-ink">
                 <span className="min-w-0 flex-1">The page changed before your {pendingPresentation.field === "icon" ? "icon" : "cover"} change was saved. Your choice is ready to retry.</span>
                 <Button size="sm" onClick={handleRetryPresentation} disabled={isRetryingPresentation || !isEditable}>{isRetryingPresentation ? "Retrying…" : `Retry ${pendingPresentation.field === "icon" ? "icon" : "cover"} change`}</Button>
                 <Button size="sm" variant="outline" onClick={discardPresentation} disabled={isRetryingPresentation}>Discard choice</Button>
               </div>
             )}
             {conflict ? (
-              <div className="mx-4 mb-3 mt-3 sm:mx-6 lg:mx-8">
+              <div className="mb-3 mt-3">
                 <PageEditConflict
                   key={`${pageId}:${conflict.currentContentRevision}`} conflict={conflict} isReloading={isReloading}
                   pendingFields={pendingFields} localTitle={localTitle} localBody="" onKeepMine={keepLocalEdits}
@@ -242,12 +242,12 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
               </div>
             ) : null}
             {page.isLocked && !canManage ? (
-              <div className="mx-4 mb-3 mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground sm:mx-6 lg:mx-8">
+              <div className="mb-3 mt-3 flex items-center gap-2 rounded-xl border border-border bg-muted/60 px-3 py-2 text-sm text-muted-foreground">
                 <KbAlertCircleIcon className="h-4 w-4 shrink-0" />
                 <span>This page is locked and is read-only.</span>
               </div>
             ) : null}
-            <div className="group/title flex items-center gap-2 px-4 py-2 sm:px-6 lg:px-8">
+            <div className="group/title flex items-center gap-2 py-2">
               {page.icon ? <PageIconPicker icon={page.icon} isEditable={isEditable} onIconChange={handleIconChange} variant="inline" /> : null}
               <textarea
                 ref={titleRef} value={localTitle} onChange={handleTitleChange} onKeyDown={handleTitleKeyDown}

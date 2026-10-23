@@ -305,7 +305,7 @@ export default function TrashPage() {
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
 
-          <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <div className="flex min-w-0 shrink-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
             <Input
               type="search"
               placeholder="Search deleted pages…"

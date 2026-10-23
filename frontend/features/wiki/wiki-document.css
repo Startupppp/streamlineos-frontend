@@ -46,7 +46,6 @@
   min-height: 0;
   flex: 1 1 auto;
   width: 100%;
-  /* Fortune paints a light sheet and does not set text color, so dark-mode foreground washes out the toolbar. */
   color: #333;
 }
 
@@ -55,7 +54,6 @@
   color: inherit;
 }
 
-/* The grid is a canvas with hardcoded light colors. Invert the whole sheet so cells, headers, and chrome follow dark mode. */
 .dark .wiki-spreadsheet-grid > .fortune-container {
   filter: invert(1) hue-rotate(180deg);
 }
@@ -69,9 +67,4 @@
   flex: 1 1 auto;
   height: 100%;
   min-height: 0;
-}
-
-/* Fortune always paints this over the last rows in edit mode. Rows are added from the row menu. */
-.wiki-spreadsheet-grid #luckysheet-bottom-controll-row {
-  display: none !important;
 }

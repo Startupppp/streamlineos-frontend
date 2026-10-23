@@ -1,4 +1,5 @@
 import { render, screen, waitFor } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import userEvent from "@testing-library/user-event";
 import { ApiError } from "@/lib/api-envelope";
 import type { AccessState } from "@/lib/rbac/gate";
@@ -8,6 +9,7 @@ import PageDocument from "./page-document";
 jest.mock("next/navigation", () => ({
   useRouter: () => ({ push: jest.fn() }),
   usePathname: () => "/build/7/wiki/42",
+  useParams: () => ({ pageId: "42" }),
 }));
 
 jest.mock("next/dynamic", () => () => {
@@ -315,7 +317,11 @@ describe("PageDocument — the access snapshot loading window", () => {
       refetch: jest.fn(),
     });
 
-    const { container } = render(<PageDocument pageId={42} projectId={7} />);
+    const { container } = render(
+      <QueryClientProvider client={new QueryClient()}>
+        <PageDocument pageId={42} projectId={7} />
+      </QueryClientProvider>,
+    );
 
     expect(container.querySelectorAll(".skeleton-shimmer").length).toBeGreaterThan(0);
     expect(screen.queryByText("Access Restricted")).toBeNull();
