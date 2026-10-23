@@ -197,12 +197,21 @@ const signBulkSendJobRowContract = z.object({
   completedAt: z.string().nullable(),
 });
 
-export const signBulkJobCreateContract = z.object({
-  job: signBulkSendJobRowContract,
-  dryRun: z.boolean(),
-  preview: z.unknown().optional(),
-  queued: z.boolean().optional(),
-});
+export const signBulkJobCreateContract = z.union([
+  z.object({
+    dryRun: z.literal(true),
+    preview: z.unknown(),
+    totalCount: z.number().int(),
+    validCount: z.number().int(),
+    failedCount: z.number().int(),
+  }),
+  z.object({
+    job: signBulkSendJobRowContract,
+    dryRun: z.boolean(),
+    preview: z.unknown().optional(),
+    queued: z.boolean().optional(),
+  }),
+]);
 
 export const signBulkJobListContract = z.array(signBulkSendJobRowContract);
 export const signBulkJobCancelContract = signBulkSendJobRowContract;
