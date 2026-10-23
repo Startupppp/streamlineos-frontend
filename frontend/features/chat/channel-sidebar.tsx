@@ -152,10 +152,11 @@ export function ChannelSidebar({
     [onSearchScopeChange],
   );
 
-  const onlineUserIds = useMemo(
-    () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers],
-  );
+  const onlineUserIds = useMemo(() => {
+    const ids = new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []);
+    ids.add(currentUserId);
+    return ids;
+  }, [onlineUsers, currentUserId]);
 
   const archivedUnreadCount = useMemo(
     () => archivedChannels.reduce((sum, ch) => sum + ch.unreadCount, 0),
@@ -224,7 +225,7 @@ export function ChannelSidebar({
 
         <ChannelSidebarHeader
           isCollapsed={isCollapsed}
-          onlineUserCount={onlineUsers?.length ?? 0}
+          onlineUserCount={onlineUserIds.size}
           unreadTotal={unreadTotal}
           inboxFilter={inboxFilter}
           inboxCounts={inboxCounts}

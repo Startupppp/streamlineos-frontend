@@ -13,6 +13,14 @@ jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
   useChatHeartbeat: jest.fn(),
 }));
 
+jest.mock("@tanstack/react-query", () => ({
+  useQueryClient: jest.fn(() => ({ invalidateQueries: jest.fn() })),
+}));
+
+jest.mock("@/lib/query-keys/collaboration", () => ({
+  collaborationQueryKeys: { chat: { onlineUsers: jest.fn(() => ["chat", "onlineUsers"]) } },
+}));
+
 const FALLBACK_BASE_MS = 15_000;
 const FALLBACK_MAX_MS = 120_000;
 const FALLBACK_JITTER_MS = 5_000;

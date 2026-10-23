@@ -12,6 +12,7 @@ export interface AblyConnectionSnapshot {
   readonly isConnected: boolean;
   readonly connectionError: string | null;
   readonly reconnectCount: number;
+  readonly isInitialConnect: boolean;
 }
 
 interface ConnectionStore {
@@ -26,6 +27,7 @@ function createStore(ably: AblyClient): ConnectionStore {
   const subscribers = new Set<() => void>();
   let previousState: string = ably.connection.state;
   let attached = false;
+  let hasEverConnected = ably.connection.state === "connected";
 
   const store: ConnectionStore = {
     snapshot: {
@@ -33,6 +35,7 @@ function createStore(ably: AblyClient): ConnectionStore {
       connectionError:
         ably.connection.state === "failed" ? CONNECTION_UNAVAILABLE : null,
       reconnectCount: 0,
+      isInitialConnect: ably.connection.state !== "connected",
     },
     subscribe: (onChange: () => void) => {
       subscribers.add(onChange);
@@ -59,11 +62,13 @@ function createStore(ably: AblyClient): ConnectionStore {
 
   function handleConnected(): void {
     const reconnected = RESYNC_FROM_STATES.includes(previousState);
+    hasEverConnected = true;
     previousState = "connected";
     publish({
       isConnected: true,
       connectionError: null,
       reconnectCount: store.snapshot.reconnectCount + (reconnected ? 1 : 0),
+      isInitialConnect: false,
     });
   }
 
@@ -73,6 +78,7 @@ function createStore(ably: AblyClient): ConnectionStore {
       isConnected: false,
       connectionError: store.snapshot.connectionError,
       reconnectCount: store.snapshot.reconnectCount,
+      isInitialConnect: !hasEverConnected,
     });
   }
 
@@ -82,6 +88,7 @@ function createStore(ably: AblyClient): ConnectionStore {
       isConnected: false,
       connectionError: CONNECTION_UNAVAILABLE,
       reconnectCount: store.snapshot.reconnectCount,
+      isInitialConnect: !hasEverConnected,
     });
   }
 
@@ -92,11 +99,13 @@ function createStore(ably: AblyClient): ConnectionStore {
     ably.connection.on("failed", handleFailed);
     ably.connection.on("suspended", handleDisconnected);
     previousState = ably.connection.state;
+    if (ably.connection.state === "connected") hasEverConnected = true;
     publish({
       isConnected: ably.connection.state === "connected",
       connectionError:
         ably.connection.state === "failed" ? CONNECTION_UNAVAILABLE : null,
       reconnectCount: store.snapshot.reconnectCount,
+      isInitialConnect: !hasEverConnected,
     });
   }
 

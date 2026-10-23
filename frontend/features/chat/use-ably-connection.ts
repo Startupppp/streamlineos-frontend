@@ -11,6 +11,7 @@ const DISCONNECTED_SNAPSHOT: AblyConnectionSnapshot = {
   isConnected: false,
   connectionError: null,
   reconnectCount: 0,
+  isInitialConnect: true,
 };
 
 export function useAblyConnection(): AblyConnectionSnapshot {

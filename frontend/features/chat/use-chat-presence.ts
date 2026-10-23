@@ -3,8 +3,10 @@
 import { useEffect, useRef } from "react";
 import { useAbly } from "ably/react";
 import { useSession } from "next-auth/react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useChatHeartbeat } from "@/hooks/api/chat-core-mutations-b";
 import { chatPresenceChannelName } from "@/lib/ably-channels";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
 const LEADER_LOCK_NAME = "chat-presence-leader";
 
@@ -24,6 +26,9 @@ export function useChatPresence(): void {
   const heartbeat = useChatHeartbeat();
   const heartbeatRef = useRef(heartbeat);
   heartbeatRef.current = heartbeat;
+  const queryClient = useQueryClient();
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
   const orgId = session?.orgId;
   const userId = session?.user?.id;
 
@@ -37,6 +42,10 @@ export function useChatPresence(): void {
       if (entered) return;
       entered = true;
       channel.presence.enter({ userId }).catch(() => {});
+      void queryClientRef.current.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.onlineUsers(),
+        exact: true,
+      });
     };
 
     const leavePresence = (): void => {

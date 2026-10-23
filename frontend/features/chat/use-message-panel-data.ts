@@ -78,7 +78,7 @@ export function useMessagePanelData({
   const { data: pins } = useChatPins(channelId, canReadChannel);
   const { data: onlineUsers } = useChatOnlineUsers();
   const { isConnected: ablyConnected, typingUserIds, publishTyping } = useChatRealtime(channelId, !canReadChannel);
-  const { isConnected: ablySocketConnected } = useAblyConnection();
+  const { isConnected: ablySocketConnected, isInitialConnect } = useAblyConnection();
 
   useHuddleRealtime(canReadChannel ? channelId : null);
   const { data: activeHuddle, isPending: huddlePending } = useActiveHuddle(channelId, canReadChannel);
@@ -100,10 +100,11 @@ export function useMessagePanelData({
 
   const isInHuddle = activeHuddle?.participants.some((p) => p.userId === currentUserId) ?? false;
 
-  const onlineUserIds = useMemo(
-    () => new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []),
-    [onlineUsers],
-  );
+  const onlineUserIds = useMemo(() => {
+    const ids = new Set(onlineUsers?.map((u: { userId: string }) => u.userId) ?? []);
+    ids.add(currentUserId);
+    return ids;
+  }, [onlineUsers, currentUserId]);
 
   const typingUsers = useMemo(
     () =>
@@ -269,6 +270,6 @@ export function useMessagePanelData({
     thread: { messageId: threadMessageId, highlightedReplyId, channelId, currentUserId, onClose: handleCloseThread },
     sidePanels: { isPanelNarrow, showSavedPanel, setShowSavedPanel, forwardMessage, setForwardMessage },
     isOnline,
-    isReconnecting: isOnline && !ablySocketConnected,
+    isReconnecting: isOnline && !ablySocketConnected && !isInitialConnect,
   };
 }
