@@ -38,8 +38,6 @@ for (const template of BUILD_PERSONA_TEMPLATES) {
   }
 }
 
-export const BUILD_DEFAULT_PERSONA: BuildPersona = "pm";
-
 export function getPersonaDefaultPinIds(persona: BuildPersona): readonly string[] {
   return (
     BUILD_PERSONA_TEMPLATES.find((t) => t.id === persona)?.defaultPinIds ?? []

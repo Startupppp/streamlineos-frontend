@@ -88,7 +88,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-sm font-medium truncate">{t.name}</span>
                     {t.category !== "GENERAL" && (
-                      <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                      <span className="shrink-0 rounded-full border border-border px-2 py-0.5 text-micro font-medium uppercase tracking-wide text-muted-foreground">
                         {t.category.replace(/_/g, " ")}
                       </span>
                     )}
@@ -97,7 +97,7 @@ export function StepTemplate({ draft, updateDraft }: StepSharedProps) {
                     <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{t.description}</div>
                   )}
                   {((t.customFieldsConfig?.length ?? 0) > 0 || (t.savedViewsConfig?.length ?? 0) > 0) && (
-                    <div className="flex gap-2 mt-1 text-[10px] text-muted-foreground">
+                    <div className="flex gap-2 mt-1 text-micro text-muted-foreground">
                       {(t.customFieldsConfig?.length ?? 0) > 0 && (
                         <span>{t.customFieldsConfig?.length} fields</span>
                       )}

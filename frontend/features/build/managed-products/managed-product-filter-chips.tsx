@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback } from "react";
 import { FilterChip } from "@/features/build/shared/filter-chip";
 import { BUILD_FILTER_ALL } from "@/features/build/shared/use-build-list-filters";
 import type { BuildListFiltersState } from "@/features/build/shared/use-build-list-filters";
@@ -181,44 +180,3 @@ export function ManagedProductFilterChips({
   );
 }
 
-export function useChipHandlers(listFilters: BuildListFiltersState) {
-  const handleClearStatus = useCallback((v: string) => listFilters.setValue("status", v), [listFilters]);
-  const handleClearLifecycle = useCallback(
-    (values: string[]) => listFilters.setValue("lifecycle", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleClearHealth = useCallback(
-    (values: string[]) => listFilters.setValue("health", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleClearTeam = useCallback(
-    (values: string[]) => listFilters.setValue("teamId", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleClearOwner = useCallback(
-    (values: string[]) => listFilters.setValue("ownerId", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleClearSegment = useCallback(
-    (values: string[]) => listFilters.setValue("segment", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleClearTag = useCallback(
-    (values: string[]) => listFilters.setValue("tag", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL),
-    [listFilters],
-  );
-  const handleClearLinkedProject = useCallback((v: string) => listFilters.setValue("linkedProjectId", v), [listFilters]);
-  const handleClearArchived = useCallback((v: string) => listFilters.setValue("archived", v), [listFilters]);
-
-  return {
-    handleClearStatus,
-    handleClearLifecycle,
-    handleClearHealth,
-    handleClearTeam,
-    handleClearOwner,
-    handleClearSegment,
-    handleClearTag,
-    handleClearLinkedProject,
-    handleClearArchived,
-  };
-}

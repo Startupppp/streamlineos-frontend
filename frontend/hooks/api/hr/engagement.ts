@@ -17,13 +17,6 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
-export interface MoodCheckin {
-  id: number;
-  date: string;
-  mood: number;
-  note?: string;
-}
-
 export type MoodAggregate = z.infer<typeof orgMoodAggregateContract>;
 
 export interface HrBadge {
@@ -34,16 +27,6 @@ export interface HrBadge {
   icon: string;
   points: number;
   createdAt: string;
-}
-
-export interface HrBadgeAward {
-  id: number;
-  badgeId: number;
-  userId: string;
-  awardedBy?: string;
-  reason?: string;
-  createdAt: string;
-  badge: HrBadge;
 }
 
 export interface LeaderboardEntry {

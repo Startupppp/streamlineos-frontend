@@ -262,7 +262,7 @@ export function AllWorkTimelineSection({
                     y={24}
                     textAnchor="middle"
                     className={cn(
-                      "text-[10px]",
+                      "text-micro",
                       isToday ? "fill-primary font-medium" : "fill-muted-foreground",
                     )}
                     fontSize={10}

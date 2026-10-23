@@ -131,10 +131,6 @@ const projectLinkResultContract = z.object({
 const projectLinkResultC = lazyContract(() =>
   Promise.resolve(projectLinkResultContract),
 );
-const noContentC = lazyContract(() =>
-  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
-);
-
 export type ProjectLinkResult = z.infer<typeof projectLinkResultContract>;
 
 interface ProjectPairInput {
@@ -221,35 +217,3 @@ export function useSetPrimaryProject() {
   );
 }
 
-export function useUnlinkProjectPair() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<void, Error, ProjectPairInput>(
-    "build:managed-products:update",
-    {
-      mutationKey: ["projects", "unlink-project-pair"],
-      mutationFn: ({ managedProductId, projectId }) =>
-        apiClient.delete(
-          `/build/managed-products/${managedProductId}/projects/${projectId}`,
-          undefined,
-          undefined,
-          noContentC,
-        ),
-      onSuccess: (_, variables) => {
-        patchProjectLinkedProductsCache(queryClient, variables.projectId, variables.managedProductId, null);
-        const linkedProjectsKey = buildWorkQueryKeys.projects.managedProducts.linkedProjects(variables.managedProductId);
-        for (const [key, cached] of queryClient.getQueriesData<LinkedProjectsPage>({ queryKey: linkedProjectsKey })) {
-          if (!cached) continue;
-          queryClient.setQueryData<LinkedProjectsPage>(key, {
-            ...cached,
-            data: cached.data.filter((row) => row.id !== variables.projectId),
-          });
-        }
-        queryClient.invalidateQueries({
-          queryKey: buildWorkQueryKeys.projects.managedProducts.insights(variables.managedProductId),
-          exact: true,
-          refetchType: "none",
-        });
-      },
-    },
-  );
-}

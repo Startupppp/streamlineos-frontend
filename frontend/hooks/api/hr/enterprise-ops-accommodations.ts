@@ -32,19 +32,6 @@ export interface AccommodationRequest {
   deletedAt: string | null;
 }
 
-export interface AccommodationTask {
-  id: string;
-  orgId: string;
-  requestId: string;
-  title: string;
-  assigneeUserId: string | null;
-  assigneeMembershipId: number | null;
-  status: AccommodationTaskStatus;
-  dueDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
 interface PaginatedResult<T> {
   data: T[];
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };

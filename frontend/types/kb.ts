@@ -1,5 +1,3 @@
-import type { AiUsageMeta } from "@/components/ai/ai-usage-chip";
-
 export type KbAudience = "internal" | "public" | "mixed";
 
 export type KbSpaceRole = "admin" | "publisher" | "editor" | "commenter" | "viewer";
@@ -80,14 +78,6 @@ export type KbAskCitation =
       linkedDocumentId: number;
       spaceId: null;
     });
-
-export interface KbAskResponse {
-  answer: string;
-  citations: KbAskCitation[];
-  hasContext: boolean;
-  conversationId: number;
-  aiUsage?: AiUsageMeta | null;
-}
 
 export interface KbSearchParams {
   q: string;

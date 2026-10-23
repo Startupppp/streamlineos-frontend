@@ -21,12 +21,6 @@ function positiveId(value: string | undefined): string | undefined {
   return Number(value) > 0 ? value : undefined;
 }
 
-function trimmedText(value: string | undefined): string | undefined {
-  if (!value || value === BUILD_FILTER_ALL) return undefined;
-  const trimmed = value.trim();
-  return trimmed || undefined;
-}
-
 function validMultiTeamId(value: string | undefined): string | undefined {
   if (!value || value === BUILD_FILTER_ALL) return undefined;
   const valid = value.split(",").map((v) => v.trim()).filter((v) => /^\d+$/.test(v) && Number(v) > 0);

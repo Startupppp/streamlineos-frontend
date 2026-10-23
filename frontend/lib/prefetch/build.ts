@@ -196,31 +196,3 @@ export async function prefetchProjectTicketByKey(
   }
 }
 
-export async function prefetchProjectCyclesAndTickets(projectId: number) {
-  try {
-    const gate = await resolvePrefetchGate();
-    const queryClient = await createServerQueryClient();
-    await Promise.all([
-      gate.can("build:cycles:view")
-        ? queryClient.prefetchQuery({
-            ...cyclesQueryOptions(projectId),
-            queryFn: () => serverGet<CyclePage>(`/build/${projectId}/cycles`, cycleListContract),
-          })
-        : Promise.resolve(),
-      gate.can("build:tickets:view")
-        ? queryClient.prefetchInfiniteQuery({
-            ...projectBoardTicketsQueryOptions(projectId),
-            queryFn: () =>
-              serverGet<CursorPageResponse<Ticket>>(
-                `/build/${projectId}/tickets?limit=100&orderBy=rank&orderDir=asc`,
-                ticketListPageContract,
-              ),
-            pages: 1,
-          })
-        : Promise.resolve(),
-    ]);
-    return dehydrate(queryClient);
-  } catch {
-    return dehydrate(await createServerQueryClient());
-  }
-}

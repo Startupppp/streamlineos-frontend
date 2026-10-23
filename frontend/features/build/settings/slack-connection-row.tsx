@@ -51,7 +51,7 @@ export function SlackConnectionRow({ connection, onDelete }: SlackConnectionRowP
           {hasRecentError ? (
             <AlertCircle className="h-3.5 w-3.5 text-destructive" aria-label="Last event failed" />
           ) : connection.lastEventAt !== null ? (
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-600 dark:text-green-400" aria-label="Receiving events" />
+            <CheckCircle2 className="h-3.5 w-3.5 text-status-success-ink" aria-label="Receiving events" />
           ) : null}
           <Badge
             variant={connection.isActive ? "default" : "secondary"}

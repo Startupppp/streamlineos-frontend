@@ -1,5 +1,4 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { QueryClientProvider, type UseMutationOptions } from "@tanstack/react-query";
 import { createAppQueryClient } from "@/components/providers/query-provider";
 import type { CreateTicketInput } from "@/types/projects";

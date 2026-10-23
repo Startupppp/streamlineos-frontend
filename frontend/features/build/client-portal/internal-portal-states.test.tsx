@@ -359,7 +359,6 @@ describe("SPEC 11 — Portal expired-grant and revoked states (BT-54b19db5799b)"
       baseQuery({ isError: true, error: expiredGrantError }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.queryByText("Alpha Project")).toBeNull();
   });
@@ -375,7 +374,6 @@ describe("SPEC 11 — Portal expired-grant and revoked states (BT-54b19db5799b)"
       }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.getByText("Alpha Project")).toBeInTheDocument();
   });
@@ -384,7 +382,6 @@ describe("SPEC 11 — Portal expired-grant and revoked states (BT-54b19db5799b)"
     mockUsePortalProjects.mockReturnValue(
       baseQuery({ isError: true, error: revokedGrantError }),
     );
-    const { PortalListPage } = require("./portal-list-page");
     render(<PortalListPage />);
     expect(screen.queryByText(/\d+ project/i)).toBeNull();
   });
@@ -400,7 +397,6 @@ describe("SPEC 11 — Portal expired-grant and revoked states (BT-54b19db5799b)"
       }),
     );
     mockUsePortalChangeRequests.mockReturnValue(baseQuery({ data: [] }));
-    const { PortalDashboardPage } = require("./portal-dashboard-page");
     render(<PortalDashboardPage projectId={42} />);
     expect(screen.queryByText("No milestones")).toBeNull();
     expect(screen.queryByText("No tasks")).toBeNull();

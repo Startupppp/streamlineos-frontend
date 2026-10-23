@@ -56,6 +56,7 @@ const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactCompiler: true,
   experimental: {
+    useTypeScriptCli: true,
     webpackBuildWorker: true,
     webpackMemoryOptimizations: true,
     optimizePackageImports,

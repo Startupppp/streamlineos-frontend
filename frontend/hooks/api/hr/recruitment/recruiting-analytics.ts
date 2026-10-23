@@ -33,8 +33,3 @@ export function useRecruitingAnalytics(window: AnalyticsWindow) {
   });
 }
 
-export function funnelCsvUrl(window: AnalyticsWindow): string {
-  const base = process.env.NEXT_PUBLIC_API_URL ?? "";
-  const query = new URLSearchParams({ from: window.from, to: window.to });
-  return `${base}/hr/recruitment/analytics/funnel.csv?${query.toString()}`;
-}

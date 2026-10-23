@@ -28,4 +28,3 @@ export const kbPageTreeLevelContract = z.object({
   }),
 });
 
-export type KbPageTreeLevelPage = z.infer<typeof kbPageTreeLevelContract>;

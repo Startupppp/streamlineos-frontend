@@ -13,24 +13,27 @@ import PageTree from "./page-tree";
 import WikiSidebarNav from "./wiki-sidebar-nav";
 import { WikiCollapsedSidebarChrome } from "./wiki-sidebar-chrome";
 import { WikiMobileChrome } from "./wiki-mobile-chrome";
-import {
-  KNOWLEDGE_BASE,
-  pageHref,
-} from "@/lib/knowledge-routes";
+import { KNOWLEDGE_BASE, pageHref } from "@/lib/knowledge-routes";
 
-const QuickFindDialog = dynamic(() => import("./quick-find-dialog"), { ssr: false });
+const QuickFindDialog = dynamic(() => import("./quick-find-dialog"), {
+  ssr: false,
+});
 
 export default function WikiShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const createPage = useGuardedCreateKbPage((page) => router.push(pageHref(page.id)));
+  const createPage = useGuardedCreateKbPage((page) =>
+    router.push(pageHref(page.id)),
+  );
   const canViewSpaces = useCan("kb:spaces:view");
   const [quickFindOpen, setQuickFindOpen] = useState(false);
   const [quickFindMounted, setQuickFindMounted] = useState(false);
   const createParamConsumedRef = useRef(false);
   const { isCollapsed: collapsed } = useShellSidebarCollapse();
   const [createConfirmOpen, setCreateConfirmOpen] = useState(false);
-  const [createKind, setCreateKind] = useState<"document" | "spreadsheet">("document");
+  const [createKind, setCreateKind] = useState<"document" | "spreadsheet">(
+    "document",
+  );
 
   const submitNewPage = createPage.submit;
   const handleNewPage = useCallback(
@@ -59,20 +62,23 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     createParamConsumedRef.current = true;
     const next = new URLSearchParams(searchParams.toString());
     next.delete("create");
-    router.replace(`${KNOWLEDGE_BASE}${next.size > 0 ? `?${next.toString()}` : ""}`);
+    router.replace(
+      `${KNOWLEDGE_BASE}${next.size > 0 ? `?${next.toString()}` : ""}`,
+    );
     setCreateKind(createParam === "spreadsheet" ? "spreadsheet" : "document");
     setCreateConfirmOpen(true);
   }, [searchParams, router]);
 
-  const handleQuickFindOpenChange = useCallback((open: boolean) => {
+  function handleQuickFindOpenChange(open: boolean) {
     if (open) setQuickFindMounted(true);
     setQuickFindOpen(open);
-  }, []);
+  }
 
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
-        if (document.activeElement?.getAttribute("contenteditable") === "true") return;
+        if (document.activeElement?.getAttribute("contenteditable") === "true")
+          return;
         e.preventDefault();
         setQuickFindMounted(true);
         setQuickFindOpen(true);
@@ -82,41 +88,41 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  const sidebarInner = () => {
-    const isCollapsedView = collapsed;
-
-    return (
-      <>
-        <ScrollArea className="flex-1 min-h-0 min-w-0">
-          <div className={isCollapsedView ? "min-w-0 overflow-hidden pb-2" : "min-w-0 overflow-hidden px-0 pb-2"}>
-            <WikiSidebarNav isCollapsed={isCollapsedView} canViewSpaces={canViewSpaces} />
-            {!isCollapsedView && (
-              <div className="min-w-0 overflow-hidden pr-2 pl-0">
-                <PageTree onCloseMobile={undefined} />
-              </div>
-            )}
-          </div>
-        </ScrollArea>
-      </>
-    );
-  };
-
   return (
     <TooltipProvider delayDuration={0}>
       <div className="flex min-h-0 flex-1 overflow-hidden bg-background">
         <aside
-          className={`relative hidden md:flex flex-col shrink-0 border-r border-border bg-card/50 overflow-hidden transition-[width] duration-300 ease-in-out ${
+          className={`relative hidden h-full min-h-0 shrink-0 flex-col overflow-hidden border-r border-border bg-card/50 transition-[width] duration-300 ease-in-out md:flex ${
             collapsed ? "w-10" : "w-[260px]"
           }`}
         >
-          <div className="flex h-full min-w-0 flex-col overflow-hidden">
+          <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
             {collapsed ? (
               <WikiCollapsedSidebarChrome
                 createPending={createPage.isSubmitting}
                 onNewPage={handleNewDocument}
               />
             ) : null}
-            {sidebarInner()}
+            <div
+              className={
+                collapsed ? "min-h-0 flex-1 overflow-y-auto" : "shrink-0"
+              }
+            >
+              <WikiSidebarNav
+                isCollapsed={collapsed}
+                canViewSpaces={canViewSpaces}
+              />
+            </div>
+            {collapsed ? null : (
+              <ScrollArea
+                className="min-h-0 min-w-0 flex-1"
+                viewportClassName="overscroll-contain"
+              >
+                <div className="min-w-0 overflow-hidden pb-2 pr-2">
+                  <PageTree />
+                </div>
+              </ScrollArea>
+            )}
           </div>
         </aside>
 
@@ -126,7 +132,12 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
             createPending={createPage.isSubmitting}
             onNewPage={handleNewDocument}
           />
-          <ScrollArea fill hideScrollbar className="min-h-0 flex-1" viewportClassName="scroll-pt-28">
+          <ScrollArea
+            fill
+            hideScrollbar
+            className="min-h-0 flex-1"
+            viewportClassName="scroll-pt-28"
+          >
             <div className="flex h-full min-h-full flex-1 flex-col overscroll-contain">
               {children}
             </div>
@@ -134,13 +145,24 @@ export default function WikiShell({ children }: { children: React.ReactNode }) {
         </div>
 
         {quickFindMounted ? (
-          <QuickFindDialog open={quickFindOpen} onOpenChange={handleQuickFindOpenChange} />
+          <QuickFindDialog
+            open={quickFindOpen}
+            onOpenChange={handleQuickFindOpenChange}
+          />
         ) : null}
         <ConfirmDialog
           open={createConfirmOpen}
           onOpenChange={handleCreateConfirmOpenChange}
-          title={createKind === "spreadsheet" ? "Create a new spreadsheet?" : "Create a new document?"}
-          description={createKind === "spreadsheet" ? "A new blank spreadsheet will be created and opened." : "A new blank document will be created and opened."}
+          title={
+            createKind === "spreadsheet"
+              ? "Create a new spreadsheet?"
+              : "Create a new document?"
+          }
+          description={
+            createKind === "spreadsheet"
+              ? "A new blank spreadsheet will be created and opened."
+              : "A new blank document will be created and opened."
+          }
           confirmLabel="Create"
           onConfirm={handleCreateConfirm}
         />

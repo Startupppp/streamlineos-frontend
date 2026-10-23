@@ -5,7 +5,6 @@ import type { UseQueryOptions } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { buildWorkQueryKeys } from "@/lib/query-keys/build-work";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   IntakeRequest,

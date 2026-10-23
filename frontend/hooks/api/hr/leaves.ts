@@ -51,7 +51,6 @@ export * from "@/hooks/api/hr/leave-request-mutations";
 export * from "@/hooks/api/hr/leave-type-mutations";
 export type {
   HrLeaveType,
-  LeavePolicyType,
   LeavePolicyResponse,
 } from "@/hooks/api/hr/leaves-types";
 

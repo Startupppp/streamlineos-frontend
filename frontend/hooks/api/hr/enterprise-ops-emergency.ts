@@ -27,15 +27,6 @@ export interface EmergencyEvent {
   resolvedAt: string | null;
 }
 
-export interface EmergencyResponse {
-  id: string;
-  eventId: string;
-  userId: string;
-  status: EmergencyResponseStatus;
-  respondedAt: string | null;
-  note: string | null;
-}
-
 interface PaginatedResult<T> {
   data: T[];
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };

@@ -51,10 +51,10 @@ const RECONCILE_TONE: Record<
   { label: string; icon: typeof CheckCircle; color: string }
 > = {
   unstarted: { label: "Unstarted", icon: Hourglass, color: "text-muted-foreground" },
-  gl_pending: { label: "GL pending", icon: AlertCircle, color: "text-yellow-500" },
-  matched: { label: "Matched", icon: CheckCircle, color: "text-emerald-500" },
+  gl_pending: { label: "GL pending", icon: AlertCircle, color: "text-status-warning-ink" },
+  matched: { label: "Matched", icon: CheckCircle, color: "text-status-success-ink" },
   unmatched: { label: "Unmatched", icon: AlertCircle, color: "text-status-danger-ink" },
-  currency_mismatch: { label: "Currency mismatch", icon: AlertCircle, color: "text-yellow-500" },
+  currency_mismatch: { label: "Currency mismatch", icon: AlertCircle, color: "text-status-warning-ink" },
 };
 
 interface ProjectTimeBudgetSectionProps {

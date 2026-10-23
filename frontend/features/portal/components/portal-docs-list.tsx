@@ -29,7 +29,7 @@ function DocCard({ doc }: { doc: PortalDocListItem }) {
     >
       <div className="flex items-center gap-2 mb-1.5">
         <FileText className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-        <span className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">
+        <span className="text-dense uppercase tracking-wider font-bold text-muted-foreground">
           {doc.kind}
         </span>
       </div>

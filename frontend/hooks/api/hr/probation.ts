@@ -19,8 +19,6 @@ const confirmProbationC = lazyContract(() =>
   import("@/hooks/api/hr/probation-schema").then((m) => m.confirmProbationContract),
 );
 
-export type ProbationStatus = "in_probation" | "review_due" | "extended" | "confirmed" | "terminated";
-
 export interface ProbationReview {
   id: number;
   orgId: string;

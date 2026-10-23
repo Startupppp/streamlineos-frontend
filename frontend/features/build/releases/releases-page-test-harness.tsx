@@ -1,5 +1,5 @@
 import { makeMutationResult, ACCESS_GRANTED, baseQueryResult, cursorPage } from "./releases-test-fixtures";
-export { ACCESS_GRANTED, ACCESS_DENIED, baseQueryResult, cursorPage, releaseRow, OWNER_USER_ID, OWNER } from "./releases-test-fixtures";
+export { ACCESS_DENIED, baseQueryResult, cursorPage, releaseRow, OWNER_USER_ID, OWNER } from "./releases-test-fixtures";
 
 export const releaseState: {
   isOnline: boolean;

@@ -39,13 +39,6 @@ export interface ProvisioningTemplate {
   updatedAt: string;
 }
 
-export interface ExitVerificationResult {
-  userId: string;
-  hasUnverifiedRevokes: boolean;
-  unverified: AccessProvisioningRecord[];
-  total: number;
-}
-
 interface PaginatedResult<T> {
   data: T[];
   pagination: { limit: number; nextCursor: string | null; hasMore: boolean };

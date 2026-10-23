@@ -163,8 +163,6 @@ export function useHrAttritionPlus(departmentId?: number) {
   });
 }
 
-export type { HrLeaveTrendsData } from "./analytics-normalize";
-
 export function useHrLeaveTrends(departmentId?: number) {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({

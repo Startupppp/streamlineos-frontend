@@ -29,11 +29,6 @@ jest.mock("@/hooks/api/authorized-mutation", () => ({
 
 const mockedPost = apiClient.post as jest.Mock;
 
-function wrapper({ children }: { children: ReactNode }) {
-  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
-}
-
 describe("P1 — publish/unpublish refresh Preview", () => {
   beforeEach(() => {
     mockedPost.mockReset();

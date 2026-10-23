@@ -34,11 +34,6 @@ export const PRODUCT_HREF_EXCEPTIONS: Readonly<
   recruitment: "/recruitment",
 };
 
-export const PRODUCT_KEY_EXCEPTIONS = new Set<ModuleKey>([
-  "administration",
-  "recruitment",
-]);
-
 function resolveProductHref(key: ModuleKey): string {
   const exception = PRODUCT_HREF_EXCEPTIONS[key];
   if (exception !== undefined) return exception;

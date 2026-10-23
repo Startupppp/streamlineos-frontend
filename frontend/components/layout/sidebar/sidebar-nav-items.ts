@@ -38,7 +38,6 @@ export type {
 export {
   isModuleEnabled,
   MODULE_ACCENTS,
-  MODULE_SWITCHER_ORDER,
   moduleSwitcherRank,
   PRODUCT_DEFINITIONS,
   PRODUCT_DESCRIPTIONS,

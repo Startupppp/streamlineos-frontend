@@ -1,8 +1,10 @@
-const { chromium } = require("@playwright/test");
-const { pathToFileURL } = require("node:url");
-const { join } = require("node:path");
-const assert = require("node:assert/strict");
-const { readFileSync } = require("node:fs");
+import { chromium } from "@playwright/test";
+import { fileURLToPath, pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+
+const scriptDir = dirname(fileURLToPath(import.meta.url));
 
 async function writeSnapshot(page, identity, version, fetchedAt = Date.now()) {
   await page.evaluate(async ({ identity, version, fetchedAt }) => {
@@ -45,7 +47,7 @@ async function main() {
   });
   try {
     const page = await browser.newPage();
-    await page.goto(pathToFileURL(join(__dirname, "..", "public", "calendar-offline.html")).href);
+    await page.goto(pathToFileURL(join(scriptDir, "..", "public", "calendar-offline.html")).href);
     await writeSnapshot(page, "org-1:user-1", 1);
     await page.reload();
     await page.waitForFunction(() => document.getElementById("status").textContent.includes("Saved"));
@@ -86,8 +88,8 @@ async function main() {
     const context = await browser.newContext({ serviceWorkers: "allow" });
     try {
       const baseUrl = "https://calendar.test";
-      const shell = readFileSync(join(__dirname, "..", "public", "calendar-offline.html"));
-      const worker = readFileSync(join(__dirname, "..", "public", "sw.js"));
+      const shell = readFileSync(join(scriptDir, "..", "public", "calendar-offline.html"));
+      const worker = readFileSync(join(scriptDir, "..", "public", "sw.js"));
       await context.route(`${baseUrl}/**`, (route) => {
         const pathname = new URL(route.request().url()).pathname;
         if (pathname === "/calendar-offline.html") return route.fulfill({ status: 200, contentType: "text/html", body: shell });

@@ -242,22 +242,6 @@ export function usePublishRoadmap() {
   });
 }
 
-export function useUnpublishRoadmap() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:roadmap:manage", {
-    mutationKey: ["projects", "roadmap", "publication", "unpublish"],
-    mutationFn: () =>
-      apiClient.delete<void>(
-        "/build/roadmap-publication",
-        undefined,
-        undefined,
-        noContentLazy,
-      ),
-    onSuccess: () =>
-      qc.setQueryData(knowledgeAndSurveysQueryKeys.roadmap.publication, null),
-  });
-}
-
 export function useRoadmapPreview(managedProductId: number) {
   const canView = useCan("build:roadmap:view");
   return useQuery({

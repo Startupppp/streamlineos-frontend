@@ -2,7 +2,6 @@
 import type { z } from "zod";
 import type {
   exitChecklistItemContract,
-  exitChecklistOwnerContract,
   offboardingChecklistRowContract,
   resignationContract,
   resignationDetailContract,
@@ -26,13 +25,7 @@ export type Resignation = z.infer<typeof resignationContract>;
 export type ResignationDetail = z.infer<typeof resignationDetailContract>;
 export type ResignationProgress = z.infer<typeof resignationProgressContract>;
 export type ExitChecklistItem = z.infer<typeof exitChecklistItemContract>;
-export type ExitChecklistOwner = z.infer<typeof exitChecklistOwnerContract>;
 export type OffboardingChecklistRow = z.infer<typeof offboardingChecklistRowContract>;
-
-export interface PaginatedResignations {
-  data: Resignation[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
 
 export interface ResignationListParams {
   cursor?: string;

@@ -119,12 +119,6 @@ const kbPageSuccessContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageSuccessContract),
 );
 
-const kbPagePermanentDeleteContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then(
-    (m) => m.kbPagePermanentDeleteContract,
-  ),
-);
-
 export function useKbProjectPagesTree(projectId: number) {
   const canView = useCan("kb:pages:view");
   return useQuery({
@@ -560,23 +554,6 @@ export function useRestoreKbPage() {
       ),
     onSuccess: (_, pageId) => {
       invalidateKbPageChange(qc, "restored", pageId);
-    },
-  });
-}
-
-export function useHardDeleteKbPage() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("kb:pages:purge", {
-    mutationKey: ["kb", "pages", "hardDelete"],
-    mutationFn: (pageId: number) =>
-      apiClient.delete<undefined>(
-        `/kb/pages/${pageId}/permanent`,
-        undefined,
-        undefined,
-        kbPagePermanentDeleteContract,
-      ),
-    onSuccess: (_, pageId) => {
-      invalidateKbPageChange(qc, "purged", pageId);
     },
   });
 }

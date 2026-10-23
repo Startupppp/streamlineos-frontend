@@ -22,8 +22,6 @@ import {
 import type { KbAudience } from "@/types/kb";
 import type { KbSpaceListItem } from "@/hooks/api/kb/kb-spaces-settings-schema";
 
-export type { KbSpaceListItem as SpaceCardItem };
-
 const AUDIENCE_LABELS: Record<KbAudience, string> = {
   internal: "Internal",
   public: "Public",

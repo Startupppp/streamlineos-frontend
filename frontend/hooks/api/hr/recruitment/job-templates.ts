@@ -1,22 +1,15 @@
 "use client";
 
-import { useQueryClient } from "@tanstack/react-query";
 import { useGatedQuery } from "@/hooks/api/gated-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
-const noContentC = lazyContract(() =>
-  import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
-);
 const jobTemplatePageC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/job-templates-schema").then(
     (m) => m.jobTemplatePageContract,
   ),
-);
-const jobTemplateC = lazyContract(() =>
-  import("@/hooks/api/hr/recruitment/job-templates-schema").then((m) => m.jobTemplateContract),
 );
 const appliedJobTemplateC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/job-templates-schema").then(
@@ -108,65 +101,6 @@ export function useJobTemplates(params?: JobTemplatesParams) {
       return page.data;
     },
     staleTime: 5 * 60_000,
-  });
-}
-
-export function useJobTemplatesPage(params?: JobTemplatesParams) {
-  const queryParams = templateQueryParams(params, params?.limit ?? 20);
-
-  return useGatedQuery("hr:requisitions:view", {
-    queryKey: [...humanResourcesQueryKeys.hr.jobTemplates(queryParams), "page"] as const,
-    queryFn: ({ signal }): Promise<JobTemplatesPage> =>
-      apiClient.get<JobTemplatesPage>(
-        "/hr/recruitment/job-templates",
-        queryParams,
-        signal,
-        jobTemplatePageC,
-      ),
-    staleTime: 5 * 60_000,
-  });
-}
-
-export function useCreateJobTemplate() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
-    mutationKey: ["hr", "recruitment", "job-templates", "create"],
-    mutationFn: (data: Partial<JobTemplateDraft> & { name: string }) =>
-      apiClient.post<JobTemplate>("/hr/recruitment/job-templates", data, undefined, jobTemplateC),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_PREFIX }),
-  });
-}
-
-export function useUpdateJobTemplate() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
-    mutationKey: ["hr", "recruitment", "job-templates", "update"],
-    mutationFn: ({
-      jobTemplateId,
-      ...data
-    }: Partial<JobTemplateDraft> & { jobTemplateId: number; name?: string }) =>
-      apiClient.patch<JobTemplate>(
-        `/hr/recruitment/job-templates/${jobTemplateId}`,
-        data,
-        undefined,
-        jobTemplateC,
-      ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_PREFIX }),
-  });
-}
-
-export function useDeleteJobTemplate() {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("hr:requisitions:manage", {
-    mutationKey: ["hr", "recruitment", "job-templates", "delete"],
-    mutationFn: (jobTemplateId: number) =>
-      apiClient.delete<void>(
-        `/hr/recruitment/job-templates/${jobTemplateId}`,
-        undefined,
-        undefined,
-        noContentC,
-      ),
-    onSuccess: () => qc.invalidateQueries({ queryKey: TEMPLATES_PREFIX }),
   });
 }
 

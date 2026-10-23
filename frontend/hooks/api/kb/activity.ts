@@ -33,7 +33,6 @@ export const kbActivityPageSchema = z.object({
   }),
 });
 
-export type KbActivityEntry = z.infer<typeof kbActivityEntrySchema>;
 export type KbActivityPage = z.infer<typeof kbActivityPageSchema>;
 
 const activityPageContract = lazyContract(() =>

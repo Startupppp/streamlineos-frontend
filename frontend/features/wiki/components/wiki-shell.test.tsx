@@ -24,7 +24,17 @@ jest.mock("@/components/layout/shell-sidebar-collapse-context", () => ({
 }));
 
 jest.mock("@/components/ui/scroll-area", () => ({
-  ScrollArea: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  ScrollArea: ({
+    children,
+    className,
+  }: {
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <div data-testid="scroll-area" className={className}>
+      {children}
+    </div>
+  ),
 }));
 
 jest.mock("./page-tree", () => ({
@@ -55,7 +65,13 @@ it("renders one focused navigation rail without duplicating the home Favorites c
   render(<WikiShell><div>Wiki body</div></WikiShell>);
 
   expect(screen.getAllByText("Wiki navigation")).toHaveLength(2);
-  expect(screen.getByText("Folder tree")).toBeInTheDocument();
+  const folderTree = screen.getByText("Folder tree");
+  const fileScroll = folderTree.closest("[data-testid='scroll-area']");
+  expect(fileScroll).not.toBeNull();
+  expect(fileScroll).not.toHaveTextContent("Wiki navigation");
+  for (const nav of screen.getAllByText("Wiki navigation")) {
+    expect(nav.closest("[data-testid='scroll-area']")).toBeNull();
+  }
   expect(screen.getByRole("button", { name: "Files" })).toBeInTheDocument();
   expect(screen.getByText("Wiki body")).toBeInTheDocument();
   expect(screen.queryByText("Favorites")).not.toBeInTheDocument();

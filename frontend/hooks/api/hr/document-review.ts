@@ -31,8 +31,6 @@ function hrOnboardingDocAdminListQueryOptions(params?: { limit?: number; cursor?
   } as const;
 }
 
-export type EmployeeOnboardingDoc = z.infer<typeof onboardingDocListContractDef>["data"][number];
-
 export type EmployeeOnboardingDocsResponse = z.infer<typeof onboardingDocListContractDef>;
 
 export function useEmployeeOnboardingDocs(

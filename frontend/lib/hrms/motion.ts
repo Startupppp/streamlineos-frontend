@@ -5,7 +5,6 @@ export const HRMS_DURATION_XS = 0.1;
 export const HRMS_DURATION_SM = 0.16;
 export const HRMS_DURATION_MD = 0.4;
 
-export const hrmsXs: Transition = { duration: HRMS_DURATION_XS, ease: PM_EASE };
 export const hrmsSm: Transition = { duration: HRMS_DURATION_SM, ease: PM_EASE };
 export const hrmsMd: Transition = { duration: HRMS_DURATION_MD, ease: PM_EASE };
 export const hrmsInstant: Transition = { duration: 0 };

@@ -212,6 +212,5 @@ export {
   ACCESS_DENIED,
   boardQueryResult,
   makeMutationResult,
-  type MutationParts,
 } from "./epics-query-builders";
 
