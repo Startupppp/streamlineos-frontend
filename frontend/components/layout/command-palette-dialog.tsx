@@ -48,6 +48,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCommandRegistry } from "./command-palette-commands";
 import { CommandPaletteActionsGroup } from "./command-palette-actions-group";
+import { useAskOs } from "@/components/assistant/ask-os-context";
 import { PalettePeopleGroup } from "@/components/command-palette/components/palette-people-group";
 import {
   COMMAND_ARROW_CLASS,
@@ -109,6 +110,7 @@ export function CommandPaletteDialogBody() {
     [entitlements],
   );
   const { paletteOpen, setPaletteOpen, openCreateTicket } = useCommandPalette();
+  const { setOpen: setAskOsOpen } = useAskOs();
 
   const projectId = useMemo(() => extractBuildProjectId(pathname), [pathname]);
 
@@ -209,10 +211,17 @@ export function CommandPaletteDialogBody() {
     openCreateTicket(projectId);
   }, [projectId, setPaletteOpen, openCreateTicket]);
 
+  const handleOpenAskOs = useCallback(() => {
+    setPaletteOpen(false);
+    setQuery("");
+    setAskOsOpen(true);
+  }, [setPaletteOpen, setAskOsOpen]);
+
   const commands = useCommandRegistry({
     projectId,
     handleSelect,
     handleCreateTicket,
+    onOpenAskOs: handleOpenAskOs,
   });
 
   const filteredPages = useMemo(() => {

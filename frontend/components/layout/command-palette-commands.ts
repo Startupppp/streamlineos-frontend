@@ -12,6 +12,7 @@ import {
   Moon,
   Sun,
   Monitor,
+  Sparkles,
 } from "lucide-react";
 import { useCan } from "@/hooks/api/access";
 import { useAppTheme } from "@/components/theme/app-theme-provider";
@@ -24,18 +25,30 @@ export function useCommandRegistry({
   projectId,
   handleSelect,
   handleCreateTicket,
+  onOpenAskOs,
 }: {
   projectId: number | null;
   handleSelect: (href: string) => void;
   handleCreateTicket: () => void;
+  onOpenAskOs: () => void;
 }): CommandPaletteCommand[] {
   const canCreateTicket = useCan("build:tickets:create");
+  const canUseAiChat = useCan("ai:chat:use");
   const hrmsCommands = useHrmsCommands(handleSelect);
   const { setMode } = useAppTheme();
 
   return useMemo<CommandPaletteCommand[]>(
     () => [
       ...hrmsCommands,
+      {
+        id: "open-ask-os",
+        label: "Ask OS",
+        group: "actions",
+        keywords: ["ask", "os", "ai", "assistant", "chat", "help"],
+        icon: Sparkles,
+        isAvailable: canUseAiChat,
+        execute: onOpenAskOs,
+      },
       {
         id: "theme-light",
         label: "Theme: Light",
@@ -153,6 +166,6 @@ export function useCommandRegistry({
         execute: () => handleSelect("/build/my-work"),
       },
     ],
-    [canCreateTicket, hrmsCommands, projectId, handleSelect, handleCreateTicket, setMode],
+    [canCreateTicket, canUseAiChat, hrmsCommands, projectId, handleSelect, handleCreateTicket, onOpenAskOs, setMode],
   );
 }

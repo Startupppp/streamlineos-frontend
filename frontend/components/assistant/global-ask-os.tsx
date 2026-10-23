@@ -32,6 +32,7 @@ import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { cn } from "@/lib/utils";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
 import { classifyAiError, type AiFailureState } from "@/components/ai";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useCanState } from "@/hooks/api/access";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useHydrated } from "@/hooks/common/use-hydrated";
@@ -103,6 +104,7 @@ export function GlobalAskOs() {
     null,
   );
   const [expanded, setExpanded] = useState(false);
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const speechPlayback = useSpeechPlayback(voiceScope);
   const speechInput = useSpeechInput({
     beforeStart: speechPlayback.stop,
@@ -597,11 +599,17 @@ export function GlobalAskOs() {
       deleteConversation.isPending
     )
       return;
+    setConfirmDeleteOpen(true);
+  }
+
+  function handleConfirmDelete() {
+    if (activeConversationId === null) return;
     deleteConversation.mutate(activeConversationId);
     speechInput.cancel();
     speechInput.reset();
     speechPlayback.stop();
     setActiveConversationId(null);
+    setConfirmDeleteOpen(false);
   }
   function handleDeleteConversation(id: number) {
     deleteConversation.mutate(id);
@@ -614,7 +622,19 @@ export function GlobalAskOs() {
     }
   }
   if (!hydrated) return null;
-  return createPortal(
+  return (
+    <>
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        onOpenChange={setConfirmDeleteOpen}
+        title="Delete conversation?"
+        description="This permanently deletes the conversation and all its messages."
+        confirmLabel="Delete"
+        destructive
+        isPending={deleteConversation.isPending}
+        onConfirm={handleConfirmDelete}
+      />
+      {createPortal(
     <div
       className={anchorClassName}
       role="complementary"
@@ -777,5 +797,7 @@ export function GlobalAskOs() {
       </AskOsCompanionStateContext>
     </div>,
     document.body,
+  )}
+    </>
   );
 }

@@ -6,7 +6,7 @@ import { EllipsisIcon, PlusIcon } from "@animateicons/react/lucide";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { SearchInput } from "@/components/ui/search-input";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -113,7 +113,6 @@ export function AskOsConversationList({
 
   function handleRenameBlur(e: React.FocusEvent<HTMLInputElement>) { commitRename(Number(e.currentTarget.dataset.id)); }
   function handleDeleteConfirm() { if (deleteId !== null) { onDelete(deleteId); setDeleteId(null); } }
-  function handleDeleteCancel() { setDeleteId(null); }
   function handleAlertOpenChange(open: boolean) { if (!open) setDeleteId(null); }
 
   return (
@@ -193,18 +192,15 @@ export function AskOsConversationList({
         </div>
       </ScrollArea>
 
-      <AlertDialog open={deleteId !== null} onOpenChange={handleAlertOpenChange}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete conversation?</AlertDialogTitle>
-            <AlertDialogDescription>This permanently deletes the conversation and all its messages.</AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ConfirmDialog
+        open={deleteId !== null}
+        onOpenChange={handleAlertOpenChange}
+        title="Delete conversation?"
+        description="This permanently deletes the conversation and all its messages."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeleteConfirm}
+      />
     </div>
   );
 }

@@ -63,6 +63,9 @@ jest.mock("@/hooks/api/calendar-search", () => ({
   useCalendarSearch: () => ({ data: undefined }),
 }));
 
+jest.mock("@/components/assistant/ask-os-context", () => ({
+  useAskOs: () => ({ open: false, setOpen: jest.fn(), toggle: jest.fn() }),
+}));
 jest.mock("@/components/theme/app-theme-provider", () => ({
   useAppTheme: () => ({ setMode: jest.fn(), theme: "light", mode: "system", isDark: false }),
 }));
