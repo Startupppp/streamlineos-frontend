@@ -88,6 +88,7 @@ export function StepInviteLaunch({
     setAccessError(null);
     onChangeInvitees(next);
     setEmail("");
+    setRole(DEFAULT_INVITE_ROLE);
   }
 
   function handleEmailKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {

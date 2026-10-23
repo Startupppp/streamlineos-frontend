@@ -24,10 +24,11 @@ import type { SkippedGrant } from "@/hooks/common/auth-schema";
 import { clearStreamToken } from "@/features/notifications/use-notification-events";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";
-import { lazyContract } from "@/lib/api-envelope";
+import { isApiError, lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { UserOrganization } from "@/hooks/api/organization-schema";
 import { toast } from "sonner";
+import { WELCOME_POP_NAME_KEY } from "@/lib/welcome-pop";
 
 function discardOfflineCalendarAccess() {
   try { sessionStorage.removeItem("streamline-calendar-offline-session-identity"); }
@@ -273,14 +274,18 @@ export function useSignOut() {
           logoutContract,
         );
         serverRevocationCompleted = true;
-      } catch {
-        serverRevocationCompleted = false;
+      } catch (error) {
+        serverRevocationCompleted = isApiError(error) && error.status === 401;
       }
       clearImpersonation();
       discardOfflineCalendarAccess();
       clearBackendTokenCache();
       clearStreamToken();
       queryClient.clear();
+      try {
+        window.sessionStorage.removeItem(WELCOME_POP_NAME_KEY);
+      } catch {
+      }
       await signOut({ redirect: false });
       publishLogout();
       return { localSignOutCompleted: true, serverRevocationCompleted };

@@ -25,6 +25,7 @@ export type MenuEntry =
 
 export function buildMenuEntries(opts: {
   canManageSettings: boolean;
+  canViewBilling: boolean;
   canManagePersonalTokens: boolean;
   canViewAiCredits: boolean;
   canSeeOrgPeople: boolean;
@@ -33,6 +34,7 @@ export function buildMenuEntries(opts: {
 }): MenuEntry[] {
   const {
     canManageSettings,
+    canViewBilling,
     canManagePersonalTokens,
     canViewAiCredits,
     canSeeOrgPeople,
@@ -43,7 +45,7 @@ export function buildMenuEntries(opts: {
   const accountLinks: MenuLink[] = [
     { href: "/settings", label: "My Account", icon: CircleUser },
   ];
-  if (canManageSettings) {
+  if (canViewBilling) {
     accountLinks.push({
       href: "/settings/billing",
       label: "Billing & Plan",
