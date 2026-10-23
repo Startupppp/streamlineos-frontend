@@ -48,3 +48,10 @@ it("does not mount the full assistant until opened, then preserves its state whe
   expect(unmounted).not.toHaveBeenCalled();
   expect(screen.getByRole("button", { name: "Open Ask OS assistant" })).toBeInTheDocument();
 });
+
+it("keeps the closed desktop launcher clickable before the assistant runtime loads", () => {
+  render(<AskOsProvider><div>Workspace</div></AskOsProvider>);
+  const region = screen.getByRole("complementary", { name: "Ask OS assistant" });
+  expect(region.className).toContain("pointer-events-none");
+  expect(region.className).toContain("md:pointer-events-auto");
+});

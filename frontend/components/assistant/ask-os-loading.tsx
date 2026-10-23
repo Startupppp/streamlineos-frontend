@@ -15,7 +15,7 @@ export function AskOsLoading() {
   return createPortal(
     <div role="complementary" aria-label="Ask OS assistant" className={open
       ? "fixed inset-0 z-[60] flex flex-col md:inset-auto md:right-0 md:bottom-[env(safe-area-inset-bottom,0px)] md:z-50 md:w-[min(100vw,400px)]"
-      : "pointer-events-none fixed inset-x-0 bottom-0 z-50 flex w-full flex-col md:inset-auto md:right-0 md:bottom-[env(safe-area-inset-bottom,0px)] md:w-[min(100vw,130px)]"}>
+      : "pointer-events-none fixed inset-x-0 bottom-0 z-50 flex w-full flex-col md:pointer-events-auto md:inset-auto md:right-0 md:bottom-[env(safe-area-inset-bottom,0px)] md:w-[min(100vw,130px)]"}>
       {open && (
         <div role="status" aria-live="polite" aria-busy="true" className="flex min-h-0 flex-1 flex-col gap-3 border-border bg-card p-4 md:h-[min(70dvh,560px)] md:flex-none md:rounded-tl-2xl md:border">
           <div className="flex items-center justify-between gap-2">
