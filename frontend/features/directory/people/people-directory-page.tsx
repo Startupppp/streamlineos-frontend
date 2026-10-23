@@ -48,10 +48,14 @@ function AddPersonButton({ onClick }: { onClick: () => void }) {
 
 interface PeopleDirectoryPageProps {
   basePath?: string;
+  title?: string;
+  subtitle?: string;
 }
 
 export function PeopleDirectoryPage({
   basePath = "/directory",
+  title = DIRECTORY_TITLE,
+  subtitle = DIRECTORY_SUBTITLE,
 }: PeopleDirectoryPageProps) {
   const canCreate = useCan("directory:people:create");
   const canUpdate = useCan("directory:people:update");
@@ -165,8 +169,8 @@ export function PeopleDirectoryPage({
 
   return (
     <PageWrapper
-      title={DIRECTORY_TITLE}
-      subtitle={DIRECTORY_SUBTITLE}
+      title={title}
+      subtitle={subtitle}
       filters={filtersBar}
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"

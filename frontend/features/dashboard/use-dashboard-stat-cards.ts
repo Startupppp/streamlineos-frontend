@@ -71,7 +71,7 @@ export function useDashboardStatCards(
     if (access.hrEnabled && access.canViewEmployees) {
       cards.push({
         id: "employees",
-        label: "Total Employees",
+        label: "Team Members",
         ...statValue(stats.totalEmployees),
         icon: Users,
       });
