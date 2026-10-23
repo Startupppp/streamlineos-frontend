@@ -31,7 +31,6 @@ const EXTENDABLE_STATUSES: ReadonlySet<SignEnvelopeStatus> = new Set([
 function notExtendableReason(status: SignEnvelopeStatus): string {
   if (status === "draft" || status === "ready_to_send")
     return "The expiry is set on the envelope itself until it is sent.";
-  if (status === "voided") return "A voided envelope cannot be reopened.";
   return "A completed envelope has no signing window left to extend.";
 }
 
@@ -55,6 +54,8 @@ export function EnvelopeExpiryControl({ envelope }: { envelope: SignEnvelope }) 
 
   const label = expiryLabel(envelope.expiresAt);
   const extendable = EXTENDABLE_STATUSES.has(envelope.status);
+
+  if (envelope.status === "voided") return null;
 
   if (!canExtend) {
     if (!envelope.expiresAt) return null;
