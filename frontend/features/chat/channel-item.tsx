@@ -9,6 +9,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { formatChannelTime } from "./chat-helpers";
+import { useHydrated } from "@/hooks/common/use-hydrated";
 import type { Channel } from "@/types/chat";
 import { ChannelAvatar } from "./channel-avatar";
 import { resolveDirectPartner } from "./channel-member-lookup";
@@ -61,6 +62,7 @@ export function ChannelItem({
     if (!isActive) prefetchChannel(channelId);
   }, [isActive, prefetchChannel, channelId]);
 
+  const isHydrated = useHydrated();
   const hasUnread = channel.unreadCount > 0 && !isActive;
   const preview = conversationPreview(channel);
   const rowLabel = conversationRowLabel(displayName, preview, channel.unreadCount, isActive, isOnline);
@@ -111,7 +113,7 @@ export function ChannelItem({
     );
   }
 
-  const lastMessageTime = channel.lastMessage?.createdAt
+  const lastMessageTime = isHydrated && channel.lastMessage?.createdAt
     ? formatChannelTime(channel.lastMessage.createdAt)
     : null;
 
@@ -192,12 +194,24 @@ export function ChannelItem({
   );
 }
 
+function stripMarkdown(text: string): string {
+  return text
+    .replace(/~~(.+?)~~/g, "$1")
+    .replace(/\*\*\*(.+?)\*\*\*/g, "$1")
+    .replace(/\*\*(.+?)\*\*/g, "$1")
+    .replace(/\*(.+?)\*/g, "$1")
+    .replace(/_([^_]+)_/g, "$1")
+    .replace(/`([^`]+)`/g, "$1")
+    .replace(/^```[\s\S]*?```$/gm, "[code]");
+}
+
 function conversationPreview(channel: Channel): string {
   const content = channel.lastMessage?.content;
   if (!content) return "No messages yet";
+  const stripped = stripMarkdown(content);
   const sender =
     channel.type === "GROUP" ? channel.lastMessage?.senderName?.split(" ")[0] : undefined;
-  return sender ? `${sender}: ${content}` : content;
+  return sender ? `${sender}: ${stripped}` : stripped;
 }
 
 function conversationRowLabel(

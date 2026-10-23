@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useTicketSearch } from "@/hooks/api/build/ticket-search";
 import { getTicketDetailHref } from "@/components/shared/format-ticket-key";
 
-const INLINE_TOKEN_PATTERN = /(\*\*\*[\s\S]+?\*\*\*|\*\*[\s\S]+?\*\*|\*[\s\S]+?\*|`[^`]+`|https?:\/\/[^\s<>"']+|@[^\s@]+(?:\s[^\s@]+)*|\b[A-Z][A-Z0-9]+-\d+\b)/g;
+const INLINE_TOKEN_PATTERN = /(\*\*\*[\s\S]+?\*\*\*|\*\*[\s\S]+?\*\*|~~[\s\S]+?~~|\*[\s\S]+?\*|_[^_\s][^_]*_|`[^`]+`|https?:\/\/[^\s<>"']+|@[^\s@]+(?:\s[^\s@]+)*|\b[A-Z][A-Z0-9]+-\d+\b)/g;
 
 const MAX_INLINE_DEPTH = 4;
 const TICKET_KEY_PATTERN = /^[A-Z][A-Z0-9]+-\d+$/;
@@ -43,7 +43,13 @@ function renderInlinePart(
   if (part.startsWith("**") && part.endsWith("**") && part.length > 4) {
     return <strong key={key}>{renderInline(part.slice(2, -2), isOwn, depth + 1)}</strong>;
   }
+  if (part.startsWith("~~") && part.endsWith("~~") && part.length > 4) {
+    return <s key={key}>{renderInline(part.slice(2, -2), isOwn, depth + 1)}</s>;
+  }
   if (part.startsWith("*") && part.endsWith("*") && part.length > 2) {
+    return <em key={key}>{renderInline(part.slice(1, -1), isOwn, depth + 1)}</em>;
+  }
+  if (part.startsWith("_") && part.endsWith("_") && part.length > 2) {
     return <em key={key}>{renderInline(part.slice(1, -1), isOwn, depth + 1)}</em>;
   }
   if (part.startsWith("`") && part.endsWith("`")) {

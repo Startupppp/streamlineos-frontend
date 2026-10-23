@@ -22,6 +22,7 @@ import {
   cancelChatChannelQueries,
   findChannelRow,
   moveChannelRowToTop,
+  patchLastMessageAfterDelete,
 } from "@/hooks/api/chat-channel-cache";
 import {
   applyOptimisticRead,
@@ -221,23 +222,25 @@ export function useDeleteMessage() {
       ),
     onMutate: async ({ channelId, messageId }) => {
       await cancelChatMessageQueries(queryClient, channelId);
+      const msgRollback = patchChatMessage(queryClient, channelId, messageId, {
+        isDeleted: true,
+        content: null,
+      });
+      const channelRollback = patchLastMessageAfterDelete(
+        queryClient,
+        channelId,
+        messageId,
+      );
       return {
-        rollback: patchChatMessage(queryClient, channelId, messageId, {
-          isDeleted: true,
-          content: null,
-        }),
+        rollback: () => {
+          msgRollback();
+          channelRollback();
+        },
       };
     },
     onError: (err, _variables, context) => {
       context?.rollback();
       toast.error(getErrorMessage(err));
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: collaborationQueryKeys.chat.myChannels(),
-        exact: true,
-        refetchType: "none",
-      });
     },
   });
 }

@@ -118,7 +118,7 @@ export function getForwardedDisplay(content: string | null, forwardCount?: numbe
 
   if (!content) return { label: null, content };
 
-  const legacyMatch = content.match(/^(.*?)(?:\n\n)?> (.+)$/s);
+  const legacyMatch = content.match(/^(.*?)\n\n> (.+)$/s);
   if (legacyMatch) {
     const prefix = legacyMatch[1]?.trim();
     const body = legacyMatch[2] ?? "";

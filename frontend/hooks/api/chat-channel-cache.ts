@@ -1,6 +1,6 @@
 import type { InfiniteData, QueryClient, QueryKey } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import type { Channel, ChannelPage, PublicChannel } from "@/types/chat";
+import type { Channel, ChannelPage, MessagesPage, PublicChannel } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import {
   cancelLoadedQueries,
@@ -208,6 +208,44 @@ export function moveChannelRowToTop(
   const moved = fn(removed);
   const undoInsert = insertChannelRow(queryClient, key, moved);
   return () => runRollbacks([rollback, undoInsert]);
+}
+
+export function patchLastMessageAfterDelete(
+  queryClient: QueryClient,
+  channelId: number,
+  deletedMessageId: number,
+): ChatCacheRollback {
+  const messagesKey = collaborationQueryKeys.chat.messages(channelId);
+  const messagesData = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
+
+  if (!messagesData) {
+    void queryClient.invalidateQueries({
+      queryKey: collaborationQueryKeys.chat.myChannels(),
+      exact: true,
+      refetchType: "active",
+    });
+    return () => undefined;
+  }
+
+  const allMessages = messagesData.pages.flatMap((p) => p.messages);
+  const remaining = allMessages.filter(
+    (m) => m.id !== deletedMessageId && !m.isDeleted && m.id > 0,
+  );
+  const latest =
+    remaining.length > 0
+      ? remaining.reduce((max, m) => (m.id > max.id ? m : max))
+      : null;
+
+  return patchChannelRow(queryClient, channelId, (channel) => ({
+    ...channel,
+    lastMessage: latest
+      ? {
+          content: latest.content,
+          senderName: latest.sender.name ?? null,
+          createdAt: latest.createdAt,
+        }
+      : null,
+  }));
 }
 
 export function patchChannelDetail(

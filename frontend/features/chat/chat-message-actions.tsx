@@ -128,7 +128,7 @@ export function MessageActions({
   return (
     <div
       className={cn(
-        "absolute -top-3 z-50 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto [@media(hover:none)]:static [@media(hover:none)]:mt-1 [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto",
+        "absolute bottom-full mb-1 z-50 opacity-0 pointer-events-none transition-opacity group-hover:opacity-100 group-hover:pointer-events-auto focus-within:opacity-100 focus-within:pointer-events-auto [@media(hover:none)]:static [@media(hover:none)]:mt-1 [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto",
         isOwn ? "right-0" : "left-0",
         keepVisible && "opacity-100 pointer-events-auto",
       )}
