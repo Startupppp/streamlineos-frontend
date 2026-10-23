@@ -26,13 +26,6 @@ jest.mock("@/hooks/api/kb/files", () => ({
 }));
 
 const mockMutate = jest.fn();
-jest.mock("@/hooks/api/kb", () => ({
-  useCreateKbPage: () => ({
-    mutate: mockMutate,
-    isPending: false,
-  }),
-}));
-
 jest.mock("@/hooks/api/kb/pages", () => ({
   useCreateKbPage: () => ({
     mutate: mockMutate,

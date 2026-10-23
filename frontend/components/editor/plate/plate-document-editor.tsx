@@ -61,7 +61,9 @@ export default function PlateDocumentEditor({
   useEffect(() => {
     if (prevKeyRef.current !== contentKey && contentKey !== undefined) {
       prevKeyRef.current = contentKey;
-      editor.tf.setValue(normalizePlateValue(value));
+      editor.tf.withoutSaving(() => {
+        editor.tf.setValue(normalizePlateValue(value));
+      });
     }
   }, [contentKey, value, editor]);
 
