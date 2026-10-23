@@ -18,8 +18,8 @@ import { cn } from "@/lib/utils";
 
 export function IncomingTransferPage() {
   const { isPending: accessPending } = useAccess();
-  const { data, isPending, isError, error, refetch } = useIncomingOrgTransfers();
-  const isLoading = accessPending || isPending;
+  const { data, isLoading: transfersLoading, isError, error, refetch } = useIncomingOrgTransfers();
+  const isLoading = accessPending || transfersLoading;
   const hasPendingTransfer = (data?.data.length ?? 0) > 0;
 
   const handleRetry = useCallback(() => {
