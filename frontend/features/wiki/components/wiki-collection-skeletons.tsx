@@ -47,7 +47,7 @@ export function WikiFillTable({ headers }: { headers: readonly string[] }) {
         className="grid min-h-0 flex-1 auto-rows-[minmax(2.5rem,1fr)] overflow-hidden"
         style={{ gridTemplateColumns: template }}
       >
-        {Array.from({ length: columns * 18 }, (_, index) => (
+        {Array.from({ length: columns * 32 }, (_, index) => (
           <div key={index} className="flex items-center border-b border-border/50 px-3">
             <Skeleton className={index % columns === 0 ? "h-3.5 w-3/4" : "h-3.5 w-1/2"} />
           </div>
@@ -68,7 +68,7 @@ export function WikiTableRowsSkeleton({
 export function WikiTemplatesGridSkeleton() {
   return (
     <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(4.75rem,1fr)]">
-      {Array.from({ length: 18 }, (_, index) => (
+      {Array.from({ length: 42 }, (_, index) => (
         <div
           key={index}
           className="flex h-full min-h-0 items-start gap-3 rounded-lg border border-border bg-card p-3"
@@ -89,7 +89,7 @@ export function WikiTemplatesGridSkeleton() {
 export function WikiPageCardsSkeleton() {
   return (
     <div className="grid min-h-0 flex-1 grid-cols-1 gap-3 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(7.5rem,1fr)]">
-      {Array.from({ length: 9 }, (_, index) => (
+      {Array.from({ length: 30 }, (_, index) => (
         <div
           key={index}
           className="flex h-full min-h-0 flex-col gap-3 overflow-hidden rounded-lg border border-border bg-card p-3"
@@ -117,7 +117,7 @@ export function WikiImportSkeleton() {
       </div>
       <Skeleton className="h-4 w-full max-w-xl shrink-0" />
       <div className="grid min-h-0 flex-1 auto-rows-[minmax(3rem,1fr)] gap-2 overflow-hidden">
-        {Array.from({ length: 12 }, (_, index) => (
+        {Array.from({ length: 24 }, (_, index) => (
           <div key={index} className="flex items-center gap-3 rounded-lg border border-border bg-card px-3">
             <Skeleton className="h-4 w-1/3" />
             <Skeleton className="ml-auto h-4 w-24" />
@@ -132,7 +132,7 @@ export function WikiImportSkeleton() {
 export function WikiSearchResultsSkeleton() {
   return (
     <div className="grid min-h-0 flex-1 auto-rows-[minmax(4.5rem,1fr)] gap-2 overflow-hidden">
-      {Array.from({ length: 12 }, (_, index) => (
+      {Array.from({ length: 18 }, (_, index) => (
         <div
           key={index}
           className="flex h-full min-h-0 flex-col justify-center gap-2 rounded-md border border-border bg-card px-4 py-3"

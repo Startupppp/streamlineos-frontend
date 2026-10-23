@@ -49,6 +49,8 @@ const WIRE_FIXTURE = {
       verifiedUntil: null,
       contentRevision: 1,
       aclRevision: 1,
+      isLocked: false,
+      can: { edit: true, manage: false },
       sharedBy: null,
     },
   ],
@@ -76,7 +78,7 @@ describe("KB page collection — response contract parity (FE-28)", () => {
       "ownerMembershipId", "ownerUserId", "createdById", "createdByMembershipId",
       "lastEditedById", "lastEditedByMembershipId", "createdAt", "updatedAt",
       "deletedAt", "nextReviewAt", "verifiedUntil", "contentRevision", "aclRevision",
-      "sharedBy",
+      "isLocked", "can", "sharedBy",
     ] as const;
     for (const field of backendProjectedFields) {
       expect(item).toHaveProperty(field);

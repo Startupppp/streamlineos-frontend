@@ -168,8 +168,11 @@ function makeSharedItem(overrides: Record<string, unknown> = {}) {
     verifiedUntil: null,
     contentRevision: 1,
     aclRevision: 1,
+    isLocked: false,
+    can: { edit: true, manage: true },
     sharedBy: {
       membershipId: 5,
+      userId: "user-5",
       at: "2026-08-01T00:00:00Z",
       access: "edit",
       expiresAt: null,
@@ -283,6 +286,27 @@ describe("SharedPage — flash fix and server-side filtering", () => {
 
     expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
     expect(screen.queryByText("Member #5")).not.toBeInTheDocument();
+  });
+
+  it("names the member who shared the file, not the file's owner, when the two differ", () => {
+    const { useOrgMembersByIds } = jest.requireMock("@/hooks/api/organization") as { useOrgMembersByIds: jest.Mock };
+    useKbPageCollection.mockReturnValue({
+      data: {
+        data: [makeSharedItem({ ownerUserId: "user-9", sharedBy: { membershipId: 5, userId: "user-5", at: "2026-08-01T00:00:00Z", access: "view", expiresAt: null } })],
+        pagination: { limit: 50, hasMore: false, nextCursor: null },
+        facets: null,
+      },
+      isLoading: false,
+      isError: false,
+      error: undefined,
+      refetch: jest.fn(),
+    });
+    usePageState.mockReturnValue({ kind: "ready" });
+
+    render(<SharedPage />);
+
+    expect(useOrgMembersByIds).toHaveBeenLastCalledWith(["user-5"]);
+    expect(screen.getAllByText("Alice").length).toBeGreaterThan(0);
   });
 
   it("access column renders the human-readable access label", () => {

@@ -46,6 +46,7 @@ const page = {
   isFavorite: false,
   isLocked: false,
   coverImage: null,
+  can: { view: true, comment: true, edit: true, manage: true, restore: false },
 } as KbPageDetail;
 
 function noop() {}

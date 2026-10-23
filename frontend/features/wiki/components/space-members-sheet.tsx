@@ -393,14 +393,14 @@ export function SpaceMembersSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="sm:max-w-sm p-0 flex flex-col">
+      <SheetContent side="right" className="sm:max-w-sm gap-0 p-0 flex flex-col">
         <SheetHeader className="px-6 py-4 border-b shrink-0">
           <SheetTitle>Members — {spaceName}</SheetTitle>
           <SheetDescription className="text-xs mt-0.5">
             People who can read or edit files in this team folder.
           </SheetDescription>
         </SheetHeader>
-        <SheetBody className="px-6 py-4 flex-1 overflow-y-auto space-y-4">
+        <SheetBody className="flex-1 overflow-y-auto px-6 py-4">
           <QueryErrorResetBoundary>
             {({ reset }) => (
               <MembersReadBoundary key={spaceId} onReset={reset}>

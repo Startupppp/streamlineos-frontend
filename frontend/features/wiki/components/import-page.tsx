@@ -496,7 +496,7 @@ export default function ImportPage() {
         </TabsList>
 
         <TabsContent value="import" className={TABS_CONTENT_PAGE_BODY_CLASS}>
-          <div className="space-y-4">
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
             <p className="text-xs text-muted-foreground">
               Accepts .md, .markdown and .txt files · 5 MB per file · max 100
               pages per import. Each page has a 50,000 character limit. Set a

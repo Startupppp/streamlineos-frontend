@@ -44,20 +44,20 @@ export function TrashMemberFilter({ value, onChange }: TrashMemberFilterProps) {
   }
 
   return (
-    <div className="flex flex-nowrap items-center gap-2">
+    <div className="flex w-full flex-col gap-2">
       <Input
         type="search"
         aria-label="Find member"
         placeholder="Find member…"
         value={search}
         onChange={(event) => setSearch(event.target.value)}
-        className="w-40"
+        className="w-full"
       />
       <Select
         value={value !== undefined ? String(value) : ALL_MEMBERS_VALUE}
         onValueChange={handleMemberChange}
       >
-        <SelectTrigger className="w-52" aria-label="Deleted by member">
+        <SelectTrigger className="w-full" aria-label="Deleted by member">
           <SelectValue placeholder="All members" />
         </SelectTrigger>
         <SelectContent>

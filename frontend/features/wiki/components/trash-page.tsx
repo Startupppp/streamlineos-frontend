@@ -1,7 +1,5 @@
 "use client";
 
-import { DatePicker } from "@/components/ui/date-picker";
-
 import { useState, useRef, useEffect } from "react";
 import { addDays, format, isValid, parseISO } from "date-fns";
 import { useSearchParams } from "next/navigation";
@@ -17,14 +15,8 @@ import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { WikiTableRowsSkeleton } from "./wiki-collection-skeletons";
+import { TrashFiltersMenu } from "./trash-filters-menu";
 import { useCan } from "@/hooks/api/access";
 import { useKbPagesTrash, useEmptyKbTrash } from "@/hooks/api/kb/pages";
 import {
@@ -38,7 +30,6 @@ import { reportTrashBulkResult, TrashBulkActions, TrashBulkPurgeConfirmation, Tr
 import type { KbPageListItem } from "@/hooks/api/kb/page-types";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
 import { TrashRetentionSection } from "@/features/wiki/components/trash-retention-section";
-import { TrashMemberFilter } from "@/features/wiki/components/trash-member-filter";
 import { getErrorMessage } from "@/lib/get-error-message";
 
 const DEFAULT_LIMIT = 50;
@@ -109,6 +100,7 @@ export default function TrashPage() {
     deletedFrom !== undefined ||
     deletedBefore !== undefined;
 
+  const canRestore = useCan("kb:pages:update");
   const canPurge = useCan("kb:pages:purge");
   const canManageSettings = useCan("kb:settings:manage");
   const pageState = usePageState({
@@ -188,6 +180,16 @@ export default function TrashPage() {
     updateFilters({ deletedBefore: value || null });
   }
 
+  function handleClearMenuFilters() {
+    cursorState.reset();
+    updateFilters({
+      spaceId: null,
+      deletedByMembershipId: null,
+      deletedFrom: null,
+      deletedBefore: null,
+    });
+  }
+
   function handleClearFilters() {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     setSearchDraft("");
@@ -249,6 +251,7 @@ export default function TrashPage() {
     <TrashBulkActions
       selectedCount={selectedCount}
       pageCount={pageCount}
+      canRestore={canRestore}
       canPurge={canPurge}
       canManageSettings={canManageSettings}
       restoring={bulkRestore.isPending}
@@ -305,49 +308,26 @@ export default function TrashPage() {
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           {canManageSettings ? <TrashRetentionSection /> : null}
 
-          <div className="flex min-w-0 shrink-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
+          <div className="flex min-w-0 shrink-0 items-center gap-2">
             <Input
               type="search"
               placeholder="Search deleted pages…"
               value={searchDraft}
               onChange={handleSearchChange}
-              className="w-64 max-w-sm"
+              className="w-full max-w-sm sm:w-64"
               aria-label="Search deleted pages"
             />
-            <TrashMemberFilter value={deletedByMembershipId} onChange={handleMemberChange} />
-            <Select
-              value={spaceId !== undefined ? String(spaceId) : ALL_SPACES_VALUE}
-              onValueChange={handleSpaceChange}
-            >
-              <SelectTrigger className="w-52" aria-label="Team folder">
-                <SelectValue placeholder="All team folders" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_SPACES_VALUE}>All team folders</SelectItem>
-                {spaces.map((space) => (
-                  <SelectItem key={space.id} value={String(space.id)}>
-                    {space.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <DatePicker
-              ariaLabel="Deleted from"
-              value={dateFilterDisplay(deletedFromRaw)}
-              onChange={handleDeletedFromChange}
-              placeholder="From"
-              dateFormat="dd MMM yyyy"
-              clearable
-              className="w-40"
-            />
-            <DatePicker
-              ariaLabel="Deleted through"
-              value={dateFilterDisplay(deletedBeforeRaw)}
-              onChange={handleDeletedBeforeChange}
-              placeholder="Through"
-              dateFormat="dd MMM yyyy"
-              clearable
-              className="w-40"
+            <TrashFiltersMenu
+              deletedByMembershipId={deletedByMembershipId}
+              onMemberChange={handleMemberChange}
+              spaceId={spaceId}
+              spaces={spaces}
+              onSpaceChange={handleSpaceChange}
+              deletedFrom={dateFilterDisplay(deletedFromRaw)}
+              deletedThrough={dateFilterDisplay(deletedBeforeRaw)}
+              onDeletedFromChange={handleDeletedFromChange}
+              onDeletedThroughChange={handleDeletedBeforeChange}
+              onClear={handleClearMenuFilters}
             />
           </div>
 

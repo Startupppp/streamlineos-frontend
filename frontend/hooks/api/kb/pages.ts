@@ -327,6 +327,7 @@ export function useKbBulkRestorePages() {
       });
       qc.invalidateQueries({
         queryKey: knowledgeAndSurveysQueryKeys.kb.kbPages(),
+        refetchType: "none",
       });
     },
   });

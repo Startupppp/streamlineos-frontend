@@ -327,7 +327,6 @@ export function WikiPageCollectionTable({
           showSpaceFilter={fixedParams.spaceId === undefined}
           sort={sort}
           view={view}
-          documentCountLabel={documentCountLabel}
           activeFilterCount={activeFilterCount}
           onStatusChange={handleStatusChange}
           onKindChange={handleKindChange}
@@ -338,6 +337,9 @@ export function WikiPageCollectionTable({
           onClearFilters={handleClearFilters}
         />
       </div>
+      {documentCountLabel !== null ? (
+        <p className="text-sm text-muted-foreground tabular-nums">{documentCountLabel}</p>
+      ) : null}
       <PageState
         resolution={pageState}
         loading={

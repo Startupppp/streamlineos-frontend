@@ -108,6 +108,8 @@ function makeItem(overrides: Partial<Record<string, unknown>> = {}) {
     verifiedUntil: null,
     contentRevision: 1,
     aclRevision: 1,
+    isLocked: false,
+    can: { edit: true, manage: true },
     sharedBy: null,
     ...overrides,
   };

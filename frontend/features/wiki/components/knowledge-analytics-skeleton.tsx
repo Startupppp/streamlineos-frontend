@@ -23,7 +23,7 @@ export function AnalyticsSkeleton() {
           <div key={section} className="flex min-h-0 flex-col gap-2 overflow-hidden">
             <Skeleton className="h-4 w-36 shrink-0" />
             <div className="grid min-h-0 flex-1 auto-rows-[minmax(2.25rem,1fr)] gap-2 overflow-hidden">
-              {Array.from({ length: 8 }, (_, row) => (
+              {Array.from({ length: 18 }, (_, row) => (
                 <Skeleton key={row} className="h-full min-h-0 w-full rounded-md" />
               ))}
             </div>

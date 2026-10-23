@@ -322,8 +322,8 @@ export default function WikiSearchPage() {
     .reduce((total, f) => total + f.count, 0);
 
   return (
-    <PageWrapper title="Search" noInternalScroll>
-      <div className="flex h-full min-h-0 flex-1 flex-col gap-4">
+    <PageWrapper title="Search">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-4">
         <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <label htmlFor={searchInputId} className="sr-only">
@@ -483,7 +483,7 @@ export default function WikiSearchPage() {
 
         <PageState
           resolution={pageState}
-          className="min-h-0 flex-1 overflow-y-auto"
+          className="min-h-0 flex-1"
           loading={<SearchSkeleton />}
           empty={
             <EmptyState

@@ -19,7 +19,7 @@ export function SpaceDetailSkeleton() {
         <div className="hidden w-56 shrink-0 flex-col gap-2 overflow-hidden rounded-xl border border-border bg-card/50 p-3 md:flex">
           <Skeleton className="h-4 w-24 shrink-0" />
           <div className="grid min-h-0 flex-1 auto-rows-[minmax(2rem,1fr)] gap-2 overflow-hidden">
-            {Array.from({ length: 12 }, (_, index) => (
+            {Array.from({ length: 20 }, (_, index) => (
               <Skeleton key={index} className="h-full min-h-0 w-full rounded-md" />
             ))}
           </div>

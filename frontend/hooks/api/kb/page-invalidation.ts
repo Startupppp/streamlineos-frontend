@@ -26,7 +26,6 @@ export function invalidateKbPageChange(
     case "created":
       qc.invalidateQueries({ queryKey: k.pagesTree() });
       qc.invalidateQueries({ queryKey: k.pagesRecent() });
-      qc.invalidateQueries({ queryKey: k.kbPages() });
       qc.invalidateQueries({ queryKey: k.pageCollection() });
       break;
     case "updated-listing":
@@ -43,16 +42,14 @@ export function invalidateKbPageChange(
       qc.invalidateQueries({ queryKey: k.pagesFavorites() });
       break;
     case "trashed":
-      qc.invalidateQueries({ queryKey: k.pagesTree() });
-      qc.invalidateQueries({ queryKey: k.pagesTrash() });
-      qc.invalidateQueries({ queryKey: k.kbPages() });
-      qc.invalidateQueries({ queryKey: k.page(pageId) });
-      break;
     case "restored":
+      qc.invalidateQueries({ queryKey: k.kbPages(), refetchType: "none" });
       qc.invalidateQueries({ queryKey: k.pagesTree() });
       qc.invalidateQueries({ queryKey: k.pagesTrash() });
-      qc.invalidateQueries({ queryKey: k.kbPages() });
-      qc.invalidateQueries({ queryKey: k.page(pageId) });
+      qc.invalidateQueries({ queryKey: k.pagesRecent() });
+      qc.invalidateQueries({ queryKey: k.pagesFavorites() });
+      qc.invalidateQueries({ queryKey: k.pageCollection() });
+      qc.invalidateQueries({ queryKey: k.page(pageId), exact: true });
       break;
     case "purged":
       qc.invalidateQueries({ queryKey: k.pagesTrash() });

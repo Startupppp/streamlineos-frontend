@@ -14,7 +14,7 @@ import { useKbSpaces } from "@/hooks/api/kb/spaces";
 const SHARED_WITH_ME_PARAMS = { sharedWithMe: "1" as const };
 
 function buildSharedColumns(
-  membershipToName: Map<number, string>,
+  userIdToName: Map<string, string>,
   spaceNameById: Map<number, string>,
 ): DataTableColumn<KbPageCollectionItem>[] {
   return [
@@ -22,11 +22,9 @@ function buildSharedColumns(
       key: "shared_by",
       header: "Shared by",
       cell: (row) => {
-        if (row.sharedBy === null) return "—";
-        const mid = row.sharedBy.membershipId;
-        if (mid === null) return "—";
-        const name = membershipToName.get(mid);
-        return name ?? "—";
+        const sharerId = row.sharedBy?.userId ?? null;
+        if (sharerId === null) return "—";
+        return userIdToName.get(sharerId) ?? "—";
       },
     },
     {
@@ -43,7 +41,9 @@ function buildSharedColumns(
       header: "Expires",
       cell: (row) => (
         <span className="tabular-nums text-muted-foreground text-sm">
-          {row.sharedBy?.expiresAt != null ? kbFormatDate(row.sharedBy.expiresAt) : "Never"}
+          {row.sharedBy?.expiresAt != null
+            ? kbFormatDate(row.sharedBy.expiresAt)
+            : "Never"}
         </span>
       ),
     },
@@ -71,14 +71,23 @@ function buildSharedColumns(
 export default function SharedPage() {
   const [rows, setRows] = useState<readonly KbPageCollectionItem[]>([]);
 
-  const ownerUserIds = [...new Set(rows.map((r) => r.ownerUserId).filter((id): id is string => id !== null))];
+  const sharerUserIds = [
+    ...new Set(
+      rows
+        .map((r) => r.sharedBy?.userId ?? null)
+        .filter((id): id is string => id !== null),
+    ),
+  ];
 
-  const { data: ownersPage } = useOrgMembersByIds(ownerUserIds);
+  const { data: sharersPage } = useOrgMembersByIds(sharerUserIds);
   const { data: spacesPage } = useKbSpaces();
 
-  const membershipToName = new Map<number, string>();
-  for (const member of ownersPage?.data ?? []) {
-    membershipToName.set(member.membershipId, getUserDisplayName({ name: member.name, email: member.email }));
+  const userIdToName = new Map<string, string>();
+  for (const member of sharersPage?.data ?? []) {
+    userIdToName.set(
+      member.userId,
+      getUserDisplayName({ name: member.name, email: member.email }),
+    );
   }
 
   const spaceNameById = new Map<number, string>();
@@ -86,7 +95,7 @@ export default function SharedPage() {
     spaceNameById.set(space.id, space.name);
   }
 
-  const sharedColumns = buildSharedColumns(membershipToName, spaceNameById);
+  const sharedColumns = buildSharedColumns(userIdToName, spaceNameById);
 
   function handleRowsChange(nextRows: readonly KbPageCollectionItem[]) {
     setRows(nextRows);

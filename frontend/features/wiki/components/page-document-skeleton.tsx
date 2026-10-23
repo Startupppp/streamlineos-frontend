@@ -74,7 +74,7 @@ export function PageDocumentSkeleton() {
             <Skeleton className="h-9 w-3/4 shrink-0" />
             <Skeleton className="h-4 w-40 shrink-0" />
             <div className="grid min-h-0 flex-1 auto-rows-[minmax(1rem,1fr)] gap-3 overflow-hidden">
-              {Array.from({ length: 36 }, (_, index) => (
+              {Array.from({ length: 48 }, (_, index) => (
                 <Skeleton
                   key={index}
                   className={index % 6 === 5 ? "h-4 w-2/3" : "h-4 w-full"}

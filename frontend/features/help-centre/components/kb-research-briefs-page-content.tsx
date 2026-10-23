@@ -23,7 +23,7 @@ export function BriefListSkeleton() {
         <Skeleton className="h-9 w-32 shrink-0 rounded-md" />
       </div>
       <div className="grid min-h-0 flex-1 auto-rows-[minmax(4.25rem,1fr)] gap-2 overflow-hidden">
-        {Array.from({ length: 12 }, (_, index) => (
+        {Array.from({ length: 18 }, (_, index) => (
           <div
             key={index}
             className="flex h-full min-h-0 items-start gap-3 rounded-xl border border-border bg-card p-3"

@@ -115,7 +115,7 @@ export function TrashRetentionSection() {
             <span className="text-sm font-medium tabular-nums text-foreground">
               {currentValue} days
             </span>
-            <Button size="sm" variant="ghost" className="text-xs" onClick={handleEdit}>
+            <Button size="sm" variant="outline" onClick={handleEdit}>
               Edit
             </Button>
           </div>

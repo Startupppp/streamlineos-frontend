@@ -99,8 +99,8 @@ export function PageDocumentToolbar({
     {
       canCreate,
       canUpdate,
-      canManage,
-      canDelete,
+      canManage: canManage && page.can.manage === true,
+      canDelete: canDelete && page.can.manage === true,
       canExport,
       canManageTemplates,
       isEditable,

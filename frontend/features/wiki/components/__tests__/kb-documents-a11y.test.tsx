@@ -43,6 +43,8 @@ function source(overrides: Partial<KbPageCollectionItem>): KbPageCollectionItem 
     verifiedUntil: null,
     contentRevision: 0,
     aclRevision: 0,
+    isLocked: false,
+    can: { edit: true, manage: true },
     sharedBy: null,
     ...overrides,
   };

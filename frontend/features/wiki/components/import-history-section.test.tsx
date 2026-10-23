@@ -34,6 +34,7 @@ function intersect(index = 0) {
 }
 
 jest.mock("@/hooks/api/kb/import-export", () => ({
+  useKbImportJob: jest.fn(),
   useKbImportJobs: jest.fn(),
   useRetryImportJob: jest.fn(),
 }));
@@ -50,7 +51,8 @@ jest.mock("@/lib/knowledge-routes", () => ({
   KNOWLEDGE_BASE: "/wiki",
 }));
 
-const { useKbImportJobs, useRetryImportJob } = jest.requireMock("@/hooks/api/kb/import-export") as {
+const { useKbImportJob, useKbImportJobs, useRetryImportJob } = jest.requireMock("@/hooks/api/kb/import-export") as {
+  useKbImportJob: jest.Mock;
   useKbImportJobs: jest.Mock;
   useRetryImportJob: jest.Mock;
 };
@@ -319,6 +321,29 @@ describe("ImportHistorySection failed items", () => {
     expect(retryButtons).toHaveLength(1);
     await userEvent.click(retryButtons[0]!);
     expect(mockRetryMutate).toHaveBeenCalledWith(1, expect.any(Object));
+  });
+
+  it("watches the new job a retry creates, so its pages reach the sidebar when it settles", async () => {
+    mockRetryMutate.mockImplementation((_jobId: number, options: { onSuccess: (accepted: { jobId: number; status: "pending" }) => void }) => {
+      options.onSuccess({ jobId: 77, status: "pending" });
+    });
+    useKbImportJobs.mockReturnValue({
+      data: [{ ...mockJob, id: 1, canRetry: true, failedItems: 1, errorReport: { failedTitles: ["Policy A"] } }],
+      isLoading: false,
+      isError: false,
+      error: null,
+      refetch: jest.fn(),
+      hasNextPage: false,
+      isFetchingNextPage: false,
+      fetchNextPage: jest.fn(),
+    });
+
+    render(<ImportHistorySection />);
+    expect(useKbImportJob).toHaveBeenLastCalledWith(null);
+
+    await userEvent.click(screen.getByRole("button", { name: "Retry failed pages" }));
+
+    expect(useKbImportJob).toHaveBeenLastCalledWith(77);
   });
 
   it("shows manual reconciliation guidance without a retry control", () => {

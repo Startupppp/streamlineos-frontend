@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { PageSection } from "@/components/ui/page-wrapper";
@@ -14,7 +15,7 @@ import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isApiError } from "@/lib/api-envelope";
 import { KNOWLEDGE_BASE } from "@/lib/knowledge-routes";
-import { useKbImportJobs, useRetryImportJob } from "@/hooks/api/kb/import-export";
+import { useKbImportJob, useKbImportJobs, useRetryImportJob } from "@/hooks/api/kb/import-export";
 import { usePermissionGate } from "@/hooks/api/access";
 import { KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
 import { kbTimeAgo } from "@/features/wiki/lib/kb-date-utils";
@@ -95,6 +96,8 @@ function ImportJobRow({ job, retryDisabled, retryPending, onRetry }: ImportJobRo
 export function ImportHistorySection() {
   const importGate = usePermissionGate("kb:pages:import");
   const retryMutation = useRetryImportJob();
+  const [retriedJobId, setRetriedJobId] = useState<number | null>(null);
+  useKbImportJob(retriedJobId);
   const {
     data: jobs = [],
     isLoading,
@@ -120,7 +123,8 @@ export function ImportHistorySection() {
   function handleRetryImport(jobId: number) {
     if (!accessReady) return;
     retryMutation.mutate(jobId, {
-      onSuccess: () => {
+      onSuccess: (accepted) => {
+        setRetriedJobId(accepted.jobId);
         toast.success("Retry queued for failed pages");
       },
       onError: (error) => {

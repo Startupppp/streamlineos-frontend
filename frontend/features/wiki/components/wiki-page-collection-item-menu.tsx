@@ -78,19 +78,20 @@ export function CollectionItemMenu({ page, resolveHref, open, onOpenChange }: Co
   const [ownerTransferOpen, setOwnerTransferOpen] = useState(false);
   const [pendingOwner, setPendingOwner] = useState("");
 
+  const pageManageable = canManage && page.can.manage;
   const capabilities: KbPageActionCapabilities = {
     canCreate,
-    canUpdate,
-    canManage,
-    canDelete,
+    canUpdate: canUpdate && page.can.edit,
+    canManage: pageManageable,
+    canDelete: canDelete && page.can.manage,
     canExport,
     canManageTemplates,
-    isEditable: canUpdate,
+    isEditable: canUpdate && page.can.edit && (!page.isLocked || page.can.manage),
   };
 
   const subject: KbPageActionSubject = {
     isFavorite: false,
-    isLocked: false,
+    isLocked: page.isLocked,
     hasCover: page.coverImage !== null,
     isArchived: page.status === "archived",
   };
@@ -282,7 +283,7 @@ export function CollectionItemMenu({ page, resolveHref, open, onOpenChange }: Co
               ))}
             </Fragment>
           ))}
-          {canManage && (
+          {canManage && page.can.edit && (
             <>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={handleOwnerTransferOpen}>

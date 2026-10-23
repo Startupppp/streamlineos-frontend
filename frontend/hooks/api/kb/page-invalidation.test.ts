@@ -1,4 +1,4 @@
-import { QueryClient } from "@tanstack/react-query";
+import { QueryClient, QueryObserver } from "@tanstack/react-query";
 import { knowledgeAndSurveysQueryKeys as qk } from "@/lib/query-keys/knowledge-and-surveys";
 import { invalidateKbPageChange, type KbPageChangeEvent } from "./page-invalidation";
 
@@ -12,13 +12,13 @@ function setup() {
 const PAGE_ID = 42;
 
 describe("KB-B-033 invalidateKbPageChange — event→keys table (FE-19, FE-34)", () => {
-  it("created: invalidates pagesTree, pagesRecent, kbPages and pageCollection", () => {
+  it("created: refreshes the listings a new page joins and never refetches every open page", () => {
     const { client, invalidate } = setup();
     invalidateKbPageChange(client, "created", PAGE_ID);
     expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesTree() });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesRecent() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.kbPages() });
     expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pageCollection() });
+    expect(invalidate).not.toHaveBeenCalledWith({ queryKey: qk.kb.kbPages() });
   });
 
   it("updated-listing: invalidates pagesTree, pagesRecent, pagesFavorites and pageCollection", () => {
@@ -40,22 +40,47 @@ describe("KB-B-033 invalidateKbPageChange — event→keys table (FE-19, FE-34)"
     expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesFavorites() });
   });
 
-  it("trashed: invalidates pagesTree, pagesTrash, kbPages and page(id)", () => {
-    const { client, invalidate } = setup();
+  it.each(["trashed", "restored"] as const)(
+    "%s: refetches only the affected listings and that page, and marks the rest of the subtree stale without refetching it",
+    (event) => {
+      const { client, invalidate } = setup();
+      invalidateKbPageChange(client, event, PAGE_ID);
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.kbPages(), refetchType: "none" });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesTree() });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesTrash() });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesRecent() });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesFavorites() });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pageCollection() });
+      expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.page(PAGE_ID), exact: true });
+      expect(invalidate).not.toHaveBeenCalledWith({ queryKey: qk.kb.kbPages() });
+    },
+  );
+
+  it("trashed: a sibling page detail that is open is marked stale but not refetched", async () => {
+    const client = new QueryClient();
+    const sibling = qk.kb.page(PAGE_ID + 1);
+    const queryFn = jest.fn().mockResolvedValue({ id: PAGE_ID + 1 });
+    await client.fetchQuery({ queryKey: sibling, queryFn, staleTime: Infinity });
+    const observer = new QueryObserver(client, { queryKey: sibling, queryFn, staleTime: Infinity });
+    const unsubscribe = observer.subscribe(() => undefined);
     invalidateKbPageChange(client, "trashed", PAGE_ID);
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesTree() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesTrash() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.kbPages() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.page(PAGE_ID) });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(client.getQueryState(sibling)?.isInvalidated).toBe(true);
+    expect(queryFn).toHaveBeenCalledTimes(1);
+    unsubscribe();
   });
 
-  it("restored: invalidates pagesTree, pagesTrash, kbPages and page(id)", () => {
-    const { client, invalidate } = setup();
-    invalidateKbPageChange(client, "restored", PAGE_ID);
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesTree() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.pagesTrash() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.kbPages() });
-    expect(invalidate).toHaveBeenCalledWith({ queryKey: qk.kb.page(PAGE_ID) });
+  it("CONTROL: trashed refetches the open detail of the trashed page itself", async () => {
+    const client = new QueryClient();
+    const own = qk.kb.page(PAGE_ID);
+    const queryFn = jest.fn().mockResolvedValue({ id: PAGE_ID });
+    await client.fetchQuery({ queryKey: own, queryFn, staleTime: Infinity });
+    const observer = new QueryObserver(client, { queryKey: own, queryFn, staleTime: Infinity });
+    const unsubscribe = observer.subscribe(() => undefined);
+    invalidateKbPageChange(client, "trashed", PAGE_ID);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(queryFn).toHaveBeenCalledTimes(2);
+    unsubscribe();
   });
 
   it("purged: invalidates pagesTrash and removes page(id) from cache", () => {

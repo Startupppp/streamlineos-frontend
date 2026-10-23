@@ -223,6 +223,8 @@ function makeItem(id: number, extra: Record<string, unknown> = {}) {
     verifiedUntil: null,
     contentRevision: 1,
     aclRevision: 1,
+    isLocked: false,
+    can: { edit: true, manage: true },
     sharedBy: null,
     ...extra,
   };

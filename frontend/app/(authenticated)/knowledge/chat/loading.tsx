@@ -1,15 +1,7 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-const BUBBLES = [
-  "w-2/3",
-  "w-3/4",
-  "w-1/2",
-  "w-3/5",
-  "w-2/3",
-  "w-1/2",
-  "w-3/4",
-  "w-2/5",
-] as const;
+const BUBBLE_WIDTHS = ["w-2/3", "w-3/4", "w-1/2", "w-3/5", "w-2/5"] as const;
+const BUBBLES = Array.from({ length: 16 }, (_, index) => BUBBLE_WIDTHS[index % BUBBLE_WIDTHS.length]);
 
 export default function KnowledgeChatLoading() {
   return (

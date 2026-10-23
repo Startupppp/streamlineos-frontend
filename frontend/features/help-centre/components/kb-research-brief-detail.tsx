@@ -70,7 +70,7 @@ export function ResearchBriefDetailSkeleton() {
         </div>
       </div>
       <div className="grid min-h-0 flex-1 auto-rows-[minmax(1rem,1fr)] gap-3 overflow-hidden rounded-xl border border-border bg-card p-4">
-        {Array.from({ length: 28 }, (_, index) => (
+        {Array.from({ length: 48 }, (_, index) => (
           <Skeleton key={index} className={index % 5 === 4 ? "h-4 w-2/3" : "h-4 w-full"} />
         ))}
       </div>

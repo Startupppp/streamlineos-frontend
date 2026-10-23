@@ -299,11 +299,12 @@ export function PageWrapper({
           aria-labelledby={title != null ? headingId : undefined}
           aria-label={title == null ? "Page content" : undefined}
           tabIndex={0}
-          className="h-full min-h-0 flex-1 overflow-y-auto scrollbar-hide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+          className="flex h-full min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         >
           <div
             className={cn(
-              "flex min-h-full w-full flex-col overscroll-contain",
+              "flex min-h-full w-full shrink-0 grow flex-col overscroll-contain",
+              "[&>:first-child]:w-full [&>:first-child]:flex-1",
               PAGE_CHROME_X,
               PAGE_CHROME_BOTTOM,
               contentClassName,

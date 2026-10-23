@@ -32,6 +32,8 @@ export const kbPageCollectionItemSchema = z.object({
   verifiedUntil: z.string().nullable(),
   contentRevision: z.number().int(),
   aclRevision: z.number().int(),
+  isLocked: z.boolean().default(false),
+  can: z.object({ edit: z.boolean(), manage: z.boolean() }).default({ edit: false, manage: false }),
   sharedBy: z
     .object({
       membershipId: z.number().int().nullable(),

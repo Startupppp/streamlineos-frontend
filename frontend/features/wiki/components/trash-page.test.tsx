@@ -290,6 +290,17 @@ describe("trash bulk purge impact confirmation", () => {
     expect(purgeDialog().open).toBe(false);
   });
 
+  it("hides bulk Restore from a viewer who lacks kb:pages:update, while still allowing selection", () => {
+    useCan.mockImplementation((key: string) => key !== "kb:pages:update");
+    usePageState.mockReturnValue({ kind: "ready" });
+    useKbPagesTrash.mockReturnValue({ data: nonEmptyListResponse, isLoading: false, isError: false, error: null, refetch: jest.fn() });
+    render(<TrashPage />);
+    const table = DataTable as jest.Mock;
+    act(() => table.mock.calls.at(-1)?.[0].selection.onChange(new Set(["9", "10"])));
+
+    expect(screen.queryByRole("button", { name: "Restore 2" })).not.toBeInTheDocument();
+  });
+
   it("reports only restored pages and retains failed selections after a partial restore", () => {
     const mutate = jest.fn();
     useKbBulkRestorePages.mockReturnValue({ mutate, isPending: false });
@@ -388,16 +399,22 @@ describe("trash bulk purge impact confirmation", () => {
   });
 });
 
+async function openTrashFilters() {
+  await userEvent.click(screen.getByRole("button", { name: /^Filters/ }));
+}
+
 describe("trash page deleted-by filter", () => {
-  it("renders a member select for deleted-by, so the backend deletedByMembershipId param has a named frontend writer", () => {
+  it("renders a member select for deleted-by, so the backend deletedByMembershipId param has a named frontend writer", async () => {
     render(<TrashPage />);
+    await openTrashFilters();
     expect(
       screen.getByRole("combobox", { name: /deleted by member/i }),
     ).toBeInTheDocument();
   });
 
-  it("member select shows member names so raw IDs are never visible on screen", () => {
+  it("member select shows member names so raw IDs are never visible on screen", async () => {
     render(<TrashPage />);
+    await openTrashFilters();
     expect(screen.getByText("All members")).toBeInTheDocument();
   });
 
@@ -421,10 +438,11 @@ describe("trash page deleted-by filter", () => {
     );
   });
 
-  it("searches the member directory so choices are not limited to its first page", () => {
+  it("searches the member directory so choices are not limited to its first page", async () => {
+    render(<TrashPage />);
+    await openTrashFilters();
     jest.useFakeTimers();
     try {
-      render(<TrashPage />);
       fireEvent.change(screen.getByRole("searchbox", { name: "Find member" }), {
         target: { value: "Zoe" },
       });
@@ -437,15 +455,17 @@ describe("trash page deleted-by filter", () => {
 });
 
 describe("trash page space filter", () => {
-  it("renders a space select, so the backend spaceId param has a frontend writer", () => {
+  it("renders a space select, so the backend spaceId param has a frontend writer", async () => {
     render(<TrashPage />);
+    await openTrashFilters();
     expect(
       screen.getByRole("combobox", { name: /team folder/i }),
     ).toBeInTheDocument();
   });
 
-  it("space select shows space names so raw IDs are never visible on screen", () => {
+  it("space select shows space names so raw IDs are never visible on screen", async () => {
     render(<TrashPage />);
+    await openTrashFilters();
     expect(screen.getByText("All team folders")).toBeInTheDocument();
   });
 
@@ -469,17 +489,19 @@ describe("trash page space filter", () => {
 });
 
 describe("trash page date filter", () => {
-  it("renders a deletedFrom date input so the backend date range has a frontend writer", () => {
+  it("renders a deletedFrom date input so the backend date range has a frontend writer", async () => {
     render(<TrashPage />);
+    await openTrashFilters();
     expect(screen.getByLabelText(/deleted from/i)).toBeInTheDocument();
   });
 
-  it("renders an inclusive deleted-through date input", () => {
+  it("renders an inclusive deleted-through date input", async () => {
     render(<TrashPage />);
+    await openTrashFilters();
     expect(screen.getByLabelText(/deleted through/i)).toBeInTheDocument();
   });
 
-  it("writes date-only filters to the URL and resets pagination", () => {
+  it("writes date-only filters to the URL and resets pagination", async () => {
     const update = jest.fn();
     const reset = jest.fn();
     const { useUrlFilters } = jest.requireMock("@/lib/url-state/use-url-filters") as {
@@ -496,6 +518,7 @@ describe("trash page date filter", () => {
     });
 
     render(<TrashPage />);
+    await openTrashFilters();
     fireEvent.change(screen.getByLabelText(/deleted from/i), {
       target: { value: "2026-06-01" },
     });
@@ -508,12 +531,13 @@ describe("trash page date filter", () => {
     expect(reset).toHaveBeenCalledTimes(2);
   });
 
-  it("sends local-day boundaries with an exclusive next-day upper bound", () => {
+  it("sends local-day boundaries with an exclusive next-day upper bound", async () => {
     useSearchParams.mockReturnValue(new URLSearchParams(
       "deletedFrom=2026-06-01&deletedBefore=2026-06-30",
     ));
 
     render(<TrashPage />);
+    await openTrashFilters();
 
     const from = new Date(2026, 5, 1);
     const afterThroughDay = new Date(2026, 6, 1);

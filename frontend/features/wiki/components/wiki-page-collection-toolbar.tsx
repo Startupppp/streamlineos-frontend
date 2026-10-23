@@ -59,7 +59,6 @@ interface WikiPageCollectionToolbarProps {
   showSpaceFilter: boolean;
   sort: string;
   view: CollectionView;
-  documentCountLabel: string | null;
   activeFilterCount: number;
   onStatusChange: (value: string) => void;
   onKindChange: (value: string) => void;
@@ -205,7 +204,6 @@ export function WikiPageCollectionToolbar({
   showSpaceFilter,
   sort,
   view,
-  documentCountLabel,
   activeFilterCount,
   onStatusChange,
   onKindChange,
@@ -286,18 +284,12 @@ export function WikiPageCollectionToolbar({
         </ResponsivePopoverContent>
       </ResponsivePopover>
 
-      <div className="ml-auto flex shrink-0 items-center gap-2">
-        {documentCountLabel !== null && (
-          <span className="text-sm text-muted-foreground tabular-nums">
-            {documentCountLabel}
-          </span>
-        )}
-        <ViewToggle
-          value={view}
-          options={VIEW_OPTIONS}
-          onChange={onViewChange}
-        />
-      </div>
+      <ViewToggle
+        value={view}
+        options={VIEW_OPTIONS}
+        onChange={onViewChange}
+        className="ml-auto"
+      />
     </>
   );
 }

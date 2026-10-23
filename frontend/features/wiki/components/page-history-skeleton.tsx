@@ -9,7 +9,7 @@ export function PageHistorySkeleton() {
           <Skeleton className="h-7 w-20 rounded-md" />
         </div>
         <div className="grid min-h-0 flex-1 auto-rows-[minmax(3.5rem,1fr)] gap-2 overflow-hidden p-3">
-          {Array.from({ length: 10 }, (_, index) => (
+          {Array.from({ length: 18 }, (_, index) => (
             <Skeleton key={index} className="h-full min-h-0 w-full rounded-md" />
           ))}
         </div>
@@ -17,7 +17,7 @@ export function PageHistorySkeleton() {
       <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 overflow-hidden rounded-xl border border-border bg-card p-4">
         <Skeleton className="h-5 w-36 shrink-0" />
         <div className="grid min-h-0 flex-1 auto-rows-[1rem] content-start gap-3 overflow-hidden">
-          {Array.from({ length: 20 }, (_, index) => (
+          {Array.from({ length: 48 }, (_, index) => (
             <Skeleton key={index} className={index % 4 === 3 ? "h-4 w-3/5" : "h-4 w-full"} />
           ))}
         </div>

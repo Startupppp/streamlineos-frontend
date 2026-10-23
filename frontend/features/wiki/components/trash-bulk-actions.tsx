@@ -83,6 +83,7 @@ export function reportTrashBulkResult(
 interface TrashBulkActionsProps {
   selectedCount: number;
   pageCount: number;
+  canRestore: boolean;
   canPurge: boolean;
   canManageSettings: boolean;
   restoring: boolean;
@@ -96,6 +97,7 @@ interface TrashBulkActionsProps {
 export function TrashBulkActions({
   selectedCount,
   pageCount,
+  canRestore,
   canPurge,
   canManageSettings,
   restoring,
@@ -109,16 +111,18 @@ export function TrashBulkActions({
     <div className="flex items-center gap-2">
       {selectedCount > 0 && (
         <>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={onRestore}
-            disabled={restoring}
-          >
-            <KbRotateCcwIcon className="mr-1.5 h-3.5 w-3.5" />
-            Restore {selectedCount}
-          </Button>
+          {canRestore && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={onRestore}
+              disabled={restoring}
+            >
+              <KbRotateCcwIcon className="mr-1.5 h-3.5 w-3.5" />
+              Restore {selectedCount}
+            </Button>
+          )}
           {canPurge && (
             <Button
               type="button"

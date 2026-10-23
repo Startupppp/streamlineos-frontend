@@ -147,7 +147,7 @@ export default function CompanyDocumentDetailPage({ linkedDocumentId }: CompanyD
         onRetry={handleRetry}
       >
         {entry ? (
-          <div className="flex flex-col gap-6">
+          <div className="flex min-h-0 flex-1 flex-col gap-6">
             {openFailure !== null ? (
               <Alert variant="destructive">
                 <AlertTitle>The file could not be opened</AlertTitle>

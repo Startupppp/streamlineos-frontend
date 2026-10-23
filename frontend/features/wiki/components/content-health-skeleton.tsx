@@ -19,7 +19,7 @@ export function ContentHealthSkeleton() {
       </div>
       <Skeleton className="h-16 shrink-0 rounded-xl" />
       <div className="grid min-h-0 flex-1 auto-rows-[minmax(2.75rem,1fr)] divide-y divide-border/60 overflow-hidden rounded-xl border border-border bg-card">
-        {Array.from({ length: 12 }, (_, index) => (
+        {Array.from({ length: 24 }, (_, index) => (
           <SignalRowSkeleton key={index} />
         ))}
       </div>
