@@ -116,6 +116,7 @@ export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipient
                     scale={scale}
                     color={recipientColor(idx)}
                     isSelected={selectedFieldId === field.id}
+                    editable={editable}
                     onSelect={() => setSelectedFieldId(field.id)}
                     onMove={(x, y) => handleMove(field.id, x, y)}
                     onResize={(w, h) => handleResize(field.id, w, h)}
