@@ -32,35 +32,35 @@ const SprintCard = dynamic(
     import("@/features/dashboard/sprint-card").then((m) => ({
       default: m.SprintCard,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const TeamCard = dynamic(
   () =>
     import("@/features/dashboard/team-card").then((m) => ({
       default: m.TeamCard,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="activity" /> },
 );
 const MyIssuesCard = dynamic(
   () =>
     import("@/features/dashboard/my-issues-card").then((m) => ({
       default: m.MyIssuesCard,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={4} variant="list" /> },
 );
 const RecentProjectsCard = dynamic(
   () =>
     import("@/features/dashboard/recent-projects-card").then((m) => ({
       default: m.RecentProjectsCard,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const RecentActivityCard = dynamic(
   () =>
     import("@/features/dashboard/recent-activity-card").then((m) => ({
       default: m.RecentActivityCard,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={4} variant="activity" /> },
 );
 
 const LeavesTodayWidget = dynamic(
@@ -68,35 +68,35 @@ const LeavesTodayWidget = dynamic(
     import("@/features/dashboard/hr-widgets").then((m) => ({
       default: m.LeavesTodayWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const TeamAttendanceWidget = dynamic(
   () =>
     import("@/features/dashboard/hr-widgets").then((m) => ({
       default: m.TeamAttendanceWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="activity" /> },
 );
 const PendingApprovalsWidget = dynamic(
   () =>
     import("@/features/dashboard/hr-widgets").then((m) => ({
       default: m.PendingApprovalsWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const BirthdaysWidget = dynamic(
   () =>
     import("@/features/dashboard/hr-widgets").then((m) => ({
       default: m.BirthdaysWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="activity" /> },
 );
 const UpcomingHolidaysWidget = dynamic(
   () =>
     import("@/features/dashboard/hr-widgets").then((m) => ({
       default: m.UpcomingHolidaysWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 
 interface DashboardDeferredBodyProps {
@@ -248,10 +248,14 @@ export function DashboardDeferredBody({
     <DeferredDashboardContent
       onVisible={handleDeferredVisible}
       fallback={
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          <WidgetSkeleton rows={3} />
-          <WidgetSkeleton rows={3} />
-          <WidgetSkeleton rows={3} />
+        <div className="grid min-w-0 grid-cols-1 gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <WidgetSkeleton rows={4} variant="list" />
+          <WidgetSkeleton rows={3} variant="list" />
+          <WidgetSkeleton
+            rows={4}
+            variant="activity"
+            className="hidden md:flex"
+          />
         </div>
       }
     >

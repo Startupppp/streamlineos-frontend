@@ -78,13 +78,14 @@ export function FocusStrip({ access }: FocusStripProps) {
   if (isLoading) {
     return (
       <div
-        className="flex items-center gap-2"
+        className="flex min-w-0 flex-wrap items-center gap-2"
         role="status"
         aria-label="Loading your attention items"
       >
-        <Skeleton className="h-7 w-36 rounded-full" />
-        <Skeleton className="h-7 w-28 rounded-full" />
-        <Skeleton className="h-7 w-32 rounded-full" />
+        <Skeleton className="h-7 w-[9.5rem] max-w-full rounded-full sm:w-36" />
+        <Skeleton className="h-7 w-[8.5rem] max-w-full rounded-full sm:w-28" />
+        <Skeleton className="h-7 w-[7.5rem] max-w-full rounded-full sm:w-32" />
+        <Skeleton className="hidden h-7 w-24 rounded-full sm:block" />
       </div>
     );
   }

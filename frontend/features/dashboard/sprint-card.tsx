@@ -56,10 +56,15 @@ export const SprintCard = memo(function SprintCard({ summary, isLoading, error, 
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-6 w-48" />
-            <Skeleton className="h-4 w-full" />
-            <Skeleton className="h-20 w-full" />
+          <div className="space-y-3" aria-hidden="true">
+            <Skeleton className="h-5 w-40" />
+            <Skeleton className="h-3 w-full" />
+            <Skeleton className="h-2 w-full rounded-full" />
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              <Skeleton className="h-12 rounded-lg" />
+              <Skeleton className="h-12 rounded-lg" />
+              <Skeleton className="h-12 rounded-lg" />
+            </div>
           </div>
         ) : error ? (
           <div className="space-y-2 py-2">

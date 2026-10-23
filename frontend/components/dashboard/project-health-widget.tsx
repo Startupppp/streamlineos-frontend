@@ -1,6 +1,7 @@
 "use client";
 
 import { WidgetCard } from "@/components/ui/widget-card";
+import { WidgetSkeleton } from "@/components/dashboard/widget-skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { useCrmPulse } from "@/hooks/api/dashboard";
@@ -13,14 +14,7 @@ export function BusinessPulseWidget() {
 
   if (crmState === "loading")
     return (
-      <WidgetCard
-        className="h-auto"
-        contentClassName="flex-none py-3"
-        icon={FolderKanban}
-        title="Business Pulse"
-        isLoading
-        loadingRows={1}
-      />
+      <WidgetSkeleton variant="pulse" className="h-auto" />
     );
   if (crmState === "denied" || !crmEnabled)
     return <NoPermissionState permission="crm:leads:view" compact />;
@@ -39,6 +33,10 @@ function BusinessPulseCard() {
 
   const handleRetry = () => void refetch();
 
+  if (isLoading && !data && !error) {
+    return <WidgetSkeleton variant="pulse" className="h-auto" />;
+  }
+
   return (
     <WidgetCard
       className="h-auto"
@@ -49,8 +47,6 @@ function BusinessPulseCard() {
           ? undefined
           : { href: "/crm/leads", label: "View pipeline", ariaLabel: "View CRM pipeline" }
       }
-      isLoading={isLoading}
-      loadingRows={1}
       error={error}
       onRetry={handleRetry}
       contentClassName="flex-none py-3"

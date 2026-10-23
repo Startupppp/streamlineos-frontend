@@ -43,9 +43,19 @@ export const TeamCard = memo(function TeamCard({ members, isLoading, error, onRe
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden flex flex-col px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
-          <div className="space-y-3 overflow-y-auto">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-12 w-full" />
+          <div className="space-y-1.5 overflow-y-auto" aria-hidden="true">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={i}
+                className={`flex min-w-0 items-center gap-2 rounded-lg border border-border/60 px-2 py-2 sm:gap-3${i >= 3 ? " hidden sm:flex" : ""}`}
+              >
+                <Skeleton className="h-7 w-7 shrink-0 rounded-full sm:h-8 sm:w-8" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-[55%] max-w-[10rem]" />
+                  <Skeleton className="h-3 w-[35%] max-w-[6rem]" />
+                </div>
+                <Skeleton className="hidden h-5 w-14 shrink-0 rounded-full sm:block" />
+              </div>
             ))}
           </div>
         ) : error ? (

@@ -42,9 +42,18 @@ export const RecentProjectsCard = memo(function RecentProjectsCard({ projects, i
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={`proj-skel-${i}`} className="h-14 w-full" />
+          <div className="space-y-1.5" aria-hidden="true">
+            {[1, 2, 3, 4].map((i) => (
+              <div
+                key={`proj-skel-${i}`}
+                className={`flex min-w-0 items-center gap-2 rounded-lg border border-border/60 p-2 sm:gap-3${i >= 3 ? " hidden sm:flex" : ""}`}
+              >
+                <Skeleton className="h-4 w-4 shrink-0 rounded" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-[65%] max-w-[12rem]" />
+                  <Skeleton className="h-3 w-[40%] max-w-[8rem]" />
+                </div>
+              </div>
             ))}
           </div>
         ) : error ? (

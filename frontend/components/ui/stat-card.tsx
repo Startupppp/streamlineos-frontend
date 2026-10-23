@@ -220,21 +220,21 @@ export function StatCardSkeleton({
     <div
       data-slot="stat-card"
       className={cn(
-        "relative flex h-full items-start gap-3 overflow-hidden rounded-xl border border-border/80 bg-card px-3.5 py-3 shadow-sm",
+        "relative flex h-full min-w-0 items-start gap-2 overflow-hidden rounded-xl border border-border/80 bg-card px-2.5 py-2.5 shadow-sm sm:gap-3 sm:px-3.5 sm:py-3",
         className,
       )}
     >
       <div
         aria-hidden="true"
         className={cn(
-          "mt-0.5 h-9 w-9 shrink-0 rounded-lg border",
+          "mt-0.5 h-8 w-8 shrink-0 rounded-lg border sm:h-9 sm:w-9",
           wash.surface,
           wash.rule,
         )}
       />
       <div className="relative min-w-0 flex-1 space-y-0.5">
-        <Skeleton className="h-5 w-20" />
-        <Skeleton className="h-5 w-12" />
+        <Skeleton className="h-4 w-14 sm:h-5 sm:w-20" />
+        <Skeleton className="h-4 w-10 sm:h-5 sm:w-12" />
       </div>
     </div>
   );

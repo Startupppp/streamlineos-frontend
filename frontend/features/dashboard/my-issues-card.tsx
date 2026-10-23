@@ -14,6 +14,7 @@ import { getErrorMessage } from "@/lib/get-error-message";
 import { getColorSafe, priorityColors } from "@/lib/theme-constants";
 import { isTicketType, typeIcons, DEFAULT_TICKET_ICON } from "./ticket-types";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { cn } from "@/lib/utils";
 
 const MAX_VISIBLE_TICKETS = 10;
 
@@ -52,9 +53,22 @@ export const MyIssuesCard = memo(function MyIssuesCard({ tickets, isLoading, err
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <Skeleton key={`ticket-skel-${i}`} className="h-14 w-full" />
+          <div className="space-y-1.5" aria-hidden="true">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={`ticket-skel-${i}`}
+                className={cn(
+                  "flex min-w-0 items-center gap-2 rounded-lg border border-border/60 p-2 sm:gap-3",
+                  i >= 3 && "hidden sm:flex",
+                )}
+              >
+                <Skeleton className="h-4 w-4 shrink-0 rounded" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-[75%] max-w-[12rem]" />
+                  <Skeleton className="h-3 w-[40%] max-w-[8rem]" />
+                </div>
+                <Skeleton className="hidden h-5 w-12 shrink-0 rounded-full sm:block" />
+              </div>
             ))}
           </div>
         ) : error ? (

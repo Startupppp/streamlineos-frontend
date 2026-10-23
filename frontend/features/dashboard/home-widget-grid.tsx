@@ -24,70 +24,70 @@ const LeaveBalanceWidget = dynamic(
     import("@/features/dashboard/hr-widgets").then((m) => ({
       default: m.LeaveBalanceWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const MyAttendanceWidget = dynamic(
   () =>
     import("@/features/dashboard/my-attendance-widget").then((m) => ({
       default: m.MyAttendanceWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const PayrollWidget = dynamic(
   () =>
     import("@/features/dashboard/payroll-widget").then((m) => ({
       default: m.PayrollWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const AlertsWidget = dynamic(
   () =>
     import("@/features/dashboard/alerts-widget").then((m) => ({
       default: m.AlertsWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const MyTasksWidget = dynamic(
   () =>
     import("@/components/dashboard/my-tasks-widget").then((m) => ({
       default: m.MyTasksWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={4} variant="list" /> },
 );
 const TimesheetWidget = dynamic(
   () =>
     import("@/components/dashboard/timesheet-widget").then((m) => ({
       default: m.TimesheetWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const AnnouncementsWidget = dynamic(
   () =>
     import("@/components/dashboard/announcements-widget").then((m) => ({
       default: m.AnnouncementsWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const UpcomingEventsWidget = dynamic(
   () =>
     import("@/components/dashboard/upcoming-events-widget").then((m) => ({
       default: m.UpcomingEventsWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="list" /> },
 );
 const BusinessPulseWidget = dynamic(
   () =>
     import("@/components/dashboard/project-health-widget").then((m) => ({
       default: m.BusinessPulseWidget,
     })),
-  { loading: () => <WidgetSkeleton rows={2} /> },
+  { loading: () => <WidgetSkeleton variant="pulse" className="h-auto" /> },
 );
 const TodayActivitiesWidget = dynamic(
   () =>
     import("@/components/dashboard/today-activities-widget").then((m) => ({
       default: m.TodayActivitiesWidget,
     })),
-  { ssr: false, loading: () => <WidgetSkeleton rows={3} /> },
+  { ssr: false, loading: () => <WidgetSkeleton rows={3} variant="activity" /> },
 );
 
 export interface HomeWidgetGridProps {

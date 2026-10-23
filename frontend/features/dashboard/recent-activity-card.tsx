@@ -12,7 +12,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { EmptyActivityIllustration } from "@/components/illustrations";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { resolveImageUrl } from "@/lib/utils";
+import { cn, resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { getInitials } from "@/lib/format-utils";
 import { formatDistanceToNow } from "date-fns";
@@ -53,9 +53,21 @@ export const RecentActivityCard = memo(function RecentActivityCard({ items, isLo
       </CardHeader>
       <CardContent className="flex-1 overflow-hidden px-4 pt-0 pb-4" aria-live="polite">
         {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <Skeleton key={`activity-skel-${i}`} className="h-14 w-full" />
+          <div className="space-y-1.5" aria-hidden="true">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={`activity-skel-${i}`}
+                className={cn(
+                  "flex min-w-0 items-center gap-2 rounded-lg border border-border/60 p-2 sm:gap-3",
+                  i >= 3 && "hidden sm:flex",
+                )}
+              >
+                <Skeleton className="h-7 w-7 shrink-0 rounded-full sm:h-8 sm:w-8" />
+                <div className="min-w-0 flex-1 space-y-1.5">
+                  <Skeleton className="h-3.5 w-[70%] max-w-[12rem]" />
+                  <Skeleton className="h-3 w-[35%] max-w-[7rem]" />
+                </div>
+              </div>
             ))}
           </div>
         ) : error ? (
