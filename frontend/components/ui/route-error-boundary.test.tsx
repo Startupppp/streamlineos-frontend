@@ -151,3 +151,20 @@ describe("access denials that escape a query render the shared page state instea
     expect(screen.getByRole("link", { name: /modules/i })).toBeInTheDocument();
   });
 });
+
+describe("route error page reference", () => {
+  it("shows the correlation id of a failed API read so support can find the real exception", () => {
+    const error = new ApiError("Survey not found", 500, "INTERNAL", { correlationId: "corr-route-1" });
+    render(<RouteErrorBoundary error={error} reset={jest.fn()} />);
+
+    expect(screen.getByRole("heading", { name: "Something went wrong" })).toBeInTheDocument();
+    expect(screen.getByText("corr-route-1")).toBeInTheDocument();
+  });
+
+  it("shows no reference line for an error that carries none (control)", () => {
+    render(<RouteErrorBoundary error={new Error("boom")} reset={jest.fn()} />);
+
+    expect(screen.getByRole("heading", { name: "Something went wrong" })).toBeInTheDocument();
+    expect(screen.queryByText("Reference")).not.toBeInTheDocument();
+  });
+});

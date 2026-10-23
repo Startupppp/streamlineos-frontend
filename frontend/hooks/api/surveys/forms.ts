@@ -7,6 +7,7 @@ import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const surveyFormListC = lazyContract(() =>
   import("./survey-forms-schema").then((m) => m.surveyFormListContract),
@@ -102,6 +103,7 @@ export function useSurveys(params?: ListSurveysParams) {
     queryFn: async ({ signal }) =>
       (await apiClient.get<OffsetPage<SurveyForm>>("/surveys", params, signal, surveyFormListC)).items,
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -111,6 +113,7 @@ export function useSurvey(surveyId: number | undefined) {
     queryFn: ({ signal }) => apiClient.get<SurveyForm>(`/surveys/${surveyId}`, undefined, signal, surveyFormRowC),
     enabled: typeof surveyId === "number",
     staleTime: 15_000,
+    ...INLINE_READ_ERROR,
   });
 }
 

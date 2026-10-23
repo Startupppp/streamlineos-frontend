@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClientProvider, type QueryClient } from "@tanstack/react-query";
 import { createAppQueryClient } from "@/components/providers/query-provider";
-import { ApiError } from "@/lib/api-envelope";
+import { ApiContractError, ApiError } from "@/lib/api-envelope";
 import { queryKeys } from "@/lib/query-keys";
 import { authenticatedScope } from "@/lib/query-scope";
 import type { AccessResponse } from "@/types/access";
@@ -214,6 +214,27 @@ describe("the surveys list renders only what the current filter returned", () =>
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(screen.getByText("Survey list is unavailable")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /try again/i })).toBeInTheDocument();
+    expect(screen.queryByText(/no surveys/i)).not.toBeInTheDocument();
+  });
+
+  it("keeps the page usable and shows a reference when the list fails its response contract, instead of crashing to the route error page", async () => {
+    mockedGet.mockImplementation((path: string) =>
+      path === "/surveys"
+        ? Promise.reject(
+            new ApiContractError("/surveys", 200, [{ path: "items.0.ownerMembershipId", message: "Invalid input" }], "corr-f12"),
+          )
+        : never(),
+    );
+    const client = createAppQueryClient(authenticatedScope(ORG_ID, USER_ID));
+    const defaults = client.getDefaultOptions();
+    client.setDefaultOptions({ ...defaults, queries: { ...defaults.queries, retry: false } });
+    client.setQueryData(queryKeys.access.me(), VIEWER_ACCESS);
+
+    renderPage(client);
+
+    expect(await screen.findByRole("alert")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: "Surveys" })).toBeInTheDocument();
+    expect(screen.getByText("corr-f12")).toBeInTheDocument();
     expect(screen.queryByText(/no surveys/i)).not.toBeInTheDocument();
   });
 });
