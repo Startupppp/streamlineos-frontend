@@ -14,6 +14,8 @@ export function BusinessPulseWidget() {
   if (crmState === "loading")
     return (
       <WidgetCard
+        className="h-auto"
+        contentClassName="flex-none py-3"
         icon={FolderKanban}
         title="Business Pulse"
         isLoading
@@ -39,6 +41,7 @@ function BusinessPulseCard() {
 
   return (
     <WidgetCard
+      className="h-auto"
       icon={FolderKanban}
       title="Business Pulse"
       link={
@@ -50,7 +53,7 @@ function BusinessPulseCard() {
       loadingRows={1}
       error={error}
       onRetry={handleRetry}
-      contentClassName="pb-0"
+      contentClassName="flex-none py-3"
     >
       <StatCardGrid cols={2}>
         <StatCard

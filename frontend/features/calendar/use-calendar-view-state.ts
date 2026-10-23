@@ -55,7 +55,8 @@ export function useCalendarViewState(timeZone: string = readerTimeZone()) {
   } | null>(null);
   const [createOpenState, setCreateOpenState] = useState(false);
   const [hasMountedCreate, setHasMountedCreate] = useState(false);
-  const [accountsOpen, setAccountsOpen] = useState(false);
+  const [accountsOpenState, setAccountsOpenState] = useState(false);
+  const accountsOpen = accountsOpenState || searchParams.get("accounts") === "1";
 
   const navigate = useCallback(
     (
@@ -261,8 +262,11 @@ export function useCalendarViewState(timeZone: string = readerTimeZone()) {
       }),
     );
   }, []);
-  const handleOpenAccounts = useCallback(() => setAccountsOpen(true), []);
-  const handleCloseAccounts = useCallback(() => setAccountsOpen(false), []);
+  const handleOpenAccounts = useCallback(() => setAccountsOpenState(true), []);
+  const handleCloseAccounts = useCallback(() => {
+    setAccountsOpenState(false);
+    if (searchParams.get("accounts") === "1") navigate({ accounts: null }, "replace");
+  }, [navigate, searchParams]);
   return {
     currentDate,
     setCurrentDate,
@@ -286,7 +290,7 @@ export function useCalendarViewState(timeZone: string = readerTimeZone()) {
     setSourceVisibility,
     setHistoryPages,
     accountsOpen,
-    setAccountsOpen,
+    setAccountsOpen: setAccountsOpenState,
     isCalendarOverlayOpen,
     guardedSelectSlot,
     handleOpenCreate,

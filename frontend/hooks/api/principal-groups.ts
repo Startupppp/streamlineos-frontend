@@ -99,8 +99,18 @@ export function useCreateGroup() {
   return useAuthorizedMutation<PrincipalGroup, Error, { name: string }>("settings:rbac:manage", {
     mutationKey: ["principalGroups", "create"],
     mutationFn: (data) => apiClient.post<PrincipalGroup>("/principal-groups", data, undefined, principalGroupContract),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
+    onSuccess: (created) => {
+      queryClient.setQueriesData<PaginatedGroupsResponse>(
+        { queryKey: accessAndCrmQueryKeys.principalGroups.list() },
+        (prev) =>
+          prev && !prev.data.some((g) => g.id === created.id)
+            ? { ...prev, data: [created, ...prev.data] }
+            : prev,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: accessAndCrmQueryKeys.principalGroups.list(),
+        refetchType: "none",
+      });
     },
   });
 }
@@ -111,8 +121,18 @@ export function useRenameGroup(groupId: string) {
     mutationKey: ["principalGroups", "rename", groupId],
     mutationFn: (data) =>
       apiClient.patch<{ success: true }>(`/principal-groups/${groupId}`, data, undefined, principalGroupSuccessContract),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
+    onSuccess: (_data, variables) => {
+      queryClient.setQueriesData<PaginatedGroupsResponse>(
+        { queryKey: accessAndCrmQueryKeys.principalGroups.list() },
+        (prev) =>
+          prev
+            ? { ...prev, data: prev.data.map((g) => (g.id === groupId ? { ...g, name: variables.name } : g)) }
+            : prev,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: accessAndCrmQueryKeys.principalGroups.list(),
+        refetchType: "none",
+      });
     },
   });
 }
@@ -128,8 +148,18 @@ export function useDeleteGroup() {
         `/principal-groups/${groupId}`,
         undefined, undefined, principalGroupSuccessContract,
       ),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.all });
+    onSuccess: (_data, variables) => {
+      queryClient.setQueriesData<PaginatedGroupsResponse>(
+        { queryKey: accessAndCrmQueryKeys.principalGroups.list() },
+        (prev) =>
+          prev
+            ? { ...prev, data: prev.data.filter((g) => g.id !== variables.groupId) }
+            : prev,
+      );
+      void queryClient.invalidateQueries({
+        queryKey: accessAndCrmQueryKeys.principalGroups.list(),
+        refetchType: "none",
+      });
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
       if (orgId) signalAccessInvalidation(orgId);
     },
@@ -146,7 +176,13 @@ export function useAddGroupMember(groupId: string) {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.members(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
+      queryClient.setQueriesData<PaginatedGroupsResponse>(
+        { queryKey: accessAndCrmQueryKeys.principalGroups.list() },
+        (prev) =>
+          prev
+            ? { ...prev, data: prev.data.map((g) => (g.id === groupId ? { ...g, memberCount: g.memberCount + 1 } : g)) }
+            : prev,
+      );
     },
   });
 }
@@ -164,7 +200,13 @@ export function useRemoveGroupMember(groupId: string) {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.members(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
+      queryClient.setQueriesData<PaginatedGroupsResponse>(
+        { queryKey: accessAndCrmQueryKeys.principalGroups.list() },
+        (prev) =>
+          prev
+            ? { ...prev, data: prev.data.map((g) => (g.id === groupId ? { ...g, memberCount: Math.max(0, g.memberCount - 1) } : g)) }
+            : prev,
+      );
     },
   });
 }
@@ -177,11 +219,17 @@ export function useAssignGroupRole(groupId: string) {
     mutationKey: ["principalGroups", "assign-role", groupId],
     mutationFn: ({ roleId }) =>
       apiClient.post<{ success: true }>(`/principal-groups/${groupId}/roles`, { roleId }, undefined, principalGroupSuccessContract),
-    onSuccess: (_, { memberCount }) => {
+    onSuccess: (_data, { memberCount }) => {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
+      queryClient.setQueriesData<PaginatedGroupsResponse>(
+        { queryKey: accessAndCrmQueryKeys.principalGroups.list() },
+        (prev) =>
+          prev
+            ? { ...prev, data: prev.data.map((g) => (g.id === groupId ? { ...g, roleCount: g.roleCount + 1 } : g)) }
+            : prev,
+      );
       if ((memberCount ?? 0) > 0) {
         void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
         if (orgId) signalAccessInvalidation(orgId);
@@ -205,7 +253,13 @@ export function useUnassignGroupRole(groupId: string) {
       void queryClient.invalidateQueries({
         queryKey: accessAndCrmQueryKeys.principalGroups.roles(groupId),
       });
-      void queryClient.invalidateQueries({ queryKey: accessAndCrmQueryKeys.principalGroups.list() });
+      queryClient.setQueriesData<PaginatedGroupsResponse>(
+        { queryKey: accessAndCrmQueryKeys.principalGroups.list() },
+        (prev) =>
+          prev
+            ? { ...prev, data: prev.data.map((g) => (g.id === groupId ? { ...g, roleCount: Math.max(0, g.roleCount - 1) } : g)) }
+            : prev,
+      );
       void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.access.me() });
       if (orgId) signalAccessInvalidation(orgId);
     },

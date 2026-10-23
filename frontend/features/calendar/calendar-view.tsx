@@ -498,10 +498,15 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
   const shellVariant = useShellVariant();
   const narrowViewport = useIsMobile();
   const isMobile = shellVariant === "mobile" || narrowViewport;
-  useEffect(() => {
-    if (isMobile && viewMode === "calendar" && !savedFilterId)
-      setViewMode("list");
-  }, [isMobile, savedFilterId, setViewMode, viewMode]);
+  const toolbarViewMode = isMobile && viewMode === "calendar" && !savedFilterId ? "list" as const : viewMode;
+
+  const handleViewModeChange = useCallback(
+    (next: typeof viewMode) => {
+      if (isMobile && next === "calendar" && !savedFilterId) return;
+      setViewMode(next);
+    },
+    [isMobile, savedFilterId, setViewMode],
+  );
 
   const toggleHrEvents = useCallback(
     () => setSourceVisibility("hr", !hrEventsVisible),
@@ -900,9 +905,6 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
     void loadEventCreateDialog();
   }, []);
 
-  useEffect(() => {
-    if (searchParams.get("accounts") === "1") setAccountsOpen(true);
-  }, [searchParams, setAccountsOpen]);
 
   if (online && calendarAccess.pending)
     return <CalendarListFallback label="Checking Calendar access" />;
@@ -1055,7 +1057,7 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
       <div className="relative flex min-h-0 flex-1 flex-col gap-3">
         <CalendarToolbar
           view={displayedGridView}
-          viewMode={viewMode}
+          viewMode={toolbarViewMode}
           hrEventsVisible={hrEventsVisible}
           crmEventsVisible={crmEventsVisible}
           attendanceEventsVisible={attendanceEventsVisible}
@@ -1067,7 +1069,7 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
           onNext={handleNext}
           onToday={handleToday}
           onViewChange={handleGridViewChange}
-          onViewModeChange={setViewMode}
+          onViewModeChange={handleViewModeChange}
           onOpenResourceApprovals={onOpenResourceApprovals}
           onOpenCreate={handleOpenCreate}
           onToggleHrEvents={toggleHrEvents}
@@ -1080,14 +1082,14 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
           hidePrimaryActions
           navigationDisabled={Boolean(selectedSavedView)}
           filters={
-            viewMode !== "history" ? (
+            toolbarViewMode !== "history" ? (
               <CalendarSavedViewControls
                 selectedId={savedFilterId}
                 currentDate={currentDate}
-                mode={viewMode}
-                search={savedViewActive ? myDaySearch : viewMode === "list" ? listSearch : undefined}
-                onSearchChange={savedViewActive ? setMyDaySearch : viewMode === "list" ? setListSearch : setMyDaySearch}
-                sources={viewMode === "list" && !savedViewActive ? listSourceOptions : undefined}
+                mode={toolbarViewMode}
+                search={savedViewActive ? myDaySearch : toolbarViewMode === "list" ? listSearch : undefined}
+                onSearchChange={savedViewActive ? setMyDaySearch : toolbarViewMode === "list" ? setListSearch : setMyDaySearch}
+                sources={toolbarViewMode === "list" && !savedViewActive ? listSourceOptions : undefined}
                 source={listSource}
                 onSourceChange={handleListSourceChange}
               />

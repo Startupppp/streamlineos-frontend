@@ -49,6 +49,29 @@ describe("renderFormattedContent ticket keys", () => {
   });
 });
 
+describe("renderFormattedContent — CHAT-002 HTML content round-trip", () => {
+  it("preserves the full closing tag including trailing > for a script tag", () => {
+    const { container } = render(
+      <div>{renderFormattedContent("<script>alert(1)</script>", false)}</div>,
+    );
+    expect(container.textContent).toBe("<script>alert(1)</script>");
+  });
+
+  it("preserves the trailing > on a bare closing tag like </b>", () => {
+    const { container } = render(
+      <div>{renderFormattedContent("</b>", false)}</div>,
+    );
+    expect(container.textContent).toBe("</b>");
+  });
+
+  it("preserves angle brackets embedded in prose", () => {
+    const { container } = render(
+      <div>{renderFormattedContent("if a<b and c>d then ok", false)}</div>,
+    );
+    expect(container.textContent).toBe("if a<b and c>d then ok");
+  });
+});
+
 describe("renderFormattedContent — CHAT-S04 nested emphasis", () => {
   it("renders *** as bold italic instead of printing the markers", () => {
     const { container } = render(

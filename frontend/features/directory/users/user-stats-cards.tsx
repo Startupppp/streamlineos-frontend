@@ -11,7 +11,7 @@ export const UserStatsCards = memo(function UserStatsCards() {
   return (
     <StatCardGrid cols={5}>
       <StatCard
-        label="Total Users"
+        label="Workspace members"
         value={data?.total ?? 0}
         icon={Users}
         tone="default"

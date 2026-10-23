@@ -7,6 +7,7 @@ import { apiClient } from "@/lib/api-client";
 import { usersAndCommerceQueryKeys } from "@/lib/query-keys/users-and-commerce";
 import { invalidatePersonAccountAccess } from "./cache";
 import type {
+  Invitation,
   InvitationsListParams,
   InvitationsResponse,
   InviteUserPayload,
@@ -67,9 +68,50 @@ export const useInviteUser = () => {
         operation.configFor(invitation),
         inviteUserContract,
       ),
-    onSuccess: () => {
+    onSuccess: (data, variables) => {
+      const email = variables.email.trim().toLowerCase();
+      const now = new Date();
+      const syntheticItem: Invitation = {
+        id: data.invitationId,
+        email,
+        role: variables.role,
+        expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        acceptedAt: null,
+        createdAt: now.toISOString(),
+        status: "PENDING",
+        revokedAt: null,
+        declinedAt: null,
+        moduleAccess: variables.moduleAccess ?? [],
+        deliveryFailed: false,
+      };
+      queryClient.setQueriesData<InvitationsResponse>(
+        { queryKey: usersAndCommerceQueryKeys.users.invitations() },
+        (page) => {
+          if (!page) return page;
+          if (data.resent) {
+            return {
+              ...page,
+              data: page.data.map((row) =>
+                row.id === data.invitationId
+                  ? { ...row, expiresAt: syntheticItem.expiresAt, deliveryFailed: false, role: variables.role }
+                  : row,
+              ),
+            };
+          }
+          return {
+            ...page,
+            data: [
+              syntheticItem,
+              ...page.data.filter(
+                (row) => row.email !== email || row.status === "ACCEPTED",
+              ),
+            ],
+          };
+        },
+      );
       void queryClient.invalidateQueries({
         queryKey: usersAndCommerceQueryKeys.users.invitations(),
+        refetchType: "none",
       });
       void queryClient.invalidateQueries({
         queryKey: usersAndCommerceQueryKeys.users.stats(),

@@ -116,4 +116,34 @@ describe("useCalendarViewState URL navigation", () => {
 
     expect(push).not.toHaveBeenCalled();
   });
+
+  it("accountsOpen is true on the first render when the URL carries ?accounts=1 without waiting for an effect", () => {
+    params = new URLSearchParams("accounts=1");
+    const { result } = renderHook(() => useCalendarViewState());
+    expect(result.current.accountsOpen).toBe(true);
+  });
+
+  it("handleCloseAccounts navigates to remove ?accounts=1 and accountsOpen becomes false once the URL updates", () => {
+    params = new URLSearchParams("mode=list&accounts=1");
+    const { result, rerender } = renderHook(() => useCalendarViewState());
+    expect(result.current.accountsOpen).toBe(true);
+
+    act(() => result.current.handleCloseAccounts());
+
+    expect(replace).toHaveBeenLastCalledWith("/calendar?mode=list");
+
+    params = new URLSearchParams("mode=list");
+    rerender();
+    expect(result.current.accountsOpen).toBe(false);
+  });
+
+  it("handleCloseAccounts without ?accounts=1 does not navigate", () => {
+    params = new URLSearchParams("mode=list");
+    const { result } = renderHook(() => useCalendarViewState());
+    expect(result.current.accountsOpen).toBe(false);
+
+    act(() => result.current.handleCloseAccounts());
+
+    expect(replace).not.toHaveBeenCalled();
+  });
 });
