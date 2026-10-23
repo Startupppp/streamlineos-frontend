@@ -168,15 +168,15 @@ export function ChatShellSkeleton({ notice }: { notice?: ReactNode }) {
           </>
         ) : (
           <>
-            <div className="flex flex-1 flex-col items-center justify-center gap-3">
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6">
               <Skeleton className="h-44 w-44 rounded-full" />
               <Skeleton className="h-5 w-48" />
               <Skeleton className="h-4 w-64" />
-            </div>
-            <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-border/40 p-3">
-              <Skeleton className="h-11 rounded-md" />
-              <Skeleton className="h-11 rounded-md" />
-              <Skeleton className="h-11 rounded-md" />
+              <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+                <Skeleton className="h-9 w-28 rounded-md" />
+                <Skeleton className="h-9 w-28 rounded-md" />
+                <Skeleton className="h-9 w-36 rounded-md" />
+              </div>
             </div>
           </>
         )}

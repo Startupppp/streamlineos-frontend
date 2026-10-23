@@ -1,11 +1,8 @@
 "use client";
 
-import { PlusIcon, SearchIcon, UsersIcon } from "@animateicons/react/lucide";
 import { ChatIllustration } from "@/components/illustrations";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-
-const PANE_ACTION_CLASS = "h-11 flex-col gap-1 px-2";
 
 export function EmptyChatState({
   onNewDM,
@@ -17,42 +14,36 @@ export function EmptyChatState({
   onSearch: () => void;
 }) {
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex h-full min-h-0 flex-col items-center justify-center px-6 py-8">
       <EmptyState
+        bare
         illustration={<ChatIllustration className="h-44 w-44" />}
         title="Choose a conversation"
-        description="Your messages and channels are in the list. Start a new one when you need it."
-        className="min-h-0 flex-1 border-0 bg-transparent px-6 shadow-none"
+        description="Pick someone from the list, or start fresh with a message or channel."
+        className="min-h-0 w-full max-w-md border-0 bg-transparent px-0 shadow-none"
       />
-      <div className="grid shrink-0 grid-cols-3 gap-2 border-t border-border/40 bg-background/95 p-3">
-        <AnimatedIconButton
-          icon={PlusIcon}
-          iconSize={18}
+      <div className="mt-6 flex w-full max-w-md flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-center">
+        <Button type="button" onClick={onNewDM} className="sm:min-w-36">
+          New message
+        </Button>
+        <Button
+          type="button"
           variant="outline"
-          className={PANE_ACTION_CLASS}
-          onClick={onNewDM}
-        >
-          Message
-        </AnimatedIconButton>
-        <AnimatedIconButton
-          icon={UsersIcon}
-          iconSize={18}
-          variant="outline"
-          className={PANE_ACTION_CLASS}
           onClick={onNewChannel}
+          className="sm:min-w-36"
         >
-          Channel
-        </AnimatedIconButton>
-        <AnimatedIconButton
-          icon={SearchIcon}
-          iconSize={18}
-          variant="outline"
-          className={PANE_ACTION_CLASS}
-          onClick={onSearch}
-        >
-          Search
-        </AnimatedIconButton>
+          New channel
+        </Button>
       </div>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onSearch}
+        className="mt-3 text-muted-foreground hover:text-foreground"
+      >
+        Search conversations
+      </Button>
     </div>
   );
 }
