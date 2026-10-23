@@ -14,6 +14,10 @@ import type { AnswerValue } from "./answer-value";
 import { QuestionInput } from "./question-input";
 import { evaluateQuestionLogic } from "./logic-evaluator";
 
+function focusFirstControl(node: HTMLDivElement | null): void {
+  node?.querySelector<HTMLElement>("input, textarea, select, button, [role='radio'], [role='checkbox'], [tabindex='0']")?.focus({ preventScroll: true });
+}
+
 interface RuntimeFlowProps {
   surveyTitle: string;
   sections: PublicSurveySection[];
@@ -186,7 +190,7 @@ export function RuntimeFlow({
           className="flex flex-col gap-4"
         >
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold leading-snug tracking-tight text-foreground sm:text-xl">
+            <h2 id={`question-${current.id}-title`} className="text-lg font-semibold leading-snug tracking-tight text-foreground sm:text-xl">
               {current.title}
               {current.required && !isContentBlock ? (
                 <span className="text-destructive"> *</span>
@@ -197,7 +201,12 @@ export function RuntimeFlow({
             ) : null}
           </div>
 
-          <div className="rounded-xl border border-border/60 bg-muted/15 px-4 py-5 sm:px-5 sm:py-6">
+          <div
+            ref={focusFirstControl}
+            role="group"
+            aria-labelledby={`question-${current.id}-title`}
+            className="rounded-xl border border-border/60 bg-muted/15 px-4 py-5 sm:px-5 sm:py-6"
+          >
             <QuestionInput
               question={current}
               value={answers[current.id]}

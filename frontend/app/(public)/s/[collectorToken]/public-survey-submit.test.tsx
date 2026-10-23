@@ -269,4 +269,14 @@ describe("a respondent keeps one response session, proven by its respondent key"
     expect(toast.error).toHaveBeenCalledWith("Your response session has expired. Please start again.");
     expect(window.sessionStorage.length).toBe(0);
   });
+
+  it("puts keyboard focus in the answer field of the first question, inside a group named by the question", async () => {
+    startThenHang();
+    renderPage();
+    await reachTheLastQuestion();
+
+    const group = screen.getByRole("group", { name: "How did onboarding go?" });
+    await waitFor(() => expect(group.contains(document.activeElement)).toBe(true));
+    expect(document.activeElement?.tagName).toMatch(/INPUT|TEXTAREA/);
+  });
 });
