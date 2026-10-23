@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import { useGatedQuery } from "@/hooks/api/gated-query";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 interface SignDashboardActivityItem {
   id: number;
@@ -52,6 +53,7 @@ export function useSignDashboard() {
     queryKey: [...growthAndSignQueryKeys.signEnvelopes.all, "dashboard"] as const,
     queryFn: ({ signal }) => apiClient.get<SignDashboardStats>("/sign/reports/dashboard", undefined, signal, signDashboardContract),
     staleTime: 30_000,
+    ...INLINE_READ_ERROR,
   });
 }
 
@@ -60,5 +62,6 @@ export function useSignSummary() {
     queryKey: [...growthAndSignQueryKeys.signEnvelopes.all, "summary"] as const,
     queryFn: ({ signal }) => apiClient.get<SignSummaryStats>("/sign/reports/summary", undefined, signal, signSummaryContract),
     staleTime: 60_000,
+    ...INLINE_READ_ERROR,
   });
 }
