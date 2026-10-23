@@ -5,7 +5,7 @@ import { useGatedQuery } from "@/hooks/api/gated-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
-import type { SignDocument } from "@/types/sign";
+import type { SignDocument, SignEnvelopeFull } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 
 const signDocumentUrlContract = lazyContract(() =>
@@ -38,9 +38,13 @@ export function useUploadSignDocument(envelopeId: number) {
       formData.append("file", file);
       return apiClient.upload<SignDocument>(`/sign/documents/upload?envelopeId=${envelopeId}`, formData, signDocumentUploadContract);
     },
-    onSuccess: () => {
+    onSuccess: (document) => {
+      qc.setQueryData<SignEnvelopeFull>(growthAndSignQueryKeys.signEnvelopes.detail(envelopeId), (current) =>
+        current && !current.documents.some((d) => d.id === document.id)
+          ? { ...current, documents: [...current.documents, document] }
+          : current,
+      );
       qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signDocuments.list(envelopeId) });
-      qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(envelopeId) });
     },
   });
 }
