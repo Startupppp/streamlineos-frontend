@@ -93,7 +93,7 @@ function renderPanel(overrides: Partial<KbPageDetail> = {}) {
 }
 
 function openDetailsTrigger() {
-  return screen.getAllByRole("button", { name: "Open details panel" })[0];
+  return screen.getByRole("button", { name: "Open details panel" });
 }
 
 describe("PageRightPanel — mobile path for linked records", () => {

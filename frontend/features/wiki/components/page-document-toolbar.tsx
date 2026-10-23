@@ -1,7 +1,6 @@
 "use client";
 
 import { Fragment, useRef } from "react";
-import { createPortal } from "react-dom";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -56,7 +55,6 @@ interface PageDocumentToolbarProps {
   onNavigate: (pageId: number) => void;
   onOpenDetailsPanel?: () => void;
   onSpreadsheetExport?: (format: "xlsx" | "csv") => void;
-  moreOptionsHost?: HTMLElement | null;
 }
 
 export function PageDocumentToolbar({
@@ -77,7 +75,6 @@ export function PageDocumentToolbar({
   onNavigate,
   onOpenDetailsPanel,
   onSpreadsheetExport,
-  moreOptionsHost,
 }: PageDocumentToolbarProps) {
   const canCreate = useCan("kb:pages:create");
   const canUpdate = useCan("kb:pages:update");
@@ -268,18 +265,6 @@ export function PageDocumentToolbar({
 
   return (
     <div className="flex w-full min-w-0 items-center justify-end gap-1.5 overflow-x-auto self-end scrollbar-hide sm:w-auto sm:self-auto">
-      {onOpenDetailsPanel ? (
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-9 w-9 px-0 xl:hidden"
-          aria-label="Open details panel"
-          onClick={onOpenDetailsPanel}
-        >
-          <KbInfoIcon className="h-4 w-4" />
-        </Button>
-      ) : null}
       {page.kind !== "spreadsheet" && (
         <KbPageAiActions
           pageId={pageId}
@@ -302,14 +287,19 @@ export function PageDocumentToolbar({
           <KbLink2Icon className="h-4 w-4" />
         </Button>
       )}
-      {moreOptionsHost ? (
-        <div className="xl:hidden">{renderMoreOptionsMenu()}</div>
-      ) : (
-        renderMoreOptionsMenu()
-      )}
-      {moreOptionsHost
-        ? createPortal(renderMoreOptionsMenu(), moreOptionsHost)
-        : null}
+      {onOpenDetailsPanel ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-9 w-9 px-0"
+          aria-label="Open details panel"
+          onClick={onOpenDetailsPanel}
+        >
+          <KbInfoIcon className="h-4 w-4" />
+        </Button>
+      ) : null}
+      {renderMoreOptionsMenu()}
     </div>
   );
 }

@@ -57,17 +57,12 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
   const [coverPickerOpen, setCoverPickerOpen] = useState(false);
   const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
   const [workbookSaveHost, setWorkbookSaveHost] = useState<HTMLElement | null>(null);
-  const [moreOptionsHost, setMoreOptionsHost] = useState<HTMLElement | null>(null);
   const visitedRef = useRef<number | null>(null);
   const titleRef = useRef<HTMLTextAreaElement>(null);
   const sheetsRef = useRef<FortuneSheet[] | null>(null);
 
   const handleWorkbookSaveHost = useCallback((node: HTMLElement | null) => {
     setWorkbookSaveHost(node);
-  }, []);
-
-  const handleMoreOptionsHost = useCallback((node: HTMLElement | null) => {
-    setMoreOptionsHost(node);
   }, []);
 
   const handleSavePage = useCallback(
@@ -230,7 +225,6 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
                 onOpenCover={handleOpenCover} onOpenDetailsPanel={handleOpenDetails}
                 onSpreadsheetExport={handleExportSpreadsheet} projectId={projectId}
                 workbookSaveHostRef={handleWorkbookSaveHost}
-                moreOptionsHost={moreOptionsHost}
               />
             </div>
           </div>
@@ -295,7 +289,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
             )}
           </div>
         </div>
-        <PageRightPanel pageId={pageId} page={page} onNavigate={handleNavigateToPage} mobileOpen={detailsMobileOpen} onMobileOpenChange={handleDetailsMobileOpenChange} railActionsHostRef={handleMoreOptionsHost} />
+        <PageRightPanel pageId={pageId} page={page} onNavigate={handleNavigateToPage} mobileOpen={detailsMobileOpen} onMobileOpenChange={handleDetailsMobileOpenChange} />
       </div>
     </div>
   );

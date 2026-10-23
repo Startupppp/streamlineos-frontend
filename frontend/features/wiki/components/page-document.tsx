@@ -149,7 +149,6 @@ export default function PageDocument({
   const editorValue = editorDraft?.pageId === pageId ? editorDraft.value : null;
   const [toolbarHost, setToolbarHost] = useState<HTMLDivElement | null>(null);
   const [detailsMobileOpen, setDetailsMobileOpen] = useState(false);
-  const [moreOptionsHost, setMoreOptionsHost] = useState<HTMLElement | null>(null);
 
   const handleSavePage = useCallback(
     (
@@ -344,10 +343,6 @@ export default function PageDocument({
     setCoverPickerOpen(open);
   }
 
-  function handleMoreOptionsHost(node: HTMLElement | null) {
-    setMoreOptionsHost(node);
-  }
-
   function handleToolbarHost(node: HTMLDivElement | null) {
     setToolbarHost(node);
   }
@@ -422,7 +417,6 @@ export default function PageDocument({
                 onOpenCover={handleOpenCover}
                 onOpenDetailsPanel={() => setDetailsMobileOpen(true)}
                 projectId={projectId}
-                moreOptionsHost={moreOptionsHost}
               />
             </div>
             {isEditable ? (
@@ -555,7 +549,6 @@ export default function PageDocument({
           onNavigate={handleNavigateToPage}
           mobileOpen={detailsMobileOpen}
           onMobileOpenChange={setDetailsMobileOpen}
-          railActionsHostRef={handleMoreOptionsHost}
         />
       </div>
     </div>

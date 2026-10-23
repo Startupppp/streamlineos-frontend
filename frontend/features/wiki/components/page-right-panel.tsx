@@ -1,10 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  KbFileTextIcon,
-  KbPanelRightOpenIcon,
-} from "@/features/wiki/lib/kb-icons";
+import { KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -52,7 +49,6 @@ interface PageRightPanelProps {
   onNavigate: (pageId: number) => void;
   mobileOpen?: boolean;
   onMobileOpenChange?: (open: boolean) => void;
-  railActionsHostRef?: (node: HTMLElement | null) => void;
 }
 
 interface PanelContentProps {
@@ -398,7 +394,6 @@ export default function PageRightPanel({
   onNavigate,
   mobileOpen,
   onMobileOpenChange,
-  railActionsHostRef,
 }: PageRightPanelProps) {
   const [uncontrolledMobileOpen, setUncontrolledMobileOpen] = useState(false);
   const title = page.title || "Untitled";
@@ -407,53 +402,31 @@ export default function PageRightPanel({
     ? Boolean(mobileOpen)
     : uncontrolledMobileOpen;
 
-  function handleOpenSheet() {
-    handleMobileSheetChange(true);
-  }
-
   function handleMobileSheetChange(open: boolean) {
     if (isMobileControlled) onMobileOpenChange?.(open);
     else setUncontrolledMobileOpen(open);
   }
 
   return (
-    <>
-      <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
-        <SheetContent side="right" className="gap-0 p-0 sm:max-w-sm">
-          <SheetHeader className="border-b border-border px-4 py-3 pr-12">
-            <SheetDescription className="text-xs">
-              Page details
-            </SheetDescription>
-            <SheetTitle className="truncate text-base leading-tight">
-              {title}
-            </SheetTitle>
-          </SheetHeader>
-          <SheetBody>
-            <PanelContent
-              pageId={pageId}
-              page={page}
-              wordCount={wordCount}
-              onNavigate={onNavigate}
-            />
-          </SheetBody>
-        </SheetContent>
-      </Sheet>
-
-      <div className="hidden h-full w-12 shrink-0 flex-col items-center gap-1.5 border-l border-border bg-muted/20 px-1.5 pt-2.5 xl:flex">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-9 w-9"
-          onClick={handleOpenSheet}
-          aria-label="Open details panel"
-        >
-          <KbPanelRightOpenIcon className="h-4 w-4" />
-        </Button>
-        {railActionsHostRef ? (
-          <span ref={railActionsHostRef} className="flex flex-col items-center" />
-        ) : null}
-      </div>
-    </>
+    <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
+      <SheetContent side="right" className="gap-0 p-0 sm:max-w-sm">
+        <SheetHeader className="border-b border-border px-4 py-3 pr-12">
+          <SheetDescription className="text-xs">
+            Page details
+          </SheetDescription>
+          <SheetTitle className="truncate text-base leading-tight">
+            {title}
+          </SheetTitle>
+        </SheetHeader>
+        <SheetBody>
+          <PanelContent
+            pageId={pageId}
+            page={page}
+            wordCount={wordCount}
+            onNavigate={onNavigate}
+          />
+        </SheetBody>
+      </SheetContent>
+    </Sheet>
   );
 }
