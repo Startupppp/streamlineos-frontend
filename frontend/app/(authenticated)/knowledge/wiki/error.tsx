@@ -6,10 +6,10 @@ import { isChunkLoadError, reportError } from "@/lib/observability";
 
 export default function KnowledgeWikiPageError({
   error,
-  reset,
+  retry,
 }: {
   error: Error & { digest?: string };
-  reset: () => void;
+  retry: () => void;
 }) {
   useEffect(() => {
     const route = typeof window !== "undefined" ? window.location.pathname : undefined;
@@ -23,7 +23,7 @@ export default function KnowledgeWikiPageError({
       <ErrorState
         title="Something went wrong"
         description="Failed to load this page. Please try again."
-        onRetry={reset}
+        onRetry={retry}
       />
     </div>
   );
