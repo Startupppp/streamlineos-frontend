@@ -7,7 +7,7 @@ export default function SignBulkSendLoading() {
     <PageWrapper
       title="Bulk Send"
       subtitle="Send one template to a list of people via CSV"
-      actions={<Skeleton className="h-9 w-32 max-w-full rounded-md" />}
+      actions={<Skeleton className="h-9 w-full max-w-full rounded-md sm:w-36" />}
     >
       <BulkSendListSkeleton />
     </PageWrapper>

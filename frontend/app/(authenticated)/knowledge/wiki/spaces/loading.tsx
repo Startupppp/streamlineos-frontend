@@ -1,19 +1,13 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SpaceCardSkeleton } from "@/features/wiki/components/space-card";
-import {
-  WIKI_LOADING_CONTENT_CLASS,
-  WikiActionsSkeleton,
-} from "@/features/wiki/components/wiki-collection-skeletons";
 
 export default function TeamFoldersLoading() {
   return (
     <PageWrapper
       title="Team folders"
       subtitle="Organize your docs into team folders"
-      actions={<WikiActionsSkeleton />}
-      noInternalScroll
-      contentClassName={WIKI_LOADING_CONTENT_CLASS}
+      actions={<Skeleton className="h-9 w-full rounded-md sm:w-40" />}
       filters={
         <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
           <div className="col-span-2 flex min-w-0 items-center gap-2 sm:contents">
@@ -25,7 +19,7 @@ export default function TeamFoldersLoading() {
         </div>
       }
     >
-      <div className="grid min-h-0 w-full min-w-0 flex-1 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(11rem,1fr)]">
+      <div className="grid w-full min-w-0 grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {Array.from({ length: 18 }, (_, index) => (
           <SpaceCardSkeleton key={index} />
         ))}

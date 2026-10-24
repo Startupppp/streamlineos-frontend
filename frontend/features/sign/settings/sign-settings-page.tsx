@@ -35,8 +35,8 @@ export function SignSettingsSkeleton() {
             <Skeleton className="h-9 w-full rounded-md" />
           </div>
         ))}
-        <div className="flex justify-end px-4 py-3">
-          <Skeleton className="h-9 w-20 rounded-md" />
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border px-4 py-3 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
+          <Skeleton className="h-9 w-full rounded-md sm:w-20" />
         </div>
       </div>
     </div>

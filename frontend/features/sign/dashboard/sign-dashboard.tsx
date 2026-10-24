@@ -112,7 +112,7 @@ export function SignDashboard() {
       onRetry={handleRetry}
       actions={
         dashboardState.kind === "loading" ? (
-          <Skeleton className="h-9 w-36 rounded-md" />
+          <Skeleton className="h-9 w-full max-w-full rounded-md sm:w-36" />
         ) : canCreateEnvelope && data ? (
           <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={handleCreateOpen}>
             New envelope

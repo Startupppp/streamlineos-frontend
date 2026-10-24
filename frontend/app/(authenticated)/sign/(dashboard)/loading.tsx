@@ -7,7 +7,7 @@ export default function SignDashboardLoading() {
     <PageWrapper
       title="Sign OS"
       subtitle="Envelopes, signatures, and completion status at a glance"
-      actions={<Skeleton className="h-9 w-36 rounded-md" />}
+      actions={<Skeleton className="h-9 w-full max-w-full rounded-md sm:w-36" />}
     >
       <SignDashboardSkeleton />
     </PageWrapper>

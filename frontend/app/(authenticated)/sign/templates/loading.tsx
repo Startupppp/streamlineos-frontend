@@ -7,7 +7,7 @@ export default function SignTemplatesLoading() {
     <PageWrapper
       title="Templates"
       subtitle="Reusable envelope layouts you can send again and again"
-      actions={<Skeleton className="h-9 w-36 max-w-full rounded-md" />}
+      actions={<Skeleton className="h-9 w-full max-w-full rounded-md sm:w-36" />}
     >
       <TemplateListSkeleton />
     </PageWrapper>

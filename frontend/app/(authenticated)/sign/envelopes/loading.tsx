@@ -7,7 +7,7 @@ export default function SignEnvelopesLoading() {
     <PageWrapper
       title="Envelopes"
       subtitle="Every signing request you've sent, organized by status"
-      actions={<Skeleton className="h-9 w-36 max-w-full rounded-md" />}
+      actions={<Skeleton className="h-9 w-full max-w-full rounded-md sm:w-36" />}
       filters={
         <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
           <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:w-64 sm:flex-none" />

@@ -195,11 +195,29 @@ export function WikiShortcutRowsSkeleton() {
   );
 }
 
-export function CollectionToolbarSkeleton({ search = true }: { search?: boolean }) {
+export function CollectionToolbarSkeleton({
+  search = true,
+  header = false,
+}: {
+  search?: boolean;
+  header?: boolean;
+}) {
   return (
-    <div className="flex w-full min-w-0 shrink-0 items-center gap-2">
+    <div className="flex w-full min-w-0 shrink-0 flex-wrap items-center gap-2">
+      {header ? (
+        <div className="flex min-w-0 flex-1 items-baseline gap-1.5">
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="h-3.5 w-12 shrink-0" />
+        </div>
+      ) : null}
       {search ? <Skeleton className="h-9 min-w-0 flex-1 rounded-md sm:max-w-xs" /> : null}
-      <Skeleton className={search ? "h-9 w-24 shrink-0 rounded-md" : "h-9 min-w-0 flex-1 rounded-md sm:w-24 sm:flex-none"} />
+      <Skeleton
+        className={
+          search || header
+            ? "h-9 w-24 shrink-0 rounded-md"
+            : "h-9 min-w-0 flex-1 rounded-md sm:w-24 sm:flex-none"
+        }
+      />
       <Skeleton className="h-9 w-16 shrink-0 rounded-md" />
     </div>
   );
@@ -222,8 +240,7 @@ export function WikiHomeSkeleton() {
         </div>
       </section>
       <section className="flex min-h-0 flex-1 flex-col gap-3">
-        <Skeleton className="h-4 w-28 shrink-0" />
-        <CollectionToolbarSkeleton search={false} />
+        <CollectionToolbarSkeleton search={false} header />
         <WikiFillTable headers={WIKI_PAGE_TABLE_HEADERS} />
       </section>
     </div>

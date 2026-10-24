@@ -8,7 +8,10 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useSurvey } from "@/hooks/api/surveys/forms";
 import { SurveyBuilderHeader } from "@/features/surveys/builder/survey-builder-header";
 import { SurveyBuilderTabs } from "@/features/surveys/builder/survey-builder-tabs";
-import { SurveyDetailSkeleton } from "@/features/surveys/builder/survey-detail-skeleton";
+import {
+  SurveyBuilderHeaderSkeleton,
+  SurveyDetailSkeleton,
+} from "@/features/surveys/builder/survey-detail-skeleton";
 
 interface SurveyDetailContentProps {
   surveyId: number;
@@ -35,7 +38,13 @@ export function SurveyDetailContent({ surveyId }: SurveyDetailContentProps) {
       backHref="/surveys"
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
-      actions={survey ? <SurveyBuilderHeader survey={survey} /> : undefined}
+      actions={
+        survey ? (
+          <SurveyBuilderHeader survey={survey} />
+        ) : pageState.kind === "loading" ? (
+          <SurveyBuilderHeaderSkeleton />
+        ) : undefined
+      }
     >
       <PageState
         resolution={pageState}
