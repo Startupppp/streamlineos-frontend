@@ -19,6 +19,7 @@ export function PdfCanvas({ fileUrl, pageNumber, onPageInfo, onCanvasClick, rend
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const docRef = useRef<pdfjsLib.PDFDocumentProxy | null>(null);
+  const renderTaskRef = useRef<pdfjsLib.RenderTask | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [scale, setScale] = useState(1);
   const [error, setError] = useState<string | null>(null);
@@ -31,12 +32,27 @@ export function PdfCanvas({ fileUrl, pageNumber, onPageInfo, onCanvasClick, rend
       const fitScale = containerWidth / naturalViewport.width;
       const viewport = page.getViewport({ scale: fitScale });
 
+      const previous = renderTaskRef.current;
+      if (previous) {
+        previous.cancel();
+        await previous.promise.catch(() => undefined);
+      }
+
       const canvas = canvasRef.current;
       const context = canvas?.getContext("2d");
       if (!canvas || !context) return;
       canvas.width = viewport.width;
       canvas.height = viewport.height;
-      await page.render({ canvas, canvasContext: context, viewport }).promise;
+      const task = page.render({ canvas, canvasContext: context, viewport });
+      renderTaskRef.current = task;
+      try {
+        await task.promise;
+      } catch (error) {
+        if (error instanceof pdfjsLib.RenderingCancelledException) return;
+        throw error;
+      } finally {
+        if (renderTaskRef.current === task) renderTaskRef.current = null;
+      }
 
       setScale(fitScale);
       onPageInfo?.({ pageCount: doc.numPages, widthPt: naturalViewport.width, heightPt: naturalViewport.height });
@@ -71,8 +87,8 @@ export function PdfCanvas({ fileUrl, pageNumber, onPageInfo, onCanvasClick, rend
   useEffect(() => {
     if (!docRef.current) return;
     let cancelled = false;
-    void renderPage(docRef.current, pageNumber).then(() => {
-      if (cancelled) return;
+    renderPage(docRef.current, pageNumber).catch(() => {
+      if (!cancelled) setError("Unable to show this page.");
     });
     return () => {
       cancelled = true;
