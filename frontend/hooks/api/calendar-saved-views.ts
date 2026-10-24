@@ -8,8 +8,7 @@ import {
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { useAccess } from "@/hooks/api/access";
-import { grantsPermission } from "@/lib/rbac/permission-gate";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type {
   CalendarSavedView,
@@ -37,7 +36,7 @@ const removeContract = lazyContract(() =>
 export function useCalendarSavedViews(enabled = true) {
   const { data: session } = useSession();
   const { data: access } = useAccess();
-  const canRead = grantsPermission(access, "calendar:read");
+  const canRead = useCan("calendar:read");
   return useInfiniteQuery({
     queryKey: platformHierarchyQueryKeys.calendar.savedViewsForAccess(
       access?.membershipId ?? null,

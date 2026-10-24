@@ -5,8 +5,7 @@ import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useAccess } from "@/hooks/api/access";
-import { grantsPermission } from "@/lib/rbac/permission-gate";
+import { useAccess, useCan } from "@/hooks/api/access";
 import { platformHierarchyQueryKeys } from "@/lib/query-keys/platform-hierarchy";
 import type { CalendarSearchResponse } from "./calendar-types";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
@@ -39,7 +38,7 @@ export function useCalendarSearch(
   const orgId = session?.orgId ?? "";
   const userId = session?.user?.id ?? "";
   const { data: access } = useAccess();
-  const canView = grantsPermission(access, "calendar:read");
+  const canView = useCan("calendar:read");
   const requestFilters = {
     ...filters,
     timeZone: filters.timeZone ?? Intl.DateTimeFormat().resolvedOptions().timeZone ?? "UTC",

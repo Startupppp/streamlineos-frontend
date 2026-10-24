@@ -7,8 +7,8 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { SearchInput } from "@/components/ui/search-input";
 import {
   Select,
   SelectContent,
@@ -166,70 +166,94 @@ export function CalendarSavedViewControls({
     }
   };
 
+  const saveViewButton = canWrite ? (
+    <Button
+      type="button"
+      size="sm"
+      variant="outline"
+      disabled={query.isError}
+      onClick={openCreate}
+      aria-label="Save view"
+      title="Save view"
+      className="size-9 shrink-0 bg-card px-0 data-[state=open]:border-primary"
+    >
+      <BookmarkPlus className="size-4" aria-hidden />
+    </Button>
+  ) : null;
+
   return (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
       {search !== undefined && onSearchChange ? (
-        <Input
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search events"
-          aria-label="Search calendar events"
-          className="h-9 w-full min-w-0 flex-1 basis-full bg-card text-sm sm:min-w-[18rem] sm:basis-0 sm:grow"
-          maxLength={200}
-        />
-      ) : null}
-      <Select
-        value={selectedId ?? "none"}
-        onOpenChange={setSelectOpen}
-        onValueChange={(value) => selectView(value === "none" ? null : value)}
-      >
-        <SelectTrigger
-          aria-label="Saved calendar view"
-          className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-40 sm:max-w-40 sm:flex-none sm:basis-auto"
+        <div className="flex w-full min-w-0 basis-full items-center gap-2 sm:min-w-[18rem] sm:flex-1 sm:basis-0">
+          <SearchInput
+            value={search}
+            onValueChange={onSearchChange}
+            placeholder="Search events"
+            aria-label="Search calendar events"
+            fill
+            className="min-w-0 flex-1 !max-w-none"
+            inputClassName="bg-card"
+            maxLength={200}
+          />
+          {saveViewButton}
+        </div>
+      ) : (
+        saveViewButton
+      )}
+      <div className="flex w-full min-w-0 basis-full items-center gap-2 sm:w-auto sm:basis-auto sm:contents">
+        <Select
+          value={selectedId ?? "none"}
+          onOpenChange={setSelectOpen}
+          onValueChange={(value) => selectView(value === "none" ? null : value)}
         >
-          <SelectValue placeholder="Saved views" />
-        </SelectTrigger>
-        <SelectContent>
-          <SelectItem value="none">
-            {mode === "my-day" ? "My Day" : "All events"}
-          </SelectItem>
-          {views.map((view: CalendarSavedView) => (
-            <SelectItem key={view.id} value={view.id}>
-              {view.name}
-              {view.scope === "team" ? " · Team" : ""}
-            </SelectItem>
-          ))}
-          {query.hasNextPage ? (
-            <div
-              ref={nextPageSentinelRef}
-              className="px-2 py-1 text-xs text-muted-foreground"
-              role="status"
-            >
-              {query.isFetchingNextPage
-                ? "Loading more views…"
-                : "Scroll to see more views"}
-            </div>
-          ) : null}
-        </SelectContent>
-      </Select>
-      {sources && onSourceChange ? (
-        <Select value={source || "all"} onValueChange={onSourceChange}>
           <SelectTrigger
-            aria-label="Filter by calendar source"
-            className="h-9 w-full min-w-0 flex-1 basis-[9rem] bg-card text-sm sm:w-44 sm:max-w-44 sm:flex-none sm:basis-auto"
+            aria-label="Saved calendar view"
+            className="h-9 min-w-0 flex-1 bg-card text-sm sm:w-40 sm:max-w-40 sm:flex-none"
           >
-            <SelectValue placeholder="All sources" />
+            <SelectValue placeholder="Saved views" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All sources</SelectItem>
-            {sources.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
+            <SelectItem value="none">
+              {mode === "my-day" ? "My Day" : "All events"}
+            </SelectItem>
+            {views.map((view: CalendarSavedView) => (
+              <SelectItem key={view.id} value={view.id}>
+                {view.name}
+                {view.scope === "team" ? " · Team" : ""}
               </SelectItem>
             ))}
+            {query.hasNextPage ? (
+              <div
+                ref={nextPageSentinelRef}
+                className="px-2 py-1 text-xs text-muted-foreground"
+                role="status"
+              >
+                {query.isFetchingNextPage
+                  ? "Loading more views…"
+                  : "Scroll to see more views"}
+              </div>
+            ) : null}
           </SelectContent>
         </Select>
-      ) : null}
+        {sources && onSourceChange ? (
+          <Select value={source || "all"} onValueChange={onSourceChange}>
+            <SelectTrigger
+              aria-label="Filter by calendar source"
+              className="h-9 min-w-0 flex-1 bg-card text-sm sm:w-44 sm:max-w-44 sm:flex-none"
+            >
+              <SelectValue placeholder="All sources" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All sources</SelectItem>
+              {sources.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        ) : null}
+      </div>
       {query.isError ? (
         <div role="alert" className="w-full text-xs text-destructive sm:w-auto">
           Saved views are unavailable.{" "}
@@ -244,20 +268,6 @@ export function CalendarSavedViewControls({
             Retry
           </Button>
         </div>
-      ) : null}
-      {canWrite ? (
-        <Button
-          type="button"
-          size="sm"
-          variant="outline"
-          disabled={query.isError}
-          onClick={openCreate}
-          aria-label="Save view"
-          title="Save view"
-          className="size-9 shrink-0 bg-card px-0 data-[state=open]:border-primary"
-        >
-          <BookmarkPlus className="size-4" aria-hidden />
-        </Button>
       ) : null}
       {canWrite &&
       selected &&

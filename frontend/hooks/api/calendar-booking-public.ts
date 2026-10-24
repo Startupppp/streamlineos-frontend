@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { parseApiResponse } from "@/lib/api-envelope";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import {
   publicCalendarBookingCallbackContract,
@@ -90,7 +89,7 @@ export function usePublicCalendarBookingOffering(token: string, from: string, to
     ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "offering", from, to],
     queryFn: ({ signal }) => apiClient.get<PublicCalendarBookingOffering>(
-      basePath(token),
+      `/public/calendar/booking/${encodeURIComponent(token)}`,
       { from, to },
       signal,
       publicCalendarBookingOfferingContract,
@@ -110,7 +109,7 @@ export function usePublicCalendarBookingSession(
     ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "session", input],
     queryFn: () => apiClient.post<PublicCalendarBookingSession>(
-      `${basePath(token)}/sessions`,
+      `/public/calendar/booking/${encodeURIComponent(token)}/sessions`,
       input,
       undefined,
       publicCalendarBookingSessionContract,
@@ -161,7 +160,7 @@ export function usePublicCalendarBookingStatus(
     queryFn: ({ signal }) => {
       if (!input) throw new Error("Booking request is unavailable");
       return apiClient.post<PublicCalendarBookingReceipt>(
-        `${basePath(token)}/confirm`,
+        `/public/calendar/booking/${encodeURIComponent(token)}/confirm`,
         input,
         { signal, credentials: "include" },
         publicCalendarBookingReceiptContract,
@@ -209,11 +208,12 @@ export function usePublicCalendarBookingRecoveredReceipt(token: string) {
   return useQuery({
     ...INLINE_READ_ERROR,
     queryKey: ["public", "calendar", "booking", token, "recovered-receipt"],
-    queryFn: async ({ signal }) => {
-      const path = `${basePath(token)}/receipt`;
-      const response = await apiClient.request(path, { method: "GET", credentials: "include" }, { signal });
-      return parseApiResponse(response, publicCalendarBookingReceiptContract, path);
-    },
+    queryFn: ({ signal }) => apiClient.get<PublicCalendarBookingReceipt>(
+      `/public/calendar/booking/${encodeURIComponent(token)}/receipt`,
+      undefined,
+      signal,
+      publicCalendarBookingReceiptContract,
+    ),
     enabled: Boolean(token),
     retry: false,
     staleTime: 0,
@@ -230,7 +230,7 @@ export function usePublicCalendarBookingCallback(
   return useQuery({
     queryKey: ["public", "calendar", "booking", token, "callback", sessionToken],
     queryFn: ({ signal }) => apiClient.get<PublicCalendarBookingCallback>(
-      `${basePath(token)}/sessions/${encodeURIComponent(sessionToken ?? "")}/callback`,
+      `/public/calendar/booking/${encodeURIComponent(token)}/sessions/${encodeURIComponent(sessionToken ?? "")}/callback`,
       undefined,
       signal,
       publicCalendarBookingCallbackContract,

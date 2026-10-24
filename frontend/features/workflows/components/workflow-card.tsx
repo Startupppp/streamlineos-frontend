@@ -4,7 +4,7 @@ import { memo } from "react";
 import Link from "next/link";
 import { Pencil, Workflow } from "lucide-react";
 import { CopyIcon, Trash2Icon } from "@animateicons/react/lucide";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNowStrict } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
@@ -39,9 +39,15 @@ export const WorkflowCard = memo(function WorkflowCard({
   onDelete,
 }: WorkflowCardProps) {
   const builderHref = `/workflows/${workflow.id}/builder`;
-  const updatedLabel = formatDistanceToNow(new Date(workflow.updatedAt), {
-    addSuffix: true,
-  });
+  const updatedAt = new Date(workflow.updatedAt);
+  const updatedShort = formatDistanceToNowStrict(updatedAt, { addSuffix: true })
+    .replace(/\sseconds?/, "s")
+    .replace(/\sminutes?/, "m")
+    .replace(/\shours?/, "h")
+    .replace(/\sdays?/, "d")
+    .replace(/\smonths?/, "mo")
+    .replace(/\syears?/, "y");
+  const updatedTitle = `Updated ${formatDistanceToNowStrict(updatedAt, { addSuffix: true })}`;
 
   return (
     <Card className="h-full border-border bg-card transition-colors hover:bg-muted/30">
@@ -89,7 +95,7 @@ export const WorkflowCard = memo(function WorkflowCard({
             <span className="mx-1.5 text-border" aria-hidden="true">
               ·
             </span>
-            <span title={`Updated ${updatedLabel}`}>Updated {updatedLabel}</span>
+            <span title={updatedTitle}>{updatedShort}</span>
           </p>
 
           <div className="flex shrink-0 items-center gap-0.5">

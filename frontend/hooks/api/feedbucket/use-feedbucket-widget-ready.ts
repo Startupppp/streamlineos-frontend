@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useState, useEffect } from "react";
 import { getFeedbucketApiBase, getFeedbucketProjectId } from "@/lib/feedbucket";
 
 const FB_CONFIG_MISS_PREFIX = "fb-cfg-miss:";
@@ -26,23 +26,19 @@ function rememberMissing(projectId: string): void {
 export function useFeedbucketWidgetReady(): boolean {
   const apiBase = getFeedbucketApiBase();
   const projectId = getFeedbucketProjectId();
-  const enabled = !!apiBase && !!projectId;
+  const [ready, setReady] = useState(false);
 
-  const { data } = useQuery({
-    queryKey: ["feedbucket", "widget-config", projectId],
-    queryFn: async ({ signal }) => {
-      if (!projectId || knownMissing(projectId)) return false;
-      const response = await fetch(
-        `${apiBase}/public/feedbucket/${projectId}/config`,
-        { signal },
-      );
-      if (response.status === 404) rememberMissing(projectId);
-      return response.ok;
-    },
-    staleTime: 5 * 60_000,
-    retry: false,
-    enabled,
-  });
+  useEffect(() => {
+    if (!apiBase || !projectId || knownMissing(projectId)) return;
+    const controller = new AbortController();
+    fetch(`${apiBase}/public/feedbucket/${projectId}/config`, { signal: controller.signal })
+      .then((response) => {
+        if (response.status === 404) rememberMissing(projectId);
+        setReady(response.ok);
+      })
+      .catch(() => {});
+    return () => controller.abort();
+  }, [apiBase, projectId]);
 
-  return data === true;
+  return ready;
 }

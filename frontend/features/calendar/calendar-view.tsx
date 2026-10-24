@@ -948,7 +948,10 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
           <div className="flex flex-col">
             <span>Calendar history</span>
             <span className="text-sm font-normal text-muted-foreground">
-              Browse past events from newest to oldest
+              <span className="sm:hidden">Newest first</span>
+              <span className="hidden sm:inline">
+                Browse past events from newest to oldest
+              </span>
             </span>
           </div>
         ) : viewMode === "my-day" ? (
@@ -1088,8 +1091,20 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
                 selectedId={savedFilterId}
                 currentDate={currentDate}
                 mode={toolbarViewMode}
-                search={savedViewActive ? myDaySearch : toolbarViewMode === "list" ? listSearch : undefined}
-                onSearchChange={savedViewActive ? setMyDaySearch : toolbarViewMode === "list" ? setListSearch : setMyDaySearch}
+                search={
+                  toolbarViewMode === "list"
+                    ? listSearch
+                    : toolbarViewMode === "my-day" || savedViewActive
+                      ? myDaySearch
+                      : undefined
+                }
+                onSearchChange={
+                  toolbarViewMode === "list"
+                    ? setListSearch
+                    : toolbarViewMode === "my-day" || savedViewActive
+                      ? setMyDaySearch
+                      : undefined
+                }
                 sources={toolbarViewMode === "list" && !savedViewActive ? listSourceOptions : undefined}
                 source={listSource}
                 onSourceChange={handleListSourceChange}
@@ -1136,7 +1151,6 @@ export function CalendarView({ onOpenResourceApprovals }: { onOpenResourceApprov
                       events={visibleSearchEvents}
                       pages={myDayPages}
                       search={myDaySearch}
-                      onSearchChange={setMyDaySearch}
                       onSelectEvent={handleSelectListEvent}
                       hasMore={Boolean(myDayQuery.hasNextPage)}
                       isLoadingMore={myDayQuery.isFetchingNextPage}

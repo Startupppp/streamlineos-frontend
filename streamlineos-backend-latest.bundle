@@ -1,0 +1,674 @@
+# StreamlineOS — Not fixed and partially fixed issues (retest 23 Oct 2026, ~22:20 IST)
+
+Org ADitay CAhala, production, Chrome on Linux, 1280×800. **17 issues: 8 still open, 9 partially fixed.** (5 more couldn't be retested: ASKOS-002, RBAC-001, RBAC-003, RBAC-005, RBAC-007.)
+
+## Overview
+
+| # | ID | Retest status | Retest result (23 Oct, 22:20 IST) |
+|---|---|---|---|
+| 1 | MAIL-001 | PARTIALLY FIXED | Critical / The CORS block is gone. / POST `/mail/send` returns **503** (2/2) with "The mail provider did not accept the message. Try again in a moment." Mail still cannot be sent. |
+| 2 | ASKOS-001 | PARTIALLY FIXED | High / No longer says "no meetings". / Lists only 2 of today's events, possibly from stale data. |
+| 3 | DOC-001 | STILL OPEN | High / Documents OS PDF upload fails / Two valid PDFs (193 B and 13.8 KB) fail. There is now an error toast, "Something went wrong on our end. Please try again shortly.", but no file is stored and the count stays at 19. |
+| 4 | CHAT-001 | PARTIALLY FIXED | Medium / Messages cross between tabs in 1.3–2.3 s. / Presence shows "0 online / Offline" or "Reconnecting to live chat…" for about 10 s after load. |
+| 5 | DOC-004 | STILL OPEN | Medium / Conflict banner "Load theirs" does nothing / The banner stays, the local text is kept, nothing from the other tab loads, and there's no toast. |
+| 6 | BILL-001 | PARTIALLY FIXED | Medium / The payment amount now shows ₹4,999. / There's still no invoice or receipt link. |
+| 7 | ADM-002 | PARTIALLY FIXED | Medium / Create gives a toast in ~3.7 s and delete gives a toast in ~0.6 s. / The first http create hung 26 s with no message. The first delete hit "Failed to load webhooks" and the retry worked. |
+| 8 | CAL-005 | STILL OPEN | Low / Calendar navigation drift / The first click on List View is ignored. The URL shows `?date=2026-10-30` while the 26 Oct–1 Nov week is shown. |
+| 9 | CAL-007 | STILL OPEN | Low / List View shows UTC as the main time / "27 Oct 2026, 3:30 am – 4:15 am · Etc/UTC (9:00 am Asia/Calcutta)". |
+| 10 | SET-005 | PARTIALLY FIXED | Low / The duplicate-location message is fast (0.9 s) and specific. / It's still a toast, prefixed "name:", not an inline field error. |
+| 11 | SET-006 | PARTIALLY FIXED | Low / Display name is capped at 100 characters with a counter. / Emptying it gives no "required" message. |
+| 12 | SET-010 | STILL OPEN | Low / /settings/incoming-transfer has no empty state / Header and subtitle only. |
+| 13 | RBAC-004 | PARTIALLY FIXED | Low / Delegate is disabled until the form is valid, and permissions read like "Accounting › Access › View". / The revoke toast wasn't testable (it needs a delegation to a person). |
+| 14 | BILL-005 | STILL OPEN | Low / AI credits rounding gap / The summary shows 22.7 but the by-feature rows sum to 22.69. |
+| 15 | ADM-007 | STILL OPEN | Low / /directory/settings duplicates /directory / Same person-records table, with no settings content. |
+| 16 | ADM-009 | PARTIALLY FIXED | Low / Table rows show "Org unit" and "KB page". / The entity filter dropdown still lists raw keys: Org_unit, Webhook_endpoint, Kb_page, Principal_group. |
+| 17 | ADM-011 | STILL OPEN | Low / People count mismatch / Directory shows 3 records while Users and Dashboard show 5, with no note explaining the difference. |
+
+---
+
+## Details (original report with the retest result added)
+
+### MAIL-001: Sending email fails: POST https://api.streamlineos.in/mail/send blocked by CORS (net::ERR_FAILED)
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Critical | The CORS block is gone. | POST `/mail/send` returns **503** (2/2) with "The mail provider did not accept the message. Try again in a moment." Mail still cannot be sent.
+
+| Field | Value |
+|---|---|
+| Severity | **Critical** |
+| Priority | P1 |
+| Status | Open — confirmed both rounds (error feedback improved in R2) |
+| Evidence label | VERIFIED |
+| URL | https://www.streamlineos.in/mail |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: failed 2+ attempts, no spinner, no error, Send stayed enabled. R2: failed 1/1 (retry outcome unclear); now shows "Sending…" ~8–10 s then error toast. |
+| Repro rate | R1 2+/2+; R2 1/1 |
+
+**Preconditions:** Owner signed in; mail account connected ("Account 2").
+
+**Steps to reproduce:**
+1. Open /mail → Compose.
+2. To: qa.mail@example.com; Subject "QA Test"; short body.
+3. Click Send; open DevTools console/network.
+
+**Expected:** Mail is sent, appears in Sent, success toast.
+
+**Actual:** R1: request blocked, no UI feedback. R2: "Sending…" spinner ~8–10 s then toast "Network error contacting api.streamlineos.in (POST /mail/send)… Retry"; console: CORS policy blocked https://api.streamlineos.in/mail/send, net::ERR_FAILED. Nothing in Sent.
+
+**Evidence (textual — no screenshot files):** Exact toast and console text from R2 notes; R1 notes record CORS block and net::ERR_FAILED.
+
+**Impact:** Users cannot send any email from StreamlineOS Mail — core function unavailable.
+
+**Acceptance criterion:** Send to an external test address succeeds 5/5 from https://www.streamlineos.in; preflight returns correct Access-Control-Allow-Origin; message appears in Sent.
+
+**Safe retest:** Send one message to a tester-owned mailbox (not example.com) and confirm receipt; delete from Sent.
+
+---
+
+---
+
+### ASKOS-001: Ask OS answers "You don't have any meetings scheduled for today" while the calendar shows events for 23 Oct
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — High | No longer says "no meetings". | Lists only 2 of today's events, possibly from stale data.
+
+| Field | Value |
+|---|---|
+| Severity | **High** |
+| Priority | P1 |
+| Status | Open — run once |
+| Evidence label | VERIFIED (1/1); cause INFERRED |
+| URL | https://www.streamlineos.in/dashboard (ASK OS dock, bottom-right, every page) |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: not run (dock could not be opened). R2: 1/1. |
+| Repro rate | R1 BLOCKED; R2 1/1 |
+
+**Preconditions:** Calendar for Fri 23 Oct 2026 shows org/external events and the tester's QA event at that time.
+
+**Steps to reproduce:**
+1. Open the ASK OS dock.
+2. Ask "What meetings do I have today?".
+3. Compare with /calendar Today view.
+
+**Expected:** Lists today's meetings visible to the user (or explains which calendars it checked).
+
+**Actual:** "You don't have any meetings scheduled for today." Source shown: getMyCalendarEvents – No matches. Calendar shows many events that day.
+
+**Evidence (textual — no screenshot files):** R2 notes (exact answer and tool source). INFERRED: the tool counts only events where the user is an attendee/organiser, excluding org-wide/external events.
+
+**Impact:** Assistant gives confidently wrong schedule info — users may miss meetings and stop trusting Ask OS.
+
+**Acceptance criterion:** For a day with N events visible in the user's calendar, Ask OS lists the same N (or clearly states the filter, e.g. "You have no meetings you're invited to; 5 org events are on the calendar").
+
+**Safe retest:** Create one "QA Test" event today, ask the question, delete the event and Ask OS conversation.
+
+---
+
+---
+
+### DOC-001: Documents OS: uploading a valid PDF silently fails (stale alerts; file not in document count after reload)
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — High | Documents OS PDF upload fails | Two valid PDFs (193 B and 13.8 KB) fail. There is now an error toast, "Something went wrong on our end. Please try again shortly.", but no file is stored and the count stays at 19.
+
+| Field | Value |
+|---|---|
+| Severity | **High** |
+| Priority | P1 |
+| Status | Open — Round 1 only, not re-tested |
+| Evidence label | VERIFIED (R1 only); R2 UNTESTED |
+| URL | https://www.streamlineos.in/knowledge (Documents OS upload) |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed 1/1. R2: NOT RETESTED (not attempted). |
+| Repro rate | R1 1/1; R2 — |
+
+**Preconditions:** Owner; Documents OS enabled.
+
+**Steps to reproduce:**
+1. Open Documents OS.
+2. Upload `QA Test upload.pdf` (193-byte valid PDF).
+3. Observe alerts; reload; check document count/list.
+
+**Expected:** Upload succeeds with progress and success toast; file listed and counted; or a clear error.
+
+**Actual:** No success; stale alerts shown; file not in document count after reload. No clear error.
+
+**Evidence (textual — no screenshot files):** R1 notes (D12). R2 cleanup notes: "Failed uploads: none stored" — confirms nothing was saved.
+
+**Impact:** Users cannot add PDFs to the knowledge base and aren't told why; Ask Documents can't use them.
+
+**Acceptance criterion:** Valid PDF ≤10 MB uploads 5/5 with success toast and appears in list/count; failures show a specific message.
+
+**Safe retest:** Upload `QA Test upload.pdf` once; trash it after.
+
+---
+
+---
+
+### CHAT-001: Live delivery/presence is unreliable: second tab not updated, header flaps to "0 online / Offline" / "Reconnecting to live chat..."
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Medium | Messages cross between tabs in 1.3–2.3 s. | Presence shows "0 online / Offline" or "Reconnecting to live chat…" for about 10 s after load.
+
+| Field | Value |
+|---|---|
+| Severity | **Medium** |
+| Priority | P2 |
+| Status | Open — intermittent |
+| Evidence label | INTERMITTENT |
+| URL | https://www.streamlineos.in/chat?channel=7 |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: reproduced 1/1. R2: live delivery NOT REPRODUCED 0/2 (A→B and B→A in ~1 s), but presence later flapped back to "0 online / Offline" in the same session. |
+| Repro rate | R1 1/1; R2 0/2 for message delivery; presence flap observed 1× in R2 |
+
+**Preconditions:** Owner signed in; self DM (?channel=7) open in two tabs.
+
+**Steps to reproduce:**
+1. Open /chat?channel=7 in tab A and tab B.
+2. Send "QA Test live A" from tab A.
+3. Watch tab B without reloading for 10 s; then send from B and watch A.
+4. Watch the conversation header presence text over several minutes.
+
+**Expected:** Message appears in the other tab within ~2 s; presence text stays stable and accurate.
+
+**Actual:** R1: tab B did not update until reload; header showed "0 online / Offline" and "Reconnecting to live chat...". R2: messages delivered within ~1 s both ways with header "1 person online / Online", but later in the session header again showed "0 online / Offline".
+
+**Evidence (textual — no screenshot files):** Exact header strings above from R1/R2 notes. No websocket/network trace captured (INFERRED: realtime connection drops intermittently).
+
+**Impact:** Users may miss or reply late to messages and see wrong presence; erodes trust in chat.
+
+**Acceptance criterion:** Over 10 consecutive cross-tab sends, 10/10 arrive within 2 s without reload; presence does not show Offline while the socket is connected; if disconnected, a visible reconnect banner appears and clears on recovery.
+
+**Safe retest:** Use only the self DM; send 10 "QA Test live n" messages between two tabs; delete them afterwards.
+
+---
+
+---
+
+### DOC-004: Conflict banner "Load theirs" does nothing (banner stays, local text kept)
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — Medium | Conflict banner "Load theirs" does nothing | The banner stays, the local text is kept, nothing from the other tab loads, and there's no toast.
+
+| Field | Value |
+|---|---|
+| Severity | **Medium** |
+| Priority | P2 |
+| Status | Open — run once |
+| Evidence label | VERIFIED (1/1, run once) |
+| URL | https://www.streamlineos.in/knowledge/wiki/doc/34 |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: not tested. R2: 1/1. (Conflict detection itself good.) |
+| Repro rate | R1 —; R2 1/1 |
+
+**Preconditions:** Same doc open in two tabs.
+
+**Steps to reproduce:**
+1. Tab 2: edit, let autosave.
+2. Tab 1: type; banner appears.
+3. Click "Load theirs".
+
+**Expected:** Tab 1 loads tab 2's version and banner clears.
+
+**Actual:** Banner ("adityachalla01 saved a newer version of this file just now. Autosave is paused — nothing you typed has been lost or overwritten") stays; TAB1 text remains. Console: 409 on /kb/pages/34.
+
+**Evidence (textual — no screenshot files):** R2 notes; console 409.
+
+**Impact:** Users stuck with autosave paused; can't resolve conflict except via other options/reload.
+
+**Acceptance criterion:** "Load theirs" replaces content with server version and clears banner; autosave resumes.
+
+**Safe retest:** Two-tab edit on a QA doc; trash after.
+
+---
+
+---
+
+### BILL-001: Payment row shows Amount "—" and no invoice/receipt link (pay_… 22 Oct 2026, captured)
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Medium | The payment amount now shows ₹4,999. | There's still no invoice or receipt link.
+
+| Field | Value |
+|---|---|
+| Severity | **Medium** |
+| Priority | P2 |
+| Status | Open |
+| Evidence label | VERIFIED |
+| URL | https://www.streamlineos.in/settings/billing (Invoices & Payments) |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed. R2: CONFIRMED 2/2. |
+| Repro rate | R1 1/1; R2 2/2 |
+
+**Preconditions:** Owner; org has one captured payment.
+
+**Steps to reproduce:**
+1. Open /settings/billing → Invoices & Payments.
+
+**Expected:** Amount (e.g. ₹4,999) and downloadable invoice.
+
+**Actual:** Row pay_… 22 Oct 2026 "captured", Amount "—", no invoice link/download.
+
+**Evidence (textual — no screenshot files):** R1/R2 notes. Observe-only.
+
+**Impact:** Customers can't see what they paid or get GST invoice — finance/compliance issue.
+
+**Acceptance criterion:** Each captured payment shows amount, currency and invoice PDF link.
+
+**Safe retest:** Read-only.
+
+---
+
+---
+
+### ADM-002: Webhook create/delete takes 10–20 s, dialog stays open after success, no toast; one create silently failed
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Medium | Create gives a toast in ~3.7 s and delete gives a toast in ~0.6 s. | The first http create hung 26 s with no message. The first delete hit "Failed to load webhooks" and the retry worked.
+
+| Field | Value |
+|---|---|
+| Severity | **Medium** |
+| Priority | P2 |
+| Status | Open |
+| Evidence label | VERIFIED (slowness 3/3); silent failure INTERMITTENT 1/3 |
+| URL | https://www.streamlineos.in/settings/webhooks |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: not noted (creates/deletes worked). R2: 3/3 slow; 1 silent failure (create hung ~20 s, no record, no error). |
+| Repro rate | R1 0/3 noted; R2 3/3 slow, 1/3 silent fail |
+
+**Preconditions:** Owner.
+
+**Steps to reproduce:**
+1. Add Webhook https://example.com/qa-hook.
+2. Click Create; time it; observe dialog/toast.
+3. Delete it; time it.
+
+**Expected:** <2 s; dialog closes; "Webhook created" toast; errors surfaced.
+
+**Actual:** 10–20 s; dialog remains open after success; no toast; once nothing created and no error. Webhooks page reload once hit a 20 s timeout.
+
+**Evidence (textual — no screenshot files):** R2 notes.
+
+**Impact:** Admins create duplicates or think it failed.
+
+**Acceptance criterion:** Create/delete complete <3 s p95 with toast and dialog close; failures show an error.
+
+**Safe retest:** Create/delete one https QA webhook.
+
+---
+
+---
+
+### CAL-005: Navigation state drifts: ?date param jumps to another week, stale New Event dialog, first clicks on view tabs ignored
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — Low | Calendar navigation drift | The first click on List View is ignored. The URL shows `?date=2026-10-30` while the 26 Oct–1 Nov week is shown.
+
+| Field | Value |
+|---|---|
+| Severity | **Medium** |
+| Priority | P2 |
+| Status | Open — intermittent |
+| Evidence label | INTERMITTENT |
+| URL | https://www.streamlineos.in/calendar |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed (jumps weeks / stale New Event dialog). R2: PARTIAL 1/1 (URL became ?date=2026-10-30 while viewing week of 26 Oct) + first click ignored on List View tab / Month option (2 observations). |
+| Repro rate | R1 1/1; R2 1/1 date drift, 2 ignored-click observations |
+
+**Preconditions:** Calendar with events.
+
+**Steps to reproduce:**
+1. Open a recurring event from week of 26 Oct; close it.
+2. Check URL ?date and visible week.
+3. Click List View tab once; open view menu and click Month once.
+
+**Expected:** URL matches visible range; single click switches view; no stale dialogs.
+
+**Actual:** ?date=2026-10-30 while viewing 26 Oct week; first clicks sometimes ignored (Month needed keyboard). R1: jumps weeks / stale New Event dialog re-opened.
+
+**Evidence (textual — no screenshot files):** R1/R2 notes.
+
+**Impact:** Disorienting; bookmarks/shares point to wrong week.
+
+**Acceptance criterion:** URL date always equals the first day of visible range; 10/10 single clicks switch view.
+
+**Safe retest:** Read-only navigation; no records needed.
+
+---
+
+---
+
+### CAL-007: List View shows external events with Etc/UTC as primary time ("3:30 am – 4:15 am · Etc/UTC (9:00 am Asia/Calcutta)")
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — Low | List View shows UTC as the main time | "27 Oct 2026, 3:30 am – 4:15 am · Etc/UTC (9:00 am Asia/Calcutta)".
+
+| Field | Value |
+|---|---|
+| Severity | **Medium** |
+| Priority | P2 |
+| Status | Open |
+| Evidence label | VERIFIED (1/1) |
+| URL | https://www.streamlineos.in/calendar (List View) |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: not tested. R2: 1/1. |
+| Repro rate | R1 —; R2 1/1 |
+
+**Preconditions:** External/synced events exist; user TZ Asia/Calcutta.
+
+**Steps to reproduce:**
+1. Open /calendar → List View.
+2. Find an external event such as on 19 Oct 2026.
+
+**Expected:** Primary time in the user's zone (IST), source zone optional secondary.
+
+**Actual:** "19 Oct 2026, 3:30 am – 4:15 am · Etc/UTC (9:00 am Asia/Calcutta)"; new native events show Asia/Calcutta.
+
+**Evidence (textual — no screenshot files):** R2 notes. Part of cross-module UTC/IST issue.
+
+**Impact:** Users may read 3:30 am as the meeting time.
+
+**Acceptance criterion:** All list items show IST as primary.
+
+**Safe retest:** Read-only.
+
+---
+
+---
+
+### SET-005: Location duplicate shows only a generic toast "That record already exists." after ~10 s (not field-level)
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Low | The duplicate-location message is fast (0.9 s) and specific. | It's still a toast, prefixed "name:", not an inline field error.
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P4 |
+| Status | Open — R1 only |
+| Evidence label | VERIFIED (R1 only) |
+| URL | https://www.streamlineos.in/settings/organization/locations |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed. R2: not re-run. |
+| Repro rate | R1 1/1 |
+
+**Preconditions:** "QA Test Location" exists.
+
+**Steps to reproduce:**
+1. Add Location with same name.
+2. Wait.
+
+**Expected:** Inline "A location named 'QA Test Location' already exists." quickly.
+
+**Actual:** Generic toast after ~10 s.
+
+**Evidence (textual — no screenshot files):** R1 notes.
+
+**Impact:** Slow, vague.
+
+**Acceptance criterion:** Field-level message <2 s.
+
+**Safe retest:** Create dup, archive original.
+
+---
+
+---
+
+### SET-006: Display name: no maximum length (200 chars accepted) and empty value disables Save with no message
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Low | Display name is capped at 100 characters with a counter. | Emptying it gives no "required" message.
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P4 |
+| Status | Open — R1 only |
+| Evidence label | VERIFIED (R1 only) |
+| URL | https://www.streamlineos.in/settings |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed. R2: not re-run. |
+| Repro rate | R1 1/1 |
+
+**Preconditions:** Owner.
+
+**Steps to reproduce:**
+1. Settings → profile display name: clear it.
+2. Enter 200 × "A", save; restore.
+
+**Expected:** Required message; sensible max (e.g. 100) with counter.
+
+**Actual:** Empty: Save disabled silently. 200 chars: "Name updated".
+
+**Evidence (textual — no screenshot files):** R1 notes. Restored to adityachalla01.
+
+**Impact:** Layout breakage risk elsewhere (INFERRED); unclear validation.
+
+**Acceptance criterion:** Empty shows "Display name is required"; max length enforced with counter.
+
+**Safe retest:** Change and restore own name.
+
+---
+
+---
+
+### SET-010: /settings/incoming-transfer shows header only — no empty state
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — Low | /settings/incoming-transfer has no empty state | Header and subtitle only.
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P4 |
+| Status | Open — R1 only |
+| Evidence label | VERIFIED (R1 only) |
+| URL | https://www.streamlineos.in/settings/incoming-transfer |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed (discovery + pass 1). R2: only sidebar presence checked. |
+| Repro rate | R1 1/1 |
+
+**Preconditions:** No pending transfer.
+
+**Steps to reproduce:**
+1. Open the page.
+
+**Expected:** "No incoming ownership transfers." with explanation.
+
+**Actual:** Blank body under header.
+
+**Evidence (textual — no screenshot files):** R1 notes.
+
+**Impact:** Looks broken.
+
+**Acceptance criterion:** Empty state copy shown.
+
+**Safe retest:** Read-only.
+
+---
+
+### RBAC-004: Delegations: Delegate button enabled on invalid form, revoke gives no toast, raw permission keys shown
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Low | Delegate is disabled until the form is valid, and permissions read like "Accounting › Access › View". | The revoke toast wasn't testable (it needs a delegation to a person).
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P3 |
+| Status | Open — R1 only |
+| Evidence label | VERIFIED (R1 only) |
+| URL | https://www.streamlineos.in/settings/delegations |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed. R2: not re-run. |
+| Repro rate | R1 1/1 |
+
+**Preconditions:** Owner; QA Emp record.
+
+**Steps to reproduce:**
+1. Delegate with nothing selected.
+2. Create delegation (QA Emp, blog:access:view, 28–30 Oct).
+3. Revoke it.
+
+**Expected:** Button disabled until valid; human permission names; revoke toast + list update.
+
+**Actual:** Errors "Select at least one permission", "Start date required", "End date required" only after clicking enabled button; permission shown as "blog:access:view"; revoke: no toast, list stale until reload (stale part = SET-001).
+
+**Evidence (textual — no screenshot files):** R1 notes.
+
+**Impact:** Minor friction; raw keys unclear to admins.
+
+**Acceptance criterion:** Disabled until valid; labels like "Blog › Access › View"; toast "Delegation revoked".
+
+**Safe retest:** Create and revoke one QA delegation.
+
+---
+
+---
+
+### BILL-005: AI credits summary vs feature breakdown differ by 0.01 (0.74 vs rows summing 0.73)
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — Low | AI credits rounding gap | The summary shows 22.7 but the by-feature rows sum to 22.69.
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P4 |
+| Status | Open — R1 only |
+| Evidence label | VERIFIED (R1); rounding cause INFERRED |
+| URL | https://www.streamlineos.in/settings/billing/ai-credits |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed. R2: not re-read. |
+| Repro rate | R1 1/1 |
+
+**Preconditions:** Owner.
+
+**Steps to reproduce:**
+1. Open AI credits Usage.
+2. Sum feature rows.
+
+**Expected:** Rows sum to total.
+
+**Actual:** Summary 44 req / 14.4K tokens / 0.74 credits; feature rows sum 0.73 (discovery earlier: 39 req / 14K / 0.73 — usage grew between reads).
+
+**Evidence (textual — no screenshot files):** R1 notes.
+
+**Impact:** Minor.
+
+**Acceptance criterion:** Totals equal sum of displayed rows (or rounding note).
+
+**Safe retest:** Read-only.
+
+---
+
+### ADM-007: /directory/settings renders identical to /directory (no settings content)
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — Low | /directory/settings duplicates /directory | Same person-records table, with no settings content.
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P3 |
+| Status | Open — R1 only |
+| Evidence label | VERIFIED (R1 only); missing route INFERRED |
+| URL | https://www.streamlineos.in/directory/settings |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed. R2: not exercised. |
+| Repro rate | R1 1/1 |
+
+**Preconditions:** Owner.
+
+**Steps to reproduce:**
+1. Open /directory/settings.
+
+**Expected:** Directory settings.
+
+**Actual:** Person records table identical to /directory.
+
+**Evidence (textual — no screenshot files):** R1 discovery.
+
+**Impact:** Settings unreachable/confusing.
+
+**Acceptance criterion:** Dedicated settings page or route removed from nav.
+
+**Safe retest:** Read-only.
+
+---
+
+---
+
+### ADM-009: Audit log shows raw keys ("Org_unit", "Webhook_endpoint", CSV actions like org.created)
+
+**Retest status (23 Oct 22:20 IST): PARTIALLY FIXED** — Low | Table rows show "Org unit" and "KB page". | The entity filter dropdown still lists raw keys: Org_unit, Webhook_endpoint, Kb_page, Principal_group.
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P4 |
+| Status | Open |
+| Evidence label | VERIFIED |
+| URL | https://www.streamlineos.in/settings/audit-log |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: raw action keys in CSV export (412 lines, includes userAgent). R2: raw entity keys in UI. |
+| Repro rate | R1 1/1; R2 1/1 |
+
+**Preconditions:** Owner.
+
+**Steps to reproduce:**
+1. Open audit log; read entity column.
+2. Export CSV.
+
+**Expected:** Human labels ("Org unit", "Webhook"), keys optional in CSV.
+
+**Actual:** "Org_unit", "Webhook_endpoint"; CSV raw keys.
+
+**Evidence (textual — no screenshot files):** R1/R2 notes.
+
+**Impact:** Readability.
+
+**Acceptance criterion:** UI uses friendly labels.
+
+**Safe retest:** Read-only.
+
+---
+
+---
+
+### ADM-011: People counts disagree: Directory 3 person records vs Users/Dashboard 5
+
+**Retest status (23 Oct 22:20 IST): STILL OPEN** — Low | People count mismatch | Directory shows 3 records while Users and Dashboard show 5, with no note explaining the difference.
+
+| Field | Value |
+|---|---|
+| Severity | **Low** |
+| Priority | P4 |
+| Status | Open — needs triage |
+| Evidence label | INFERRED (may be by design: person records ≠ user accounts) |
+| URL | https://www.streamlineos.in/directory vs /settings/users, /dashboard |
+| Role | Owner (adityachalla01) |
+| Browser | Chrome on Linux, 1280x800 viewport (automation-driven browser; member session in a separate Chrome profile) |
+| Rounds | R1: observed. R2: not re-checked. |
+| Repro rate | R1 1/1 |
+
+**Preconditions:** Owner.
+
+**Steps to reproduce:**
+1. Compare /directory rows, /settings/users stats, dashboard Total Employees.
+
+**Expected:** Consistent or explained.
+
+**Actual:** Directory 3; Users 5; Dashboard Total Employees 5.
+
+**Evidence (textual — no screenshot files):** R1 discovery.
+
+**Impact:** Confusing headcount.
+
+**Acceptance criterion:** Counts match or labels explain difference.
+
+**Safe retest:** Read-only.
+
+---

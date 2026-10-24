@@ -103,7 +103,7 @@ export const useUserPreferences = (
 export const useUserStats = (
   options?: Omit<UseQueryOptions<UserStats, Error>, "queryKey" | "queryFn">,
 ) => {
-  const canView = useCan("settings:view");
+  const canView = useCan("settings:organization:manage");
   return useQuery<UserStats, Error>({
     queryKey: usersAndCommerceQueryKeys.users.stats(),
     queryFn: ({ signal }) => apiClient.get("/users/stats", undefined, signal, userStatsContract),

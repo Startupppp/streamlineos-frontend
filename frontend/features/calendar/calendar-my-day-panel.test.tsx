@@ -55,7 +55,6 @@ describe("CalendarMyDayPanel", () => {
         events={[viewOnlyTask, completableTask]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={jest.fn()}
         hasMore={false}
@@ -85,7 +84,6 @@ describe("CalendarMyDayPanel", () => {
         events={[editable, deletable]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={jest.fn()}
         hasMore={false}
@@ -111,7 +109,6 @@ describe("CalendarMyDayPanel", () => {
         ]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={onLoadMore}
         hasMore
@@ -137,7 +134,6 @@ describe("CalendarMyDayPanel", () => {
         events={[]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={onLoadMore}
         hasMore
@@ -155,7 +151,6 @@ describe("CalendarMyDayPanel", () => {
     const props = {
       events: [],
       pages: [],
-      onSearchChange: jest.fn(),
       onSelectEvent: jest.fn(),
       onLoadMore,
       hasMore: true,
@@ -180,7 +175,6 @@ describe("CalendarMyDayPanel", () => {
         events={[first, second]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={onSelectEvent}
         onLoadMore={jest.fn()}
         hasMore={false}
@@ -205,7 +199,6 @@ describe("CalendarMyDayPanel", () => {
         events={[internalEvent]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={jest.fn()}
         hasMore={false}
@@ -228,7 +221,6 @@ describe("CalendarMyDayPanel", () => {
         events={[externalEvent]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={jest.fn()}
         hasMore={false}
@@ -247,7 +239,6 @@ describe("CalendarMyDayPanel", () => {
         events={[event("no-link", "2026-01-01T09:00:00.000Z")]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={jest.fn()}
         hasMore={false}
@@ -267,7 +258,6 @@ describe("CalendarMyDayPanel", () => {
         events={[unsafeEvent]}
         pages={[]}
         search=""
-        onSearchChange={jest.fn()}
         onSelectEvent={jest.fn()}
         onLoadMore={jest.fn()}
         hasMore={false}

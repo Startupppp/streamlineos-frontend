@@ -60,11 +60,13 @@ Rollback order: frontend first, then backend. Migrations 2490/2495/2500 are addi
 
 **Done when**
 
-- [ ] Observation order has been executed with metric evidence (or explicitly waived with recorded volume rationale).
+- [x] Observation order has been executed with metric evidence (or explicitly waived with recorded volume rationale).
+
+**Volume waiver (2026-10-24).** `pnpm chat:baseline` (read-only, all orgs, last 7 days): 19 messages, 1 sender, 0 Huddles. No window can reach ≥1,000 sends and ≥50 Huddle starts, so the observation order is waived until volume exists. Health in the same snapshot: 0 duplicate `clientKey` groups, 0 same-content pairs within 2s, 0 stuck outbox rows, 204 `chat.message.fanout` events in 7 days with 0 dead, 0 errored, 0 retried, 0 Huddles active over 24h. Re-run the snapshot weekly; start the internal window once a 7-day snapshot reaches the volume floor.
 - [ ] Baseline values for every release-gate metric are recorded before any behaviour change.
 
 - [ ] Backend: focused Jest, typecheck, lint, OpenAPI, migration, contract, tenant, idempotency and Ably gates pass.
 - [ ] Frontend: focused Jest, type-check, lint, response-contract, permission, PageState, dead-code, file-size and route-bundle gates pass.
 
 - [ ] Order: baseline telemetry, additive contracts and migration, internal cohort, agency/service pilots, staged release, GA.
-- [ ] GA is marked only when every release gate holds for a full cohort/staged period.
+- [ ] GA is marked only when every release gate holds for a full cohort/staged period. Not marked: the waiver above covers observation order only; GA still needs a full staged window at volume.

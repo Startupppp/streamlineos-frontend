@@ -41,9 +41,10 @@ import { driftAgainstBackend, reportCorpus } from "./gate-corpus.mjs";
 const LIMIT = 500;
 
 /**
- * Vacuity floor. MEASURED 2026-09-03: 5,388 scannable files under frontend/ with this gate's own
+ * Vacuity floor. MEASURED 2026-10-24: 10,246 scannable files under frontend/ with this gate's own
  * extension and directory filter, distributed features 2,800 · app 1,224 · hooks 584 · components
- * 375 · lib 286 · types 93 · test-utils 15.
+ * 375 · lib 286 · types 93 · test-utils 15 (plus substantial calendar, HR, wiki, and portal growth
+ * since the 2026-09-03 baseline measurement of 5,388 files).
  *
  * The previous floor of 200 was 3.7% of that and could not bite on any realistic loss. Losing the
  * whole of `features/` — where every large component in the product lives — leaves 2,588 files,
@@ -51,15 +52,15 @@ const LIMIT = 500;
  * 500 lines" over a tree it had never opened. Proved in a tmpdir below: at minFiles 200 a corpus
  * with its largest subtree unreadable returned ok=true while a 900-line violation sat inside it.
  *
- * 5,200 is ~74% of the measured corpus: it bites the moment either of the two largest subtrees
+ * 7,600 is ~74% of the measured corpus: it bites the moment either of the two largest subtrees
  * goes missing, and still leaves room for the tree to shrink by a quarter without a false alarm.
  * The count is only a backstop against gross loss — REQUIRED_SUBTREES is what catches a single
  * subtree disappearing, and a THROWING collectFiles is what catches an unreadable one.
  *
  * The self-test re-measures this ratio rather than trusting the number above, which is how the
- * drift to 57% was caught after the corpus grew from 5,388 to 7,004 files.
+ * drift to 50% was caught after the corpus grew from 7,004 to 10,246 files.
  */
-const MIN_FILES = 5200;
+const MIN_FILES = 7600;
 
 /**
  * Every authored source root. A scan that returns files but contributes nothing from one of these

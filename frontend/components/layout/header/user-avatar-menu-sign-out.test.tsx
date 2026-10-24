@@ -10,6 +10,15 @@ jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => mobile }));
 jest.mock("@/hooks/common/auth-hooks", () => ({
   useSignOut: () => ({ mutate: signOut, isPending: false }),
 }));
+jest.mock("@/hooks/common/use-presence-selection", () => ({
+  usePresenceSelection: () => ({
+    status: "ONLINE",
+    statusMessage: "",
+    statusExpiresAt: null,
+    selectStatus: jest.fn(),
+    isPending: false,
+  }),
+}));
 
 describe("the account menu's Sign out", () => {
   it("renders in the dropdown even when the menu body and the profile never load", () => {

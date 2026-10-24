@@ -2,11 +2,9 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, type Key } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
 import { List, useDynamicRowHeight, type RowComponentProps } from "react-window";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { EVENT_COLORS } from "./calendar-event-constants";
 import type { CalendarListItem, CalendarSearchResponse } from "@/hooks/api/calendar-types";
 import { formatEventTimeRange } from "@/lib/date-utils";
@@ -113,7 +111,6 @@ export function CalendarMyDayPanel({
   events,
   pages,
   search,
-  onSearchChange,
   onSelectEvent,
   onLoadMore,
   hasMore,
@@ -122,7 +119,6 @@ export function CalendarMyDayPanel({
   events: CalendarListItem[];
   pages: CalendarSearchResponse[];
   search: string;
-  onSearchChange: (value: string) => void;
   onSelectEvent: (event: CalendarListItem) => void;
   onLoadMore: () => void;
   hasMore: boolean;
@@ -176,18 +172,8 @@ export function CalendarMyDayPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <label className="relative mx-4 mt-4 mb-3 block shrink-0">
-        <span className="sr-only">Search My Day</span>
-        <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder="Search authorized events"
-          className="pl-9"
-        />
-      </label>
       {incomplete ? (
-        <div role="status" className="mx-4 mb-3 shrink-0 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
+        <div role="status" className="mx-4 mt-4 mb-3 shrink-0 rounded-md border border-status-warning-rule bg-status-warning-surface px-3 py-2 text-xs text-status-warning-ink">
           Some calendar sources are incomplete. Search results may be missing items.
         </div>
       ) : null}

@@ -414,7 +414,7 @@ async function fetchOrThrowTransportError(
   if (outageCircuitRemainingMs() > 0)
     throw networkError(url, requestInit, path, "Server unavailable; retrying shortly.");
   try {
-    const credentials = requestInit.credentials === "include" && isPublicCalendarReceiptPath(path) ? "include" : "omit";
+    const credentials = isPublicCalendarReceiptPath(path) ? "include" : "omit";
     const res = await fetch(url, { ...requestInit, headers, credentials, signal });
     if (
       OUTAGE_STATUSES.has(res.status) &&

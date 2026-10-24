@@ -543,6 +543,7 @@
     "inventory:warehouses:scope-all",
     "inventory:webhooks:manage",
     "kb:ai:generate",
+    "kb:analytics:manage",
     "kb:analytics:view",
     "kb:articles:create",
     "kb:articles:delete",
@@ -3554,6 +3555,11 @@
       "action": "generate",
       "description": "Generate AI answers from the knowledge base"
     },
+    "kb:analytics:manage": {
+      "resource": "kb:analytics",
+      "action": "manage",
+      "description": "Manage knowledge base analytics gap actions (assign, dismiss, create fix)"
+    },
     "kb:analytics:view": {
       "resource": "kb:analytics",
       "action": "view",
@@ -5054,6 +5060,7 @@
     "inventory:warehouses:read",
     "inventory:warehouses:scope-all",
     "kb:ai:generate",
+    "kb:analytics:manage",
     "kb:analytics:view",
     "kb:articles:create",
     "kb:articles:delete",

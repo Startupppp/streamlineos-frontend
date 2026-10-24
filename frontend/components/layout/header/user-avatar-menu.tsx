@@ -22,8 +22,11 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { PresenceDot } from "@/components/shared/presence-dot";
 import { useIsMobile } from "@/hooks/common/use-mobile";
+import { usePresenceSelection } from "@/hooks/common/use-presence-selection";
 import { useSignOut } from "@/hooks/common/auth-hooks";
+import { presenceLabel, type PresenceStatus } from "@/lib/presence";
 import { resolveImageUrl, cn } from "@/lib/utils";
 
 const UserAvatarMenuBody = dynamic(
@@ -40,11 +43,25 @@ const AccountTrigger = forwardRef<
     name: string;
     image: string | undefined;
     initials: string;
+    status: PresenceStatus;
+    statusMessage: string;
   }
 >(function AccountTrigger(
-  { name, image, initials, className, type = "button", ...props },
+  {
+    name,
+    image,
+    initials,
+    status,
+    statusMessage,
+    className,
+    type = "button",
+    ...props
+  },
   ref,
 ) {
+  const availability =
+    statusMessage.trim() === "" ? presenceLabel(status) : statusMessage.trim();
+
   return (
     <button
       ref={ref}
@@ -54,14 +71,20 @@ const AccountTrigger = forwardRef<
         className,
       )}
       {...props}
-      aria-label="Account menu"
+      aria-label={`Account menu · ${availability}`}
     >
-      <Avatar className="size-8 ring-2 ring-sidebar-border">
-        <AvatarImage src={image} alt={name} />
-        <AvatarFallback className="text-dense font-bold bg-primary/10 text-primary">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
+      <span className="relative block size-8">
+        <Avatar className="size-8 ring-2 ring-sidebar-border">
+          <AvatarImage src={image} alt={name} />
+          <AvatarFallback className="text-dense font-bold bg-primary/10 text-primary">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
+        <PresenceDot
+          status={status}
+          className="absolute -bottom-0.5 -right-0.5 size-2.5 border-sidebar"
+        />
+      </span>
     </button>
   );
 });
@@ -84,6 +107,7 @@ export function UserAvatarMenu({
   const email = session?.user?.email ?? "";
   const image = resolveImageUrl(session?.user?.image);
   const initials = name.charAt(0).toUpperCase();
+  const { status, statusMessage } = usePresenceSelection();
 
   const { mutate: signOut, isPending: isSigningOut } = useSignOut();
   const handleSignOut = useCallback(() => signOut(), [signOut]);
@@ -104,7 +128,13 @@ export function UserAvatarMenu({
   );
 
   const trigger = (
-    <AccountTrigger name={name} image={image} initials={initials} />
+    <AccountTrigger
+      name={name}
+      image={image}
+      initials={initials}
+      status={status}
+      statusMessage={statusMessage}
+    />
   );
 
   if (hideTrigger || isMobile) {

@@ -358,14 +358,13 @@ describe("useMailThreadView — attachment descriptors", () => {
     expect(view.messages[0]!.attachments).toEqual([]);
   });
 
-  it("provides the correct download path with url-encoded fileName", () => {
+  it("provides attachment messageId and accountId for download", () => {
     const attachments = [
       { id: "att-1", fileName: "doc with spaces.pdf", mimeType: "application/pdf", sizeBytes: null },
     ];
     const view = renderWith([{ ...BASE, attachments }]);
-    expect(view.messages[0]!.attachments[0]!.downloadPath).toBe(
-      "/mail/messages/msg-1/attachments/att-1?accountId=7&fileName=doc%20with%20spaces.pdf",
-    );
+    expect(view.messages[0]!.attachments[0]!.messageId).toBe("msg-1");
+    expect(view.messages[0]!.attachments[0]!.accountId).toBe(7);
   });
 });
 

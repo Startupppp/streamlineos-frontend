@@ -23,7 +23,6 @@ import type {
 } from "@/types/projects";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
-import type { ZodType } from "zod";
 import {
   PORTAL_CHILD_PAGE_SIZE,
   portalFilesPageSchema,
@@ -112,6 +111,16 @@ interface PortalChildPage<T> {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
+function buildPortalChildParams(
+  pageParam: string | undefined,
+  forPortalMembershipId: string | undefined,
+): Record<string, string | number> {
+  const params: Record<string, string | number> = { limit: PORTAL_CHILD_PAGE_SIZE };
+  if (pageParam !== undefined) params.cursor = pageParam;
+  if (forPortalMembershipId !== undefined) params.forPortalMembershipId = forPortalMembershipId;
+  return params;
+}
+
 function usePortalPreviewChildPage<T>(
   projectId: number,
   segment:
@@ -123,8 +132,7 @@ function usePortalPreviewChildPage<T>(
     | "deliverables"
     | "approvals"
     | "invoices",
-  path: string,
-  contract: ZodType<PortalChildPage<T>>,
+  fetcher: (params: Record<string, string | number>, signal: AbortSignal) => Promise<PortalChildPage<T>>,
   forPortalMembershipId?: string,
 ) {
   const canView = useCan("build:portal:view");
@@ -134,15 +142,8 @@ function usePortalPreviewChildPage<T>(
       segment,
       forPortalMembershipId,
     ] as const,
-    queryFn: ({ signal, pageParam }) => {
-      const params: Record<string, string | number> = {
-        limit: PORTAL_CHILD_PAGE_SIZE,
-      };
-      if (pageParam !== undefined) params.cursor = pageParam;
-      if (forPortalMembershipId !== undefined)
-        params.forPortalMembershipId = forPortalMembershipId;
-      return apiClient.get<PortalChildPage<T>>(path, params, signal, contract);
-    },
+    queryFn: ({ signal, pageParam }) =>
+      fetcher(buildPortalChildParams(pageParam, forPortalMembershipId), signal),
     initialPageParam: NO_CURSOR_YET,
     getNextPageParam: (lastPage: PortalChildPage<T>) =>
       lastPage.pagination.nextCursor ?? undefined,
@@ -164,8 +165,10 @@ export function usePortalPreviewUpdates(
   return usePortalPreviewChildPage(
     projectId,
     "updates",
-    `/build/portal/projects/${projectId}/updates`,
-    portalUpdatesPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/updates`,
+      params, signal, portalUpdatesPageSchema,
+    ),
     forPortalMembershipId,
   );
 }
@@ -177,8 +180,10 @@ export function usePortalPreviewFiles(
   return usePortalPreviewChildPage(
     projectId,
     "files",
-    `/build/portal/projects/${projectId}/files`,
-    portalFilesPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/files`,
+      params, signal, portalFilesPageSchema,
+    ),
     forPortalMembershipId,
   );
 }
@@ -190,8 +195,10 @@ export function usePortalPreviewRequests(
   return usePortalPreviewChildPage(
     projectId,
     "requests",
-    `/build/portal/projects/${projectId}/requests`,
-    portalRequestsPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/requests`,
+      params, signal, portalRequestsPageSchema,
+    ),
     forPortalMembershipId,
   );
 }
@@ -203,8 +210,10 @@ export function usePortalPreviewMilestones(
   return usePortalPreviewChildPage(
     projectId,
     "milestones",
-    `/build/portal/projects/${projectId}/milestones`,
-    portalMilestonesPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/milestones`,
+      params, signal, portalMilestonesPageSchema,
+    ),
     forPortalMembershipId,
   );
 }
@@ -216,8 +225,10 @@ export function usePortalPreviewTasks(
   return usePortalPreviewChildPage(
     projectId,
     "tasks",
-    `/build/portal/projects/${projectId}/tasks`,
-    portalTasksPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/tasks`,
+      params, signal, portalTasksPageSchema,
+    ),
     forPortalMembershipId,
   );
 }
@@ -229,8 +240,10 @@ export function usePortalPreviewDeliverables(
   return usePortalPreviewChildPage(
     projectId,
     "deliverables",
-    `/build/portal/projects/${projectId}/deliverables`,
-    portalDeliverablesPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/deliverables`,
+      params, signal, portalDeliverablesPageSchema,
+    ),
     forPortalMembershipId,
   );
 }
@@ -242,8 +255,10 @@ export function usePortalPreviewApprovals(
   return usePortalPreviewChildPage(
     projectId,
     "approvals",
-    `/build/portal/projects/${projectId}/approvals`,
-    portalApprovalsPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/approvals`,
+      params, signal, portalApprovalsPageSchema,
+    ),
     forPortalMembershipId,
   );
 }
@@ -255,8 +270,10 @@ export function usePortalPreviewInvoices(
   return usePortalPreviewChildPage(
     projectId,
     "invoices",
-    `/build/portal/projects/${projectId}/invoices`,
-    portalInvoicesPageSchema,
+    (params, signal) => apiClient.get(
+      `/build/portal/projects/${projectId}/invoices`,
+      params, signal, portalInvoicesPageSchema,
+    ),
     forPortalMembershipId,
   );
 }

@@ -124,10 +124,11 @@ type MessageBody =
 
 export interface ThreadAttachment {
   id: string;
+  messageId: string;
+  accountId: number;
   fileName: string;
   sizeBytes: number | null;
   mimeType: string;
-  downloadPath: string;
 }
 
 export interface ThreadMessageView extends Omit<
@@ -161,10 +162,11 @@ function toMessageView(
 
   const threadAttachments: ThreadAttachment[] = attachments.map((att) => ({
     id: att.id,
+    messageId: m.id,
+    accountId: m.accountId,
     fileName: att.fileName,
     sizeBytes: att.sizeBytes,
     mimeType: att.mimeType,
-    downloadPath: `/mail/messages/${m.id}/attachments/${att.id}?accountId=${m.accountId}&fileName=${encodeURIComponent(att.fileName)}`,
   }));
 
   return {

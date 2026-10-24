@@ -1,6 +1,6 @@
 {
   "capturedAgainst": "(file)",
-  "capturedAt": "2026-10-21T04:40:04.267Z",
+  "capturedAt": "2026-10-24T05:55:33.201Z",
   "missing": [
     "get /access/user-module-access/{userId} [].core",
     "get /clients/{clientId}/timeline events[].id",
@@ -445,7 +445,6 @@
     "post /party/subjects/{subjectId}/parties linkedAt",
     "post /party/subjects/{subjectId}/parties linkedBy",
     "post /party/subjects/{subjectId}/parties relationship",
-    "post /payroll/employees/{employeeUserId}/profiles id",
     "post /payroll/manager/loans/{loanId}/approve ok",
     "post /payroll/manager/loans/{loanId}/approve reason",
     "post /payroll/manager/loans/{loanId}/reject ok",

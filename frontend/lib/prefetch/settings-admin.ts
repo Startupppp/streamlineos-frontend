@@ -239,7 +239,7 @@ export async function prefetchPrivacyRequests(subjectEmail: string | undefined) 
       queryKey: platformCoreQueryKeys.privacy.subjectRequests(params),
       queryFn: () =>
         serverGet(
-          params ? `/compliance/subject-requests?${query(params)}` : "/compliance/subject-requests",
+          `/compliance/subject-requests${params ? `?${query(params)}` : ""}`,
           subjectRequestListContract,
         ),
       staleTime: 30_000,

@@ -51,7 +51,7 @@ export function usePublicCalendarPoll(token: string) {
     queryKey: queryKey(token),
     queryFn: ({ signal }) =>
       apiClient.get<PublicCalendarPoll>(
-        pollPath(token),
+        `/public/calendar/polls/${encodeURIComponent(token)}`,
         undefined,
         signal,
         calendarPollContract,

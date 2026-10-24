@@ -47,8 +47,8 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
           downloadUrl: string;
           fileName: string;
         }>(
-          attachment.downloadPath,
-          undefined,
+          `/mail/messages/${attachment.messageId}/attachments/${attachment.id}`,
+          { accountId: String(attachment.accountId), fileName: attachment.fileName },
           undefined,
           mailDownloadContract,
         );
@@ -56,7 +56,7 @@ const AttachmentChip = forwardRef<HTMLButtonElement, AttachmentChipProps>(
       } catch (err) {
         toast.error(getErrorMessage(err));
       }
-    }, [attachment.downloadPath]);
+    }, [attachment.messageId, attachment.id, attachment.accountId, attachment.fileName]);
 
     const handleClick = useCallback(() => {
       void handleDownload();
