@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Users } from "lucide-react";
 import { toast } from "sonner";
 import { useChatOrgUsers, useChatOnlineUsers } from "@/hooks/api/chat-core-read";
-import { useCreateDMChannel } from "@/hooks/api/chat-core-mutations-b";
+import { useCreateDMChannel } from "@/hooks/api/chat-channel-mutations";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { resolveImageUrl } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";

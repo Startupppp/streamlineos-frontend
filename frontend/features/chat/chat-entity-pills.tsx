@@ -1,6 +1,5 @@
 "use client";
 
-import { memo, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Lock } from "lucide-react";
 import { toast } from "sonner";
@@ -20,7 +19,7 @@ import { useSubmitEntityAction, type EntityReferenceInput } from "@/hooks/api/ch
 import { useLinkedRecordPreview, useResolvedReferenceCard } from "@/hooks/api/chat-reference-cards";
 import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
-import { LINKED_RECORD_META } from "./linked-record-meta";
+import { getLinkedRecordMeta } from "./linked-record-meta";
 
 const TICKET_STATUSES = ["TODO", "IN_PROGRESS", "IN_REVIEW", "DONE"] as const;
 
@@ -48,14 +47,14 @@ interface StatusMenuItemProps {
   onPick: (status: string) => void;
 }
 
-const StatusMenuItem = memo(function StatusMenuItem({ status, isCurrent, onPick }: StatusMenuItemProps) {
-  const handleSelect = useCallback(() => onPick(status), [onPick, status]);
+function StatusMenuItem({ status, isCurrent, onPick }: StatusMenuItemProps) {
+  function handleSelect() { onPick(status); }
   return (
     <DropdownMenuItem onSelect={handleSelect} className={cn(isCurrent && "font-semibold")}>
       {TICKET_STATUS_DISPLAY[status]}
     </DropdownMenuItem>
   );
-});
+}
 
 interface TicketStatusControlProps {
   reference: EntityReferenceInput;
@@ -70,19 +69,16 @@ function TicketStatusControl({ reference, channelId, status }: TicketStatusContr
   const isPending = Boolean(submitEntityAction.isPending);
   const { mutateAsync } = submitEntityAction;
 
-  const handleStatusChange = useCallback(
-    async (next: string) => {
-      const previous = current;
-      setCurrent(next);
-      try {
-        await mutateAsync({ channelId, reference, actionId: "status", input: { status: next } });
-      } catch (error) {
-        setCurrent(previous);
-        toast.error(statusChangeError(error));
-      }
-    },
-    [current, setCurrent, mutateAsync, channelId, reference],
-  );
+  async function handleStatusChange(next: string) {
+    const previous = current;
+    setCurrent(next);
+    try {
+      await mutateAsync({ channelId, reference, actionId: "status", input: { status: next } });
+    } catch (error) {
+      setCurrent(previous);
+      toast.error(statusChangeError(error));
+    }
+  }
 
   const label = TICKET_STATUS_DISPLAY[current] ?? current;
   const badgeClass = cn(
@@ -128,13 +124,13 @@ export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
   const preview = useLinkedRecordPreview(entity);
   const resolved = useResolvedReferenceCard(channelId, entity, entity.card === undefined);
   const card = entity.card !== undefined ? entity.card : resolved !== undefined ? resolved : preview;
-  const meta = LINKED_RECORD_META[entity.type];
+  const meta = getLinkedRecordMeta(entity.type);
   const href = card?.href ?? null;
-  const reference = useMemo(() => ({ type: entity.type, id: entity.id }), [entity.type, entity.id]);
+  const reference = { type: entity.type, id: entity.id };
 
-  const handleOpen = useCallback(() => {
+  function handleOpen() {
     if (href) router.push(href);
-  }, [router, href]);
+  }
 
   if (card === null)
     return (
@@ -150,7 +146,7 @@ export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
     <>
       <Icon className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
       {card?.subtitle && (
-        <span className={cn("shrink-0 text-muted-foreground", entity.type === "ticket" && "font-mono")}>
+        <span className={cn("shrink-0 text-muted-foreground", meta.subtitleMonospace && "font-mono")}>
           {card.subtitle}
         </span>
       )}
@@ -172,7 +168,7 @@ export function LinkedRecordPill({ entity, channelId }: LinkedRecordPillProps) {
       ) : (
         <span className="flex min-w-0 items-center gap-1.5 text-muted-foreground">{body}</span>
       )}
-      {entity.type === "ticket" && card?.status && (
+      {meta.statusControl && card?.status && (
         <TicketStatusControl reference={reference} channelId={channelId} status={card.status} />
       )}
     </span>

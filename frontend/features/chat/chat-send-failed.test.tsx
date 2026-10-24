@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { ApiError } from "@/lib/api-envelope";
 import { UNSCOPED } from "@/lib/org-scoped-storage";
 import { chatSendRetry } from "@/hooks/api/chat-send-policy";
-import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
+import { useSendMessage } from "@/hooks/api/chat-message-mutations";
 import { freshClient, installRandomUuid, seedTimeline, timeline, wrapperFor } from "@/hooks/api/chat-cache-test-harness";
 import { appendOutboxEntry, chatDraftKey, readOutbox } from "./composer-draft";
 import { discardFailedSend } from "./chat-outbox-delivery";

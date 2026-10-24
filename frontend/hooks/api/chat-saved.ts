@@ -9,13 +9,6 @@ import {
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-
-const chatOkContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
-);
-const chatSavedMessagesContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatSavedMessagesContract),
-);
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
@@ -30,6 +23,13 @@ import {
 } from "@/hooks/api/chat-message-cache";
 import { findChannelRow } from "@/hooks/api/chat-channel-cache";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+
+const chatOkContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
+);
+const chatSavedMessagesContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatSavedMessagesContract),
+);
 
 export function useSavedMessages() {
   const canRead = useCan("chat:messages:read");

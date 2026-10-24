@@ -35,7 +35,7 @@ import React from "react";
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { useDeleteMessage } from "@/hooks/api/chat-core-mutations-a";
+import { useDeleteMessage } from "@/hooks/api/chat-message-mutations";
 import { toast } from "sonner";
 
 const mockDelete = apiClient.delete as jest.MockedFunction<typeof apiClient.delete>;

@@ -1,7 +1,7 @@
 "use client";
 
 import type { ReactNode, RefObject } from "react";
-import { Bookmark, Sparkles } from "lucide-react";
+import { Bookmark, Info, Sparkles } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import {
@@ -19,11 +19,14 @@ import {
 } from "@/components/ui/sheet";
 import { AiActionResultBody, type AiAction } from "@/components/ai";
 import { useAiPopoverAction } from "@/components/ai/use-ai-popover-action";
+import { cn } from "@/lib/utils";
 
 interface ConversationOverflowMenuProps {
   canUseAi: boolean;
   summarizeAction: AiAction;
   onOpenSaved: () => void;
+  onOpenDetails: () => void;
+  detailsOpen?: boolean;
   triggerClassName: string;
   triggerRef?: RefObject<HTMLButtonElement | null>;
   children?: ReactNode;
@@ -33,6 +36,8 @@ export function ConversationOverflowMenu({
   canUseAi,
   summarizeAction,
   onOpenSaved,
+  onOpenDetails,
+  detailsOpen = false,
   triggerClassName,
   triggerRef,
   children,
@@ -54,13 +59,17 @@ export function ConversationOverflowMenu({
             icon={EllipsisIcon}
             iconSize={16}
             variant="ghost"
-            className={triggerClassName}
+            className={cn(triggerClassName, detailsOpen && "bg-muted text-foreground")}
             aria-label="More conversation actions"
           >
             {children}
           </AnimatedIconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuItem onSelect={onOpenDetails}>
+            <Info />
+            Conversation details
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={onOpenSaved}>
             <Bookmark />
             Saved messages

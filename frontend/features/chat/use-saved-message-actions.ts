@@ -3,7 +3,7 @@
 import { useCallback, useMemo } from "react";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
+import { useSavedMessages, useSaveMessage, useUnsaveMessage } from "@/hooks/api/chat-saved";
 
 export function useSavedMessageActions() {
   const { data: savedData } = useSavedMessages();

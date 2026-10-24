@@ -8,9 +8,9 @@ import {
   useDeleteMessage,
   useEditMessage,
   useSendMessage,
-} from "@/hooks/api/chat-core-mutations-a";
+} from "@/hooks/api/chat-message-mutations";
 import { useToggleReaction } from "@/hooks/api/chat-reaction-mutation";
-import { useSaveMessage } from "@/hooks/api/chat-personal-a";
+import { useSaveMessage } from "@/hooks/api/chat-saved";
 import type { Message, MessagesPage, SavedMessagesPage } from "@/types/chat";
 
 jest.mock("next-auth/react", () => ({

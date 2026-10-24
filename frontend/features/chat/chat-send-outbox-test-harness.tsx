@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { act, renderHook } from "@testing-library/react";
 import type { QueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
+import { useSendMessage } from "@/hooks/api/chat-message-mutations";
 import { CHANNEL_ID, wrapperFor } from "@/hooks/api/chat-cache-test-harness";
 import type { Message } from "@/types/chat";
 import { useMessageComposer } from "./use-message-composer";

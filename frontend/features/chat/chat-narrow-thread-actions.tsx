@@ -1,7 +1,7 @@
 "use client";
 
 import type { RefObject } from "react";
-import { InfoIcon, MicIcon } from "@animateicons/react/lucide";
+import { MicIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { cn } from "@/lib/utils";
 import type { AiAction } from "@/components/ai";
@@ -60,22 +60,12 @@ export function ChatNarrowThreadActions({
           aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
         />
       )}
-      <AnimatedIconButton
-        type="button"
-        icon={InfoIcon}
-        iconSize={16}
-        iconClassName="mr-0"
-        variant="ghost"
-        size="icon"
-        className={cn(NARROW_ICON_CLASS, showInfoPanel && "bg-muted text-foreground")}
-        onClick={onToggleInfo}
-        aria-label="Conversation details"
-        aria-expanded={showInfoPanel}
-      />
       <ConversationOverflowMenu
         canUseAi={canUseAi}
         summarizeAction={summarizeAction}
         onOpenSaved={onToggleSaved}
+        onOpenDetails={onToggleInfo}
+        detailsOpen={showInfoPanel}
         triggerClassName={NARROW_ICON_CLASS}
         triggerRef={dropdownTriggerRef}
       />

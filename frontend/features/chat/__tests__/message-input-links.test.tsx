@@ -26,7 +26,7 @@ jest.mock("@/components/layout/mobile/chat-mobile-chrome-layout", () => ({
 }));
 
 const addMember = jest.fn();
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-channel-mutations", () => ({
   useAddChannelMember: () => ({ mutate: addMember, isPending: false }),
 }));
 

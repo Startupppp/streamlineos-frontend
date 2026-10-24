@@ -11,7 +11,7 @@ import { ChevronRightIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useCreateGroupChannel, useCreatePublicChannel, useCreatePrivateChannel } from "@/hooks/api/chat-core-mutations-b";
+import { useCreateGroupChannel, useCreatePublicChannel, useCreatePrivateChannel } from "@/hooks/api/chat-channel-mutations";
 import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { apiClient } from "@/lib/api-client";

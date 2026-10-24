@@ -9,7 +9,7 @@ jest.mock("ably/react", () => ({
   useAbly: jest.fn(),
 }));
 
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-presence", () => ({
   useChatHeartbeat: jest.fn(),
 }));
 
@@ -32,7 +32,7 @@ const { useAbly } = jest.requireMock("ably/react") as {
   useAbly: jest.Mock;
 };
 const { useChatHeartbeat } = jest.requireMock(
-  "@/hooks/api/chat-core-mutations-b",
+  "@/hooks/api/chat-presence",
 ) as {
   useChatHeartbeat: jest.Mock;
 };

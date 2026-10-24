@@ -219,7 +219,7 @@ describe("send_to_visible through the real send and realtime paths", () => {
   });
 
   async function mountChat() {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const { useChatRealtime } = await import("@/hooks/api/chat-realtime");
     const ably = ablyMock();
     useAbly.mockReturnValue(ably);

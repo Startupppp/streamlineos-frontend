@@ -31,7 +31,7 @@ jest.mock("@/hooks/api/access", () => ({
 const mockJoin = jest.fn();
 const mockCreateDM = jest.fn();
 
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-channel-mutations", () => ({
   useJoinChannel: () => ({ mutateAsync: mockJoin, isPending: false }),
   useCreateDMChannel: () => ({ mutateAsync: mockCreateDM, isPending: false }),
 }));

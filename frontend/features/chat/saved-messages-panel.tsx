@@ -12,7 +12,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { resolveImageUrl } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useSavedMessages, useUnsaveMessage } from "@/hooks/api/chat-personal-a";
+import { useSavedMessages, useUnsaveMessage } from "@/hooks/api/chat-saved";
 import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
 import { formatMessageTime, buildChatUserMap, resolveChatUserName } from "./chat-helpers";
 import { usePanelRenderWindow } from "./panel-render-window";

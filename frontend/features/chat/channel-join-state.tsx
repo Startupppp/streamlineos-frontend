@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { useJoinChannel } from "@/hooks/api/chat-core-mutations-b";
+import { useJoinChannel } from "@/hooks/api/chat-channel-mutations";
 
 interface ChannelJoinStateProps {
   channelId: number;

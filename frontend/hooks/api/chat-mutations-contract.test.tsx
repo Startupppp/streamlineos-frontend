@@ -27,7 +27,7 @@ import React from "react";
 import { renderHook, act } from "@testing-library/react";
 import { QueryClient, QueryClientProvider, type InfiniteData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { useSendMessage, useEditMessage, useDeleteMessage } from "@/hooks/api/chat-core-mutations-a";
+import { useSendMessage, useEditMessage, useDeleteMessage } from "@/hooks/api/chat-message-mutations";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import type { MessagesPage } from "@/types/chat";
 

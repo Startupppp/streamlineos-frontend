@@ -29,6 +29,22 @@ describe("a Zod rejection from the API reaches the field that caused it, because
     expect(getValidationFieldErrors(new Error("plain"))).toEqual([]);
   });
 
+  it("maps field details on a 409 conflict so duplicate-name forms stay inline", () => {
+    const error = new ApiError("That record already exists.", 409, "CONFLICT", [
+      {
+        path: "name",
+        message: "A location named 'QA Test Location' already exists.",
+      },
+    ]);
+
+    expect(getValidationFieldErrors(error)).toEqual([
+      {
+        path: "name",
+        message: "A location named 'QA Test Location' already exists.",
+      },
+    ]);
+  });
+
   it("skips malformed entries rather than trusting the body's shape", () => {
     const error = new ApiError("Validation failed.", 400, "VALIDATION_FAILED", [
       { path: "ok", message: "fine" },

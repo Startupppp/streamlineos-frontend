@@ -18,7 +18,7 @@ import {
   useMuteChannel,
   useSetNotificationPreference,
   useUnmuteChannel,
-} from "@/hooks/api/chat-personal-b";
+} from "@/hooks/api/chat-settings";
 import type { ChatNotificationPreference } from "@/types/chat";
 import {
   CHAT_NOTIFICATION_OPTIONS,

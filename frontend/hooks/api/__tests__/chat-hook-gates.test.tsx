@@ -94,7 +94,7 @@ describe("chat read hooks — stay idle without permission", () => {
   });
 
   it("useEntityChannel — fetchStatus idle when chat:channels:read denied", async () => {
-    const { useEntityChannel } = await import("@/hooks/api/chat-personal-b");
+    const { useEntityChannel } = await import("@/hooks/api/chat-entities");
     const client = freshClient();
     const { result } = renderHook(() => useEntityChannel("project", "p-1"), {
       wrapper: makeWrapper(client),
@@ -188,7 +188,7 @@ describe("chat mutation hooks — throw without permission", () => {
   });
 
   it("useMarkChannelRead — uses chat:messages:read key (not chat:channels:write)", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useMarkChannelRead } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     const { result } = renderHook(() => useMarkChannelRead(), {
       wrapper: makeWrapper(client),
@@ -202,7 +202,7 @@ describe("chat mutation hooks — throw without permission", () => {
   });
 
   it("useSetPresenceStatus — uses chat:messages:read key (not chat:messages:write)", async () => {
-    const { useSetPresenceStatus } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useSetPresenceStatus } = await import("@/hooks/api/chat-presence");
     const client = freshClient();
     const { result } = renderHook(() => useSetPresenceStatus(), {
       wrapper: makeWrapper(client),
@@ -216,7 +216,7 @@ describe("chat mutation hooks — throw without permission", () => {
   });
 
   it("useChatHeartbeat — uses chat:messages:read key (not chat:messages:write)", async () => {
-    const { useChatHeartbeat } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useChatHeartbeat } = await import("@/hooks/api/chat-presence");
     const client = freshClient();
     const { result } = renderHook(() => useChatHeartbeat(), {
       wrapper: makeWrapper(client),
@@ -230,7 +230,7 @@ describe("chat mutation hooks — throw without permission", () => {
   });
 
   it("useMarkChannelUnread — uses chat:messages:write key (not chat:channels:write)", async () => {
-    const { useMarkChannelUnread } = await import("@/hooks/api/chat-personal-b");
+    const { useMarkChannelUnread } = await import("@/hooks/api/chat-settings");
     const client = freshClient();
     const { result } = renderHook(() => useMarkChannelUnread(), {
       wrapper: makeWrapper(client),

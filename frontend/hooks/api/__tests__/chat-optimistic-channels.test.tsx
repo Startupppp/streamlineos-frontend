@@ -121,7 +121,7 @@ beforeEach(() => {
 
 describe("archive and unarchive move the row instantly", () => {
   it("useArchiveChannel moves the row to the archive before the server answers and never refetches", async () => {
-    const { useArchiveChannel } = await import("@/hooks/api/chat-personal-b");
+    const { useArchiveChannel } = await import("@/hooks/api/chat-settings");
     const client = freshClient();
     seedList(client, myChannelsKey, [channelRow()]);
     seedList<Channel>(client, archivedKey, []);
@@ -140,7 +140,7 @@ describe("archive and unarchive move the row instantly", () => {
   });
 
   it("useUnarchiveChannel puts the row back in the archive when the server refuses", async () => {
-    const { useUnarchiveChannel } = await import("@/hooks/api/chat-personal-b");
+    const { useUnarchiveChannel } = await import("@/hooks/api/chat-settings");
     const client = freshClient();
     seedList<Channel>(client, myChannelsKey, []);
     seedList(client, archivedKey, [channelRow()]);
@@ -156,7 +156,7 @@ describe("archive and unarchive move the row instantly", () => {
 
 describe("personal channel settings patch the viewer's membership", () => {
   it("useMuteChannel shows the channel muted at once and keeps the server's mutedUntil", async () => {
-    const { useMuteChannel } = await import("@/hooks/api/chat-personal-b");
+    const { useMuteChannel } = await import("@/hooks/api/chat-settings");
     const client = freshClient();
     seedList(client, myChannelsKey, [channelRow()]);
     client.setQueryData(detailKey, detail());
@@ -175,7 +175,7 @@ describe("personal channel settings patch the viewer's membership", () => {
   });
 
   it("useFavoriteChannel stars the channel at once and unstars it again on failure", async () => {
-    const { useFavoriteChannel } = await import("@/hooks/api/chat-personal-b");
+    const { useFavoriteChannel } = await import("@/hooks/api/chat-settings");
     const client = freshClient();
     seedList(client, myChannelsKey, [channelRow()]);
     const pending = deferred<{ ok: true }>();
@@ -190,7 +190,7 @@ describe("personal channel settings patch the viewer's membership", () => {
   });
 
   it("useMarkChannelUnread raises the badge and the total before the server answers", async () => {
-    const { useMarkChannelUnread } = await import("@/hooks/api/chat-personal-b");
+    const { useMarkChannelUnread } = await import("@/hooks/api/chat-settings");
     const client = freshClient();
     seedList(client, myChannelsKey, [channelRow()]);
     client.setQueryData(unreadKey, { total: 2 });
@@ -218,7 +218,7 @@ describe("join and leave are instant", () => {
   };
 
   it("useJoinChannel lists the channel as joined before the server answers", async () => {
-    const { useJoinChannel } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useJoinChannel } = await import("@/hooks/api/chat-channel-mutations");
     const client = freshClient();
     seedList<Channel>(client, myChannelsKey, []);
     seedList(client, publicKey, [listed]);
@@ -239,7 +239,7 @@ describe("join and leave are instant", () => {
   });
 
   it("useLeaveChannel drops the row and its unread count, and restores both on failure", async () => {
-    const { useLeaveChannel } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useLeaveChannel } = await import("@/hooks/api/chat-channel-mutations");
     const client = freshClient();
     seedList(client, myChannelsKey, [channelRow({ unreadCount: 2 })]);
     client.setQueryData(unreadKey, { total: 5 });
@@ -259,7 +259,7 @@ describe("join and leave are instant", () => {
 
 describe("creating a conversation is instant", () => {
   it("useCreateDMChannel shows a placeholder row, then swaps in the server channel and seeds its detail", async () => {
-    const { useCreateDMChannel } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useCreateDMChannel } = await import("@/hooks/api/chat-channel-mutations");
     const client = freshClient();
     seedList<Channel>(client, myChannelsKey, []);
     const bo: OrgUser = { id: "user-2", name: "Bo", email: "bo@example.com", image: null, role: null };
@@ -284,7 +284,7 @@ describe("creating a conversation is instant", () => {
   });
 
   it("useCreatePublicChannel removes the placeholder when the server refuses", async () => {
-    const { useCreatePublicChannel } = await import("@/hooks/api/chat-core-mutations-b");
+    const { useCreatePublicChannel } = await import("@/hooks/api/chat-channel-mutations");
     const client = freshClient();
     seedList(client, myChannelsKey, [channelRow()]);
     mockedPost.mockRejectedValue(new ApiError("Conflict", 409));

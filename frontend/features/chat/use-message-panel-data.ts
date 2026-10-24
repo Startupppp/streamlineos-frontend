@@ -7,7 +7,7 @@ import {
 } from "@/hooks/api/chat-core-read";
 import {
   useSendMessage, useDeleteMessage, useEditMessage, useMarkChannelRead,
-} from "@/hooks/api/chat-core-mutations-a";
+} from "@/hooks/api/chat-message-mutations";
 import { useToggleReaction } from "@/hooks/api/chat-reaction-mutation";
 import { useChatPins, usePinMessage, useUnpinMessage } from "@/hooks/api/chat-search";
 import { useChatPollReconciliation } from "./use-chat-poll-reconciliation";

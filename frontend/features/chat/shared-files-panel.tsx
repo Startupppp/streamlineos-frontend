@@ -6,7 +6,7 @@ import { Paperclip } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useChannelFiles } from "@/hooks/api/chat-personal-b";
+import { useChannelFiles } from "@/hooks/api/chat-channel-files";
 import { ChatAttachment } from "./chat-attachment";
 import { usePanelRenderWindow } from "./panel-render-window";
 import { TablePagination } from "@/components/ui/table-pagination";

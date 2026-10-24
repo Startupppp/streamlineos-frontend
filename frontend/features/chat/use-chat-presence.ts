@@ -4,7 +4,7 @@ import { useEffect, useRef } from "react";
 import { useAbly } from "ably/react";
 import { useSession } from "next-auth/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { useChatHeartbeat } from "@/hooks/api/chat-core-mutations-b";
+import { useChatHeartbeat } from "@/hooks/api/chat-presence";
 import { chatPresenceChannelName } from "@/lib/ably-channels";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 

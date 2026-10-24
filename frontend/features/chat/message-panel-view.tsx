@@ -3,7 +3,7 @@
 import React from "react";
 import dynamic from "next/dynamic";
 import { ArrowLeft, Search } from "lucide-react";
-import { InfoIcon, MicIcon } from "@animateicons/react/lucide";
+import { MicIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn, resolveImageUrl } from "@/lib/utils";
@@ -253,21 +253,12 @@ export function MessagePanelView({
                 )}
               </AnimatedIconButton>
             )}
-            <AnimatedIconButton
-              type="button"
-              icon={InfoIcon}
-              iconSize={16}
-              variant="ghost"
-              size="icon"
-              className={cn("size-8 rounded-lg", showInfoPanel && "bg-muted")}
-              onClick={onToggleInfo}
-              aria-label="Conversation details"
-              aria-expanded={showInfoPanel}
-            />
             <ConversationOverflowMenu
               canUseAi={canUseAi}
               summarizeAction={summarizeAction}
               onOpenSaved={onToggleSaved}
+              onOpenDetails={onToggleInfo}
+              detailsOpen={showInfoPanel}
               triggerClassName="size-8 rounded-lg p-0 text-muted-foreground hover:text-foreground"
             />
           </div>

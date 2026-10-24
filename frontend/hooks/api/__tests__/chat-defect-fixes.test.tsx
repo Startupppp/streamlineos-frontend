@@ -121,7 +121,7 @@ describe("F3 — a reaction toggle removes what the viewer already added", () =>
 
 describe("F4 — marking read moves the read marker in the channel detail without refetching it", () => {
   it("patches the viewer's lastReadAt in chat.channel(id) to the newest visible message", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useMarkChannelRead } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message({ createdAt: "2026-09-30T10:00:00.000Z" })]);
     client.setQueryData(collaborationQueryKeys.chat.channel(CHANNEL_ID), {

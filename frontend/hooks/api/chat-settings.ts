@@ -1,24 +1,23 @@
 "use client";
 
-import {
-  useInfiniteQuery,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
+import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import type { ChatNotificationPreference } from "@/types/chat";
+import { runRollbacks, type ChatCacheRollback } from "@/hooks/api/chat-message-cache";
+import {
+  cancelChatChannelQueries,
+  insertChannelRow,
+  removeChannelRow,
+} from "@/hooks/api/chat-channel-cache";
+import { markStale } from "@/hooks/api/chat-channel-rows";
+import { applyOptimisticUnread, patchOwnMember } from "@/hooks/api/chat-read-cache";
 
 const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
-);
-const chatChannelDetailContract = lazyContract(() =>
-  import("@/hooks/api/chat-extra-schema").then((m) => m.chatChannelDetailContract),
-);
-const chatEntityChannelLookupContract = lazyContract(() =>
-  import("@/hooks/api/chat-extra-schema").then((m) =>
-    m.chatChannelDetailContract.nullable(),
-  ),
 );
 const chatMuteResponseContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatMuteResponseContract),
@@ -26,25 +25,6 @@ const chatMuteResponseContract = lazyContract(() =>
 const chatNotifPrefResponseContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatNotifPrefResponseContract),
 );
-const chatChannelFilesContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatChannelFilesContract),
-);
-import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useCan } from "@/hooks/api/access";
-import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { ChatNotificationPreference } from "@/types/chat";
-import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
-import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
-import { runRollbacks, type ChatCacheRollback } from "@/hooks/api/chat-message-cache";
-import {
-  cancelChatChannelQueries,
-  findChannelRow,
-  insertChannelRow,
-  removeChannelRow,
-} from "@/hooks/api/chat-channel-cache";
-import { channelRowFromDetail, markStale } from "@/hooks/api/chat-channel-rows";
-import { applyOptimisticUnread, patchOwnMember } from "@/hooks/api/chat-read-cache";
 
 interface RollbackContext {
   rollback: ChatCacheRollback;
@@ -143,52 +123,6 @@ export function useMarkChannelUnread() {
   });
 }
 
-export function useEntityChannel(
-  entityType: string | null,
-  entityId: string | null,
-) {
-  const canRead = useCan("chat:channels:read");
-  return useQuery({
-    ...INLINE_READ_ERROR,
-    queryKey: collaborationQueryKeys.chat.entityChannel(entityType, entityId),
-    queryFn: ({ signal }) =>
-      apiClient.get<ChatChannelDetailWire | null>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatEntityChannelLookupContract),
-    enabled: canRead && Boolean(entityType && entityId),
-    staleTime: 5 * 60_000,
-  });
-}
-
-interface CreateEntityChannelInput {
-  entityType: string;
-  entityId: string;
-}
-
-export function useCreateEntityChannel() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation<ChatChannelDetailWire, Error, CreateEntityChannelInput>(
-    "chat:channels:write",
-    {
-      mutationKey: ["chat", "channels", "entity", "create"],
-      mutationFn: ({ entityType, entityId }) =>
-        apiClient.post<ChatChannelDetailWire>(
-          `/chat/channels/entity/${entityType}/${entityId}`,
-          undefined,
-          undefined,
-          chatChannelDetailContract,
-        ),
-      onSuccess: (detail, variables) => {
-        queryClient.setQueryData<ChatChannelDetailWire | null>(
-          collaborationQueryKeys.chat.entityChannel(variables.entityType, variables.entityId),
-          detail,
-        );
-        queryClient.setQueryData<ChatChannelDetailWire>(collaborationQueryKeys.chat.channel(detail.id), detail);
-        if (!findChannelRow(queryClient, detail.id))
-          insertChannelRow(queryClient, collaborationQueryKeys.chat.myChannels(), channelRowFromDetail(detail));
-      },
-    },
-  );
-}
-
 export function useMuteChannel() {
   const queryClient = useQueryClient();
   const { data: session } = useSession();
@@ -260,34 +194,5 @@ export function useSetNotificationPreference() {
     onSuccess: ({ notificationPreference }, { channelId }) => {
       patchOwnMember(queryClient, channelId, userId, { notificationPreference });
     },
-  });
-}
-
-interface ChannelFile {
-  id: number;
-  messageId: number;
-  fileName: string;
-  fileKey: string;
-  fileSize: number;
-  mimeType: string;
-  createdAt: string;
-}
-
-export function useChannelFiles(channelId: number) {
-  const canRead = useCan("chat:messages:read");
-  return useInfiniteQuery({
-    ...INLINE_READ_ERROR,
-    queryKey: collaborationQueryKeys.chat.channelFiles(channelId),
-    queryFn: ({ pageParam, signal }) =>
-      apiClient.get<{ files: ChannelFile[]; nextCursor?: number | null }>(
-        `/chat/channels/${channelId}/files`,
-        pageParam !== undefined ? { cursor: String(pageParam) } : undefined,
-        signal,
-        chatChannelFilesContract,
-      ),
-    getNextPageParam: (last) => last.nextCursor ?? undefined,
-    initialPageParam: NO_ID_CURSOR_YET,
-    staleTime: 60_000,
-    enabled: canRead && channelId > 0,
   });
 }

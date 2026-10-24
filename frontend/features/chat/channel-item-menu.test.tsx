@@ -6,7 +6,7 @@ import type { Channel } from "@/types/chat";
 
 const mockArchive = jest.fn();
 
-jest.mock("@/hooks/api/chat-personal-b", () => ({
+jest.mock("@/hooks/api/chat-settings", () => ({
   useArchiveChannel: () => ({ mutateAsync: mockArchive, isPending: false }),
   useFavoriteChannel: () => ({ mutateAsync: jest.fn() }),
   useUnfavoriteChannel: () => ({ mutateAsync: jest.fn() }),

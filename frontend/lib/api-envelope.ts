@@ -37,7 +37,9 @@ export function isApiError(error: unknown): error is ApiError {
 }
 
 export function isWriteConflict(error: unknown): error is ApiError {
-  return isApiError(error) && error.status === 409 && error.code !== "PROJECT_LOCKED";
+  return (
+    isApiError(error) && error.status === 409 && error.code !== "PROJECT_LOCKED"
+  );
 }
 
 export function getApiErrorCode(error: unknown): string | undefined {
@@ -52,7 +54,7 @@ export interface ValidationFieldError {
 export function getValidationFieldErrors(
   error: unknown,
 ): readonly ValidationFieldError[] {
-  if (!isApiError(error) || error.code !== "VALIDATION_FAILED") return [];
+  if (!isApiError(error)) return [];
   const raw = Array.isArray(error.details)
     ? error.details
     : isRecord(error.details) && Array.isArray(error.details.details)
@@ -200,7 +202,12 @@ function applyContract<T>(
   if (contract === undefined) return assertUnchecked<T>(payload);
   const result = contract.safeParse(payload);
   if (result.success) return result.data;
-  return rejectContractViolation(resource, status, result.error.issues, correlationId);
+  return rejectContractViolation(
+    resource,
+    status,
+    result.error.issues,
+    correlationId,
+  );
 }
 
 export async function apiErrorFromResponse(
@@ -270,7 +277,13 @@ export async function parseApiResponse<T>(
   const requestId = correlationId ?? responseCorrelationId(res);
   if (!res.ok) throw await apiErrorFromResponse(res, resource, requestId);
   if (res.status === 204)
-    return applyContract<T>(undefined, contract, resource, res.status, requestId);
+    return applyContract<T>(
+      undefined,
+      contract,
+      resource,
+      res.status,
+      requestId,
+    );
   let body: unknown;
   try {
     body = await res.json();

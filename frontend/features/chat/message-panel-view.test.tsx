@@ -89,10 +89,10 @@ beforeEach(() => {
   mockNarrow.mockReturnValue(false);
 });
 
-describe("MessagePanelView header — one details entry plus one overflow", () => {
-  it("shows a single Details button and a single overflow instead of a button per panel", () => {
+describe("MessagePanelView header — overflow owns details and secondary actions", () => {
+  it("shows a single overflow instead of a button per panel", () => {
     render(<MessagePanelView {...makeProps()} />);
-    expect(screen.getAllByRole("button", { name: "Conversation details" })).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: "Conversation details" })).toBeNull();
     expect(screen.getAllByRole("button", { name: "More conversation actions" })).toHaveLength(1);
     expect(screen.queryByRole("button", { name: "Shared files" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Saved messages" })).toBeNull();
@@ -100,21 +100,21 @@ describe("MessagePanelView header — one details entry plus one overflow", () =
     expect(screen.queryByRole("button", { name: /^AI/ })).toBeNull();
   });
 
-  it("opens the details surface from the Details button", async () => {
-    const user = userEvent.setup();
-    const props = makeProps();
-    render(<MessagePanelView {...props} />);
-    const details = screen.getByRole("button", { name: "Conversation details" });
-    expect(details).toHaveAttribute("aria-expanded", "false");
-    await user.click(details);
-    expect(props.header.onToggleInfo).toHaveBeenCalledTimes(1);
-  });
-
-  it("puts saved messages and the AI summary in the overflow menu", async () => {
+  it("opens the details surface from the overflow menu", async () => {
     const user = userEvent.setup();
     const props = makeProps();
     render(<MessagePanelView {...props} />);
     const menu = await openOverflow(user);
+    await user.click(within(menu).getByRole("menuitem", { name: "Conversation details" }));
+    expect(props.header.onToggleInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it("puts details, saved messages and the AI summary in the overflow menu", async () => {
+    const user = userEvent.setup();
+    const props = makeProps();
+    render(<MessagePanelView {...props} />);
+    const menu = await openOverflow(user);
+    expect(within(menu).getByRole("menuitem", { name: "Conversation details" })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: "Saved messages" })).toBeInTheDocument();
     expect(within(menu).getByRole("menuitem", { name: "Summarize conversation" })).toBeInTheDocument();
     await user.click(within(menu).getByRole("menuitem", { name: "Saved messages" }));
@@ -160,13 +160,18 @@ describe("MessagePanelView header — one details entry plus one overflow", () =
     expect(within(menu).queryByRole("menuitem", { name: "Summarize conversation" })).toBeNull();
   });
 
-  it("keeps the same details entry and overflow on a narrow panel", () => {
+  it("keeps details inside the overflow on a narrow panel", async () => {
     mockNarrow.mockReturnValue(true);
-    render(<MessagePanelView {...makeProps()} />);
+    const user = userEvent.setup();
+    const props = makeProps();
+    render(<MessagePanelView {...props} />);
     const toolbar = screen.getByRole("toolbar", { name: "Conversation actions" });
-    expect(within(toolbar).getByRole("button", { name: "Conversation details" })).toBeInTheDocument();
+    expect(within(toolbar).queryByRole("button", { name: "Conversation details" })).toBeNull();
     expect(within(toolbar).getByRole("button", { name: "More conversation actions" })).toBeInTheDocument();
     expect(within(toolbar).queryByRole("button", { name: /^AI/ })).toBeNull();
+    const menu = await openOverflow(user);
+    await user.click(within(menu).getByRole("menuitem", { name: "Conversation details" }));
+    expect(props.header.onToggleInfo).toHaveBeenCalledTimes(1);
   });
 });
 

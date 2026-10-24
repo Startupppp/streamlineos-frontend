@@ -1,6 +1,5 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { ExternalLink, MessageSquare, Ticket } from "lucide-react";
@@ -11,14 +10,17 @@ import {
   useCommentPermalink,
   useTicketPermalink,
 } from "@/hooks/api/chat-previews";
+import { useResolvedReferenceCard } from "@/hooks/api/chat-reference-cards";
 import { LinkPreviewCard } from "./link-preview-card";
 import { getStatusBadgeClass } from "@/components/shared/ticket-status-badge";
 import { formatTicketKey } from "@/components/shared/format-ticket-key";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { LINKED_RECORD_META, getLinkedRecordMeta } from "./linked-record-meta";
 
 type InternalLink =
   | { kind: "comment"; projectId: number; ticketId: number; commentId: string; href: string }
-  | { kind: "ticket"; projectId: number; ticketId: number; href: string };
+  | { kind: "ticket"; projectId: number; ticketId: number; href: string }
+  | { kind: "entity"; entityType: string; entityId: string; href: string };
 
 function extractFirstUrl(content: string): string | null {
   const match = content.match(/https?:\/\/[^\s<>"']+/);
@@ -34,19 +36,30 @@ function parseInternalLink(raw: string): InternalLink | null {
     return null;
   }
   if (url.origin !== window.location.origin) return null;
-  const pathMatch = url.pathname.match(/^\/projects\/(\d+)$/);
-  if (!pathMatch) return null;
-  const projectId = Number(pathMatch[1]);
-  const ticketIdStr = url.searchParams.get("ticket");
-  if (!ticketIdStr) return null;
-  const ticketId = Number(ticketIdStr);
-  const commentId = url.searchParams.get("comment");
-  if (commentId) {
-    return { kind: "comment", projectId, ticketId, commentId, href: raw };
-  }
-  return { kind: "ticket", projectId, ticketId, href: raw };
-}
 
+  const projectsMatch = url.pathname.match(/^\/projects\/(\d+)$/);
+  if (projectsMatch) {
+    const projectId = Number(projectsMatch[1]);
+    const ticketIdStr = url.searchParams.get("ticket");
+    if (!ticketIdStr) return null;
+    const ticketId = Number(ticketIdStr);
+    const commentId = url.searchParams.get("comment");
+    if (commentId) {
+      return { kind: "comment", projectId, ticketId, commentId, href: raw };
+    }
+    return { kind: "ticket", projectId, ticketId, href: raw };
+  }
+
+  for (const [entityType, meta] of Object.entries(LINKED_RECORD_META)) {
+    if (!meta.parseRoute) continue;
+    const entityId = meta.parseRoute(url.pathname, url.searchParams);
+    if (entityId) {
+      return { kind: "entity", entityType, entityId, href: raw };
+    }
+  }
+
+  return null;
+}
 
 function SkeletonLine({ className }: { className?: string }) {
   return <div className={cn("animate-pulse rounded bg-muted/60", className)} />;
@@ -113,7 +126,7 @@ function CommentPreviewCard({
   const { data, isLoading, error } = useCommentPermalink(projectId, ticketId, commentId);
   const { data: ticketData } = useTicketPermalink(projectId, ticketId);
 
-  const handleOpen = useCallback(() => router.push(href), [router, href]);
+  function handleOpen() { router.push(href); }
 
   if (isLoading) {
     return (
@@ -212,7 +225,7 @@ function TicketPreviewCard({
   const router = useRouter();
   const { data, isLoading, error } = useTicketPermalink(projectId, ticketId);
 
-  const handleOpen = useCallback(() => router.push(href), [router, href]);
+  function handleOpen() { router.push(href); }
 
   if (isLoading) {
     return (
@@ -282,19 +295,96 @@ function TicketPreviewCard({
   );
 }
 
+function GenericEntityPreviewCard({
+  entityType,
+  entityId,
+  href,
+  channelId,
+  isOwn,
+}: {
+  entityType: string;
+  entityId: string;
+  href: string;
+  channelId: number;
+  isOwn: boolean;
+}) {
+  const router = useRouter();
+  const resolved = useResolvedReferenceCard(channelId, { type: entityType, id: entityId }, true);
+  const meta = getLinkedRecordMeta(entityType);
+
+  function handleOpen() { router.push(href); }
+
+  if (resolved === undefined) {
+    return (
+      <div
+        className={cn(
+          "mt-2 rounded-xl border p-3 max-w-[320px]",
+          isOwn ? "bg-white/10 border-white/15" : "bg-background border-border/50 shadow-sm",
+        )}
+      >
+        <SkeletonLine className="h-3 w-1/3 mb-2" />
+        <SkeletonLine className="h-3 w-2/3" />
+      </div>
+    );
+  }
+
+  if (resolved === null) return null;
+
+  const Icon = meta.icon;
+
+  return (
+    <CardShell isOwn={isOwn} onClick={handleOpen}>
+      <div className="flex items-start gap-2">
+        <Icon
+          className={cn("h-3.5 w-3.5 shrink-0 mt-0.5", isOwn ? "text-white/60" : "text-primary")}
+        />
+        <div className="min-w-0 flex-1">
+          <p
+            className={cn(
+              "text-dense font-semibold",
+              isOwn ? "text-white/80" : "text-muted-foreground",
+            )}
+          >
+            {meta.label}
+          </p>
+          <TruncatedText
+            text={resolved.title}
+            className={cn(
+              "text-xs font-medium mt-0.5",
+              isOwn ? "text-white/90" : "text-foreground",
+            )}
+          />
+          {resolved.status && (
+            <p
+              className={cn(
+                "text-micro mt-0.5",
+                isOwn ? "text-white/60" : "text-muted-foreground",
+              )}
+            >
+              {resolved.status}
+            </p>
+          )}
+        </div>
+        <ExternalLink
+          className={cn("h-3 w-3 shrink-0", isOwn ? "text-white/40" : "text-muted-foreground")}
+        />
+      </div>
+    </CardShell>
+  );
+}
+
 export function InternalLinkPreview({
   content,
   isOwn,
+  channelId = 0,
 }: {
   content: string;
   isOwn: boolean;
+  channelId?: number;
 }) {
   const mounted = useHydrated();
-  const link = useMemo(() => {
-    if (!mounted) return null;
-    const raw = extractFirstUrl(content);
-    return raw ? parseInternalLink(raw) : null;
-  }, [mounted, content]);
+  const raw = mounted ? extractFirstUrl(content) : null;
+  const link = raw ? parseInternalLink(raw) : null;
 
   if (!mounted) return null;
 
@@ -310,11 +400,22 @@ export function InternalLinkPreview({
         />
       );
     }
+    if (link.kind === "ticket") {
+      return (
+        <TicketPreviewCard
+          projectId={link.projectId}
+          ticketId={link.ticketId}
+          href={link.href}
+          isOwn={isOwn}
+        />
+      );
+    }
     return (
-      <TicketPreviewCard
-        projectId={link.projectId}
-        ticketId={link.ticketId}
+      <GenericEntityPreviewCard
+        entityType={link.entityType}
+        entityId={link.entityId}
         href={link.href}
+        channelId={channelId}
         isOwn={isOwn}
       />
     );

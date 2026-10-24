@@ -11,7 +11,7 @@ jest.mock("sonner", () => ({
   },
 }));
 
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-channel-mutations", () => ({
   useCreateGroupChannel: () => ({ mutateAsync: mockGroupMutateAsync, isPending: false }),
   useCreatePublicChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useCreatePrivateChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),

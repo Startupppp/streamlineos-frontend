@@ -18,7 +18,7 @@ import { useChatPins, useUnpinMessage } from "@/hooks/api/chat-search";
 import {
   useArchiveChannel,
   useUnarchiveChannel,
-} from "@/hooks/api/chat-personal-b";
+} from "@/hooks/api/chat-settings";
 import { useCan } from "@/hooks/api/access";
 import { resolveImageUrl } from "@/lib/utils";
 import { ChannelInfoPanelProfile } from "./channel-info-panel-profile";

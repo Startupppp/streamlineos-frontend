@@ -10,4 +10,4 @@ export const PERSON_TABLE_HEADERS = [
 export const DIRECTORY_TITLE = "Directory";
 
 export const DIRECTORY_SUBTITLE =
-  "Person records from Directory or HR onboarding.";
+  "Person records from Directory or HR — not the same as team members.";

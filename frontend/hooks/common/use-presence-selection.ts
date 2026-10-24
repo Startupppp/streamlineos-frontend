@@ -7,7 +7,7 @@ import { usePresenceCustomStatus, usePresenceMap } from "@/hooks/api/chat-core-r
 import {
   useSetPresenceStatus,
   type SetPresenceStatusInput,
-} from "@/hooks/api/chat-core-mutations-b";
+} from "@/hooks/api/chat-presence";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { PresenceStatus } from "@/lib/presence";
 

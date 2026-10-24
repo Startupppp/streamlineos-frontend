@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useChatChannels } from "@/hooks/api/chat-core-read";
-import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
+import { useSendMessage } from "@/hooks/api/chat-message-mutations";
 import type { Channel, EntityRef, MessageMetadata } from "@/types/chat";
 import { getForwardedDisplay } from "./chat-helpers";
 import { TruncatedText } from "@/components/ui/truncated-text";

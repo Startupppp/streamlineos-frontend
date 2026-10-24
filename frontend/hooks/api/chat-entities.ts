@@ -4,9 +4,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
+import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
+import {
+  findChannelRow,
+  insertChannelRow,
+} from "@/hooks/api/chat-channel-cache";
+import { channelRowFromDetail } from "@/hooks/api/chat-channel-rows";
 
 const chatLinkPreviewContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatLinkPreviewContract),
@@ -191,3 +198,58 @@ export function useEntityActionOptions(
   });
 }
 
+const chatChannelDetailContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) => m.chatChannelDetailContract),
+);
+
+const chatEntityChannelLookupContract = lazyContract(() =>
+  import("@/hooks/api/chat-extra-schema").then((m) =>
+    m.chatChannelDetailContract.nullable(),
+  ),
+);
+
+export function useEntityChannel(
+  entityType: string | null,
+  entityId: string | null,
+) {
+  const canRead = useCan("chat:channels:read");
+  return useQuery({
+    ...INLINE_READ_ERROR,
+    queryKey: collaborationQueryKeys.chat.entityChannel(entityType, entityId),
+    queryFn: ({ signal }) =>
+      apiClient.get<ChatChannelDetailWire | null>(`/chat/channels/entity/${entityType}/${entityId}`, undefined, signal, chatEntityChannelLookupContract),
+    enabled: canRead && Boolean(entityType && entityId),
+    staleTime: 5 * 60_000,
+  });
+}
+
+interface CreateEntityChannelInput {
+  entityType: string;
+  entityId: string;
+}
+
+export function useCreateEntityChannel() {
+  const queryClient = useQueryClient();
+  return useAuthorizedMutation<ChatChannelDetailWire, Error, CreateEntityChannelInput>(
+    "chat:channels:write",
+    {
+      mutationKey: ["chat", "channels", "entity", "create"],
+      mutationFn: ({ entityType, entityId }) =>
+        apiClient.post<ChatChannelDetailWire>(
+          `/chat/channels/entity/${entityType}/${entityId}`,
+          undefined,
+          undefined,
+          chatChannelDetailContract,
+        ),
+      onSuccess: (detail, variables) => {
+        queryClient.setQueryData<ChatChannelDetailWire | null>(
+          collaborationQueryKeys.chat.entityChannel(variables.entityType, variables.entityId),
+          detail,
+        );
+        queryClient.setQueryData<ChatChannelDetailWire>(collaborationQueryKeys.chat.channel(detail.id), detail);
+        if (!findChannelRow(queryClient, detail.id))
+          insertChannelRow(queryClient, collaborationQueryKeys.chat.myChannels(), channelRowFromDetail(detail));
+      },
+    },
+  );
+}

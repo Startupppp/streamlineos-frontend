@@ -52,7 +52,7 @@ beforeEach(() => jest.clearAllMocks());
 
 describe("useEditMessage — optimistic edit", () => {
   it("patches the timeline, the open thread and the pin before the server answers", async () => {
-    const { useEditMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useEditMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message()]);
     client.setQueryData<InfiniteData<ThreadPage>>(threadKey, {
@@ -87,7 +87,7 @@ describe("useEditMessage — optimistic edit", () => {
   });
 
   it("restores the original text when the server refuses", async () => {
-    const { useEditMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useEditMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message()]);
     mockedPatch.mockRejectedValue(new ApiError("Forbidden", 403));
@@ -103,7 +103,7 @@ describe("useEditMessage — optimistic edit", () => {
 
 describe("useDeleteMessage — optimistic delete", () => {
   it("tombstones the message at once and keeps it tombstoned without a refetch", async () => {
-    const { useDeleteMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useDeleteMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message()]);
     const pending = deferred<{ ok: true }>();
@@ -121,7 +121,7 @@ describe("useDeleteMessage — optimistic delete", () => {
   });
 
   it("brings the message back when the delete fails", async () => {
-    const { useDeleteMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useDeleteMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message()]);
     mockedDelete.mockRejectedValue(new ApiError("Forbidden", 403));

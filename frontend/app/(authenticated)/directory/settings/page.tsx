@@ -12,7 +12,7 @@ export default async function DirectorySettingsRoute() {
     <PeopleDirectoryPage
       basePath="/directory/settings"
       title="People Records"
-      subtitle="Manage person records for this organisation. This count may differ from team members in Settings, since not every member has a person record."
+      subtitle="Person records for this org — not the same as team members."
     />
   );
 }

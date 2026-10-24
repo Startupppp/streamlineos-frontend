@@ -7,7 +7,7 @@ import { ApiError } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { refreshJoinedChannel } from "@/hooks/api/chat-read-cache";
-import { useJoinChannel } from "@/hooks/api/chat-core-mutations-b";
+import { useJoinChannel } from "@/hooks/api/chat-channel-mutations";
 import { readChannelJoinRequired } from "./chat-helpers";
 import { ChannelJoinState } from "./channel-join-state";
 import { CHANNEL_ID, ids, leaveSpy, message, positioned, useHarness } from "./use-message-timeline-test-harness";

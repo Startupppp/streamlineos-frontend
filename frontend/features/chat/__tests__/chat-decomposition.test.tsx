@@ -3,7 +3,7 @@ import { convertToTaskSchema } from "../convert-to-task-dialog-schema";
 import { ChannelMembersSection } from "../channel-members-section";
 import type { ChannelMember } from "@/types/chat";
 
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-channel-mutations", () => ({
   useRemoveChannelMember: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useLeaveChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useUpdateChannelMemberRole: () => ({ mutate: jest.fn(), isPending: false }),

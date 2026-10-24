@@ -17,7 +17,7 @@ import { usePublicChannels } from "@/hooks/api/chat-core-read";
 import {
   useCreateDMChannel,
   useJoinChannel,
-} from "@/hooks/api/chat-core-mutations-b";
+} from "@/hooks/api/chat-channel-mutations";
 import { ChatDialogHeader } from "./chat-dialog-header";
 import { useDialogReturnFocus } from "./use-dialog-return-focus";
 import {

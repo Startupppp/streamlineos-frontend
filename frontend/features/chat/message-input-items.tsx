@@ -11,7 +11,7 @@ import { FileText, Loader2, Reply, UserPlus, X } from "lucide-react";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCan } from "@/hooks/api/access";
-import { useAddChannelMember } from "@/hooks/api/chat-core-mutations-b";
+import { useAddChannelMember } from "@/hooks/api/chat-channel-mutations";
 import { getFileColor, getFileExt } from "./chat-helpers";
 import { formatFileSize, getInitials } from "@/lib/format-utils";
 import type { PendingAttachment } from "./message-input-types";

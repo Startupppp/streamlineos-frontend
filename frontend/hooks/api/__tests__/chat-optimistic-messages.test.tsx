@@ -71,7 +71,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
   };
 
   it("appends an optimistic copy with an empty reactions map before the server answers", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message()]);
     const pending = deferred<typeof serverRow>();
@@ -90,7 +90,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
   });
 
   it("mints a clientKey when the caller omitted one and posts that same key", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, []);
     mockedPost.mockResolvedValue({ ...serverRow, clientKey: null });
@@ -104,7 +104,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
   });
 
   it("writes the server row in place of the optimistic copy without refetching the timeline", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message()]);
     seedChannels(client, [channelRow({ id: 99 }), channelRow()]);
@@ -122,7 +122,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
   });
 
   it("removes the optimistic copy when the send finally fails", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message()]);
     mockedPost.mockRejectedValue(new ApiError("Rejected", 400));
@@ -134,7 +134,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
   });
 
   it("retries a transient network failure with the same clientKey instead of dropping the message", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, []);
     mockedPost
@@ -154,7 +154,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
 
 describe("useSendMessage — attachments and sidebar ordering", () => {
   it("shows the attachments in the optimistic copy under temporary ids", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, []);
     mockedPost.mockReturnValue(deferred<Record<string, unknown>>().promise);
@@ -170,7 +170,7 @@ describe("useSendMessage — attachments and sidebar ordering", () => {
   });
 
   it("cancels an in-flight sidebar fetch before moving the row, so the fetch cannot overwrite the patch", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, []);
     seedChannels(client, [channelRow()]);
@@ -190,7 +190,7 @@ describe("a sent attachment gets its server id from the realtime echo", () => {
   const echoed = [{ id: 77, ...file }];
 
   it("replaces the temporary attachment ids in the timeline, so the attachment URL query can run", async () => {
-    const { useSendMessage } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const { mergeInboundMessage } = await import("@/features/chat/message-page-merge");
     const { useAttachmentUrl } = await import("@/hooks/api/chat-shared");
     const client = freshClient();

@@ -12,7 +12,7 @@ let mockUsers: MockUsers;
 jest.mock("@/hooks/api/chat-core-read", () => ({
   useChatOrgUsers: () => mockUsers,
 }));
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-channel-mutations", () => ({
   useAddChannelMember: () => ({ mutateAsync: jest.fn(), isPending: false }),
 }));
 jest.mock("@/hooks/api/chat-invite-links", () => ({

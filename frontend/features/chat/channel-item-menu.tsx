@@ -26,7 +26,7 @@ import {
   useFavoriteChannel,
   useMarkChannelUnread,
   useUnfavoriteChannel,
-} from "@/hooks/api/chat-personal-b";
+} from "@/hooks/api/chat-settings";
 import { AddChannelMembersDialog } from "./add-channel-members-dialog";
 import type { Channel } from "@/types/chat";
 import { ChannelNotificationSubmenu } from "./channel-notification-submenu";

@@ -35,7 +35,7 @@ export function ChatBubbleAttachments({
   return (
     <>
       {message.content && LINK_PATTERN.test(message.content) && (
-        <InternalLinkPreview content={message.content} isOwn={isOwn} />
+        <InternalLinkPreview content={message.content} isOwn={isOwn} channelId={message.channelId} />
       )}
 
       {entities.length > 0 && (

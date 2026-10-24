@@ -5,7 +5,7 @@ import { useSession } from "next-auth/react";
 import { hashKey, onlineManager, useQueryClient, type InfiniteData } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import { useOrgStorageScope } from "@/lib/org-scoped-storage";
-import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
+import { useSendMessage } from "@/hooks/api/chat-message-mutations";
 import { useSendThreadReply } from "@/hooks/api/chat-search";
 import { optimisticMessage } from "@/hooks/api/chat-send-policy";
 import { mapPages } from "@/hooks/api/chat-message-cache";

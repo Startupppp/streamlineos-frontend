@@ -16,11 +16,11 @@ const useUnsaveMessage = jest.fn();
 const useSendThreadReply = jest.fn();
 const useChatOrgUsers = jest.fn();
 
-jest.mock("@/hooks/api/chat-personal-b", () => ({
+jest.mock("@/hooks/api/chat-channel-files", () => ({
   useChannelFiles: (channelId: number) => useChannelFiles(channelId),
 }));
 
-jest.mock("@/hooks/api/chat-personal-a", () => ({
+jest.mock("@/hooks/api/chat-saved", () => ({
   useSavedMessages: () => useSavedMessages(),
   useUnsaveMessage: () => useUnsaveMessage(),
 }));

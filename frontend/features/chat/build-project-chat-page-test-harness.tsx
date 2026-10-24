@@ -95,7 +95,7 @@ export const mockUseEntityChannel = jest.fn();
 export const mockUseCreateEntityChannel = jest.fn();
 export const mockUseCan = jest.fn();
 
-jest.mock("@/hooks/api/chat-personal-b", () => ({
+jest.mock("@/hooks/api/chat-entities", () => ({
   useEntityChannel: (...args: unknown[]) => mockUseEntityChannel(...args),
   useCreateEntityChannel: () => mockUseCreateEntityChannel(),
 }));

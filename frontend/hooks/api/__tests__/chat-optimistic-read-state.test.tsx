@@ -59,7 +59,7 @@ beforeEach(() => jest.clearAllMocks());
 
 describe("useMarkChannelRead — optimistic read state", () => {
   it("zeroes the row, subtracts it from the total and moves lastReadAt forward before the server answers", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useMarkChannelRead } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message({ id: 1, createdAt: "2026-09-30T10:00:00.000Z" })]);
     seedChannels(client, [channelRow({ unreadCount: 3 })]);
@@ -83,7 +83,7 @@ describe("useMarkChannelRead — optimistic read state", () => {
   });
 
   it("never moves lastReadAt backwards when the visible window is older than the read marker", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useMarkChannelRead } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, [message({ createdAt: "2026-09-29T10:00:00.000Z" })]);
     client.setQueryData(detailKey, detail());
@@ -98,7 +98,7 @@ describe("useMarkChannelRead — optimistic read state", () => {
   });
 
   it("asks the server for the unread total once when the channel's row is not loaded, because it cannot be computed", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useMarkChannelRead } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     client.setQueryData(unreadKey, { total: 5 });
     const invalidate = jest.spyOn(client, "invalidateQueries");
@@ -111,7 +111,7 @@ describe("useMarkChannelRead — optimistic read state", () => {
   });
 
   it("does not refetch the total when the row was loaded and patched", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useMarkChannelRead } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedChannels(client, [channelRow({ unreadCount: 2 })]);
     client.setQueryData(unreadKey, { total: 5 });
@@ -125,7 +125,7 @@ describe("useMarkChannelRead — optimistic read state", () => {
   });
 
   it("restores the unread badge when the mark fails", async () => {
-    const { useMarkChannelRead } = await import("@/hooks/api/chat-core-mutations-a");
+    const { useMarkChannelRead } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedChannels(client, [channelRow({ unreadCount: 3 })]);
     client.setQueryData(unreadKey, { total: 5 });
@@ -182,7 +182,7 @@ describe("useSendThreadReply — instant thread reply", () => {
 
 describe("saved messages share the optimistic recipe", () => {
   it("useSaveMessage lists the message as saved before the server answers and unsave removes it", async () => {
-    const { useSaveMessage, useUnsaveMessage } = await import("@/hooks/api/chat-personal-a");
+    const { useSaveMessage, useUnsaveMessage } = await import("@/hooks/api/chat-saved");
     const client = freshClient();
     seedTimeline(client, [message()]);
     client.setQueryData<InfiniteData<SavedMessagesPage>>(savedKey, {

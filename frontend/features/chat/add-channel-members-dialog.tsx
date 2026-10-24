@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useChatOrgUsers } from "@/hooks/api/chat-core-read";
-import { useAddChannelMember } from "@/hooks/api/chat-core-mutations-b";
+import { useAddChannelMember } from "@/hooks/api/chat-channel-mutations";
 import {
   useChannelInviteLink,
   useRegenerateInviteLink,

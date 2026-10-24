@@ -11,7 +11,7 @@ import {
   useLeaveChannel,
   useRemoveChannelMember,
   useUpdateChannelMemberRole,
-} from "@/hooks/api/chat-core-mutations-b";
+} from "@/hooks/api/chat-channel-mutations";
 import type { ChannelMember } from "@/types/chat";
 import { ChannelMemberRow } from "./channel-member-row";
 import {

@@ -8,7 +8,7 @@ const PANEL_RENDER_PAGE_SIZE = 25;
 const mockRemoveMember = jest.fn();
 const mockLeaveChannel = jest.fn();
 
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-channel-mutations", () => ({
   useRemoveChannelMember: () => ({ mutateAsync: mockRemoveMember, isPending: false }),
   useLeaveChannel: () => ({ mutateAsync: mockLeaveChannel, isPending: false }),
   useUpdateChannelMemberRole: () => ({ mutate: jest.fn(), isPending: false }),

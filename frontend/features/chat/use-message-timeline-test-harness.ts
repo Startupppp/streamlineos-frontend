@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { useChatMessages } from "@/hooks/api/chat-core-read";
-import { useSendMessage } from "@/hooks/api/chat-core-mutations-a";
+import { useSendMessage } from "@/hooks/api/chat-message-mutations";
 import type { Message } from "@/types/chat";
 import { useMessageTimeline } from "./use-message-timeline";
 

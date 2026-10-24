@@ -10,7 +10,7 @@ jest.mock("@/hooks/api/chat-core-read", () => ({
   })),
 }));
 
-jest.mock("@/hooks/api/chat-core-mutations-a", () => ({
+jest.mock("@/hooks/api/chat-message-mutations", () => ({
   useSendMessage: jest.fn(() => ({ mutateAsync: mockMutateAsync, isPending: false })),
 }));
 

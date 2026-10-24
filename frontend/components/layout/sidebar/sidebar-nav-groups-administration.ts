@@ -71,7 +71,7 @@ export const ADMINISTRATION_NAV_GROUPS: NavGroup[] = [
     ],
     routes: [
       {
-        label: "Directory",
+        label: "People Records",
         icon: Contact2,
         href: "/directory/settings",
         exact: true,

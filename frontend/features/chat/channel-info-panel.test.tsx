@@ -35,7 +35,7 @@ jest.mock("@/hooks/api/chat-search", () => ({
   useUnpinMessage: () => ({ mutate: mockUnpin, isPending: false }),
 }));
 
-jest.mock("@/hooks/api/chat-personal-b", () => ({
+jest.mock("@/hooks/api/chat-settings", () => ({
   useArchiveChannel: () => ({ mutateAsync: mockArchive, isPending: false }),
   useUnarchiveChannel: () => ({ mutateAsync: mockUnarchive, isPending: false }),
 }));

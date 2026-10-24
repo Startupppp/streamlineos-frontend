@@ -31,7 +31,7 @@ jest.mock("@/hooks/api/access", () => ({
   useModuleEnabled: jest.fn().mockReturnValue(true),
 }));
 
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-channel-mutations", () => ({
   useJoinChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useCreateDMChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),
   useCreateGroupChannel: () => ({ mutateAsync: jest.fn(), isPending: false }),

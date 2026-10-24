@@ -19,7 +19,7 @@ jest.mock("@/hooks/api/chat-core-read", () => ({
   usePresenceCustomStatus: () => customStatus,
 }));
 
-jest.mock("@/hooks/api/chat-core-mutations-b", () => ({
+jest.mock("@/hooks/api/chat-presence", () => ({
   useSetPresenceStatus: () => ({ mutate, isPending: false }),
 }));
 

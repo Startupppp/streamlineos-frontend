@@ -65,7 +65,7 @@ function urlsOf(calls: unknown[][]): string[] {
 const CASES: Case[] = [
   {
     name: "useSavedMessages sends numeric cursor 0",
-    module: "./chat-personal-a",
+    module: "./chat-saved",
     run: (m) => (m["useSavedMessages"] as () => unknown)(),
     firstPage: { messages: [], nextCursor: 0 },
     expectCursor: (calls) => expect(paramsOf(calls)[1]).toEqual({ cursor: 0 }),
