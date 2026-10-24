@@ -39,7 +39,7 @@ jest.mock("@/hooks/api/calendar", () => ({
   useUpdateCalendarEvent: jest.fn().mockReturnValue({ mutateAsync: jest.fn() }),
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: jest.fn() }));
+jest.mock("@/hooks/api/access", () => ({ useCanState: () => "denied", useCan: jest.fn() }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({ iconRef: { current: null }, hoverHandlers: {} }),

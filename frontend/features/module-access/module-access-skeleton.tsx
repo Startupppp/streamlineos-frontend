@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Geometry match for ModuleAccessPage tabs + member/role rows (FE-142). */
 export function ModuleAccessSkeleton() {
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-4">

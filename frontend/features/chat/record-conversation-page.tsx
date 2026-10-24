@@ -1,11 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import type { RecordConversationProps } from "@/components/record-conversation/record-conversation-slot";
 import { useSession } from "next-auth/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { useCreateEntityChannel, useEntityChannel } from "@/hooks/api/chat-entities";
+import {
+  useCreateEntityChannel,
+  useEntityChannel,
+} from "@/hooks/api/chat-entities";
 import { useCan } from "@/hooks/api/access";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { PageWrapper } from "@/components/ui/page-wrapper";
@@ -21,14 +25,6 @@ import { useMobilePanelBack } from "./use-mobile-panel-back";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { PM_PANEL_SOLID, PmPageShell } from "@/components/pm-chrome";
 
-export interface RecordConversationPanelProps {
-  entityType: string;
-  entityId: string;
-  emptyTitle?: string;
-  emptyDescriptionWrite?: string;
-  emptyDescriptionReadOnly?: string;
-}
-
 const noop = () => {};
 
 export function RecordConversationPanel({
@@ -37,14 +33,17 @@ export function RecordConversationPanel({
   emptyTitle = "No chat channel linked",
   emptyDescriptionWrite = "This record does not have an associated chat channel yet. Create one to start the conversation.",
   emptyDescriptionReadOnly = "This record does not have an associated chat channel yet. Ask an admin to link one.",
-}: RecordConversationPanelProps) {
+}: RecordConversationProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
   useChatOutboxDrain();
-  const { data: channel, error, isLoading, isError, refetch } = useEntityChannel(
-    entityType,
-    entityId,
-  );
+  const {
+    data: channel,
+    error,
+    isLoading,
+    isError,
+    refetch,
+  } = useEntityChannel(entityType, entityId);
   const [showInfoPanel, setShowInfoPanel] = useState(false);
   const isPanelNarrow = useIsChatPanelNarrow();
   const canCreateChannel = useCan("chat:channels:write");
@@ -91,11 +90,15 @@ export function RecordConversationPanel({
       className="flex-1"
       illustrationPreset="chat"
       title={emptyTitle}
-      description={canCreateChannel ? emptyDescriptionWrite : emptyDescriptionReadOnly}
+      description={
+        canCreateChannel ? emptyDescriptionWrite : emptyDescriptionReadOnly
+      }
       action={
         canCreateChannel
           ? {
-              label: createEntityChannel.isPending ? "Creating channel…" : "Create chat channel",
+              label: createEntityChannel.isPending
+                ? "Creating channel…"
+                : "Create chat channel",
               onClick: handleCreateChannel,
             }
           : undefined
@@ -111,7 +114,12 @@ export function RecordConversationPanel({
       onRetry={handleRetry}
     >
       {channel?.id && currentUserId ? (
-        <div className={cn(PM_PANEL_SOLID, "overflow-hidden flex flex-1 min-h-0 overflow-hidden p-0")}>
+        <div
+          className={cn(
+            PM_PANEL_SOLID,
+            "overflow-hidden flex flex-1 min-h-0 overflow-hidden p-0",
+          )}
+        >
           <ChatAblyProvider>
             <div className="flex min-h-0 min-w-0 flex-1">
               <div className="flex min-h-0 min-w-0 flex-1 flex-col">
@@ -167,7 +175,7 @@ export function RecordConversationPanel({
   );
 }
 
-interface RecordConversationPageProps extends RecordConversationPanelProps {
+interface RecordConversationPageProps extends RecordConversationProps {
   title?: string;
   subtitle?: string;
 }

@@ -3,11 +3,7 @@
 import { use, useCallback } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  ExternalLink,
-  CheckSquare,
-  TrendingUp,
-} from "lucide-react";
+import { ExternalLink, CheckSquare, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,7 +17,7 @@ import { useClient360 } from "@/hooks/api/crm";
 import { useCanState } from "@/hooks/api/access";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
+import { RecordConversation } from "@/components/record-conversation/record-conversation-slot";
 import { ClientOverviewTab } from "@/features/crm/clients/client-overview-tab";
 import { ClientTimelineTab } from "@/features/crm/clients/client-timeline-tab";
 import { ClientOpportunitiesTab } from "@/features/crm/clients/client-opportunities-tab";
@@ -38,10 +34,13 @@ const STATUS_LABELS: Record<ClientAccountStatus, string> = {
 };
 
 const STATUS_BADGE_CLASSES: Record<ClientAccountStatus, string> = {
-  ACCOUNT_OPENING: "bg-status-info-surface text-status-info-ink border-status-info-rule",
-  QUERIES: "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
+  ACCOUNT_OPENING:
+    "bg-status-info-surface text-status-info-ink border-status-info-rule",
+  QUERIES:
+    "bg-status-warning-surface text-status-warning-ink border-status-warning-rule",
   PLAN_SELECTED: "bg-muted text-muted-foreground border-border",
-  INVESTED: "bg-status-success-surface text-status-success-ink border-status-success-rule",
+  INVESTED:
+    "bg-status-success-surface text-status-success-ink border-status-success-rule",
 };
 
 export default function ClientDetailPage({
@@ -60,7 +59,8 @@ export default function ClientDetailPage({
     access,
   } = useClientAccount(clientId);
 
-  const { data: client360, isLoading: client360Loading } = useClient360(clientId);
+  const { data: client360, isLoading: client360Loading } =
+    useClient360(clientId);
   const chatAccess = useCanState("chat:channels:read");
 
   const { staggerContainer, fadeUp } = useMotionVariants();
@@ -138,18 +138,26 @@ export default function ClientDetailPage({
         <div className="flex items-center gap-2 flex-wrap">
           <Badge
             variant="outline"
-            className={cn("h-5 px-2 py-0.5 text-micro", STATUS_BADGE_CLASSES[client.status])}
+            className={cn(
+              "h-5 px-2 py-0.5 text-micro",
+              STATUS_BADGE_CLASSES[client.status],
+            )}
           >
             {STATUS_LABELS[client.status]}
           </Badge>
           {client.planName && (
-            <span className="text-label text-muted-foreground">{client.planName}</span>
+            <span className="text-label text-muted-foreground">
+              {client.planName}
+            </span>
           )}
         </div>
       }
       actions={
         <>
-          <AccountInlineAiMenu clientId={clientId} clientName={client.clientName} />
+          <AccountInlineAiMenu
+            clientId={clientId}
+            clientName={client.clientName}
+          />
           <Button variant="outline" size="sm" asChild>
             <Link href={`/crm/leads/${client.leadId}`}>
               <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
@@ -165,9 +173,7 @@ export default function ClientDetailPage({
         initial="hidden"
         animate="visible"
       >
-        <motion.div
-          variants={fadeUp}
-        >
+        <motion.div variants={fadeUp}>
           <Tabs defaultValue="overview">
             <TabsList className="mb-4">
               <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -217,12 +223,15 @@ export default function ClientDetailPage({
             </TabsContent>
 
             <TabsContent value="customer360">
-              <Customer360Section data={client360} isLoading={client360Loading} />
+              <Customer360Section
+                data={client360}
+                isLoading={client360Loading}
+              />
             </TabsContent>
 
             {chatAccess !== "denied" && (
               <TabsContent value="chat" className="flex flex-col min-h-[520px]">
-                <RecordConversationPanel
+                <RecordConversation
                   entityType="client"
                   entityId={String(clientId)}
                   emptyDescriptionWrite="This client does not have an associated chat channel yet. Create one to start the conversation."

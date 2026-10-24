@@ -7,7 +7,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { useMotionVariants } from "@/lib/motion-variants";
-import { useLeadDetail, useLeadTimeline, useUpdateLeadStatus } from "@/hooks/api/leads";
+import {
+  useLeadDetail,
+  useLeadTimeline,
+  useUpdateLeadStatus,
+} from "@/hooks/api/leads";
 import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -18,7 +22,7 @@ import { LeadInfoCard } from "@/features/crm/leads/detail/lead-info-card";
 import { LeadQuickActions } from "@/features/crm/leads/detail/lead-quick-actions";
 import { LeadSidebar } from "@/features/crm/leads/detail/lead-sidebar";
 import { LeadQualificationPanel } from "@/features/crm/leads/detail/lead-qualification-panel";
-import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
+import { RecordConversation } from "@/components/record-conversation/record-conversation-slot";
 import {
   type QuickAction,
   type PipelineStatus,
@@ -35,7 +39,12 @@ export default function LeadDetailPage({
   const { leadId: leadIdStr } = use(params);
   const leadId = Number(leadIdStr);
 
-  const { data: lead, isLoading, isError: leadError, refetch: refetchLead } = useLeadDetail(leadId);
+  const {
+    data: lead,
+    isLoading,
+    isError: leadError,
+    refetch: refetchLead,
+  } = useLeadDetail(leadId);
 
   const handleRetry = useCallback(() => void refetchLead(), [refetchLead]);
   const { data: timeline, isLoading: timelineLoading } = useLeadTimeline(
@@ -187,14 +196,17 @@ export default function LeadDetailPage({
                   timeline={timeline}
                   timelineLoading={timelineLoading}
                 />
-                <LeadQualificationPanel leadId={leadId} customData={lead.customData} />
+                <LeadQualificationPanel
+                  leadId={leadId}
+                  customData={lead.customData}
+                />
               </div>
             </motion.div>
           </TabsContent>
 
           {chatAccess !== "denied" && (
             <TabsContent value="chat" className="flex flex-col min-h-[520px]">
-              <RecordConversationPanel
+              <RecordConversation
                 entityType="lead"
                 entityId={String(leadId)}
                 emptyDescriptionWrite="This lead does not have an associated chat channel yet. Create one to start the conversation."

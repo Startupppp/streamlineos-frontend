@@ -65,7 +65,6 @@ function keepRoute(route: NavRoute, showAdvanced: boolean): NavRoute[] {
 }
 
 export function applyHrWeekOneNav(groups: NavGroup[], showAdvanced: boolean, isOrgOwner = true): NavGroup[] {
-  // Non-owners already have a permission-scoped tree; keep every authorized job visible.
   const includeAdvanced = showAdvanced || !isOrgOwner;
   const visible = groups
     .map((group) => ({

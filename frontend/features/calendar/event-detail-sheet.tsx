@@ -16,13 +16,21 @@ import {
   type CalendarListItem,
 } from "@/hooks/api/calendar";
 import { useCan, useCanState } from "@/hooks/api/access";
-import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
+import { RecordConversation } from "@/components/record-conversation/record-conversation-slot";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatEventDate, formatEventDateRange, formatEventTimeRange, zonedWallClock } from "@/lib/date-utils";
+import {
+  formatEventDate,
+  formatEventDateRange,
+  formatEventTimeRange,
+  zonedWallClock,
+} from "@/lib/date-utils";
 import { useCalendarTimeZone } from "./calendar-time-zone-context";
 import { downloadCalendarExport } from "./calendar-export";
-import { EventSeriesScopeDialog, type SeriesScope } from "./event-series-scope-dialog";
+import {
+  EventSeriesScopeDialog,
+  type SeriesScope,
+} from "./event-series-scope-dialog";
 import { EventDetailActions } from "./event-detail-actions";
 import { EventCreateDialog } from "./event-create-dialog";
 import {
@@ -48,12 +56,18 @@ const MeetingWorkspacePanel = dynamic(
 );
 
 const ProtectedWorkDialog = dynamic(
-  () => import("./protected-work-dialog").then((m) => ({ default: m.ProtectedWorkDialog })),
+  () =>
+    import("./protected-work-dialog").then((m) => ({
+      default: m.ProtectedWorkDialog,
+    })),
   { ssr: false },
 );
 
 const CommitmentRadarSheet = dynamic(
-  () => import("./commitment-radar-sheet").then((m) => ({ default: m.CommitmentRadarSheet })),
+  () =>
+    import("./commitment-radar-sheet").then((m) => ({
+      default: m.CommitmentRadarSheet,
+    })),
   { ssr: false },
 );
 
@@ -63,9 +77,14 @@ interface EventDetailSheetProps {
   onQueueScenarioStep?: (draft: CalendarScenarioDraftStep) => void;
 }
 
-export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventDetailSheetProps) {
+export function EventDetailSheet({
+  event,
+  onClose,
+  onQueueScenarioStep,
+}: EventDetailSheetProps) {
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [deleteRecurringScopeOpen, setDeleteRecurringScopeOpen] = useState(false);
+  const [deleteRecurringScopeOpen, setDeleteRecurringScopeOpen] =
+    useState(false);
   const [cancelOccurrenceOpen, setCancelOccurrenceOpen] = useState(false);
   const [unlinkConfirmOpen, setUnlinkConfirmOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -87,23 +106,41 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const { data: detail, isLoading: detailLoading } = useCalendarEvent(
     isCalendarEvent ? numericEventId : null,
   );
-  const canUpdate = isCalendarEvent && (detail ? detail.canManage === true : event?.actions.edit === true);
+  const canUpdate =
+    isCalendarEvent &&
+    (detail ? detail.canManage === true : event?.actions.edit === true);
   const canMutateEvent = canUpdate && event?.category !== "huddle";
   const canExport = useCan("calendar:events:export");
   const chatAccess = useCanState("chat:channels:read");
   const calendarTimeZone = useCalendarTimeZone();
   const commitmentRoot: CommitmentReference | null = detail?.linkedTicket
-    ? { source: "build", type: "ticket", recordId: String(detail.linkedTicket.id) }
-    : event?.entityType === "deal" && event.entityId && /^\d+$/.test(event.entityId)
+    ? {
+        source: "build",
+        type: "ticket",
+        recordId: String(detail.linkedTicket.id),
+      }
+    : event?.entityType === "deal" &&
+        event.entityId &&
+        /^\d+$/.test(event.entityId)
       ? { source: "crm", type: "deal", recordId: event.entityId }
       : null;
   const when = !event
     ? ""
     : event.allDay
-      ? event.time.kind === "date" && event.time.startDate !== event.time.endDate
-        ? formatEventDateRange(event.time.startDate, event.time.endDate, event.timezone)
+      ? event.time.kind === "date" &&
+        event.time.startDate !== event.time.endDate
+        ? formatEventDateRange(
+            event.time.startDate,
+            event.time.endDate,
+            event.timezone,
+          )
         : `${formatEventDate(event.start, event.timezone)} · All day`
-      : formatEventTimeRange(event.start, event.end, event.timezone, calendarTimeZone);
+      : formatEventTimeRange(
+          event.start,
+          event.end,
+          event.timezone,
+          calendarTimeZone,
+        );
 
   const handleUnlink = useCallback(async () => {
     if (numericEventId === null) return;
@@ -172,9 +209,10 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const handleExportDay = useCallback(async () => {
     if (!event) return;
     try {
-      const startDay = event.time.kind === "date"
-        ? new Date(`${event.time.startDate}T00:00:00`)
-        : zonedWallClock(new Date(event.start), calendarTimeZone);
+      const startDay =
+        event.time.kind === "date"
+          ? new Date(`${event.time.startDate}T00:00:00`)
+          : zonedWallClock(new Date(event.start), calendarTimeZone);
       await downloadCalendarExport(
         format(startDay, "yyyy-MM-dd"),
         format(addDays(startDay, 1), "yyyy-MM-dd"),
@@ -218,7 +256,14 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
         setConfirmOpen(true);
       }
     },
-    [event, numericEventId, parsedEventId, detail?.localVersion, cancelOccurrence, onClose],
+    [
+      event,
+      numericEventId,
+      parsedEventId,
+      detail?.localVersion,
+      cancelOccurrence,
+      onClose,
+    ],
   );
 
   const handleRequestCancelOccurrence = useCallback(
@@ -227,9 +272,18 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   );
   const handleRequestUnlink = useCallback(() => setUnlinkConfirmOpen(true), []);
   const handleOpenEdit = useCallback(() => setEditOpen(true), []);
-  const handleOpenMeetingWorkspace = useCallback(() => setMeetingWorkspaceOpen(true), []);
-  const handleOpenProtectedWork = useCallback(() => setProtectedWorkOpen(true), []);
-  const handleOpenCommitmentRadar = useCallback(() => setCommitmentRadarOpen(true), []);
+  const handleOpenMeetingWorkspace = useCallback(
+    () => setMeetingWorkspaceOpen(true),
+    [],
+  );
+  const handleOpenProtectedWork = useCallback(
+    () => setProtectedWorkOpen(true),
+    [],
+  );
+  const handleOpenCommitmentRadar = useCallback(
+    () => setCommitmentRadarOpen(true),
+    [],
+  );
 
   return (
     <>
@@ -239,51 +293,83 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
         title={event?.title ?? "Event details"}
         description={when}
         className="sm:max-w-xl"
-        footer={<EventDetailActions
-          showMeeting={isCalendarEvent && event?.category !== "huddle"}
-          showHuddle={event?.category === "huddle" && Boolean(event.entityId)}
-          huddleHref={event?.entityId ? `/chat?channel=${event.entityId}` : null}
-          canExport={canExport}
-          canMutate={canMutateEvent}
-          mutatePending={isCalendarEvent && !detail}
-          showCancelOccurrence={canMutateEvent && detail?.isRecurring === true}
-          showProtect={canMutateEvent && !detail?.isRecurring && !event?.allDay}
-          showRadar={commitmentRoot !== null}
-          onClose={onClose}
-          onDelete={handleRequestDelete}
-          onCancelOccurrence={handleRequestCancelOccurrence}
-          onMeeting={handleOpenMeetingWorkspace}
-          onExport={handleExportDay}
-          onEdit={handleOpenEdit}
-          onProtect={handleOpenProtectedWork}
-          onRadar={handleOpenCommitmentRadar}
-        />}
-      >
-          {event ? (
-            <div className="mb-4 flex items-center gap-2 border-l-4 pl-3" style={{ borderColor: getEventColor(event) }}>
-              <Tag className="size-3.5" style={{ color: getEventColor(event) }} />
-              <span className="text-sm capitalize text-muted-foreground">{event.category}</span>
-            </div>
-          ) : null}
-          <EventDetailContent
-            event={event}
-            numericEventId={numericEventId}
-            isCalendarEvent={isCalendarEvent}
-            canUpdate={canUpdate}
-            deleteEventIsPending={deleteEventIsPending}
-            rsvpMutationIsPending={rsvpMutationIsPending}
-            detail={detail}
-            detailLoading={detailLoading}
+        footer={
+          <EventDetailActions
+            showMeeting={isCalendarEvent && event?.category !== "huddle"}
+            showHuddle={event?.category === "huddle" && Boolean(event.entityId)}
+            huddleHref={
+              event?.entityId ? `/chat?channel=${event.entityId}` : null
+            }
+            canExport={canExport}
+            canMutate={canMutateEvent}
+            mutatePending={isCalendarEvent && !detail}
+            showCancelOccurrence={
+              canMutateEvent && detail?.isRecurring === true
+            }
+            showProtect={
+              canMutateEvent && !detail?.isRecurring && !event?.allDay
+            }
+            showRadar={commitmentRoot !== null}
             onClose={onClose}
-            onRequestUnlink={handleRequestUnlink}
-            onRsvp={handleRsvp}
+            onDelete={handleRequestDelete}
+            onCancelOccurrence={handleRequestCancelOccurrence}
+            onMeeting={handleOpenMeetingWorkspace}
+            onExport={handleExportDay}
+            onEdit={handleOpenEdit}
+            onProtect={handleOpenProtectedWork}
+            onRadar={handleOpenCommitmentRadar}
           />
-          {event ? <CalendarSourceActionPanel key={`${event.id}:${event.sourceVersion}`} event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
-          {detail && canMutateEvent && !detail.isRecurring && !detail.allDay && commitmentRoot && onQueueScenarioStep ?
-            <CalendarNativeScenarioMove key={`${detail.id}:${detail.localVersion}`} detail={detail} root={commitmentRoot} onQueue={onQueueScenarioStep} /> : null}
-          {isCalendarEvent && numericEventId !== null && chatAccess !== "denied" && (
+        }
+      >
+        {event ? (
+          <div
+            className="mb-4 flex items-center gap-2 border-l-4 pl-3"
+            style={{ borderColor: getEventColor(event) }}
+          >
+            <Tag className="size-3.5" style={{ color: getEventColor(event) }} />
+            <span className="text-sm capitalize text-muted-foreground">
+              {event.category}
+            </span>
+          </div>
+        ) : null}
+        <EventDetailContent
+          event={event}
+          numericEventId={numericEventId}
+          isCalendarEvent={isCalendarEvent}
+          canUpdate={canUpdate}
+          deleteEventIsPending={deleteEventIsPending}
+          rsvpMutationIsPending={rsvpMutationIsPending}
+          detail={detail}
+          detailLoading={detailLoading}
+          onClose={onClose}
+          onRequestUnlink={handleRequestUnlink}
+          onRsvp={handleRsvp}
+        />
+        {event ? (
+          <CalendarSourceActionPanel
+            key={`${event.id}:${event.sourceVersion}`}
+            event={event}
+            onQueueScenarioStep={onQueueScenarioStep}
+          />
+        ) : null}
+        {detail &&
+        canMutateEvent &&
+        !detail.isRecurring &&
+        !detail.allDay &&
+        commitmentRoot &&
+        onQueueScenarioStep ? (
+          <CalendarNativeScenarioMove
+            key={`${detail.id}:${detail.localVersion}`}
+            detail={detail}
+            root={commitmentRoot}
+            onQueue={onQueueScenarioStep}
+          />
+        ) : null}
+        {isCalendarEvent &&
+          numericEventId !== null &&
+          chatAccess !== "denied" && (
             <div className="flex flex-col min-h-[400px] mt-4 border-t border-border pt-4">
-              <RecordConversationPanel
+              <RecordConversation
                 entityType="calendar_event"
                 entityId={String(numericEventId)}
                 emptyDescriptionWrite="This event does not have an associated chat channel yet. Create one to start the conversation."
@@ -353,7 +439,11 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
         />
       ) : null}
       {commitmentRadarOpen && commitmentRoot ? (
-        <CommitmentRadarSheet root={commitmentRoot} open onClose={() => setCommitmentRadarOpen(false)} />
+        <CommitmentRadarSheet
+          root={commitmentRoot}
+          open
+          onClose={() => setCommitmentRadarOpen(false)}
+        />
       ) : null}
     </>
   );
@@ -370,7 +460,9 @@ function MeetingWorkspaceSheet({
   open,
   onOpenChange,
 }: MeetingWorkspaceSheetProps) {
-  const eventId = event ? parseCalendarEventId(event.id)?.eventId ?? null : null;
+  const eventId = event
+    ? (parseCalendarEventId(event.id)?.eventId ?? null)
+    : null;
   return (
     <AppSheet
       open={open}
@@ -379,7 +471,12 @@ function MeetingWorkspaceSheet({
       description={event?.title || "Meeting"}
       className="z-[110] sm:max-w-2xl"
     >
-      {event && eventId ? <MeetingWorkspacePanel eventId={eventId} eventTitle={event.title ?? ""} /> : null}
+      {event && eventId ? (
+        <MeetingWorkspacePanel
+          eventId={eventId}
+          eventTitle={event.title ?? ""}
+        />
+      ) : null}
     </AppSheet>
   );
 }

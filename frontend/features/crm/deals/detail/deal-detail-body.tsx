@@ -23,7 +23,7 @@ import { DealStageHistory } from "./deal-stage-history";
 import { DealCustomFieldsCard } from "./deal-custom-fields-card";
 import { DealLinkedProjectCard } from "./deal-linked-project-card";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
-import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
+import { RecordConversation } from "@/components/record-conversation/record-conversation-slot";
 
 interface DealDetailBodyProps {
   deal: Deal;
@@ -200,7 +200,7 @@ export function DealDetailBody({
 
         {chatAccess !== "denied" && (
           <TabsContent value="chat" className="flex flex-col min-h-[520px] mt-4">
-            <RecordConversationPanel
+            <RecordConversation
               entityType="deal"
               entityId={String(dealId)}
               emptyDescriptionWrite="This deal does not have an associated chat channel yet. Create one to start the conversation."

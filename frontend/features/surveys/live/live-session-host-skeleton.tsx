@@ -1,7 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** Geometry match for the live session host ready layout (FE-142). */
 export function LiveSessionHostSkeleton() {
   return (
     <div className="flex flex-col gap-3">

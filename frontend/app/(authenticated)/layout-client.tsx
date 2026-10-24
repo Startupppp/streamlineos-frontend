@@ -11,6 +11,10 @@ import { I18nProvider } from "@/lib/i18n/i18n";
 import { BuildSidebarSkeleton } from "@/components/layout/sidebar/build-sidebar-skeleton";
 import type { BuildSidebarSlotProps } from "@/components/layout/sidebar/build-sidebar-slot";
 import { AuthenticatedProviders } from "@/components/providers/authenticated-providers";
+import {
+  RecordConversationSlotProvider,
+  type RecordConversationProps,
+} from "@/components/record-conversation/record-conversation-slot";
 
 const BuildSidebar = dynamic(
   () =>
@@ -36,6 +40,14 @@ const ChatMobileBottomNav = dynamic(
   { ssr: false },
 );
 
+const RecordConversationPanel = dynamic(
+  () =>
+    import("@/features/chat/record-conversation-page").then(
+      (m) => m.RecordConversationPanel,
+    ),
+  { ssr: false },
+);
+
 interface LayoutClientProps {
   children: ReactNode;
   userId: string;
@@ -57,6 +69,10 @@ function renderBuildSidebar(props: BuildSidebarSlotProps) {
   return <BuildSidebar {...props} />;
 }
 
+function renderRecordConversation(props: RecordConversationProps) {
+  return <RecordConversationPanel {...props} />;
+}
+
 function renderChatMobileNav(onOpenMobileMenu: () => void) {
   return <ChatMobileBottomNav onOpenMobileMenu={onOpenMobileMenu} />;
 }
@@ -65,15 +81,17 @@ export function LayoutClient({ children, ...shellProps }: LayoutClientProps) {
   return (
     <I18nProvider>
       <AuthenticatedProviders>
-        <DashboardShell
-          {...shellProps}
-          buildSidebarSlot={renderBuildSidebar}
-          chatMobileNavSlot={renderChatMobileNav}
-          notificationBellSlot={notificationBellSlot}
-        >
-          <AccessVersionSync />
-          {children}
-        </DashboardShell>
+        <RecordConversationSlotProvider render={renderRecordConversation}>
+          <DashboardShell
+            {...shellProps}
+            buildSidebarSlot={renderBuildSidebar}
+            chatMobileNavSlot={renderChatMobileNav}
+            notificationBellSlot={notificationBellSlot}
+          >
+            <AccessVersionSync />
+            {children}
+          </DashboardShell>
+        </RecordConversationSlotProvider>
       </AuthenticatedProviders>
     </I18nProvider>
   );

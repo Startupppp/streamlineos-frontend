@@ -22,7 +22,7 @@ jest.mock("@/hooks/api/calendar", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/access", () => ({
+jest.mock("@/hooks/api/access", () => ({ useCanState: () => "denied",
   useCan: jest.fn().mockReturnValue(true),
 }));
 

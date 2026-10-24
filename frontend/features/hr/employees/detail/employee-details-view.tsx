@@ -3,7 +3,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import dynamic from "next/dynamic";
-import { EditEmployeeForm, type EmployeeData } from "@/features/hr/employees/detail/edit-employee-form";
+import {
+  EditEmployeeForm,
+  type EmployeeData,
+} from "@/features/hr/employees/detail/edit-employee-form";
 import { EmployeeAttendanceHistory } from "@/components/hr/employee-attendance-history";
 import { SelfEditProfileForm } from "@/components/hr/self-edit-profile-form";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
@@ -26,7 +29,7 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useCan, useCanState, useScope } from "@/hooks/api/access";
-import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
+import { RecordConversation } from "@/components/record-conversation/record-conversation-slot";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 import { AiActionsMenu } from "@/components/ai";
 import type { AiAction } from "@/components/ai";
@@ -34,27 +37,58 @@ import { useAIAttritionRisk, useAIGenerateReview } from "@/hooks/api/ai";
 import { EmployeeHeaderCard } from "@/features/hr/employees/detail/employee-header-card";
 import { OverviewTab } from "@/features/hr/employees/detail/overview-tab";
 import { EmployeeTabsList } from "@/features/hr/employees/detail/employee-tabs-list";
-import { LIFECYCLE_BADGE, profileCompletenessScore } from "@/features/hr/employees/detail/employee-detail-constants";
+import {
+  LIFECYCLE_BADGE,
+  profileCompletenessScore,
+} from "@/features/hr/employees/detail/employee-detail-constants";
 import { getUserDisplayName } from "@/lib/person-display";
 
 const EmployeeTimelineTab = dynamic(
-  () => import("@/features/hr/employees/detail/timeline-tab").then(m => ({ default: m.EmployeeTimelineTab })),
-  { loading: () => <div className="space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div> }
+  () =>
+    import("@/features/hr/employees/detail/timeline-tab").then((m) => ({
+      default: m.EmployeeTimelineTab,
+    })),
+  {
+    loading: () => (
+      <div className="space-y-3">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-xl" />
+        ))}
+      </div>
+    ),
+  },
 );
 const RehireEmployeeDialog = dynamic(() =>
-  import("@/features/hr/employees/detail/rehire-employee-dialog").then((m) => ({ default: m.RehireEmployeeDialog })),
+  import("@/features/hr/employees/detail/rehire-employee-dialog").then((m) => ({
+    default: m.RehireEmployeeDialog,
+  })),
 );
 const ArchiveEmployeeAction = dynamic(() =>
-  import("@/features/hr/employees/detail/archive-employee-action").then((m) => ({ default: m.ArchiveEmployeeAction })),
+  import("@/features/hr/employees/detail/archive-employee-action").then(
+    (m) => ({ default: m.ArchiveEmployeeAction }),
+  ),
 );
 const EmployeeSensitiveTab = dynamic(
-  () => import("@/features/hr/employees/detail/sensitive-tab").then(m => ({ default: m.EmployeeSensitiveTab })),
-  { loading: () => <div className="space-y-3">{Array.from({ length: 10 }).map((_, i) => <Skeleton key={i} className="h-14 w-full rounded-xl" />)}</div> }
+  () =>
+    import("@/features/hr/employees/detail/sensitive-tab").then((m) => ({
+      default: m.EmployeeSensitiveTab,
+    })),
+  {
+    loading: () => (
+      <div className="space-y-3">
+        {Array.from({ length: 10 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full rounded-xl" />
+        ))}
+      </div>
+    ),
+  },
 );
 
 export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const hydrated = useHydrated();
-  const { data: stats, isLoading: statsLoading } = useHrEmployeeStats(employee.id);
+  const { data: stats, isLoading: statsLoading } = useHrEmployeeStats(
+    employee.id,
+  );
   const { data: projects } = useHrEmployeeProjects(employee.id);
   const { data: ticketsResult } = useHrEmployeeTickets(employee.id);
   const { data: employmentRecord } = useEmployeeEmployment(employee.id);
@@ -96,9 +130,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const showExportPdf = serverActions?.has("export") ?? showManageActions;
   const showSensitiveTab =
     serverActions?.has("view_sensitive") ??
-    (hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own"));
+    (hydrated &&
+      sensitiveScope !== "none" &&
+      (isSelf || sensitiveScope !== "own"));
   const showEditTab =
-    serverActions?.has("update") ?? (hydrated && canUpdateEmployee && (isSelf || manageScope === "all"));
+    serverActions?.has("update") ??
+    (hydrated && canUpdateEmployee && (isSelf || manageScope === "all"));
   const chatAccess = useCanState("chat:channels:read");
   const showChatTab = chatAccess !== "denied";
   const employeeName = getUserDisplayName(employee);
@@ -129,7 +166,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
 
   const skillsList: string[] = (employee.skills ?? []).map((s) => s.name);
 
-  const { pct: completeness, missing: missingFields } = profileCompletenessScore(employee);
+  const { pct: completeness, missing: missingFields } =
+    profileCompletenessScore(employee);
 
   const nestedEmployment =
     employee.employment && typeof employee.employment === "object"
@@ -142,7 +180,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
   const lifecycleStatus =
     employmentRecord?.lifecycleStatus ??
     nestedEmployment?.lifecycleStatus ??
-    (typeof employee.employmentStatus === "string" ? employee.employmentStatus : null);
+    (typeof employee.employmentStatus === "string"
+      ? employee.employmentStatus
+      : null);
   const rawEmployeeNumber =
     employmentRecord?.employeeNumber ??
     nestedEmployment?.employeeNumber ??
@@ -151,7 +191,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     typeof rawEmployeeNumber === "string" && rawEmployeeNumber.trim()
       ? rawEmployeeNumber
       : null;
-  const workerType = employmentRecord?.workerType ?? nestedEmployment?.workerType ?? null;
+  const workerType =
+    employmentRecord?.workerType ?? nestedEmployment?.workerType ?? null;
 
   const handleTerminateClick = useCallback(() => {
     router.push(`/hr/termination?employeeId=${employee.id}`);
@@ -213,7 +254,9 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         run: async () => {
           const result = await generateReviewMutation.mutateAsync({
             userId: employee.id,
-            periodStart: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+            periodStart: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000)
+              .toISOString()
+              .slice(0, 10),
             periodEnd: new Date().toISOString().slice(0, 10),
           });
           return {
@@ -222,7 +265,13 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         },
       },
     ];
-  }, [canManageEmployees, canDraftReview, employee.id, attritionRiskMutation, generateReviewMutation]);
+  }, [
+    canManageEmployees,
+    canDraftReview,
+    employee.id,
+    attritionRiskMutation,
+    generateReviewMutation,
+  ]);
 
   const employmentStatusRaw = employee.employmentStatus;
   const employmentStatus =
@@ -230,9 +279,12 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
       ? employmentStatusRaw.toUpperCase()
       : null;
   const isAlreadyTerminated =
-    employee.isActive === false || employmentStatus === "EXITED" || employmentStatus === "ALUMNI";
+    employee.isActive === false ||
+    employmentStatus === "EXITED" ||
+    employmentStatus === "ALUMNI";
   const canRehire =
-    serverActions?.has("rehire") ?? (hydrated && canManageExits && isAlreadyTerminated);
+    serverActions?.has("rehire") ??
+    (hydrated && canManageExits && isAlreadyTerminated);
   const canTerminate =
     serverActions?.has("terminate") ??
     (hydrated &&
@@ -400,12 +452,25 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
                   id: employee.id,
                   firstName: employee.firstName,
                   lastName: employee.lastName,
-                  image: typeof employee.image === "string" ? employee.image : null,
+                  image:
+                    typeof employee.image === "string" ? employee.image : null,
                   bio: typeof employee.bio === "string" ? employee.bio : null,
-                  linkedinUrl: typeof employee.linkedinUrl === "string" ? employee.linkedinUrl : null,
-                  twitterUrl: typeof employee.twitterUrl === "string" ? employee.twitterUrl : null,
-                  githubUrl: typeof employee.githubUrl === "string" ? employee.githubUrl : null,
-                  websiteUrl: typeof employee.websiteUrl === "string" ? employee.websiteUrl : null,
+                  linkedinUrl:
+                    typeof employee.linkedinUrl === "string"
+                      ? employee.linkedinUrl
+                      : null,
+                  twitterUrl:
+                    typeof employee.twitterUrl === "string"
+                      ? employee.twitterUrl
+                      : null,
+                  githubUrl:
+                    typeof employee.githubUrl === "string"
+                      ? employee.githubUrl
+                      : null,
+                  websiteUrl:
+                    typeof employee.websiteUrl === "string"
+                      ? employee.websiteUrl
+                      : null,
                   skills: employee.skills,
                 }}
                 onSaved={() => router.refresh()}
@@ -427,8 +492,11 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
         </TabsContent>
 
         {showChatTab && (
-          <TabsContent value="chat" className="mt-0 flex flex-col min-h-[520px]">
-            <RecordConversationPanel
+          <TabsContent
+            value="chat"
+            className="mt-0 flex flex-col min-h-[520px]"
+          >
+            <RecordConversation
               entityType="employee"
               entityId={employee.id}
               emptyDescriptionWrite="This employee does not have an associated chat channel yet. Create one to start the conversation."

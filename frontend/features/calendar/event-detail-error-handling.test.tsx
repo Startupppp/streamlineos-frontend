@@ -58,7 +58,7 @@ jest.mock("@/hooks/api/calendar", () => ({
   }),
 }));
 
-jest.mock("@/hooks/api/access", () => ({ useCan: () => true }));
+jest.mock("@/hooks/api/access", () => ({ useCanState: () => "denied", useCan: () => true }));
 
 jest.mock("@/hooks/common/use-animated-icon", () => ({
   useAnimatedIcon: () => ({

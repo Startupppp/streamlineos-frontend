@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useSupportTicket } from "@/hooks/api/support";
 import { useSupportRealtime } from "@/hooks/api/support/realtime";
 import { useCanState } from "@/hooks/api/access";
-import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
+import { RecordConversation } from "@/components/record-conversation/record-conversation-slot";
 import { TicketDetailHeader } from "./ticket-detail-header";
 import { TicketDetailTimeline } from "./ticket-detail-timeline";
 import { TicketDetailRelations } from "./ticket-detail-relations";
@@ -13,23 +13,32 @@ import { TicketExternalLinksSection } from "./ticket-external-links-section";
 import { TicketReplyComposer } from "./ticket-reply-composer";
 import { KbDeflectionPanel } from "./ticket-kb-deflection-panel";
 import { TicketAiPanel } from "./ticket-ai-panel";
-import { SUPPORT_INSERT_REPLY_DRAFT_EVENT, type SupportInsertReplyDraftDetail } from "./use-inbox-shortcuts";
+import {
+  SUPPORT_INSERT_REPLY_DRAFT_EVENT,
+  type SupportInsertReplyDraftDetail,
+} from "./use-inbox-shortcuts";
 
 interface TicketDetailSheetProps {
   ticketId: number;
   onBack: () => void;
 }
 
-export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) {
+export function TicketDetailSheet({
+  ticketId,
+  onBack,
+}: TicketDetailSheetProps) {
   const { data: ticket, isLoading } = useSupportTicket(ticketId);
   useSupportRealtime(ticketId > 0 ? ticketId : null);
   const chatAccess = useCanState("chat:channels:read");
 
   const handleInsertReply = useCallback((body: string) => {
     window.dispatchEvent(
-      new CustomEvent<SupportInsertReplyDraftDetail>(SUPPORT_INSERT_REPLY_DRAFT_EVENT, {
-        detail: { body },
-      }),
+      new CustomEvent<SupportInsertReplyDraftDetail>(
+        SUPPORT_INSERT_REPLY_DRAFT_EVENT,
+        {
+          detail: { body },
+        },
+      ),
     );
   }, []);
 
@@ -55,7 +64,11 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <TicketDetailHeader ticket={ticket} onBack={onBack} onInsertReply={handleInsertReply} />
+      <TicketDetailHeader
+        ticket={ticket}
+        onBack={onBack}
+        onInsertReply={handleInsertReply}
+      />
       <TicketDetailTimeline ticket={ticket} />
       <TicketDetailRelations ticketId={ticket.id} />
       <TicketExternalLinksSection ticketId={ticket.id} />
@@ -64,7 +77,7 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
       <KbDeflectionPanel ticketId={ticket.id} ticketTitle={ticket.title} />
       {chatAccess !== "denied" && (
         <div className="flex flex-col min-h-[400px] border-t border-border">
-          <RecordConversationPanel
+          <RecordConversation
             entityType="support_ticket"
             entityId={String(ticket.id)}
             emptyDescriptionWrite="This ticket does not have an associated chat channel yet. Create one to start the conversation."

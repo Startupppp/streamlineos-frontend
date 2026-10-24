@@ -4,7 +4,7 @@
 
 ## PRD and to-do files
 
-- [Knowledge Base and Documents](01-knowledge-documents-prd.md): 14 mapped architecture items and six historical defect checks.
+- Knowledge Base and Documents: the separate triage PRD was retired; use the [canonical Knowledge Base open-task queue](../specs/knowledge-base/OPEN-TASKS.md) and its [product decision](../specs/knowledge-base/2026-10-20-document-module-product-decision.md).
 - [Platform access and shared modules](02-platform-access-prd.md): 18 mapped items covering identity, authorization, admission, providers and money.
 - [Build, Chat and Companion](03-build-chat-companion-prd.md): 17 Build regression checks, eight Chat items and five Companion verification items. The October 2 Build package list remains in the existing canonical Build registry.
 

@@ -7,6 +7,7 @@ import PageRightPanel from "./page-right-panel";
 import type { KbPageDetail } from "@/hooks/api/kb/page-types";
 import { ApiError } from "@/lib/api-envelope";
 
+jest.mock("@/hooks/api/access", () => ({ useCanState: () => "denied" }));
 jest.mock("@/hooks/api/use-page-state", () => ({
   usePageState: ({ isLoading, isError, isEmpty, error }: { isLoading: boolean; isError: boolean; isEmpty?: boolean; error?: unknown }) =>
     isLoading ? { kind: "loading" } : isError ? { kind: "error", error } : isEmpty ? { kind: "empty" } : { kind: "ready" },

@@ -40,6 +40,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: () => true,
+  useCanState: () => "denied",
   useScope: () => "all",
   usePermissionGate: () => mockCalendarPermission,
   useModuleEnabled: (moduleKey: string) =>

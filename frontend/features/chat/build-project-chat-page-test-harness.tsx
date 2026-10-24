@@ -12,6 +12,15 @@ jest.mock("framer-motion", () => ({
   useReducedMotion: () => false,
 }));
 
+jest.mock("@/components/record-conversation/record-conversation-slot", () => {
+  const { RecordConversationPanel } = jest.requireActual<typeof import("./record-conversation-page")>("./record-conversation-page");
+  return {
+    RecordConversation: (props: import("@/components/record-conversation/record-conversation-slot").RecordConversationProps) => (
+      <RecordConversationPanel {...props} />
+    ),
+  };
+});
+
 jest.mock("sonner", () => ({
   toast: { success: jest.fn(), error: jest.fn() },
 }));
