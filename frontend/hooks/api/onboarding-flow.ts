@@ -64,15 +64,6 @@ export type ModuleChecklist = {
   items: ModuleChecklistItem[];
 };
 
-export function useModuleChecklists(enabled = true) {
-  return useGatedQuery("onboarding:module-checklists:view", {
-    queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklists(),
-    queryFn: ({ signal }) => apiClient.get<ModuleChecklist[]>("/onboarding/module-checklists", undefined, signal, moduleChecklistListContract),
-    staleTime: 30_000,
-    enabled,
-  });
-}
-
 function invalidateChecklist(queryClient: ReturnType<typeof useQueryClient>, moduleKey: string) {
   void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklists() });
   void queryClient.invalidateQueries({ queryKey: platformCoreQueryKeys.onboardingFlow.moduleChecklist(moduleKey) });
@@ -109,16 +100,6 @@ export function useCompleteChecklistItem() {
       }
     },
     onSettled: (_data, _err, { moduleKey }) => invalidateChecklist(queryClient, moduleKey),
-  });
-}
-
-export function useDismissModuleChecklist() {
-  const queryClient = useQueryClient();
-  return useAuthorizedMutation("onboarding:module-checklists:manage", {
-    mutationKey: ["onboarding", "module-checklists", "dismiss"],
-    mutationFn: (moduleKey: string) =>
-      apiClient.post(`/onboarding/module-checklists/${moduleKey}/dismiss`, {}, undefined, checklistProgressContract),
-    onSuccess: (_, moduleKey) => invalidateChecklist(queryClient, moduleKey),
   });
 }
 

@@ -30,10 +30,6 @@ const grantContract = lazyContract(() =>
 const activationResultContract_ = lazyContract(() =>
   import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.activationResultContract),
 );
-const resendInvitationContract_ = lazyContract(() =>
-  import("@/hooks/api/portal-access/portal-access-schema").then((m) => m.resendInvitationContract),
-);
-
 export function usePortalMemberships(
   params?: { cursor?: string; limit?: number; status?: string },
   options?: Omit<UseQueryOptions<PortalMembershipsPage>, "queryKey" | "queryFn">,
@@ -181,19 +177,3 @@ export function useBulkRevokeGrant() {
   });
 }
 
-export function useResendPortalInvitation(portalMembershipId: string) {
-  const qc = useQueryClient();
-  return useAuthorizedMutation("build:clientvisibility:manage", {
-    mutationKey: ["portalAccess", "memberships", portalMembershipId, "resend-invitation"],
-    mutationFn: () =>
-      apiClient.post(
-        `/portal-access/memberships/${portalMembershipId}/resend-invitation`,
-        {},
-        undefined,
-        resendInvitationContract_,
-      ),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: directoryAndOwnershipQueryKeys.portalAccess.memberships() });
-    },
-  });
-}

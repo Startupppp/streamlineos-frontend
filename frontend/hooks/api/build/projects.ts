@@ -38,7 +38,7 @@ import type {
 } from "@/types/projects";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { useHydratedProject } from "@/features/build/project-detail/project-hydration-context";
-import { projectReadErrorReachesBoundary } from "@/lib/query-error-policy";
+import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 import {
   projectsListQueryOptions,
   projectDetailQueryOptions,
@@ -152,7 +152,7 @@ export function useProject(
         projectDetailLazy,
       ),
     initialData: hydratedProject,
-    throwOnError: projectReadErrorReachesBoundary,
+    throwOnError: readErrorExceptNotFoundReachesBoundary,
     ...options,
     enabled: canView && !!projectId,
   });

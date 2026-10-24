@@ -96,7 +96,11 @@ export interface CalculationSnapshot {
     previousNet: string | null;
     netDelta: string | null;
     netDeltaPercent: number | null;
-    changedComponents: { code: string; previous: string | null; current: string | null }[];
+    changedComponents: {
+      code: string;
+      previous: string | null;
+      current: string | null;
+    }[];
   } | null;
 }
 
@@ -156,19 +160,6 @@ export interface RunEmployeeDetail extends RunEmployee {
   calculationSnapshot?: CalculationSnapshot;
 }
 
-export interface PayrollException {
-  id: number;
-  runId: number;
-  runEmployeeId: number | null;
-  code: string;
-  severity: PayrollExceptionSeverity;
-  message: string;
-  status: PayrollExceptionStatus;
-  resolvedBy: string | null;
-  resolvedAt: string | null;
-  overrideReason: string | null;
-}
-
 export interface RunInput {
   id: number;
   runId: number;
@@ -214,4 +205,3 @@ export interface VarianceSummary {
 }
 
 export type VarianceData = z.infer<typeof runVarianceResponseContract>;
-

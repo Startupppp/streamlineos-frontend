@@ -113,9 +113,6 @@ const orgSetupDraftSaveContract = lazyContract(() =>
 const orgSetupDraftContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupDraftContract),
 );
-const orgSetupPreviewContract = lazyContract(() =>
-  import("@/hooks/api/org-setup-schema").then((m) => m.orgSetupPreviewContract),
-);
 const orgSetupActivateContract = lazyContract(() =>
   import("@/hooks/api/org-setup-schema").then(
     (m) => m.orgSetupActivateContract,
@@ -126,11 +123,6 @@ export type OrgSetupDraftSavePayload = {
   revision: number;
   stepData: Record<string, unknown>;
   expiresAt: string;
-};
-
-export type OrgSetupPreviewPayload = {
-  modules: string[];
-  targetOrgId?: string;
 };
 
 export type OrgSetupActivatePayload = {
@@ -192,20 +184,6 @@ export function useOrgSetupDraftQuery(enabled = true) {
     staleTime: 60_000,
     retry: false,
     enabled,
-  });
-}
-
-export function useOrgSetupPreviewMutation() {
-  return useMutation({
-    mutationKey: ["org", "setup", "preview"],
-    mutationFn: (payload: OrgSetupPreviewPayload) =>
-      apiClient.post(
-        "/org/setup/selection/preview",
-        payload,
-        { timeoutMs: 10_000 },
-        orgSetupPreviewContract,
-      ),
-    retry: false,
   });
 }
 

@@ -1,4 +1,3 @@
-
 export const PRICING = {
   currency: "₹",
   freeSeatLimit: 5,
@@ -204,7 +203,10 @@ export function calculateSavingsVsAllInOne(
     competitorAnnual,
     streamlineAnnual,
     savings: competitorAnnual - streamlineAnnual,
-    savingsPct: savingsPercent(competitorAnnual - streamlineAnnual, competitorAnnual),
+    savingsPct: savingsPercent(
+      competitorAnnual - streamlineAnnual,
+      competitorAnnual,
+    ),
   };
 }
 
@@ -225,12 +227,9 @@ export function calculateSavingsVsStack(seats: number) {
   };
 }
 
-export function bundleSavingsCopy(): string {
-  return `Typical all-in-one platforms charge ${fmt(COMPETITOR_PRICES.allInOneErp)}/seat or more for the same bundle. StreamlineOS Starter is ${fmt(STARTER_TIER.annual ?? annualOf(PRICING.starterMonthlyInr))}/month on annual billing.`;
-}
-
 export function cheapestAnnualLabel(): string {
   const cheapest = PRICING_TIERS.find((t) => t.annual && t.annual > 0);
-  if (!cheapest || !cheapest.annual) return fmt(annualOf(PRICING.starterMonthlyInr));
+  if (!cheapest || !cheapest.annual)
+    return fmt(annualOf(PRICING.starterMonthlyInr));
   return fmt(cheapest.annual);
 }

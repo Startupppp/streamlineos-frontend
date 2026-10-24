@@ -30,7 +30,6 @@ import {
   FOUR_ACTIONS,
   GALLERY_HEADERS,
 } from "./build-list-gallery-data";
-export type { GalleryRow };
 export {
   ROWS,
   COLUMNS,

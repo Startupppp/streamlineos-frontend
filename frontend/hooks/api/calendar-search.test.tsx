@@ -23,6 +23,7 @@ jest.mock("next-auth/react", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: accessSnapshot }),
+  useCan: (key: string) => Boolean(accessSnapshot.scopes[key]),
 }));
 
 jest.mock("@/lib/api-client", () => ({

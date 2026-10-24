@@ -72,7 +72,7 @@ export interface PortalProjectOverview {
   invoices: PortalInvoice[];
 }
 
-export interface AcceptInvitationResponse {
+interface AcceptInvitationResponse {
   token: string;
   expiresAt: string;
 }

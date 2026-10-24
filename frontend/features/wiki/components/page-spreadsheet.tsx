@@ -28,7 +28,7 @@ import PageSpreadsheetGrid from "./page-spreadsheet-grid";
 import { usePageAutosave, type PageAutosavePatch } from "./use-page-autosave";
 import { usePagePresentationUpdate } from "./use-page-presentation-update";
 import type { KbPageEditConflict } from "@/features/wiki/lib/wiki-schema";
-import { WIKI_SPREADSHEET_COLUMN } from "@/features/wiki/lib/wiki-document-column";
+import { WIKI_DOCUMENT_COLUMN } from "@/features/wiki/lib/wiki-document-column";
 
 interface PageSpreadsheetProps {
   pageId: number;
@@ -211,7 +211,7 @@ export default function PageSpreadsheet({ pageId, onNavigateToPage, projectId }:
       <PageCover coverImage={page.coverImage} isEditable={isEditable} onCoverChange={handleCoverChange} onChangeCover={handleOpenCover} />
       <PageCoverPickerDialog open={coverPickerOpen} onOpenChange={handleCoverPickerOpenChange} onCoverChange={handleCoverChange} pageId={pageId} />
       <div className="flex min-h-0 min-w-0 flex-1">
-        <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col", WIKI_SPREADSHEET_COLUMN)}>
+        <div className={cn("flex h-full min-h-0 min-w-0 flex-1 flex-col", WIKI_DOCUMENT_COLUMN)}>
           <div className="wiki-document-chrome sticky top-0 z-40 shrink-0">
             <div className="py-2.5">
               <PageDocumentHeader

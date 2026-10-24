@@ -1,5 +1,8 @@
 import type { z } from "zod";
-import type { expensePageDataRowContract, expensePageDataContract } from "@/hooks/api/hr/expenses-schema";
+import type {
+  expensePageDataRowContract,
+  expensePageDataContract,
+} from "@/hooks/api/hr/expenses-schema";
 
 export interface ExpenseFilters {
   startDate?: string;
@@ -51,32 +54,12 @@ export type ExpenseWithRelations = z.infer<typeof expensePageDataRowContract>;
 
 export type ExpensePageData = z.infer<typeof expensePageDataContract>;
 
-export type ExpenseStatus = "PENDING" | "APPROVED" | "REJECTED" | "PAID" | "WITHDRAWN";
-
-export interface Expense {
-  id: number;
-  orgId: string;
-  userId: string;
-  categoryId: number | null;
-  category: string;
-  amount: string;
-  currency: string | null;
-  description: string | null;
-  receiptUrl: string | null;
-  receiptFileName: string | null;
-  merchant: string | null;
-  paymentMethod: string | null;
-  projectId: number | null;
-  status: ExpenseStatus | null;
-  approverId: string | null;
-  approvedAt: Date | string | null;
-  rejectionReason: string | null;
-  paidAt: Date | string | null;
-  transactionRef: string | null;
-  expenseDate: string;
-  createdAt: Date | string | null;
-  updatedAt: Date | string | null;
-}
+export type ExpenseStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "PAID"
+  | "WITHDRAWN";
 
 export interface CreateExpenseInput {
   category: string;

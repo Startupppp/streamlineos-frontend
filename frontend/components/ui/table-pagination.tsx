@@ -123,7 +123,7 @@ export function TablePagination(props: TablePaginationProps) {
   return <OffsetFooter {...props} />;
 }
 
-export function TablePaginationSkeleton({ className }: { className?: string }) {
+function TablePaginationSkeleton({ className }: { className?: string }) {
   return (
     <div className={cn(SHELL_CLASS, className)} aria-label="Loading pagination">
       <Skeleton className="col-start-2 h-8 w-[12.5rem] justify-self-center rounded-md" />

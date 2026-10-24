@@ -1,29 +1,7 @@
 export type SpringValues = Record<string, string | number>;
 
-export const transformRange = (
-  value: number,
-  min: number,
-  max: number,
-  newMin: number,
-  newMax: number,
-) => {
-  const normalized = (Math.min(Math.max(value, min), max) - min) / (max - min);
-  return newMin + normalized * (newMax - newMin);
-};
-
 export const lerp = (start: number, end: number, t: number): number => {
   return start * (1 - t) + end * t;
-};
-
-export const debounce = <T extends (...args: never[]) => void>(
-  func: T,
-  delay: number,
-): T => {
-  let timeout: NodeJS.Timeout;
-  return ((...args: Parameters<T>) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), delay);
-  }) as T;
 };
 
 export const interpolate = (

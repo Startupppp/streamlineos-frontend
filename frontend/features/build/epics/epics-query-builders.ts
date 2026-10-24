@@ -34,7 +34,10 @@ export function pendingQuery<T>(): UseQueryResult<T, Error> {
   };
 }
 
-export function successfulQuery<T>(data: T, dataUpdatedAt = 0): UseQueryResult<T, Error> {
+export function successfulQuery<T>(
+  data: T,
+  dataUpdatedAt = 0,
+): UseQueryResult<T, Error> {
   return {
     data,
     error: null,
@@ -96,21 +99,29 @@ export function failedQuery<T>(error: Error): UseQueryResult<T, Error> {
   };
 }
 
-export const disabledQueryResult = <T = never>(): UseQueryResult<T, Error> => pendingQuery<T>();
+export const disabledQueryResult = <T = never>(): UseQueryResult<T, Error> =>
+  pendingQuery<T>();
 
-export const ACCESS_LOADING: UseQueryResult<AccessResponse, Error> = pendingQuery<AccessResponse>();
-export const ACCESS_GRANTED: UseQueryResult<AccessResponse, Error> = successfulQuery<AccessResponse>({
-  isOrgOwner: false,
-  canManageOrganizationMembership: false,
-  scopes: { "build:view": "all", "build:tickets:view": "all", "build:tickets:create": "all" },
-  modules: { BUILD: true },
-});
-export const ACCESS_DENIED: UseQueryResult<AccessResponse, Error> = successfulQuery<AccessResponse>({
-  isOrgOwner: false,
-  canManageOrganizationMembership: false,
-  scopes: {},
-  modules: { BUILD: true },
-});
+export const ACCESS_LOADING: UseQueryResult<AccessResponse, Error> =
+  pendingQuery<AccessResponse>();
+export const ACCESS_GRANTED: UseQueryResult<AccessResponse, Error> =
+  successfulQuery<AccessResponse>({
+    isOrgOwner: false,
+    canManageOrganizationMembership: false,
+    scopes: {
+      "build:view": "all",
+      "build:tickets:view": "all",
+      "build:tickets:create": "all",
+    },
+    modules: { BUILD: true },
+  });
+export const ACCESS_DENIED: UseQueryResult<AccessResponse, Error> =
+  successfulQuery<AccessResponse>({
+    isOrgOwner: false,
+    canManageOrganizationMembership: false,
+    scopes: {},
+    modules: { BUILD: true },
+  });
 
 type BoardQueryResult = ReturnType<typeof useProjectBoardTickets>;
 
@@ -155,10 +166,6 @@ export function boardQueryResult(data: Ticket[]): BoardQueryResult {
     promise: new Promise<Awaited<BoardQueryResult["promise"]>>(() => undefined),
   };
 }
-
-export type MutationParts<T> = T extends UseMutationResult<infer Data, infer Error, infer Variables, infer Context>
-  ? [Data, Error, Variables, Context]
-  : never;
 
 export function makeMutationResult<
   TData = unknown,

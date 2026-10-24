@@ -116,7 +116,11 @@ export interface Asset {
   updatedAt: Date | string | null;
 }
 
-export type DocumentClassification = "PERSONAL" | "CONFIDENTIAL" | "RESTRICTED" | "INTERNAL";
+export type DocumentClassification =
+  | "PERSONAL"
+  | "CONFIDENTIAL"
+  | "RESTRICTED"
+  | "INTERNAL";
 
 export interface Document {
   id: number;
@@ -354,8 +358,15 @@ export interface BulkOnboardEmployeeRow {
 }
 
 export type BulkOnboardRowStatus = "READY" | "WARNING" | "ERROR" | "SKIPPED";
-export type BulkOnboardCommitStatus = BulkOnboardRowStatus | "CREATED" | "FAILED";
-export type ManagerResolutionKind = "SELECTED" | "IN_FILE" | "FALLBACK_CONFIGURED" | "FALLBACK_UPLOADER";
+export type BulkOnboardCommitStatus =
+  | BulkOnboardRowStatus
+  | "CREATED"
+  | "FAILED";
+export type ManagerResolutionKind =
+  | "SELECTED"
+  | "IN_FILE"
+  | "FALLBACK_CONFIGURED"
+  | "FALLBACK_UPLOADER";
 
 export interface OnboardingPrimaryManager {
   userId: string | null;
@@ -400,10 +411,4 @@ export interface BulkOnboardSeats {
   available: number | null;
   required: number;
   blocked: number;
-}
-
-export interface BulkOnboardPreview {
-  rows: BulkOnboardPreviewRow[];
-  counts: { ready: number; warning: number; error: number; skipped: number };
-  seats: BulkOnboardSeats;
 }

@@ -1,10 +1,10 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { WIKI_DOCUMENT_COLUMN, WIKI_SPREADSHEET_COLUMN } from "@/features/wiki/lib/wiki-document-column";
+import { WIKI_DOCUMENT_COLUMN } from "@/features/wiki/lib/wiki-document-column";
 import { cn } from "@/lib/utils";
 
 export function PageSpreadsheetSkeleton({ label = "Loading spreadsheet" }: { label?: string }) {
   return (
-    <div className={cn("wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden", WIKI_SPREADSHEET_COLUMN)} aria-label={label}>
+    <div className={cn("wiki-document flex h-full min-h-0 flex-1 flex-col overflow-hidden", WIKI_DOCUMENT_COLUMN)} aria-label={label}>
       <div className="wiki-document-chrome shrink-0">
         <div className="flex min-w-0 flex-col gap-2 px-4 py-2.5 sm:flex-row sm:items-center">
           <Skeleton className="h-4 w-40 max-w-full" />

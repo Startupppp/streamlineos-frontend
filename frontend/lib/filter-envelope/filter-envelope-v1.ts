@@ -1,7 +1,6 @@
 import { z } from "zod";
 
 export const MAX_FILTER_CLAUSES = 20;
-export const MAX_FILTER_DEPTH = 2;
 
 export const FILTER_OPERATORS = [
   "is",
@@ -18,7 +17,7 @@ export const FILTER_OPERATORS = [
   "is-not-empty",
 ] as const;
 
-export type FilterOperator = (typeof FILTER_OPERATORS)[number];
+type FilterOperator = (typeof FILTER_OPERATORS)[number];
 
 export const TICKET_FILTER_FIELDS = [
   "status",
@@ -81,7 +80,7 @@ const filterValueSchema = z.union([
   z.array(z.union([z.string(), z.number()])),
 ]);
 
-export type FilterValue = z.infer<typeof filterValueSchema>;
+type FilterValue = z.infer<typeof filterValueSchema>;
 
 const filterClauseSchema = z
   .object({

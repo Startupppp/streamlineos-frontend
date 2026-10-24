@@ -46,8 +46,6 @@ import {
   History,
   Image as ImageIcon,
   Link2,
-  PanelRightClose,
-  PanelRightOpen,
   PenLine,
   RotateCcw,
   Save,
@@ -159,8 +157,6 @@ export const KbClockIcon = createLucideIcon(Clock);
 export const KbRotateCcwIcon = createLucideIcon(RotateCcw);
 export const KbArchiveIcon = createLucideIcon(Archive);
 export const KbHistoryIcon = createLucideIcon(History);
-export const KbPanelRightOpenIcon = createLucideIcon(PanelRightOpen);
-export const KbPanelRightCloseIcon = createLucideIcon(PanelRightClose);
 export const KbImageIcon = createLucideIcon(ImageIcon);
 export const KbSmileIcon = createLucideIcon(Smile);
 export const KbBuilding2Icon = createLucideIcon(Building2);

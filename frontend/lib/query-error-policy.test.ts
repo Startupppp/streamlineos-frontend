@@ -4,7 +4,7 @@ import {
   ACCESS_UNAVAILABLE_DIGEST,
   INLINE_READ_ERROR,
   isTransientNetworkError,
-  projectReadErrorReachesBoundary,
+  readErrorExceptNotFoundReachesBoundary,
   readErrorReachesBoundary,
 } from "@/lib/query-error-policy";
 
@@ -99,7 +99,7 @@ describe("which read failures reach the route error boundary", () => {
 describe("project lookup failures", () => {
   it("keeps a missing project inline so shell lookups cannot crash an invalid project route", () => {
     expect(
-      projectReadErrorReachesBoundary(
+      readErrorExceptNotFoundReachesBoundary(
         new ApiError("Project not found", 404, "PROJECTS_NOT_FOUND"),
         nothingRendered,
       ),
@@ -108,7 +108,7 @@ describe("project lookup failures", () => {
 
   it("still sends an unavailable project service to the route error boundary", () => {
     expect(
-      projectReadErrorReachesBoundary(
+      readErrorExceptNotFoundReachesBoundary(
         new ApiError("Unavailable", 503, "BACKEND_UNREACHABLE"),
         nothingRendered,
       ),

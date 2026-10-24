@@ -21,8 +21,6 @@ export function readErrorExceptNotFoundReachesBoundary(
   return readErrorReachesBoundary(error, query);
 }
 
-export const projectReadErrorReachesBoundary = readErrorExceptNotFoundReachesBoundary;
-
 export const INLINE_READ_ERROR = { throwOnError: false } as const;
 
 export async function optionalSignalRead<T>(

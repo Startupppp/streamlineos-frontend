@@ -50,17 +50,6 @@ export interface InterviewSla {
   createdAt: string | null;
 }
 
-export interface CandidateSlaRecord {
-  id: number;
-  orgId: string;
-  candidateId: number;
-  stage: string;
-  enteredAt: string;
-  breachedAt: string | null;
-  status: "ON_TRACK" | "AT_RISK" | "BREACHED";
-  updatedAt: string | null;
-}
-
 export interface SlaReportStage {
   stage: string;
   total: number;
@@ -158,7 +147,12 @@ export interface HrBookingLink {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
-  candidate: { id: number; firstName: string; lastName: string; email: string } | null;
+  candidate: {
+    id: number;
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null;
   jobPosting: { id: number; title: string } | null;
   creator: { id: string; name: string | null } | null;
 }

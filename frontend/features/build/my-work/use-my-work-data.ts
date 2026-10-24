@@ -20,7 +20,6 @@ import {
 } from "./my-work-data-model";
 
 export {
-  type WorkTab,
   WORK_TABS,
   TAB_CONFIG,
   parseWorkTab,

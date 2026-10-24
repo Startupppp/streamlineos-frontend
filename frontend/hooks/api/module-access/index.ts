@@ -40,7 +40,6 @@ export {
   useAddModuleMember,
   useUpdateModuleMember,
   useRemoveModuleMember,
-  useModuleMemberCandidates,
   useModuleMemberGrants,
   useSetModuleMemberGrants,
 } from "./members";

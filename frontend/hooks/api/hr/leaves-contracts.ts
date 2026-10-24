@@ -12,9 +12,6 @@ export const leaveRejectC = lazyContract(() =>
 export const leaveCancelC = lazyContract(() =>
   import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveCancelContract),
 );
-export const leaveRevertC = lazyContract(() =>
-  import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveRevertContract),
-);
 export const leaveTypesListC = lazyContract(() =>
   import("@/hooks/api/hr/leaves-schema").then((m) => m.leaveTypesListContract),
 );

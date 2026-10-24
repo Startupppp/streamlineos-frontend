@@ -35,7 +35,7 @@ export const restStyle = (to: Record<string, unknown> = {}, style?: CSSPropertie
   return out as CSSProperties;
 };
 
-export const Spring = forwardRef<HTMLElement, SpringProps>(function RobotAwareSpring(props, ref) {
+const Spring = forwardRef<HTMLElement, SpringProps>(function RobotAwareSpring(props, ref) {
   const robot = useRobot();
   if (!robot) return <MotionSpring ref={ref} {...props} />;
   const {

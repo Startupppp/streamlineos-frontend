@@ -1,7 +1,6 @@
 import type { Transition, Variants } from "framer-motion";
 import { PM_EASE } from "@/lib/motion-presets";
 
-export const HRMS_DURATION_XS = 0.1;
 export const HRMS_DURATION_SM = 0.16;
 export const HRMS_DURATION_MD = 0.4;
 
@@ -49,7 +48,10 @@ export const hrmsCanvasEnterReduced: Variants = {
   show: { opacity: 1 },
 };
 
-export function hrmsTransition(reduced: boolean | null, transition: Transition): Transition {
+export function hrmsTransition(
+  reduced: boolean | null,
+  transition: Transition,
+): Transition {
   return reduced ? hrmsInstant : transition;
 }
 

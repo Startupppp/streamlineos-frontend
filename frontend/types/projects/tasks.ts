@@ -120,7 +120,7 @@ export interface Ticket {
   customer?: { id: number; name: string } | null;
 }
 
-export interface TimeEntry {
+interface TimeEntry {
   id: number;
   orgId: string;
   userId: string | null;

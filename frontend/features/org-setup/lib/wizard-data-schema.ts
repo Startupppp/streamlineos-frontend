@@ -6,8 +6,6 @@ import {
 } from "@/hooks/api/org-setup-schema";
 export {
   ORG_MODULE_KEYS,
-  MAX_INVITEE_MODULE_ACCESS,
-  inviteeModuleAccessSchema,
 } from "@/hooks/api/org-setup-schema";
 export type {
   InviteeModuleAccess,

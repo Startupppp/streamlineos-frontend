@@ -4,8 +4,6 @@ import { cn } from "@/lib/utils";
 
 export {
   RichPanel as HrPanel,
-  RichHero as HrHero,
-  RichQuickAction as HrQuickAction,
   RichSectionHeader as HrSectionHeader,
   RichIconWell as HrIconWell,
   RichPageContent as HrPageContent,
