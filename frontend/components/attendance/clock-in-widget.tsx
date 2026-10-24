@@ -131,8 +131,14 @@ export function ClockInWidget() {
           )}
         </div>
         {!isCheckedIn && !isOnBreak && (
-          <div className="mt-1 text-xs text-muted-foreground">
-            Your location is recorded when you clock in.
+          <div
+            className="mt-1 text-xs text-muted-foreground"
+            title="Your location is recorded when you clock in."
+          >
+            <span className="sm:hidden">Location recorded</span>
+            <span className="hidden sm:inline">
+              Your location is recorded when you clock in.
+            </span>
           </div>
         )}
       </div>
@@ -141,7 +147,8 @@ export function ClockInWidget() {
         variant={actionEnabled ? "default" : "outline"}
         disabled={isPending || !actionEnabled}
         onClick={handleToggle}
-        className={`font-bold px-3 py-2 h-auto text-xs tracking-wider rounded-sm shadow-lg ${
+        aria-label={canClockOut ? "Web clock out" : "Web clock in"}
+        className={`font-bold px-3 py-2 h-auto text-xs tracking-wide rounded-sm shadow-lg ${
           actionEnabled
             ? ""
             : "bg-background text-foreground border-border hover:bg-accent hover:text-accent-foreground"
@@ -155,9 +162,9 @@ export function ClockInWidget() {
             {formatCooldown(localCooldown)}
           </span>
         ) : canClockOut ? (
-          "WEB CLOCK-OUT"
+          "Clock out"
         ) : (
-          "WEB CLOCK-IN"
+          "Clock in"
         )}
       </Button>
     </div>

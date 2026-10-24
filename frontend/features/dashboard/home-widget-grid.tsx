@@ -255,7 +255,13 @@ export function HomeWidgetGrid({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3">
+      <div
+        className={
+          editing
+            ? "flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
+            : "flex items-center justify-between gap-3"
+        }
+      >
         <HomeSectionHeader title="My day" />
         <HomeCustomisationBar
           customisation={customisation}

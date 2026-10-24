@@ -11,8 +11,9 @@ describe("formatClockInOrgTz – timezone safety", () => {
   it("full clock string contains the IST date components for 03:30Z", () => {
     const result = formatClockInOrgTz(INSTANT_03_30Z, "Asia/Kolkata");
     expect(result).toContain("WED");
+    expect(result).toContain("14");
     expect(result).toContain("OCT");
-    expect(result).toContain("2026");
+    expect(result).not.toContain("2026");
   });
 
   it("returns empty string when orgTz is null so no browser-zone time flashes", () => {

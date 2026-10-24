@@ -61,6 +61,7 @@ type GrnFilters = {
   poId?: number;
   vendorId?: number;
   status?: GrnStatus;
+  search?: string;
   dateFrom?: string;
   dateTo?: string;
   page?: number;
@@ -85,6 +86,7 @@ export function useGoodsReceipts(filters?: GrnFilters) {
         ...(filters?.poId !== undefined ? { poId: String(filters.poId) } : {}),
         ...(filters?.vendorId !== undefined ? { vendorId: String(filters.vendorId) } : {}),
         ...(filters?.status !== undefined ? { status: filters.status } : {}),
+        ...(filters?.search ? { search: filters.search } : {}),
         ...(filters?.dateFrom !== undefined ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo !== undefined ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page !== undefined ? { page: String(filters.page) } : {}),

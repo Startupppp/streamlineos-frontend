@@ -38,12 +38,12 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
 
     render(<ClockInWidget />);
 
-    const button = screen.getByRole("button", { name: "WEB CLOCK-IN" });
+    const button = screen.getByRole("button", { name: "Web clock in" });
     expect(button).toBeEnabled();
     expect(button.className).not.toMatch(/(^|\s)bg-(destructive|status-danger)/);
     expect(button.className).toMatch(/(^|\s)bg-primary(\s|$)/);
-    expect(screen.queryByRole("button", { name: "WEB CLOCK-OUT" })).not.toBeInTheDocument();
-    expect(screen.getByText("Your location is recorded when you clock in.")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Web clock out" })).not.toBeInTheDocument();
+    expect(screen.getByText("Location recorded")).toBeInTheDocument();
     expect(screen.queryByTestId("clock-in-widget-skeleton")).not.toBeInTheDocument();
   });
 
@@ -59,9 +59,9 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
 
     render(<ClockInWidget />);
 
-    const button = screen.getByRole("button", { name: "WEB CLOCK-OUT" });
+    const button = screen.getByRole("button", { name: "Web clock out" });
     expect(button).toBeEnabled();
-    expect(screen.queryByRole("button", { name: "WEB CLOCK-IN" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Web clock in" })).not.toBeInTheDocument();
     await user.click(button);
     expect(checkOut.mutate).toHaveBeenCalledTimes(1);
   });

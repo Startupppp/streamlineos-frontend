@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { Trash2 } from "lucide-react";
 import { EntityFormSheet } from "@/components/shared";
 import { Button } from "@/components/ui/button";
+import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,6 +18,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useGoodsReceipts } from "@/hooks/api/inventory/operations";
 import {
@@ -38,7 +41,6 @@ export function LandedCostCreateSheet({
   onOpenChange: (open: boolean) => void;
 }) {
   const create = useCreateLandedCostVoucher();
-  const { data: receipts, isLoading: receiptsLoading } = useGoodsReceipts({ limit: 100 });
 
   function handleSubmit(values: CreateLandedCostVoucherFormOutput): void {
     create.mutate(
@@ -84,7 +86,7 @@ export function LandedCostCreateSheet({
       submitLabel={create.isPending ? "Raising…" : "Raise voucher"}
       onSubmit={handleSubmit}
     >
-      {(form) => <LandedCostFields form={form} receipts={receipts?.items} loading={receiptsLoading} />}
+      {(form) => <LandedCostFields form={form} />}
     </EntityFormSheet>
   );
 }
@@ -95,15 +97,13 @@ type FormApi = Parameters<
   >[0]["children"]
 >[0];
 
-function LandedCostFields({
-  form,
-  receipts,
-  loading,
-}: {
-  form: FormApi;
-  receipts: Array<{ id: number; grnNumber: string; status: string }> | undefined;
-  loading: boolean;
-}) {
+function LandedCostFields({ form }: { form: FormApi }) {
+  const [grnSearch, setGrnSearch] = useState("");
+  const debouncedGrnSearch = useDebouncedValue(grnSearch, 300);
+  const { data: receipts, isLoading: receiptsLoading } = useGoodsReceipts({
+    limit: 25,
+    ...(debouncedGrnSearch ? { search: debouncedGrnSearch } : {}),
+  });
   const charges = useFieldArray({ control: form.control, name: "charges" });
 
   function handleAddCharge(): void {
@@ -115,26 +115,30 @@ function LandedCostFields({
       <FormField
         control={form.control}
         name="grnId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Goods receipt</FormLabel>
-            <Select onValueChange={field.onChange} value={field.value} disabled={loading}>
+        render={({ field }) => {
+          const grnOptions: ComboboxOption[] = (receipts?.items ?? []).map((r) => ({
+            value: String(r.id),
+            label: r.grnNumber,
+            sublabel: r.status.toLowerCase(),
+          }));
+          return (
+            <FormItem>
+              <FormLabel>Goods receipt</FormLabel>
               <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder={loading ? "Loading receipts…" : "Choose a receipt"} />
-                </SelectTrigger>
+                <Combobox
+                  options={grnOptions}
+                  value={field.value}
+                  onChange={field.onChange}
+                  onSearchChange={setGrnSearch}
+                  placeholder={receiptsLoading ? "Loading receipts…" : "Choose a receipt"}
+                  searchPlaceholder="Search receipts…"
+                  emptyText="No receipts found."
+                />
               </FormControl>
-              <SelectContent>
-                {(receipts ?? []).map((receipt) => (
-                  <SelectItem key={receipt.id} value={String(receipt.id)}>
-                    {receipt.grnNumber} ({receipt.status.toLowerCase()})
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormMessage />
-          </FormItem>
-        )}
+              <FormMessage />
+            </FormItem>
+          );
+        }}
       />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

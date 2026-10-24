@@ -29,11 +29,13 @@ interface HomeCustomisationBarProps {
 
 function DensityButton({
   value,
+  shortLabel,
   label,
   current,
   onSelect,
 }: {
   value: HomeDensity;
+  shortLabel: string;
   label: string;
   current: HomeDensity;
   onSelect: (value: HomeDensity) => void;
@@ -45,9 +47,11 @@ function DensityButton({
       variant={current === value ? "secondary" : "ghost"}
       size="sm"
       onClick={handleClick}
-      className="h-9 px-2 text-xs"
+      aria-label={label}
+      className="h-8 shrink-0 px-2 text-xs"
     >
-      {label}
+      <span className="sm:hidden">{shortLabel}</span>
+      <span className="hidden sm:inline">{label}</span>
     </Button>
   );
 }
@@ -102,11 +106,11 @@ export function HomeCustomisationBar({
 
   return (
     <TooltipProvider delayDuration={250}>
-      <div className="flex w-full min-w-0 flex-wrap items-center justify-end gap-1 rounded-xl border border-border bg-background/95 p-1 shadow-sm backdrop-blur-sm sm:w-auto">
+      <div className="flex w-full min-w-0 max-w-full flex-nowrap items-center justify-end gap-0.5 overflow-x-auto overscroll-x-contain rounded-lg border border-border bg-background/95 p-0.5 shadow-sm backdrop-blur-sm [-ms-overflow-style:none] [scrollbar-width:none] sm:w-auto sm:gap-1 sm:rounded-xl sm:p-1 [&::-webkit-scrollbar]:hidden">
         <Tooltip>
           <TooltipTrigger asChild>
-            <Button type="button" variant="ghost" size="icon-sm" aria-label="How to arrange widgets">
-              <CircleHelp className="h-4 w-4" aria-hidden="true" />
+            <Button type="button" variant="ghost" size="icon-sm" className="size-8 shrink-0" aria-label="How to arrange widgets">
+              <CircleHelp className="h-3.5 w-3.5" aria-hidden="true" />
             </Button>
           </TooltipTrigger>
           <TooltipContent side="bottom" align="end" className="max-w-64 text-xs">
@@ -116,11 +120,11 @@ export function HomeCustomisationBar({
         </Tooltip>
         <Popover open={addOpen} onOpenChange={setAddOpen}>
           <PopoverTrigger asChild>
-            <Button type="button" variant="outline" size="sm" className="h-9 gap-1.5" aria-label="Add widget">
+            <Button type="button" variant="outline" size="sm" className="h-8 shrink-0 gap-1 px-2" aria-label="Add widget">
               <Plus className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Add widget</span>
+              <span className="hidden sm:inline">Add</span>
               {remaining > 0 ? (
-                <span className="hidden rounded bg-muted px-1.5 text-micro text-muted-foreground sm:inline">
+                <span className="rounded bg-muted px-1 text-micro text-muted-foreground tabular-nums">
                   {remaining}
                 </span>
               ) : null}
@@ -158,22 +162,40 @@ export function HomeCustomisationBar({
             </ul>
           </PopoverContent>
         </Popover>
-        <div className="flex items-center gap-1" role="group" aria-label="Density">
-          <DensityButton value="comfortable" label="Comfortable" current={state.density} onSelect={setDensity} />
-          <DensityButton value="compact" label="Compact" current={state.density} onSelect={setDensity} />
+        <div className="flex shrink-0 items-center rounded-md bg-muted/50 p-0.5" role="group" aria-label="Density">
+          <DensityButton
+            value="comfortable"
+            shortLabel="Roomy"
+            label="Comfortable"
+            current={state.density}
+            onSelect={setDensity}
+          />
+          <DensityButton
+            value="compact"
+            shortLabel="Dense"
+            label="Compact"
+            current={state.density}
+            onSelect={setDensity}
+          />
         </div>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="h-9 gap-1.5 text-muted-foreground"
+          className="h-8 shrink-0 gap-1 px-2 text-muted-foreground"
           onClick={handleOpenReset}
           aria-label="Reset Home layout to defaults"
         >
           <RotateCcw className="h-3.5 w-3.5" />
-          Reset
+          <span className="hidden sm:inline">Reset</span>
         </Button>
-        <Button type="button" size="sm" className="h-9 gap-1.5" onClick={handleDone} aria-label="Finish customizing">
+        <Button
+          type="button"
+          size="sm"
+          className="h-8 shrink-0 gap-1 px-2.5"
+          onClick={handleDone}
+          aria-label="Finish customizing"
+        >
           <Check className="h-3.5 w-3.5" />
           Done
         </Button>

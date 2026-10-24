@@ -320,14 +320,13 @@ export function formatClockInOrgTz(instant: Date, orgTz: string | null): string 
     minute: "2-digit",
     hour12: true,
     weekday: "short",
-    day: "2-digit",
+    day: "numeric",
     month: "short",
-    year: "numeric",
     timeZone: tz,
   }).formatToParts(instant);
   const get = (type: Intl.DateTimeFormatPartTypes): string =>
     parts.find((p) => p.type === type)?.value ?? "";
-  return `${get("hour")}:${get("minute")} ${get("dayPeriod")} - ${get("weekday")} ${get("day")}, ${get("month")} ${get("year")}`.toUpperCase();
+  return `${get("hour")}:${get("minute")} ${get("dayPeriod")} · ${get("weekday")} ${get("day")} ${get("month")}`.toUpperCase();
 }
 
 export function datetimeLocalAfterDays(days: number, orgTz: string | null): string {
