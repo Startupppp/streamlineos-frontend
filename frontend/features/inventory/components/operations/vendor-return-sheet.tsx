@@ -93,9 +93,11 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
     value: String(v.id),
     label: v.name,
   }));
+  const [poSearch, setPoSearch] = useState("");
+  const debouncedPoSearch = useDebouncedValue(poSearch, 300);
   const warehousesQuery = useWarehouses();
   const createMutation = useCreateVendorReturn();
-  const purchaseOrdersQuery = usePurchaseOrders({ pageSize: 100 });
+  const purchaseOrdersQuery = usePurchaseOrders({ pageSize: 25, search: debouncedPoSearch || undefined });
   const variantsQuery = useProductVariants({ activeOnly: true });
 
   const poOptions: ComboboxOption[] = (purchaseOrdersQuery.data?.items ?? []).map((po) => ({
@@ -222,6 +224,7 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
                     options={poOptions}
                     value={field.value ? String(field.value) : ""}
                     onChange={(val) => field.onChange(val ? Number(val) : undefined)}
+                    onSearchChange={setPoSearch}
                     placeholder="Search purchase orders…"
                     searchPlaceholder="Search by PO number…"
                     emptyText="No purchase orders found"

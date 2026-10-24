@@ -25,6 +25,7 @@ interface PaginatedResponse<T> {
 type PurchaseOrderFilters = {
   vendorId?: number;
   status?: PurchaseOrderStatus;
+  search?: string;
   page?: number;
   pageSize?: number;
 };
@@ -59,6 +60,7 @@ export function usePurchaseOrders(filters?: PurchaseOrderFilters) {
       apiClient.get<PaginatedResponse<PurchaseOrderSummary>>("/inventory/purchase-orders", {
         ...(filters?.vendorId ? { vendorId: String(filters.vendorId) } : {}),
         ...(filters?.status ? { status: filters.status } : {}),
+        ...(filters?.search ? { search: filters.search } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),
         ...(filters?.pageSize ? { limit: String(filters.pageSize) } : {}),
       }, signal),

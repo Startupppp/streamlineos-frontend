@@ -3,7 +3,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { DEFAULT_PAGE_SIZE } from "@/lib/list-pagination";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -128,7 +127,7 @@ export function useJobPostings(
   options?: { throwOnError?: false },
 ) {
   const canRequisitions = useCan("hr:requisitions:view");
-  const pageSize = params?.pageSize ?? DEFAULT_PAGE_SIZE;
+  const pageSize = params?.pageSize ?? 100;
   const queryParams = {
     ...(params?.status ? { status: params.status } : {}),
     ...(params?.cursor ? { cursor: params.cursor } : {}),

@@ -106,7 +106,10 @@ export function EnrolInNurtureDialog({
                     <Combobox
                       options={partyOptions}
                       value={field.value}
-                      onChange={(val) => { field.onChange(val); setSelectedPartyId(val); }}
+                      onChange={(val) => {
+                        field.onChange(val);
+                        setSelectedPartyId(val);
+                      }}
                       placeholder="Choose a customer…"
                       searchPlaceholder="Search customers…"
                       emptyText="No customers found."

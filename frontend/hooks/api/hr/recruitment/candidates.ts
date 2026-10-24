@@ -5,7 +5,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { DEFAULT_PAGE_SIZE } from "@/lib/list-pagination";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -164,7 +163,7 @@ export function useCandidates(
   params?: CandidatesParams,
   options?: { throwOnError?: false },
 ) {
-  const queryParams = candidateQueryParams(params, params?.limit ?? DEFAULT_PAGE_SIZE);
+  const queryParams = candidateQueryParams(params, params?.limit ?? 100);
 
   return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.candidates(queryParams),

@@ -55,43 +55,8 @@ export interface PayrollSourceRef {
   endDate?: string | null;
 }
 
-export interface CalcExplainStep {
-  steps: string[];
-  note?: string;
-  formula?: string;
-  inputs?: Record<string, number>;
-  sources?: PayrollSourceRef[];
-}
 
 
-export interface CalculationSnapshot {
-  policyVersionId: number | null;
-  computedAt: string;
-  currency: string;
-  scheduledDays: string;
-  paidDays: string;
-  lopDays: string;
-  overtimeHours: string;
-  lopSources?: PayrollSourceRef[];
-  lines: CalculationSnapshotLine[];
-  totals: {
-    gross: string;
-    deductions: string;
-    employerContributions: string;
-    net: string;
-  };
-  variance: {
-    previousRunId: number | null;
-    previousNet: string | null;
-    netDelta: string | null;
-    netDeltaPercent: number | null;
-    changedComponents: {
-      code: string;
-      previous: string | null;
-      current: string | null;
-    }[];
-  } | null;
-}
 
 export interface PayrollRun {
   id: number;

@@ -3,7 +3,6 @@
 import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { DEFAULT_PAGE_SIZE } from "@/lib/list-pagination";
 
 const noContentC = lazyContract(() =>
   import("@/hooks/api/cursor-page-schema").then((m) => m.noContentContract),
@@ -138,7 +137,7 @@ export function useInterviews(
   options?: { enabled?: boolean; throwOnError?: false },
 ) {
   const { enabled, ...queryOptions } = options ?? {};
-  const queryParams: Record<string, unknown> = { limit: params?.limit ?? DEFAULT_PAGE_SIZE };
+  const queryParams: Record<string, unknown> = { limit: params?.limit ?? 100 };
   if (params?.candidateId) queryParams.candidateId = params.candidateId;
   if (params?.upcoming != null) queryParams.upcoming = params.upcoming ? "true" : "false";
   if (params?.relevant != null) queryParams.relevant = params.relevant ? "true" : "false";
