@@ -20,6 +20,7 @@ import {
   FormItem,
   FormLabel,
   FormControl,
+  FormDescription,
   FormMessage,
 } from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -30,28 +31,26 @@ function MessageField({
   control,
   name,
   label,
-  placeholder,
-  rows = 3,
+  hint,
 }: {
   control: Control<MessagesValues>;
   name: keyof MessagesValues;
   label: string;
-  placeholder: string;
-  rows?: number;
+  hint: string;
 }) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem>
+        <FormItem className="rounded-lg border border-border/70 bg-muted/20 p-3">
           <FormLabel>{label}</FormLabel>
+          <FormDescription>{hint}</FormDescription>
           <FormControl>
             <Textarea
               {...field}
-              rows={rows}
-              placeholder={placeholder}
-              className="field-sizing-fixed min-h-0 resize-y"
+              rows={3}
+              className="field-sizing-fixed min-h-0 resize-y bg-card"
             />
           </FormControl>
           <FormMessage />
@@ -111,59 +110,44 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
                 </LoadingButton>
               </CardAction>
             </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-3">
-                <p className="text-dense font-medium text-muted-foreground">
-                  Start & finish
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <MessageField
-                    control={form.control}
-                    name="welcomeMessage"
-                    label="Welcome"
-                    placeholder="Shown before they start"
-                  />
-                  <MessageField
-                    control={form.control}
-                    name="thankYouMessage"
-                    label="Thank you"
-                    placeholder="Shown after they submit"
-                  />
-                </div>
-                <FormField
-                  control={form.control}
-                  name="submitButtonText"
-                  render={({ field }) => (
-                    <FormItem className="max-w-xs">
-                      <FormLabel>Submit button</FormLabel>
-                      <FormControl>
-                        <Input {...field} className="h-9" />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <div className="space-y-3 border-t border-border/60 pt-4">
-                <p className="text-dense font-medium text-muted-foreground">
-                  Edge cases
-                </p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <MessageField
-                    control={form.control}
-                    name="disqualificationMessage"
-                    label="Disqualified"
-                    placeholder="Shown when logic ends the survey early"
-                  />
-                  <MessageField
-                    control={form.control}
-                    name="closedMessage"
-                    label="Closed"
-                    placeholder="Shown when this survey is closed"
-                  />
-                </div>
-              </div>
+            <CardContent className="grid gap-3 sm:grid-cols-2">
+              <MessageField
+                control={form.control}
+                name="welcomeMessage"
+                label="Welcome"
+                hint="Shown before they start."
+              />
+              <MessageField
+                control={form.control}
+                name="thankYouMessage"
+                label="Thank you"
+                hint="Shown after they submit."
+              />
+              <MessageField
+                control={form.control}
+                name="disqualificationMessage"
+                label="Disqualified"
+                hint="Shown when logic ends the survey early."
+              />
+              <MessageField
+                control={form.control}
+                name="closedMessage"
+                label="Closed"
+                hint="Shown when this survey is closed."
+              />
+              <FormField
+                control={form.control}
+                name="submitButtonText"
+                render={({ field }) => (
+                  <FormItem className="sm:col-span-2 sm:max-w-xs">
+                    <FormLabel>Submit button</FormLabel>
+                    <FormControl>
+                      <Input {...field} className="h-9" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </CardContent>
           </Card>
         </form>

@@ -158,7 +158,7 @@ export function PageTabsToolbar({
     ) : null;
 
   const actionCluster = actions ? (
-    <div className="flex max-w-full shrink-0 items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide">
+    <div className="flex w-full max-w-full shrink-0 items-center gap-2 overflow-x-auto overscroll-x-contain scrollbar-hide md:w-auto">
       {actions}
     </div>
   ) : null;

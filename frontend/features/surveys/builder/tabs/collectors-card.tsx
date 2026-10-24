@@ -152,24 +152,21 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
             </Tooltip>
           </TooltipProvider>
         </CardTitle>
-        <CardAction className="col-span-full row-start-2 mt-2 w-full justify-self-stretch sm:col-span-1 sm:col-start-2 sm:row-span-1 sm:row-start-1 sm:mt-0 sm:w-auto sm:max-w-[min(100%,22rem)] sm:self-center sm:justify-self-end">
+        <CardAction className="col-start-1 col-span-2 row-span-1 row-start-2 mt-2 w-full min-w-0 justify-self-stretch lg:col-span-1 lg:col-start-2 lg:row-start-1 lg:mt-0 lg:w-auto lg:max-w-[min(100%,22rem)] lg:self-center lg:justify-self-end">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleCreate)}
-              className="flex w-full min-w-0 flex-row items-center gap-2"
+              className="grid w-full min-w-0 grid-cols-2 items-center gap-2 lg:flex lg:w-auto"
             >
               <FormField
                 control={form.control}
                 name="collectorType"
                 render={({ field }) => (
-                  <FormItem className="min-w-0 flex-1 basis-0 sm:flex-none sm:basis-auto">
+                  <FormItem className="min-w-0 lg:w-44">
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger
-                          className={cn(
-                            FILTER_SELECT_TRIGGER,
-                            "w-full min-w-0 sm:w-44",
-                          )}
+                          className={cn(FILTER_SELECT_TRIGGER, "w-full min-w-0")}
                           aria-label="Collector type"
                         >
                           <SelectValue />
@@ -190,12 +187,12 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
               <LoadingButton
                 type="submit"
                 size="sm"
-                className="min-w-0 flex-1 basis-0 sm:flex-none sm:basis-auto"
+                className="w-full min-w-0 lg:w-auto"
                 isPending={createCollector.isPending}
               >
                 <Plus className="size-3.5" />
-                <span className="hidden sm:inline">Add collector</span>
-                <span className="sm:hidden">Add</span>
+                <span className="hidden lg:inline">Add collector</span>
+                <span className="lg:hidden">Add</span>
               </LoadingButton>
             </form>
           </Form>

@@ -132,7 +132,6 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
           backHref={`/surveys/${surveyId}`}
           noInternalScroll
           contentClassName="flex min-h-0 flex-1 flex-col"
-          actionsInline
           state={pageState}
           loading={
             <DataTableSkeleton
@@ -155,22 +154,28 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
             ),
           }}
           extraActions={
-            <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div
+              className={cn(
+                "grid w-full min-w-0 grid-cols-2 items-center gap-2",
+                "sm:flex sm:w-auto sm:max-w-full sm:flex-nowrap sm:overflow-x-auto sm:overscroll-x-contain",
+                "sm:[-ms-overflow-style:none] sm:[scrollbar-width:none] sm:[&::-webkit-scrollbar]:hidden",
+              )}
+            >
               <AnimatedIconButton
                 icon={UserPlusIcon}
                 iconSize={14}
                 iconClassName="mr-1.5"
                 size="sm"
-                className="h-9 shrink-0"
+                className="h-9 w-full min-w-0 sm:w-auto sm:shrink-0"
                 onClick={handleOpenAdd}
               >
-                Add participants
+                <span className="truncate">Add participants</span>
               </AnimatedIconButton>
               <Select value={status} onValueChange={handleStatusChange}>
                 <SelectTrigger
                   className={cn(
                     FILTER_SELECT_TRIGGER,
-                    "w-auto max-w-[11rem] shrink-0 sm:w-40 sm:max-w-none",
+                    "w-full min-w-0 sm:w-40 sm:shrink-0",
                   )}
                   aria-label="Status"
                 >
@@ -193,7 +198,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
                     iconClassName="mr-1.5"
                     variant="outline"
                     size="sm"
-                    className="h-9 shrink-0"
+                    className="h-9 w-full min-w-0 sm:w-auto sm:shrink-0"
                     onClick={handleInvite}
                     disabled={invite.isPending}
                   >
@@ -205,7 +210,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
                     iconClassName="mr-1.5"
                     variant="outline"
                     size="sm"
-                    className="h-9 shrink-0"
+                    className="h-9 w-full min-w-0 sm:w-auto sm:shrink-0"
                     onClick={handleRemind}
                     disabled={remind.isPending}
                   >

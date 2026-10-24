@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
+import { Trash2Icon } from "@animateicons/react/lucide";
 import { AutomationsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -199,11 +198,20 @@ function AutomationDraftForm({
   );
 }
 
-export function AutomationsTab({ survey }: { survey: SurveyForm }) {
+interface AutomationsTabProps {
+  survey: SurveyForm;
+  adding: boolean;
+  onAddingChange: (adding: boolean) => void;
+}
+
+export function AutomationsTab({
+  survey,
+  adding,
+  onAddingChange,
+}: AutomationsTabProps) {
   const { data: rules, isLoading, isError, error, refetch, access } =
     useSurveyAutomations(survey.id);
   const deleteRule = useDeleteAutomation(survey.id);
-  const [adding, setAdding] = useState(false);
 
   async function handleDelete(automationId: string) {
     try {
@@ -217,16 +225,12 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
     void refetch();
   }
 
-  function handleStartAdding() {
-    setAdding(true);
-  }
-
   function handleCancelAdding() {
-    setAdding(false);
+    onAddingChange(false);
   }
 
   function handleCreated() {
-    setAdding(false);
+    onAddingChange(false);
   }
 
   function deleteRuleHandler(automationId: string) {
@@ -252,95 +256,68 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
     />
   ) : null;
 
-  const addAutomationBar = (
-    <div className="flex shrink-0 justify-end border-t border-border pt-3">
-      <AnimatedIconButton
-        icon={PlusIcon}
-        iconSize={14}
-        iconClassName="mr-1.5"
-        variant="outline"
-        size="sm"
-        onClick={handleStartAdding}
-      >
-        Add automation
-      </AnimatedIconButton>
-    </div>
-  );
-
   return (
     <PageState
       resolution={pageState}
       loading={
         <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
-          <div className="flex min-h-0 flex-1 flex-col gap-3">
-            <Skeleton className="h-11 w-full rounded-md" />
-            <Skeleton className="h-11 w-full rounded-md" />
-            <Skeleton className="h-11 w-full rounded-md" />
-          </div>
-          <Skeleton className="ml-auto h-9 w-36 rounded-md" />
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-11 w-full rounded-md" />
+          <Skeleton className="h-11 w-full rounded-md" />
         </div>
       }
       onRetry={handleRetry}
       className="h-full min-h-0 flex-1"
       empty={
-        <div className="flex h-full min-h-0 flex-1 flex-col">
-          <EmptyState
-            illustration={
-              <div className="h-28 w-28">
-                <AutomationsIllustration />
-              </div>
-            }
-            title="No automations yet"
-            description="Route leads to CRM, notify the survey owner, or trigger a webhook based on responses."
-            className="min-h-0 flex-1"
-          />
-          {addAutomationBar}
-        </div>
+        <EmptyState
+          illustration={<AutomationsIllustration className="h-full w-full" />}
+          illustrationSize="lg"
+          title="No automations yet"
+          description="Route leads to CRM, notify the survey owner, or trigger a webhook based on responses."
+          className="h-full min-h-full flex-1"
+        />
       }
     >
-      <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-hide">
-          {!hasRules ? draft : null}
-          {rules?.map((rule) => (
-            <div
-              key={rule.id}
-              className="flex items-start gap-2 rounded-md border border-border px-3 py-2 text-sm"
-            >
-              <span className="min-w-0 flex-1 break-words">
-                When{" "}
-                <span className="font-medium">
-                  {EVENT_LABELS[rule.eventType]}
-                </span>
-                {rule.action.scoreThreshold != null && (
-                  <> and score ≥ {rule.action.scoreThreshold}</>
-                )}{" "}
-                →{" "}
-                <span className="font-medium">
-                  {ACTION_LABELS[rule.action.type]}
-                </span>
-                {rule.action.type === "create_lead" &&
-                  Boolean(rule.action.config?.createFollowUpTask) && (
-                    <span className="text-muted-foreground">
-                      {" "}
-                      + follow-up task
-                    </span>
-                  )}
+      <div className="flex h-full min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-hide">
+        {!hasRules ? draft : null}
+        {rules?.map((rule) => (
+          <div
+            key={rule.id}
+            className="flex items-start gap-2 rounded-md border border-border px-3 py-2 text-sm"
+          >
+            <span className="min-w-0 flex-1 break-words">
+              When{" "}
+              <span className="font-medium">
+                {EVENT_LABELS[rule.eventType]}
               </span>
-              <AnimatedIconButton
-                icon={Trash2Icon}
-                iconSize={14}
-                iconClassName="text-destructive"
-                variant="ghost"
-                size="icon"
-                className="size-9 shrink-0"
-                aria-label="Delete automation rule"
-                onClick={deleteRuleHandler(rule.id)}
-              />
-            </div>
-          ))}
-          {hasRules && adding ? draft : null}
-        </div>
-        {adding ? null : addAutomationBar}
+              {rule.action.scoreThreshold != null && (
+                <> and score ≥ {rule.action.scoreThreshold}</>
+              )}{" "}
+              →{" "}
+              <span className="font-medium">
+                {ACTION_LABELS[rule.action.type]}
+              </span>
+              {rule.action.type === "create_lead" &&
+                Boolean(rule.action.config?.createFollowUpTask) && (
+                  <span className="text-muted-foreground">
+                    {" "}
+                    + follow-up task
+                  </span>
+                )}
+            </span>
+            <AnimatedIconButton
+              icon={Trash2Icon}
+              iconSize={14}
+              iconClassName="text-destructive"
+              variant="ghost"
+              size="icon"
+              className="size-9 shrink-0"
+              aria-label="Delete automation rule"
+              onClick={deleteRuleHandler(rule.id)}
+            />
+          </div>
+        ))}
+        {hasRules && adding ? draft : null}
       </div>
     </PageState>
   );

@@ -10,11 +10,10 @@ export default function SurveyParticipantsLoading() {
       backHref="/surveys"
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
-      actionsInline
       extraActions={
-        <div className="flex min-w-0 flex-nowrap items-center gap-2">
-          <Skeleton className="h-9 w-36 shrink-0 rounded-md" />
-          <Skeleton className="h-9 w-28 shrink-0 rounded-md sm:w-40" />
+        <div className="grid w-full min-w-0 grid-cols-2 items-center gap-2 sm:flex sm:w-auto sm:flex-nowrap">
+          <Skeleton className="h-9 w-full rounded-md sm:w-36 sm:shrink-0" />
+          <Skeleton className="h-9 w-full rounded-md sm:w-40 sm:shrink-0" />
         </div>
       }
     >

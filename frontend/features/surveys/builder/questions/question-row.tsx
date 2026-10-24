@@ -20,25 +20,17 @@ import { questionDragId } from "./questions-reorder";
 interface QuestionRowProps {
   question: SurveyBuilderViewQuestion;
   index: number;
-  isFirst: boolean;
-  isLast: boolean;
   onEdit: (question: SurveyBuilderViewQuestion) => void;
   onDuplicate: (questionId: number) => void;
   onDelete: (questionId: number) => void;
-  onMoveUp: (questionId: number) => void;
-  onMoveDown: (questionId: number) => void;
 }
 
 export function QuestionRow({
   question,
   index,
-  isFirst,
-  isLast,
   onEdit,
   onDuplicate,
   onDelete,
-  onMoveUp,
-  onMoveDown,
 }: QuestionRowProps) {
   const meta = QUESTION_TYPE_META[question.type];
   const Icon = meta.icon;
@@ -112,12 +104,6 @@ export function QuestionRow({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-44">
               <DropdownMenuItem onClick={() => onEdit(question)}>Edit</DropdownMenuItem>
-              <DropdownMenuItem disabled={isFirst} onClick={() => onMoveUp(question.id)}>
-                Move up
-              </DropdownMenuItem>
-              <DropdownMenuItem disabled={isLast} onClick={() => onMoveDown(question.id)}>
-                Move down
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => onDuplicate(question.id)}>Duplicate</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem variant="destructive" onClick={() => onDelete(question.id)}>

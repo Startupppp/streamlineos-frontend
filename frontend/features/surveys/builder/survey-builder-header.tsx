@@ -140,18 +140,15 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
           </MobileOnlyLabelTooltip>
         ) : null}
         {canPublishNow ? (
-          <MobileOnlyLabelTooltip label="Publish">
-            <Button
-              size="sm"
-              className={cn(RESPONSIVE_ICON_LABEL_TRIGGER_CLASS, "bg-primary text-primary-foreground hover:bg-primary/90")}
-              onClick={handlePublish}
-              disabled={isBusy}
-              aria-label="Publish"
-            >
-              <Send className="size-4" aria-hidden="true" />
-              <ResponsiveIconLabelText>Publish</ResponsiveIconLabelText>
-            </Button>
-          </MobileOnlyLabelTooltip>
+          <Button
+            size="sm"
+            className="h-9 shrink-0"
+            onClick={handlePublish}
+            disabled={isBusy}
+          >
+            <Send className="size-4" aria-hidden="true" />
+            Publish
+          </Button>
         ) : null}
         {canPauseNow ? (
           <MobileOnlyLabelTooltip label="Pause">

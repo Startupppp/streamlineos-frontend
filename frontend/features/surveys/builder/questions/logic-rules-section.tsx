@@ -301,7 +301,22 @@ export function LogicRulesSection({
 
   return (
     <div className="space-y-2">
-      <Label>Logic</Label>
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <Label className="shrink-0">Logic</Label>
+        {adding ? null : (
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            variant="outline"
+            size="sm"
+            className="h-8 shrink-0"
+            onClick={handleStartAdding}
+          >
+            Add logic rule
+          </AnimatedIconButton>
+        )}
+      </div>
       {questionRules.map((rule) => (
         <div
           key={rule.id}
@@ -329,18 +344,7 @@ export function LogicRulesSection({
           onCancel={handleCancelAdding}
           onCreated={handleCreated}
         />
-      ) : (
-        <AnimatedIconButton
-          icon={PlusIcon}
-          iconSize={14}
-          iconClassName="mr-1.5"
-          variant="outline"
-          size="sm"
-          onClick={handleStartAdding}
-        >
-          Add logic rule
-        </AnimatedIconButton>
-      )}
+      ) : null}
     </div>
   );
 }

@@ -20,8 +20,6 @@ interface SectionCardProps {
   onEditQuestion: (question: SurveyBuilderViewQuestion) => void;
   onDuplicateQuestion: (questionId: number) => void;
   onDeleteQuestion: (questionId: number) => void;
-  onMoveQuestionUp: (sectionId: number, questionId: number) => void;
-  onMoveQuestionDown: (sectionId: number, questionId: number) => void;
 }
 
 export function SectionCard({
@@ -33,8 +31,6 @@ export function SectionCard({
   onEditQuestion,
   onDuplicateQuestion,
   onDeleteQuestion,
-  onMoveQuestionUp,
-  onMoveQuestionDown,
 }: SectionCardProps) {
   const [title, setTitle] = useSourceOverride(section.title, section.title);
 
@@ -116,13 +112,9 @@ export function SectionCard({
                         key={question.id}
                         question={question}
                         index={questionIndex}
-                        isFirst={questionIndex === 0}
-                        isLast={questionIndex === questions.length - 1}
                         onEdit={onEditQuestion}
                         onDuplicate={onDuplicateQuestion}
                         onDelete={onDeleteQuestion}
-                        onMoveUp={(questionId) => onMoveQuestionUp(section.id, questionId)}
-                        onMoveDown={(questionId) => onMoveQuestionDown(section.id, questionId)}
                       />
                     ))}
                     {dropProvided.placeholder}

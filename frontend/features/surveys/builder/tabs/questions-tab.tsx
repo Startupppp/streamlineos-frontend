@@ -4,8 +4,6 @@ import { useCallback, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { toast } from "sonner";
-import { PlusIcon } from "@animateicons/react/lucide";
-import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { PageState } from "@/components/shared/page-state";
@@ -124,27 +122,6 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
     }
   }
 
-  async function handleMoveQuestion(sectionId: number, questionId: number, direction: -1 | 1) {
-    const section = sections.find((s) => s.id === sectionId);
-    if (!section) return;
-    const questions = [...section.questions].sort((a, b) => a.sortOrder - b.sortOrder);
-    const index = questions.findIndex((q) => q.id === questionId);
-    const swapIndex = index + direction;
-    if (index === -1 || swapIndex < 0 || swapIndex >= questions.length) return;
-    const a = questions[index];
-    const b = questions[swapIndex];
-    try {
-      await reorder.mutateAsync({
-        questions: [
-          { id: a.id, sectionId, sortOrder: b.sortOrder },
-          { id: b.id, sectionId, sortOrder: a.sortOrder },
-        ],
-      });
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
   function openAddQuestion(sectionId: number) {
     setEditorSectionId(sectionId);
     setEditorQuestion(null);
@@ -197,22 +174,7 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
         />
       }
     >
-      <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
-        <div className="flex shrink-0 justify-stretch sm:justify-end">
-          <AnimatedIconButton
-            icon={PlusIcon}
-            iconSize={14}
-            iconClassName="mr-1.5"
-            variant="outline"
-            size="sm"
-            className="w-full sm:w-auto"
-            aria-label="Add section"
-            onClick={handleAddSection}
-            disabled={createSection.isPending}
-          >
-            Add section
-          </AnimatedIconButton>
-        </div>
+      <div className="flex h-full min-h-0 flex-1 flex-col">
         <ScrollArea fill className="min-h-0 flex-1">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId={SECTIONS_DROPPABLE_ID} type={SECTION_DND_TYPE}>
@@ -233,12 +195,6 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
                       onEditQuestion={openEditQuestion}
                       onDuplicateQuestion={handleDuplicateQuestion}
                       onDeleteQuestion={handleDeleteQuestion}
-                      onMoveQuestionUp={(sectionId, questionId) =>
-                        handleMoveQuestion(sectionId, questionId, -1)
-                      }
-                      onMoveQuestionDown={(sectionId, questionId) =>
-                        handleMoveQuestion(sectionId, questionId, 1)
-                      }
                     />
                   ))}
                   {provided.placeholder}
