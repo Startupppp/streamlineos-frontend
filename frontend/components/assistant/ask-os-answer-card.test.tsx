@@ -33,7 +33,8 @@ describe("AskOsEvidenceCard", () => {
     expect(rows).toHaveLength(3);
     expect(rows[0]).toHaveTextContent("Available");
     expect(rows[0]).toHaveTextContent(/Build · This project · as of/);
-    expect(rows[1]).toHaveTextContent("Degraded");
+    expect(rows[1]).toHaveTextContent("Keyword match");
+    expect(rows[1]).toHaveTextContent("Semantic search was unavailable");
     expect(rows[1]).toHaveTextContent("Up to 20 days");
     expect(rows[2]).toHaveTextContent("No access");
   });

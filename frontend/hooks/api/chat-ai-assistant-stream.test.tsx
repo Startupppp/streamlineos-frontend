@@ -302,6 +302,7 @@ describe("useAskAI — the one streaming AI client", () => {
         recordId: "STRE-7",
       },
       clarification: { clarificationId: "clr-1", optionId: "project:42" },
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     });
     window.history.pushState({}, "", "/");
   });

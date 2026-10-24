@@ -28,6 +28,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { askOsPageContext } from "@/components/assistant/ask-os-request-policy";
+import { readerTimeZone } from "@/lib/date-utils";
 
 export interface AskAIMessage {
   role: "user" | "assistant";
@@ -168,6 +169,7 @@ export function useAskAI() {
         path: "/chat",
         body: {
           messages,
+          timeZone: readerTimeZone(),
           ...(options?.includePageContext !== false && {
             context: askOsPageContext(window.location.pathname),
           }),

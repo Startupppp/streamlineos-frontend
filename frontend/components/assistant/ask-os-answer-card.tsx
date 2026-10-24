@@ -12,11 +12,15 @@ type EvidenceSource = AskOsDirectiveOf<"evidence">["sources"][number];
 type PlanStep = AskOsDirectiveOf<"action-plan">["steps"][number];
 type LimitReason = AskOsDirectiveOf<"capability-limit">["reason"];
 
-const EVIDENCE_STATUS: Record<EvidenceSource["status"], { tone: BadgeTone; label: string }> = {
+const EVIDENCE_STATUS: Record<EvidenceSource["status"], { tone: BadgeTone; label: string; note?: string }> = {
   ok: { tone: "success", label: "Available" },
   empty: { tone: "neutral", label: "No matches" },
   partial: { tone: "warning", label: "Partial" },
-  degraded: { tone: "warning", label: "Degraded" },
+  degraded: {
+    tone: "warning",
+    label: "Keyword match",
+    note: "Semantic search was unavailable, so this source was matched by its keywords.",
+  },
   denied: { tone: "danger", label: "No access" },
   "needs-connection": { tone: "info", label: "Needs connection" },
   failed: { tone: "danger", label: "Failed" },
@@ -78,6 +82,7 @@ function EvidenceRow({ source }: { source: EvidenceSource }) {
         <SemanticBadge tone={status.tone} label={status.label} size="xs" className="shrink-0" />
       </div>
       {meta ? <p className="text-micro text-muted-foreground">{meta}</p> : null}
+      {status.note ? <p className="text-micro text-muted-foreground">{status.note}</p> : null}
       {source.excerpt ? (
         <p className="line-clamp-3 text-dense leading-5 text-muted-foreground">{source.excerpt}</p>
       ) : null}
