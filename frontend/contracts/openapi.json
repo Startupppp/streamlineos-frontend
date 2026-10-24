@@ -53416,36 +53416,6 @@
                                 "status": {
                                   "type": "string"
                                 },
-                                "razorpaySubscriptionId": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
-                                "razorpayCustomerId": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
-                                "razorpayPlanId": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
                                 "currentPeriodStart": {
                                   "anyOf": [
                                     {
@@ -53490,20 +53460,6 @@
                                     }
                                   ]
                                 },
-                                "metadata": {
-                                  "anyOf": [
-                                    {
-                                      "type": "object",
-                                      "propertyNames": {
-                                        "type": "string"
-                                      },
-                                      "additionalProperties": {}
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
                                 "createdAt": {
                                   "type": "string",
                                   "format": "date-time"
@@ -53531,16 +53487,6 @@
                                         "maximum": 9007199254740991
                                       },
                                       "razorpayPaymentId": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
-                                      "razorpayOrderId": {
                                         "anyOf": [
                                           {
                                             "type": "string"
@@ -53582,20 +53528,6 @@
                                           }
                                         ]
                                       },
-                                      "metadata": {
-                                        "anyOf": [
-                                          {
-                                            "type": "object",
-                                            "propertyNames": {
-                                              "type": "string"
-                                            },
-                                            "additionalProperties": {}
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -53606,13 +53538,11 @@
                                       "orgId",
                                       "subscriptionId",
                                       "razorpayPaymentId",
-                                      "razorpayOrderId",
                                       "amount",
                                       "amountPaise",
                                       "currency",
                                       "status",
                                       "paidAt",
-                                      "metadata",
                                       "createdAt"
                                     ]
                                   }
@@ -53623,14 +53553,10 @@
                                 "orgId",
                                 "plan",
                                 "status",
-                                "razorpaySubscriptionId",
-                                "razorpayCustomerId",
-                                "razorpayPlanId",
                                 "currentPeriodStart",
                                 "currentPeriodEnd",
                                 "trialEndsAt",
                                 "cancelledAt",
-                                "metadata",
                                 "createdAt",
                                 "updatedAt",
                                 "payments"

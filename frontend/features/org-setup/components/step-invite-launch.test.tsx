@@ -220,6 +220,32 @@ describe("People step product access", () => {
     expect(screen.getByText("Access: all enabled products as Org Admin")).toBeInTheDocument();
   });
 
+  it("resets the role to Member after each invite, so the next invite is never an accidental Org Admin", async () => {
+    const onChangeInvitees = jest.fn<void, [Invitee[]]>();
+    const user = userEvent.setup();
+    const { rerender } = render(
+      <StepInviteLaunch data={wizard()} onBack={jest.fn()} onChangeInvitees={onChangeInvitees} />,
+    );
+
+    await user.click(screen.getByRole("combobox"));
+    await user.click(screen.getByRole("option", { name: "Org Admin" }));
+    await user.type(screen.getByPlaceholderText("teammate@company.com"), "admin@example.com");
+    await user.click(screen.getByRole("button", { name: "Add invitee" }));
+    rerender(
+      <StepInviteLaunch
+        data={wizard(onChangeInvitees.mock.calls[0]?.[0] ?? [])}
+        onBack={jest.fn()}
+        onChangeInvitees={onChangeInvitees}
+      />,
+    );
+    await user.type(screen.getByPlaceholderText("teammate@company.com"), "second@example.com");
+    await user.click(screen.getByRole("button", { name: "Add invitee" }));
+
+    const secondCall = onChangeInvitees.mock.calls[1]?.[0] ?? [];
+    expect(secondCall[1]?.email).toBe("second@example.com");
+    expect(secondCall[1]?.role).toBe("MEMBER");
+  });
+
   it("returns from a rejected launch to invitations without changing invitees", async () => {
     const onBack = jest.fn();
     const onChangeInvitees = jest.fn();
