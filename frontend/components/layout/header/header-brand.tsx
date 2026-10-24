@@ -2,15 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  orgScopedStorageKey,
-  useOrgStorageScope,
-} from "@/lib/org-scoped-storage";
-import {
-  LAST_PRODUCT_PATHS_STORAGE,
-  readLastProductPaths,
-  resolveRememberedProductHref,
-} from "../last-product-path";
+import { resolveRememberedProductHref } from "../last-product-path";
+import { useLastProductPaths } from "../use-last-product-paths";
 
 const HOME_FALLBACK = "/dashboard";
 
@@ -19,10 +12,7 @@ interface HeaderBrandProps {
 }
 
 export function HeaderBrand({ showLabel = true }: HeaderBrandProps) {
-  const scope = useOrgStorageScope();
-  const remembered = readLastProductPaths(
-    orgScopedStorageKey(LAST_PRODUCT_PATHS_STORAGE, scope),
-  );
+  const remembered = useLastProductPaths();
   const href = resolveRememberedProductHref(
     "home",
     remembered.home,

@@ -6,7 +6,61 @@ import {
 
 export const LAST_PRODUCT_PATHS_STORAGE = "last-product-paths";
 
+export const LAST_PRODUCT_PATHS_CHANGE =
+  "streamlineos:last-product-paths-change";
+
 export type LastProductPaths = Partial<Record<ModuleKey, string>>;
+
+const EMPTY_PATHS: LastProductPaths = {};
+const snapshotCache = new Map<
+  string,
+  { raw: string | null; value: LastProductPaths }
+>();
+
+export function emptyLastProductPaths(): LastProductPaths {
+  return EMPTY_PATHS;
+}
+
+export function subscribeLastProductPaths(
+  onStoreChange: () => void,
+): () => void {
+  const onChange = () => {
+    snapshotCache.clear();
+    onStoreChange();
+  };
+  window.addEventListener("storage", onChange);
+  window.addEventListener(LAST_PRODUCT_PATHS_CHANGE, onChange);
+  return () => {
+    window.removeEventListener("storage", onChange);
+    window.removeEventListener(LAST_PRODUCT_PATHS_CHANGE, onChange);
+  };
+}
+
+/** Stable snapshot for `useSyncExternalStore` — same raw string returns the same object. */
+export function getLastProductPathsSnapshot(
+  storageKey: string,
+): LastProductPaths {
+  let raw: string | null = null;
+  try {
+    raw = window.localStorage.getItem(storageKey);
+  } catch {
+    raw = null;
+  }
+  const hit = snapshotCache.get(storageKey);
+  if (hit && hit.raw === raw) return hit.value;
+
+  let value: LastProductPaths = EMPTY_PATHS;
+  if (raw !== null) {
+    try {
+      const parsed = parseLastProductPaths(JSON.parse(raw) as unknown);
+      value = Object.keys(parsed).length === 0 ? EMPTY_PATHS : parsed;
+    } catch {
+      value = EMPTY_PATHS;
+    }
+  }
+  snapshotCache.set(storageKey, { raw, value });
+  return value;
+}
 
 const SKIP_PREFIXES = [
   "/access-denied",
@@ -63,12 +117,11 @@ export function writeLastProductPath(
   } catch {
     return;
   }
+  snapshotCache.delete(storageKey);
+  window.dispatchEvent(new Event(LAST_PRODUCT_PATHS_CHANGE));
 }
 
-export function buildProductLocation(
-  pathname: string,
-  search: string,
-): string {
+export function buildProductLocation(pathname: string, search: string): string {
   if (!search) return pathname;
   const query = search.startsWith("?") ? search.slice(1) : search;
   return query ? `${pathname}?${query}` : pathname;
@@ -87,7 +140,8 @@ export function resolveRememberedProductHref(
   rememberedHref: string | undefined,
   fallbackHref: string,
 ): string {
-  if (!rememberedHref || !isRelativeAppPath(rememberedHref)) return fallbackHref;
+  if (!rememberedHref || !isRelativeAppPath(rememberedHref))
+    return fallbackHref;
   const pathname = rememberedHref.split("?")[0] ?? "";
   if (!pathname || getProductFromPathname(pathname) !== product) {
     return fallbackHref;

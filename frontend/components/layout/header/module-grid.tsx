@@ -13,15 +13,8 @@ import {
 } from "../sidebar/sidebar-nav-items";
 import { ModuleTile } from "./module-tile";
 import { hasAssignedProductAccess } from "@/lib/rbac/route-access/route-access";
-import {
-  orgScopedStorageKey,
-  useOrgStorageScope,
-} from "@/lib/org-scoped-storage";
-import {
-  LAST_PRODUCT_PATHS_STORAGE,
-  readLastProductPaths,
-  resolveRememberedProductHref,
-} from "../last-product-path";
+import { resolveRememberedProductHref } from "../last-product-path";
+import { useLastProductPaths } from "../use-last-product-paths";
 
 export interface ModuleGridProps {
   activeModule: ModuleKey;
@@ -44,10 +37,7 @@ export function ModuleGrid({
   onClose,
   shouldReduceMotion,
 }: ModuleGridProps) {
-  const scope = useOrgStorageScope();
-  const rememberedPaths = readLastProductPaths(
-    orgScopedStorageKey(LAST_PRODUCT_PATHS_STORAGE, scope),
-  );
+  const rememberedPaths = useLastProductPaths();
 
   const visibleProducts = useMemo(() => {
     const products = PRODUCT_DEFINITIONS.flatMap((product) => {
