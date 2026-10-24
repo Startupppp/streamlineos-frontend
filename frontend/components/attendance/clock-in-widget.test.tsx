@@ -29,10 +29,12 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
 
     expect(screen.getByTestId("clock-in-widget-skeleton")).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
-    expect(screen.queryByText("Your location is recorded when you clock in.")).not.toBeInTheDocument();
+    expect(
+      screen.queryByTitle("Your location is recorded when you clock in."),
+    ).not.toBeInTheDocument();
   });
 
-  it("offers a single clock-in primary action once the status is known, with the location notice beside it", () => {
+  it("offers a single clock-in primary action once the status is known, with the location notice on the control", () => {
     statusQuery.isLoading = false;
     statusQuery.data = { status: "ABSENT", cooldownRemaining: 0, todayLog: null, dailyStats: null };
 
@@ -40,10 +42,13 @@ describe("ClockInWidget — RBAC-UX-r1-11 no alarming control while the status l
 
     const button = screen.getByRole("button", { name: "Web clock in" });
     expect(button).toBeEnabled();
+    expect(button).toHaveAttribute(
+      "title",
+      "Your location is recorded when you clock in.",
+    );
     expect(button.className).not.toMatch(/(^|\s)bg-(destructive|status-danger)/);
     expect(button.className).toMatch(/(^|\s)bg-primary(\s|$)/);
     expect(screen.queryByRole("button", { name: "Web clock out" })).not.toBeInTheDocument();
-    expect(screen.getByText("Location recorded")).toBeInTheDocument();
     expect(screen.queryByTestId("clock-in-widget-skeleton")).not.toBeInTheDocument();
   });
 

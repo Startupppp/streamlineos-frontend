@@ -23,6 +23,7 @@ export function useSalesOrders(filters?: SalesOrderFilters) {
         ? {
             status: filters.status,
             clientId: filters.clientId,
+            search: filters.search,
             dateFrom: filters.dateFrom,
             dateTo: filters.dateTo,
             page: filters.page,
@@ -34,6 +35,7 @@ export function useSalesOrders(filters?: SalesOrderFilters) {
       const raw = await apiClient.get<RawListResponse>("/inventory/sales-orders", {
         ...(filters?.status ? { status: filters.status } : {}),
         ...(filters?.clientId ? { clientId: String(filters.clientId) } : {}),
+        ...(filters?.search ? { search: filters.search } : {}),
         ...(filters?.dateFrom ? { dateFrom: filters.dateFrom } : {}),
         ...(filters?.dateTo ? { dateTo: filters.dateTo } : {}),
         ...(filters?.page ? { page: String(filters.page) } : {}),

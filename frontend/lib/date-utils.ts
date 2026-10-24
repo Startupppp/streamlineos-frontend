@@ -312,11 +312,14 @@ export function hoursInOrgTz(instant: Date, orgTz: string | null): number {
   return wall.getUTCHours();
 }
 
-export function formatClockInOrgTz(instant: Date, orgTz: string | null): string {
-  if (!orgTz) return "";
+export function formatClockInParts(
+  instant: Date,
+  orgTz: string | null,
+): { time: string; date: string } | null {
+  if (!orgTz) return null;
   const tz = resolveTimeZone(orgTz, readerTimeZone());
   const parts = new Intl.DateTimeFormat("en-US", {
-    hour: "2-digit",
+    hour: "numeric",
     minute: "2-digit",
     hour12: true,
     weekday: "short",
@@ -326,7 +329,15 @@ export function formatClockInOrgTz(instant: Date, orgTz: string | null): string 
   }).formatToParts(instant);
   const get = (type: Intl.DateTimeFormatPartTypes): string =>
     parts.find((p) => p.type === type)?.value ?? "";
-  return `${get("hour")}:${get("minute")} ${get("dayPeriod")} · ${get("weekday")} ${get("day")} ${get("month")}`.toUpperCase();
+  const time = `${get("hour")}:${get("minute")} ${get("dayPeriod")}`;
+  const date = `${get("weekday")} ${get("day")} ${get("month")}`;
+  return { time, date };
+}
+
+export function formatClockInOrgTz(instant: Date, orgTz: string | null): string {
+  const parts = formatClockInParts(instant, orgTz);
+  if (!parts) return "";
+  return `${parts.time} · ${parts.date}`.toUpperCase();
 }
 
 export function datetimeLocalAfterDays(days: number, orgTz: string | null): string {

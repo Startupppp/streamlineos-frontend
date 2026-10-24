@@ -14,6 +14,7 @@ export type SalesOrderStatus =
 export interface SalesOrderFilters {
   clientId?: number;
   status?: SalesOrderStatus;
+  search?: string;
   dateFrom?: string;
   dateTo?: string;
   page?: number;

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -75,7 +76,9 @@ function RemoveLineButton({ index, onRemove }: RemoveLineButtonProps) {
 
 export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetProps) {
   const createMutation = useCreateCustomerReturn();
-  const salesOrdersQuery = useSalesOrders({ limit: 100 });
+  const [soSearch, setSoSearch] = useState("");
+  const debouncedSoSearch = useDebouncedValue(soSearch, 300);
+  const salesOrdersQuery = useSalesOrders({ limit: 25, ...(debouncedSoSearch ? { search: debouncedSoSearch } : {}) });
   const variantsQuery = useProductVariants({ activeOnly: true });
   const warehousesQuery = useWarehouses();
   const [selectedWarehouseId, setSelectedWarehouseId] = useState<number>(0);
@@ -177,6 +180,7 @@ export function CustomerReturnSheet({ open, onOpenChange }: CustomerReturnSheetP
                     options={soOptions}
                     value={field.value ? String(field.value) : ""}
                     onChange={(val) => field.onChange(val ? Number(val) : undefined)}
+                    onSearchChange={setSoSearch}
                     placeholder="Search sales orders…"
                     searchPlaceholder="Search by order number…"
                     emptyText="No sales orders found"

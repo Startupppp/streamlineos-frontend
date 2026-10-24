@@ -7,11 +7,11 @@ export function ClockInWidgetSkeleton() {
       aria-hidden="true"
       data-testid="clock-in-widget-skeleton"
     >
-      <div className="flex min-w-0 flex-col items-start gap-1 sm:items-end">
-        <Skeleton className="h-4 w-24 sm:w-32" />
-        <Skeleton className="h-3 w-24 sm:w-44" />
+      <div className="flex min-w-0 flex-1 items-baseline gap-1.5 sm:flex-none sm:justify-end">
+        <Skeleton className="h-4 w-14" />
+        <Skeleton className="hidden h-3 w-16 sm:block" />
       </div>
-      <Skeleton className="h-9 w-[4.75rem] shrink-0 rounded-sm sm:w-[5.5rem]" />
+      <Skeleton className="h-9 w-[5.25rem] shrink-0 rounded-md" />
     </div>
   );
 }
