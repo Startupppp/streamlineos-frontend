@@ -134,10 +134,15 @@ const mutationGatingCases: readonly MutationGatingCase[] = [
 ];
 
 function hookSource(subPath: string, hookName: string): string {
-  const source = readFileSync(
-    join(process.cwd(), "hooks", "api", subPath),
-    "utf8",
-  );
+  const filePath = join(process.cwd(), "hooks", "api", subPath);
+  const source = readFileSync(filePath, "utf8");
+  const readOptionsPath = filePath.replace(/\.ts$/, "-read-options.ts");
+  let readOptionsSource: string | null = null;
+  try {
+    readOptionsSource = readFileSync(readOptionsPath, "utf8");
+  } catch {
+    // no companion read-options file
+  }
   const marker = `export function ${hookName}(`;
   const start = source.indexOf(marker);
   expect(start).toBeGreaterThanOrEqual(0);
@@ -145,10 +150,15 @@ function hookSource(subPath: string, hookName: string): string {
   const body = source.slice(start, next === -1 ? undefined : next);
   const factories = [...body.matchAll(/\.\.\.(\w+QueryOptions)\(/g)].map((match) => {
     const factoryMarker = `export const ${match[1]} =`;
-    const factoryStart = source.indexOf(factoryMarker);
+    let factoryStart = source.indexOf(factoryMarker);
+    let factorySource = source;
+    if (factoryStart === -1 && readOptionsSource !== null) {
+      factoryStart = readOptionsSource.indexOf(factoryMarker);
+      factorySource = readOptionsSource;
+    }
     expect(factoryStart).toBeGreaterThanOrEqual(0);
-    const factoryEnd = source.indexOf("\nexport ", factoryStart + factoryMarker.length);
-    return source.slice(factoryStart, factoryEnd === -1 ? undefined : factoryEnd);
+    const factoryEnd = factorySource.indexOf("\nexport ", factoryStart + factoryMarker.length);
+    return factorySource.slice(factoryStart, factoryEnd === -1 ? undefined : factoryEnd);
   });
   return [body, ...factories].join("\n");
 }
