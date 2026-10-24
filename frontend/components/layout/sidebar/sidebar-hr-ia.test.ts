@@ -42,21 +42,40 @@ describe("HRMS-UX-001 — the default visible HR tree is a lean founder tree", (
 
   it("orders the groups as the IA declares", () => {
     expect(visible.map((group) => group.label)).toEqual([
-      "HR Overview",
-      "HR People",
-      "Time Off & Attendance",
-      "People Ops",
+      "Overview",
+      "People",
+      "Time & Leave",
+      "Services",
       "Settings",
     ]);
   });
 
-  it("puts the Action Center second in Overview, on the approver union it needs", () => {
+  it("puts Approvals second in Overview, on the approver union it needs", () => {
     const overview = visible[0];
     expect(overview.routes[1]).toMatchObject({
-      label: "Action Center",
+      label: "Approvals",
       href: "/hr/approvals",
       requiredPermission: ["hr:workflows:approve", "hr:leaves:approve"],
     });
+  });
+
+  it("groups default work by job and reveals talent only in advanced mode", () => {
+    const routeHrefs = (label: string) =>
+      visible.find((group) => group.label === label)?.routes.map((route) => route.href);
+
+    expect(routeHrefs("Overview")).toEqual(["/hr", "/hr/approvals", "/hr/analytics"]);
+    expect(routeHrefs("People")).toEqual([
+      "/hr/employees", "/hr/onboarding", "/hr/exit", "/hr/benefits",
+    ]);
+    expect(routeHrefs("Time & Leave")).toEqual([
+      "/hr/attendance", "/hr/leaves",
+    ]);
+    expect(routeHrefs("Services")).toEqual([
+      "/hr/documents", "/hr/cases",
+    ]);
+    expect(founderAdminGroups(true).find((group) => group.label === "Talent & Planning")?.routes.map((route) => route.href)).toEqual([
+      "/hr/performance", "/hr/workforce",
+    ]);
   });
 
   it("keeps every default-hidden route out of the visible tree and in advanced", () => {
@@ -80,6 +99,14 @@ describe("HRMS-UX-001 — the default visible HR tree is a lean founder tree", (
     for (const href of HR_NAV_ADVANCED_HREFS) {
       expect(resolveNavRouteAccess(href).matched).toBe(true);
     }
+  });
+
+  it.each([
+    ["hr:assets:view", "/hr/assets"],
+    ["hr:attendance:manage", "/hr/biometric"],
+  ])("keeps %s specialists able to reach %s", (permission, href) => {
+    const groups = getNavGroupsForModule("hrms", "MEMBER", { [permission]: "all" }, ["HR"]);
+    expect(hrefsOf(applyHrWeekOneNav(groups, false, false))).toContain(href);
   });
 });
 
@@ -105,14 +132,14 @@ describe("HRMS-UX-010 — the locked chrome kills are executed in HR nav", () =>
     expect(payroll).toContain("/payroll/reimbursements");
   });
 
-  it("keeps the killed routes reachable by deep link rather than deleted", () => {
-    for (const href of ["/hr/service-delivery", "/hr/reimbursements", "/hr/simulator"]) {
+  it("keeps distinct hidden routes reachable by deep link", () => {
+    for (const href of ["/hr/service-delivery", "/hr/simulator"]) {
       expect(resolveNavRouteAccess(href).matched).toBe(true);
     }
   });
 
   it("puts Devices and Biometric under one Time clocks parent", () => {
-    const time = founderAdminGroups(false).find((group) => group.label === "Time Off & Attendance");
+    const time = founderAdminGroups(true).find((group) => group.label === "Time & Leave");
     const timeClocks = time?.routes.find((route) => route.label === "Time clocks");
 
     expect(timeClocks?.children?.map((child) => child.href)).toEqual([

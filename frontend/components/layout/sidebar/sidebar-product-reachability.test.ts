@@ -17,25 +17,26 @@ function groupsShownFor(product: ModuleKey): NavGroup[] {
 }
 
 describe("every navigation group is reachable from a product", () => {
-  const productsByGroupLabel = new Map<string, ModuleKey[]>();
+  const productsByGroup = new Map<string, ModuleKey[]>();
   for (const product of EVERY_PRODUCT) {
     for (const group of groupsShownFor(product)) {
-      const found = productsByGroupLabel.get(group.label) ?? [];
+      const key = `${group.module}:${group.label}`;
+      const found = productsByGroup.get(key) ?? [];
       found.push(product);
-      productsByGroupLabel.set(group.label, found);
+      productsByGroup.set(key, found);
     }
   }
 
   it("shows every declared group in exactly one product", () => {
     const unreachable = DECLARED_GROUPS.filter(
-      (group) => (productsByGroupLabel.get(group.label) ?? []).length === 0,
+      (group) => (productsByGroup.get(`${group.module}:${group.label}`) ?? []).length === 0,
     ).map((group) => `${group.label} (declares module=${group.module})`);
 
     expect(unreachable).toEqual([]);
   });
 
   it("never shows one group in two products", () => {
-    const duplicated = [...productsByGroupLabel.entries()]
+    const duplicated = [...productsByGroup.entries()]
       .filter(([, products]) => products.length > 1)
       .map(([label, products]) => `${label}: ${products.join(", ")}`);
 

@@ -4,9 +4,18 @@
 **Decision:** Global, country-neutral HR records; **India-first payroll**  
 **Target customer:** Organizations with 5–2,000 workers, with a scale target of 10,000  
 **Recruitment:** A separate product with a versioned hire and position handoff  
-**Updated:** 2026-10-22
+**Updated:** 2026-10-24
 
 ## Start here
+
+For the confirmed **startup/SMB, India-first HRMS + Payroll** buyer, start with
+the [24 October consolidated product offer and PRD](./2026-10-24-startup-smb-product-prd.md).
+It lists basic, complete-suite, wow and future capabilities, a proposed simpler
+sidebar, current-route preservation, delivery waves and acceptance measures.
+The [23-vendor official-source review](./2026-10-24-competitor-evidence.md)
+supplies dated evidence and availability caveats. These are a product proposal
+and research refresh; the owner PRDs and tier register below remain the
+business-rule and release authority. No implementation completeness is implied.
 
 The [suite PRD](./00-suite-product-prd.md) states the customer, outcomes,
 boundaries, and journeys. [Competitive coverage and release](./08-competitive-coverage-release-prd.md)

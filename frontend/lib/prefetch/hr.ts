@@ -9,7 +9,6 @@ import { serverGet } from "@/lib/server-fetch";
 import { hrDocumentListContract } from "@/lib/prefetch/prefetch-schema";
 import { assetListPageContract } from "@/hooks/api/hr/assets-schema";
 import { expensePageDataContract } from "@/hooks/api/hr/expenses-schema";
-import { reimbursementsListContract } from "@/hooks/api/hr/reimbursements-schema";
 import { travelRequestListContract } from "@/hooks/api/hr/travel-schema";
 import { hrCaseListContract } from "@/hooks/api/hr/cases-schema";
 import { safetyIncidentListContract } from "@/hooks/api/hr/safety-schema";
@@ -17,7 +16,6 @@ import { helpdeskTicketListContract } from "@/hooks/api/hr/helpdesk-schema";
 import { opsInboxContract, myItemsContract } from "@/hooks/api/hr/service-delivery-schema";
 import { assetReturnListContract } from "@/hooks/api/hr/asset-returns-schema";
 import { expensePageDataQueryOptions } from "@/hooks/api/hr/expenses-read-options";
-import { reimbursementsListQueryOptions } from "@/hooks/api/hr/reimbursements-read-options";
 import { hrCasesListQueryOptions } from "@/hooks/api/hr/cases-read-options";
 import { hrDocumentListQueryOptions } from "@/hooks/api/hr/documents-read-options";
 import { hrAssetListQueryOptions } from "@/hooks/api/hr/assets-read-options";
@@ -30,7 +28,6 @@ import { assetReturnsQueryOptions } from "@/hooks/api/hr/asset-returns-read-opti
 type HrDocumentListResponse = z.infer<typeof hrDocumentListContract>;
 type HrAssetListResponse = z.infer<typeof assetListPageContract>;
 type ExpensePageDataResponse = z.infer<typeof expensePageDataContract>;
-type ReimbursementsListResponse = z.infer<typeof reimbursementsListContract>;
 type TravelListResponse = z.infer<typeof travelRequestListContract>;
 type HrCaseListResponse = z.infer<typeof hrCaseListContract>;
 type SafetyIncidentListResponse = z.infer<typeof safetyIncidentListContract>;
@@ -66,18 +63,6 @@ export async function prefetchHrExpenses() {
       queryFn: () => serverGet<ExpensePageDataResponse>("/hr/expenses/page-data", expensePageDataContract),
     });
   }
-  return dehydrate(queryClient);
-}
-
-export async function prefetchHrReimbursements() {
-  const queryClient = await createServerQueryClient();
-  await queryClient.prefetchQuery({
-    ...reimbursementsListQueryOptions(),
-    queryFn: async () => {
-      const page = await serverGet<ReimbursementsListResponse>("/hr/reimbursements", reimbursementsListContract);
-      return page.items;
-    },
-  });
   return dehydrate(queryClient);
 }
 

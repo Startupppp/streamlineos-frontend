@@ -418,7 +418,6 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 
 ### Expenses & Travel
 - `/hr/expenses` · **HR** · hooks: `→ features/hr/expenses` (2026-09-21: admin actions are "Add expense" primary, "Import expenses" outlined and "Export expenses" in the overflow menu, opening `ExpenseExportDialog` in its controlled mode)
-- `/hr/reimbursements` · **HR** · hooks: `→ features/hr/reimbursements` (2026-09-21: the request sheet validates on change through `reimbursement-schema.ts`; a negative amount is flagged inline before submit) (2026-09-21: `loading.tsx` shows the table's real column headers under the page title while the rows load)
 - `/hr/travel` · **HR** · hooks: `→ features/hr/travel`
 - `/hr/travel/approvals` · **HR** · hooks: `→ features/hr/travel`
 

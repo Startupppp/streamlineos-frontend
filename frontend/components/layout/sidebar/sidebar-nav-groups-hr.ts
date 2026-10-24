@@ -1,4 +1,4 @@
-import type { NavGroup } from "./sidebar-nav-types";
+import type { NavGroup, NavRoute } from "./sidebar-nav-types";
 import {
   HR_OVERVIEW_ROUTES,
   HR_PEOPLE_ROUTES,
@@ -12,88 +12,55 @@ import {
 import { HR_INSIGHTS_ROUTES } from "./sidebar-nav-routes-hr-governance";
 import { HR_SETTINGS_ROUTES } from "./sidebar-nav-routes-hr-settings";
 
+function routeFor(routes: NavRoute[], href: string): NavRoute {
+  const route = routes.find((candidate) => candidate.href === href);
+  if (!route) throw new Error(`Missing HR navigation route: ${href}`);
+  return route;
+}
+
 export const HR_NAV_GROUPS: NavGroup[] = [
   {
-    label: "HR Overview",
+    label: "Overview",
     module: "hrms",
-    requiredPermission: [
-      "hr:employees:view",
-      "hr:attendance:view",
-      "hr:leaves:view",
-      "hr:workflows:approve",
-      "hr:leaves:approve",
+    routes: [
+      ...HR_OVERVIEW_ROUTES,
+      routeFor(HR_INSIGHTS_ROUTES, "/hr/analytics"),
     ],
-    routes: HR_OVERVIEW_ROUTES,
   },
   {
-    label: "HR People",
+    label: "People",
     module: "hrms",
-    requiredPermission: [
-      "hr:employees:view",
-      "hr:positions:view",
-      "hr:reporting-lines:review",
-      "hr:reporting-lines:manage",
-      "hr:onboarding:manage",
-      "hr:exit:view",
-      "hr:exit:manage",
-      "hr:payroll:approve",
-      "hr:assets:view",
-      "hr:documents:view",
-      "hr:documents:manage",
-      "hr:email-templates:manage",
-      "hr:sensitive:view",
-    ],
     routes: [
       ...HR_PEOPLE_ROUTES,
       ...HR_LIFECYCLE_ROUTES,
-      ...HR_DOCUMENTS_ROUTES,
+      routeFor(HR_PEOPLE_OPS_ROUTES, "/hr/benefits"),
     ],
   },
   {
-    label: "Time Off & Attendance",
+    label: "Time & Leave",
     module: "hrms",
-    requiredPermission: [
-      "hr:attendance:view",
-      "hr:attendance:manage",
-      "hr:leaves:view",
-      "hr:leaves:manage",
-      "hr:biometric:manage",
-      "self:leaves",
-      "self:attendance",
-    ],
     routes: HR_TIME_ROUTES,
   },
   {
-    label: "People Ops",
+    label: "Services",
     module: "hrms",
-    requiredPermission: [
-      "hr:cases:view",
-      "hr:helpdesk:view",
-      "hr:engagement:view",
-      "hr:accommodations:view",
-      "hr:expenses:view",
-      "hr:expenses:manage",
-      "hr:payroll:view",
-      "hr:benefits:view",
-      "hr:compensation:manage",
-      "hr:equity:view",
-      "hr:analytics:read",
-      "hr:contracts:view",
-      "hr:performance:manage",
-      "hr:performance:view",
-      "hr:feedback:view",
+    routes: [
+      ...HR_DOCUMENTS_ROUTES,
+      routeFor(HR_PEOPLE_OPS_ROUTES, "/hr/cases"),
+      routeFor(HR_PEOPLE_OPS_ROUTES, "/hr/expenses"),
     ],
-    routes: [...HR_PEOPLE_OPS_ROUTES, ...HR_INSIGHTS_ROUTES],
+  },
+  {
+    label: "Talent & Planning",
+    module: "hrms",
+    routes: [
+      routeFor(HR_INSIGHTS_ROUTES, "/hr/performance"),
+      routeFor(HR_INSIGHTS_ROUTES, "/hr/workforce"),
+    ],
   },
   {
     label: "Settings",
     module: "hrms",
-    requiredPermission: [
-      "hr:policies:view",
-      "hr:identity:view",
-      "hr:access:view",
-      "hr:compliance:manage",
-    ],
     routes: HR_SETTINGS_ROUTES,
   },
 ];

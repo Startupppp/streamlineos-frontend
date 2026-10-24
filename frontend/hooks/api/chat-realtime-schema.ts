@@ -1,24 +1,26 @@
 import { z } from "zod";
-import {
-  chatMessageAttachmentContract,
-  chatMessageMetadataContract,
-} from "@/hooks/api/chat-schema/message-schema";
+import { chatMessageContract } from "@/hooks/api/chat-schema/message-schema";
 
-export const messagePayloadSchema = z.object({
-  id: z.number(),
-  channelId: z.number(),
-  senderId: z.string().nullable(),
-  senderName: z.string().nullable(),
-  senderImage: z.string().nullable().optional(),
-  content: z.string().nullable(),
-  createdAt: z.string().nullable(),
-  replyToId: z.number().nullable(),
-  metadata: chatMessageMetadataContract.optional(),
-  messageType: z.enum(["text", "lead_submission", "system"]).optional(),
-  attachments: z.array(chatMessageAttachmentContract).optional(),
-  idempotencyKey: z.string().optional(),
-  clientKey: z.string().nullable().optional(),
-});
+const messageWire = chatMessageContract.shape;
+
+export const messagePayloadSchema = chatMessageContract
+  .pick({
+    id: true,
+    channelId: true,
+    senderId: true,
+    content: true,
+    replyToId: true,
+    clientKey: true,
+  })
+  .extend({
+    senderName: z.string().nullable(),
+    senderImage: z.string().nullable().optional(),
+    createdAt: messageWire.createdAt.nullable(),
+    metadata: messageWire.metadata.optional(),
+    messageType: messageWire.messageType.optional(),
+    attachments: messageWire.attachments.optional(),
+    idempotencyKey: z.string().optional(),
+  });
 
 export const messageUpdatedPayloadSchema = z.object({
   id: z.number(),

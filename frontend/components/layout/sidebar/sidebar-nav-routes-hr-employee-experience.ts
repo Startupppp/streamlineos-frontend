@@ -108,7 +108,7 @@ export const HR_TIME_ROUTES: NavRoute[] = [
     icon: Clock,
     href: "/hr/devices",
     searchTerms: ["devices", "biometric", "punch", "kiosk"],
-    requiredPermission: ["hr:biometric:manage", "hr:attendance:manage"],
+    requiredPermission: "hr:biometric:manage",
     children: [
       {
         label: "Devices",
@@ -218,12 +218,6 @@ export const HR_PEOPLE_OPS_ROUTES: NavRoute[] = [
         icon: CheckSquare,
         href: "/hr/travel/approvals",
         requiredPermission: "hr:travel:manage",
-      },
-      {
-        label: "Reimbursements",
-        icon: RefreshCcw,
-        href: "/hr/reimbursements",
-        requiredPermission: "hr:payroll:view",
       },
     ],
   },

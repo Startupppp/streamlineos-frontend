@@ -77,6 +77,7 @@ export function useProductSidebarVisibility(): {
         ? applyHrWeekOneNav(
             getNavGroupsForModule(activeProduct, effectiveRole, scopes, enabledModules, lockedModules),
             showAdvancedHr,
+            isOrgOwner,
           )
         : getNavGroupsForModule(activeProduct, effectiveRole, scopes, enabledModules, lockedModules);
 

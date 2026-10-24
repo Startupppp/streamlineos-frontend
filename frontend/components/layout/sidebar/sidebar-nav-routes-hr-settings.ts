@@ -138,12 +138,6 @@ export const HR_SETTINGS_ROUTES: NavRoute[] = [
     requiredPermission: "hr:compliance:manage",
     children: [
       {
-        label: "Compliance",
-        icon: Scale,
-        href: "/hr/compliance",
-        requiredPermission: "hr:compliance:manage",
-      },
-      {
         label: "Health & Safety",
         icon: ShieldAlert,
         href: "/hr/safety",

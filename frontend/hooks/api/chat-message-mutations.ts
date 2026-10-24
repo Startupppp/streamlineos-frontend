@@ -39,16 +39,15 @@ import {
   countTransientSendFailure,
   keepsFailedSendRow,
   pendingSendMessage,
-  reconcileSentMessage,
   releaseSendTurn,
   sendClientKey,
 } from "@/hooks/api/chat-send-policy";
 import type {
   EditMessageInput,
+  Message,
   MessagesPage,
   SendMessageInput,
 } from "@/types/chat";
-import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 import {
   abandonChatSend,
   beginChatSend,
@@ -59,8 +58,8 @@ const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
 );
 
-const chatSendResponseContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
+const chatMessageContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContract),
 );
 
 interface RollbackContext {
@@ -76,7 +75,7 @@ export function useSendMessage() {
   const { data: session } = useSession();
   const user = session?.user;
   return useAuthorizedMutation<
-    ChatSendResponse,
+    Message,
     Error,
     SendMessageInput,
     RollbackContext
@@ -87,11 +86,11 @@ export function useSendMessage() {
       const { channelId, ...body } = variables;
       await awaitSendTurn(sendClientKey(variables));
       return apiClient
-        .post<ChatSendResponse>(
+        .post<Message>(
           `/chat/channels/${channelId}/messages`,
           { ...body, clientKey: sendClientKey(variables) },
           undefined,
-          chatSendResponseContract,
+          chatMessageContract,
         )
         .catch((error: unknown) => {
           countTransientSendFailure(sendClientKey(variables), error);
@@ -149,7 +148,7 @@ export function useSendMessage() {
           replaceOptimisticMessage(
             old,
             sendClientKey(variables),
-            (optimistic) => reconcileSentMessage(optimistic, row),
+            () => row,
           ),
       );
       chatSendVisible(sendClientKey(variables));

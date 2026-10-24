@@ -1,11 +1,5 @@
 import { reimbursementAmountStringSchema } from "./reimbursement-amount";
-import { reimbursementSchema as hrSchema } from "@/features/hr/reimbursements/reimbursement-schema";
 import { reimbursementSchema as essSchema } from "@/features/payroll/ess/components/ess-reimbursements-schema";
-
-function hrAmountIssues(amount: string): string[] {
-  const result = hrSchema.safeParse({ category: "Travel", customCategory: "", amount, description: "" });
-  return result.success ? [] : result.error.issues.filter((i) => i.path[0] === "amount").map((i) => i.message);
-}
 
 function essAmountIssues(amount: string): string[] {
   const result = essSchema.safeParse({
@@ -50,24 +44,12 @@ describe("reimbursementAmountStringSchema — shared frontend amount rule (PAY-0
   });
 });
 
-describe("HR reimbursement form — amount field (PAY-004)", () => {
-  it("rejects 1234.5678 which previously had no two-decimal-place guard on the HR form", () => {
-    expect(hrAmountIssues("1234.5678")).toContain("Amount must have at most 2 decimal places");
-  });
-
-  it("accepts 1234.57 and other valid two-decimal claims", () => {
-    expect(hrAmountIssues("1234.57")).toHaveLength(0);
-    expect(hrAmountIssues("99.99")).toHaveLength(0);
-    expect(hrAmountIssues("1")).toHaveLength(0);
-  });
-});
-
 describe("ESS reimbursement form — amount field (PAY-004)", () => {
   it("rejects 1234.5678 on the ESS form, which previously accepted it and let Postgres silently round the claim to an amount the employee did not type", () => {
     expect(essAmountIssues("1234.5678")).toContain("Amount must have at most 2 decimal places");
   });
 
-  it("rejects 0.50 which is below the ₹1 floor now shared with the HR route", () => {
+  it("rejects 0.50 which is below the ₹1 floor", () => {
     expect(essAmountIssues("0.50")).not.toHaveLength(0);
   });
 
@@ -76,10 +58,4 @@ describe("ESS reimbursement form — amount field (PAY-004)", () => {
     expect(essAmountIssues("99.99")).toHaveLength(0);
   });
 
-  it("applies the identical amount rule on the HR form and the ESS form, because both submit to routes that write the same decimal(15,2) column", () => {
-    expect(hrAmountIssues("1234.5678")).not.toHaveLength(0);
-    expect(essAmountIssues("1234.5678")).not.toHaveLength(0);
-    expect(hrAmountIssues("1234.57")).toHaveLength(0);
-    expect(essAmountIssues("1234.57")).toHaveLength(0);
-  });
 });

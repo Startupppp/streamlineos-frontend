@@ -24,12 +24,6 @@ export const HR_INSIGHTS_ROUTES: NavRoute[] = [
     requiredPermission: "hr:analytics:read",
     children: [
       {
-        label: "Workforce Planning",
-        icon: TrendingUp,
-        href: "/hr/workforce",
-        requiredPermission: "hr:analytics:read",
-      },
-      {
         label: "Cost Analysis",
         icon: Coins,
         href: "/hr/workforce-cost",

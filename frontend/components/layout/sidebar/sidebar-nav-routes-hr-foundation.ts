@@ -20,7 +20,7 @@ import type { NavRoute } from "./sidebar-nav-types";
 
 export const HR_OVERVIEW_ROUTES: NavRoute[] = [
   {
-    label: "Hub",
+    label: "Overview",
     icon: LayoutDashboard,
     href: "/hr",
     exact: true,
@@ -31,7 +31,7 @@ export const HR_OVERVIEW_ROUTES: NavRoute[] = [
     ],
   },
   {
-    label: "Action Center",
+    label: "Approvals",
     icon: ClipboardCheck,
     href: "/hr/approvals",
     searchTerms: ["approvals", "queue", "exceptions"],

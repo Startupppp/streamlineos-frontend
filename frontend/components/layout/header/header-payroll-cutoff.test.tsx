@@ -51,13 +51,16 @@ describe("the header payroll cutoff chip", () => {
     });
 
     render(<HeaderPayrollCutoff />);
-    const link = screen.getByRole("link");
+    const links = screen.getAllByRole("link");
 
-    expect(link).toHaveAttribute("href", "/payroll/readiness");
-    expect(link).toHaveAccessibleName(/payroll cutoff/i);
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link).toHaveAttribute("href", "/payroll/readiness");
+      expect(link).toHaveAccessibleName(/payroll cutoff/i);
+    }
   });
 
-  it("keeps the full chip out of the 390px header row", () => {
+  it("keeps the labeled chip for lg+ and an icon with tooltip below lg", () => {
     mockedCutoff.mockReturnValue({
       cutoff: { title: "Inputs lock", date: futureIsoDate(3) },
       month: "2026-10",
@@ -65,12 +68,16 @@ describe("the header payroll cutoff chip", () => {
     });
 
     render(<HeaderPayrollCutoff />);
+    const links = screen.getAllByRole("link");
 
-    expect(screen.getByRole("link").className).toContain("hidden");
-    expect(screen.getByRole("link").className).toContain("sm:inline-flex");
+    expect(links).toHaveLength(2);
+    expect(links[0].className).toContain("lg:hidden");
+    expect(links[0].className).toContain("size-9");
+    expect(links[1].className).toContain("hidden");
+    expect(links[1].className).toContain("lg:inline-flex");
   });
 
-  it("showcases a calendar icon in the compact mobile header", () => {
+  it("showcases a calendar icon with tooltip in the compact mobile header", () => {
     mockedCutoff.mockReturnValue({
       cutoff: { title: "Inputs lock", date: futureIsoDate(3) },
       month: "2026-10",
@@ -84,5 +91,6 @@ describe("the header payroll cutoff chip", () => {
     expect(link).toHaveAccessibleName(/payroll cutoff/i);
     expect(link.className).toContain("size-9");
     expect(link.querySelector("svg")).not.toBeNull();
+    expect(link).not.toHaveAttribute("title");
   });
 });

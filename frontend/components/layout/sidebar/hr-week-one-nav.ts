@@ -10,6 +10,10 @@ export const HR_NAV_CHROME_KILLS: readonly string[] = [
 const CHROME_KILLS = new Set(HR_NAV_CHROME_KILLS);
 
 export const HR_NAV_ADVANCED_HREFS: readonly string[] = [
+  "/hr/assets",
+  "/hr/expenses",
+  "/hr/devices",
+  "/hr/biometric",
   "/hr/employees/manager-coverage",
   "/hr/employees/reporting-requests",
   "/hr/employees/reporting-changes",
@@ -60,11 +64,15 @@ function keepRoute(route: NavRoute, showAdvanced: boolean): NavRoute[] {
   return [{ ...route, children: children.length > 0 ? children : undefined }];
 }
 
-export function applyHrWeekOneNav(groups: NavGroup[], showAdvanced: boolean): NavGroup[] {
-  return groups
+export function applyHrWeekOneNav(groups: NavGroup[], showAdvanced: boolean, isOrgOwner = true): NavGroup[] {
+  // Non-owners already have a permission-scoped tree; keep every authorized job visible.
+  const includeAdvanced = showAdvanced || !isOrgOwner;
+  const visible = groups
     .map((group) => ({
       ...group,
-      routes: group.routes.flatMap((route) => keepRoute(route, showAdvanced)),
+      routes: group.routes.flatMap((route) => keepRoute(route, includeAdvanced)),
     }))
     .filter((group) => group.routes.length > 0);
+
+  return visible;
 }

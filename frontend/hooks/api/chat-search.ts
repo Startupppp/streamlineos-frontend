@@ -22,8 +22,8 @@ const chatPinsContract = lazyContract(() =>
 const chatThreadPageContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatThreadPageContract),
 );
-const chatSendResponseContract = lazyContract(() =>
-  import("@/hooks/api/chat-schema").then((m) => m.chatSendResponseContract),
+const chatMessageContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.chatMessageContract),
 );
 const chatSearchMessagesContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatSearchMessagesContract),
@@ -50,19 +50,18 @@ import {
 import {
   chatSendRetry,
   optimisticMessage,
-  reconcileSentMessage,
   sendClientKey,
 } from "@/hooks/api/chat-send-policy";
 import { abandonChatSend, beginChatSend, chatSendVisible } from "@/hooks/api/chat-telemetry";
 import type {
   AttachmentInput,
+  Message,
   PinnedMessage,
   ThreadPage,
   SearchMessagesResult,
   SearchChannelResult,
   SearchUserResult,
 } from "@/types/chat";
-import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 import { NO_ID_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
@@ -202,15 +201,15 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
   const { data: session } = useSession();
   const user = session?.user;
   const threadKey = collaborationQueryKeys.chat.thread(channelId, parentMessageId);
-  return useAuthorizedMutation<ChatSendResponse, Error, ThreadReplyInput, RollbackContext>("chat:messages:write", {
+  return useAuthorizedMutation<Message, Error, ThreadReplyInput, RollbackContext>("chat:messages:write", {
     ...chatSendRetry,
     mutationKey: ["chat", "thread", "reply"],
     mutationFn: (body) =>
-      apiClient.post<ChatSendResponse>(
+      apiClient.post<Message>(
         `/chat/channels/${channelId}/messages/${parentMessageId}/thread`,
         { ...body, clientKey: sendClientKey(body) },
         undefined,
-        chatSendResponseContract,
+        chatMessageContract,
       ),
     onMutate: async (body) => {
       await cancelLoadedQueries(queryClient, [threadKey]);
@@ -236,7 +235,7 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
     },
     onSuccess: (row, body) => {
       queryClient.setQueryData<InfiniteData<ThreadPage>>(threadKey, (old) =>
-        reconcileThreadReply(old, sendClientKey(body), (optimistic) => reconcileSentMessage(optimistic, row)),
+        reconcileThreadReply(old, sendClientKey(body), () => row),
       );
       chatSendVisible(sendClientKey(body));
     },

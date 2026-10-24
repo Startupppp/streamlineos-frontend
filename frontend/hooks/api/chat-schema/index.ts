@@ -14,15 +14,17 @@ export {
   huddleAlternativeContract,
   leaveHuddleResponseContract,
 } from "./huddle-schema";
-export type { HuddleAccount, HuddleAccountsList, HuddleAlternative } from "./huddle-schema";
+export type {
+  HuddleAccount,
+  HuddleAccountsList,
+  HuddleAlternative,
+} from "./huddle-schema";
 export {
   chatMessageContextContract,
   chatMessageContract,
   chatMessagesPageContract,
   chatPollPageContract,
-  chatSendResponseContract,
 } from "./message-schema";
-export type { ChatSendResponse } from "./message-schema";
 export {
   chatCreateTaskContract,
   chatEntityActionOptionsContract,

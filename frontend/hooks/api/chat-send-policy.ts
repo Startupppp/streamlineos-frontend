@@ -13,7 +13,6 @@ import type {
   MessagesPage,
   SendMessageInput,
 } from "@/types/chat";
-import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 
 export const CHAT_SEND_MUTATION_KEY = ["chat", "messages", "send"];
 
@@ -160,26 +159,6 @@ export function appendPendingSend(
     ),
   );
   return held ? data : appendTimelineMessage(data, message);
-}
-
-export function reconcileSentMessage(
-  optimistic: Message,
-  row: ChatSendResponse,
-): Message {
-  return {
-    ...optimistic,
-    id: row.id,
-    content: row.content,
-    replyToId: row.replyToId,
-    isEdited: row.isEdited,
-    isDeleted: row.isDeleted,
-    messageType: row.messageType,
-    metadata: row.metadata ?? optimistic.metadata,
-    actionStatus: row.actionStatus,
-    clientKey: row.clientKey ?? optimistic.clientKey,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-  };
 }
 
 interface OptimisticMessageInput {

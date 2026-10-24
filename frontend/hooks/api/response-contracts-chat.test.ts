@@ -9,7 +9,6 @@ import {
   chatMessagesPageContract,
   chatPollPageContract,
   chatPublicChannelContract,
-  chatSendResponseContract,
 } from "@/hooks/api/chat-schema";
 import { chatChannelDetailContract } from "@/hooks/api/chat-extra-schema";
 
@@ -472,20 +471,8 @@ const SEND_RESPONSE = {
   updatedAt: "2026-09-02T12:00:00.000Z",
 };
 
-describe("chatSendResponseContract — BUG-058: POST send endpoint returns a raw message without sender/attachments/replyTo", () => {
-  it("accepts the raw send response which has no sender, attachments or replyTo fields", () => {
-    expect(chatSendResponseContract.safeParse(SEND_RESPONSE).success).toBe(true);
-  });
-
-  it("accepts a send response with a null senderMembershipId when the sender account is gone", () => {
-    expect(chatSendResponseContract.safeParse({ ...SEND_RESPONSE, senderMembershipId: null }).success).toBe(true);
-  });
-
-  it("accepts a send response with a null clientKey when the client did not supply one", () => {
-    expect(chatSendResponseContract.safeParse({ ...SEND_RESPONSE, clientKey: null }).success).toBe(true);
-  });
-
-  it("rejects the send response through chatMessageContract — sender is required there so parsing always fails (BUG-058 root cause)", () => {
+describe("BUG-058: the POST send endpoint returns the list message shape", () => {
+  it("rejects the raw send row through chatMessageContract because sender is required, so a backend regression to the raw row cannot pass", () => {
     const result = chatMessageContract.safeParse(SEND_RESPONSE);
     expect(result.success).toBe(false);
     if (result.success) return;

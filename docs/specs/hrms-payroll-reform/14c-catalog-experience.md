@@ -37,9 +37,9 @@
 - **Sheets/dialogs:** detail; approve/reject; bulk approve.
 - **Backend:** expenses module; `hr:expenses:*`; invalidate lists.
 
-### `/hr/reimbursements` — MERGE→`/payroll/reimbursements`
-- Prefer payroll canonical UI; if kept, thin deep-link only.
-- **Checkbox:** [ ] **HRM-14c-001** remove duplicate or document single owner.
+### `/hr/reimbursements` — REMOVED; `/payroll/reimbursements` is canonical
+- The duplicate HR page and its private UI were removed. Payroll retains the shared reimbursement API and the `hr:payroll:view` gate; no legacy redirect was added.
+- **Checkbox:** [x] **HRM-14c-001** remove duplicate or document single owner.
 
 ### `/hr/travel` — KEEP
 - **Job:** Travel requests.

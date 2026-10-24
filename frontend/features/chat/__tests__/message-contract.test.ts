@@ -1,4 +1,4 @@
-import { chatMessageContract, chatMessagesPageContract, chatSendResponseContract } from "@/hooks/api/chat-schema";
+import { chatMessageContract, chatMessagesPageContract } from "@/hooks/api/chat-schema";
 import { messagePayloadSchema } from "@/hooks/api/chat-realtime-schema";
 
 const SENDER_FIXTURE = { id: "user-abc", name: "Alice", image: null };
@@ -70,43 +70,16 @@ describe("list wire — chatMessagesPageContract", () => {
   });
 });
 
-describe("send wire — chatSendResponseContract", () => {
-  const SEND_RESPONSE_FIXTURE = {
-    id: 202,
-    orgId: "org-1",
-    channelId: 7,
-    senderMembershipId: 5,
-    content: "Sent message",
-    replyToId: null,
-    isEdited: false,
-    isDeleted: false,
-    messageType: "text" as const,
-    metadata: null,
-    actionStatus: null,
-    clientKey: "uuid-send-1",
-    channelPosition: 202,
-    createdAt: "2026-01-02T00:00:00.000Z",
-    updatedAt: "2026-01-02T00:00:00.000Z",
-  };
-
-  it("parses a well-formed send response", () => {
-    const result = chatSendResponseContract.safeParse(SEND_RESPONSE_FIXTURE);
+describe("send wire — the send response is the list message", () => {
+  it("parses a send response with the exact contract the list uses", () => {
+    const result = chatMessageContract.safeParse({ ...MESSAGE_FIXTURE, id: 202 });
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.id).toBe(202);
   });
 
-  it("tolerates a null channelPosition (backend may not set it on all paths)", () => {
-    const result = chatSendResponseContract.safeParse({
-      ...SEND_RESPONSE_FIXTURE,
-      channelPosition: null,
-    });
-    expect(result.success).toBe(true);
-  });
-
-  it("rejects a response missing the required id", () => {
-    const { id: _dropped, ...rest } = SEND_RESPONSE_FIXTURE;
-    const result = chatSendResponseContract.safeParse(rest);
-    expect(result.success).toBe(false);
+  it("rejects the raw database row the send route used to return, so a regression to it fails loudly", () => {
+    const { sender: _sender, senderId: _senderId, attachments: _attachments, replyTo: _replyTo, ...raw } = MESSAGE_FIXTURE;
+    expect(chatMessageContract.safeParse({ ...raw, orgId: "org-1", senderMembershipId: 5 }).success).toBe(false);
   });
 });
 
