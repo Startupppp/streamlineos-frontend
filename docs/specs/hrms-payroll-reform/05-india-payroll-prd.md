@@ -300,3 +300,23 @@ proration, insufficient net, concurrency, corrections, payout, accounting, close
 - [ ] Accounting journal balances and traces to components and run version.
 - [ ] Paid payroll is corrected by governed adjustment/reversal, not destructive edit.
 - [ ] No partner-dependent payment or filing is shown as complete without acknowledgment.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-007 | Make payroll eligibility explicit for workers and employments |
+| FR-ARCH-009 | Version and validate every frozen snapshot section |
+| FR-ARCH-015 | Reconcile bank-return files idempotently with per-row outcomes |
+| FR-ARCH-020 | Preserve the Payroll-to-Accounting posting seam |
+| FR-ARCH-031 | Make document publication and cleanup recoverable |
+
+Payroll leads [FR-ARCH-033](./16-architecture-hardening-prd.md#fr-arch-033-cover-governed-retention-and-accountless-document-delivery) for governed pay/tax documents and accountless delivery; Core HR and Privacy retain their documented supporting ownership.

@@ -1,6 +1,11 @@
 "use client";
 
-import { createContext, useContext, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  type ComponentType,
+  type ReactNode,
+} from "react";
 
 export interface RecordConversationProps {
   entityType: string;
@@ -10,27 +15,24 @@ export interface RecordConversationProps {
   emptyDescriptionReadOnly?: string;
 }
 
-type RenderRecordConversation = (props: RecordConversationProps) => ReactNode;
-
-const RecordConversationSlot = createContext<RenderRecordConversation | null>(
-  null,
-);
+const RecordConversationSlot =
+  createContext<ComponentType<RecordConversationProps> | null>(null);
 
 export function RecordConversationSlotProvider({
-  render,
+  render: Component,
   children,
 }: {
-  render: RenderRecordConversation;
+  render: ComponentType<RecordConversationProps>;
   children: ReactNode;
 }) {
   return (
-    <RecordConversationSlot.Provider value={render}>
+    <RecordConversationSlot.Provider value={Component}>
       {children}
     </RecordConversationSlot.Provider>
   );
 }
 
 export function RecordConversation(props: RecordConversationProps) {
-  const render = useContext(RecordConversationSlot);
-  return render ? render(props) : null;
+  const Component = useContext(RecordConversationSlot);
+  return Component ? <Component {...props} /> : null;
 }

@@ -292,3 +292,21 @@ These may be tabs/secondary routes under the canonical pages in PRD 07.
 
 Sources establish requirements and change monitoring; they do not replace
 professional payroll/legal interpretation.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-013 | Use validated exact payroll money, rates and rounding |
+| FR-ARCH-016 | Represent payment unknown, partial, return and reconciliation honestly |
+| FR-ARCH-031 | Make document publication and cleanup recoverable |
+| FR-ARCH-033 | Cover governed retention and accountless document delivery |
+| FR-ARCH-038 | Require complete fixed-revision release and capability evidence |

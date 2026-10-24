@@ -159,3 +159,21 @@ before cutover. After an irreversible external act, recovery is forward-only.
 - [ ] Domain events occur only after the owning state commit.
 - [ ] Downstream failure is visible and reconcilable without rolling back the owner fact.
 - [ ] Transition tests cover every row plus denied, duplicate, stale, and partial-failure cases.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-011 | Make HR input-period build, lock and unlock atomic and versioned |
+| FR-ARCH-012 | Preserve locked history and route late changes through correction |
+| FR-ARCH-017 | Preserve payout coverage, run transitions and stale-approval controls |
+| FR-ARCH-018 | Make leave-to-payroll and downstream projection intent durable |
+| FR-ARCH-019 | Make accepted-hire onboarding and BGV handoff repairable |

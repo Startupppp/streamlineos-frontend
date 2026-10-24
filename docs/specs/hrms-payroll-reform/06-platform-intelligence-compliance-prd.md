@@ -298,3 +298,25 @@ P0 dependency delivery/fallback is fixed by the integration matrix in PRD 06a.
 - [ ] Country rule packs are effective-dated, tested, signed off, and removable.
 - [ ] AI answers cite sources, abstain safely, and cannot execute prohibited actions.
 - [ ] Jobs, events, notifications, and audit share end-to-end correlation.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-001 | Authorize payroll aggregates before response and cache fill |
+| FR-ARCH-002 | Apply declared metric filters, periods and run-status semantics |
+| FR-ARCH-003 | Use canonical department identifiers in AskOS |
+| FR-ARCH-005 | Enforce access revocation and actor lifecycle across surfaces |
+| FR-ARCH-008 | Unify versioned schemas and current wire contracts |
+| FR-ARCH-022 | Deepen governed insights for charts, reports and drill-through |
+| FR-ARCH-023 | Ground AskOS in owner reads, effective policies and current authority |
+| FR-ARCH-024 | Own backend cache freshness and access-shaped keys |
+| FR-ARCH-032 | Validate downloads and reauthorize export lifecycle |

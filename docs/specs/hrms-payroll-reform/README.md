@@ -8,6 +8,19 @@
 
 ## Start here
 
+For **Claude implementation of the architecture review**, start with
+[17 Claude execution guide](./17-claude-architecture-execution.md), then
+[16 Architecture hardening PRD](./16-architecture-hardening-prd.md).
+The complete [HTML report](./architecture-review/2026-10-24-architecture-review.html)
+is preserved here. Its [coverage map](./architecture-review/html-prd-coverage.json)
+maps every semantic report point to requirements; the
+[execution ledger](./architecture-review/execution-ledger.json) tracks 158
+atomic acceptance criteria, initially NOT_STARTED. Run
+`node scripts/check-hrms-architecture-coverage.mjs --self-test` and the command
+without flags to check document completeness. Implementation/release modes
+remain red until their actual evidence is supplied. The guide includes the
+copyable implementation prompt, dependency programs and resume protocol.
+
 For the confirmed **startup/SMB, India-first HRMS + Payroll** buyer, start with
 the [24 October consolidated product offer and PRD](./2026-10-24-startup-smb-product-prd.md).
 It lists basic, complete-suite, wow and future capabilities, a proposed simpler

@@ -186,3 +186,20 @@ duplicate payout, or unacknowledged compliance claims are non-waivable.
 - [ ] GA guardrails pass with no non-waivable exception.
 - [ ] AI thresholds pass before any affected assistant/tool capability is enabled.
 - [ ] Every P0/P1 requirement and canonical page has traceable release evidence.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-034 | Instrument recovery, projection lag and operational controls |
+| FR-ARCH-038 | Require complete fixed-revision release and capability evidence |
+| FR-ARCH-039 | Make audit coverage, gate scope and source revision checkable |
+| FR-ARCH-040 | Provide a resumable Claude execution and evidence contract |

@@ -107,8 +107,10 @@ For each cache entry document:
 
 ## Frontend Data Hooks
 
-- [ ] **HRM-07-018** each collection hook uses stable query keys including org,
-  filters, cursor.
+- [ ] **HRM-07-018** each authenticated collection hook uses tenant-neutral
+  key arrays with entity/filter/cursor identity; organization/user isolation is
+  supplied by the scoped QueryClient hash. Preserve access-version behavior.
+  Public-tenant exceptions require explicit evidence. See FR-ARCH-025/026.
 - [ ] **HRM-07-019** no duplicate HTTP for data another live query already
   returns (hub vs page).
 - [ ] **HRM-07-020** exports use server export jobs for large sets — never
@@ -129,3 +131,17 @@ For each cache entry document:
 - [ ] **HRM-07-025** unit/contract proof for invalidation helper coverage.
 - [ ] **HRM-07-026** no new unbounded `findMany` without limit in HR modules
   (CI grep or suite).
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-030 | Bound and project queries without truncating business completion |

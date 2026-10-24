@@ -36,6 +36,7 @@ subsets of the same owner requirement; it never gains a second owner PRD.
 | 06 Platform | FR-PLT-001–010, 016–025, 039–049 | FR-PLT-011–015, 026–030 | FR-PLT-031–038 |
 | 07b Experience | FR-UX-001–020 for enabled P0 journeys | Same requirements for P1 surfaces and configuration depth | Same requirements for enabled P2/P3 surfaces |
 | 09 Implementation | FR-IMP-001–006, 008, 010–011, 013–026, 028–039 | FR-IMP-007, 009, 012, 027 plus template/phased depth | advanced migration twin P2 |
+| 16 Architecture | FR-ARCH-001–040 controls for enabled P0 journeys; 039–040 governance | Same controls when P1 capabilities are enabled; direct-provider extensions retain P1/partner scope | Same controls when P2/P3 capabilities are enabled; no new country commitment |
 
 Additional tier rules:
 

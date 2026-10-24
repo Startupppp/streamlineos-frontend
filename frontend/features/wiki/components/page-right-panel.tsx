@@ -401,28 +401,34 @@ export default function PageRightPanel({
 
   return (
     <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
-      <SheetContent side="right" className="gap-0 p-0 sm:max-w-sm">
-        <SheetHeader className="border-b border-border px-4 py-3 pr-12">
+      <SheetContent
+        side="right"
+        className="h-dvh max-h-dvh gap-0 p-0 sm:max-w-sm"
+      >
+        <SheetHeader className="shrink-0 border-b border-border px-4 py-3 pr-12">
           <SheetDescription className="text-xs">Page details</SheetDescription>
           <SheetTitle className="truncate text-base leading-tight">
             {title}
           </SheetTitle>
         </SheetHeader>
-        <SheetBody className="flex flex-col p-0">
+        <SheetBody className="flex min-h-0 flex-1 flex-col overflow-hidden p-0">
           {chatAccess !== "denied" ? (
             <Tabs
               defaultValue="details"
-              className="flex flex-col flex-1 min-h-0"
+              className="flex min-h-0 flex-1 flex-col gap-0"
             >
-              <TabsList className="shrink-0 mx-4 mt-3 mb-0 self-start">
-                <TabsTrigger value="details" className="text-xs px-3">
+              <TabsList className="mx-4 mt-3 w-full shrink-0 md:w-full">
+                <TabsTrigger value="details" className="flex-1">
                   Details
                 </TabsTrigger>
-                <TabsTrigger value="chat" className="text-xs px-3">
+                <TabsTrigger value="chat" className="flex-1">
                   Chat
                 </TabsTrigger>
               </TabsList>
-              <TabsContent value="details" className="flex-1 overflow-y-auto">
+              <TabsContent
+                value="details"
+                className="mt-0 min-h-0 flex-1 overflow-y-auto overscroll-contain"
+              >
                 <PanelContent
                   pageId={pageId}
                   page={page}
@@ -432,7 +438,7 @@ export default function PageRightPanel({
               </TabsContent>
               <TabsContent
                 value="chat"
-                className="flex flex-col flex-1 min-h-[400px]"
+                className="mt-0 flex min-h-0 flex-1 flex-col overflow-hidden"
               >
                 <RecordConversation
                   entityType="doc_page"
@@ -443,12 +449,14 @@ export default function PageRightPanel({
               </TabsContent>
             </Tabs>
           ) : (
-            <PanelContent
-              pageId={pageId}
-              page={page}
-              wordCount={wordCount}
-              onNavigate={onNavigate}
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+              <PanelContent
+                pageId={pageId}
+                page={page}
+                wordCount={wordCount}
+                onNavigate={onNavigate}
+              />
+            </div>
           )}
         </SheetBody>
       </SheetContent>

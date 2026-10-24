@@ -271,3 +271,20 @@ remain after callers move.
 - [ ] Payroll input rebuild shows versioned deltas and locked periods reject silent mutation.
 - [ ] A payroll operator can trace quantities without reading protected HR reason text.
 - [ ] All lists/calendar windows meet the numerical scale/latency gates in PRD 06a.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-010 | Prove snapshot completeness and source provenance |
+| FR-ARCH-014 | Define business dates and approved time quantities |
+| FR-ARCH-018 | Make leave-to-payroll and downstream projection intent durable |
+| FR-ARCH-021 | Keep Calendar projections visibility-safe and failure-aware |

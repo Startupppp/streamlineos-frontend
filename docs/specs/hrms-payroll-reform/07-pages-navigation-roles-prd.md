@@ -299,3 +299,19 @@ must not preserve broader legacy access.
 - [ ] Consolidated routes have zero remaining internal callers before removal.
 - [ ] Desktop collapse and mobile sheet preserve keyboard/focus behavior.
 - [ ] Every P0 page meets the common page contract and WCAG 2.2 AA.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-025 | Preserve client cache identity and centralize query options |
+| FR-ARCH-026 | Share employee prefetch and infinite-list identity |
+| FR-ARCH-028 | Keep mutation outcomes, conflicts and cache effects local |

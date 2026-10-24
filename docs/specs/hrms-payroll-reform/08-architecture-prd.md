@@ -38,12 +38,17 @@ Individual API performance tasks remain HRM-07. Page disposition remains HRM-02.
 
 **Status: LOCKED 2026-09-19 — Option 3 (strangler dual-run).**
 
-**Decision:**
+**Decision (staged storage rollout, reconciled 2026-10-24):**
 
-- **New writes** go to Directory `workers` / `worker_engagements` (and Directory
-  people APIs where that is the membership surface).
+- **New business commands** enter the sole fact owner in
+  [00a Domain contracts](./00a-suite-domain-contracts-prd.md): Directory owns
+  person/membership identity; Core HR owns worker/engagement/employment facts.
+  Adopt Directory-backed worker representations through that owner interface
+  during the staged cutover; table placement does not create a second writer.
 - **HR `hr_people` / `hr_employments`** remain the read/join facade for
   attendance, leave, and legacy HR screens during a time-boxed dual-run.
+  This storage facade does not transfer employment business ownership away
+  from Core HR. Publish the exact current writer/ID map before changing it.
 - **EmploymentFacts** (or successor) is the only allowed join facade; new code
   must not ad-hoc dual-join.
 - Cutover deletes duplicate write paths once FE employee list and payroll
@@ -169,3 +174,17 @@ Canonical product modes are **WFO** (office) and **WFH** (home). Attendance
 - [ ] **HRM-08-018** after migrations, one primary FE path per people list job.
 - [ ] **HRM-08-019** cross-module e2e: hire → onboard; exit → FnF initiate;
   expense approve → payroll input visibility (named disposable env).
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-037 | Keep file locality and deep modules aligned with current standards |

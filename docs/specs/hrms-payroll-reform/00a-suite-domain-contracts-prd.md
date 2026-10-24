@@ -12,8 +12,10 @@ This PRD resolves ownership, terminology, tier, and cross-domain handoff
 ambiguity. Domain PRDs own business behavior; this contract wins when two
 domain PRDs appear to own the same mutable fact or command.
 
-Normative documents are PRDs 00, 00a–00c, 01–07, 05a–05c, 06a, 07a–07b,
-08, and 09.
+Normative documents are PRDs 00, 00a–00c, 01–07, 05a–05c, 06a, 07a–07c,
+08, 09, and the [architecture hardening addendum 16](./16-architecture-hardening-prd.md).
+PRD 16 owns additive FR-ARCH identifiers and preserves the fact ownership here;
+[guide 17](./17-claude-architecture-execution.md) governs their implementation process.
 [Competitor Benchmark PRD 08a](./08a-competitor-benchmark-prd.md) is dated
 evidence only and cannot add scope without a normative requirement.
 

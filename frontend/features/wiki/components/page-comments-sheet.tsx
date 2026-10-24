@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { useSession } from "next-auth/react";
-import {
-  KbMessageSquareIcon,
-  KbXIcon,
-} from "@/features/wiki/lib/kb-icons";
+import { Send } from "lucide-react";
+import { KbMessageSquareIcon, KbXIcon } from "@/features/wiki/lib/kb-icons";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import { ErrorState } from "@/components/shared";
 import { ErrorReference } from "@/components/shared/error-reference";
-import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { EmptyState } from "@/components/ui/empty-state";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
@@ -19,7 +23,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   useKbPageComments,
   useCreateKbPageComment,
@@ -36,7 +46,8 @@ import { isApiError } from "@/lib/api-envelope";
 
 const ANCHOR_CHIP_CLASS =
   "rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground transition-colors hover:text-foreground";
-const ANCHOR_CHIP_SELECTED_CLASS = "border-primary/30 bg-primary/10 text-primary";
+const ANCHOR_CHIP_SELECTED_CLASS =
+  "border-primary/30 bg-primary/10 text-primary";
 
 interface PageCommentsSheetProps {
   pageId: number;
@@ -45,7 +56,12 @@ interface PageCommentsSheetProps {
   content?: PageAnchorContent;
 }
 
-export default function PageCommentsSheet({ pageId, open, onOpenChange, content = null }: PageCommentsSheetProps) {
+export default function PageCommentsSheet({
+  pageId,
+  open,
+  onOpenChange,
+  content = null,
+}: PageCommentsSheetProps) {
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? null;
   const canUpdate = useCan("kb:pages:update");
@@ -68,13 +84,23 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
   const [postAnnouncement, setPostAnnouncement] = useState("");
 
   const anchorTargets = extractCommentAnchorTargets(content);
-  const selectedAnchor = findCommentAnchorTarget(anchorTargets, anchorBlockIndex);
+  const selectedAnchor = findCommentAnchorTarget(
+    anchorTargets,
+    anchorBlockIndex,
+  );
 
   const topLevel = comments.filter((c) => c.parentId === null && !c.resolvedAt);
-  const resolved = comments.filter((c) => c.parentId === null && !!c.resolvedAt);
-  const accessLost = isError && isApiError(error) && (error.status === 401 || error.status === 403 || error.status === 404);
-  const showReadError = isError && (accessLost || (!isFetchNextPageError && comments.length === 0));
-  const showCachedReadError = isError && !isFetchNextPageError && comments.length > 0 && !accessLost;
+  const resolved = comments.filter(
+    (c) => c.parentId === null && !!c.resolvedAt,
+  );
+  const accessLost =
+    isError &&
+    isApiError(error) &&
+    (error.status === 401 || error.status === 403 || error.status === 404);
+  const showReadError =
+    isError && (accessLost || (!isFetchNextPageError && comments.length === 0));
+  const showCachedReadError =
+    isError && !isFetchNextPageError && comments.length > 0 && !accessLost;
 
   function handlePost() {
     if (!canUpdate || !newContent.trim()) return;
@@ -95,7 +121,7 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
           setPostAnnouncement(isReply ? "Reply posted." : "Comment posted.");
         },
         onError: (error) => toast.error(getErrorMessage(error)),
-      }
+      },
     );
   }
 
@@ -131,8 +157,16 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="p-0 flex flex-col gap-0 sm:max-w-md">
-        <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+      <SheetContent
+        side="right"
+        className="p-0 flex flex-col gap-0 sm:max-w-md"
+      >
+        <div
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+          className="sr-only"
+        >
           {postAnnouncement}
         </div>
         <SheetHeader className="shrink-0 px-6 py-4 border-b">
@@ -140,7 +174,9 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
             <KbMessageSquareIcon className="h-4 w-4" />
             File comments
           </SheetTitle>
-          <SheetDescription>Discuss this file and resolve feedback with your team.</SheetDescription>
+          <SheetDescription>
+            Discuss this file and resolve feedback with your team.
+          </SheetDescription>
         </SheetHeader>
         <ScrollArea className="flex-1 min-h-0">
           <div className="px-6 py-4">
@@ -166,169 +202,217 @@ export default function PageCommentsSheet({ pageId, open, onOpenChange, content 
                 ))}
               </div>
             )}
-            {!isPending && !isError && !hasNextPage && topLevel.length === 0 && resolved.length === 0 && (
-              <EmptyState
-                title="No comments yet"
-                description="Be the first to add a comment."
-                compact
-                className="flex-1 min-h-[40dvh]"
-              />
-            )}
-            {!accessLost && <div className="space-y-5">
-              {showCachedReadError && (
-                <div role="alert" className="space-y-2 text-sm text-destructive">
-                  <p>Could not refresh comments. {getErrorMessage(error)}</p>
-                  <ErrorReference error={error} />
-                  <Button type="button" variant="outline" size="sm" onClick={handleRetryComments}>
-                    Retry loading comments
+            {!isPending &&
+              !isError &&
+              !hasNextPage &&
+              topLevel.length === 0 &&
+              resolved.length === 0 && (
+                <EmptyState
+                  title="No comments yet"
+                  description="Be the first to add a comment."
+                  illustrationSize="lg"
+                  className="flex-1 min-h-[55dvh]"
+                />
+              )}
+            {!accessLost && (
+              <div className="space-y-5">
+                {showCachedReadError && (
+                  <div
+                    role="alert"
+                    className="space-y-2 text-sm text-destructive"
+                  >
+                    <p>Could not refresh comments. {getErrorMessage(error)}</p>
+                    <ErrorReference error={error} />
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRetryComments}
+                    >
+                      Retry loading comments
+                    </Button>
+                  </div>
+                )}
+                <ul className="space-y-5">
+                  {topLevel.map((comment) => (
+                    <li key={comment.id}>
+                      <PageCommentThread
+                        comment={comment}
+                        replies={comments.filter(
+                          (c) => c.parentId === comment.id,
+                        )}
+                        pageId={pageId}
+                        onReply={handleSetReplyingTo}
+                        currentUserId={currentUserId}
+                        canUpdate={canUpdate}
+                        canManage={canManage}
+                      />
+                    </li>
+                  ))}
+                </ul>
+                {resolved.length > 0 && (
+                  <>
+                    <Separator />
+                    <p className="text-xs font-medium text-muted-foreground">
+                      Resolved ({resolved.length})
+                    </p>
+                    <ul className="space-y-5">
+                      {resolved.map((comment) => (
+                        <li key={comment.id}>
+                          <PageCommentThread
+                            comment={comment}
+                            replies={comments.filter(
+                              (c) => c.parentId === comment.id,
+                            )}
+                            pageId={pageId}
+                            onReply={handleSetReplyingTo}
+                            currentUserId={currentUserId}
+                            canUpdate={canUpdate}
+                            canManage={canManage}
+                          />
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                {isFetchNextPageError && (
+                  <div
+                    role="alert"
+                    className="space-y-2 text-sm text-destructive"
+                  >
+                    <p>
+                      Could not load more comments. {getErrorMessage(error)}
+                    </p>
+                    <ErrorReference error={error} />
+                  </div>
+                )}
+                {hasNextPage && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLoadMoreComments}
+                    disabled={isFetchingNextPage}
+                  >
+                    {isFetchingNextPage
+                      ? "Loading comments…"
+                      : isFetchNextPageError
+                        ? "Retry loading comments"
+                        : "Load more comments"}
                   </Button>
-                </div>
-              )}
-              <ul className="space-y-5">
-                {topLevel.map((comment) => (
-                  <li key={comment.id}>
-                    <PageCommentThread
-                      comment={comment}
-                      replies={comments.filter((c) => c.parentId === comment.id)}
-                      pageId={pageId}
-                      onReply={handleSetReplyingTo}
-                      currentUserId={currentUserId}
-                      canUpdate={canUpdate}
-                      canManage={canManage}
-                    />
-                  </li>
-                ))}
-              </ul>
-              {resolved.length > 0 && (
-                <>
-                  <Separator />
-                  <p className="text-xs font-medium text-muted-foreground">
-                    Resolved ({resolved.length})
-                  </p>
-                  <ul className="space-y-5">
-                    {resolved.map((comment) => (
-                      <li key={comment.id}>
-                        <PageCommentThread
-                          comment={comment}
-                          replies={comments.filter((c) => c.parentId === comment.id)}
-                          pageId={pageId}
-                          onReply={handleSetReplyingTo}
-                          currentUserId={currentUserId}
-                          canUpdate={canUpdate}
-                          canManage={canManage}
-                        />
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {isFetchNextPageError && (
-                <div role="alert" className="space-y-2 text-sm text-destructive">
-                  <p>Could not load more comments. {getErrorMessage(error)}</p>
-                  <ErrorReference error={error} />
-                </div>
-              )}
-              {hasNextPage && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLoadMoreComments}
-                  disabled={isFetchingNextPage}
-                >
-                  {isFetchingNextPage ? "Loading comments…" : isFetchNextPageError ? "Retry loading comments" : "Load more comments"}
-                </Button>
-              )}
-            </div>}
+                )}
+              </div>
+            )}
           </div>
         </ScrollArea>
-        {canUpdate && !accessLost && <div className="shrink-0 border-t px-6 py-4 space-y-2">
-          {replyingTo && (
-            <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
-              <span>Replying to comment…</span>
-              <button
-                type="button"
-                aria-label="Cancel reply"
-                onClick={handleClearReply}
-                className="ml-auto hover:text-foreground transition-colors"
-              >
-                <KbXIcon className="h-3 w-3" />
-              </button>
-            </div>
-          )}
-          {!replyingTo && anchorTargets.length > 0 && (
-            <>
-              <Select
-                value={anchorBlockIndex === null ? "page" : String(anchorBlockIndex)}
-                onValueChange={handleMobileAnchorSelect}
-              >
-                <SelectTrigger className="sm:hidden" aria-label="Anchor this comment to a block">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="page">Whole page</SelectItem>
-                  {anchorTargets.map((target) => (
-                    <SelectItem key={target.blockIndex} value={String(target.blockIndex)}>
-                      {target.quote}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div
-                role="group"
-                aria-label="Anchor this comment to a block"
-                className="hidden flex-wrap gap-1 sm:flex"
-              >
+        {canUpdate && !accessLost && (
+          <div className="shrink-0 border-t px-6 py-4 space-y-2">
+            {replyingTo && (
+              <div className="flex items-center gap-2 text-xs text-muted-foreground bg-muted px-2 py-1 rounded">
+                <span>Replying to comment…</span>
                 <button
                   type="button"
-                  aria-pressed={anchorBlockIndex === null}
-                  onClick={handleAnchorSelect}
-                  className={cn(ANCHOR_CHIP_CLASS, anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS)}
+                  aria-label="Cancel reply"
+                  onClick={handleClearReply}
+                  className="ml-auto hover:text-foreground transition-colors"
                 >
-                  Whole page
+                  <KbXIcon className="h-3 w-3" />
                 </button>
-                {anchorTargets.map((target) => (
+              </div>
+            )}
+            {!replyingTo && anchorTargets.length > 0 && (
+              <>
+                <Select
+                  value={
+                    anchorBlockIndex === null
+                      ? "page"
+                      : String(anchorBlockIndex)
+                  }
+                  onValueChange={handleMobileAnchorSelect}
+                >
+                  <SelectTrigger
+                    className="sm:hidden"
+                    aria-label="Anchor this comment to a block"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="page">Whole page</SelectItem>
+                    {anchorTargets.map((target) => (
+                      <SelectItem
+                        key={target.blockIndex}
+                        value={String(target.blockIndex)}
+                      >
+                        {target.quote}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div
+                  role="group"
+                  aria-label="Anchor this comment to a block"
+                  className="hidden flex-wrap gap-1 sm:flex"
+                >
                   <button
-                    key={target.blockIndex}
                     type="button"
-                    data-block-index={String(target.blockIndex)}
-                    aria-pressed={anchorBlockIndex === target.blockIndex}
+                    aria-pressed={anchorBlockIndex === null}
                     onClick={handleAnchorSelect}
                     className={cn(
                       ANCHOR_CHIP_CLASS,
-                      "max-w-[12rem] truncate",
-                      anchorBlockIndex === target.blockIndex && ANCHOR_CHIP_SELECTED_CLASS,
+                      anchorBlockIndex === null && ANCHOR_CHIP_SELECTED_CLASS,
                     )}
                   >
-                    {target.quote}
+                    Whole page
                   </button>
-                ))}
-              </div>
-            </>
-          )}
-          {selectedAnchor && (
-            <blockquote className="line-clamp-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
-              {selectedAnchor.quote}
-            </blockquote>
-          )}
-          <Textarea
-            aria-label={replyingTo ? "Reply to comment" : "Write a comment"}
-            value={newContent}
-            onChange={handleNewContentChange}
-            placeholder="Write a comment…"
-            className="resize-none min-h-[80px] text-sm"
-          />
-          <div className="flex justify-end">
-            <LoadingButton
-              onClick={handlePost}
-              disabled={!newContent.trim()}
-              isPending={createComment.isPending}
-              loadingText="Posting…"
-            >
-              Post comment
-            </LoadingButton>
+                  {anchorTargets.map((target) => (
+                    <button
+                      key={target.blockIndex}
+                      type="button"
+                      data-block-index={String(target.blockIndex)}
+                      aria-pressed={anchorBlockIndex === target.blockIndex}
+                      onClick={handleAnchorSelect}
+                      className={cn(
+                        ANCHOR_CHIP_CLASS,
+                        "max-w-[12rem] truncate",
+                        anchorBlockIndex === target.blockIndex &&
+                          ANCHOR_CHIP_SELECTED_CLASS,
+                      )}
+                    >
+                      {target.quote}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+            {selectedAnchor && (
+              <blockquote className="line-clamp-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+                {selectedAnchor.quote}
+              </blockquote>
+            )}
+            <div className="flex items-end gap-2">
+              <Textarea
+                aria-label={replyingTo ? "Reply to comment" : "Write a comment"}
+                value={newContent}
+                onChange={handleNewContentChange}
+                placeholder="Write a comment…"
+                className="min-h-[80px] min-w-0 flex-1 resize-none text-sm"
+              />
+              <LoadingButton
+                type="button"
+                size="icon"
+                className="size-9 shrink-0"
+                onClick={handlePost}
+                disabled={!newContent.trim()}
+                isPending={createComment.isPending}
+                aria-label="Post comment"
+              >
+                {createComment.isPending ? null : (
+                  <Send className="size-4" aria-hidden="true" />
+                )}
+              </LoadingButton>
+            </div>
           </div>
-        </div>}
+        )}
       </SheetContent>
     </Sheet>
   );

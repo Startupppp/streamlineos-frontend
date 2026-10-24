@@ -32,6 +32,8 @@ const required = [
   "10-current-product-gaps-prd.md",
   "11-reporting-manager-prd.md",
   "2026-10-22-market-benchmark.md",
+  "16-architecture-hardening-prd.md",
+  "17-claude-architecture-execution.md",
 ];
 
 // These moved files had unfinished checkboxes at consolidation time. A file may
@@ -57,7 +59,7 @@ const protectedOpenFiles = [
 const registeredRequirementIds = (register) => {
   const ids = new Set();
   for (const row of register.split(/\r?\n/)) {
-    if (!/^\|\s*0\d[a-z]?\s/.test(row)) continue;
+    if (!/^\|\s*\d{2}[a-z]?\s/.test(row)) continue;
     const family = row.match(/FR-([A-Z]+)-\d{3}/)?.[1];
     if (!family) continue;
     for (const [, first, last] of row.matchAll(/(?<!\d)(\d{3})(?:[–-](\d{3}))?(?!\d)/g)) {
@@ -118,6 +120,9 @@ if (process.argv.includes("--self-test")) {
   const parsed = registeredRequirementIds("| 01 Core | FR-CORE-001–003, 005 | FR-CORE-007 | — |");
   if (!parsed.has("FR-CORE-002") || !parsed.has("FR-CORE-005") || parsed.has("FR-CORE-004"))
     throw new Error("tier range parser self-test failed");
+  const architecture = registeredRequirementIds("| 16 Architecture | FR-ARCH-001–040 | — | — |");
+  if (!architecture.has("FR-ARCH-001") || !architecture.has("FR-ARCH-040") || architecture.has("FR-ARCH-041"))
+    throw new Error("architecture tier range parser self-test failed");
   const failures = validate({ directory: join(root, "docs/specs/does-not-exist"), retiredDirectory: join(root, "docs/specs/does-not-exist-either") });
   if (failures.length !== 1 || failures[0] !== "merged People + Payroll folder is missing")
     throw new Error("merged-suite validator self-test failed");

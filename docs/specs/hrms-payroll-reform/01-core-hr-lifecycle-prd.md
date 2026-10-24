@@ -296,3 +296,20 @@ exit blockers. Every queue item identifies an owner and next action.
 - [ ] All P0 lifecycle mutations are idempotent, audited, and integration-recoverable.
 - [ ] Position and accepted-hire handoffs recover from reject, update, rescind,
       duplicate, delayed-start, and replay scenarios.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-004 | Restore the ScopedRead sensitive-data seam |
+| FR-ARCH-006 | Publish one identity mapping and effective Employment Facts interface |
+| FR-ARCH-019 | Make accepted-hire onboarding and BGV handoff repairable |
+| FR-ARCH-033 | Cover governed retention and accountless document delivery |

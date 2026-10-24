@@ -1,5 +1,13 @@
 # HRMS Agent Runbook
 
+For the 24 October architecture HTML and FR-ARCH implementation track, start
+with [guide 17](./17-claude-architecture-execution.md). Its coordinator may audit
+Git, create exact child reservations, update the architecture ledger, and run
+authorized evidence checks. The browserless restrictions below apply to
+assigned leaf packets; they do not prohibit that coordinator work. Acceptance
+is owned by [PRD 16](./16-architecture-hardening-prd.md), without duplicating
+the existing business requirements or prematurely closing legacy tasks.
+
 ## Assignment Contract
 
 The coordinator must fill every field. A missing exact write set, acceptance

@@ -119,3 +119,17 @@ the affected portion; all directions reconcile before obligation close.
 - [ ] Country-pack ordering changes guards, never audit/evidence requirements.
 - [ ] Tests reference stable transition IDs and cover success, denial, retry,
       partial, rejection, correction, cancellation, and recovery.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-017 | Preserve payout coverage, run transitions and stale-approval controls |

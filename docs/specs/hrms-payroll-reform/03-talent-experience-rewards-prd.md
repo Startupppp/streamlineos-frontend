@@ -275,3 +275,22 @@ PRD 07 defines final canonical routes and migration from current route names.
       archive, audit, and employee-visible publication where applicable.
 - [ ] Total rewards clearly separates salary, benefits, equity, and estimates.
 - [ ] No AI output can directly execute an employment or pay decision.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-006 | Publish one identity mapping and effective Employment Facts interface |
+| FR-ARCH-009 | Version and validate every frozen snapshot section |
+| FR-ARCH-012 | Preserve locked history and route late changes through correction |
+| FR-ARCH-013 | Use validated exact payroll money, rates and rounding |
+| FR-ARCH-022 | Deepen governed insights for charts, reports and drill-through |
+| FR-ARCH-023 | Ground AskOS in owner reads, effective policies and current authority |

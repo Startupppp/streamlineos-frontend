@@ -329,3 +329,17 @@ The offer is complete for a declared release when every in-scope capability has 
 The next product questions are workforce mix (knowledge work versus shift/field/manufacturing), first company-size slice, initial India establishments/states, languages, bank/accounting/device/signature partners, desired self-service versus managed implementation, and buyer budget/support expectations. They affect rollout order and supported claims, not whether we can document the inventory now. Validate them through interviews and implementation discovery before final estimation.
 
 For detailed business rules follow the [existing suite index](./README.md); for current market evidence follow the [competitor review](./2026-10-24-competitor-evidence.md); for unfinished implementation use the [gap routing map](./10-current-product-gaps-prd.md). Do not infer missing or completed StreamlineOS functionality from this proposal or from competitor marketing.
+
+
+## Architecture review execution routing (2026-10-24)
+
+The preserved [architecture HTML](./architecture-review/2026-10-24-architecture-review.html)
+is fully mapped into [PRD 16](./16-architecture-hardening-prd.md): 40 additive
+requirements and 158 atomic acceptance criteria. Use [guide 17](./17-claude-architecture-execution.md)
+for implementation/resume and the [ledger](./architecture-review/execution-ledger.json)
+for status. Its programs are planning groups; dispatch exact outcome children,
+not a whole domain/folder. Existing legacy snapshot counts and open criteria
+remain historical acceptance sources and are not silently replaced or marked complete.
+The [coverage map](./architecture-review/html-prd-coverage.json) preserves all
+268 semantic report points, including source evidence and caveats. A passing
+document validator is not implementation or release evidence.

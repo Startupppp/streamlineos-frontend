@@ -1,6 +1,6 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
@@ -40,7 +40,7 @@ export function AssessmentScoringCard({
   const patchSurvey = usePatchSurvey(survey.id);
   const existing = (survey.settings as AssessmentSettings | undefined) ?? {};
   const form = useForm<AssessmentScoringValues>({
-    resolver: zodResolver(assessmentScoringSchema),
+    resolver: zodResolver(assessmentScoringSchema) as Resolver<AssessmentScoringValues>,
     defaultValues: {
       passScore: existing.passScore ?? 0,
       attemptsAllowed: existing.attemptsAllowed ?? 0,

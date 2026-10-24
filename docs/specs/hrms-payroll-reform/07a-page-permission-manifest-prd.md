@@ -156,3 +156,26 @@ Temporary consultant/customer grants expire at handoff.
 - [ ] Every mutating page action calls only the owning domain command.
 - [ ] Specialist and implementation roles cannot self-grant or combine incompatible duties.
 - [ ] Manager, finance, executive, auditor, and implementation views pass field-level denial tests.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-001 | Authorize payroll aggregates before response and cache fill |
+| FR-ARCH-004 | Restore the ScopedRead sensitive-data seam |
+| FR-ARCH-005 | Enforce access revocation and actor lifecycle across surfaces |
+| FR-ARCH-008 | Unify versioned schemas and current wire contracts |
+| FR-ARCH-021 | Keep Calendar projections visibility-safe and failure-aware |
+| FR-ARCH-025 | Preserve client cache identity and centralize query options |
+| FR-ARCH-026 | Share employee prefetch and infinite-list identity |
+| FR-ARCH-029 | Keep shareable filters and navigation state consistent |
+| FR-ARCH-032 | Validate downloads and reauthorize export lifecycle |
+| FR-ARCH-035 | Prove full task states, responsive and accessible journeys |

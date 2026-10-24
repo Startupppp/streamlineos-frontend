@@ -157,3 +157,39 @@ test in a browser with persisted records and realistic source/provider states.
       capabilities are enabled; no tier skips the applicable P0 trust rules.
 - [ ] New incidents, rule changes, and customer edge cases update this matrix
       and the owning domain fixture before the next affected release.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-001 | Authorize payroll aggregates before response and cache fill |
+| FR-ARCH-004 | Restore the ScopedRead sensitive-data seam |
+| FR-ARCH-005 | Enforce access revocation and actor lifecycle across surfaces |
+| FR-ARCH-007 | Make payroll eligibility explicit for workers and employments |
+| FR-ARCH-009 | Version and validate every frozen snapshot section |
+| FR-ARCH-010 | Prove snapshot completeness and source provenance |
+| FR-ARCH-011 | Make HR input-period build, lock and unlock atomic and versioned |
+| FR-ARCH-012 | Preserve locked history and route late changes through correction |
+| FR-ARCH-014 | Define business dates and approved time quantities |
+| FR-ARCH-015 | Reconcile bank-return files idempotently with per-row outcomes |
+| FR-ARCH-017 | Preserve payout coverage, run transitions and stale-approval controls |
+| FR-ARCH-018 | Make leave-to-payroll and downstream projection intent durable |
+| FR-ARCH-019 | Make accepted-hire onboarding and BGV handoff repairable |
+| FR-ARCH-020 | Preserve the Payroll-to-Accounting posting seam |
+| FR-ARCH-021 | Keep Calendar projections visibility-safe and failure-aware |
+| FR-ARCH-023 | Ground AskOS in owner reads, effective policies and current authority |
+| FR-ARCH-026 | Share employee prefetch and infinite-list identity |
+| FR-ARCH-027 | Concentrate Action Center source behavior |
+| FR-ARCH-031 | Make document publication and cleanup recoverable |
+| FR-ARCH-032 | Validate downloads and reauthorize export lifecycle |
+| FR-ARCH-035 | Prove full task states, responsive and accessible journeys |
+| FR-ARCH-036 | Migrate by expand, reconcile, enforce and retire |
+| FR-ARCH-038 | Require complete fixed-revision release and capability evidence |

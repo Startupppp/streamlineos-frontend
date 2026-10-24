@@ -15,7 +15,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
-import { useCreateSection, useSurveyBuilder } from "@/hooks/api/surveys/builder";
+import {
+  useCreateSection,
+  useSurveyBuilder,
+} from "@/hooks/api/surveys/builder";
 import { QuestionsTab } from "./tabs/questions-tab";
 import { OptionsTab } from "./tabs/options-tab";
 import { MessagesTab } from "./tabs/messages-tab";
@@ -36,8 +39,14 @@ const BUILDER_TABS: readonly BuilderTab[] = [
   { value: "options", label: "Options", Panel: OptionsTab, scroll: true },
   { value: "messages", label: "Messages", Panel: MessagesTab, scroll: true },
   { value: "results", label: "Results", Panel: ResultsTab },
-  { value: "automations", label: "Automations", Panel: AutomationsTab },
 ];
+
+const AUTOMATIONS_TAB = { value: "automations", label: "Automations" } as const;
+
+const TAB_TRIGGERS = [
+  ...BUILDER_TABS.map(({ value, label }) => ({ value, label })),
+  AUTOMATIONS_TAB,
+] as const;
 
 function TabScrollBody({ children }: { children: ReactNode }) {
   return (
@@ -127,7 +136,7 @@ export function SurveyBuilderTabs({ survey }: { survey: SurveyForm }) {
             className="w-full max-w-full shrink-0 md:w-fit"
             aria-label="Survey builder"
           >
-            {BUILDER_TABS.map((item) => (
+            {TAB_TRIGGERS.map((item) => (
               <TabsTrigger key={item.value} value={item.value}>
                 {item.label}
               </TabsTrigger>
@@ -137,14 +146,12 @@ export function SurveyBuilderTabs({ survey }: { survey: SurveyForm }) {
         actions={tabActions}
       />
       {BUILDER_TABS.map((item) => (
-        <TabsContent key={item.value} value={item.value} className={TAB_PANEL_CLASS}>
-          {item.value === "automations" ? (
-            <AutomationsTab
-              survey={survey}
-              adding={addingAutomation}
-              onAddingChange={setAddingAutomation}
-            />
-          ) : item.scroll ? (
+        <TabsContent
+          key={item.value}
+          value={item.value}
+          className={TAB_PANEL_CLASS}
+        >
+          {item.scroll ? (
             <TabScrollBody>
               <item.Panel survey={survey} />
             </TabScrollBody>
@@ -153,6 +160,13 @@ export function SurveyBuilderTabs({ survey }: { survey: SurveyForm }) {
           )}
         </TabsContent>
       ))}
+      <TabsContent value={AUTOMATIONS_TAB.value} className={TAB_PANEL_CLASS}>
+        <AutomationsTab
+          survey={survey}
+          adding={addingAutomation}
+          onAddingChange={setAddingAutomation}
+        />
+      </TabsContent>
     </Tabs>
   );
 }

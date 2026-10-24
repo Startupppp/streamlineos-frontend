@@ -295,3 +295,17 @@ Canonical route migration and role visibility are defined in PRD 07.
 - [ ] Notifications remain permission-safe after access or record changes.
 - [ ] The assistant cites effective sources, abstains on ambiguity, and confirms actions.
 - [ ] High-impact employment and pay actions cannot execute from generic approval or AI.
+
+
+## Architecture hardening acceptance (2026-10-24)
+
+The following additive acceptance belongs to [PRD 16](./16-architecture-hardening-prd.md)
+and must be applied to this domain through [guide 17](./17-claude-architecture-execution.md).
+Business facts, tiers and existing acceptance remain owned here. FR-ARCH identifiers
+have one definition in PRD 16 and one criterion status in the
+[architecture execution ledger](./architecture-review/execution-ledger.json);
+this routing table does not duplicate or pre-close an implementation task.
+
+| Requirement | Applicable architecture obligation |
+|---|---|
+| FR-ARCH-027 | Concentrate Action Center source behavior |

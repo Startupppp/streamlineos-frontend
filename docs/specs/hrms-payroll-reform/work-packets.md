@@ -214,3 +214,17 @@ Do not paste a broad command if the agent is forbidden to run it. Whole-side
 typechecks/builds and seeded DB checks are coordinator gate windows. If a named
 script does not exist, creating its bounded implementation/self-test is a
 separate packet, not an excuse to report an unrun command as passing.
+
+
+## Architecture review execution routing (2026-10-24)
+
+The preserved [architecture HTML](./architecture-review/2026-10-24-architecture-review.html)
+is fully mapped into [PRD 16](./16-architecture-hardening-prd.md): 40 additive
+requirements and 158 atomic acceptance criteria. Use [guide 17](./17-claude-architecture-execution.md)
+for implementation/resume and the [ledger](./architecture-review/execution-ledger.json)
+for status. Its programs are planning groups; dispatch exact outcome children,
+not a whole domain/folder. Existing legacy snapshot counts and open criteria
+remain historical acceptance sources and are not silently replaced or marked complete.
+The [coverage map](./architecture-review/html-prd-coverage.json) preserves all
+268 semantic report points, including source evidence and caveats. A passing
+document validator is not implementation or release evidence.
