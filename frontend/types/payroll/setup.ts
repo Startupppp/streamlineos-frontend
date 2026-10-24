@@ -4,7 +4,6 @@ import type {
   TemplatePreviewResult,
   PolicyPreviewComponent,
   PolicyPreviewResult,
-  ComplianceChecklistItem,
   StatutoryPackItem,
   StatutoryPackPreview,
 } from "@/hooks/api/payroll/setup-preview-schema";
@@ -80,8 +79,6 @@ export type PayFrequency = (typeof PAY_FREQUENCIES)[number];
 
 export type PolicyStatus = "DRAFT" | "ACTIVE" | "SUPERSEDED" | "ARCHIVED";
 
-export type VersionStatus = "DRAFT" | "ACTIVE" | "SUPERSEDED";
-
 export type ComponentDef = {
   code: string;
   name: string;
@@ -112,14 +109,8 @@ export type {
   TemplatePreviewResult,
   PolicyPreviewComponent,
   PolicyPreviewResult,
-  ComplianceChecklistItem,
   StatutoryPackItem,
   StatutoryPackPreview,
-};
-
-export type PolicyConfig = {
-  statutory?: Record<string, unknown>;
-  [key: string]: unknown;
 };
 
 export type PolicyRow = {
@@ -133,37 +124,6 @@ export type PolicyRow = {
   payDay: number;
   startMonth: string;
   activeVersionId: number | null;
-};
-
-export type VersionRow = {
-  id: number;
-  version: number;
-  templateKey: string;
-  toggles: Record<ToggleKey, boolean>;
-  config: PolicyConfig;
-  status: VersionStatus;
-  effectiveFrom: string;
-  reason: string;
-};
-
-export type StatutoryPackConfig = {
-  country: string;
-  items: {
-    key: string;
-    enabled: boolean;
-    percentOverride?: number;
-    label?: string;
-    kind?: string | null;
-  }[];
-  complianceChecklist: ComplianceChecklistItem[];
-};
-
-export type ActivateChecklistItem = {
-  key: string;
-  label: string;
-  done: boolean;
-  href: string;
-  detail: string | null;
 };
 
 export type ComponentPayCategory =

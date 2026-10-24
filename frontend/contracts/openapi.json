@@ -217408,7 +217408,7 @@
         "description": "Exposure: permission — ai:chat:use"
       }
     },
-    "/chat/huddle/accounts": {
+    "/chat/huddle/meeting-accounts": {
       "get": {
         "operationId": "ChatHuddlesController_listHuddleAccounts",
         "parameters": [],
@@ -217541,7 +217541,7 @@
         "description": "Exposure: permission — chat:huddles:start"
       }
     },
-    "/chat/huddle/accounts/default": {
+    "/chat/huddle/meeting-accounts/default": {
       "put": {
         "operationId": "ChatHuddlesController_setHuddleDefault",
         "parameters": [

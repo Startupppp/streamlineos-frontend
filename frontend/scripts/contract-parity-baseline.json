@@ -1,6 +1,6 @@
 {
   "capturedAgainst": "(file)",
-  "capturedAt": "2026-10-24T05:55:33.201Z",
+  "capturedAt": "2026-10-24T08:10:03.599Z",
   "missing": [
     "get /access/user-module-access/{userId} [].core",
     "get /clients/{clientId}/timeline events[].id",
@@ -441,7 +441,6 @@
     "post /notifications/admin/events/emit failedRecipients",
     "post /notifications/admin/events/emit notified",
     "post /notifications/admin/events/emit suppressed",
-    "post /onboarding/module-checklists/{moduleKey}/dismiss requiredIncomplete",
     "post /party/subjects/{subjectId}/parties linkedAt",
     "post /party/subjects/{subjectId}/parties linkedBy",
     "post /party/subjects/{subjectId}/parties relationship",
