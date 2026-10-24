@@ -179,6 +179,10 @@ function isPublicCalendarPage(pathname: string): boolean {
     /^\/calendar\/invitations\/(?:rsvp|join)\/?$/.test(pathname);
 }
 
+function isPublicSigningPage(pathname: string): boolean {
+  return /^\/sign\/[0-9a-f]{64}\/?$/i.test(pathname);
+}
+
 function isBlogAdminPath(pathname: string): boolean {
   return matchesRoute(pathname, "/blogs/admin");
 }
@@ -245,10 +249,10 @@ export async function proxy(req: NextRequest) {
 
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
-  const publicCalendarPage = isPublicCalendarPage(pathname);
+  const publicPage = isPublicCalendarPage(pathname) || isPublicSigningPage(pathname);
   const secret = process.env.NEXTAUTH_SECRET;
   let token: JWT | null = null;
-  if (!publicCalendarPage) {
+  if (!publicPage) {
     for (const cookieName of sessionCookieBases()) {
       token = await getToken({
         req,
@@ -262,7 +266,7 @@ export async function proxy(req: NextRequest) {
   }
 
   const isProtected =
-    (matchesAny(pathname, PROTECTED_ROUTES) && !publicCalendarPage) || isBlogAdminPath(pathname);
+    (matchesAny(pathname, PROTECTED_ROUTES) && !publicPage) || isBlogAdminPath(pathname);
 
   if (!token && isProtected) {
     const hasSessionCookie = req.cookies
