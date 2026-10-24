@@ -25,6 +25,7 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
   const upload = useUploadSignDocument(envelopeId);
   const deleteDocument = useDeleteSignDocument(envelopeId);
   const { selectedDocumentId, setSelectedDocumentId, setCurrentPage } = useBuilder();
+  const activeDocumentId = selectedDocumentId ?? documents[0]?.id ?? null;
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -93,7 +94,7 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
             onClick={selectDocument(doc.id)}
             onKeyDown={selectDocumentOnActivationKey(doc.id)}
             className={`w-full flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors cursor-pointer ${
-              selectedDocumentId === doc.id ? "border-foreground bg-muted" : "border-border hover:bg-muted/50"
+              activeDocumentId === doc.id ? "border-foreground bg-muted" : "border-border hover:bg-muted/50"
             }`}
           >
             <FileText className="size-4 shrink-0 text-muted-foreground" />

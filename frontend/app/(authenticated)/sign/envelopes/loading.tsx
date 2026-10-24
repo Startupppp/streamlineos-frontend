@@ -10,7 +10,7 @@ export default function SignEnvelopesLoading() {
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <div className="flex flex-col gap-3">
-        <div className="flex gap-1 border-b border-border pb-0 shrink-0">
+        <div className="flex min-w-0 shrink-0 gap-1 overflow-x-auto border-b border-border pb-0 scrollbar-hide">
           {Array.from({ length: 7 }).map((_, i) => (
             <Skeleton key={i} className="h-9 w-20 rounded-t-md" />
           ))}

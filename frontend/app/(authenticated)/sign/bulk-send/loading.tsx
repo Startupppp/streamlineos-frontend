@@ -1,18 +1,17 @@
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BulkSendListSkeleton } from "@/features/sign/bulk-send/bulk-send-list-skeleton";
 
 export default function SignBulkSendLoading() {
   return (
     <PageWrapper
       title="Bulk Send"
       subtitle="Send one template to a list of people via CSV"
-      actions={<Skeleton className="h-9 w-32 rounded-md" />}
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
+      actions={<Skeleton className="h-9 w-32 max-w-full rounded-md" />}
     >
-      <div className="space-y-3">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
-        ))}
-      </div>
+      <BulkSendListSkeleton />
     </PageWrapper>
   );
 }

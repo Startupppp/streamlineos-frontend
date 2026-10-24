@@ -85,6 +85,22 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
     }
   }
 
+  function copyLinkHandler(token: string) {
+    return function handleCopyCollectorLink() {
+      void handleCopyLink(token);
+    };
+  }
+
+  function toggleStatusHandler(collectorId: number, status: CollectorStatus) {
+    return function handleToggleCollectorStatus() {
+      void handleToggleStatus(collectorId, status);
+    };
+  }
+
+  function handleRetryCollectors() {
+    void refetch();
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -94,40 +110,40 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
         {isLoading ? (
           <div className="space-y-3">
             <div className="space-y-2 rounded-md border border-border p-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Skeleton className="h-4 w-28" />
                 <Skeleton className="h-5 w-14 rounded-full" />
-                <div className="ml-auto flex items-center gap-2">
+                <div className="flex w-full flex-wrap gap-2 sm:ml-auto sm:w-auto">
                   <Skeleton className="h-3.5 w-12" />
                   <Skeleton className="h-3.5 w-12" />
                   <Skeleton className="h-3.5 w-16" />
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Skeleton className="h-9 min-w-0 flex-1 rounded-md" />
-                <Skeleton className="size-8 shrink-0 rounded-md" />
+              <div className="flex flex-wrap items-center gap-2">
+                <Skeleton className="h-9 min-w-0 flex-1 basis-full rounded-md sm:basis-auto" />
+                <Skeleton className="size-9 shrink-0 rounded-md" />
                 <Skeleton className="h-9 w-20 shrink-0 rounded-md" />
               </div>
             </div>
           </div>
         ) : isError ? (
-          <ErrorState compact title="Couldn't load collectors" description={getErrorMessage(error)} onRetry={() => void refetch()} />
+          <ErrorState compact title="Couldn't load collectors" description={getErrorMessage(error)} onRetry={handleRetryCollectors} />
         ) : (
           collectors?.map((collector) => (
-            <div key={collector.id} className="rounded-md border border-border p-3">
-              <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">{collector.name}</span>
+            <div key={collector.id} className="flex flex-col gap-2 rounded-md border border-border p-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="min-w-0 text-sm font-medium">{collector.name}</span>
                 <Badge variant={STATUS_VARIANT[collector.status]}>{collector.status}</Badge>
-                <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
+                <div className="flex w-full flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground sm:ml-auto sm:w-auto">
                   <span>{collector.opens} opens</span>
                   <span>{collector.starts} starts</span>
                   <span>{collector.completions} completions</span>
                 </div>
               </div>
-              <div className="mt-2 flex items-center gap-2">
-                <Input readOnly value={publicLinkFor(collector.token)} className="flex-1" />
-                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="shrink-0" aria-label="Copy survey link" onClick={() => handleCopyLink(collector.token)} />
-                <Button variant="outline" size="sm" onClick={() => handleToggleStatus(collector.id, collector.status)}>
+              <div className="flex flex-wrap items-center gap-2">
+                <Input readOnly value={publicLinkFor(collector.token)} className="min-w-0 flex-1 basis-full sm:basis-auto" />
+                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="size-9 shrink-0" aria-label="Copy survey link" onClick={copyLinkHandler(collector.token)} />
+                <Button variant="outline" size="sm" onClick={toggleStatusHandler(collector.id, collector.status)}>
                   {collector.status === "active" ? "Pause" : "Activate"}
                 </Button>
               </div>

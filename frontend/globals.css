@@ -774,6 +774,119 @@ button.goal-everything-chip[aria-checked="true"]::before {
     linear-gradient(var(--brand-core), var(--brand-core));
 }
 
+a.ask-documents-cta {
+  position: relative;
+  isolation: isolate;
+  border-style: solid;
+  border-width: 1.5px;
+  border-color: transparent;
+  color: var(--foreground);
+  background-color: transparent;
+  background-image:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb, var(--brand-core) 16%, var(--card)) 0%,
+      color-mix(in srgb, var(--brand-cyan) 14%, var(--card)) 100%
+    ),
+    linear-gradient(
+      120deg,
+      var(--brand-deep) 0%,
+      var(--brand-core) 22%,
+      var(--brand-cyan) 48%,
+      var(--brand-bright) 68%,
+      var(--brand-core) 86%,
+      var(--brand-deep) 100%
+    );
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  background-size:
+    100% 100%,
+    280% 100%;
+  background-position:
+    0 0,
+    0% 50%;
+  box-shadow:
+    0 0 0 0 color-mix(in srgb, var(--brand-cyan) 0%, transparent),
+    0 1px 2px color-mix(in srgb, var(--brand-deep) 12%, transparent);
+  animation: goal-everything-border 2s ease-in-out infinite;
+  transition:
+    box-shadow 200ms ease-out,
+    color 180ms ease-out;
+}
+
+a.ask-documents-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(
+    105deg,
+    transparent 32%,
+    color-mix(in srgb, var(--brand-cyan) 28%, transparent) 50%,
+    transparent 68%
+  );
+  background-size: 220% 100%;
+  background-position: 120% 0;
+  animation: goal-everything-sheen 2.2s ease-in-out infinite;
+}
+
+a.ask-documents-cta::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0.55;
+  background: radial-gradient(
+    120% 80% at 50% 120%,
+    color-mix(in srgb, var(--brand-cyan) 35%, transparent),
+    transparent 70%
+  );
+  transform: translateY(2px) scale(0.96);
+  transition:
+    opacity 200ms ease-out,
+    transform 200ms ease-out;
+}
+
+a.ask-documents-cta:hover {
+  box-shadow:
+    0 0 0 3px color-mix(in srgb, var(--brand-cyan) 18%, transparent),
+    0 8px 20px color-mix(in srgb, var(--brand-deep) 18%, transparent);
+}
+
+a.ask-documents-cta:hover::after {
+  opacity: 0.9;
+  transform: translateY(4px) scale(1);
+}
+
+a.ask-documents-cta .ask-documents-cta__label {
+  background-image: linear-gradient(
+    120deg,
+    var(--brand-deep),
+    var(--brand-core) 40%,
+    var(--brand-cyan) 70%,
+    var(--brand-deep)
+  );
+  background-size: 200% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: goal-everything-border 2.4s ease-in-out infinite;
+}
+
+.dark a.ask-documents-cta .ask-documents-cta__label {
+  background-image: linear-gradient(
+    120deg,
+    var(--brand-cyan),
+    var(--brand-bright) 45%,
+    var(--brand-core) 75%,
+    var(--brand-cyan)
+  );
+}
+
 @media (prefers-reduced-motion: reduce) {
   button.goal-everything-chip {
     animation: none;
@@ -799,6 +912,40 @@ button.goal-everything-chip[aria-checked="true"]::before {
 
   button.goal-everything-chip::before {
     display: none;
+  }
+
+  a.ask-documents-cta {
+    animation: none;
+    background-image:
+      linear-gradient(
+        135deg,
+        color-mix(in srgb, var(--brand-core) 16%, var(--card)) 0%,
+        color-mix(in srgb, var(--brand-cyan) 14%, var(--card)) 100%
+      ),
+      linear-gradient(
+        135deg,
+        var(--brand-deep),
+        var(--brand-core),
+        var(--brand-cyan)
+      );
+    background-size:
+      100% 100%,
+      100% 100%;
+    background-position:
+      0 0,
+      0 0;
+  }
+
+  a.ask-documents-cta::before {
+    display: none;
+  }
+
+  a.ask-documents-cta .ask-documents-cta__label {
+    animation: none;
+    background-image: none;
+    background-clip: unset;
+    -webkit-background-clip: unset;
+    color: var(--foreground);
   }
 
   button.goal-everything-chip[aria-checked="true"] {

@@ -117,6 +117,24 @@ export function EmptyChat({
   );
 }
 
+export function ChatFollowUpButton({
+  children,
+  onClick,
+}: {
+  children: React.ReactNode;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-flex items-center rounded-full border border-border bg-background px-2.5 py-0.5 text-dense font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+    >
+      {children}
+    </button>
+  );
+}
+
 export function CreateKnowledgeGapButton({ question, spaceId }: { question: string; spaceId?: number }) {
   const createGap = useCreateKbKnowledgeGap();
   const [created, setCreated] = useState(false);
@@ -296,7 +314,7 @@ export function DisagreementBanner({ summary }: DisagreementBannerProps) {
   return (
     <div
       role="note"
-      className={`mt-2 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${warningTone.rule} ${warningTone.surface} ${warningTone.ink}`}
+      className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${warningTone.rule} ${warningTone.surface} ${warningTone.ink}`}
     >
       <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
       <span><span className="font-semibold">Sources disagree:</span> {summary}</span>

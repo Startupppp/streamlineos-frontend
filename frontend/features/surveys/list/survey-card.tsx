@@ -161,7 +161,7 @@ export function SurveyCard({ survey }: { survey: SurveyForm }) {
         </div>
       </CardContent>
 
-      <CardFooter className="mt-auto gap-2 border-t border-border/60">
+      <CardFooter className="mt-auto flex-wrap gap-2 border-t border-border/60">
         <Button type="button" variant="outline" size="sm" className="gap-1.5" asChild>
           <Link href={href}>
             <ExternalLink className="size-4" aria-hidden="true" />

@@ -165,8 +165,8 @@ export function BuilderTopBar({ envelope, recipients, documents = [], fields = [
   }
 
   return (
-    <div className="shrink-0 border-b border-border px-4 py-3 flex items-center justify-between gap-3">
-      <div className="flex items-center gap-3 min-w-0">
+    <div className="flex shrink-0 flex-wrap items-center gap-2 border-b border-border px-3 py-2 sm:px-4 sm:py-3">
+      <div className="flex min-w-0 flex-1 basis-full items-center gap-2 sm:basis-auto">
         <Button variant="ghost" size="icon" className="size-8" aria-label="Back to envelopes" onClick={handleBack}>
           <ArrowLeft className="size-4" />
         </Button>
@@ -180,7 +180,7 @@ export function BuilderTopBar({ envelope, recipients, documents = [], fields = [
         <EnvelopeExpiryControl envelope={envelope} />
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex min-w-0 flex-wrap items-center gap-2">
         {isDraft && canManageTemplates && envelope.templateId != null && (
           <LoadingButton variant="outline" onClick={handleSaveToTemplate} isPending={updateTemplate.isPending} loadingText="Saving…">
             Save to template

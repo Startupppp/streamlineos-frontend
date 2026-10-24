@@ -25,16 +25,16 @@ function SurveyCardSkeleton() {
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-3">
-        <Skeleton className="h-4 w-40" />
-        <div className="mt-auto flex items-center gap-3">
+        <Skeleton className="h-4 w-40 max-w-full" />
+        <div className="mt-auto flex flex-wrap items-center gap-3">
           <Skeleton className="h-4 w-6" />
-          <Skeleton className="h-4 w-36" />
+          <Skeleton className="h-4 w-36 max-w-full" />
         </div>
       </CardContent>
-      <CardFooter className="mt-auto gap-2 border-t border-border/60">
-        <Skeleton className="h-9 w-[5.125rem] rounded-md" />
-        <Skeleton className="h-9 w-[5.25rem] rounded-md" />
-        <Skeleton className="ml-auto h-9 w-[5.95rem] rounded-md" />
+      <CardFooter className="mt-auto flex-wrap gap-2 border-t border-border/60">
+        <Skeleton className="h-9 w-16 rounded-md" />
+        <Skeleton className="h-9 w-16 rounded-md" />
+        <Skeleton className="h-9 w-20 rounded-md sm:ml-auto" />
         <Skeleton className="size-9 rounded-md" />
       </CardFooter>
     </Card>

@@ -9,6 +9,7 @@ import { useCan } from "@/hooks/api/access";
 import { useIdempotentOperation } from "@/hooks/common/use-idempotent-operation";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { NO_CURSOR_YET } from "@/hooks/api/cursor-page-param";
+import { invalidateKbPageChange } from "./page-invalidation";
 import type { KbFileDetail, KbFileVersion, KbUploadFileResponse } from "./kb-files-schema";
 
 const kbFileDetailContractLazy = lazyContract(() =>
@@ -104,6 +105,7 @@ export function useUploadKbFile() {
         exact: false,
         refetchType: "none",
       });
+      invalidateKbPageChange(qc, "created", data.page.id);
       qc.setQueryData(
         knowledgeAndSurveysQueryKeys.kb.fileDetail(data.page.id),
         (prev: KbFileDetail | undefined) =>

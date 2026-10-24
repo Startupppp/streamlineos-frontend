@@ -40,6 +40,7 @@ import {
   OverQuotaBanner,
   DisagreementBanner,
   CopyAnswerButton,
+  ChatFollowUpButton,
   AnswerFeedbackBar,
   CitationEvidenceList,
   buildKbHistoryRows,
@@ -434,40 +435,56 @@ export default function KnowledgeBasePage() {
                         />
                       )}
                       {pending?.error && !pending.isQuotaError && (
-                        <ChatBubble
-                          key="pending-error"
-                          message={{
-                            id: "pending-error",
-                            role: "assistant",
-                            content: pending.error,
-                            isError: true,
-                          }}
-                          onCitation={handleCitationClick}
-                          reduce={Boolean(reduce)}
-                        />
+                        <div className="flex flex-col gap-1.5">
+                          <ChatBubble
+                            key="pending-error"
+                            message={{
+                              id: "pending-error",
+                              role: "assistant",
+                              content: pending.error,
+                              isError: true,
+                            }}
+                            onCitation={handleCitationClick}
+                            reduce={Boolean(reduce)}
+                          />
+                          {!ask.isPending && (
+                            <div className="flex">
+                              <ChatFollowUpButton onClick={handleRegenerate}>
+                                Generate a new answer
+                              </ChatFollowUpButton>
+                            </div>
+                          )}
+                        </div>
                       )}
-                      {pending?.error &&
-                        !pending.isQuotaError &&
-                        !ask.isPending && (
-                          <Button variant="outline" onClick={handleRegenerate}>
-                            Generate a new answer
-                          </Button>
-                        )}
                       {pending?.answer && pending.error && (
                         <p role="status" className="text-xs text-muted-foreground">
                           Partial answer — generation did not complete.
                         </p>
                       )}
-                      {pending?.hasContext === false && (
-                        <InsufficientEvidenceBanner
-                          question={pending.question}
-                          spaceId={pending.spaceId}
-                        />
-                      )}
-                      {pending?.disagreement && (
-                        <DisagreementBanner
-                          summary={pending.disagreement.summary}
-                        />
+                      {(pending?.hasContext === false || pending?.disagreement) && (
+                        <div className="flex flex-col gap-1.5">
+                          {pending.hasContext === false && (
+                            <InsufficientEvidenceBanner
+                              question={pending.question}
+                              spaceId={pending.spaceId}
+                            />
+                          )}
+                          {pending.disagreement && (
+                            <DisagreementBanner
+                              summary={pending.disagreement.summary}
+                            />
+                          )}
+                          {!ask.isPending && (
+                            <div className="flex gap-1.5">
+                              <ChatFollowUpButton onClick={handleDismissPending}>
+                                Dismiss
+                              </ChatFollowUpButton>
+                              <ChatFollowUpButton onClick={handleRegenerate}>
+                                Try again
+                              </ChatFollowUpButton>
+                            </div>
+                          )}
+                        </div>
                       )}
                       {pending?.answer && (
                         <ChatBubble
@@ -499,26 +516,6 @@ export default function KnowledgeBasePage() {
                       {ask.isPending && !pending?.answer && (
                         <TypingBubble reduce={Boolean(reduce)} />
                       )}
-                      {(pending?.hasContext === false ||
-                        pending?.disagreement) &&
-                        !ask.isPending && (
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleDismissPending}
-                            >
-                              Dismiss
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={handleRegenerate}
-                            >
-                              Try again
-                            </Button>
-                          </div>
-                        )}
                     </>
                   )}
                 </div>

@@ -16,7 +16,7 @@ const SETTINGS_SUBTITLE = "Tenant-wide defaults, branding, and watermark policy 
 export function SignSettingsSkeleton() {
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex gap-1">
+      <div className="flex w-full min-w-0 gap-1 overflow-x-auto scrollbar-hide">
         <Skeleton className="h-9 w-24 rounded-md" />
         <Skeleton className="h-9 w-24 rounded-md" />
         <Skeleton className="h-9 w-28 rounded-md" />

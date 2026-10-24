@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useSignEnvelope } from "@/hooks/api/sign/envelopes";
 import { useSignDocumentPreview } from "@/hooks/api/sign/documents";
@@ -12,16 +12,95 @@ import { BuilderLeftPanel } from "./builder-left-panel";
 import { BuilderCanvasArea } from "./builder-canvas-area";
 import { FieldSettingsPanel } from "./field-settings-panel";
 import { AuditTrailSheet } from "./audit-trail-sheet";
+import { EnvelopeBuilderSkeleton } from "./envelope-builder-skeleton";
 
 const EDITABLE_STATUSES = new Set(["draft", "ready_to_send"]);
 
-function BuilderRightPanel({ envelopeId }: { envelopeId: number }) {
+const BUILDER_PANES = [
+  { value: "setup", label: "Setup" },
+  { value: "document", label: "Document" },
+  { value: "field", label: "Field" },
+] as const;
+
+type BuilderPane = (typeof BUILDER_PANES)[number]["value"];
+
+function BuilderPaneButton({
+  value,
+  label,
+  selected,
+  onSelect,
+}: {
+  value: BuilderPane;
+  label: string;
+  selected: boolean;
+  onSelect: (pane: BuilderPane) => void;
+}) {
+  function handleSelect() {
+    onSelect(value);
+  }
+
+  return (
+    <button
+      type="button"
+      role="tab"
+      aria-selected={selected}
+      onClick={handleSelect}
+      className={cn(
+        "h-9 min-w-0 flex-1 rounded-md px-2 text-sm font-medium",
+        selected
+          ? "bg-foreground text-background"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {label}
+    </button>
+  );
+}
+
+function BuilderPaneSwitch({
+  pane,
+  onSelect,
+}: {
+  pane: BuilderPane;
+  onSelect: (pane: BuilderPane) => void;
+}) {
+  return (
+    <div
+      className="flex shrink-0 gap-1 border-b border-border p-2 lg:hidden"
+      role="tablist"
+      aria-label="Builder sections"
+    >
+      {BUILDER_PANES.map((item) => (
+        <BuilderPaneButton
+          key={item.value}
+          value={item.value}
+          label={item.label}
+          selected={pane === item.value}
+          onSelect={onSelect}
+        />
+      ))}
+    </div>
+  );
+}
+
+function BuilderRightPanel({
+  envelopeId,
+  className,
+}: {
+  envelopeId: number;
+  className?: string;
+}) {
   const { selectedFieldId } = useBuilder();
   const { data } = useSignEnvelope(envelopeId);
   const field = data?.fields.find((f) => f.id === selectedFieldId);
 
   return (
-    <div className="w-72 shrink-0 border-l border-border p-4 overflow-y-auto">
+    <div
+      className={cn(
+        "min-h-0 w-full flex-1 overflow-y-auto border-border p-4 lg:w-72 lg:flex-none lg:shrink-0 lg:border-l",
+        className,
+      )}
+    >
       {field ? (
         <FieldSettingsPanel envelopeId={envelopeId} field={field} />
       ) : (
@@ -56,74 +135,104 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
     setAuditOpen(true);
   }
 
-  const { selectedDocumentId, setSelectedDocumentId } = useBuilder();
+  const { selectedDocumentId } = useBuilder();
+  const activeDocumentId = selectedDocumentId ?? data?.documents?.[0]?.id;
+  const { data: preview } = useSignDocumentPreview(activeDocumentId);
 
-  useEffect(() => {
-    if (!selectedDocumentId && data?.documents && data.documents.length > 0) {
-      setSelectedDocumentId(data.documents[0].id);
-    }
-  }, [data?.documents, selectedDocumentId, setSelectedDocumentId]);
-
-  const previewDocumentId = selectedDocumentId ?? data?.documents?.[0]?.id;
-  const { data: preview } = useSignDocumentPreview(
-    previewDocumentId ?? undefined,
-  );
-
-  if (pageState.kind !== "ready" || !data) {
+  if (pageState.kind !== "ready" || !data)
     return (
       <PageWrapper
         title="Envelope"
         noInternalScroll
-        contentClassName="flex min-h-0 flex-1 flex-col"
         state={pageState}
-        loading={
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-96 w-full" />
-          </div>
-        }
         onRetry={handleRetry}
+        loading={<EnvelopeBuilderSkeleton />}
+        contentClassName="flex min-h-0 flex-1 flex-col"
       >
         {null}
       </PageWrapper>
     );
-  }
 
   const editable = EDITABLE_STATUSES.has(data.envelope.status);
   const selectedDocument = data.documents.find(
-    (d) => d.id === selectedDocumentId,
+    (d) => d.id === activeDocumentId,
   );
 
   return (
-    <div className="flex flex-col h-full min-h-0">
+    <BuilderWorkspace
+      envelopeId={envelopeId}
+      data={data}
+      previewUrl={preview?.url}
+      selectedDocument={selectedDocument}
+      editable={editable}
+      auditOpen={auditOpen}
+      onAuditOpenChange={setAuditOpen}
+      onShowAudit={handleShowAudit}
+    />
+  );
+}
+
+function BuilderWorkspace({
+  envelopeId,
+  data,
+  previewUrl,
+  selectedDocument,
+  editable,
+  auditOpen,
+  onAuditOpenChange,
+  onShowAudit,
+}: {
+  envelopeId: number;
+  data: NonNullable<ReturnType<typeof useSignEnvelope>["data"]>;
+  previewUrl: string | undefined;
+  selectedDocument:
+    | NonNullable<
+        ReturnType<typeof useSignEnvelope>["data"]
+      >["documents"][number]
+    | undefined;
+  editable: boolean;
+  auditOpen: boolean;
+  onAuditOpenChange: (open: boolean) => void;
+  onShowAudit: () => void;
+}) {
+  const [pane, setPane] = useState<BuilderPane>("document");
+
+  return (
+    <div className="flex h-full min-h-0 min-w-0 flex-col overflow-hidden">
       <BuilderTopBar
-        envelope={data.envelope}
-        recipients={data.recipients}
-        documents={data.documents}
         fields={data.fields}
-        onShowAudit={handleShowAudit}
+        envelope={data.envelope}
+        onShowAudit={onShowAudit}
+        documents={data.documents}
+        recipients={data.recipients}
       />
-      <div className="flex flex-1 min-h-0">
+      <BuilderPaneSwitch pane={pane} onSelect={setPane} />
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col lg:flex-row">
         <BuilderLeftPanel
+          editable={editable}
           envelopeId={envelopeId}
           documents={data.documents}
           recipients={data.recipients}
-          editable={editable}
+          className={pane === "setup" ? undefined : "max-lg:hidden"}
         />
         <BuilderCanvasArea
-          envelopeId={envelopeId}
-          document={selectedDocument}
-          documentUrl={preview?.url}
-          recipients={data.recipients}
-          fields={data.fields}
           editable={editable}
+          fields={data.fields}
+          envelopeId={envelopeId}
+          documentUrl={previewUrl}
+          document={selectedDocument}
+          recipients={data.recipients}
+          className={pane === "document" ? undefined : "max-lg:hidden"}
         />
-        <BuilderRightPanel envelopeId={envelopeId} />
+        <BuilderRightPanel
+          envelopeId={envelopeId}
+          className={pane === "field" ? undefined : "max-lg:hidden"}
+        />
       </div>
       <AuditTrailSheet
-        envelopeId={envelopeId}
         open={auditOpen}
-        onOpenChange={setAuditOpen}
+        envelopeId={envelopeId}
+        onOpenChange={onAuditOpenChange}
       />
     </div>
   );

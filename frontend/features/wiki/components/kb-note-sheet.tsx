@@ -65,7 +65,7 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
       onOpenChange={handleOpenChange}
       title="Add note"
       description="Paste or type content for the AI to learn from."
-      scrollArea
+      fill
       footer={
         <div className="grid w-full grid-cols-2 gap-2">
           <Button type="button" variant="outline" size="sm" onClick={handleClose} disabled={createNote.isPending}>
@@ -84,7 +84,7 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
       }
     >
       <Form {...form}>
-        <form id="kb-note-form" onSubmit={form.handleSubmit(handleSave)} className="flex flex-col gap-4">
+        <form id="kb-note-form" onSubmit={form.handleSubmit(handleSave)} className="flex min-h-0 flex-1 flex-col gap-4">
           <FormField
             control={form.control}
             name="title"
@@ -104,7 +104,7 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
             control={form.control}
             name="text"
             render={({ field }) => (
-              <FormItem>
+              <FormItem className="grid min-h-0 flex-1 grid-rows-[auto_minmax(0,1fr)_auto]">
                 <FormLabel>
                   Content <span className="text-destructive">*</span>
                 </FormLabel>
@@ -112,7 +112,7 @@ export function KbNoteSheet({ open, onOpenChange }: KbNoteSheetProps) {
                   <Textarea
                     {...field}
                     placeholder="Paste or type the content you want the AI to learn…"
-                    className="min-h-32 resize-y"
+                    className="h-full min-h-0 resize-none field-sizing-fixed overflow-y-auto scrollbar-hide"
                   />
                 </FormControl>
                 <FormMessage />

@@ -8,6 +8,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageState } from "@/components/shared/page-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAddSignField } from "@/hooks/api/sign/fields";
 import { useUpdateSignField } from "@/hooks/api/sign/fields";
@@ -33,9 +34,10 @@ interface BuilderCanvasAreaProps {
   recipients: SignRecipient[];
   fields: SignField[];
   editable: boolean;
+  className?: string;
 }
 
-export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipients, fields, editable }: BuilderCanvasAreaProps) {
+export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipients, fields, editable, className }: BuilderCanvasAreaProps) {
   const [pageCount, setPageCount] = useState(1);
   const { currentPage, setCurrentPage, selectedRecipientId, placingFieldType, setPlacingFieldType, selectedFieldId, setSelectedFieldId } =
     useBuilder();
@@ -83,7 +85,7 @@ export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipient
       <PageState
         resolution={{ kind: "empty" }}
         loading={null}
-        className="h-full min-h-0 flex-1"
+        className={cn("h-full min-h-0 min-w-0 flex-1", className)}
         empty={
           <EmptyState
             illustrationPreset="documents"
@@ -100,15 +102,15 @@ export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipient
   }
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-muted/30">
-      <div className="shrink-0 flex items-center justify-center gap-3 border-b border-border py-2 bg-background">
+    <div className={cn("flex min-h-0 min-w-0 flex-1 flex-col bg-muted/30", className)}>
+      <div className="flex shrink-0 items-center justify-center gap-3 border-b border-border bg-background py-2">
         <AnimatedIconButton icon={ChevronLeftIcon} iconSize={16} variant="ghost" size="icon" className="size-7" disabled={currentPage <= 1} onClick={() => setCurrentPage(currentPage - 1)} aria-label="Previous page" />
         <span className="text-xs text-muted-foreground">
           Page {currentPage} of {pageCount}
         </span>
         <AnimatedIconButton icon={ChevronRightIcon} iconSize={16} variant="ghost" size="icon" className="size-7" disabled={currentPage >= pageCount} onClick={() => setCurrentPage(currentPage + 1)} aria-label="Next page" />
       </div>
-      <div className="flex-1 overflow-auto p-6 flex justify-center">
+      <div className="flex min-h-0 min-w-0 flex-1 justify-center overflow-auto p-3 sm:p-6">
         <PdfCanvas
           fileUrl={documentUrl}
           pageNumber={currentPage}

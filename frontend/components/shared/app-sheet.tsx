@@ -23,6 +23,7 @@ interface AppSheetProps {
   side?: "right" | "left" | "top" | "bottom";
   className?: string;
   scrollArea?: boolean;
+  fill?: boolean;
 }
 
 export function AppSheet({
@@ -35,13 +36,17 @@ export function AppSheet({
   side = "right",
   className,
   scrollArea = false,
+  fill = false,
 }: AppSheetProps) {
   const isMobile = useIsMobile();
   const resolvedSide = isMobile ? "bottom" : side;
 
   const sideClasses =
     resolvedSide === "bottom"
-      ? "h-auto max-h-[92dvh] rounded-t-2xl border-t pb-[env(safe-area-inset-bottom)]"
+      ? cn(
+          "max-h-[92dvh] rounded-t-2xl border-t pb-[env(safe-area-inset-bottom)]",
+          fill ? "h-[92dvh]" : "h-auto",
+        )
       : "sm:max-w-lg";
 
   return (
@@ -73,9 +78,10 @@ export function AppSheet({
           className={
             scrollArea
               ? "flex flex-col overflow-y-hidden p-0"
-              : resolvedSide === "bottom"
-                ? "px-5 py-4"
-                : "px-6 py-4"
+              : cn(
+                  resolvedSide === "bottom" ? "px-5 py-4" : "px-6 py-4",
+                  fill && "flex flex-col overflow-y-hidden",
+                )
           }
         >
           {scrollArea ? (

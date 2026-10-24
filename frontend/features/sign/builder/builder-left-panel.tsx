@@ -2,6 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 import type { SignDocument, SignRecipient } from "@/types/sign";
 import { DocumentPanel } from "./document-panel";
 import { RecipientsPanel } from "./recipients-panel";
@@ -13,13 +14,14 @@ interface BuilderLeftPanelProps {
   documents: SignDocument[];
   recipients: SignRecipient[];
   editable: boolean;
+  className?: string;
 }
 
-export function BuilderLeftPanel({ envelopeId, documents, recipients, editable }: BuilderLeftPanelProps) {
+export function BuilderLeftPanel({ envelopeId, documents, recipients, editable, className }: BuilderLeftPanelProps) {
   const { selectedRecipientId } = useBuilder();
 
   return (
-    <div className="h-full flex flex-col border-r border-border w-72 shrink-0">
+    <div className={cn("flex h-full min-h-0 w-full flex-1 flex-col border-border lg:w-72 lg:flex-none lg:shrink-0 lg:border-r", className)}>
       <Tabs defaultValue="recipients" className="flex-1 flex flex-col min-h-0">
         <TabsList className="mx-3 mt-3">
           <TabsTrigger value="documents">Docs</TabsTrigger>

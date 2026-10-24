@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ChangeEvent } from "react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { AutomationsIllustration } from "@/components/illustrations";
 import { toast } from "sonner";
@@ -57,16 +57,6 @@ const ACTION_LABELS: Record<AutomationActionType, string> = {
 
 const SCORE_AWARE_ACTIONS = new Set<AutomationActionType>(["create_lead", "update_lead", "notify_owner"]);
 
-function AddAutomationBar({ onClick }: { onClick: () => void }) {
-  return (
-    <div className="flex shrink-0 justify-end border-t border-border pt-3">
-      <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={onClick}>
-        Add automation
-      </AnimatedIconButton>
-    </div>
-  );
-}
-
 export function AutomationsTab({ survey }: { survey: SurveyForm }) {
   const { data: rules, isLoading, isError, error, refetch, access } = useSurveyAutomations(survey.id);
   const createRule = useCreateAutomation(survey.id);
@@ -117,6 +107,28 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
     void refetch();
   }
 
+  function handleStartAdding() {
+    setAdding(true);
+  }
+
+  function handleCancelAdding() {
+    setAdding(false);
+  }
+
+  function handleActionTypeChange(value: string) {
+    setActionType(value as AutomationActionType);
+  }
+
+  function handleScoreThresholdChange(event: ChangeEvent<HTMLInputElement>) {
+    setScoreThreshold(event.target.value);
+  }
+
+  function deleteRuleHandler(automationId: string) {
+    return function handleDeleteRule() {
+      void handleDelete(automationId);
+    };
+  }
+
   const hasRules = (rules?.length ?? 0) > 0;
   const pageState = usePageState({
     permission: "surveys:automations:manage",
@@ -146,7 +158,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
 
       <div className="space-y-1.5">
         <Label>Then</Label>
-        <Select value={actionType} onValueChange={(v) => setActionType(v as AutomationActionType)}>
+        <Select value={actionType} onValueChange={handleActionTypeChange}>
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>
@@ -166,7 +178,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
           <Input
             type="number"
             value={scoreThreshold}
-            onChange={(e) => setScoreThreshold(e.target.value)}
+            onChange={handleScoreThresholdChange}
             placeholder="e.g. 50"
           />
         </div>
@@ -180,7 +192,7 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
       )}
 
       <div className="flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => setAdding(false)}>
+        <Button variant="outline" size="sm" onClick={handleCancelAdding}>
           Cancel
         </Button>
         <Button size="sm" onClick={handleAdd} disabled={createRule.isPending}>
@@ -190,14 +202,32 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
     </div>
   ) : null;
 
+  const addAutomationBar = (
+    <div className="flex shrink-0 justify-end border-t border-border pt-3">
+      <AnimatedIconButton
+        icon={PlusIcon}
+        iconSize={14}
+        iconClassName="mr-1.5"
+        variant="outline"
+        size="sm"
+        onClick={handleStartAdding}
+      >
+        Add automation
+      </AnimatedIconButton>
+    </div>
+  );
+
   return (
     <PageState
       resolution={pageState}
       loading={
-        <div className="space-y-3">
-          <Skeleton className="h-10 w-full rounded-md" />
-          <Skeleton className="h-10 w-full rounded-md" />
-          <Skeleton className="h-9 w-36 rounded-md" />
+        <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
+          <div className="flex min-h-0 flex-1 flex-col gap-3">
+            <Skeleton className="h-11 w-full rounded-md" />
+            <Skeleton className="h-11 w-full rounded-md" />
+            <Skeleton className="h-11 w-full rounded-md" />
+          </div>
+          <Skeleton className="ml-auto h-9 w-36 rounded-md" />
         </div>
       }
       onRetry={handleRetry}
@@ -214,16 +244,16 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
             description="Route leads to CRM, notify the survey owner, or trigger a webhook based on responses."
             className="min-h-0 flex-1"
           />
-          <AddAutomationBar onClick={() => setAdding(true)} />
+          {addAutomationBar}
         </div>
       }
     >
-      <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-hide">
           {!hasRules ? draft : null}
           {rules?.map((rule) => (
-            <div key={rule.id} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
-              <span className="flex-1">
+            <div key={rule.id} className="flex items-start gap-2 rounded-md border border-border px-3 py-2 text-sm">
+              <span className="min-w-0 flex-1 break-words">
                 When <span className="font-medium">{EVENT_LABELS[rule.eventType]}</span>
                 {rule.action.scoreThreshold != null && <> and score ≥ {rule.action.scoreThreshold}</>} →{" "}
                 <span className="font-medium">{ACTION_LABELS[rule.action.type]}</span>
@@ -231,12 +261,21 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
                   <span className="text-muted-foreground"> + follow-up task</span>
                 )}
               </span>
-              <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Delete automation rule" onClick={() => handleDelete(rule.id)} />
+              <AnimatedIconButton
+                icon={Trash2Icon}
+                iconSize={14}
+                iconClassName="text-destructive"
+                variant="ghost"
+                size="icon"
+                className="size-9 shrink-0"
+                aria-label="Delete automation rule"
+                onClick={deleteRuleHandler(rule.id)}
+              />
             </div>
           ))}
+          {hasRules && adding ? draft : null}
         </div>
-        {hasRules && adding ? <div className="mt-3">{draft}</div> : null}
-        {adding ? null : <AddAutomationBar onClick={() => setAdding(true)} />}
+        {adding ? null : addAutomationBar}
       </div>
     </PageState>
   );

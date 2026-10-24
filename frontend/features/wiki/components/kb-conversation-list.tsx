@@ -177,20 +177,21 @@ export function KbConversationList({
         <h2 className="text-base font-semibold text-foreground">Conversations</h2>
         <div className="flex min-w-0 items-center gap-2">
           <SearchInput
-            fill
             value={search}
             onValueChange={onSearchChange}
             placeholder="Search conversations…"
             aria-label="Search conversations"
-            className="min-w-0 flex-1"
+            className="min-w-0"
           />
-          <Button type="button" variant="outline" size="sm" onClick={onNewChat} className="gap-1.5">
-            <KbPenLineIcon className="size-4" />
-            New chat
-          </Button>
-          <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close panel">
-            <KbXIcon className="size-4" />
-          </Button>
+          <div className="ml-auto flex shrink-0 items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={onNewChat} className="gap-1.5">
+              <KbPenLineIcon className="size-4" />
+              New chat
+            </Button>
+            <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close panel">
+              <KbXIcon className="size-4" />
+            </Button>
+          </div>
         </div>
       </div>
 

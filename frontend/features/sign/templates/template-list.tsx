@@ -7,7 +7,6 @@ import { EllipsisIcon, SendIcon, CopyIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import {
   DropdownMenu,
@@ -27,6 +26,7 @@ import type { SignTemplate, SignTemplateStatus } from "@/types/sign";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { CreateEnvelopeFromTemplateDialog } from "./create-envelope-from-template-dialog";
 import { CreateTemplateDialog } from "./create-template-dialog";
+import { TemplateListSkeleton } from "./template-list-skeleton";
 import { useCan } from "@/hooks/api/access";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
 
@@ -82,9 +82,9 @@ function TemplateRow({ template }: { template: SignTemplate }) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 items-center gap-2">
           <TruncatedText text={template.name} className="font-medium text-sm" />
           <Badge variant={STATUS_VARIANT[template.status]}>
             {template.status}
@@ -101,7 +101,7 @@ function TemplateRow({ template }: { template: SignTemplate }) {
           {template.category ? ` · ${template.category}` : ""}
         </p>
       </div>
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-2 sm:shrink-0">
         {canCreateEnvelope && template.status === "published" && (
           <Button size="sm" onClick={handleCreateOpen} {...sendHover}>
             <SendIcon ref={sendRef} className="size-4" />
@@ -192,13 +192,7 @@ export function TemplateList() {
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
         state={pageState}
-        loading={
-          <div className="space-y-3">
-            {Array.from({ length: 9 }).map((_, i) => (
-              <Skeleton key={i} className="h-20 w-full" />
-            ))}
-          </div>
-        }
+        loading={<TemplateListSkeleton />}
         onRetry={handleRetry}
         actions={
           canManageTemplates ? (

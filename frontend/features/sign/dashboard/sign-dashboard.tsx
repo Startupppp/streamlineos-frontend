@@ -146,7 +146,7 @@ export function SignDashboard() {
                     <div className="rounded-lg bg-primary/10 p-2.5">
                       <UploadCloud className="size-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">Upload &amp; send</p>
                       <p className="text-sm text-muted-foreground">Start a new envelope from a PDF</p>
                     </div>
@@ -159,7 +159,7 @@ export function SignDashboard() {
                     <div className="rounded-lg bg-primary/10 p-2.5">
                       <FileStack className="size-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">Browse templates</p>
                       <p className="text-sm text-muted-foreground">Reuse a saved envelope layout</p>
                     </div>
@@ -172,7 +172,7 @@ export function SignDashboard() {
                     <div className="rounded-lg bg-primary/10 p-2.5">
                       <Send className="size-5 text-primary" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-sm font-medium">Bulk send</p>
                       <p className="text-sm text-muted-foreground">Send one template to many people</p>
                     </div>
@@ -196,9 +196,9 @@ export function SignDashboard() {
                   ) : (
                     <ul className="flex flex-col gap-3">
                       {data.recentActivity.map((event) => (
-                        <li key={event.id} className="flex items-center justify-between gap-3 border-b border-border pb-3 text-sm last:border-0 last:pb-0">
-                          <span className="text-foreground">{formatEventType(event.eventType)}</span>
-                          <span className="shrink-0 text-sm text-muted-foreground">
+                        <li key={event.id} className="flex flex-col gap-1 border-b border-border pb-3 text-sm last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                          <span className="min-w-0 text-foreground">{formatEventType(event.eventType)}</span>
+                          <span className="text-sm text-muted-foreground sm:shrink-0">
                             {event.actorName ?? "System"} · {formatDateTimeInOrgTz(event.createdAt, orgTimeZone)}
                           </span>
                         </li>

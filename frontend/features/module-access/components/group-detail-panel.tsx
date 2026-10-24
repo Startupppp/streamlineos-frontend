@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState } from "react";
 import { Users } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,14 +54,16 @@ export function GroupDetailPanel({
   moduleKey,
   canManage,
 }: GroupDetailPanelProps) {
-  const draft = useMemo(() => buildDraft(group), [group]);
+  const draft = buildDraft(group);
   const [membersOpen, setMembersOpen] = useState(false);
 
-  const handleOpenMembers = useCallback(() => setMembersOpen(true), []);
-  const handleMembersOpenChange = useCallback(
-    (open: boolean) => setMembersOpen(open),
-    [],
-  );
+  function handleOpenMembers() {
+    setMembersOpen(true);
+  }
+
+  function handleMembersOpenChange(open: boolean) {
+    setMembersOpen(open);
+  }
 
   const grantedCount = Object.values(draft).filter((s) => s !== "none").length;
   const scopeLabel = moduleScopeLabel(moduleKey);
@@ -70,9 +72,9 @@ export function GroupDetailPanel({
     <>
       <Card className="flex flex-col flex-1 min-h-0">
         <CardHeader className="pb-3 shrink-0">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              <CardTitle className="text-sm font-semibold truncate">
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-2">
+              <CardTitle className="min-w-0 text-sm font-semibold break-words">
                 {group.name}
               </CardTitle>
               {group.isSystem && (
@@ -85,13 +87,8 @@ export function GroupDetailPanel({
               </Badge>
             </div>
             <div className="flex items-center gap-2 shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-7 text-xs"
-                onClick={handleOpenMembers}
-              >
-                <Users className="h-3.5 w-3.5 mr-1" />
+              <Button variant="outline" size="sm" onClick={handleOpenMembers}>
+                <Users className="size-4" />
                 Members ({group.memberCount})
               </Button>
             </div>

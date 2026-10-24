@@ -8,7 +8,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -21,6 +20,7 @@ import {
   useCancelBulkSendJob,
 } from "@/hooks/api/sign/bulk-send";
 import type { SignBulkSendJob } from "@/types/sign";
+import { BulkSendListSkeleton } from "./bulk-send-list-skeleton";
 import { CreateBulkSendDialog } from "./create-bulk-send-dialog";
 import { BulkSendJobSheet } from "./bulk-send-job-sheet";
 
@@ -68,7 +68,7 @@ function BulkSendJobRow({ job, templateName, onOpen }: BulkSendJobRowProps) {
   }
 
   return (
-    <div className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-md">
+    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
       <div className="min-w-0 flex-1">
         <button
           type="button"
@@ -76,8 +76,8 @@ function BulkSendJobRow({ job, templateName, onOpen }: BulkSendJobRowProps) {
           className="w-full cursor-pointer text-left"
           aria-label={`Open bulk send job ${job.id}`}
         >
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-sm">{templateName ?? `Job #${job.id}`}</p>
+          <div className="flex min-w-0 flex-wrap items-center gap-2">
+            <p className="min-w-0 font-medium text-sm">{templateName ?? `Job #${job.id}`}</p>
             <Badge variant={STATUS_VARIANT[job.status]}>{STATUS_LABEL[job.status]}</Badge>
           </div>
           <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
@@ -123,6 +123,10 @@ export function BulkSendList() {
     await refetch();
   }
 
+  function handleOpenCreate() {
+    setCreateOpen(true);
+  }
+
   const pageState = usePageState({
     permission: "sign:bulk_send:run",
     isLoading: showSkeleton,
@@ -139,16 +143,10 @@ export function BulkSendList() {
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
       state={pageState}
-      loading={
-        <div className="space-y-3">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-full" />
-          ))}
-        </div>
-      }
+      loading={<BulkSendListSkeleton />}
       onRetry={handleRetry}
       actions={
-        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)} disabled={!hasPublished}>
+        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={handleOpenCreate} disabled={!hasPublished}>
           New bulk send
         </AnimatedIconButton>
       }
@@ -158,7 +156,7 @@ export function BulkSendList() {
           illustration={<IllustrationImage name="empty-upload" className="h-40 w-40" />}
           title={hasPublished ? "No bulk send jobs yet" : "Publish a template first"}
           description={hasPublished ? "Upload a CSV of recipients to send one template to everyone at once." : "Bulk send requires a published single-signer template. Save an envelope as a template, then publish it."}
-          action={hasPublished ? { label: "New bulk send", onClick: () => setCreateOpen(true) } : undefined}
+          action={hasPublished ? { label: "New bulk send", onClick: handleOpenCreate } : undefined}
           className="h-full min-h-full flex-1"
         />
       }

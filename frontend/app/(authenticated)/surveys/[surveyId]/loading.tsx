@@ -8,10 +8,10 @@ export default function SurveyDetailLoading() {
       title="Survey"
       backHref="/surveys"
       actions={
-        <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
           <Skeleton className="h-5 w-16 rounded-full" />
           <Skeleton className="h-3.5 w-14" />
-          <Skeleton className="ml-2 h-9 w-36 rounded-md" />
+          <Skeleton className="h-9 w-28 max-w-full rounded-md sm:ml-2 sm:w-36" />
           <Skeleton className="h-9 w-20 rounded-md" />
           <Skeleton className="size-9 rounded-md" />
         </div>

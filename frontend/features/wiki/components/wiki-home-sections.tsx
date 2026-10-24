@@ -9,10 +9,10 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AskDocumentsCta } from "./ask-documents-cta";
 import { KbNewMenu } from "./kb-new-menu";
 import {
   KB_ANALYTICS,
-  KB_CHAT,
   KB_IMPORT,
   KB_MANAGE,
   KB_MANAGE_SHARING,
@@ -44,11 +44,7 @@ export function WikiHomeHeaderActions({
 
   return (
     <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto sm:flex-nowrap sm:justify-end">
-      {!isProjectScoped && (
-        <Button asChild variant="outline" size="sm" className="min-w-0 flex-1 basis-[calc(50%-0.25rem)] sm:basis-auto sm:flex-none">
-          <Link href={KB_CHAT}>Ask documents</Link>
-        </Button>
-      )}
+      {!isProjectScoped && <AskDocumentsCta />}
       {canCreate && (
         <KbNewMenu
           scope={{ projectId }}

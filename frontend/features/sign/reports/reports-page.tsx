@@ -73,9 +73,9 @@ export function SignReportsPanels({ data }: { data: SignSummaryStats }) {
             ) : (
               <ul className="flex flex-col gap-2">
                 {Object.entries(data.byStatus).map(([status, count]) => (
-                  <li key={status} className="flex items-center justify-between text-sm">
-                    <span>{envelopeStatusLabel(status)}</span>
-                    <span className="font-medium tabular-nums">{count}</span>
+                  <li key={status} className="flex min-w-0 items-center justify-between gap-3 text-sm">
+                    <span className="min-w-0 truncate">{envelopeStatusLabel(status)}</span>
+                    <span className="shrink-0 font-medium tabular-nums">{count}</span>
                   </li>
                 ))}
               </ul>
@@ -93,9 +93,9 @@ export function SignReportsPanels({ data }: { data: SignSummaryStats }) {
             ) : (
               <ul className="flex flex-col gap-2">
                 {data.senderPerformance.map((sender) => (
-                  <li key={senderRowKey(sender)} className="flex items-center justify-between text-sm">
-                    <span>{sender.senderName ?? "Unknown"}</span>
-                    <span className="font-medium tabular-nums">{sender.sentCount} sent</span>
+                  <li key={senderRowKey(sender)} className="flex min-w-0 items-center justify-between gap-3 text-sm">
+                    <span className="min-w-0 truncate">{sender.senderName ?? "Unknown"}</span>
+                    <span className="shrink-0 font-medium tabular-nums">{sender.sentCount} sent</span>
                   </li>
                 ))}
               </ul>
@@ -115,10 +115,10 @@ export function SignReportsPanels({ data }: { data: SignSummaryStats }) {
                 {data.templateUsage.map((template) => (
                   <li
                     key={template.templateId ?? template.templateName}
-                    className="flex items-center justify-between text-sm"
+                    className="flex min-w-0 items-center justify-between gap-3 text-sm"
                   >
-                    <span>{template.templateName}</span>
-                    <span className="font-medium tabular-nums">{template.value} envelopes</span>
+                    <span className="min-w-0 truncate">{template.templateName}</span>
+                    <span className="shrink-0 font-medium tabular-nums">{template.value} envelopes</span>
                   </li>
                 ))}
               </ul>
