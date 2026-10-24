@@ -51,7 +51,7 @@ describe("a live reply keeps its quote", () => {
       });
     });
     const reply = client.getQueryData<InfiniteData<MessagesPage>>(messagesKey)?.pages[0]?.messages.find((m) => m.id === 2);
-    expect(reply?.replyTo).toEqual({ id: 1, content: "the parent", sender: parent.sender });
+    expect(reply?.replyTo).toEqual({ id: 1, content: "the parent", sender: parent.sender, isDeleted: false });
     unmount();
   });
 

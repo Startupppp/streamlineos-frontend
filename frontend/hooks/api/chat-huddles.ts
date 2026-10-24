@@ -158,7 +158,7 @@ export function useHuddleAccounts() {
     queryKey: collaborationQueryKeys.chat.huddleAccounts(),
     queryFn: ({ signal }) =>
       apiClient.get(
-        "/chat/huddle/accounts",
+        "/chat/huddle/meeting-accounts",
         undefined,
         signal,
         huddleAccountsContract,
@@ -176,7 +176,7 @@ export function useSetHuddleDefault() {
     mutationKey: ["chat", "huddle", "set-default"],
     mutationFn: ({ connectionId }: { connectionId: number | null }) =>
       apiClient.put<{ ok: true }>(
-        "/chat/huddle/accounts/default",
+        "/chat/huddle/meeting-accounts/default",
         { connectionId },
         operation.configFor({ connectionId }),
         chatOkContract,

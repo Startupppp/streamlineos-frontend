@@ -101,7 +101,7 @@ const chatMessageReplyToContract = z.object({
   id: z.number(),
   content: z.string().nullable(),
   sender: chatMessageSenderContract,
-  isDeleted: z.boolean(),
+  isDeleted: z.boolean().optional(),
 });
 
 export const chatMessageContract = z.object({
