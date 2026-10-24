@@ -174,8 +174,8 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
     render(<KbSourcesSheet {...SCOPE_PROPS} />);
 
     for (const label of ["Draft", "In review", "Published"])
-      expect(screen.getByRole("button", { name: label })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Archived" })).not.toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: label })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Archived" })).not.toBeInTheDocument();
   });
 
   it("renders an owner combobox, the dimension that produces ownerMembershipId", () => {
@@ -215,9 +215,9 @@ describe("KbSourcesSheet scope mode — all six scope dimensions are present and
   });
 
   it("renders the space and verified-only controls and no file/note kind toggle, since notes are documents chosen through the page picker", () => {
-    render(<KbSourcesSheet {...SCOPE_PROPS} />);
+    render(<KbSourcesSheet {...SCOPE_PROPS} spaceIdFilter={10} />);
 
-    expect(screen.getByRole("button", { name: "Engineering" })).toBeInTheDocument();
+    expect(screen.getByRole("combobox", { name: "Space" })).toHaveTextContent("Engineering");
     expect(screen.getByRole("switch", { name: /verified pages and articles only/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Notes" })).not.toBeInTheDocument();
   });

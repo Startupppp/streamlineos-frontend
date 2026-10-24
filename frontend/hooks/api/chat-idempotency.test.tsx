@@ -19,7 +19,7 @@ jest.mock("next-auth/react", () => ({
 }));
 
 jest.mock("@/lib/api-client", () => ({
-  apiClient: { post: jest.fn(), get: jest.fn(), patch: jest.fn() },
+  apiClient: { post: jest.fn(), put: jest.fn(), get: jest.fn(), patch: jest.fn() },
   isApiError: (error: unknown) =>
     error instanceof Error && error.name === "ApiError",
 }));
@@ -29,10 +29,11 @@ import {
   useSubmitEntityAction,
   useCreateTaskFromMessage,
 } from "@/hooks/api/chat-entities";
-import { useInviteToHuddle } from "@/hooks/api/chat-huddles";
+import { useInviteToHuddle, useSetHuddleDefault } from "@/hooks/api/chat-huddles";
 import { useChatSummarize } from "@/hooks/api/chat-summarize";
 
 const post = apiClient.post as jest.MockedFunction<typeof apiClient.post>;
+const put = apiClient.put as jest.MockedFunction<typeof apiClient.put>;
 
 const MEASURED_FENCED_ROUTE_FLOOR = 4;
 
@@ -115,6 +116,13 @@ const CALLERS: Readonly<Record<string, FencedCall>> = {
     input: { huddleId: 5, userIds: ["user-2"] },
     otherInput: { huddleId: 5, userIds: ["user-3"] },
   },
+  "/chat/huddle/meeting-accounts/default": {
+    url: "/chat/huddle/meeting-accounts/default",
+    useHook: useSetHuddleDefault,
+    call: asMutation as FencedCall["call"],
+    input: { connectionId: 7 },
+    otherInput: { connectionId: 8 },
+  },
   "/chat/channels/:channelId/summarize": {
     url: "/chat/channels/3/summarize",
     useHook: useChatSummarize,
@@ -130,6 +138,7 @@ const ACCESS: AccessResponse = {
     "chat:messages:write": "all",
     "chat:messages:read": "all",
     "chat:channels:write": "all",
+    "chat:huddles:start": "all",
   },
   isOrgOwner: false,
   canManageOrganizationMembership: false,
@@ -153,15 +162,19 @@ function wrapperFor(client: QueryClient) {
   };
 }
 
+function sentCalls() {
+  return [...post.mock.calls, ...put.mock.calls];
+}
+
 function keySentOn(url: string): string | undefined {
-  const call = post.mock.calls.find(([called]) => called === url);
+  const call = sentCalls().find(([called]) => called === url);
   if (call === undefined) return undefined;
   const config = call[2] as RequestConfig | undefined;
   return config?.headers?.["Idempotency-Key"];
 }
 
 function allKeysSent(): (string | undefined)[] {
-  return post.mock.calls.map(
+  return sentCalls().map(
     ([, , config]) => (config as RequestConfig | undefined)?.headers?.["Idempotency-Key"],
   );
 }
@@ -178,6 +191,8 @@ async function run(caller: FencedCall, input: unknown): Promise<void> {
 beforeEach(() => {
   post.mockReset();
   post.mockResolvedValue({ ok: true });
+  put.mockReset();
+  put.mockResolvedValue({ ok: true });
 });
 
 describe("every @Idempotent chat route is called with an Idempotency-Key", () => {
@@ -196,7 +211,7 @@ describe("every @Idempotent chat route is called with an Idempotency-Key", () =>
     async (_route, caller) => {
       await run(caller, caller.input);
 
-      expect(post.mock.calls.map(([url]) => url)).toContain(caller.url);
+      expect(sentCalls().map(([url]) => url)).toContain(caller.url);
       expect(keySentOn(caller.url)).toMatch(/^[0-9a-f-]{36}$/);
     },
   );
@@ -206,6 +221,10 @@ describe("every @Idempotent chat route is called with an Idempotency-Key", () =>
     async (_route, caller) => {
       post.mockReset();
       post.mockRejectedValue(
+        new ApiError("Request timed out.", undefined, "TIMEOUT"),
+      );
+      put.mockReset();
+      put.mockRejectedValue(
         new ApiError("Request timed out.", undefined, "TIMEOUT"),
       );
 
@@ -229,6 +248,10 @@ describe("every @Idempotent chat route is called with an Idempotency-Key", () =>
     async (_route, caller) => {
       post.mockReset();
       post.mockRejectedValue(
+        new ApiError("Network error", undefined, "NETWORK_ERROR"),
+      );
+      put.mockReset();
+      put.mockRejectedValue(
         new ApiError("Network error", undefined, "NETWORK_ERROR"),
       );
 

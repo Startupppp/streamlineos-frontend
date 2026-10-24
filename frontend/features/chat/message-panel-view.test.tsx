@@ -36,6 +36,10 @@ jest.mock("@/hooks/common/use-animated-icon", () => ({
 }));
 
 jest.mock("@/hooks/common/use-mobile", () => ({ useIsMobile: () => false }));
+jest.mock("@/hooks/api/chat-huddles", () => ({
+  useHuddleAccounts: () => ({ data: { accounts: [] } }),
+  useSetHuddleDefault: () => ({ mutate: jest.fn(), isPending: false }),
+}));
 
 type ViewProps = React.ComponentProps<typeof MessagePanelView>;
 

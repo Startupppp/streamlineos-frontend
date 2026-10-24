@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
@@ -125,13 +125,20 @@ beforeEach(() => {
   mockAskMutate.mockReset();
 });
 
+async function chooseSpace(name: string) {
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Space" }), { key: "ArrowDown" });
+  fireEvent.click(await screen.findByRole("option", { name }));
+}
+
 describe("KnowledgeBasePage — space filter in scope sheet", () => {
   it("shows space filter buttons when spaces are available", async () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /choose sources to search/i }));
 
-    expect(await screen.findByRole("button", { name: "Engineering" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "Marketing" })).toBeInTheDocument();
+    expect(await screen.findByRole("combobox", { name: "Space" })).toHaveTextContent("All spaces");
+    fireEvent.keyDown(screen.getByRole("combobox", { name: "Space" }), { key: "ArrowDown" });
+    expect(await screen.findByRole("option", { name: "Engineering" })).toBeInTheDocument();
+    expect(screen.getByRole("option", { name: "Marketing" })).toBeInTheDocument();
   });
 
   it("shows all sources initially before any space filter is applied", async () => {
@@ -145,9 +152,8 @@ describe("KnowledgeBasePage — space filter in scope sheet", () => {
   it("hides sources outside the selected space when a space filter is applied", async () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("button", { name: "Engineering" });
-
-    await userEvent.click(screen.getByRole("button", { name: "Engineering" }));
+    await screen.findByRole("combobox", { name: "Space" });
+    await chooseSpace("Engineering");
 
     expect(screen.queryByText("Marketing Playbook")).not.toBeInTheDocument();
   });
@@ -155,9 +161,8 @@ describe("KnowledgeBasePage — space filter in scope sheet", () => {
   it("still shows sources from the selected space when a space filter is applied", async () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("button", { name: "Engineering" });
-
-    await userEvent.click(screen.getByRole("button", { name: "Engineering" }));
+    await screen.findByRole("combobox", { name: "Space" });
+    await chooseSpace("Engineering");
 
     expect(screen.getByText("Engineering Spec")).toBeInTheDocument();
   });
@@ -165,11 +170,11 @@ describe("KnowledgeBasePage — space filter in scope sheet", () => {
   it("shows only the new space's sources when switching from one space filter to another", async () => {
     renderPage();
     await userEvent.click(screen.getByRole("button", { name: /choose sources to search/i }));
-    await screen.findByRole("button", { name: "Engineering" });
-    await userEvent.click(screen.getByRole("button", { name: "Engineering" }));
+    await screen.findByRole("combobox", { name: "Space" });
+    await chooseSpace("Engineering");
     expect(screen.queryByText("Marketing Playbook")).not.toBeInTheDocument();
 
-    await userEvent.click(screen.getByRole("button", { name: "Marketing" }));
+    await chooseSpace("Marketing");
 
     expect(screen.getByText("Marketing Playbook")).toBeInTheDocument();
     expect(screen.queryByText("Engineering Spec")).not.toBeInTheDocument();

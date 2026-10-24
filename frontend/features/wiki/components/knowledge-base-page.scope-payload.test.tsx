@@ -129,20 +129,25 @@ beforeEach(() => {
   mockCreateGapMutate.mockReset();
 });
 
+async function chooseSpace(name: string) {
+  fireEvent.keyDown(screen.getByRole("combobox", { name: "Space" }), { key: "ArrowDown" });
+  fireEvent.click(await screen.findByRole("option", { name }));
+}
+
 describe("KnowledgeBasePage — every scope dimension the sheet edits reaches the ask request body", () => {
   it("states the broad default search scope beside the composer before the user sends a question", async () => {
     const user = renderPage();
 
     expect(screen.getByText("Searching all accessible knowledge.")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Edit" }));
-    expect(screen.getByText(/all ready sources and pages will be searched/i)).toBeInTheDocument();
+    expect(screen.getByText(/search everything, or narrow it/i)).toBeInTheDocument();
   });
 
   it("sends status when the status control is set, because a control that renders without reaching the payload scopes nothing", async () => {
     const user = renderPage();
     await openScopeSheet(user);
 
-    await user.click(screen.getByRole("button", { name: "Draft" }));
+    await user.click(screen.getByRole("tab", { name: "Draft" }));
     await confirmAndAsk(user);
 
     expect(await sentBody()).toHaveProperty("status", "draft");
@@ -180,7 +185,7 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     const user = renderPage();
     await openScopeSheet(user);
 
-    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await chooseSpace("Engineering");
     await confirmAndAsk(user);
 
     expect(await sentBody()).toHaveProperty("spaceId", 10);
@@ -192,7 +197,7 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     );
     const user = renderPage();
     await openScopeSheet(user);
-    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await chooseSpace("Engineering");
     await confirmAndAsk(user);
 
     await user.click(await screen.findByRole("button", { name: /create a knowledge gap/i }));
@@ -263,9 +268,9 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     await openScopeSheet(user);
 
     await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
-    await user.click(screen.getByRole("button", { name: "Draft" }));
+    await user.click(screen.getByRole("tab", { name: "Draft" }));
 
-    expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
+    expect(screen.getByText(/those files are excluded/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search 0 files" })).toBeDisabled();
 
     await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
@@ -276,14 +281,14 @@ describe("KnowledgeBasePage — every scope dimension the sheet edits reaches th
     const user = renderPage();
     await openScopeSheet(user);
 
-    await user.click(screen.getByRole("button", { name: "Published" }));
-    await user.click(screen.getByRole("button", { name: "Engineering" }));
+    await user.click(screen.getByRole("tab", { name: "Published" }));
+    await chooseSpace("Engineering");
     await user.click(screen.getByRole("switch", { name: /verified pages and articles only/i }));
     await user.click(screen.getByRole("checkbox", { name: /include engineering spec in search/i }));
     await user.click(screen.getByRole("checkbox", { name: /include onboarding guide in search/i }));
     await user.click(screen.getByRole("combobox", { name: /restrict answer to files owned by a member/i }));
     await user.click(await screen.findByText("Ada Lovelace"));
-    expect(screen.getByText(/selected files and notes are excluded/i)).toBeInTheDocument();
+    expect(screen.getByText(/those files are excluded/i)).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Search 1 file" })).toBeEnabled();
     await confirmAndAsk(user);
 

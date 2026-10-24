@@ -9,6 +9,7 @@ import {
   SheetDescription,
   SheetBody,
 } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useIsMobile } from "@/hooks/common/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ interface AppSheetProps {
   children: React.ReactNode;
   side?: "right" | "left" | "top" | "bottom";
   className?: string;
+  scrollArea?: boolean;
 }
 
 export function AppSheet({
@@ -32,6 +34,7 @@ export function AppSheet({
   children,
   side = "right",
   className,
+  scrollArea = false,
 }: AppSheetProps) {
   const isMobile = useIsMobile();
   const resolvedSide = isMobile ? "bottom" : side;
@@ -68,10 +71,23 @@ export function AppSheet({
 
         <SheetBody
           className={
-            resolvedSide === "bottom" ? "px-5 py-4" : "px-6 py-4"
+            scrollArea
+              ? "flex flex-col overflow-y-hidden p-0"
+              : resolvedSide === "bottom"
+                ? "px-5 py-4"
+                : "px-6 py-4"
           }
         >
-          {children}
+          {scrollArea ? (
+            <ScrollArea
+              className="min-h-0 flex-1"
+              viewportClassName={resolvedSide === "bottom" ? "px-5 py-4" : "px-6 py-4"}
+            >
+              {children}
+            </ScrollArea>
+          ) : (
+            children
+          )}
         </SheetBody>
 
         {footer && (

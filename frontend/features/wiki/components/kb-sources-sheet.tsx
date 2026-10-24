@@ -10,8 +10,6 @@ import {
 import {
   Check,
   ShieldCheck,
-  UserIcon,
-  Layers,
   FileText,
 } from "lucide-react";
 import { AppSheet } from "@/components/shared/app-sheet";
@@ -25,7 +23,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Combobox } from "@/components/ui/combobox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { cn } from "@/lib/utils";
 import type { KbPageCollectionItem } from "@/hooks/api/kb/page-collection";
@@ -145,6 +151,7 @@ function KbSourcesManageSheet({
       title="Sources"
       description={description}
       className="sm:max-w-md"
+      scrollArea
     >
       <div className="flex flex-col gap-4">
         <div className="flex gap-2">
@@ -155,7 +162,7 @@ function KbSourcesManageSheet({
             onClick={onUploadClick}
             disabled={uploadPending}
           >
-            <UploadIcon size={14} />
+            <UploadIcon size={16} />
             {uploadPending ? "Uploading…" : "Upload"}
           </Button>
           <Button
@@ -164,11 +171,11 @@ function KbSourcesManageSheet({
             className="flex-1 gap-1.5"
             onClick={onAddNoteClick}
           >
-            <PlusIcon size={14} />
+            <PlusIcon size={16} />
             Note
           </Button>
         </div>
-        <p className="text-xs text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           PDF, DOCX, XLSX, TXT, MD, or CSV — up to 25 MB.
         </p>
 
@@ -202,62 +209,8 @@ export type OwnerFilter = (typeof OWNER_FILTERS)[number];
 
 const OWNER_LABELS: Record<OwnerFilter, string> = { all: "All", mine: "Mine" };
 
-function OwnerFilterButton({
-  owner,
-  active,
-  onSelect,
-}: {
-  owner: OwnerFilter;
-  active: boolean;
-  onSelect: (owner: OwnerFilter) => void;
-}) {
-  function handleClick() {
-    onSelect(owner);
-  }
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-        active
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {OWNER_LABELS[owner]}
-    </button>
-  );
-}
-
-function SpaceFilterButton({
-  spaceId,
-  label,
-  active,
-  onSelect,
-}: {
-  spaceId: SpaceIdFilter;
-  label: string;
-  active: boolean;
-  onSelect: (spaceId: SpaceIdFilter) => void;
-}) {
-  function handleClick() {
-    onSelect(spaceId);
-  }
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-        active
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {label}
-    </button>
-  );
+function isOwnerFilter(value: string): value is OwnerFilter {
+  return (OWNER_FILTERS as readonly string[]).includes(value);
 }
 
 function statusScopeLabel(status: KbAskStatusScope): string {
@@ -265,34 +218,8 @@ function statusScopeLabel(status: KbAskStatusScope): string {
   return spaced.charAt(0).toUpperCase() + spaced.slice(1);
 }
 
-function StatusScopeButton({
-  status,
-  label,
-  active,
-  onSelect,
-}: {
-  status: StatusScopeFilter;
-  label: string;
-  active: boolean;
-  onSelect: (status: StatusScopeFilter) => void;
-}) {
-  function handleClick() {
-    onSelect(status);
-  }
-  return (
-    <button
-      type="button"
-      onClick={handleClick}
-      className={cn(
-        "flex-1 rounded px-2 py-1 text-xs font-medium transition-colors",
-        active
-          ? "bg-background text-foreground shadow-sm"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {label}
-    </button>
-  );
+function isStatusScope(value: string): value is KbAskStatusScope {
+  return (KB_ASK_STATUS_SCOPES as readonly string[]).includes(value);
 }
 
 function OwnerMembershipSelect({
@@ -343,16 +270,14 @@ function OwnerMembershipSelect({
   }
 
   return (
-    <div className="space-y-2">
+    <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">
-          Page owner
-        </span>
+        <Label>Owner</Label>
         {ownerMembershipId !== null && (
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 text-xs"
+            className="h-9 px-2"
             onClick={handleClear}
           >
             Any owner
@@ -442,12 +367,12 @@ function KbSourcesScopeSheet({
   }
 
   const description = sourceSelectionConflicts
-    ? "Selected files and notes are excluded by file owner, file status or verification. Deselect them or choose files to search."
+    ? "Those files are excluded. Clear the filter or pick pages."
     : noneSelected
       ? pageOnlyScope
-        ? "Only eligible pages and articles will be searched. Files and notes are excluded."
-        : "All ready sources and pages will be searched. Select specific items to narrow the answer."
-      : `${totalSelected} item${totalSelected === 1 ? "" : "s"} selected — only these will be searched.`;
+        ? "Pages only. Files and notes are out."
+        : "Search everything, or narrow it."
+      : `${totalSelected} selected.`;
 
   function handleToggleAll() {
     if (allSelected) {
@@ -477,66 +402,67 @@ function KbSourcesScopeSheet({
       title="Choose sources"
       description={description}
       className="sm:max-w-md"
+      scrollArea
     >
       <div className="flex flex-col gap-4">
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {currentUserId !== undefined && (
-            <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
-              <UserIcon className="ml-1 h-3 w-3 shrink-0 text-muted-foreground" />
-              {OWNER_FILTERS.map((owner) => (
-                <OwnerFilterButton
-                  key={owner}
-                  owner={owner}
-                  active={ownerFilter === owner}
-                  onSelect={onOwnerFilterChange}
-                />
-              ))}
-            </div>
+            <Tabs
+              value={ownerFilter}
+              onValueChange={(value) => {
+                if (isOwnerFilter(value)) onOwnerFilterChange(value);
+              }}
+              className="w-auto shrink-0 gap-0"
+            >
+              <TabsList aria-label="Whose sources">
+                {OWNER_FILTERS.map((owner) => (
+                  <TabsTrigger key={owner} value={owner}>
+                    {OWNER_LABELS[owner]}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
           )}
+          {spaces.length > 0 ? (
+            <Select
+              value={spaceIdFilter === null ? "all" : String(spaceIdFilter)}
+              onValueChange={(value) =>
+                onSpaceIdFilterChange(value === "all" ? null : Number(value))
+              }
+            >
+              <SelectTrigger aria-label="Space" className="min-w-0 flex-1 basis-40">
+                <SelectValue placeholder="All spaces" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All spaces</SelectItem>
+                {spaces.map((space) => (
+                  <SelectItem key={space.id} value={String(space.id)}>
+                    {space.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : null}
         </div>
 
-        {spaces.length > 0 && (
-          <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
-            <Layers className="ml-1 h-3 w-3 shrink-0 text-muted-foreground" />
-            <SpaceFilterButton
-              spaceId={null}
-              label="All"
-              active={spaceIdFilter === null}
-              onSelect={onSpaceIdFilterChange}
-            />
-            {spaces.map((space) => (
-              <SpaceFilterButton
-                key={space.id}
-                spaceId={space.id}
-                label={space.name}
-                active={spaceIdFilter === space.id}
-                onSelect={onSpaceIdFilterChange}
-              />
-            ))}
-          </div>
-        )}
-
-        <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground">
-            Page status
-          </span>
-          <div className="flex items-center gap-1 rounded-md border border-border bg-muted p-1">
-            <StatusScopeButton
-              status={null}
-              label="Any"
-              active={statusScope === null}
-              onSelect={onStatusScopeChange}
-            />
-            {KB_ASK_STATUS_SCOPES.map((status) => (
-              <StatusScopeButton
-                key={status}
-                status={status}
-                label={statusScopeLabel(status)}
-                active={statusScope === status}
-                onSelect={onStatusScopeChange}
-              />
-            ))}
-          </div>
+        <div className="flex flex-col gap-2">
+          <Label>Status</Label>
+          <Tabs
+            value={statusScope ?? "any"}
+            onValueChange={(value) => {
+              onStatusScopeChange(value === "any" || !isStatusScope(value) ? null : value);
+            }}
+            className="gap-0"
+          >
+            <TabsList aria-label="Page status" className="w-full md:w-full">
+              <TabsTrigger value="any">Any</TabsTrigger>
+              {KB_ASK_STATUS_SCOPES.map((status) => (
+                <TabsTrigger key={status} value={status}>
+                  {statusScopeLabel(status)}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
         </div>
 
         <OwnerMembershipSelect
@@ -553,12 +479,10 @@ function KbSourcesScopeSheet({
           onOwnersRetry={onOwnersRetry}
         />
 
-        <div className="flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2">
+        <div className="flex h-9 items-center justify-between rounded-md border border-input bg-card px-3 shadow-xs">
           <div className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-muted-foreground" />
-            <Label htmlFor="verified-only-toggle" className="text-sm">
-              Verified pages and articles only
-            </Label>
+            <ShieldCheck className="size-4 text-muted-foreground" />
+            <Label htmlFor="verified-only-toggle">Verified only</Label>
           </div>
           <Switch
             id="verified-only-toggle"
@@ -570,7 +494,7 @@ function KbSourcesScopeSheet({
 
         {readyVisible.length > 1 && (
           <div className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
+            <span className="text-sm text-muted-foreground">
               {selectedIds.length === 0
                 ? "No sources selected"
                 : `${selectedIds.length} of ${sources.filter((s) => s.status !== "archived").length} sources selected`}
@@ -578,7 +502,7 @@ function KbSourcesScopeSheet({
             <Button
               variant="ghost"
               size="sm"
-              className="h-7 text-xs"
+              className="h-9 px-2"
               onClick={handleToggleAll}
             >
               {allSelected ? "Deselect all" : "Select all"}
@@ -606,13 +530,13 @@ function KbSourcesScopeSheet({
           onRetry={onSourceRetry}
         />
 
-        <div className="space-y-2">
-          <p className="text-xs font-medium text-muted-foreground">Files</p>
+        <div className="flex flex-col gap-2">
+          <Label htmlFor="kb-scope-file-search">Files</Label>
           <Input
+            id="kb-scope-file-search"
             value={pageSearchQuery}
             onChange={(e) => onPageSearchQueryChange(e.target.value)}
             placeholder="Search files…"
-            className="h-8 text-xs"
             aria-label="Search files"
           />
           {pageSearchIsLoading ? (
@@ -633,9 +557,9 @@ function KbSourcesScopeSheet({
               ))}
             </ul>
           ) : pageSearchQuery.length > 0 ? (
-            <p className="text-xs text-muted-foreground">No files found</p>
+            <p className="text-sm text-muted-foreground">No files found</p>
           ) : (
-            <p className="text-xs text-muted-foreground">Type to search files</p>
+            <p className="text-sm text-muted-foreground">Type to search files</p>
           )}
         </div>
 
@@ -829,7 +753,7 @@ function ScopeSourceRow({
         onCheckedChange={handleCheckedChange}
         aria-label={`Include ${source.title ?? "source"} in search`}
       />
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
         <BookOpenTextIcon size={16} className="text-muted-foreground" />
       </div>
       <label
@@ -871,8 +795,8 @@ function ScopePageRow({
         onCheckedChange={handleCheckedChange}
         aria-label={`Include ${page.title} in search`}
       />
-      <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-muted">
-        <FileText className="h-3.5 w-3.5 text-muted-foreground" />
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
+        <FileText className="size-4 text-muted-foreground" />
       </div>
       <label htmlFor={`scope-page-${page.id}`} className="min-w-0 flex-1 cursor-pointer">
         <TruncatedText text={page.title} className="text-sm font-medium text-foreground" />
@@ -892,7 +816,7 @@ function SourceRow({
 }) {
   return (
     <li className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 shadow-sm">
-      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-muted">
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-muted">
         <BookOpenTextIcon size={16} className="text-muted-foreground" />
       </div>
 
@@ -908,12 +832,12 @@ function SourceRow({
       <LoadingButton
         variant="ghost"
         size="icon"
-        className="w-7 shrink-0 text-muted-foreground hover:text-destructive"
+        className="size-9 shrink-0 text-muted-foreground hover:text-destructive"
         onClick={onDelete}
         isPending={isDeleting}
         aria-label="Delete source"
       >
-        {!isDeleting && <Trash2Icon size={14} />}
+        {!isDeleting && <Trash2Icon size={16} />}
       </LoadingButton>
     </li>
   );
