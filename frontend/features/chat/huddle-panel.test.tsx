@@ -2,6 +2,32 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { HuddlePanel } from "./huddle-panel";
 import type { Huddle } from "@/types/chat";
 
+jest.mock("@/components/ui/confirm-dialog", () => ({
+  ConfirmDialog: ({
+    open,
+    onOpenChange,
+    onConfirm,
+    title,
+    isPending,
+  }: {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    onConfirm: () => void;
+    title: string;
+    isPending?: boolean;
+  }) =>
+    open ? (
+      <div role="alertdialog" aria-label={title}>
+        <button type="button" onClick={onConfirm} disabled={isPending}>
+          Confirm leave
+        </button>
+        <button type="button" onClick={() => onOpenChange(false)}>
+          Cancel
+        </button>
+      </div>
+    ) : null,
+}));
+
 const leaveMutate = jest.fn();
 const heartbeat = jest.fn();
 
@@ -114,5 +140,44 @@ describe("HuddlePanel invite picker", () => {
     expand();
     fireEvent.click(screen.getByRole("button", { name: "Invite users" }));
     expect(pickerCandidates).toHaveBeenLastCalledWith(["u-bo"]);
+  });
+});
+
+describe("HuddlePanel leave confirmation", () => {
+  it("clicking Leave huddle in the expanded view opens the confirm dialog without calling mutate", () => {
+    renderPanel(makeHuddle({}));
+    expand();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Leave huddle" }));
+    expect(screen.getByRole("alertdialog", { name: "Leave huddle" })).toBeInTheDocument();
+    expect(leaveMutate).not.toHaveBeenCalled();
+  });
+
+  it("confirming the dialog calls leaveHuddle.mutate and closes the dialog", () => {
+    renderPanel(makeHuddle({}));
+    expand();
+    fireEvent.click(screen.getByRole("button", { name: "Leave huddle" }));
+    fireEvent.click(screen.getByRole("button", { name: "Confirm leave" }));
+    expect(leaveMutate).toHaveBeenCalledTimes(1);
+    expect(leaveMutate).toHaveBeenCalledWith({ huddleId: 11, channelId: 7 });
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
+  it("cancelling the dialog does not call mutate and closes the dialog", () => {
+    renderPanel(makeHuddle({}));
+    expand();
+    fireEvent.click(screen.getByRole("button", { name: "Leave huddle" }));
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(leaveMutate).not.toHaveBeenCalled();
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+  });
+
+  it("clicking Leave huddle in the mini bar (collapsed) also opens the confirm dialog", () => {
+    renderPanel(makeHuddle({}));
+    expect(screen.queryByRole("alertdialog")).toBeNull();
+    const miniLeaveButtons = screen.getAllByRole("button", { name: "Leave huddle" });
+    fireEvent.click(miniLeaveButtons[0]!);
+    expect(screen.getByRole("alertdialog", { name: "Leave huddle" })).toBeInTheDocument();
+    expect(leaveMutate).not.toHaveBeenCalled();
   });
 });

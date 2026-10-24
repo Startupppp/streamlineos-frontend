@@ -48,9 +48,22 @@ jest.mock("@/components/ui/empty-state", () => ({
   ),
 }));
 
+jest.mock("@/components/ui/tabs", () => ({
+  Tabs: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  TabsList: ({ children }: { children: React.ReactNode }) => <div role="tablist">{children}</div>,
+  TabsTrigger: ({ children, value }: { children: React.ReactNode; value: string }) => (
+    <button type="button" role="tab" data-value={value}>{children}</button>
+  ),
+  TabsContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
 jest.mock("@/components/ui/sheet", () => ({
   Sheet: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   SheetContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetBody: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetHeader: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetTitle: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  SheetDescription: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 export const mockMessagePanel = jest.fn();

@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
 import type { LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface TemplatePickerCardProps {
   icon: LucideIcon;
@@ -10,29 +9,34 @@ interface TemplatePickerCardProps {
   disabled?: boolean;
 }
 
-export function TemplatePickerCard({ icon: Icon, title, description, onClick, disabled }: TemplatePickerCardProps) {
+export function TemplatePickerCard({
+  icon: Icon,
+  title,
+  description,
+  onClick,
+  disabled,
+}: TemplatePickerCardProps) {
   return (
-    <Card
-      role="button"
-      tabIndex={disabled ? -1 : 0}
-      onClick={disabled ? undefined : onClick}
-      onKeyDown={(e) => {
-        if (!disabled && (e.key === "Enter" || e.key === " ")) onClick();
-      }}
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
       className={cn(
-        "h-full cursor-pointer transition-all hover:shadow-md hover:border-primary/40",
-        disabled && "cursor-not-allowed opacity-60",
+        "group flex w-full min-w-0 items-start gap-3 rounded-xl border border-border bg-card p-3 text-left shadow-noir transition-colors",
+        "hover:border-primary/40 hover:bg-muted/30",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+        "disabled:pointer-events-none disabled:opacity-60",
       )}
     >
-      <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-          <Icon className="h-5 w-5 text-brand-core" />
-        </div>
-        <p className="font-semibold text-sm">{title}</p>
-      </CardHeader>
-      <CardContent>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </CardContent>
-    </Card>
+      <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-brand-core transition-colors group-hover:bg-primary/15">
+        <Icon className="size-4" aria-hidden="true" />
+      </span>
+      <span className="min-w-0 flex-1 space-y-0.5">
+        <span className="block text-sm font-semibold text-foreground">{title}</span>
+        <span className="block text-dense text-muted-foreground text-pretty line-clamp-2">
+          {description}
+        </span>
+      </span>
+    </button>
   );
 }

@@ -131,7 +131,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-1.5 text-sm">
+        <CardTitle className="flex min-w-0 items-center gap-1.5 text-sm sm:self-center">
           Collectors
           <TooltipProvider delayDuration={200}>
             <Tooltip>
@@ -152,21 +152,24 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
             </Tooltip>
           </TooltipProvider>
         </CardTitle>
-        <CardAction className="col-span-full row-start-2 mt-2 w-full justify-self-stretch @md/card-header:col-span-1 @md/card-header:col-start-2 @md/card-header:row-span-2 @md/card-header:row-start-1 @md/card-header:mt-0 @md/card-header:w-auto @md/card-header:justify-self-end">
+        <CardAction className="col-span-full row-start-2 mt-2 w-full justify-self-stretch sm:col-span-1 sm:col-start-2 sm:row-span-1 sm:row-start-1 sm:mt-0 sm:w-auto sm:max-w-[min(100%,22rem)] sm:self-center sm:justify-self-end">
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(handleCreate)}
-              className="flex w-full flex-col gap-2 sm:flex-row sm:items-center"
+              className="flex w-full min-w-0 flex-row items-center gap-2"
             >
               <FormField
                 control={form.control}
                 name="collectorType"
                 render={({ field }) => (
-                  <FormItem className="min-w-0 flex-1 sm:flex-none">
+                  <FormItem className="min-w-0 flex-1 basis-0 sm:flex-none sm:basis-auto">
                     <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger
-                          className={cn(FILTER_SELECT_TRIGGER, "w-full sm:w-52")}
+                          className={cn(
+                            FILTER_SELECT_TRIGGER,
+                            "w-full min-w-0 sm:w-44",
+                          )}
                           aria-label="Collector type"
                         >
                           <SelectValue />
@@ -187,10 +190,12 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
               <LoadingButton
                 type="submit"
                 size="sm"
+                className="min-w-0 flex-1 basis-0 sm:flex-none sm:basis-auto"
                 isPending={createCollector.isPending}
               >
                 <Plus className="size-3.5" />
-                Add collector
+                <span className="hidden sm:inline">Add collector</span>
+                <span className="sm:hidden">Add</span>
               </LoadingButton>
             </form>
           </Form>

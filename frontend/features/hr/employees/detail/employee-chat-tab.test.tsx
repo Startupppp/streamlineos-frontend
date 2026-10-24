@@ -54,6 +54,10 @@ jest.mock("@/components/ai", () => ({
   AiActionsMenu: () => null,
 }));
 
+jest.mock("./employee-header-card", () => ({
+  EmployeeHeaderCard: () => null,
+}));
+
 jest.mock("./overview-tab", () => ({ OverviewTab: () => null }));
 jest.mock("./timeline-tab", () => ({ EmployeeTimelineTab: () => null }));
 jest.mock("./sensitive-tab", () => ({ EmployeeSensitiveTab: () => null }));

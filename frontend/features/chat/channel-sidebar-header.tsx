@@ -7,8 +7,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import { Button } from "@/components/ui/button";
 import { PlusIcon } from "@animateicons/react/lucide";
-import { MessageSquareText, Search } from "lucide-react";
+import { Archive, MessageSquareText, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ChatInboxFilters } from "./chat-inbox-filters";
 import {
@@ -22,9 +28,12 @@ interface ChannelSidebarHeaderProps {
   onlineUserCount: number;
   unreadTotal: number;
   showArchived: boolean;
+  showArchivedEntry: boolean;
+  archivedUnreadCount: number;
   inboxFilter: ChatInboxFilter;
   inboxCounts: ChatInboxFilterCounts;
   onInboxFilter: (filter: ChatInboxFilter) => void;
+  onOpenArchived: () => void;
   onOpenNewDM: () => void;
   onOpenNewChannel: () => void;
   onOpenSearch: () => void;
@@ -35,13 +44,21 @@ export function ChannelSidebarHeader({
   onlineUserCount,
   unreadTotal,
   showArchived,
+  showArchivedEntry,
+  archivedUnreadCount,
   inboxFilter,
   inboxCounts,
   onInboxFilter,
+  onOpenArchived,
   onOpenNewDM,
   onOpenNewChannel,
   onOpenSearch,
 }: ChannelSidebarHeaderProps) {
+  const archivedLabel =
+    archivedUnreadCount > 0
+      ? `Archived, ${archivedUnreadCount > 99 ? "99+" : archivedUnreadCount} unread`
+      : "Archived";
+
   return (
     <div
       className={cn(
@@ -88,11 +105,38 @@ export function ChannelSidebarHeader({
       </button>
 
       {!showArchived && (
-        <ChatInboxFilters
-          value={inboxFilter}
-          counts={inboxCounts}
-          onChange={onInboxFilter}
-        />
+        <div className="flex min-w-0 w-full flex-nowrap items-center gap-2">
+          <ChatInboxFilters
+            value={inboxFilter}
+            counts={inboxCounts}
+            onChange={onInboxFilter}
+            className="min-w-0 flex-1"
+          />
+          {showArchivedEntry ? (
+            <MobileOnlyLabelTooltip label={archivedLabel}>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onOpenArchived}
+                aria-label={archivedLabel}
+                className={cn(
+                  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+                  "bg-card",
+                  archivedUnreadCount > 0 && "w-auto px-2 md:px-2.5",
+                )}
+              >
+                <Archive className="size-4 shrink-0" aria-hidden="true" />
+                <ResponsiveIconLabelText>Archived</ResponsiveIconLabelText>
+                {archivedUnreadCount > 0 ? (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
+                    {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
+                  </span>
+                ) : null}
+              </Button>
+            </MobileOnlyLabelTooltip>
+          ) : null}
+        </div>
       )}
     </div>
   );

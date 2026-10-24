@@ -155,61 +155,82 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
-          <form
-            onSubmit={handleSearchFormSubmit}
-            role="search"
-            className="w-full max-w-md shrink-0"
-          >
-            <SearchInput
-              ref={searchInputRef}
-              value={searchValue}
-              onValueChange={setSearchValue}
-              onSubmitSearch={handleSearchSubmit}
-              placeholder={
-                isProjectScoped
-                  ? "Filter this project's files…"
-                  : "Search documents…"
-              }
-            />
-          </form>
+        {isProjectScoped ? (
+          <div className="flex min-h-0 flex-1 flex-col gap-4">
+            <form
+              onSubmit={handleSearchFormSubmit}
+              role="search"
+              className="w-full max-w-md shrink-0"
+            >
+              <SearchInput
+                ref={searchInputRef}
+                value={searchValue}
+                onValueChange={setSearchValue}
+                onSubmitSearch={handleSearchSubmit}
+                placeholder="Filter this project's files…"
+              />
+            </form>
+            <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 md:flex-row">
+              <aside
+                className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
+                aria-label="Folder tree"
+              >
+                <PageTree projectId={projectId} baseHref={baseHref} />
+              </aside>
+              <section className="flex min-h-0 min-w-0 flex-1 flex-col">
+                <WikiPageCollectionTable
+                  fixedParams={{ projectId }}
+                  searchPlaceholder={null}
+                  emptyTitle="Your Docs workspace starts here"
+                  emptyDescription="Create your first document to give your team one place for current knowledge."
+                  emptyAction={
+                    canCreate
+                      ? { label: "Create a document", onClick: handleNewPage }
+                      : undefined
+                  }
+                  emptySecondaryAction={{
+                    label: "Browse templates",
+                    href: KB_TEMPLATES,
+                  }}
+                  emptyTertiaryAction={
+                    canImport
+                      ? { label: "Import documents", href: KB_IMPORT }
+                      : undefined
+                  }
+                  onItemCountChange={handleItemCountChange}
+                  onDocumentCountLabelChange={setDocumentCountLabel}
+                  onRowsChange={handleRowsChange}
+                />
+              </section>
+            </div>
+          </div>
+        ) : (
+          <div className="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide overscroll-contain">
+            <div className="flex flex-col gap-4">
+              <form
+                onSubmit={handleSearchFormSubmit}
+                role="search"
+                className="w-full max-w-md shrink-0"
+              >
+                <SearchInput
+                  ref={searchInputRef}
+                  value={searchValue}
+                  onValueChange={setSearchValue}
+                  onSubmitSearch={handleSearchSubmit}
+                  placeholder="Search documents…"
+                />
+              </form>
 
-          {!isProjectScoped && recentPreview.length > 0 && (
-            <section className="min-w-0 shrink-0">
-              <div className="mb-2 flex items-center gap-2">
-                <KbClockIcon className="h-4 w-4 text-muted-foreground" />
-                <h2 className="text-sm font-semibold text-foreground">
-                  Recently visited
-                </h2>
-              </div>
-              <div className={HOME_SHORTCUT_STRIP_CLASS}>
-                {recentPreview.map((page) => (
-                  <div key={page.id} className={HOME_SHORTCUT_CARD_CLASS}>
-                    <WikiPageCard
-                      icon={page.icon}
-                      title={page.title}
-                      subtitle={kbTimeAgo(page.updatedAt)}
-                      href={pageHref(page.id)}
-                      coverImage={page.coverImage}
-                    />
+              {recentPreview.length > 0 && (
+                <section className="min-w-0">
+                  <div className="mb-2 flex items-center gap-2">
+                    <KbClockIcon className="h-4 w-4 text-muted-foreground" />
+                    <h2 className="text-sm font-semibold text-foreground">
+                      Recently visited
+                    </h2>
                   </div>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {!isProjectScoped &&
-            (favoritePreview.length > 0 || favoritesQuery.isError) && (
-              <section className="min-w-0 shrink-0">
-                <div className="mb-2 flex items-center gap-2">
-                  <KbStarIcon className="h-4 w-4 text-muted-foreground" />
-                  <h2 className="text-sm font-semibold text-foreground">
-                    Starred
-                  </h2>
-                </div>
-                {favoritePreview.length > 0 && (
                   <div className={HOME_SHORTCUT_STRIP_CLASS}>
-                    {favoritePreview.map((page) => (
+                    {recentPreview.map((page) => (
                       <div key={page.id} className={HOME_SHORTCUT_CARD_CLASS}>
                         <WikiPageCard
                           icon={page.icon}
@@ -221,47 +242,64 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                       </div>
                     ))}
                   </div>
-                )}
-                {favoritesQuery.isError && (
-                  <ErrorState
-                    title="Could not load favorites"
-                    error={favoritesQuery.error}
-                    onRetry={handleRetryFavorites}
-                    compact
-                    className="mt-2"
-                  />
-                )}
-              </section>
-            )}
+                </section>
+              )}
 
-          <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-4 md:flex-row">
-            {isProjectScoped && (
-              <aside
-                className="hidden w-[200px] shrink-0 flex-col overflow-y-auto rounded-lg border border-border/60 bg-card/50 p-3 md:flex"
-                aria-label="Folder tree"
-              >
-                <PageTree projectId={projectId} baseHref={baseHref} />
-              </aside>
-            )}
-            <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-              <WikiPageCollectionTable
-                fixedParams={{
-                  projectId: isProjectScoped ? projectId : undefined,
-                }}
-                searchPlaceholder={null}
-                stickyToolbarHeader={
-                  !isProjectScoped ? (
-                    <div className="flex min-w-0 items-baseline gap-2">
-                      <h2 className="text-sm font-semibold text-foreground">
-                        All documents
-                      </h2>
-                      {documentCountLabel ? (
-                        <p className="text-sm text-muted-foreground tabular-nums">
-                          {documentCountLabel}
-                        </p>
-                      ) : null}
+              {(favoritePreview.length > 0 || favoritesQuery.isError) && (
+                <section className="min-w-0">
+                  <div className="mb-2 flex items-center gap-2">
+                    <KbStarIcon className="h-4 w-4 text-muted-foreground" />
+                    <h2 className="text-sm font-semibold text-foreground">
+                      Starred
+                    </h2>
+                  </div>
+                  {favoritePreview.length > 0 && (
+                    <div className={HOME_SHORTCUT_STRIP_CLASS}>
+                      {favoritePreview.map((page) => (
+                        <div key={page.id} className={HOME_SHORTCUT_CARD_CLASS}>
+                          <WikiPageCard
+                            icon={page.icon}
+                            title={page.title}
+                            subtitle={kbTimeAgo(page.updatedAt)}
+                            href={pageHref(page.id)}
+                            coverImage={page.coverImage}
+                          />
+                        </div>
+                      ))}
                     </div>
-                  ) : null
+                  )}
+                  {favoritesQuery.isError && (
+                    <ErrorState
+                      title="Could not load favorites"
+                      error={favoritesQuery.error}
+                      onRetry={handleRetryFavorites}
+                      compact
+                      className="mt-2"
+                    />
+                  )}
+                </section>
+              )}
+
+              <WikiPageCollectionTable
+                fixedParams={{}}
+                searchPlaceholder={null}
+                scrollMode="page"
+                stickyToolbarHeader={
+                  <div className="flex min-w-0 items-baseline gap-1.5 overflow-hidden">
+                    <h2 className="truncate text-sm font-semibold text-foreground">
+                      All documents
+                    </h2>
+                    {documentCountLabel ? (
+                      <p className="shrink-0 text-sm text-muted-foreground tabular-nums">
+                        <span className="sm:hidden">
+                          {documentCountLabel.replace(/\bdocuments?\b/, (word) =>
+                            word === "document" ? "item" : "items",
+                          )}
+                        </span>
+                        <span className="hidden sm:inline">{documentCountLabel}</span>
+                      </p>
+                    ) : null}
+                  </div>
                 }
                 emptyTitle="Your Docs workspace starts here"
                 emptyDescription="Create your first document to give your team one place for current knowledge."
@@ -283,9 +321,9 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
                 onDocumentCountLabelChange={setDocumentCountLabel}
                 onRowsChange={handleRowsChange}
               />
-            </section>
+            </div>
           </div>
-        </div>
+        )}
       </PageWrapper>
       <ShortcutHelpDialog
         open={shortcutHelpOpen}

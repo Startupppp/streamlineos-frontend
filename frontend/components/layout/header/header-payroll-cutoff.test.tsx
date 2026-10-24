@@ -57,7 +57,7 @@ describe("the header payroll cutoff chip", () => {
     expect(link).toHaveAccessibleName(/payroll cutoff/i);
   });
 
-  it("keeps the chip out of the 390px header row", () => {
+  it("keeps the full chip out of the 390px header row", () => {
     mockedCutoff.mockReturnValue({
       cutoff: { title: "Inputs lock", date: futureIsoDate(3) },
       month: "2026-10",
@@ -68,5 +68,21 @@ describe("the header payroll cutoff chip", () => {
 
     expect(screen.getByRole("link").className).toContain("hidden");
     expect(screen.getByRole("link").className).toContain("sm:inline-flex");
+  });
+
+  it("showcases a calendar icon in the compact mobile header", () => {
+    mockedCutoff.mockReturnValue({
+      cutoff: { title: "Inputs lock", date: futureIsoDate(3) },
+      month: "2026-10",
+      isLoading: false,
+    });
+
+    render(<HeaderPayrollCutoff compact />);
+    const link = screen.getByRole("link");
+
+    expect(link).toHaveAttribute("href", "/payroll/readiness");
+    expect(link).toHaveAccessibleName(/payroll cutoff/i);
+    expect(link.className).toContain("size-9");
+    expect(link.querySelector("svg")).not.toBeNull();
   });
 });

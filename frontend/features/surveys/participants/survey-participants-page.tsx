@@ -6,11 +6,11 @@ import { UserPlusIcon, SendIcon, BellIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTableSkeleton } from "@/components/ui/data-table";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
+import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
 import { ErrorState } from "@/components/shared";
@@ -65,14 +65,28 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
     void refetch();
   }
 
+  function handleStatusChange(value: string) {
+    setStatus(value as ParticipantStatus | "all");
+    setPage(1);
+  }
+
+  function handleOpenAdd() {
+    setAddOpen(true);
+  }
+
+  function handleClearFilters() {
+    setStatus("all");
+    setPage(1);
+  }
+
   async function handleInvite() {
     if (selected.size === 0) return;
     try {
       await invite.mutateAsync(Array.from(selected, Number));
       toast.success("Invitations sent");
       setSelected(new Set());
-    } catch (error) {
-      toast.error(getErrorMessage(error));
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
@@ -82,38 +96,54 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
       await remind.mutateAsync(Array.from(selected, Number));
       toast.success("Reminders sent");
       setSelected(new Set());
-    } catch (error) {
-      toast.error(getErrorMessage(error));
+    } catch (err) {
+      toast.error(getErrorMessage(err));
     }
   }
 
+  const hasActiveFilters = status !== "all";
   const pageState = usePageState({
     permission: "surveys:participants:view",
     isLoading,
     isError,
     error,
     isEmpty: !isLoading && !isError && participants.length === 0,
+    hasActiveFilters,
   });
+
+  const emptyNode = (
+    <EmptyState
+      title="No participants yet"
+      description="Add participants by email to invite them to this survey."
+      action={{ label: "Add participants", onClick: handleOpenAdd }}
+      filtersActive={hasActiveFilters}
+      filteredTitle="No participants match this status"
+      onClearFilters={handleClearFilters}
+      className="h-full min-h-full flex-1"
+    />
+  );
 
   return (
     <DashboardGate permission="surveys:participants:view">
       <RequireModule module="surveys">
         <PageWrapper
           title="Participants"
+          subtitle="Invite people and track who has started or finished."
           backHref={`/surveys/${surveyId}`}
           noInternalScroll
           contentClassName="flex min-h-0 flex-1 flex-col"
+          actionsInline
           state={pageState}
-          loading={<DataTableSkeleton rows={8} headers={["Name", "Email", "Status", "Invited", "Completed"]} fill />}
-          onRetry={handleRetry}
-          empty={
-            <EmptyState
-              title="No participants yet"
-              description="Add participants by email to invite them to this survey."
-              action={{ label: "Add participants", onClick: () => setAddOpen(true) }}
-              className="h-full min-h-full flex-1"
+          loading={
+            <DataTableSkeleton
+              rows={8}
+              headers={["Name", "Email", "Status", "Invited", "Completed"]}
+              fill
             />
           }
+          empty={emptyNode}
+          onRetry={handleRetry}
+          onClearFilters={handleClearFilters}
           stateViews={{
             error: (
               <ErrorState
@@ -124,10 +154,26 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
               />
             ),
           }}
-          actions={
-            <div className="flex w-full items-center justify-end gap-2">
-              <Select value={status} onValueChange={(v) => { setStatus(v as ParticipantStatus | "all"); setPage(1); }}>
-                <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40 shrink-0")}>
+          extraActions={
+            <div className="flex min-w-0 max-w-full flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <AnimatedIconButton
+                icon={UserPlusIcon}
+                iconSize={14}
+                iconClassName="mr-1.5"
+                size="sm"
+                className="h-9 shrink-0"
+                onClick={handleOpenAdd}
+              >
+                Add participants
+              </AnimatedIconButton>
+              <Select value={status} onValueChange={handleStatusChange}>
+                <SelectTrigger
+                  className={cn(
+                    FILTER_SELECT_TRIGGER,
+                    "w-auto max-w-[11rem] shrink-0 sm:w-40 sm:max-w-none",
+                  )}
+                  aria-label="Status"
+                >
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -139,22 +185,35 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
                   <SelectItem value="bounced">Bounced</SelectItem>
                 </SelectContent>
               </Select>
-              <AnimatedIconButton icon={UserPlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="shrink-0" onClick={() => setAddOpen(true)}>
-                Add participants
-              </AnimatedIconButton>
+              {selected.size > 0 ? (
+                <>
+                  <AnimatedIconButton
+                    icon={SendIcon}
+                    iconSize={14}
+                    iconClassName="mr-1.5"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0"
+                    onClick={handleInvite}
+                    disabled={invite.isPending}
+                  >
+                    Invite ({selected.size})
+                  </AnimatedIconButton>
+                  <AnimatedIconButton
+                    icon={BellIcon}
+                    iconSize={14}
+                    iconClassName="mr-1.5"
+                    variant="outline"
+                    size="sm"
+                    className="h-9 shrink-0"
+                    onClick={handleRemind}
+                    disabled={remind.isPending}
+                  >
+                    Remind ({selected.size})
+                  </AnimatedIconButton>
+                </>
+              ) : null}
             </div>
-          }
-          filters={
-            selected.size > 0 ? (
-              <div className={FILTER_TOOLBAR_ROW}>
-                <AnimatedIconButton icon={SendIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleInvite} disabled={invite.isPending}>
-                  Invite ({selected.size})
-                </AnimatedIconButton>
-                <AnimatedIconButton icon={BellIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleRemind} disabled={remind.isPending}>
-                  Remind ({selected.size})
-                </AnimatedIconButton>
-              </div>
-            ) : undefined
           }
         >
           <DataTable
@@ -169,14 +228,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
               getRowLabel: (row) => row.name ?? row.email ?? "",
             }}
             pagination={{ mode: "server", page, pageSize, total, onPageChange: setPage }}
-            emptyState={
-              <EmptyState
-                title="No participants yet"
-                description="Add participants by email to invite them to this survey."
-                action={{ label: "Add participants", onClick: () => setAddOpen(true) }}
-                className="h-full min-h-full flex-1"
-              />
-            }
+            emptyState={emptyNode}
           />
         </PageWrapper>
         <AddParticipantsDialog surveyId={surveyId} open={addOpen} onOpenChange={setAddOpen} />

@@ -5,6 +5,7 @@ import { PhoneOff, Video, VideoOff } from "lucide-react";
 import { ChevronDownIcon, ChevronUpIcon, UserPlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useLeaveHuddle, useHuddleHeartbeat } from "@/hooks/api/chat-huddles";
 import type { Huddle } from "@/types/chat";
 import { useHuddleEvents } from "./use-huddle-events";
@@ -24,6 +25,7 @@ interface HuddlePanelProps {
 export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelProps) {
   const [expanded, setExpanded] = useState(false);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   const leaveHuddle = useLeaveHuddle();
   const isJoined = huddle.participants.some((p) => p.userId === currentUserId);
@@ -37,7 +39,10 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
 
   const handleLeave = useCallback(() => {
     leaveHuddle.mutate({ huddleId: huddle.id, channelId });
+    setConfirmLeave(false);
   }, [leaveHuddle, huddle.id, channelId]);
+
+  const handleRequestLeave = useCallback(() => setConfirmLeave(true), []);
 
   useHuddleEvents({
     channelId,
@@ -138,7 +143,7 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
               variant="ghost"
               size="sm"
               className="h-9 w-9 rounded-full p-0 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive"
-              onClick={handleLeave}
+              onClick={handleRequestLeave}
               aria-label="Leave huddle"
               disabled={leaveHuddle.isPending}
             >
@@ -161,10 +166,21 @@ export function HuddlePanel({ huddle, channelId, currentUserId }: HuddlePanelPro
           participants={huddle.participants}
           meetingUrl={meetingUrl}
           meetingProvider={huddle.meetingProvider}
-          onLeave={handleLeave}
+          onLeave={handleRequestLeave}
           isLeavePending={leaveHuddle.isPending}
         />
       )}
+
+      <ConfirmDialog
+        open={confirmLeave}
+        onOpenChange={setConfirmLeave}
+        title="Leave huddle"
+        description="You will be removed from this active huddle. Others can continue without you."
+        confirmLabel="Leave"
+        destructive
+        isPending={leaveHuddle.isPending}
+        onConfirm={handleLeave}
+      />
     </div>
   );
 }

@@ -16,6 +16,12 @@ import { toast } from "sonner";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
@@ -429,20 +435,28 @@ export function CopyAnswerButton({ text }: { text: string }) {
     );
   }
 
+  const label = copied ? "Answer copied" : "Copy answer";
+
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      aria-label={copied ? "Answer copied" : "Copy answer"}
-      className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
-    >
-      {copied ? (
-        <CheckCircle2 className="h-3 w-3 shrink-0" aria-hidden="true" />
-      ) : (
-        <Copy className="h-3 w-3 shrink-0" aria-hidden="true" />
-      )}
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={handleCopy}
+            aria-label={label}
+            className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {copied ? (
+              <CheckCircle2 className="size-3.5 shrink-0" aria-hidden="true" />
+            ) : (
+              <Copy className="size-3.5 shrink-0" aria-hidden="true" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top">{label}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
@@ -506,37 +520,52 @@ export function AnswerFeedbackBar({
 
   return (
     <>
-      <div className="flex flex-wrap items-center gap-1 pt-1">
-        <span className="mr-1 text-micro text-muted-foreground">Helpful?</span>
-        <button
-          type="button"
-          onClick={handleHelpful}
-          disabled={feedback.isPending}
-          aria-label="Mark answer as helpful"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ThumbsUp className="h-3 w-3 shrink-0" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          onClick={handleNotHelpful}
-          disabled={feedback.isPending}
-          aria-label="Mark answer as not helpful"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <ThumbsDown className="h-3 w-3 shrink-0" aria-hidden="true" />
-        </button>
-        <button
-          type="button"
-          onClick={handleOpenReportDialog}
-          disabled={feedback.isPending}
-          aria-label="Report answer as wrong or stale"
-          className="inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-dense text-muted-foreground transition-colors hover:text-foreground"
-        >
-          <Flag className="h-3 w-3 shrink-0" aria-hidden="true" />
-          Report wrong or stale
-        </button>
-      </div>
+      <TooltipProvider delayDuration={200}>
+        <div className="flex flex-wrap items-center gap-0.5">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleHelpful}
+                disabled={feedback.isPending}
+                aria-label="Mark answer as helpful"
+                className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              >
+                <ThumbsUp className="size-3.5 shrink-0" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Helpful</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleNotHelpful}
+                disabled={feedback.isPending}
+                aria-label="Mark answer as not helpful"
+                className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              >
+                <ThumbsDown className="size-3.5 shrink-0" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Not helpful</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={handleOpenReportDialog}
+                disabled={feedback.isPending}
+                aria-label="Report answer as wrong or stale"
+                className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+              >
+                <Flag className="size-3.5 shrink-0" aria-hidden="true" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="top">Report wrong or stale</TooltipContent>
+          </Tooltip>
+        </div>
+      </TooltipProvider>
       <ConfirmDialog
         open={reportOpen}
         onOpenChange={handleReportDialogOpenChange}

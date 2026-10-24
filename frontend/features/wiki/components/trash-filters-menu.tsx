@@ -6,6 +6,11 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Label } from "@/components/ui/label";
 import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import {
   ResponsivePopover,
   ResponsivePopoverContent,
   ResponsivePopoverTrigger,
@@ -17,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import { TrashMemberFilter } from "./trash-member-filter";
 
 const ALL_SPACES_VALUE = "all";
@@ -66,23 +72,28 @@ export function TrashFiltersMenu({
 
   return (
     <ResponsivePopover open={open} onOpenChange={setOpen}>
-      <ResponsivePopoverTrigger asChild>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-9 shrink-0 gap-1.5"
-          aria-label={filtersLabel}
-        >
-          <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
-          Filters
-          {activeCount > 0 ? (
-            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-normal tabular-nums text-foreground">
-              {activeCount}
-            </span>
-          ) : null}
-        </Button>
-      </ResponsivePopoverTrigger>
+      <MobileOnlyLabelTooltip label={filtersLabel}>
+        <ResponsivePopoverTrigger asChild>
+          <Button
+            type="button"
+            variant="outline"
+            className={cn(
+              RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+              "max-md:overflow-hidden",
+              activeCount > 0 && "w-auto px-2 md:px-2.5",
+            )}
+            aria-label={filtersLabel}
+          >
+            <SlidersHorizontal className="h-4 w-4 shrink-0" aria-hidden="true" />
+            <ResponsiveIconLabelText>Filters</ResponsiveIconLabelText>
+            {activeCount > 0 ? (
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary/10 px-1 text-dense font-normal tabular-nums text-foreground">
+                {activeCount}
+              </span>
+            ) : null}
+          </Button>
+        </ResponsivePopoverTrigger>
+      </MobileOnlyLabelTooltip>
       <ResponsivePopoverContent
         align="start"
         title="Filters"

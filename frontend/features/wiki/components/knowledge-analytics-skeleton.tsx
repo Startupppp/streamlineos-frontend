@@ -3,11 +3,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function AnalyticsSkeleton() {
   return (
     <div className="flex min-h-0 w-full min-w-0 flex-1 flex-col gap-4">
-      <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-        <Skeleton className="h-9 w-full rounded-md sm:w-44" />
-        <Skeleton className="h-9 w-full rounded-md sm:w-52" />
-        <Skeleton className="col-span-2 h-9 w-full rounded-md sm:w-40" />
-      </div>
       <div className="grid shrink-0 grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }, (_, index) => (
           <Skeleton key={index} className="h-20 w-full rounded-xl" />

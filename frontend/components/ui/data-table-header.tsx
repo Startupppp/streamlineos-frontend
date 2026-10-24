@@ -16,6 +16,7 @@ interface DataTableHeaderProps<T> {
   table: TanstackTable<T>;
   announceSort: boolean;
   rowIndex: number;
+  stickyTop?: number;
   selectAll?: {
     checked: boolean | "indeterminate";
     onCheckedChange: (value: boolean | "indeterminate") => void;
@@ -26,10 +27,11 @@ export function DataTableHeader<T>({
   table,
   announceSort,
   rowIndex,
+  stickyTop,
   selectAll,
 }: DataTableHeaderProps<T>) {
   return (
-    <TableHeader className="sticky top-0 z-10 border-b-2 border-border bg-muted">
+    <TableHeader className="border-b-2 border-border bg-muted">
       {table.getHeaderGroups().map((hg) => (
         <TableRow
           key={hg.id}
@@ -47,9 +49,11 @@ export function DataTableHeader<T>({
               <TableHead
                 key={header.id}
                 className={cn(
-                  "text-sm font-medium px-2 py-2",
+                  "sticky z-10 bg-muted text-sm font-medium px-2 py-2",
+                  stickyTop == null && "top-0",
                   header.column.columnDef.meta?.headerClassName,
                 )}
+                style={stickyTop != null ? { top: stickyTop } : undefined}
                 aria-sort={
                   !announceSort
                     ? undefined

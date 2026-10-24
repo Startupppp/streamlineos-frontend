@@ -226,16 +226,19 @@ export function EnvelopeList() {
         ) : undefined
       }
       filters={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
           <SearchInput
             placeholder="Search title or signer"
             aria-label="Search envelopes"
             value={search}
             onValueChange={setSearch}
-            className="w-full sm:w-64"
+            className="min-w-0 flex-1 sm:w-64 sm:flex-none"
           />
           <Select value={status} onValueChange={handleStatusChange}>
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")} aria-label="Status">
+            <SelectTrigger
+              className={cn(FILTER_SELECT_TRIGGER, "w-auto max-w-[11rem] shrink-0 sm:w-44 sm:max-w-none")}
+              aria-label="Status"
+            >
               <SelectValue placeholder="All statuses" />
             </SelectTrigger>
             <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>

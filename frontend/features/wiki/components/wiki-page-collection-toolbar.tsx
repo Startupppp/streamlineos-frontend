@@ -232,7 +232,7 @@ export function WikiPageCollectionToolbar({
       : "Filters";
 
   return (
-    <>
+    <div className="flex shrink-0 flex-nowrap items-center gap-2">
       <ResponsivePopover open={filtersOpen} onOpenChange={setFiltersOpen}>
         <MobileOnlyLabelTooltip label={filtersLabel}>
           <ResponsivePopoverTrigger asChild>
@@ -301,6 +301,6 @@ export function WikiPageCollectionToolbar({
         onChange={onViewChange}
         className="shrink-0"
       />
-    </>
+    </div>
   );
 }

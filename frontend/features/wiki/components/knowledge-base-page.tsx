@@ -266,44 +266,57 @@ export default function KnowledgeBasePage() {
     <PageState resolution={pageState} loading={null}>
     <PageWrapper
       title="Ask documents"
-      subtitle="Ask across your files and docs. Every answer stays grounded in content you can access."
+      subtitle="Answers grounded in your docs."
       noInternalScroll
       contentClassName="flex min-h-0 min-w-0 flex-col px-4 sm:px-6"
       actions={
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full min-w-0 flex-nowrap items-center gap-1.5 sm:w-auto sm:gap-2">
           <Button
             variant="outline"
             size="sm"
-            className="gap-1.5"
+            className="min-w-0 flex-1 gap-1.5 px-2 sm:flex-none sm:px-3"
             onClick={handleToggleConversations}
             aria-pressed={conversationsOpen}
+            aria-label="Conversations"
+            title="Conversations"
           >
-            <MessageSquare className="h-4 w-4" />
-            Conversations
+            <MessageSquare className="size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">Conversations</span>
           </Button>
           <Button
             variant={scope.scopeActive ? "default" : "outline"}
             size="sm"
-            className="gap-1.5"
+            className="min-w-0 flex-1 gap-1.5 px-2 sm:flex-none sm:px-3"
             onClick={handleScopeClick}
             aria-label={
               scope.scopeActive
                 ? `Searching ${scope.scopeSummary}`
                 : "Choose sources to search"
             }
+            title={
+              scope.scopeActive
+                ? `Searching ${scope.scopeSummary}`
+                : "Choose sources to search"
+            }
           >
-            <SlidersHorizontal className="h-4 w-4" />
-            {scope.scopeActive ? scope.scopeSummary : "Scope"}
+            <SlidersHorizontal className="size-4 shrink-0" aria-hidden="true" />
+            <span className="truncate">
+              {scope.scopeActive ? scope.scopeSummary : "Scope"}
+            </span>
           </Button>
           <LoadingButton
             variant="outline"
             size="sm"
-            className="gap-1.5"
+            className="min-w-0 flex-1 gap-1.5 px-2 sm:flex-none sm:px-3"
             isPending={uploadFile.isPending}
             onClick={handleManageSourcesClick}
+            aria-label="Sources"
+            title="Sources"
           >
-            {!uploadFile.isPending && <BookOpenTextIcon size={16} />}
-            Sources
+            {!uploadFile.isPending && (
+              <BookOpenTextIcon size={16} className="shrink-0" aria-hidden="true" />
+            )}
+            <span className="truncate">Sources</span>
           </LoadingButton>
         </div>
       }

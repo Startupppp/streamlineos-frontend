@@ -3,7 +3,9 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
+  useRef,
   useState,
   Fragment,
   type ReactNode,
@@ -88,6 +90,7 @@ export interface WikiPageCollectionTableProps {
   onItemCountChange?: (count: number) => void;
   onDocumentCountLabelChange?: (label: string | null) => void;
   stickyToolbarHeader?: ReactNode;
+  scrollMode?: "contain" | "page";
 }
 
 export function WikiPageCollectionTable({
@@ -105,6 +108,7 @@ export function WikiPageCollectionTable({
   onItemCountChange,
   onDocumentCountLabelChange,
   stickyToolbarHeader,
+  scrollMode = "contain",
 }: WikiPageCollectionTableProps) {
   const searchParams = useSearchParams();
   const { update } = useUrlFilters({ pageParam: KB_PAGE_CURSOR_PARAM });
@@ -373,7 +377,10 @@ export function WikiPageCollectionTable({
   );
 
   const toolbarRow = (
-    <div className="flex w-full min-w-0 items-center gap-2">
+    <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+      {stickyToolbarHeader ? (
+        <div className="min-w-0 flex-1">{stickyToolbarHeader}</div>
+      ) : null}
       {searchPlaceholder !== null && (
         <SearchInput
           value={rawSearch}
@@ -382,7 +389,7 @@ export function WikiPageCollectionTable({
           className="h-9 !w-auto !min-w-0 max-w-full flex-1 basis-0 sm:max-w-xs"
         />
       )}
-      <div className="ml-auto flex shrink-0 items-center gap-2">
+      <div className="ml-auto flex shrink-0 flex-nowrap items-center gap-2">
         <WikiPageCollectionToolbar
           status={status}
           kind={kind}
@@ -406,8 +413,32 @@ export function WikiPageCollectionTable({
     </div>
   );
 
+  const isPageScroll = scrollMode === "page";
+  const stickyChromeRef = useRef<HTMLDivElement>(null);
+  const [stickyChromeHeight, setStickyChromeHeight] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!isPageScroll) {
+      setStickyChromeHeight(0);
+      return;
+    }
+    const el = stickyChromeRef.current;
+    if (!el) return;
+    const update = () => setStickyChromeHeight(el.offsetHeight);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isPageScroll]);
+
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-3">
+    <div
+      className={
+        isPageScroll
+          ? "flex flex-col gap-0"
+          : "flex min-h-0 flex-1 flex-col gap-3"
+      }
+    >
       {isOffline && (
         <span
           className="flex items-center gap-1 text-xs text-status-warning-ink"
@@ -417,8 +448,14 @@ export function WikiPageCollectionTable({
           Offline — data may be stale
         </span>
       )}
-      <div className="flex shrink-0 flex-col gap-3">
-        {stickyToolbarHeader}
+      <div
+        ref={isPageScroll ? stickyChromeRef : undefined}
+        className={
+          isPageScroll
+            ? "sticky top-0 z-20 flex shrink-0 flex-col gap-3 bg-background pb-3"
+            : "flex shrink-0 flex-col gap-3"
+        }
+      >
         {toolbarRow}
       </div>
       <PageState
@@ -432,14 +469,26 @@ export function WikiPageCollectionTable({
         }
         empty={emptyNode}
         onRetry={handleRetry}
-        className={CONTENT_FILL_PANEL}
+        className={isPageScroll ? "flex w-full flex-col" : CONTENT_FILL_PANEL}
       >
         {view === "card" ? (
           rows.length === 0 ? (
             emptyNode
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col gap-3">
-              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+            <div
+              className={
+                isPageScroll
+                  ? "flex flex-col gap-3"
+                  : "flex min-h-0 flex-1 flex-col gap-3"
+              }
+            >
+              <div
+                className={
+                  isPageScroll
+                    ? undefined
+                    : "min-h-0 flex-1 overflow-y-auto scrollbar-hide"
+                }
+              >
                 <div className={WIKI_PAGE_CARD_GRID_CLASS}>
                   {rows.map((row) => (
                     <Fragment key={row.id}>{renderMobileCard(row)}</Fragment>
@@ -462,7 +511,9 @@ export function WikiPageCollectionTable({
           )
         ) : (
           <DataTable
-            className="h-full min-h-0 flex-1"
+            className={isPageScroll ? undefined : "h-full min-h-0 flex-1"}
+            fillHeight={!isPageScroll}
+            stickyHeaderTop={isPageScroll ? stickyChromeHeight : undefined}
             data={rows}
             columns={columns}
             getRowKey={(row) => row.id}

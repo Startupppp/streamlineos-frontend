@@ -291,10 +291,51 @@ export default function SpacesPage() {
     />
   );
 
+  const filters = (
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+      <div className="col-span-2 flex min-w-0 items-center gap-2 sm:contents">
+        <SearchInput
+          value={rawSearch}
+          onValueChange={handleSearchChange}
+          placeholder="Search team folders…"
+          className="h-9 min-w-0 flex-1 sm:w-48 sm:flex-none"
+        />
+        <ViewToggle
+          value={view}
+          options={[...SPACE_VIEW_OPTIONS]}
+          onChange={handleViewChange}
+          className="shrink-0 sm:order-last sm:ml-auto"
+        />
+      </div>
+      <Select value={audienceFilter} onValueChange={handleAudienceChange}>
+        <SelectTrigger className="h-9 w-full sm:w-36">
+          <SelectValue placeholder="Audience" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All audiences</SelectItem>
+          <SelectItem value="internal">Internal</SelectItem>
+          <SelectItem value="public">Public</SelectItem>
+          <SelectItem value="mixed">Mixed</SelectItem>
+        </SelectContent>
+      </Select>
+      <Select value={archivedFilter} onValueChange={handleStatusChange}>
+        <SelectTrigger className="h-9 w-full sm:w-36">
+          <SelectValue placeholder="Status" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All statuses</SelectItem>
+          <SelectItem value="active">Active</SelectItem>
+          <SelectItem value="archived">Archived</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  );
+
   return (
     <PageWrapper
       title="Team folders"
       subtitle="Organize your docs into team folders"
+      filters={filters}
       actions={
         canManage ? (
           <Button size="sm" onClick={handleCreate}>
@@ -304,110 +345,70 @@ export default function SpacesPage() {
         ) : undefined
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-        <div className="grid w-full shrink-0 grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <div className="col-span-2 flex min-w-0 items-center gap-2 sm:contents">
-            <SearchInput
-              value={rawSearch}
-              onValueChange={handleSearchChange}
-              placeholder="Search team folders…"
-              className="h-9 min-w-0 flex-1 sm:w-48 sm:flex-none"
-            />
-            <ViewToggle
-              value={view}
-              options={[...SPACE_VIEW_OPTIONS]}
-              onChange={handleViewChange}
-              className="shrink-0 sm:order-last sm:ml-auto"
-            />
-          </div>
-          <Select value={audienceFilter} onValueChange={handleAudienceChange}>
-            <SelectTrigger className="h-9 w-full sm:w-36">
-              <SelectValue placeholder="Audience" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All audiences</SelectItem>
-              <SelectItem value="internal">Internal</SelectItem>
-              <SelectItem value="public">Public</SelectItem>
-              <SelectItem value="mixed">Mixed</SelectItem>
-            </SelectContent>
-          </Select>
-          <Select value={archivedFilter} onValueChange={handleStatusChange}>
-            <SelectTrigger className="h-9 w-full sm:w-36">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All statuses</SelectItem>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="archived">Archived</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <PageState
-          resolution={pageState}
-          onRetry={handleRetry}
-          className={CONTENT_FILL_PANEL}
-          loading={
-            view === "list" ? (
-              <WikiFillTable
-                headers={["Team folder", "Audience", "Files", "Members", "Owner", "Updated", ""]}
-              />
-            ) : (
-              <div className="grid min-h-0 w-full min-w-0 flex-1 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(11rem,1fr)]">
-                {Array.from({ length: 18 }, (_, index) => (
-                  <SpaceCardSkeleton key={index} />
-                ))}
-              </div>
-            )
-          }
-          empty={emptyNode}
-        >
-          {view === "list" ? (
-            <SpacesListTable
-              spaces={spaces}
-              canManage={canManage}
-              pageSize={LIST_LIMIT}
-              hasMore={pagination?.hasMore ?? false}
-              hasPrevious={Boolean(cursor)}
-              onNext={handleGoNext}
-              onPrevious={handleGoPrevious}
-              onEdit={handleEdit}
-              onArchiveToggle={handleArchiveToggle}
-              onDelete={handleDelete}
-              onViewMembers={handleViewMembers}
-              emptyState={emptyNode}
+      <PageState
+        resolution={pageState}
+        onRetry={handleRetry}
+        className={CONTENT_FILL_PANEL}
+        loading={
+          view === "list" ? (
+            <WikiFillTable
+              headers={["Team folder", "Audience", "Files", "Members", "Owner", "Updated", ""]}
             />
           ) : (
-            <div className="flex flex-col gap-4">
-              <SpacesGrid>
-                {spaces.map((space: KbSpaceListItem) => (
-                  <SpaceCard
-                    key={space.id}
-                    space={space}
-                    canManage={canManage}
-                    pageCount={space.pageCount}
-                    onEdit={handleEdit}
-                    onArchiveToggle={handleArchiveToggle}
-                    onDelete={handleDelete}
-                    onViewMembers={handleViewMembers}
-                  />
-                ))}
-              </SpacesGrid>
-              {pagination &&
-                (pagination.hasMore || Boolean(cursor)) && (
-                  <TablePagination
-                    mode="cursor"
-                    rowCount={spaces.length}
-                    hasPrevious={Boolean(cursor)}
-                    hasMore={pagination.hasMore}
-                    onNext={handleGoNext}
-                    onPrevious={handleGoPrevious}
-                  />
-                )}
+            <div className="grid min-h-0 w-full min-w-0 flex-1 grid-cols-1 gap-4 overflow-hidden sm:grid-cols-2 lg:grid-cols-3 [grid-auto-rows:minmax(11rem,1fr)]">
+              {Array.from({ length: 18 }, (_, index) => (
+                <SpaceCardSkeleton key={index} />
+              ))}
             </div>
-          )}
-        </PageState>
-      </div>
+          )
+        }
+        empty={emptyNode}
+      >
+        {view === "list" ? (
+          <SpacesListTable
+            spaces={spaces}
+            canManage={canManage}
+            pageSize={LIST_LIMIT}
+            hasMore={pagination?.hasMore ?? false}
+            hasPrevious={Boolean(cursor)}
+            onNext={handleGoNext}
+            onPrevious={handleGoPrevious}
+            onEdit={handleEdit}
+            onArchiveToggle={handleArchiveToggle}
+            onDelete={handleDelete}
+            onViewMembers={handleViewMembers}
+            emptyState={emptyNode}
+          />
+        ) : (
+          <div className="flex flex-col gap-4">
+            <SpacesGrid>
+              {spaces.map((space: KbSpaceListItem) => (
+                <SpaceCard
+                  key={space.id}
+                  space={space}
+                  canManage={canManage}
+                  pageCount={space.pageCount}
+                  onEdit={handleEdit}
+                  onArchiveToggle={handleArchiveToggle}
+                  onDelete={handleDelete}
+                  onViewMembers={handleViewMembers}
+                />
+              ))}
+            </SpacesGrid>
+            {pagination &&
+              (pagination.hasMore || Boolean(cursor)) && (
+                <TablePagination
+                  mode="cursor"
+                  rowCount={spaces.length}
+                  hasPrevious={Boolean(cursor)}
+                  hasMore={pagination.hasMore}
+                  onNext={handleGoNext}
+                  onPrevious={handleGoPrevious}
+                />
+              )}
+          </div>
+        )}
+      </PageState>
 
       <SpaceSheet
         key={editingSpace?.id ?? "new"}

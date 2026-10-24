@@ -70,11 +70,13 @@ export function OptionsTab({ survey }: { survey: SurveyForm }) {
         >
           <Card className="flex-1">
             <CardHeader>
-              <CardTitle className="text-sm">Survey</CardTitle>
-              <CardDescription>
-                Title, description, and the language respondents see first.
-              </CardDescription>
-              <CardAction className="max-sm:col-span-full max-sm:row-start-3 max-sm:mt-2 max-sm:w-full max-sm:justify-self-stretch">
+              <div className="col-start-1 row-start-1 flex min-w-0 flex-col gap-1">
+                <CardTitle className="text-sm">Survey</CardTitle>
+                <CardDescription>
+                  Title, description, and the language respondents see first.
+                </CardDescription>
+              </div>
+              <CardAction className="col-start-1 row-start-2 mt-2 w-full justify-self-stretch sm:col-start-2 sm:row-span-1 sm:row-start-1 sm:mt-0 sm:w-auto sm:justify-self-end">
                 <LoadingButton
                   type="submit"
                   isPending={patchSurvey.isPending}

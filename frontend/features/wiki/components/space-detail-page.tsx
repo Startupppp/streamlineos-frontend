@@ -363,6 +363,7 @@ export default function SpaceDetailPage({ spaceId }: SpaceDetailPageProps) {
             <div className="flex min-h-0 flex-1 flex-col">
               <WikiPageCollectionTable
                 fixedParams={{ spaceId }}
+                scrollMode="page"
                 emptyTitle="No files in this team folder yet"
                 emptyDescription="Move or create files inside this team folder to see them here."
                 onDocumentCountLabelChange={setDocumentCountLabel}

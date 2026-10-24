@@ -2,6 +2,7 @@
 
 import { useCallback } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 import {
   CHAT_INBOX_FILTERS,
   chatInboxFilterLabel,
@@ -14,6 +15,7 @@ interface ChatInboxFiltersProps {
   value: ChatInboxFilter;
   counts: ChatInboxFilterCounts;
   onChange: (filter: ChatInboxFilter) => void;
+  className?: string;
 }
 
 function filterCount(filter: ChatInboxFilter, counts: ChatInboxFilterCounts): number {
@@ -21,14 +23,24 @@ function filterCount(filter: ChatInboxFilter, counts: ChatInboxFilterCounts): nu
   return counts[filter];
 }
 
-export function ChatInboxFilters({ value, counts, onChange }: ChatInboxFiltersProps) {
+export function ChatInboxFilters({
+  value,
+  counts,
+  onChange,
+  className,
+}: ChatInboxFiltersProps) {
   const handleValueChange = useCallback(
     (next: string) => onChange(readChatInboxFilter(next)),
     [onChange],
   );
 
   return (
-    <div className="min-w-0 w-full overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <div
+      className={cn(
+        "min-w-0 w-full overflow-x-auto overscroll-x-contain [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        className,
+      )}
+    >
       <Tabs
         value={value}
         onValueChange={handleValueChange}

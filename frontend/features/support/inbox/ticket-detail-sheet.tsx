@@ -4,6 +4,8 @@ import { useCallback } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSupportTicket } from "@/hooks/api/support";
 import { useSupportRealtime } from "@/hooks/api/support/realtime";
+import { useCanState } from "@/hooks/api/access";
+import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
 import { TicketDetailHeader } from "./ticket-detail-header";
 import { TicketDetailTimeline } from "./ticket-detail-timeline";
 import { TicketDetailRelations } from "./ticket-detail-relations";
@@ -21,6 +23,7 @@ interface TicketDetailSheetProps {
 export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) {
   const { data: ticket, isLoading } = useSupportTicket(ticketId);
   useSupportRealtime(ticketId > 0 ? ticketId : null);
+  const chatAccess = useCanState("chat:channels:read");
 
   const handleInsertReply = useCallback((body: string) => {
     window.dispatchEvent(
@@ -59,6 +62,16 @@ export function TicketDetailSheet({ ticketId, onBack }: TicketDetailSheetProps) 
       <TicketAiPanel ticketId={ticket.id} onInsertReply={handleInsertReply} />
       <TicketReplyComposer key={ticket.id} ticketId={ticket.id} />
       <KbDeflectionPanel ticketId={ticket.id} ticketTitle={ticket.title} />
+      {chatAccess !== "denied" && (
+        <div className="flex flex-col min-h-[400px] border-t border-border">
+          <RecordConversationPanel
+            entityType="support_ticket"
+            entityId={String(ticket.id)}
+            emptyDescriptionWrite="This ticket does not have an associated chat channel yet. Create one to start the conversation."
+            emptyDescriptionReadOnly="This ticket does not have an associated chat channel yet. Ask an admin to link one."
+          />
+        </div>
+      )}
     </div>
   );
 }

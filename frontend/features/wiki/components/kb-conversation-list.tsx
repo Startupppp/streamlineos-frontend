@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SearchInput } from "@/components/ui/search-input";
+import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
 import { cn } from "@/lib/utils";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import {
@@ -63,7 +68,7 @@ function ConversationRowActions({ conv, onRename, onDeleteRequest }: Conversatio
           variant="ghost"
           size="icon"
           aria-label="More options"
-          className="size-9 shrink-0 text-muted-foreground lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:focus-visible:opacity-100 data-[state=open]:opacity-100"
+          className="size-9 shrink-0 text-muted-foreground"
         >
           <KbMoreHorizontalIcon className="size-4" />
         </Button>
@@ -184,10 +189,19 @@ export function KbConversationList({
             className="min-w-0"
           />
           <div className="ml-auto flex shrink-0 items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={onNewChat} className="gap-1.5">
-              <KbPenLineIcon className="size-4" />
-              New chat
-            </Button>
+            <MobileOnlyLabelTooltip label="New chat">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={onNewChat}
+                aria-label="New chat"
+                className={cn(RESPONSIVE_ICON_LABEL_TRIGGER_CLASS, "bg-card")}
+              >
+                <KbPenLineIcon className="size-4" aria-hidden="true" />
+                <ResponsiveIconLabelText>New chat</ResponsiveIconLabelText>
+              </Button>
+            </MobileOnlyLabelTooltip>
             <Button type="button" variant="ghost" size="icon" onClick={onClose} aria-label="Close panel">
               <KbXIcon className="size-4" />
             </Button>
@@ -207,12 +221,14 @@ export function KbConversationList({
               <section key={label} className="mb-2">
                 <h3 className="px-2 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</h3>
                 <ul>
-                {items.map((conv) => (
+                {items.map((conv) => {
+                  const isActive = activeConversationId === conv.id;
+                  return (
                   <li
                     key={conv.id}
                     className={cn(
                       "group flex min-h-9 items-center gap-2 rounded-md px-2",
-                      activeConversationId === conv.id ? "bg-muted" : "hover:bg-muted/60",
+                      isActive ? "bg-muted" : "hover:bg-muted/60",
                     )}
                   >
                     {renamingId === conv.id ? (
@@ -230,19 +246,31 @@ export function KbConversationList({
                         type="button"
                         data-conversation-id={conv.id}
                         onClick={handleSelectItem}
-                        className="flex h-9 min-w-0 flex-1 items-center gap-3 text-left"
+                        className="flex h-9 min-w-0 flex-1 items-center text-left"
                       >
                         <TruncatedText text={conv.title ?? "New conversation"} className="min-w-0 flex-1 text-sm font-medium text-foreground" />
-                        <span className="shrink-0 text-sm tabular-nums text-muted-foreground">{relativeTime(conv.updatedAt)}</span>
                       </button>
                     )}
-                    <ConversationRowActions
-                      conv={conv}
-                      onRename={handleRowRename}
-                      onDeleteRequest={handleRowDeleteRequest}
-                    />
+                    <div
+                      className={cn(
+                        "flex shrink-0 items-center gap-0.5 transition-opacity",
+                        "max-lg:opacity-100",
+                        "lg:opacity-0 lg:group-hover:opacity-100 lg:group-focus-within:opacity-100 lg:has-[[data-state=open]]:opacity-100",
+                        isActive && "lg:opacity-100",
+                      )}
+                    >
+                      <span className="shrink-0 px-1 text-sm tabular-nums text-muted-foreground">
+                        {relativeTime(conv.updatedAt)}
+                      </span>
+                      <ConversationRowActions
+                        conv={conv}
+                        onRename={handleRowRename}
+                        onDeleteRequest={handleRowDeleteRequest}
+                      />
+                    </div>
                   </li>
-                ))}
+                  );
+                })}
                 </ul>
               </section>
             ))}

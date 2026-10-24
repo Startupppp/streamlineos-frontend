@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { cn } from "@/lib/utils";
+import { TabsNavigation, TabsNavigationLink } from "@/components/ui/tabs";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useSignEnvelope } from "@/hooks/api/sign/envelopes";
 import { useSignDocumentPreview } from "@/hooks/api/sign/documents";
@@ -23,39 +23,6 @@ const BUILDER_PANES = [
 
 type BuilderPane = (typeof BUILDER_PANES)[number]["value"];
 
-function BuilderPaneButton({
-  value,
-  label,
-  selected,
-  onSelect,
-}: {
-  value: BuilderPane;
-  label: string;
-  selected: boolean;
-  onSelect: (pane: BuilderPane) => void;
-}) {
-  function handleSelect() {
-    onSelect(value);
-  }
-
-  return (
-    <button
-      type="button"
-      role="tab"
-      aria-selected={selected}
-      onClick={handleSelect}
-      className={cn(
-        "h-9 min-w-0 flex-1 rounded-md px-2 text-sm font-medium",
-        selected
-          ? "bg-foreground text-background"
-          : "text-muted-foreground hover:text-foreground",
-      )}
-    >
-      {label}
-    </button>
-  );
-}
-
 function BuilderPaneSwitch({
   pane,
   onSelect,
@@ -64,20 +31,20 @@ function BuilderPaneSwitch({
   onSelect: (pane: BuilderPane) => void;
 }) {
   return (
-    <div
-      className="flex shrink-0 gap-1 border-b border-border p-2 lg:hidden"
-      role="tablist"
-      aria-label="Builder sections"
-    >
-      {BUILDER_PANES.map((item) => (
-        <BuilderPaneButton
-          key={item.value}
-          value={item.value}
-          label={item.label}
-          selected={pane === item.value}
-          onSelect={onSelect}
-        />
-      ))}
+    <div className="shrink-0 border-b border-border px-3 py-2 lg:hidden">
+      <TabsNavigation aria-label="Builder sections" className="w-full max-w-full md:w-full">
+        {BUILDER_PANES.map((item) => (
+          <TabsNavigationLink key={item.value} active={pane === item.value}>
+            <button
+              type="button"
+              className="min-w-0 flex-1"
+              onClick={() => onSelect(item.value)}
+            >
+              {item.label}
+            </button>
+          </TabsNavigationLink>
+        ))}
+      </TabsNavigation>
     </div>
   );
 }

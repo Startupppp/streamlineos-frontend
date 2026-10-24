@@ -194,10 +194,11 @@ export function BuilderTopBar({
         <EnvelopeExpiryControl envelope={envelope} />
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 sm:flex-none">
+      <div className="flex h-9 min-w-0 flex-1 flex-nowrap items-center justify-end gap-2 sm:flex-none">
         {isDraft && canSend && (
           <LoadingButton
-            className="min-w-0 flex-1 sm:flex-none"
+            size="sm"
+            className="h-9 min-w-0 flex-1 sm:flex-none"
             onClick={handleSend}
             isPending={validate.isPending || send.isPending}
             loadingText="Sending…"
@@ -248,10 +249,10 @@ export function BuilderTopBar({
             <span className="hidden sm:inline">Certificate</span>
           </LoadingButton>
         )}
-        <EnvelopeAiMenu envelopeId={envelope.id} />
+        <EnvelopeAiMenu envelopeId={envelope.id} className="h-9 shrink-0" />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" className="size-8" aria-label="Document actions" />
+            <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="outline" size="icon" className="size-9 shrink-0" aria-label="Document actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={onShowFieldSettings}>

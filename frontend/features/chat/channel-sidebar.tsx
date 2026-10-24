@@ -230,6 +230,9 @@ export function ChannelSidebar({
           inboxCounts={inboxCounts}
           onInboxFilter={writeInboxFilter}
           showArchived={showArchived}
+          showArchivedEntry={archivedChannels.length > 0}
+          archivedUnreadCount={archivedUnreadCount}
+          onOpenArchived={handleOpenArchived}
           onOpenNewDM={handleOpenNewDM}
           onOpenNewChannel={handleOpenNewChannel}
           onOpenSearch={handleOpenSearch}
@@ -261,12 +264,10 @@ export function ChannelSidebar({
               starred={starred}
               conversations={conversations}
               archivedChannels={archivedChannels}
-              archivedUnreadCount={archivedUnreadCount}
               isArchivedLoading={isArchivedLoading}
               hasMoreArchived={hasMoreArchived}
               isLoadingMoreArchived={isLoadingMoreArchived}
               onLoadMoreArchived={loadMoreArchived}
-              onOpenArchived={handleOpenArchived}
               onCloseArchived={handleCloseArchived}
               activeChannelId={activeChannelId}
               currentUserId={currentUserId}

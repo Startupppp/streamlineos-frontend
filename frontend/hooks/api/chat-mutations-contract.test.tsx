@@ -64,7 +64,7 @@ describe("useSendMessage — optimistic cache patch", () => {
     mockPost.mockReturnValue(new Promise(() => {}));
 
     const { result } = renderHook(() => useSendMessage(), { wrapper: makeWrapper(qc) });
-    act(() => { result.current.mutate({ channelId: 7, content: "hello from test" }); });
+    act(() => { result.current.mutate({ channelId: 7, content: "hello from test", clientKey: "ck-test-1" }); });
     await act(async () => { await new Promise(r => setTimeout(r, 0)); });
 
     const cached = qc.getQueryData<InfiniteData<MessagesPage>>(collaborationQueryKeys.chat.messages(7));
@@ -83,7 +83,7 @@ describe("useSendMessage — optimistic cache patch", () => {
 
     const { result } = renderHook(() => useSendMessage(), { wrapper: makeWrapper(qc) });
     await act(async () => {
-      await result.current.mutateAsync({ channelId: 7, content: "failed send" }).catch(() => {});
+      await result.current.mutateAsync({ channelId: 7, content: "failed send", clientKey: "ck-test-fail" }).catch(() => {});
     });
 
     const cached = qc.getQueryData<InfiniteData<MessagesPage>>(collaborationQueryKeys.chat.messages(7));
@@ -171,7 +171,7 @@ describe("useSendMessage — reconciles in place after success", () => {
 
     const { result } = renderHook(() => useSendMessage(), { wrapper: makeWrapper(qc) });
     await act(async () => {
-      await result.current.mutateAsync({ channelId: 7, content: "sent" });
+      await result.current.mutateAsync({ channelId: 7, content: "sent", clientKey: "ck-sent-2" });
     });
 
     expect(refetching(invalidateSpy, collaborationQueryKeys.chat.myChannels())).toEqual([]);

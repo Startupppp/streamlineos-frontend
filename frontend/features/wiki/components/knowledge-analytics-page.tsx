@@ -244,72 +244,74 @@ export default function KnowledgeAnalyticsPage() {
     error: overviewQueryError ?? (overviewMissing ? OVERVIEW_NEVER_ARRIVED : undefined),
   });
 
+  const filters = (
+    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:items-center">
+      <Select value={rangePreset} onValueChange={handleRangeChange}>
+        <SelectTrigger className="w-full sm:w-44" aria-label="Date range">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {ANALYTICS_RANGE_PRESETS.map((preset) => (
+            <SelectItem key={preset} value={preset}>
+              {ANALYTICS_RANGE_LABELS[preset]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
+        onValueChange={handleSpaceChange}
+      >
+        <SelectTrigger className="w-full sm:w-52" aria-label="Team folder">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={ALL_SPACES_VALUE}>All team folders</SelectItem>
+          {spaces.map((space) => (
+            <SelectItem key={space.id} value={String(space.id)}>
+              {space.name}
+            </SelectItem>
+          ))}
+          {spacesPage?.pagination?.hasMore ? (
+            <SelectItem value="" disabled>
+              And more — use the search page to filter by folder
+            </SelectItem>
+          ) : null}
+        </SelectContent>
+      </Select>
+      <Button
+        type="button"
+        variant={staleOnly ? "default" : "outline"}
+        size="sm"
+        aria-pressed={staleOnly}
+        onClick={handleStaleOnlyToggle}
+        className="col-span-2 w-full gap-1 sm:w-auto"
+      >
+        <KbClockIcon className="h-3.5 w-3.5" />
+        Stale high-use only
+      </Button>
+      {isFiltered ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="col-span-2 w-full sm:w-auto"
+          onClick={handleClearFilters}
+        >
+          Clear filters
+        </Button>
+      ) : null}
+    </div>
+  );
+
   return (
-    <PageWrapper title="Analytics">
+    <PageWrapper title="Analytics" filters={filters}>
       <PageState
         resolution={pageState}
         className="flex-1"
         onRetry={handleRetry}
         loading={<AnalyticsSkeleton />}
       >
-        <div className="mb-4 grid w-full grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <Select value={rangePreset} onValueChange={handleRangeChange}>
-            <SelectTrigger className="w-full sm:w-44" aria-label="Date range">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {ANALYTICS_RANGE_PRESETS.map((preset) => (
-                <SelectItem key={preset} value={preset}>
-                  {ANALYTICS_RANGE_LABELS[preset]}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Select
-            value={spaceId === undefined ? ALL_SPACES_VALUE : String(spaceId)}
-            onValueChange={handleSpaceChange}
-          >
-            <SelectTrigger className="w-full sm:w-52" aria-label="Team folder">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value={ALL_SPACES_VALUE}>All team folders</SelectItem>
-              {spaces.map((space) => (
-                <SelectItem key={space.id} value={String(space.id)}>
-                  {space.name}
-                </SelectItem>
-              ))}
-              {spacesPage?.pagination?.hasMore ? (
-                <SelectItem value="" disabled>
-                  And more — use the search page to filter by folder
-                </SelectItem>
-              ) : null}
-            </SelectContent>
-          </Select>
-          <Button
-            type="button"
-            variant={staleOnly ? "default" : "outline"}
-            size="sm"
-            aria-pressed={staleOnly}
-            onClick={handleStaleOnlyToggle}
-            className="col-span-2 w-full gap-1 sm:w-auto"
-          >
-            <KbClockIcon className="h-3.5 w-3.5" />
-            Stale high-use only
-          </Button>
-          {isFiltered ? (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="col-span-2 w-full sm:w-auto"
-              onClick={handleClearFilters}
-            >
-              Clear filters
-            </Button>
-          ) : null}
-        </div>
-
         {overview ? (
           <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <StatCard

@@ -1,20 +1,17 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 const TEMPLATE_CARD_PLACEHOLDERS = 4;
 
 function TemplateCardSkeleton() {
   return (
-    <Card className="h-full">
-      <CardHeader className="flex flex-row items-center gap-3 space-y-0">
-        <Skeleton className="size-9 shrink-0 rounded-lg" />
+    <div className="flex w-full items-start gap-3 rounded-xl border border-border bg-card p-3">
+      <Skeleton className="size-9 shrink-0 rounded-lg" />
+      <div className="min-w-0 flex-1 space-y-1.5 pt-0.5">
         <Skeleton className="h-4 w-24" />
-      </CardHeader>
-      <CardContent className="space-y-2">
         <Skeleton className="h-3 w-full" />
         <Skeleton className="h-3 w-4/5" />
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }
 

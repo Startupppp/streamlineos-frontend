@@ -65,7 +65,7 @@ export function AppDialog({
           <SheetBody className="px-4 py-3">{children}</SheetBody>
 
           {footer && (
-            <div className="shrink-0 flex items-center justify-end gap-2 px-4 py-3 border-t border-border/60 bg-muted/30">
+            <div className="flex w-full shrink-0 items-center gap-2 border-t border-border/60 bg-muted/30 px-4 py-3 [&>*]:min-w-0 [&>*]:flex-1">
               {footer}
             </div>
           )}
@@ -95,7 +95,7 @@ export function AppDialog({
         <DialogBody className="px-4 py-3">{children}</DialogBody>
 
         {footer && (
-          <div className="flex shrink-0 items-center justify-end gap-2 border-t border-border/60 bg-muted/30 px-4 py-3">
+          <div className="flex w-full shrink-0 items-center gap-2 border-t border-border/60 bg-muted/30 px-4 py-3 [&>*]:min-w-0 [&>*]:flex-1">
             {footer}
           </div>
         )}

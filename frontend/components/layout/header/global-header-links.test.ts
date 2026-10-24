@@ -9,8 +9,9 @@ describe("global header action hierarchy", () => {
     expect(source).not.toContain('href: "/chat"');
   });
 
-  it("keeps search and create reachable in the mobile header", () => {
+  it("keeps search, calendar cutoff, and create reachable in the mobile header", () => {
     expect(source).toContain("<SearchButton compact />");
+    expect(source).toContain("<HeaderPayrollCutoff compact />");
     expect(source).toContain("<QuickCreateButton compact />");
   });
 

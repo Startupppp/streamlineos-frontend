@@ -156,6 +156,7 @@ function MobileHeader({
       </div>
       <div className="flex shrink-0 items-center gap-1 rounded-xl border border-sidebar-border/70 bg-sidebar-accent/30 p-1">
         <SearchButton compact />
+        {!hideAdminChrome ? <HeaderPayrollCutoff compact /> : null}
         {!hideAdminChrome ? <QuickCreateButton compact /> : null}
         {afterLoad ? (notificationBellSlot ?? null) : <NotificationBellPlaceholder />}
         <div className="mx-1 h-4 w-px bg-sidebar-border" />

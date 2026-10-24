@@ -68,6 +68,8 @@ export function DataTable<T>({
   footer,
   minWidth,
   className,
+  fillHeight = true,
+  stickyHeaderTop,
   scrollRegionLabel,
   rowClassName,
   search,
@@ -339,7 +341,8 @@ export function DataTable<T>({
   return (
     <div
       className={cn(
-        "flex h-full min-h-0 w-full min-w-0 flex-1 flex-col rounded-md border border-border bg-card",
+        "flex w-full min-w-0 flex-col rounded-md border border-border bg-card",
+        fillHeight ? "h-full min-h-0 flex-1" : "h-auto",
         className,
       )}
     >
@@ -367,7 +370,12 @@ export function DataTable<T>({
         role={scrollRegionLabel ? "region" : undefined}
         aria-label={scrollRegionLabel}
         tabIndex={scrollRegionLabel ? 0 : undefined}
-        className="flex-1 min-h-0 overflow-auto overscroll-x-contain flex flex-col [-webkit-overflow-scrolling:touch] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className={cn(
+          "flex flex-col overscroll-x-contain focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          fillHeight
+            ? "min-h-0 flex-1 overflow-auto [-webkit-overflow-scrolling:touch]"
+            : "overflow-visible",
+        )}
       >
         {isLoading ? (
           <div aria-busy={isOnline}>
@@ -415,6 +423,7 @@ export function DataTable<T>({
                   table={table}
                   announceSort={false}
                   rowIndex={1}
+                  stickyTop={stickyHeaderTop}
                   selectAll={selectAll}
                 />
                 <TableBody>
@@ -501,7 +510,13 @@ export function DataTable<T>({
                 containerFocusable={!scrollRegionLabel}
                 aria-rowcount={ariaRowCount}
               >
-                <DataTableHeader table={table} announceSort rowIndex={1} selectAll={selectAll} />
+                <DataTableHeader
+                  table={table}
+                  announceSort
+                  rowIndex={1}
+                  stickyTop={stickyHeaderTop}
+                  selectAll={selectAll}
+                />
                 <TableBody>
                   {rows.map((row, rowIndex) => (
                     <TableRow

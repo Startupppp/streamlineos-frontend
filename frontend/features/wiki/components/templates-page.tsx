@@ -267,47 +267,49 @@ export default function TemplatesPage() {
         onValueChange={handleTabChange}
         className="flex min-h-0 flex-1 flex-col gap-4"
       >
-        <PageTabsToolbar
-          tabs={
-            <TabsList>
-              <TabsTrigger value="starters">Starters</TabsTrigger>
-              <TabsTrigger value="saved">Saved</TabsTrigger>
-            </TabsList>
-          }
-          search={
-            <SearchInput
-              placeholder="Search templates…"
-              value={searchDraft}
-              onValueChange={handleSearchChange}
-              aria-label="Search templates"
-              fill
-              className="min-w-0"
-            />
-          }
-          primaryFilters={
-            activeTab === "starters" ? (
-              <Select
-                value={activeCategory}
-                onValueChange={handleCategoryChange}
-              >
-                <SelectTrigger
-                  className="h-9 min-w-0 flex-1 sm:w-56 sm:flex-none"
-                  aria-label="Filter templates by category"
+        <div className="sticky top-0 z-10 bg-background pb-1">
+          <PageTabsToolbar
+            tabs={
+              <TabsList>
+                <TabsTrigger value="starters">Starters</TabsTrigger>
+                <TabsTrigger value="saved">Saved</TabsTrigger>
+              </TabsList>
+            }
+            search={
+              <SearchInput
+                placeholder="Search templates…"
+                value={searchDraft}
+                onValueChange={handleSearchChange}
+                aria-label="Search templates"
+                fill
+                className="min-w-0"
+              />
+            }
+            primaryFilters={
+              activeTab === "starters" ? (
+                <Select
+                  value={activeCategory}
+                  onValueChange={handleCategoryChange}
                 >
-                  <SelectValue placeholder="All categories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
-                  {STARTER_TEMPLATE_CATEGORIES.map((category) => (
-                    <SelectItem key={category} value={category}>
-                      {category}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            ) : undefined
-          }
-        />
+                  <SelectTrigger
+                    className="h-9 min-w-0 flex-1 sm:w-56 sm:flex-none"
+                    aria-label="Filter templates by category"
+                  >
+                    <SelectValue placeholder="All categories" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={ALL_CATEGORIES}>All categories</SelectItem>
+                    {STARTER_TEMPLATE_CATEGORIES.map((category) => (
+                      <SelectItem key={category} value={category}>
+                        {category}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : undefined
+            }
+          />
+        </div>
 
         <TabsContent value="starters" className={TABS_CONTENT_PAGE_BODY_CLASS}>
           <PageState resolution={startersState} loading={<WikiTemplatesGridSkeleton />}>

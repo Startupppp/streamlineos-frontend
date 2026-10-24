@@ -6,9 +6,22 @@ import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
 import { messagesSchema, type MessagesValues } from "./messages-schema";
@@ -18,26 +31,27 @@ function MessageField({
   name,
   label,
   placeholder,
-  fill = false,
+  rows = 3,
 }: {
   control: Control<MessagesValues>;
   name: keyof MessagesValues;
   label: string;
   placeholder: string;
-  fill?: boolean;
+  rows?: number;
 }) {
   return (
     <FormField
       control={control}
       name={name}
       render={({ field }) => (
-        <FormItem className={cn(fill && "lg:h-full lg:grid-rows-[auto_minmax(8rem,1fr)_auto]")}>
+        <FormItem>
           <FormLabel>{label}</FormLabel>
           <FormControl>
             <Textarea
               {...field}
+              rows={rows}
               placeholder={placeholder}
-              className={cn("field-sizing-fixed resize-none", fill ? "min-h-32 lg:h-full" : "min-h-24")}
+              className="field-sizing-fixed min-h-0 resize-y"
             />
           </FormControl>
           <FormMessage />
@@ -64,7 +78,9 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
 
   async function onSubmit(values: MessagesValues) {
     try {
-      await patchSurvey.mutateAsync({ settings: { ...survey.settings, messages: values } });
+      await patchSurvey.mutateAsync({
+        settings: { ...survey.settings, messages: values },
+      });
       toast.success("Messages saved");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -72,16 +88,22 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
   }
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-w-0 flex-1 flex-col">
-          <Card className="flex-1">
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="flex min-w-0 flex-1 flex-col"
+        >
+          <Card>
             <CardHeader>
-              <CardTitle className="text-sm">Messages</CardTitle>
-              <CardDescription>Copy respondents see before they start and after they finish.</CardDescription>
-              <CardAction className="max-sm:col-span-full max-sm:row-start-3 max-sm:mt-2 max-sm:w-full max-sm:justify-self-stretch">
+              <div className="col-start-1 row-start-1 flex min-w-0 flex-col gap-0.5">
+                <CardTitle className="text-sm">Messages</CardTitle>
+                <CardDescription>Welcome and thank-you text.</CardDescription>
+              </div>
+              <CardAction className="col-start-1 row-start-2 mt-2 w-full justify-self-stretch sm:col-start-2 sm:row-span-1 sm:row-start-1 sm:mt-0 sm:w-auto sm:justify-self-end">
                 <LoadingButton
                   type="submit"
+                  size="sm"
                   isPending={patchSurvey.isPending}
                   className="w-full sm:w-auto"
                 >
@@ -89,49 +111,58 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
                 </LoadingButton>
               </CardAction>
             </CardHeader>
-            <CardContent className="flex flex-1 flex-col gap-4">
-              <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1">
-                <MessageField
+            <CardContent className="space-y-5">
+              <div className="space-y-3">
+                <p className="text-dense font-medium text-muted-foreground">
+                  Start & finish
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <MessageField
+                    control={form.control}
+                    name="welcomeMessage"
+                    label="Welcome"
+                    placeholder="Shown before they start"
+                  />
+                  <MessageField
+                    control={form.control}
+                    name="thankYouMessage"
+                    label="Thank you"
+                    placeholder="Shown after they submit"
+                  />
+                </div>
+                <FormField
                   control={form.control}
-                  name="welcomeMessage"
-                  label="Welcome message"
-                  placeholder="Shown before they start"
-                  fill
-                />
-                <MessageField
-                  control={form.control}
-                  name="thankYouMessage"
-                  label="Thank-you message"
-                  placeholder="Shown after they submit"
-                  fill
+                  name="submitButtonText"
+                  render={({ field }) => (
+                    <FormItem className="max-w-xs">
+                      <FormLabel>Submit button</FormLabel>
+                      <FormControl>
+                        <Input {...field} className="h-9" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="submitButtonText"
-                render={({ field }) => (
-                  <FormItem className="sm:max-w-xs">
-                    <FormLabel>Submit button text</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid gap-4 lg:grid-cols-2">
-                <MessageField
-                  control={form.control}
-                  name="disqualificationMessage"
-                  label="Disqualification message"
-                  placeholder="Shown when logic ends the survey early"
-                />
-                <MessageField
-                  control={form.control}
-                  name="closedMessage"
-                  label="Closed survey message"
-                  placeholder="Shown when this survey is closed"
-                />
+
+              <div className="space-y-3 border-t border-border/60 pt-4">
+                <p className="text-dense font-medium text-muted-foreground">
+                  Edge cases
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <MessageField
+                    control={form.control}
+                    name="disqualificationMessage"
+                    label="Disqualified"
+                    placeholder="Shown when logic ends the survey early"
+                  />
+                  <MessageField
+                    control={form.control}
+                    name="closedMessage"
+                    label="Closed"
+                    placeholder="Shown when this survey is closed"
+                  />
+                </div>
               </div>
             </CardContent>
           </Card>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Archive, Star } from "lucide-react";
+import { Star } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
 import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { cn } from "@/lib/utils";
@@ -20,12 +20,10 @@ interface ChannelInboxSectionsProps {
   starred: Channel[];
   conversations: Channel[];
   archivedChannels: Channel[];
-  archivedUnreadCount: number;
   isArchivedLoading: boolean;
   hasMoreArchived: boolean;
   isLoadingMoreArchived: boolean;
   onLoadMoreArchived: () => void;
-  onOpenArchived: () => void;
   onCloseArchived: () => void;
   activeChannelId: number | null;
   currentUserId: string;
@@ -50,12 +48,10 @@ export function ChannelInboxSections({
   starred,
   conversations,
   archivedChannels,
-  archivedUnreadCount,
   isArchivedLoading,
   hasMoreArchived,
   isLoadingMoreArchived,
   onLoadMoreArchived,
-  onOpenArchived,
   onCloseArchived,
   activeChannelId,
   currentUserId,
@@ -153,22 +149,6 @@ export function ChannelInboxSections({
           onLoadMore={onLoadMoreChannels}
           label="Load more conversations"
         />
-      )}
-
-      {inboxFilter === "all" && archivedChannels.length > 0 && (
-        <button
-          type="button"
-          onClick={onOpenArchived}
-          className="mt-1 flex min-h-11 w-full items-center gap-3 rounded-xl px-2 py-2 text-left text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-        >
-          <Archive className="h-4 w-4 shrink-0" aria-hidden="true" />
-          <span className="flex-1 text-label font-medium">Archived</span>
-          {archivedUnreadCount > 0 && (
-            <span className="flex h-5 min-w-5 shrink-0 items-center justify-center rounded-full bg-primary px-1 font-mono text-micro font-bold tabular-nums text-primary-foreground">
-              {archivedUnreadCount > 99 ? "99+" : archivedUnreadCount}
-            </span>
-          )}
-        </button>
       )}
     </div>
   );

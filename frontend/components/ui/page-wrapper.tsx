@@ -133,7 +133,8 @@ export function PageWrapper({
     state.kind !== "ready" &&
     state.kind !== "empty" &&
     state.kind !== "filtered-empty";
-  const visibleActions = isInterrupted && state?.kind !== "loading" ? undefined : actions;
+  const visibleActions =
+    isInterrupted && state?.kind !== "loading" ? undefined : actions;
   const visibleExtraActions =
     isInterrupted && state?.kind !== "loading" ? undefined : extraActions;
   const visibleFilters =
@@ -151,21 +152,21 @@ export function PageWrapper({
     !leading &&
     (onBack ? (
       <Button
+        size="icon"
         type="button"
         variant="ghost"
-        size="icon-sm"
-        className={backButtonClassName}
         onClick={handleBack}
         aria-label={backLabel}
+        className={backButtonClassName}
       >
         <ArrowLeft className="h-4 w-4" />
       </Button>
     ) : backHref ? (
       <Button
-        variant="ghost"
-        size="icon-sm"
-        className={backButtonClassName}
         asChild
+        size="icon"
+        variant="ghost"
+        className={backButtonClassName}
       >
         <GuardedBackLink href={backHref} label={backLabel}>
           <ArrowLeft className="h-4 w-4" />
@@ -195,7 +196,7 @@ export function PageWrapper({
         views={stateViews}
         onClearFilters={onClearFilters}
         onRetry={onRetry}
-        className="flex-1"
+        className={cn("flex-1", noInternalScroll && "flex min-h-0 flex-col")}
       >
         {children}
       </PageState>
@@ -218,38 +219,40 @@ export function PageWrapper({
         >
           <div className="flex flex-wrap items-start gap-x-3 gap-y-2">
             <div className="flex min-w-0 max-w-full flex-col">
-              <div className="flex max-w-full items-center gap-1">
+              <div className="flex max-w-full items-center gap-2">
                 {leading ?? builtInBack}
-                <div className="min-w-0 max-w-full">
-                  {(title != null || badge) && (
-                    <div className="flex max-w-full items-center gap-2">
-                      {typeof title === "string" ? (
-                        <h1
-                          suppressHydrationWarning
-                          id={headingId}
-                          className={cn(titleClass, "w-max max-w-full")}
-                        >
-                          <TruncatedText text={title} />
-                        </h1>
-                      ) : title != null ? (
-                        <h1
-                          suppressHydrationWarning
-                          id={headingId}
-                          className={cn(titleClass, "w-max max-w-full")}
-                        >
-                          {title}
-                        </h1>
-                      ) : null}
-                      {badge && (
-                        <span className="inline-flex shrink-0 items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-dense font-medium tabular-nums border border-primary/20">
-                          {badge}
-                        </span>
-                      )}
-                    </div>
-                  )}
+                <div>
+                  <div className="min-w-0 max-w-full">
+                    {(title != null || badge) && (
+                      <div className="flex max-w-full items-center gap-2">
+                        {typeof title === "string" ? (
+                          <h1
+                            suppressHydrationWarning
+                            id={headingId}
+                            className={cn(titleClass, "w-max max-w-full")}
+                          >
+                            <TruncatedText text={title} />
+                          </h1>
+                        ) : title != null ? (
+                          <h1
+                            suppressHydrationWarning
+                            id={headingId}
+                            className={cn(titleClass, "w-max max-w-full")}
+                          >
+                            {title}
+                          </h1>
+                        ) : null}
+                        {badge && (
+                          <span className="inline-flex shrink-0 items-center px-1.5 py-0.5 rounded-md bg-primary/10 text-foreground text-dense font-medium tabular-nums border border-primary/20">
+                            {badge}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {subtitle ? <SubtitleBlock subtitle={subtitle} /> : null}
                 </div>
               </div>
-              {subtitle ? <SubtitleBlock subtitle={subtitle} /> : null}
             </div>
 
             {(visibleActions || visibleExtraActions) && (

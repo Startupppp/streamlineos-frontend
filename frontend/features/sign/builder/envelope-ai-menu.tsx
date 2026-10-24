@@ -11,7 +11,13 @@ function buildSummaryText(summary: string): string {
   return `${summary}\n\n---\n${DISCLAIMER}`;
 }
 
-export function EnvelopeAiMenu({ envelopeId }: { envelopeId: number }) {
+export function EnvelopeAiMenu({
+  envelopeId,
+  className,
+}: {
+  envelopeId: number;
+  className?: string;
+}) {
   const canView = useCan("sign:envelope:view");
   const summarize = useSummarizeEnvelope(envelopeId);
 
@@ -35,6 +41,7 @@ export function EnvelopeAiMenu({ envelopeId }: { envelopeId: number }) {
       triggerLabel="AI Summary"
       menuLabel="Document AI"
       align="end"
+      className={className}
     />
   );
 }

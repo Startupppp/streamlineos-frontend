@@ -28,14 +28,16 @@ export function ChatPresenceMenu({
   const availability = statusMessage === "" ? presenceLabel(status) : statusMessage;
 
   return (
-    <DropdownMenu>
+    <DropdownMenu modal={!compact}>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
           aria-label={`Your availability: ${availability}. Change it`}
           className={cn(
             "flex items-center rounded-lg transition-colors hover:bg-muted/60",
-            compact ? "min-w-11 flex-col gap-0.5 py-1" : "w-full gap-2.5 px-2 py-1.5",
+            compact
+              ? "min-h-12 min-w-11 flex-col gap-0.5 py-1"
+              : "w-full gap-2.5 px-2 py-1.5",
             className,
           )}
         >
@@ -71,7 +73,12 @@ export function ChatPresenceMenu({
         </button>
       </DropdownMenuTrigger>
 
-      <DropdownMenuContent align="start" className="w-64">
+      <DropdownMenuContent
+        side={compact ? "top" : "bottom"}
+        align={compact ? "end" : "start"}
+        sideOffset={8}
+        className="w-64"
+      >
         <DropdownMenuLabel className="text-micro uppercase tracking-wider text-muted-foreground">
           Availability
         </DropdownMenuLabel>

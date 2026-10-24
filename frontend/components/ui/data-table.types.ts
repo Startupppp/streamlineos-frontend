@@ -85,6 +85,8 @@ export interface DataTableProps<T> {
   footer?: ReactNode;
   minWidth?: string;
   className?: string;
+  fillHeight?: boolean;
+  stickyHeaderTop?: number;
   scrollRegionLabel?: string;
   rowClassName?: (row: T, index: number) => string;
   search?: {

@@ -110,6 +110,7 @@ export default function SharedPage() {
       <WikiPageCollectionTable
         fixedParams={SHARED_WITH_ME_PARAMS}
         additionalColumns={sharedColumns}
+        scrollMode="page"
         emptyTitle="Nothing shared with you"
         emptyDescription="Files explicitly shared with your account will appear here."
         accessLostTitle="Your access may have changed"

@@ -5,12 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+  ResponsivePopover,
+  ResponsivePopoverContent,
+  ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { cn } from "@/lib/utils";
 import { useCan } from "@/hooks/api/access";
@@ -54,6 +52,9 @@ interface KbNewMenuProps {
   className?: string;
 }
 
+const MENU_ITEM_CLASS =
+  "relative flex w-full cursor-default items-center gap-2 rounded-md px-2 py-2.5 text-sm outline-hidden select-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent focus-visible:text-accent-foreground focus-visible:outline-none md:py-1.5 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-muted-foreground";
+
 export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, className }: KbNewMenuProps) {
   const router = useRouter();
   const canCreate = useCan("kb:pages:create");
@@ -61,6 +62,7 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, cl
   const canImport = useCan("kb:pages:import");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const fileUploadInputRef = useRef<HTMLInputElement>(null);
+  const [open, setOpen] = useState(false);
   const [folderSheetOpen, setFolderSheetOpen] = useState(false);
   const uploadFile = useUploadKbFile();
 
@@ -76,7 +78,12 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, cl
 
   if (!canCreate) return null;
 
+  function closeMenu() {
+    setOpen(false);
+  }
+
   function handleUploadFileClick() {
+    closeMenu();
     fileUploadInputRef.current?.click();
   }
 
@@ -102,14 +109,17 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, cl
   }
 
   function handleDocument() {
+    closeMenu();
     void createPage.submit({ ...scope, kind: "document" });
   }
 
   function handleSpreadsheet() {
+    closeMenu();
     void createPage.submit({ ...scope, kind: "spreadsheet" });
   }
 
   function handleUploadClick() {
+    closeMenu();
     fileInputRef.current?.click();
   }
 
@@ -128,11 +138,12 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, cl
   }
 
   function handleOpenFolder() {
+    closeMenu();
     setFolderSheetOpen(true);
   }
 
-  function handleFolderOpenChange(open: boolean) {
-    setFolderSheetOpen(open);
+  function handleFolderOpenChange(next: boolean) {
+    setFolderSheetOpen(next);
   }
 
   function handleFolderSuccess() {
@@ -154,48 +165,61 @@ export function KbNewMenu({ scope, allowFolder, onCreated, trigger, baseHref, cl
 
   return (
     <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>{triggerEl}</DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onSelect={handleDocument}>
-            <KbFileTextIcon className="h-4 w-4" />
-            Document
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleSpreadsheet}>
-            <KbSpreadsheetIcon className="h-4 w-4" />
-            Spreadsheet
-          </DropdownMenuItem>
-          <DropdownMenuItem onSelect={handleUploadFileClick}>
-            <KbFileDownIcon className="h-4 w-4" />
-            Upload file
-          </DropdownMenuItem>
-          {allowFolder && canManageSpaces && (
-            <DropdownMenuItem onSelect={handleOpenFolder}>
-              <KbFolderOpenIcon className="h-4 w-4" />
-              Folder
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleUploadClick}>
-            <KbUploadIcon className="h-4 w-4" />
-            Upload Excel or CSV
-          </DropdownMenuItem>
-          {canImport && (
-            <DropdownMenuItem asChild>
-              <Link href={KB_IMPORT}>
+      <ResponsivePopover open={open} onOpenChange={setOpen}>
+        <ResponsivePopoverTrigger asChild>{triggerEl}</ResponsivePopoverTrigger>
+        <ResponsivePopoverContent
+          align="end"
+          title="New"
+          showHeader
+          className="w-[min(18rem,calc(100vw-2rem))] p-1 md:min-w-[10rem] md:w-auto"
+        >
+          <div role="menu" aria-label="New" className="flex flex-col gap-0.5">
+            <button type="button" role="menuitem" className={MENU_ITEM_CLASS} onClick={handleDocument}>
+              <KbFileTextIcon className="h-4 w-4" />
+              Document
+            </button>
+            <button type="button" role="menuitem" className={MENU_ITEM_CLASS} onClick={handleSpreadsheet}>
+              <KbSpreadsheetIcon className="h-4 w-4" />
+              Spreadsheet
+            </button>
+            <button type="button" role="menuitem" className={MENU_ITEM_CLASS} onClick={handleUploadFileClick}>
+              <KbFileDownIcon className="h-4 w-4" />
+              Upload file
+            </button>
+            {allowFolder && canManageSpaces ? (
+              <button type="button" role="menuitem" className={MENU_ITEM_CLASS} onClick={handleOpenFolder}>
+                <KbFolderOpenIcon className="h-4 w-4" />
+                Folder
+              </button>
+            ) : null}
+            <div role="separator" className="my-1 h-px bg-border" />
+            <button type="button" role="menuitem" className={MENU_ITEM_CLASS} onClick={handleUploadClick}>
+              <KbUploadIcon className="h-4 w-4" />
+              Upload Excel or CSV
+            </button>
+            {canImport ? (
+              <Link
+                href={KB_IMPORT}
+                role="menuitem"
+                className={MENU_ITEM_CLASS}
+                onClick={closeMenu}
+              >
                 <KbUploadIcon className="h-4 w-4" />
                 Import documents
               </Link>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuItem asChild>
-            <Link href={KB_TEMPLATES}>
+            ) : null}
+            <Link
+              href={KB_TEMPLATES}
+              role="menuitem"
+              className={MENU_ITEM_CLASS}
+              onClick={closeMenu}
+            >
               <KbLayoutTemplateIcon className="h-4 w-4" />
               From template
             </Link>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </div>
+        </ResponsivePopoverContent>
+      </ResponsivePopover>
       <input
         ref={fileInputRef}
         type="file"

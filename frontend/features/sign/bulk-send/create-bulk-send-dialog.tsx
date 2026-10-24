@@ -246,7 +246,7 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
             )}
           </form>
         </Form>
-        <DialogFooter>
+        <DialogFooter className="flex-row justify-end gap-2 [&>*]:min-w-0 [&>*]:flex-1 sm:[&>*]:flex-none">
           <Button
             type="button"
             variant="outline"

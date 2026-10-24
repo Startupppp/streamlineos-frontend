@@ -28,13 +28,13 @@ describe("chat mobile chrome layout", () => {
 
   it("keeps safe-area space for the conversation list across the whole band the nav covers", () => {
     expect(getChatMobileContentPaddingClassName(false)).toContain(
-      "max-lg:pb-[calc(2.75rem+0.5rem+env(safe-area-inset-bottom))]",
+      "max-lg:pb-[calc(3rem+0.5rem+env(safe-area-inset-bottom))]",
     );
   });
 
   it("clears the bottom nav under the message composer", () => {
     expect(getChatMobileComposerInsetClassName()).toBe(
-      "max-lg:pb-[calc(2.75rem+0.5rem+env(safe-area-inset-bottom))]",
+      "max-lg:pb-[calc(3rem+0.5rem+env(safe-area-inset-bottom))]",
     );
   });
 

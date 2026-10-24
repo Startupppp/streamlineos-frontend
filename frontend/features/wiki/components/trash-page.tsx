@@ -14,7 +14,7 @@ import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { useUrlFilters } from "@/lib/url-state/use-url-filters";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
+import { SearchInput } from "@/components/ui/search-input";
 import { WikiTableRowsSkeleton } from "./wiki-collection-skeletons";
 import { TrashFiltersMenu } from "./trash-filters-menu";
 import { useCan } from "@/hooks/api/access";
@@ -148,8 +148,7 @@ export default function TrashPage() {
     void refetchPurgeImpact();
   }
 
-  function handleSearchChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const value = e.target.value;
+  function handleSearchChange(value: string) {
     setSearchDraft(value);
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -304,16 +303,12 @@ export default function TrashPage() {
         title="Trash"
         subtitle="Deleted pages can be restored or permanently removed"
         actions={actions}
-      >
-        <div className="flex min-h-0 flex-1 flex-col gap-4">
-          {canManageSettings ? <TrashRetentionSection /> : null}
-
-          <div className="flex w-full min-w-0 shrink-0 items-center gap-2">
-            <Input
-              type="search"
+        filters={
+          <div className="flex w-full min-w-0 flex-nowrap items-center gap-2">
+            <SearchInput
               placeholder="Search deleted pages…"
               value={searchDraft}
-              onChange={handleSearchChange}
+              onValueChange={handleSearchChange}
               className="h-9 min-w-0 flex-1 sm:w-64 sm:flex-none"
               aria-label="Search deleted pages"
             />
@@ -330,6 +325,10 @@ export default function TrashPage() {
               onClear={handleClearMenuFilters}
             />
           </div>
+        }
+      >
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          {canManageSettings ? <TrashRetentionSection /> : null}
 
           <PageState
             resolution={pageState}

@@ -22,6 +22,7 @@ export default function PrivatePage() {
         <ShortcutsSection />
         <WikiPageCollectionTable
           fixedParams={MY_PAGES_PARAMS}
+          scrollMode="page"
           emptyTitle="No files yet"
           emptyDescription="Files you own will appear here."
           onDocumentCountLabelChange={setDocumentCountLabel}

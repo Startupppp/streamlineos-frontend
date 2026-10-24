@@ -24,7 +24,7 @@ import {
 import { ChatPresenceMenu } from "./chat-presence-menu";
 
 const NAV_BUTTON_CLASS =
-  "h-auto min-h-11 min-w-11 flex-col gap-0.5 py-1 text-dense text-muted-foreground";
+  "h-auto min-h-12 min-w-11 flex-col gap-0.5 py-1 text-dense text-muted-foreground";
 
 interface ChatMobileBottomNavProps {
   onOpenMobileMenu: () => void;

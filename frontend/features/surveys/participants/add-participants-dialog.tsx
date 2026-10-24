@@ -82,7 +82,7 @@ export function AddParticipantsDialog({ surveyId, open, onOpenChange }: { survey
                 </FormItem>
               )}
             />
-            <DialogFooter>
+            <DialogFooter className="flex-row gap-2 [&>*]:min-w-0 [&>*]:flex-1">
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 Cancel
               </Button>

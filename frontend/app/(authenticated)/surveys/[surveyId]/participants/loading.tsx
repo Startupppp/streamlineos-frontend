@@ -6,13 +6,15 @@ export default function SurveyParticipantsLoading() {
   return (
     <PageWrapper
       title="Participants"
+      subtitle="Invite people and track who has started or finished."
       backHref="/surveys"
       noInternalScroll
       contentClassName="flex min-h-0 flex-1 flex-col"
-      actions={
-        <div className="flex w-full items-center justify-end gap-2">
-          <Skeleton className="h-9 w-40 shrink-0 rounded-md" />
+      actionsInline
+      extraActions={
+        <div className="flex min-w-0 flex-nowrap items-center gap-2">
           <Skeleton className="h-9 w-36 shrink-0 rounded-md" />
+          <Skeleton className="h-9 w-28 shrink-0 rounded-md sm:w-40" />
         </div>
       }
     >

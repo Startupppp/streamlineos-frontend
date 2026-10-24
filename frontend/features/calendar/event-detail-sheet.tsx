@@ -15,7 +15,8 @@ import {
   useUpdateCalendarEvent,
   type CalendarListItem,
 } from "@/hooks/api/calendar";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useCanState } from "@/hooks/api/access";
+import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatEventDate, formatEventDateRange, formatEventTimeRange, zonedWallClock } from "@/lib/date-utils";
@@ -89,6 +90,7 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
   const canUpdate = isCalendarEvent && (detail ? detail.canManage === true : event?.actions.edit === true);
   const canMutateEvent = canUpdate && event?.category !== "huddle";
   const canExport = useCan("calendar:events:export");
+  const chatAccess = useCanState("chat:channels:read");
   const calendarTimeZone = useCalendarTimeZone();
   const commitmentRoot: CommitmentReference | null = detail?.linkedTicket
     ? { source: "build", type: "ticket", recordId: String(detail.linkedTicket.id) }
@@ -279,6 +281,16 @@ export function EventDetailSheet({ event, onClose, onQueueScenarioStep }: EventD
           {event ? <CalendarSourceActionPanel key={`${event.id}:${event.sourceVersion}`} event={event} onQueueScenarioStep={onQueueScenarioStep} /> : null}
           {detail && canMutateEvent && !detail.isRecurring && !detail.allDay && commitmentRoot && onQueueScenarioStep ?
             <CalendarNativeScenarioMove key={`${detail.id}:${detail.localVersion}`} detail={detail} root={commitmentRoot} onQueue={onQueueScenarioStep} /> : null}
+          {isCalendarEvent && numericEventId !== null && chatAccess !== "denied" && (
+            <div className="flex flex-col min-h-[400px] mt-4 border-t border-border pt-4">
+              <RecordConversationPanel
+                entityType="calendar_event"
+                entityId={String(numericEventId)}
+                emptyDescriptionWrite="This event does not have an associated chat channel yet. Create one to start the conversation."
+                emptyDescriptionReadOnly="This event does not have an associated chat channel yet. Ask an admin to link one."
+              />
+            </div>
+          )}
       </AppSheet>
       <EventSeriesScopeDialog
         open={deleteRecurringScopeOpen}
