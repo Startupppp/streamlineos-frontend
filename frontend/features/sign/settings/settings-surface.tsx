@@ -44,7 +44,7 @@ export function SettingsSurface({
         {children}
       </div>
       {footer ? (
-        <div className="flex shrink-0 justify-end border-t border-border px-4 py-3">
+        <div className="flex shrink-0 flex-col gap-2 border-t border-border px-4 py-3 sm:flex-row sm:justify-end [&>*]:w-full sm:[&>*]:w-auto">
           {footer}
         </div>
       ) : null}

@@ -154,7 +154,7 @@ export function BulkSendList() {
       loading={<BulkSendListSkeleton />}
       onRetry={handleRetry}
       actions={
-        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={handleOpenCreate} disabled={!hasPublished}>
+        <AnimatedIconButton icon={PlusIcon} onClick={handleOpenCreate} disabled={!hasPublished}>
           New bulk send
         </AnimatedIconButton>
       }
