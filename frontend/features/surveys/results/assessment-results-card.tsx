@@ -2,9 +2,10 @@ import { Award } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { formatShortDate } from "@/lib/date-utils";
 import { useAssessmentAttempts, useSurveyCertificates } from "@/hooks/api/surveys/assessment";
@@ -20,40 +21,44 @@ export function AssessmentResultsCard({ surveyId }: { surveyId: number }) {
     void certificatesQuery.refetch();
   }
 
-  if (attemptsQuery.access.denied) {
-    return <NoPermissionState permission="surveys:assessments:manage" compact />;
-  }
-
-  if (
-    attemptsQuery.access.pending ||
-    certificatesQuery.access.pending ||
-    attemptsQuery.isLoading ||
-    certificatesQuery.isLoading
-  ) {
-    return <Skeleton className="h-32 w-full" />;
-  }
-
-  if (
-    attemptsQuery.isError ||
-    certificatesQuery.isError ||
-    attemptsQuery.access.unavailable ||
-    certificatesQuery.access.unavailable
-  ) {
-    return (
-      <ErrorState
-        compact
-        title="Couldn't load assessment results"
-        description={getErrorMessage(attemptsQuery.error ?? certificatesQuery.error)}
-        onRetry={handleRetry}
-      />
-    );
-  }
+  const pageState = usePageState({
+    permission: "surveys:assessments:manage",
+    isLoading:
+      attemptsQuery.access.pending ||
+      certificatesQuery.access.pending ||
+      attemptsQuery.isLoading ||
+      certificatesQuery.isLoading,
+    isError:
+      attemptsQuery.isError ||
+      certificatesQuery.isError ||
+      attemptsQuery.access.unavailable ||
+      certificatesQuery.access.unavailable,
+    error: attemptsQuery.error ?? certificatesQuery.error,
+  });
 
   const submitted = (attempts ?? []).filter((a) => a.status === "passed" || a.status === "failed");
   const passedCount = submitted.filter((a) => a.passed).length;
   const passRate = submitted.length > 0 ? Math.round((passedCount / submitted.length) * 100) : 0;
 
   return (
+    <PageState
+      resolution={pageState}
+      loading={<StatCardGridSkeleton cols={3} />}
+      onRetry={handleRetry}
+      compact
+      className="min-h-full flex-1"
+      views={{
+        error: (
+          <ErrorState
+            compact
+            className="min-h-full flex-1"
+            title="Couldn't load assessment results"
+            description={getErrorMessage(attemptsQuery.error ?? certificatesQuery.error)}
+            onRetry={handleRetry}
+          />
+        ),
+      }}
+    >
     <div className="space-y-3">
       <StatCardGrid cols={3}>
         <StatCard label="Attempts" value={attempts?.length ?? 0} icon={Award} />
@@ -77,5 +82,6 @@ export function AssessmentResultsCard({ surveyId }: { surveyId: number }) {
         </Card>
       )}
     </div>
+    </PageState>
   );
 }

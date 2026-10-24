@@ -30,6 +30,17 @@ jest.mock("@/hooks/api/sign/envelopes", () => ({
 
 jest.mock("@/hooks/api/sign/templates", () => ({
   useSaveEnvelopeAsTemplate: () => idleMutation,
+  useUpdateSignTemplate: () => idleMutation,
+}));
+
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (options: { permission?: string; isLoading: boolean; isError: boolean; isEmpty?: boolean; error?: unknown }) => {
+    if (options.permission && !grantedKeys.has(options.permission)) return { kind: "denied" };
+    if (options.isLoading) return { kind: "loading" };
+    if (options.isError) return { kind: "error", error: options.error };
+    if (options.isEmpty) return { kind: "empty" };
+    return { kind: "ready" };
+  },
 }));
 
 jest.mock("./envelope-ai-menu", () => ({

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
 import { numericFieldChangeOr } from "@/lib/numeric-field";
@@ -18,7 +19,7 @@ interface AssessmentSettings {
   certificateOnPass?: boolean;
 }
 
-export function AssessmentScoringCard({ survey }: { survey: SurveyForm }) {
+export function AssessmentScoringCard({ survey, className }: { survey: SurveyForm; className?: string }) {
   const patchSurvey = usePatchSurvey(survey.id);
   const existing = (survey.settings as AssessmentSettings | undefined) ?? {};
 
@@ -45,12 +46,12 @@ export function AssessmentScoringCard({ survey }: { survey: SurveyForm }) {
   }
 
   return (
-    <Card>
+    <Card className={cn("h-full", className)}>
       <CardHeader>
-        <CardTitle className="text-sm">Time & Scoring</CardTitle>
+        <CardTitle className="text-sm">Time & scoring</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <div className="space-y-1.5">
             <Label>Pass score</Label>
             <Input type="number" value={passScore} onChange={numericFieldChangeOr(setPassScore, 0)} className="w-28" />

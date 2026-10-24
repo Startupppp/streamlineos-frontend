@@ -1,23 +1,23 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { statusToneClasses, type StatusTone } from "@/lib/design-tokens";
 import { formatRelativeTime } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import { useSignSweepStatus } from "@/hooks/api/sign/settings";
 import type { SignSweepRunSummary, SignSweepStaleness } from "@/types/sign";
+import { SettingsSurface } from "./settings-surface";
 
 const SWEEP_TITLE: Record<SignSweepRunSummary["sweep"], string> = {
-  reminder: "Reminder sweep",
-  expiration: "Expiration sweep",
+  reminder: "Reminders",
+  expiration: "Expiry",
 };
 
 const SWEEP_DESCRIPTION: Record<SignSweepRunSummary["sweep"], string> = {
-  reminder: "Chases signers who have not opened or completed their envelope.",
+  reminder: "Emails people who have not opened or finished their envelope.",
   expiration: "Closes envelopes that have passed their expiry date.",
 };
 
@@ -26,82 +26,80 @@ const STALENESS: Record<SignSweepStaleness, { label: string; tone: StatusTone; d
   never_run: {
     label: "Never run",
     tone: "danger",
-    detail: "No scheduler has ever called this sweep for your organisation, so nothing it promises has happened.",
+    detail: "Nothing has called this job yet, so the rule above has not taken effect.",
   },
   stale: {
     label: "Stopped",
     tone: "danger",
-    detail: "It has run before but not recently, which means the scheduler has stopped calling it.",
+    detail: "It ran before, then stopped. The scheduler is no longer calling it.",
   },
   errored: {
     label: "Failing",
     tone: "warning",
-    detail: "It ran recently and raised an error, so its work did not complete.",
+    detail: "The last run raised an error, so its work did not finish.",
   },
 };
 
 function SweepRow({ sweep }: { sweep: SignSweepRunSummary }) {
   const state = STALENESS[sweep.staleness];
   const tone = statusToneClasses(state.tone);
+  const lastRun = sweep.ranAt ? formatRelativeTime(sweep.ranAt) : "Never";
 
   return (
-    <div className="rounded-lg border border-border p-3">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold">{SWEEP_TITLE[sweep.sweep]}</p>
-          <p className="text-sm text-muted-foreground">{SWEEP_DESCRIPTION[sweep.sweep]}</p>
-        </div>
-        <Badge variant="outline" className={cn("shrink-0", tone.surface, tone.ink, tone.rule)}>
-          {state.label}
-        </Badge>
+    <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-start sm:justify-between">
+      <div className="min-w-0">
+        <p className="text-sm font-medium text-foreground">{SWEEP_TITLE[sweep.sweep]}</p>
+        <p className="mt-0.5 text-sm text-muted-foreground">{SWEEP_DESCRIPTION[sweep.sweep]}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Last run {lastRun}
+          <span aria-hidden="true"> · </span>
+          <span className="tabular-nums">{sweep.affected}</span> affected
+          <span aria-hidden="true"> · </span>
+          expected every <span className="tabular-nums">{sweep.expectedWithinHours}h</span>
+        </p>
+        <p className={cn("mt-1 text-sm", sweep.healthy ? "text-muted-foreground" : tone.ink)}>{state.detail}</p>
+        {sweep.error ? <p className={cn("mt-1 text-sm", statusToneClasses("danger").ink)}>{sweep.error}</p> : null}
       </div>
-      <dl className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
-        <div>
-          <dt className="text-sm text-muted-foreground">Last run</dt>
-          <dd className="text-sm font-mono tabular-nums">{sweep.ranAt ? formatRelativeTime(sweep.ranAt) : "Never"}</dd>
-        </div>
-        <div>
-          <dt className="text-sm text-muted-foreground">Affected</dt>
-          <dd className="text-sm font-mono tabular-nums">{sweep.affected}</dd>
-        </div>
-        <div>
-          <dt className="text-sm text-muted-foreground">Expected every</dt>
-          <dd className="text-sm font-mono tabular-nums">{sweep.expectedWithinHours}h</dd>
-        </div>
-      </dl>
-      <p className={cn("mt-2 text-sm", sweep.healthy ? "text-muted-foreground" : tone.ink)}>{state.detail}</p>
-      {sweep.error ? <p className={cn("mt-1 text-sm", statusToneClasses("danger").ink)}>{sweep.error}</p> : null}
+      <Badge variant="outline" className={cn("w-fit shrink-0", tone.surface, tone.ink, tone.rule)}>
+        {state.label}
+      </Badge>
     </div>
   );
 }
 
 export function SweepStatusPanel() {
-  const { data, isLoading, isError, error, refetch } = useSignSweepStatus();
+  const sweepQuery = useSignSweepStatus();
+  const panelState = usePageState({
+    permission: "sign:admin:manage",
+    isLoading: sweepQuery.isLoading,
+    isError: sweepQuery.isError,
+    error: sweepQuery.error,
+  });
+
+  function handleRetry() {
+    void sweepQuery.refetch();
+  }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm font-semibold">Reminder &amp; expiry scheduling</CardTitle>
-        <CardDescription>
-          Reminder cadence and expiry windows only take effect if these sweeps are actually being called.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {isLoading ? (
-          <>
-            <Skeleton className="h-28 w-full" />
-            <Skeleton className="h-28 w-full" />
-          </>
-        ) : isError ? (
-          <ErrorState
-            title="Couldn't load sweep status"
-            description={getErrorMessage(error)}
-            onRetry={() => void refetch()}
-          />
-        ) : (
-          data?.sweeps.map((sweep) => <SweepRow key={sweep.sweep} sweep={sweep} />)
-        )}
-      </CardContent>
-    </Card>
+    <SettingsSurface
+      title="Scheduling"
+      description="Reminders and expiry only happen when these jobs run."
+    >
+      <PageState
+        resolution={panelState}
+        loading={
+          <div className="divide-y divide-border">
+            <Skeleton className="h-20 w-full rounded-none" />
+            <Skeleton className="h-20 w-full rounded-none" />
+          </div>
+        }
+        onRetry={handleRetry}
+        compact
+      >
+        <div className="divide-y divide-border">
+          {sweepQuery.data?.sweeps.map((sweep) => <SweepRow key={sweep.sweep} sweep={sweep} />)}
+        </div>
+      </PageState>
+    </SettingsSurface>
   );
 }

@@ -908,7 +908,7 @@ PM Workspace is removed from Build entirely (not renamed, not consolidated into 
 - `/sign/envelopes/[envelopeId]` · **Sign** · hooks: `→ features/sign/envelopes`
 - `/sign/bulk-send` · **Sign** · hooks: `→ features/sign`
 - `/sign/templates` · **Sign** · hooks: `→ features/sign/templates`
-- `/sign/reports` · **Sign** · hooks: `→ features/sign/reports`
+- `/sign/reports` · **Sign** [RETIRED path: reports now render on `/sign` with the dashboard]
 - `/sign/settings` · **Sign** · hooks: `→ features/sign/settings`
 - `/sign/access` · **Sign** · hooks: `→ features/sign`
 

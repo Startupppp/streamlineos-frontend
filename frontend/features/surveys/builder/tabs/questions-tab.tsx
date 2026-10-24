@@ -1,13 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { DragDropContext, Droppable, type DropResult } from "@hello-pangea/dnd";
 import { toast } from "sonner";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePageState } from "@/hooks/api/use-page-state";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
 import {
   useSurveyBuilder,
@@ -17,38 +24,81 @@ import {
   useDeleteQuestion,
   useDuplicateQuestion,
   useReorderBuilder,
+  type SurveyBuilderData,
   type SurveyBuilderViewQuestion,
 } from "@/hooks/api/surveys/builder";
 import { SectionCard } from "../questions/section-card";
 import { QuestionEditorSheet } from "../questions/question-editor-sheet";
+import { SECTION_DND_TYPE, SECTIONS_DROPPABLE_ID, applyBuilderDrop } from "../questions/questions-reorder";
+
+function QuestionsTabSkeleton() {
+  return (
+    <div className="space-y-3">
+      {Array.from({ length: 2 }).map((_, index) => (
+        <Card key={index}>
+          <CardHeader className="flex flex-col gap-2 space-y-0 sm:flex-row sm:items-center">
+            <Skeleton className="h-9 w-full rounded-md sm:max-w-xs" />
+            <div className="flex items-center gap-2 sm:ml-auto">
+              <Skeleton className="h-9 w-32 rounded-md" />
+              <Skeleton className="size-9 rounded-md" />
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            <Skeleton className="h-12 w-full rounded-md" />
+            <Skeleton className="h-12 w-full rounded-md" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  );
+}
 
 export function QuestionsTab({ survey }: { survey: SurveyForm }) {
   const surveyId = survey.id;
-  const { data: builder, isLoading, isError, refetch } = useSurveyBuilder(surveyId);
+  const { data: builder, isLoading, isError, error, refetch } = useSurveyBuilder(surveyId);
   const createSection = useCreateSection(surveyId);
   const patchSection = usePatchSection(surveyId);
   const deleteSection = useDeleteSection(surveyId);
   const deleteQuestion = useDeleteQuestion(surveyId);
   const duplicateQuestion = useDuplicateQuestion(surveyId);
   const reorder = useReorderBuilder(surveyId);
+  const queryClient = useQueryClient();
+  const builderKey = knowledgeAndSurveysQueryKeys.surveys.builder(surveyId);
 
   const [editorOpen, setEditorOpen] = useState(false);
   const [editorSectionId, setEditorSectionId] = useState<number | null>(null);
   const [editorQuestion, setEditorQuestion] = useState<SurveyBuilderViewQuestion | null>(null);
 
-  if (isLoading) {
-    return (
-      <div className="space-y-3">
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-32 w-full" />
-      </div>
-    );
-  }
-  if (isError || !builder) {
-    return <ErrorState description="Failed to load questions." onRetry={refetch} />;
-  }
+  const sections = useMemo(
+    () => (builder ? [...builder.sections].sort((a, b) => a.sortOrder - b.sortOrder) : []),
+    [builder],
+  );
 
-  const sections = [...builder.sections].sort((a, b) => a.sortOrder - b.sortOrder);
+  const pageState = usePageState({
+    permission: "surveys:view",
+    isLoading,
+    isError: isError || (!isLoading && !builder),
+    error,
+    isEmpty: Boolean(builder) && sections.length === 0,
+  });
+
+  const handleDragEnd = useCallback((result: DropResult) => {
+    if (!builder) return;
+    const next = applyBuilderDrop(sections, result);
+    if (!next) return;
+    const previous = builder;
+    queryClient.setQueryData<SurveyBuilderData>(builderKey, { ...builder, sections: next.sections });
+    reorder.mutate(next.reorder, {
+      onError: (error) => {
+        queryClient.setQueryData(builderKey, previous);
+        toast.error(getErrorMessage(error));
+      },
+    });
+  }, [builder, builderKey, queryClient, reorder, sections]);
+
+  function handleRetry() {
+    void refetch();
+  }
 
   async function handleAddSection() {
     try {
@@ -69,24 +119,6 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
   async function handleDeleteSection(sectionId: number) {
     try {
       await deleteSection.mutateAsync(sectionId);
-    } catch (error) {
-      toast.error(getErrorMessage(error));
-    }
-  }
-
-  async function handleMoveSection(sectionId: number, direction: -1 | 1) {
-    const index = sections.findIndex((s) => s.id === sectionId);
-    const swapIndex = index + direction;
-    if (index === -1 || swapIndex < 0 || swapIndex >= sections.length) return;
-    const a = sections[index];
-    const b = sections[swapIndex];
-    try {
-      await reorder.mutateAsync({
-        sections: [
-          { id: a.id, sortOrder: b.sortOrder },
-          { id: b.id, sortOrder: a.sortOrder },
-        ],
-      });
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -142,48 +174,73 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
   }
 
   return (
-    <div className="space-y-4">
-      {sections.length === 0 ? (
+    <PageState
+      resolution={pageState}
+      loading={<QuestionsTabSkeleton />}
+      onRetry={handleRetry}
+      className="h-full min-h-0 flex-1"
+      views={{
+        error: (
+          <ErrorState
+            className="h-full min-h-full flex-1"
+            description="Failed to load questions."
+            onRetry={handleRetry}
+          />
+        ),
+      }}
+      empty={
         <EmptyState
           title="No sections yet"
           description="Add a section to start building your questions."
           action={{ label: "Add section", onClick: handleAddSection }}
-          compact
+          className="h-full min-h-full flex-1"
         />
-      ) : (
-        sections.map((section, index) => (
-          <SectionCard
-            key={section.id}
-            section={section}
-            isFirst={index === 0}
-            isLast={index === sections.length - 1}
-            onRenameSection={handleRenameSection}
-            onDeleteSection={handleDeleteSection}
-            onMoveSectionUp={(id) => handleMoveSection(id, -1)}
-            onMoveSectionDown={(id) => handleMoveSection(id, 1)}
-            onAddQuestion={openAddQuestion}
-            onEditQuestion={openEditQuestion}
-            onDuplicateQuestion={handleDuplicateQuestion}
-            onDeleteQuestion={handleDeleteQuestion}
-            onMoveQuestionUp={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, -1)}
-            onMoveQuestionDown={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, 1)}
+      }
+    >
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <ScrollArea fill className="min-h-0 flex-1">
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId={SECTIONS_DROPPABLE_ID} type={SECTION_DND_TYPE}>
+              {(provided) => (
+                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4 pr-3 pb-1">
+                  {sections.map((section, index) => (
+                    <SectionCard
+                      key={section.id}
+                      section={section}
+                      index={index}
+                      onRenameSection={handleRenameSection}
+                      onDeleteSection={handleDeleteSection}
+                      onAddQuestion={openAddQuestion}
+                      onEditQuestion={openEditQuestion}
+                      onDuplicateQuestion={handleDuplicateQuestion}
+                      onDeleteQuestion={handleDeleteQuestion}
+                      onMoveQuestionUp={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, -1)}
+                      onMoveQuestionDown={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, 1)}
+                    />
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </ScrollArea>
+        <div className="flex shrink-0 justify-end border-t border-border pt-3">
+          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAddSection}>
+            Add section
+          </AnimatedIconButton>
+        </div>
+        {builder ? (
+          <QuestionEditorSheet
+            surveyId={surveyId}
+            sectionId={editorSectionId}
+            question={editorQuestion}
+            sections={sections}
+            logicRules={builder.logicRules}
+            open={editorOpen}
+            onOpenChange={setEditorOpen}
           />
-        ))
-      )}
-      {sections.length > 0 && (
-        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAddSection}>
-          Add section
-        </AnimatedIconButton>
-      )}
-      <QuestionEditorSheet
-        surveyId={surveyId}
-        sectionId={editorSectionId}
-        question={editorQuestion}
-        sections={sections}
-        logicRules={builder.logicRules}
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-      />
-    </div>
+        ) : null}
+      </div>
+    </PageState>
   );
 }

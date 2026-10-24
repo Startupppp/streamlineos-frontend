@@ -8,14 +8,14 @@ import { AppSheet } from "@/components/shared/app-sheet";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
-import { useCan } from "@/hooks/api/access";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useBulkSendJob, useBulkSendJobErrorReport } from "@/hooks/api/sign/bulk-send";
 import type { SignBulkSendJob, SignBulkSendRow } from "@/types/sign";
 import { failedRowsCsv, rowIdentity } from "./bulk-send-row-utils";
@@ -76,15 +76,34 @@ function CoverageNote({ shown, total, noun, reason }: { shown: number; total: nu
 }
 
 export function BulkSendJobSheet({ jobId, templateName, open, onOpenChange }: BulkSendJobSheetProps) {
-  const canRun = useCan("sign:bulk_send:run");
-  const enabled = open && canRun;
-  const detail = useBulkSendJob(enabled ? jobId : undefined);
-  const errorReport = useBulkSendJobErrorReport(enabled ? jobId : undefined);
+  const detail = useBulkSendJob(open ? jobId : undefined);
+  const errorReport = useBulkSendJobErrorReport(open ? jobId : undefined);
 
   const job: SignBulkSendJob | undefined = detail.data?.job;
   const rows = detail.data?.rows ?? [];
   const failedRows = errorReport.data?.rows ?? [];
   const mapping = job?.columnMappingJson ?? {};
+  const sheetState = usePageState({
+    permission: "sign:bulk_send:run",
+    isLoading: open && detail.isLoading,
+    isError: detail.isError,
+    error: detail.error,
+  });
+  const reportState = usePageState({
+    permission: "sign:bulk_send:run",
+    isLoading: open && errorReport.isLoading,
+    isError: errorReport.isError,
+    error: errorReport.error,
+    isEmpty: open && !errorReport.isLoading && !errorReport.isError && failedRows.length === 0,
+  });
+
+  function handleRetry() {
+    void detail.refetch();
+  }
+
+  function handleRetryReport() {
+    void errorReport.refetch();
+  }
 
   async function handleCopyFailures() {
     try {
@@ -103,21 +122,19 @@ export function BulkSendJobSheet({ jobId, templateName, open, onOpenChange }: Bu
       description={jobId === undefined ? undefined : `Job #${jobId}`}
       className="sm:max-w-xl"
     >
-      {!canRun ? (
-        <EmptyState
-          title="You cannot view bulk send jobs"
-          description="Opening a bulk send job needs the Sign OS bulk send permission."
-          compact
-        />
-      ) : detail.isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-12 w-full" />
-          ))}
-        </div>
-      ) : detail.isError || !job ? (
-        <ErrorState title="Failed to load this bulk send job" onRetry={() => void detail.refetch()} compact />
-      ) : (
+      <PageState
+        resolution={sheetState}
+        loading={
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} className="h-12 w-full" />
+            ))}
+          </div>
+        }
+        onRetry={handleRetry}
+        className="h-full min-h-full flex-1"
+      >
+        {job ? (
         <div className="space-y-4">
           <StatCardGrid cols={3}>
             <StatCard label="Rows" value={job.totalCount} icon={Rows3} />
@@ -151,54 +168,51 @@ export function BulkSendJobSheet({ jobId, templateName, open, onOpenChange }: Bu
             </TabsList>
 
             <TabsContent value="failed" className="space-y-3">
-              {errorReport.isLoading ? (
-                <Skeleton className="h-24 w-full" />
-              ) : errorReport.isError ? (
-                <ErrorState
-                  title="Failed to load the error report"
-                  onRetry={() => void errorReport.refetch()}
-                  compact
-                />
-              ) : failedRows.length === 0 ? (
-                <EmptyState
-                  title="No failed rows"
-                  description="Every row in this job was accepted."
-                  compact
-                />
-              ) : (
-                <>
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-xs text-muted-foreground tabular-nums">
-                      {failedRows.length} row(s) failed
-                    </p>
-                    <AnimatedIconButton
-                      icon={CopyIcon}
-                      iconClassName="mr-1.5"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleCopyFailures}
-                    >
-                      Copy as CSV
-                    </AnimatedIconButton>
-                  </div>
-                  <CoverageNote
-                    shown={failedRows.length}
-                    total={errorReport.data?.failedCount ?? job.failedCount}
-                    noun="failed rows"
-                    reason={`The error report stops at ${errorReport.data?.limit ?? failedRows.length} failed rows, so the rest are not in this list.`}
+              <PageState
+                resolution={reportState}
+                loading={<Skeleton className="h-24 w-full" />}
+                onRetry={handleRetryReport}
+                compact
+                empty={
+                  <EmptyState
+                    title="No failed rows"
+                    description="Every row in this job was accepted."
+                    compact
+                    className="border-0 bg-transparent"
                   />
-                  <ul className="space-y-2">
-                    {failedRows.map((row) => (
-                      <RowCard key={row.id} row={row} mapping={mapping} />
-                    ))}
-                  </ul>
-                </>
-              )}
+                }
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm text-muted-foreground tabular-nums">
+                    {failedRows.length} row(s) failed
+                  </p>
+                  <AnimatedIconButton
+                    icon={CopyIcon}
+                    iconClassName="mr-1.5"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopyFailures}
+                  >
+                    Copy as CSV
+                  </AnimatedIconButton>
+                </div>
+                <CoverageNote
+                  shown={failedRows.length}
+                  total={errorReport.data?.failedCount ?? job.failedCount}
+                  noun="failed rows"
+                  reason={`The error report stops at ${errorReport.data?.limit ?? failedRows.length} failed rows, so the rest are not in this list.`}
+                />
+                <ul className="space-y-2">
+                  {failedRows.map((row) => (
+                    <RowCard key={row.id} row={row} mapping={mapping} />
+                  ))}
+                </ul>
+              </PageState>
             </TabsContent>
 
             <TabsContent value="all" className="space-y-3">
               {rows.length === 0 ? (
-                <EmptyState title="No rows" description="This job has no rows recorded." compact />
+                <EmptyState title="No rows" description="This job has no rows recorded." className="h-full min-h-full flex-1" />
               ) : (
                 <>
                   <CoverageNote
@@ -217,7 +231,8 @@ export function BulkSendJobSheet({ jobId, templateName, open, onOpenChange }: Bu
             </TabsContent>
           </Tabs>
         </div>
-      )}
+        ) : null}
+      </PageState>
     </AppSheet>
   );
 }

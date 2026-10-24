@@ -12,6 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
 import {
@@ -55,8 +57,18 @@ const ACTION_LABELS: Record<AutomationActionType, string> = {
 
 const SCORE_AWARE_ACTIONS = new Set<AutomationActionType>(["create_lead", "update_lead", "notify_owner"]);
 
+function AddAutomationBar({ onClick }: { onClick: () => void }) {
+  return (
+    <div className="flex shrink-0 justify-end border-t border-border pt-3">
+      <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={onClick}>
+        Add automation
+      </AnimatedIconButton>
+    </div>
+  );
+}
+
 export function AutomationsTab({ survey }: { survey: SurveyForm }) {
-  const { data: rules, isLoading } = useSurveyAutomations(survey.id);
+  const { data: rules, isLoading, isError, error, refetch, access } = useSurveyAutomations(survey.id);
   const createRule = useCreateAutomation(survey.id);
   const deleteRule = useDeleteAutomation(survey.id);
 
@@ -101,95 +113,131 @@ export function AutomationsTab({ survey }: { survey: SurveyForm }) {
     }
   }
 
-  if (isLoading) return <Skeleton className="h-40 w-full" />;
+  function handleRetry() {
+    void refetch();
+  }
+
+  const hasRules = (rules?.length ?? 0) > 0;
+  const pageState = usePageState({
+    permission: "surveys:automations:manage",
+    isLoading: isLoading || access.pending,
+    isError,
+    error,
+    isEmpty: !adding && !hasRules,
+  });
+
+  const draft = adding ? (
+    <div className="shrink-0 space-y-3 rounded-md border border-border p-3">
+      <div className="space-y-1.5">
+        <Label>When</Label>
+        <Select value={eventType} onValueChange={handleEventTypeChange}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {EVENT_TYPES.map((key) => (
+              <SelectItem key={key} value={key}>
+                {EVENT_LABELS[key]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label>Then</Label>
+        <Select value={actionType} onValueChange={(v) => setActionType(v as AutomationActionType)}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(ACTION_LABELS) as AutomationActionType[]).map((key) => (
+              <SelectItem key={key} value={key}>
+                {ACTION_LABELS[key]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {SCORE_AWARE_ACTIONS.has(actionType) && (
+        <div className="space-y-1.5">
+          <Label>Minimum score (optional)</Label>
+          <Input
+            type="number"
+            value={scoreThreshold}
+            onChange={(e) => setScoreThreshold(e.target.value)}
+            placeholder="e.g. 50"
+          />
+        </div>
+      )}
+
+      {actionType === "create_lead" && (
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox checked={createFollowUpTask} onCheckedChange={handleFollowUpTaskToggle} />
+          Create a follow-up task for the assigned owner
+        </label>
+      )}
+
+      <div className="flex justify-end gap-2">
+        <Button variant="outline" size="sm" onClick={() => setAdding(false)}>
+          Cancel
+        </Button>
+        <Button size="sm" onClick={handleAdd} disabled={createRule.isPending}>
+          Add automation
+        </Button>
+      </div>
+    </div>
+  ) : null;
 
   return (
-    <div className="space-y-3">
-      {!rules?.length && !adding && (
-        <EmptyState
-          illustration={
-            <div className="h-28 w-28">
-              <AutomationsIllustration />
-            </div>
-          }
-          title="No automations yet"
-          description="Route leads to CRM, notify the survey owner, or trigger a webhook based on responses."
-          compact
-        />
-      )}
-
-      {rules?.map((rule) => (
-        <div key={rule.id} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
-          <span className="flex-1">
-            When <span className="font-medium">{EVENT_LABELS[rule.eventType]}</span>
-            {rule.action.scoreThreshold != null && <> and score ≥ {rule.action.scoreThreshold}</>} →{" "}
-            <span className="font-medium">{ACTION_LABELS[rule.action.type]}</span>
-            {rule.action.type === "create_lead" && Boolean(rule.action.config?.createFollowUpTask) && (
-              <span className="text-muted-foreground"> + follow-up task</span>
-            )}
-          </span>
-          <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Delete automation rule" onClick={() => handleDelete(rule.id)} />
+    <PageState
+      resolution={pageState}
+      loading={
+        <div className="space-y-3">
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-10 w-full rounded-md" />
+          <Skeleton className="h-9 w-36 rounded-md" />
         </div>
-      ))}
-
-      {adding ? (
-        <div className="space-y-3 rounded-md border border-border p-3">
-          <div className="space-y-1.5">
-            <Label>When</Label>
-            <Select
-              value={eventType}
-              onValueChange={handleEventTypeChange}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {EVENT_TYPES.map((key) => (
-                  <SelectItem key={key} value={key}>{EVENT_LABELS[key]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-1.5">
-            <Label>Then</Label>
-            <Select value={actionType} onValueChange={(v) => setActionType(v as AutomationActionType)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {(Object.keys(ACTION_LABELS) as AutomationActionType[]).map((key) => (
-                  <SelectItem key={key} value={key}>{ACTION_LABELS[key]}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {SCORE_AWARE_ACTIONS.has(actionType) && (
-            <div className="space-y-1.5">
-              <Label>Minimum score (optional)</Label>
-              <Input
-                type="number"
-                value={scoreThreshold}
-                onChange={(e) => setScoreThreshold(e.target.value)}
-                placeholder="e.g. 50"
-              />
-            </div>
-          )}
-
-          {actionType === "create_lead" && (
-            <label className="flex items-center gap-2 text-sm">
-              <Checkbox checked={createFollowUpTask} onCheckedChange={handleFollowUpTaskToggle} />
-              Create a follow-up task for the assigned owner
-            </label>
-          )}
-
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" size="sm" onClick={() => setAdding(false)}>Cancel</Button>
-            <Button size="sm" onClick={handleAdd} disabled={createRule.isPending}>Add automation</Button>
-          </div>
+      }
+      onRetry={handleRetry}
+      className="h-full min-h-0 flex-1"
+      empty={
+        <div className="flex h-full min-h-0 flex-1 flex-col">
+          <EmptyState
+            illustration={
+              <div className="h-28 w-28">
+                <AutomationsIllustration />
+              </div>
+            }
+            title="No automations yet"
+            description="Route leads to CRM, notify the survey owner, or trigger a webhook based on responses."
+            className="min-h-0 flex-1"
+          />
+          <AddAutomationBar onClick={() => setAdding(true)} />
         </div>
-      ) : (
-        <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => setAdding(true)}>
-          Add automation
-        </AnimatedIconButton>
-      )}
-    </div>
+      }
+    >
+      <div className="flex h-full min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-hide">
+          {!hasRules ? draft : null}
+          {rules?.map((rule) => (
+            <div key={rule.id} className="flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm">
+              <span className="flex-1">
+                When <span className="font-medium">{EVENT_LABELS[rule.eventType]}</span>
+                {rule.action.scoreThreshold != null && <> and score ≥ {rule.action.scoreThreshold}</>} →{" "}
+                <span className="font-medium">{ACTION_LABELS[rule.action.type]}</span>
+                {rule.action.type === "create_lead" && Boolean(rule.action.config?.createFollowUpTask) && (
+                  <span className="text-muted-foreground"> + follow-up task</span>
+                )}
+              </span>
+              <AnimatedIconButton icon={Trash2Icon} iconSize={14} iconClassName="text-destructive" variant="ghost" size="icon" className="h-7 w-7 shrink-0" aria-label="Delete automation rule" onClick={() => handleDelete(rule.id)} />
+            </div>
+          ))}
+        </div>
+        {hasRules && adding ? <div className="mt-3">{draft}</div> : null}
+        {adding ? null : <AddAutomationBar onClick={() => setAdding(true)} />}
+      </div>
+    </PageState>
   );
 }

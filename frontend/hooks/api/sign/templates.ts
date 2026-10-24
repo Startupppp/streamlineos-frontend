@@ -43,6 +43,26 @@ export function useSignTemplates() {
   });
 }
 
+export function useCreateSignTemplate() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("sign:template:manage", {
+    mutationKey: ["signTemplates", "create"],
+    mutationFn: (input: CreateSignTemplateInput) =>
+      apiClient.post<SignTemplate>("/sign/templates", input, undefined, signTemplateMutationContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signTemplates.all }),
+  });
+}
+
+export function useInstantiateSignTemplate() {
+  const qc = useQueryClient();
+  return useAuthorizedMutation("sign:envelope:create", {
+    mutationKey: ["signTemplates", "create-envelope"],
+    mutationFn: ({ templateId, input }: { templateId: number; input: CreateEnvelopeFromTemplateInput }) =>
+      apiClient.post<SignEnvelope>(`/sign/templates/${templateId}/create-envelope`, input, undefined, signTemplateInstantiateContract),
+    onSuccess: () => qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.all }),
+  });
+}
+
 export function useSaveEnvelopeAsTemplate(envelopeId: number) {
   const qc = useQueryClient();
   return useAuthorizedMutation("sign:template:manage", {

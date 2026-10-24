@@ -17,6 +17,14 @@ jest.mock("@/hooks/api/sign/envelopes", () => ({
   }),
 }));
 jest.mock("@/hooks/api/org-display", () => ({ useOrgTimeZone: () => "Asia/Kolkata" }));
+jest.mock("@/hooks/api/use-page-state", () => ({
+  usePageState: (options: { isLoading: boolean; isError: boolean; isEmpty?: boolean; error?: unknown }) => {
+    if (options.isLoading) return { kind: "loading" };
+    if (options.isError) return { kind: "error", error: options.error };
+    if (options.isEmpty) return { kind: "empty" };
+    return { kind: "ready" };
+  },
+}));
 
 describe("the envelope audit trail", () => {
   it("shows each event's time in the organisation's time zone and names that zone", () => {

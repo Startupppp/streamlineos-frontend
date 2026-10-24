@@ -1,16 +1,51 @@
 "use client";
 
-import { useForm } from "react-hook-form";
+import { useForm, type Control } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
 import { messagesSchema, type MessagesValues } from "./messages-schema";
+
+function MessageField({
+  control,
+  name,
+  label,
+  placeholder,
+  fill = false,
+}: {
+  control: Control<MessagesValues>;
+  name: keyof MessagesValues;
+  label: string;
+  placeholder: string;
+  fill?: boolean;
+}) {
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className={cn(fill && "lg:h-full lg:grid-rows-[auto_minmax(8rem,1fr)_auto]")}>
+          <FormLabel>{label}</FormLabel>
+          <FormControl>
+            <Textarea
+              {...field}
+              placeholder={placeholder}
+              className={cn("field-sizing-fixed resize-none", fill ? "min-h-32 lg:h-full" : "min-h-24")}
+            />
+          </FormControl>
+          <FormMessage />
+        </FormItem>
+      )}
+    />
+  );
+}
 
 export function MessagesTab({ survey }: { survey: SurveyForm }) {
   const patchSurvey = usePatchSurvey(survey.id);
@@ -37,84 +72,67 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
   }
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">Messages</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="welcomeMessage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Welcome message</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} rows={3} placeholder="Shown on the respondent's welcome screen" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="submitButtonText"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Submit button text</FormLabel>
-                  <FormControl>
-                    <Input {...field} className="w-48" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="thankYouMessage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Thank-you message</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} rows={3} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="disqualificationMessage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Disqualification message</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} rows={2} placeholder="Shown when logic disqualifies a respondent" />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="closedMessage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Closed survey message</FormLabel>
-                  <FormControl>
-                    <Textarea {...field} rows={2} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <LoadingButton type="submit" size="sm" isPending={patchSurvey.isPending}>
-              Save
-            </LoadingButton>
-          </form>
-        </Form>
-      </CardContent>
-    </Card>
+    <div className="flex min-h-full flex-1 flex-col">
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="flex min-w-0 flex-1 flex-col">
+          <Card className="flex-1">
+            <CardHeader>
+              <CardTitle className="text-sm">Messages</CardTitle>
+              <CardDescription>Copy respondents see before they start and after they finish.</CardDescription>
+              <CardAction>
+                <LoadingButton type="submit" isPending={patchSurvey.isPending}>
+                  Save
+                </LoadingButton>
+              </CardAction>
+            </CardHeader>
+            <CardContent className="flex flex-1 flex-col gap-4">
+              <div className="grid gap-4 lg:min-h-0 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1">
+                <MessageField
+                  control={form.control}
+                  name="welcomeMessage"
+                  label="Welcome message"
+                  placeholder="Shown before they start"
+                  fill
+                />
+                <MessageField
+                  control={form.control}
+                  name="thankYouMessage"
+                  label="Thank-you message"
+                  placeholder="Shown after they submit"
+                  fill
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="submitButtonText"
+                render={({ field }) => (
+                  <FormItem className="sm:max-w-xs">
+                    <FormLabel>Submit button text</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <div className="grid gap-4 lg:grid-cols-2">
+                <MessageField
+                  control={form.control}
+                  name="disqualificationMessage"
+                  label="Disqualification message"
+                  placeholder="Shown when logic ends the survey early"
+                />
+                <MessageField
+                  control={form.control}
+                  name="closedMessage"
+                  label="Closed survey message"
+                  placeholder="Shown when this survey is closed"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </form>
+      </Form>
+    </div>
   );
 }

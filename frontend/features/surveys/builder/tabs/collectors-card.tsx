@@ -92,7 +92,24 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
-          <Skeleton className="h-16 w-full" />
+          <div className="space-y-3">
+            <div className="space-y-2 rounded-md border border-border p-3">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-5 w-14 rounded-full" />
+                <div className="ml-auto flex items-center gap-2">
+                  <Skeleton className="h-3.5 w-12" />
+                  <Skeleton className="h-3.5 w-12" />
+                  <Skeleton className="h-3.5 w-16" />
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-9 min-w-0 flex-1 rounded-md" />
+                <Skeleton className="size-8 shrink-0 rounded-md" />
+                <Skeleton className="h-9 w-20 shrink-0 rounded-md" />
+              </div>
+            </div>
+          </div>
         ) : isError ? (
           <ErrorState compact title="Couldn't load collectors" description={getErrorMessage(error)} onRetry={() => void refetch()} />
         ) : (
@@ -109,7 +126,7 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
               </div>
               <div className="mt-2 flex items-center gap-2">
                 <Input readOnly value={publicLinkFor(collector.token)} className="flex-1" />
-                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="h-8 w-8 shrink-0" aria-label="Copy survey link" onClick={() => handleCopyLink(collector.token)} />
+                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="shrink-0" aria-label="Copy survey link" onClick={() => handleCopyLink(collector.token)} />
                 <Button variant="outline" size="sm" onClick={() => handleToggleStatus(collector.id, collector.status)}>
                   {collector.status === "active" ? "Pause" : "Activate"}
                 </Button>
@@ -121,12 +138,12 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
           ))
         )}
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Select
             value={newType}
             onValueChange={handleNewTypeChange}
           >
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-[200px]")}><SelectValue /></SelectTrigger>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:w-52")}><SelectValue /></SelectTrigger>
             <SelectContent>
               {COLLECTOR_TYPES.map((type) => (
                 <SelectItem key={type} value={type}>{COLLECTOR_TYPE_LABELS[type]}</SelectItem>

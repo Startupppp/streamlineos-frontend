@@ -56,7 +56,7 @@ export function CreateEnvelopeDialog({
       open={open}
       onOpenChange={onOpenChange}
       title={dialogTitle ?? "New envelope"}
-      description={dialogDescription ?? "Start with a title — you'll upload the document and add signers next."}
+      description={dialogDescription ?? "Title first. Upload and signers come next."}
       resolver={zodResolver(envelopeSchema)}
       defaultValues={{ title: defaultTitle ?? "", message: "" }}
       onSubmit={handleSubmit}

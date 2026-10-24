@@ -4,5 +4,4 @@ export { EnvelopeBuilder } from "./builder/envelope-builder";
 export { PublicSessionView } from "./public/public-session-view";
 export { TemplateList } from "./templates/template-list";
 export { BulkSendList } from "./bulk-send/bulk-send-list";
-export { ReportsPage } from "./reports/reports-page";
 export { SignSettingsPage } from "./settings/sign-settings-page";

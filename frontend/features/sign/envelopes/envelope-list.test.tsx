@@ -14,12 +14,21 @@ jest.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { orgId: "org-1" }, status: "authenticated" }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: jest.fn(() => true),
   useModuleEnabled: jest.fn(() => true),
   usePermissionGate: jest.fn(() => ({ permission: "sign:envelope:view", allowed: true, denied: false, pending: false })),
   useCanState: jest.fn(() => "granted"),
-  useAccess: jest.fn(() => ({ data: { scopes: {}, modules: {}, isOrgOwner: false }, refetch: jest.fn() })),
+  useAccess: jest.fn(() => ({
+    data: { scopes: { "sign:envelope:view": true }, modules: { sign: true }, isOrgOwner: false },
+    isLoading: false,
+    isError: false,
+    refetch: jest.fn(),
+  })),
 }));
 
 jest.mock("@/hooks/common/use-query-param-open", () => ({

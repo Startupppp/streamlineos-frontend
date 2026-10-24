@@ -10,9 +10,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
-import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -175,7 +175,7 @@ export function EnvelopeList() {
       title="No envelopes match your search"
       description="Search looks at the envelope title and each signer's name and email."
       action={{ label: "Clear search", onClick: handleClearSearch }}
-      className="border-0 bg-transparent min-h-[40vh]"
+      className="h-full min-h-full flex-1 border-0 bg-transparent"
     />
   ) : activeFilter ? (
     <EmptyState
@@ -183,7 +183,7 @@ export function EnvelopeList() {
       title={`No ${activeFilter.label.toLowerCase()} envelopes`}
       description="Try a different status filter or clear it to see all."
       action={{ label: "Clear filter", onClick: handleClearFilter }}
-      className="border-0 bg-transparent min-h-[40vh]"
+      className="h-full min-h-full flex-1 border-0 bg-transparent"
     />
   ) : (
     <EmptyState
@@ -191,9 +191,16 @@ export function EnvelopeList() {
       title="No envelopes yet"
       description="Upload a PDF and send it for signature to get started."
       action={canCreateEnvelope ? { label: "New envelope", onClick: handleCreateOpen } : undefined}
-      className="border-0 bg-transparent min-h-[40vh]"
+      className="h-full min-h-full flex-1 border-0 bg-transparent"
     />
   );
+
+  const pageState = usePageState({
+    permission: "sign:envelope:view",
+    isLoading: isLoading && !hasData,
+    isError: isError && !hasData,
+    error,
+  });
 
   const columns = envelopeColumns({
     canDelete: canCreateEnvelope,
@@ -206,6 +213,11 @@ export function EnvelopeList() {
     <PageWrapper
       title="Envelopes"
       subtitle="Every signing request you've sent, organized by status"
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
+      state={pageState}
+      loading={<DataTableSkeleton rows={8} headers={["Title", "Status", "Sent", "Expires"]} fill />}
+      onRetry={handleRetry}
       actions={
         canCreateEnvelope ? (
           <Button onClick={handleCreateOpen}>
@@ -239,16 +251,8 @@ export function EnvelopeList() {
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
-        {isError && !hasData ? (
-          <ErrorState
-            className="flex-1"
-            title="Failed to load envelopes"
-            description={getErrorMessage(error)}
-            onRetry={handleRetry}
-          />
-        ) : (
           <DataTable
-            className="flex-1 min-h-0"
+            className="h-full min-h-0 flex-1"
             data={envelopes}
             columns={columns}
             getRowKey={(envelope) => envelope.id}
@@ -273,7 +277,6 @@ export function EnvelopeList() {
               pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
             }}
           />
-        )}
       </div>
 
       <CreateEnvelopeDialog open={createOpen} onOpenChange={setCreateOpen} />

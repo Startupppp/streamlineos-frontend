@@ -7,6 +7,8 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
 import { EmptyState } from "@/components/ui/empty-state";
+import { DataTableSkeleton } from "@/components/ui/data-table";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { FILTER_TOOLBAR_ROW, FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
@@ -37,7 +39,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
   const [addOpen, setAddOpen] = useState(false);
 
-  const { data: participantsPage, isLoading, isError, refetch } = useParticipants(surveyId, {
+  const { data: participantsPage, isLoading, isError, error, refetch } = useParticipants(surveyId, {
     status: status === "all" ? undefined : status,
     page,
   });
@@ -85,7 +87,13 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
     }
   }
 
-  const hasParticipants = participants.length > 0 || isLoading;
+  const pageState = usePageState({
+    permission: "surveys:participants:view",
+    isLoading,
+    isError,
+    error,
+    isEmpty: !isLoading && !isError && participants.length === 0,
+  });
 
   return (
     <DashboardGate permission="surveys:participants:view">
@@ -93,25 +101,35 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
         <PageWrapper
           title="Participants"
           backHref={`/surveys/${surveyId}`}
-          actions={
-            <AnimatedIconButton icon={UserPlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={() => setAddOpen(true)}>
-              Add participants
-            </AnimatedIconButton>
+          noInternalScroll
+          contentClassName="flex min-h-0 flex-1 flex-col"
+          state={pageState}
+          loading={<DataTableSkeleton rows={8} headers={["Name", "Email", "Status", "Invited", "Completed"]} fill />}
+          onRetry={handleRetry}
+          empty={
+            <EmptyState
+              title="No participants yet"
+              description="Add participants by email to invite them to this survey."
+              action={{ label: "Add participants", onClick: () => setAddOpen(true) }}
+              className="h-full min-h-full flex-1"
+            />
           }
-          filters={
-            <div className={FILTER_TOOLBAR_ROW}>
-              {selected.size > 0 && (
-                <>
-                  <AnimatedIconButton icon={SendIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleInvite} disabled={invite.isPending}>
-                    Invite ({selected.size})
-                  </AnimatedIconButton>
-                  <AnimatedIconButton icon={BellIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleRemind} disabled={remind.isPending}>
-                    Remind ({selected.size})
-                  </AnimatedIconButton>
-                </>
-              )}
+          stateViews={{
+            error: (
+              <ErrorState
+                className="h-full min-h-full flex-1"
+                title="Couldn't load participants"
+                description="Failed to load survey participants. Please try again."
+                onRetry={handleRetry}
+              />
+            ),
+          }}
+          actions={
+            <div className="flex w-full items-center justify-end gap-2">
               <Select value={status} onValueChange={(v) => { setStatus(v as ParticipantStatus | "all"); setPage(1); }}>
-                <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}><SelectValue placeholder="Status" /></SelectTrigger>
+                <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40 shrink-0")}>
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
                   <SelectItem value="invited">Invited</SelectItem>
@@ -121,38 +139,45 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
                   <SelectItem value="bounced">Bounced</SelectItem>
                 </SelectContent>
               </Select>
+              <AnimatedIconButton icon={UserPlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" className="shrink-0" onClick={() => setAddOpen(true)}>
+                Add participants
+              </AnimatedIconButton>
             </div>
           }
+          filters={
+            selected.size > 0 ? (
+              <div className={FILTER_TOOLBAR_ROW}>
+                <AnimatedIconButton icon={SendIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleInvite} disabled={invite.isPending}>
+                  Invite ({selected.size})
+                </AnimatedIconButton>
+                <AnimatedIconButton icon={BellIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleRemind} disabled={remind.isPending}>
+                  Remind ({selected.size})
+                </AnimatedIconButton>
+              </div>
+            ) : undefined
+          }
         >
-          {isError ? (
-            <ErrorState
-              className="flex-1"
-              title="Couldn't load participants"
-              description="Failed to load survey participants. Please try again."
-              onRetry={handleRetry}
-            />
-          ) : hasParticipants ? (
-            <DataTable
-              className="flex-1 min-h-0"
-              data={participants}
-              columns={columns}
-              getRowKey={(row) => row.id}
-              isLoading={isLoading}
-              selection={{
-                selected,
-                onChange: setSelected,
-                getRowLabel: (row) => row.name ?? row.email ?? "",
-              }}
-              pagination={{ mode: "server", page, pageSize, total, onPageChange: setPage }}
-            />
-          ) : (
-            <EmptyState
-              title="No participants yet"
-              description="Add participants by email to invite them to this survey."
-              action={{ label: "Add participants", onClick: () => setAddOpen(true) }}
-              className="flex-1"
-            />
-          )}
+          <DataTable
+            className="h-full min-h-0 flex-1"
+            data={participants}
+            columns={columns}
+            getRowKey={(row) => row.id}
+            isLoading={false}
+            selection={{
+              selected,
+              onChange: setSelected,
+              getRowLabel: (row) => row.name ?? row.email ?? "",
+            }}
+            pagination={{ mode: "server", page, pageSize, total, onPageChange: setPage }}
+            emptyState={
+              <EmptyState
+                title="No participants yet"
+                description="Add participants by email to invite them to this survey."
+                action={{ label: "Add participants", onClick: () => setAddOpen(true) }}
+                className="h-full min-h-full flex-1"
+              />
+            }
+          />
         </PageWrapper>
         <AddParticipantsDialog surveyId={surveyId} open={addOpen} onOpenChange={setAddOpen} />
       </RequireModule>

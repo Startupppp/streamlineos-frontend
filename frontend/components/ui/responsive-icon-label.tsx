@@ -18,19 +18,21 @@ interface MobileOnlyLabelTooltipProps {
   label: string;
   children: ReactElement;
   always?: boolean;
+  side?: "top" | "bottom" | "left" | "right";
 }
 
 export function MobileOnlyLabelTooltip({
   label,
   children,
   always = false,
+  side = "bottom",
 }: MobileOnlyLabelTooltipProps) {
   return (
     <TooltipProvider delayDuration={200}>
       <Tooltip>
         <TooltipTrigger asChild>{children}</TooltipTrigger>
         <TooltipContent
-          side="bottom"
+          side={side}
           className={cn("text-xs", !always && "md:hidden")}
         >
           {label}

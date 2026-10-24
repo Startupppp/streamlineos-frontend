@@ -97,7 +97,7 @@ describe("KbConversationList row actions", () => {
     render(<KbConversationList {...baseProps} />);
 
     const menu = screen.getByRole("button", { name: "More options" });
-    expect(menu).toHaveClass("h-8", "w-8", "lg:opacity-0", "lg:group-focus-within:opacity-100", "lg:focus-visible:opacity-100");
+    expect(menu).toHaveClass("size-9", "lg:opacity-0", "lg:group-focus-within:opacity-100", "lg:focus-visible:opacity-100");
     expect(menu).not.toHaveClass("opacity-0");
 
     await user.tab();

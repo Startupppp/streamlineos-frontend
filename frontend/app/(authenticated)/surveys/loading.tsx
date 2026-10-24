@@ -8,16 +8,17 @@ export default function SurveysLoading() {
     <PageWrapper
       title="Surveys"
       subtitle="Build surveys, quizzes, live polls, and lead forms."
-      actions={<Skeleton className="h-9 w-28 rounded-md" />}
+      actions={<Skeleton className="h-9 w-[7.5rem] rounded-md" />}
       filters={
         <div className={FILTER_TOOLBAR_ROW}>
-          <Skeleton className="h-9 w-48 rounded-md" />
-          <Skeleton className="h-9 w-[140px] rounded-md" />
-          <Skeleton className="h-9 w-[120px] rounded-md" />
+          <Skeleton className="h-9 min-w-[12rem] flex-1 basis-[12rem] rounded-md md:max-w-xs" />
+          <Skeleton className="hidden h-9 w-[8.5rem] rounded-md md:block" />
+          <Skeleton className="hidden h-9 w-[8.5rem] rounded-md md:block" />
+          <Skeleton className="size-9 shrink-0 rounded-md md:hidden" />
         </div>
       }
     >
-      <div className="flex flex-1 min-h-0 flex-col">
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
         <SurveyListSkeleton />
       </div>
     </PageWrapper>

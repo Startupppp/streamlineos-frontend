@@ -34,7 +34,21 @@ export function ResponseDetailSheet({ surveyId, sessionId, open, onOpenChange }:
         </SheetHeader>
         <SheetBody className="space-y-4 px-6 py-4">
           {isLoading ? (
-            <Skeleton className="h-40 w-full" />
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <Skeleton className="h-5 w-16 rounded-full" />
+                <Skeleton className="h-5 w-20 rounded-full" />
+                <Skeleton className="h-3.5 w-24" />
+              </div>
+              <div className="space-y-3">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <div key={index} className="space-y-1">
+                    <Skeleton className="h-3.5 w-2/3" />
+                    <Skeleton className="h-4 w-full" />
+                  </div>
+                ))}
+              </div>
+            </div>
           ) : data ? (
             <>
               <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

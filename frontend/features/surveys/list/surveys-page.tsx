@@ -69,7 +69,7 @@ export function SurveysPage() {
             hasAnySurveys ? (
               <Link
                 href="/surveys/new"
-                className="inline-flex h-9 items-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                className="inline-flex h-9 items-center justify-center rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground hover:bg-primary/90"
               >
                 Create survey
               </Link>
@@ -88,12 +88,12 @@ export function SurveysPage() {
             ) : undefined
           }
         >
-          <div className="flex flex-1 min-h-0 flex-col gap-4">
+          <div className="flex min-h-full flex-1 flex-col gap-4">
             <PageState
               resolution={pageState}
               loading={<SurveyListSkeleton />}
               onRetry={handleRetry}
-              className="flex-1"
+              className="min-h-full flex-1"
               empty={
                 <EmptyState
                   illustration={<EmptyReportIllustration className="h-28 w-28" />}
@@ -104,7 +104,7 @@ export function SurveysPage() {
                   filteredTitle="No surveys match your filters"
                   onClearFilters={handleClearFilters}
                   access={surveysQuery.access}
-                  className="flex-1"
+                  className="h-full min-h-full flex-1"
                 />
               }
             >

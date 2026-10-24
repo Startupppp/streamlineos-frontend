@@ -7,7 +7,8 @@ import { AppSheet } from "@/components/shared/app-sheet";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -126,13 +127,19 @@ function CertificateBody({ details }: { details: CertificateDetails }) {
 }
 
 export function CompletionCertificateSheet({ envelopeId, open, onOpenChange }: CompletionCertificateSheetProps) {
-  const canDownload = useCan("sign:certificate:download");
   const canRegenerate = useCan("sign:admin:manage");
-  const certificate = useSignEnvelopeCertificate(open && canDownload ? envelopeId : undefined);
+  const certificate = useSignEnvelopeCertificate(open ? envelopeId : undefined);
+  const notFound = isApiError(certificate.error) && certificate.error.status === 404;
+  const certificateState = usePageState({
+    permission: "sign:certificate:download",
+    isLoading: open && certificate.isLoading,
+    isError: certificate.isError && !notFound,
+    error: certificate.error,
+    isEmpty: notFound,
+  });
   const regenerate = useRegenerateSignCertificate(envelopeId);
 
   const parsed = certificate.data ? certificateDetailsSchema.safeParse(certificate.data.certificate.certificateJson) : undefined;
-  const notFound = isApiError(certificate.error) && certificate.error.status === 404;
 
   function handleRetry() {
     void certificate.refetch();
@@ -182,32 +189,26 @@ export function CompletionCertificateSheet({ envelopeId, open, onOpenChange }: C
         ) : undefined
       }
     >
-      {!canDownload ? (
-        <EmptyState
-          title="You cannot view certificates"
-          description="Viewing a completion certificate needs the Sign OS certificate download permission."
-          compact
-        />
-      ) : certificate.isLoading ? (
-        <div className="space-y-3">
-          {Array.from({ length: 8 }).map((_, index) => (
-            <Skeleton key={index} className="h-8 w-full" />
-          ))}
-        </div>
-      ) : notFound ? (
-        <EmptyState
-          title="No certificate yet"
-          description="A certificate is issued when every signer has completed the envelope."
-          compact
-        />
-      ) : certificate.isError ? (
-        <ErrorState
-          title="Failed to load the certificate"
-          description={getErrorMessage(certificate.error)}
-          onRetry={handleRetry}
-          compact
-        />
-      ) : parsed?.success ? (
+      <PageState
+        resolution={certificateState}
+        loading={
+          <div className="space-y-3">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <Skeleton key={index} className="h-8 w-full" />
+            ))}
+          </div>
+        }
+        onRetry={handleRetry}
+        className="h-full min-h-full flex-1"
+        empty={
+          <EmptyState
+            title="No certificate yet"
+            description="A certificate is issued when every signer has completed the envelope."
+            className="h-full min-h-full flex-1"
+          />
+        }
+      >
+      {parsed?.success ? (
         <CertificateBody details={parsed.data} />
       ) : certificate.data ? (
         <div className="space-y-4">
@@ -227,6 +228,7 @@ export function CompletionCertificateSheet({ envelopeId, open, onOpenChange }: C
           </dl>
         </div>
       ) : null}
+      </PageState>
     </AppSheet>
   );
 }

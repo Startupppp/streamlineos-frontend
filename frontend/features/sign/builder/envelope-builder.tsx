@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ErrorState } from "@/components/shared/error-state";
-import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useSignEnvelope } from "@/hooks/api/sign/envelopes";
 import { useSignDocumentPreview } from "@/hooks/api/sign/documents";
 import { BuilderProvider, useBuilder } from "./builder-context";
@@ -28,7 +27,10 @@ function BuilderRightPanel({ envelopeId }: { envelopeId: number }) {
       ) : (
         <div className="text-sm text-muted-foreground">
           <p className="font-medium text-foreground mb-1">No field selected</p>
-          <p>Click a field on the document to edit its settings, or place a new one from the Fields tab.</p>
+          <p>
+            Click a field on the document to edit its settings, or place a new
+            one from the Fields tab.
+          </p>
         </div>
       )}
     </div>
@@ -36,12 +38,24 @@ function BuilderRightPanel({ envelopeId }: { envelopeId: number }) {
 }
 
 function BuilderContent({ envelopeId }: { envelopeId: number }) {
-  const { data, isLoading, isError, error, refetch } = useSignEnvelope(envelopeId);
+  const { data, isLoading, isError, error, refetch } =
+    useSignEnvelope(envelopeId);
+  const pageState = usePageState({
+    permission: "sign:envelope:view",
+    isLoading: (isLoading || data === undefined) && !isError,
+    isError,
+    error,
+  });
 
   function handleRetry() {
     void refetch();
   }
   const [auditOpen, setAuditOpen] = useState(false);
+
+  function handleShowAudit() {
+    setAuditOpen(true);
+  }
+
   const { selectedDocumentId, setSelectedDocumentId } = useBuilder();
 
   useEffect(() => {
@@ -51,39 +65,51 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
   }, [data?.documents, selectedDocumentId, setSelectedDocumentId]);
 
   const previewDocumentId = selectedDocumentId ?? data?.documents?.[0]?.id;
-  const { data: preview } = useSignDocumentPreview(previewDocumentId ?? undefined);
+  const { data: preview } = useSignDocumentPreview(
+    previewDocumentId ?? undefined,
+  );
 
-  if (isError) {
+  if (pageState.kind !== "ready" || !data) {
     return (
-      <PageWrapper title="Envelope" noInternalScroll>
-        <ErrorState
-          title="Failed to load this envelope"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      </PageWrapper>
-    );
-  }
-
-  if (isLoading || !data) {
-    return (
-      <PageWrapper title="Loading envelope…" noInternalScroll>
-        <div className="p-6 space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-96 w-full" />
-        </div>
+      <PageWrapper
+        title="Envelope"
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
+        state={pageState}
+        loading={
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-96 w-full" />
+          </div>
+        }
+        onRetry={handleRetry}
+      >
+        {null}
       </PageWrapper>
     );
   }
 
   const editable = EDITABLE_STATUSES.has(data.envelope.status);
-  const selectedDocument = data.documents.find((d) => d.id === selectedDocumentId);
+  const selectedDocument = data.documents.find(
+    (d) => d.id === selectedDocumentId,
+  );
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <BuilderTopBar envelope={data.envelope} recipients={data.recipients} onShowAudit={() => setAuditOpen(true)} />
+      <BuilderTopBar
+        envelope={data.envelope}
+        recipients={data.recipients}
+        documents={data.documents}
+        fields={data.fields}
+        onShowAudit={handleShowAudit}
+      />
       <div className="flex flex-1 min-h-0">
-        <BuilderLeftPanel envelopeId={envelopeId} documents={data.documents} recipients={data.recipients} editable={editable} />
+        <BuilderLeftPanel
+          envelopeId={envelopeId}
+          documents={data.documents}
+          recipients={data.recipients}
+          editable={editable}
+        />
         <BuilderCanvasArea
           envelopeId={envelopeId}
           document={selectedDocument}
@@ -94,7 +120,11 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
         />
         <BuilderRightPanel envelopeId={envelopeId} />
       </div>
-      <AuditTrailSheet envelopeId={envelopeId} open={auditOpen} onOpenChange={setAuditOpen} />
+      <AuditTrailSheet
+        envelopeId={envelopeId}
+        open={auditOpen}
+        onOpenChange={setAuditOpen}
+      />
     </div>
   );
 }

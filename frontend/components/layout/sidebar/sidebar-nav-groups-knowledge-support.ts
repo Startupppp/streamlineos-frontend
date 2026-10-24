@@ -125,7 +125,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
         icon: PenTool,
         href: "/sign",
         exact: true,
-        requiredPermission: "sign:envelope:view",
+        requiredPermission: ["sign:envelope:view", "sign:audit:view"],
       },
       {
         label: "Envelopes",
@@ -144,12 +144,6 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
         icon: Send,
         href: "/sign/bulk-send",
         requiredPermission: "sign:bulk_send:run",
-      },
-      {
-        label: "Reports",
-        icon: BarChart3,
-        href: "/sign/reports",
-        requiredPermission: "sign:audit:view",
       },
       {
         label: "Access",

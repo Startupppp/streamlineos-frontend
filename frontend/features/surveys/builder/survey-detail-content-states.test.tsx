@@ -31,10 +31,6 @@ jest.mock("@/features/surveys/builder/survey-builder-tabs", () => ({
   SurveyBuilderTabs: ({ survey }: { survey: SurveyForm }) => <div data-testid="builder-tabs">{survey.title}</div>,
 }));
 
-jest.mock("@/features/surveys/builder/survey-activity-panel", () => ({
-  SurveyActivityPanel: () => <aside data-testid="activity-panel" />,
-}));
-
 jest.mock("@/features/surveys/builder/survey-builder-header", () => ({
   SurveyBuilderHeader: () => <div data-testid="builder-header" />,
 }));
@@ -151,14 +147,14 @@ describe("the survey detail page never leaves a reader on an unexplained skeleto
     await waitFor(() => expect(screen.queryByRole("alert")).not.toBeInTheDocument());
   });
 
-  it("renders the survey title, builder tabs and activity panel once the survey arrives", async () => {
+  it("renders the survey title, builder tabs and header once the survey arrives", async () => {
     mockedGet.mockImplementation((path: string) => (path === SURVEY_PATH ? Promise.resolve(SURVEY) : never()));
 
     renderDetail(testClient(VIEWER_ACCESS));
 
     expect(await screen.findByRole("heading", { name: SURVEY.title })).toBeInTheDocument();
     expect(screen.getByTestId("builder-tabs")).toBeInTheDocument();
-    expect(screen.getByTestId("activity-panel")).toBeInTheDocument();
+    expect(screen.getByTestId("builder-header")).toBeInTheDocument();
   });
 
   it("tells a reader without surveys:view that access is restricted rather than leaving the skeleton up", async () => {

@@ -8,7 +8,15 @@ import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter, SheetBody } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogBody,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -116,22 +124,22 @@ export function SpaceSheet({
   const isPending = createSpace.isPending || updateSpace.isPending;
 
   return (
-    <Sheet open={open} onOpenChange={handleOpenChange}>
-      <SheetContent side="right" className="sm:max-w-md p-0 flex flex-col">
-        <SheetHeader className="px-6 py-4 border-b shrink-0">
-          <SheetTitle>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>
             {editingSpace ? "Edit team folder" : "Create team folder"}
-          </SheetTitle>
-          <SheetDescription className="text-xs mt-0.5">
+          </DialogTitle>
+          <DialogDescription>
             Name, audience and appearance of this space.
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="flex flex-col flex-1 min-h-0"
+            className="space-y-4"
           >
-            <SheetBody className="px-6 py-5 space-y-4">
+            <DialogBody className="space-y-4">
               <FormField
                 control={form.control}
                 name="name"
@@ -206,23 +214,22 @@ export function SpaceSheet({
                   </FormItem>
                 )}
               />
-            </SheetBody>
-            <SheetFooter className="px-6 py-4 border-t shrink-0 flex gap-2">
+            </DialogBody>
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                className="flex-1"
                 onClick={handleCancel}
               >
                 Cancel
               </Button>
-              <LoadingButton type="submit" className="flex-1" isPending={isPending} loadingText="Saving…">
+              <LoadingButton type="submit" isPending={isPending} loadingText="Saving…">
                 {editingSpace ? "Save" : "Create"}
               </LoadingButton>
-            </SheetFooter>
+            </DialogFooter>
           </form>
         </Form>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

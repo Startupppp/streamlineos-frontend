@@ -20,6 +20,8 @@ import {
   useVoidSignEnvelope,
 } from "@/hooks/api/sign/envelopes";
 import { useCan } from "@/hooks/api/access";
+import { useUpdateSignTemplate } from "@/hooks/api/sign/templates";
+import { snapshotFromEnvelope } from "../templates/template-snapshot";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
 import { EnvelopeAiMenu } from "./envelope-ai-menu";
@@ -28,15 +30,17 @@ import { CorrectEnvelopeSheet } from "./correct-envelope-sheet";
 import { EnvelopeExpiryControl } from "./envelope-expiry-control";
 import { SaveAsTemplateDialog } from "./save-as-template-dialog";
 import { ConfirmWithReasonSheet } from "@/components/ui/confirm-with-reason-sheet";
-import type { SignEnvelope, SignRecipient } from "@/types/sign";
+import type { SignDocument, SignEnvelope, SignField, SignRecipient } from "@/types/sign";
 
 interface BuilderTopBarProps {
   envelope: SignEnvelope;
   recipients: SignRecipient[];
+  documents?: SignDocument[];
+  fields?: SignField[];
   onShowAudit: () => void;
 }
 
-export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopBarProps) {
+export function BuilderTopBar({ envelope, recipients, documents = [], fields = [], onShowAudit }: BuilderTopBarProps) {
   const router = useRouter();
   const [validationErrors, setValidationErrors] = useState<string[] | null>(null);
   const [certificateOpen, setCertificateOpen] = useState(false);
@@ -55,6 +59,7 @@ export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopB
   const voidEnvelope = useVoidSignEnvelope(envelope.id);
   const downloadFinalPdf = useDownloadSignEnvelopeFinalPdf(envelope.id);
   const downloadCertificate = useDownloadSignEnvelopeCertificate(envelope.id);
+  const updateTemplate = useUpdateSignTemplate(envelope.templateId ?? 0);
 
   const isDraft = envelope.status === "draft" || envelope.status === "ready_to_send";
   const isActive = envelope.status === "sent" || envelope.status === "delivered" || envelope.status === "partially_completed";
@@ -135,6 +140,18 @@ export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopB
     setTemplateOpen(true);
   }
 
+  async function handleSaveToTemplate() {
+    if (envelope.templateId == null) return;
+    try {
+      await updateTemplate.mutateAsync({
+        templateJson: snapshotFromEnvelope({ envelope, documents, recipients, fields }),
+      });
+      toast.success(documents.length > 0 ? "Template updated" : "Template saved. Add a document before you publish it.");
+    } catch (error) {
+      toast.error(getErrorMessage(error));
+    }
+  }
+
   function handleBack() {
     router.push("/sign/envelopes");
   }
@@ -164,6 +181,16 @@ export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopB
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
+        {isDraft && canManageTemplates && envelope.templateId != null && (
+          <LoadingButton variant="outline" onClick={handleSaveToTemplate} isPending={updateTemplate.isPending} loadingText="Saving…">
+            Save to template
+          </LoadingButton>
+        )}
+        {isDraft && canManageTemplates && envelope.templateId == null && (
+          <Button variant="outline" onClick={handleSaveAsTemplate}>
+            Save as template
+          </Button>
+        )}
         {isDraft && canSend && (
           <LoadingButton onClick={handleSend} isPending={validate.isPending || send.isPending} loadingText="Sending…">
             <Send className="size-4" />
@@ -197,7 +224,9 @@ export function BuilderTopBar({ envelope, recipients, onShowAudit }: BuilderTopB
             <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" className="size-8" aria-label="Document actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {canManageTemplates && <DropdownMenuItem onClick={handleSaveAsTemplate}>Save as template</DropdownMenuItem>}
+            {canManageTemplates && envelope.templateId != null && (
+              <DropdownMenuItem onClick={handleSaveAsTemplate}>Save as a new template</DropdownMenuItem>
+            )}
             {canViewCertificate && (
               <DropdownMenuItem onClick={handleShowCertificate} disabled={!isCompleted}>
                 <ScrollText className="size-4" />

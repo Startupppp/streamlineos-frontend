@@ -138,6 +138,38 @@ describe("DataTable — keyboard activation on interactive row content", () => {
     expect(screen.queryByTestId("detail-sheet")).not.toBeInTheDocument();
   });
 
+  it("marks the header checkbox once every row on the page is selected", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    function rowCheckbox(index: number): HTMLElement {
+      const box = screen.getAllByRole("checkbox", { name: "Select row" })[index];
+      if (!box) throw new Error("no row checkbox rendered");
+      return box;
+    }
+    await user.click(rowCheckbox(0));
+    await user.click(rowCheckbox(1));
+
+    expect(screen.getByRole("checkbox", { name: "Select all rows on this page" })).toHaveAttribute(
+      "aria-checked",
+      "true",
+    );
+  });
+
+  it("marks the header checkbox as mixed when only some rows are selected", async () => {
+    const user = userEvent.setup();
+    render(<Harness />);
+
+    const [first] = screen.getAllByRole("checkbox", { name: "Select row" });
+    if (!first) throw new Error("no row checkbox rendered");
+    await user.click(first);
+
+    expect(screen.getByRole("checkbox", { name: "Select all rows on this page" })).toHaveAttribute(
+      "aria-checked",
+      "mixed",
+    );
+  });
+
   it("leaves a second row selectable by keyboard after the first is selected", async () => {
     const user = userEvent.setup();
     render(<Harness />);

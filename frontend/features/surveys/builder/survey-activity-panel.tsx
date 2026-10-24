@@ -1,18 +1,43 @@
+"use client";
+
+import { Info } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
 
-export function SurveyActivityPanel({ survey }: { survey: SurveyForm }) {
+function relativeTime(value: string | null | undefined): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return formatDistanceToNow(date, { addSuffix: true });
+}
+
+export function SurveyActivityInfo({ survey }: { survey: SurveyForm }) {
+  const created = relativeTime(survey.createdAt);
+  const updated = relativeTime(survey.updatedAt);
+  const archived = relativeTime(survey.archivedAt);
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-sm">Activity</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2 text-xs text-muted-foreground">
-        <p>Created {formatDistanceToNow(new Date(survey.createdAt), { addSuffix: true })}</p>
-        <p>Last updated {formatDistanceToNow(new Date(survey.updatedAt), { addSuffix: true })}</p>
-        {survey.archivedAt && <p>Archived {formatDistanceToNow(new Date(survey.archivedAt), { addSuffix: true })}</p>}
-      </CardContent>
-    </Card>
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            className="size-9 shrink-0 text-muted-foreground"
+            aria-label="Survey activity"
+          >
+            <Info className="size-4" aria-hidden="true" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom" align="start" className="space-y-0.5 px-3 py-2">
+          {created ? <p>Created {created}</p> : null}
+          {updated ? <p>Last updated {updated}</p> : null}
+          {archived ? <p>Archived {archived}</p> : null}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }

@@ -119,33 +119,7 @@ export function DataTable<T>({
       const activeSelection = selection;
       defs.push({
         id: "__select__",
-        header: ({ table }) => {
-          const pageRowIds = table.getRowModel().rows.map((r) => r.id);
-          const allSelected =
-            pageRowIds.length > 0 &&
-            pageRowIds.every((id) => activeSelection.selected.has(id));
-          function handleSelectAllChange(v: boolean | "indeterminate") {
-            if (v) {
-              activeSelection.onChange(
-                new Set<string | number>([
-                  ...activeSelection.selected,
-                  ...pageRowIds,
-                ]),
-              );
-            } else {
-              const next = new Set<string | number>(activeSelection.selected);
-              for (const id of pageRowIds) next.delete(id);
-              activeSelection.onChange(next);
-            }
-          }
-          return (
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={handleSelectAllChange}
-              aria-label="Select all rows on this page"
-            />
-          );
-        },
+        header: () => null,
         cell: ({ row }) =>
           row.getCanSelect() ? (
             <Checkbox
@@ -282,6 +256,26 @@ export function DataTable<T>({
   });
 
   const rows = table.getRowModel().rows;
+  const selectableRows = rows.filter((row) => row.getCanSelect());
+  const selectedOnPage = selectableRows.filter((row) => rowSelection[row.id]).length;
+  const selectAll = selection
+    ? {
+        checked:
+          selectableRows.length > 0 && selectedOnPage === selectableRows.length
+            ? true
+            : selectedOnPage > 0
+              ? ("indeterminate" as const)
+              : false,
+        onCheckedChange: (value: boolean | "indeterminate") => {
+          const next = { ...rowSelection };
+          for (const row of selectableRows) {
+            if (value === true) next[row.id] = true;
+            else delete next[row.id];
+          }
+          table.setRowSelection(next);
+        },
+      }
+    : undefined;
 
   const [isRowPending, startRowTransition] = useTransition();
   const [pendingRowKey, setPendingRowKey] = useState<string | null>(null);
@@ -421,6 +415,7 @@ export function DataTable<T>({
                   table={table}
                   announceSort={false}
                   rowIndex={1}
+                  selectAll={selectAll}
                 />
                 <TableBody>
                   {Array.from({ length: 12 }).map((_, i) => (
@@ -506,7 +501,7 @@ export function DataTable<T>({
                 containerFocusable={!scrollRegionLabel}
                 aria-rowcount={ariaRowCount}
               >
-                <DataTableHeader table={table} announceSort rowIndex={1} />
+                <DataTableHeader table={table} announceSort rowIndex={1} selectAll={selectAll} />
                 <TableBody>
                   {rows.map((row, rowIndex) => (
                     <TableRow

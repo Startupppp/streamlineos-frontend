@@ -135,9 +135,17 @@ export function SurveyListFilters({
       </div>
       <ResponsivePopover>
         <ResponsivePopoverTrigger asChild>
-          <Button type="button" variant="outline" size="sm" className="h-9 shrink-0 gap-1.5 px-2.5 md:hidden" aria-label="Filters">
-            <ListFilter className="h-4 w-4" />
-            <span className="text-xs">Filters</span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className={cn(
+              "size-9 shrink-0 p-0 md:hidden",
+              activeFacets > 0 && "w-auto gap-1.5 px-2",
+            )}
+            aria-label="Filters"
+          >
+            <ListFilter className="h-4 w-4" aria-hidden="true" />
             {activeFacets > 0 ? (
               <span className="rounded-full bg-primary/10 px-1.5 text-micro font-medium tabular-nums text-primary">
                 {activeFacets}

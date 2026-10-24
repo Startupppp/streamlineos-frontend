@@ -2,8 +2,11 @@
 
 import { EmptyChartIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState, NoPermissionState } from "@/components/shared";
+import { ErrorState } from "@/components/shared";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { DataTableSkeleton } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -18,6 +21,33 @@ import type { AiAction } from "@/components/ai";
 import { useCan } from "@/hooks/api/access";
 import { streamSurveyResponseSummary } from "@/hooks/api/surveys/survey-ai";
 
+function QuestionAnalyticsCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="space-y-1">
+        <Skeleton className="h-4 w-3/4" />
+        <Skeleton className="h-3 w-20" />
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-3 w-24" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+          <Skeleton className="h-2 w-full rounded-full" />
+        </div>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Skeleton className="h-3 w-28" />
+            <Skeleton className="h-3 w-12" />
+          </div>
+          <Skeleton className="h-2 w-full rounded-full" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function ResultsSkeleton() {
   return (
     <div className="flex flex-col gap-4" data-testid="survey-results-skeleton">
@@ -25,8 +55,8 @@ function ResultsSkeleton() {
       <div className="flex flex-col gap-3">
         <Skeleton className="h-4 w-36" />
         <div className="grid gap-3 sm:grid-cols-2">
-          <Skeleton className="h-32 w-full" />
-          <Skeleton className="h-32 w-full" />
+          <QuestionAnalyticsCardSkeleton />
+          <QuestionAnalyticsCardSkeleton />
         </div>
       </div>
       <div className="flex flex-col gap-3">
@@ -68,42 +98,36 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
     void questionsQuery.refetch();
   }
 
-  if (overviewQuery.access.denied) {
-    return <NoPermissionState permission="surveys:analytics:view" compact />;
-  }
-
-  if (overviewQuery.access.pending || overviewQuery.isLoading) {
-    return <ResultsSkeleton />;
-  }
-
-  if (overviewQuery.isError || !overview) {
-    return (
-      <ErrorState
-        title="Couldn't load results"
-        description={getErrorMessage(overviewQuery.error)}
-        onRetry={handleRetryOverview}
-      />
-    );
-  }
-
-  if (overview.totalResponses === 0) {
-    return (
-      <EmptyState
-        illustration={
-          <div className="h-28 w-28">
-            <EmptyChartIllustration />
-          </div>
-        }
-        title="No responses yet"
-        description="Results, question analytics, and exports will appear here once responses come in."
-        compact
-      />
-    );
-  }
+  const awaitingOverview = overviewQuery.access.pending || overviewQuery.isLoading;
+  const pageState = usePageState({
+    permission: "surveys:analytics:view",
+    isLoading: awaitingOverview,
+    isError: overviewQuery.isError || (!awaitingOverview && overviewQuery.access.allowed && !overview),
+    error: overviewQuery.error,
+    isEmpty: (overview?.totalResponses ?? 0) === 0 && overview !== undefined,
+  });
 
   return (
-    <div className="flex flex-col gap-4">
-      <OverviewStats overview={overview} />
+    <PageState
+      resolution={pageState}
+      loading={<ResultsSkeleton />}
+      onRetry={handleRetryOverview}
+      className="h-full min-h-0 flex-1"
+      empty={
+        <EmptyState
+          illustration={
+            <div className="h-28 w-28">
+              <EmptyChartIllustration />
+            </div>
+          }
+          title="No responses yet"
+          description="Results, question analytics, and exports will appear here once responses come in."
+          className="h-full min-h-full flex-1"
+        />
+      }
+    >
+    <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto scrollbar-hide pr-3 pb-1">
+      {overview ? <OverviewStats overview={overview} /> : null}
 
       {canUseAi && (
         <div className="flex justify-end">
@@ -122,8 +146,8 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
         <h3 className="text-sm font-semibold text-foreground">Question analytics</h3>
         {questionsQuery.access.pending || questionsQuery.isLoading ? (
           <div className="grid gap-3 sm:grid-cols-2">
-            <Skeleton className="h-32 w-full" />
-            <Skeleton className="h-32 w-full" />
+            <QuestionAnalyticsCardSkeleton />
+            <QuestionAnalyticsCardSkeleton />
           </div>
         ) : questionsQuery.isError ? (
           <ErrorState
@@ -134,9 +158,9 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
           />
         ) : !questionAnalytics || questionAnalytics.length === 0 ? (
           <EmptyState
-            compact
             title="No question analytics yet"
             description="Answers are counted per question as responses are submitted."
+            className="h-full min-h-full flex-1"
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
@@ -152,5 +176,6 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
         <ResponseTable surveyId={survey.id} />
       </div>
     </div>
+    </PageState>
   );
 }

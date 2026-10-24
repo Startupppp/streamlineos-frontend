@@ -2,6 +2,7 @@
 
 import { type Table as TanstackTable, flexRender } from "@tanstack/react-table";
 import { ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -15,12 +16,17 @@ interface DataTableHeaderProps<T> {
   table: TanstackTable<T>;
   announceSort: boolean;
   rowIndex: number;
+  selectAll?: {
+    checked: boolean | "indeterminate";
+    onCheckedChange: (value: boolean | "indeterminate") => void;
+  };
 }
 
 export function DataTableHeader<T>({
   table,
   announceSort,
   rowIndex,
+  selectAll,
 }: DataTableHeaderProps<T>) {
   return (
     <TableHeader className="sticky top-0 z-10 border-b-2 border-border bg-muted">
@@ -54,7 +60,13 @@ export function DataTableHeader<T>({
                         : undefined
                 }
               >
-                {header.isPlaceholder ? null : canSort ? (
+                {header.isPlaceholder ? null : header.column.id === "__select__" && selectAll ? (
+                  <Checkbox
+                    checked={selectAll.checked}
+                    onCheckedChange={selectAll.onCheckedChange}
+                    aria-label="Select all rows on this page"
+                  />
+                ) : canSort ? (
                   <button
                     type="button"
                     aria-label={headerLabel ? `Sort by ${headerLabel}` : undefined}

@@ -13,6 +13,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  MobileOnlyLabelTooltip,
+  RESPONSIVE_ICON_LABEL_TRIGGER_CLASS,
+  ResponsiveIconLabelText,
+} from "@/components/ui/responsive-icon-label";
+import { cn } from "@/lib/utils";
+import { SurveyActivityInfo } from "@/features/surveys/builder/survey-activity-panel";
 import { SurveyStatusBadge } from "@/features/surveys/list/survey-status-badge";
 import { SURVEY_MODE_META } from "@/features/surveys/shared/survey-mode-meta";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -44,6 +51,12 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
 
   const modeMeta = SURVEY_MODE_META[survey.mode];
   const canArchive = canDelete && survey.status !== "archived";
+  const canPublishNow =
+    canPublish &&
+    (survey.status === "draft" || survey.status === "testing" || survey.status === "paused");
+  const canPauseNow = canPublish && survey.status === "published";
+  const canStartLive =
+    canHostLive && survey.mode === "live_session" && survey.status === "published";
 
   const handlePublish = useCallback(async () => {
     try {
@@ -103,58 +116,109 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
     }
   }, [createLiveSession, router]);
 
-  const isBusy = publish.isPending || pause.isPending || close.isPending || archive.isPending || duplicate.isPending;
+  const isBusy =
+    publish.isPending ||
+    pause.isPending ||
+    close.isPending ||
+    archive.isPending ||
+    duplicate.isPending;
 
   return (
-    <div className="flex items-center gap-2">
-      <SurveyStatusBadge status={survey.status} />
-      <span className="text-xs text-muted-foreground">{modeMeta.label}</span>
-      <div className="ml-auto flex items-center gap-2">
-        {canViewParticipants && (
-          <Button variant="outline" size="sm" asChild>
-            <a href={`/surveys/${survey.id}/participants`}>
-              <Users className="h-3.5 w-3.5" /> Participants & Share
-            </a>
-          </Button>
+    <div className="flex w-full min-w-0 flex-wrap items-center gap-2">
+      <div className="flex min-w-0 items-center gap-2">
+        <SurveyStatusBadge status={survey.status} />
+        <span className="truncate text-sm text-muted-foreground">{modeMeta.label}</span>
+        <SurveyActivityInfo survey={survey} />
+      </div>
+      <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">
+        {canViewParticipants ? (
+          <MobileOnlyLabelTooltip label="Participants & Share" always side="top">
+            <Button variant="outline" size="icon" className="size-9 shrink-0" asChild>
+              <a href={`/surveys/${survey.id}/participants`} aria-label="Participants & Share">
+                <Users className="size-4" aria-hidden="true" />
+              </a>
+            </Button>
+          </MobileOnlyLabelTooltip>
+        ) : null}
+        {canPublishNow ? (
+          <MobileOnlyLabelTooltip label="Publish">
+            <Button
+              size="sm"
+              className={cn(RESPONSIVE_ICON_LABEL_TRIGGER_CLASS, "bg-primary text-primary-foreground hover:bg-primary/90")}
+              onClick={handlePublish}
+              disabled={isBusy}
+              aria-label="Publish"
+            >
+              <Send className="size-4" aria-hidden="true" />
+              <ResponsiveIconLabelText>Publish</ResponsiveIconLabelText>
+            </Button>
+          </MobileOnlyLabelTooltip>
+        ) : null}
+        {canPauseNow ? (
+          <MobileOnlyLabelTooltip label="Pause">
+            <Button
+              variant="outline"
+              size="sm"
+              className={cn(RESPONSIVE_ICON_LABEL_TRIGGER_CLASS, "bg-card")}
+              onClick={handlePause}
+              disabled={isBusy}
+              aria-label="Pause"
+            >
+              <Pause className="size-4" aria-hidden="true" />
+              <ResponsiveIconLabelText>Pause</ResponsiveIconLabelText>
+            </Button>
+          </MobileOnlyLabelTooltip>
+        ) : null}
+        {canStartLive ? (
+          <MobileOnlyLabelTooltip label="Start live session">
+            <Button
+              size="sm"
+              className={cn(RESPONSIVE_ICON_LABEL_TRIGGER_CLASS, "bg-primary text-primary-foreground hover:bg-primary/90")}
+              onClick={handleStartLiveSession}
+              disabled={createLiveSession.isPending}
+              aria-label="Start live session"
+            >
+              <Radio className="size-4" aria-hidden="true" />
+              <ResponsiveIconLabelText>Live</ResponsiveIconLabelText>
+            </Button>
+          </MobileOnlyLabelTooltip>
+        ) : null}
+        {(canCreate || canPublish || canArchive) && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <AnimatedIconButton
+                icon={EllipsisIcon}
+                iconSize={16}
+                variant="outline"
+                size="icon"
+                className="size-9 shrink-0"
+                disabled={isBusy}
+                aria-label="Survey actions"
+              />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {canCreate && (
+                <DropdownMenuItem onClick={handleDuplicate}>
+                  <Copy className="size-4" />
+                  Duplicate
+                </DropdownMenuItem>
+              )}
+              {canPublish && (survey.status === "published" || survey.status === "paused") && (
+                <DropdownMenuItem onClick={handleClose}>
+                  <Lock className="size-4" />
+                  Close
+                </DropdownMenuItem>
+              )}
+              {canArchive && <DropdownMenuSeparator />}
+              {canArchive && (
+                <DropdownMenuItem onClick={handleRequestArchive} variant="destructive">
+                  <Archive className="size-4" />
+                  Archive
+                </DropdownMenuItem>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
-        {canPublish && (survey.status === "draft" || survey.status === "testing" || survey.status === "paused") && (
-          <Button size="sm" onClick={handlePublish} disabled={isBusy}>
-            <Send className="h-3.5 w-3.5" /> Publish
-          </Button>
-        )}
-        {canPublish && survey.status === "published" && (
-          <Button variant="outline" size="sm" onClick={handlePause} disabled={isBusy}>
-            <Pause className="h-3.5 w-3.5" /> Pause
-          </Button>
-        )}
-        {canHostLive && survey.mode === "live_session" && survey.status === "published" && (
-          <Button size="sm" onClick={handleStartLiveSession} disabled={createLiveSession.isPending}>
-            <Radio className="h-3.5 w-3.5" /> Start Live Session
-          </Button>
-        )}
-        {(canCreate || canPublish || canArchive) && <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="outline" size="icon" className="h-8 w-8" disabled={isBusy} aria-label="Survey actions" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {canCreate && (
-              <DropdownMenuItem onClick={handleDuplicate}>
-                <Copy className="h-3.5 w-3.5" /> Duplicate
-              </DropdownMenuItem>
-            )}
-            {canPublish && (survey.status === "published" || survey.status === "paused") && (
-              <DropdownMenuItem onClick={handleClose}>
-                <Lock className="h-3.5 w-3.5" /> Close
-              </DropdownMenuItem>
-            )}
-            {canArchive && <DropdownMenuSeparator />}
-            {canArchive && (
-              <DropdownMenuItem onClick={handleRequestArchive} variant="destructive">
-                <Archive className="h-3.5 w-3.5" /> Archive
-              </DropdownMenuItem>
-            )}
-          </DropdownMenuContent>
-        </DropdownMenu>}
         <ConfirmDialog
           open={confirmArchiveOpen}
           onOpenChange={setConfirmArchiveOpen}

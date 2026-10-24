@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import { ChevronLeftIcon, ChevronRightIcon } from "@animateicons/react/lucide";
 import { EmptyState } from "@/components/ui/empty-state";
+import { PageState } from "@/components/shared/page-state";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useAddSignField } from "@/hooks/api/sign/fields";
@@ -79,14 +80,22 @@ export function BuilderCanvasArea({ envelopeId, document, documentUrl, recipient
 
   if (!document || !documentUrl) {
     return (
-      <EmptyState
-        illustrationPreset="documents"
-        illustrationSize="md"
-        title="No document selected"
-        description="Upload a PDF from the Documents tab to start placing fields."
-        compact
-        className="flex-1 min-h-0 border-0 bg-transparent"
-      />
+      <PageState
+        resolution={{ kind: "empty" }}
+        loading={null}
+        className="h-full min-h-0 flex-1"
+        empty={
+          <EmptyState
+            illustrationPreset="documents"
+            illustrationSize="md"
+            title="No document selected"
+            description="Upload a PDF from the Documents tab to start placing fields."
+            className="h-full min-h-full flex-1"
+          />
+        }
+      >
+        {null}
+      </PageState>
     );
   }
 

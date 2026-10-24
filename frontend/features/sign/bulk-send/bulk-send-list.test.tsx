@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, fireEvent } from "@testing-library/react";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import type { SignBulkSendJob, SignBulkSendRow, SignTemplate } from "@/types/sign";
@@ -6,8 +7,22 @@ import { BulkSendList } from "./bulk-send-list";
 
 const grantedKeys = new Set<string>();
 
+jest.mock("next-auth/react", () => ({
+  useSession: () => ({ data: { orgId: "org-1" }, status: "authenticated" }),
+}));
+
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => grantedKeys.has(key),
+  useAccess: () => ({
+    data: {
+      scopes: grantedKeys.has("sign:bulk_send:run") ? { "sign:bulk_send:run": true } : {},
+      modules: { sign: true },
+      isOrgOwner: false,
+    },
+    isLoading: false,
+    isError: false,
+    error: null,
+  }),
 }));
 
 jest.mock("./create-bulk-send-dialog", () => ({
@@ -99,10 +114,13 @@ jest.mock("@/hooks/api/sign/bulk-send", () => ({
 }));
 
 function renderList() {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <TooltipProvider>
-      <BulkSendList />
-    </TooltipProvider>,
+    <QueryClientProvider client={client}>
+      <TooltipProvider>
+        <BulkSendList />
+      </TooltipProvider>
+    </QueryClientProvider>,
   );
 }
 
@@ -143,9 +161,8 @@ describe("BulkSendList job detail", () => {
   it("refuses to read the job for a role without the bulk send permission", () => {
     renderList();
 
-    fireEvent.click(screen.getByRole("button", { name: "Open bulk send job 12" }));
-
-    expect(screen.getByText("You cannot view bulk send jobs")).toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("Access Restricted");
+    expect(screen.queryByRole("button", { name: "Open bulk send job 12" })).not.toBeInTheDocument();
     expect(screen.queryByText("Missing or invalid email")).not.toBeInTheDocument();
   });
 });

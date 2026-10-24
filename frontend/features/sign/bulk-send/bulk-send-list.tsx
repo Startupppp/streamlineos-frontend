@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
-import { ErrorState } from "@/components/shared/error-state";
 import { IllustrationImage } from "@/components/illustrations/illustration-image";
 import { EmptyState } from "@/components/ui/empty-state";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useSignTemplates } from "@/hooks/api/sign/templates";
 import {
   ACTIVE_BULK_SEND_STATUSES,
@@ -123,65 +123,59 @@ export function BulkSendList() {
     await refetch();
   }
 
-  if (access.denied) {
-    return (
-      <PageWrapper title="Bulk Send" subtitle="Send one template to a list of people via CSV">
-        <EmptyState
-          illustrationPreset="permissions"
-          access={access}
-          title="Access restricted"
-          description="You don't have permission to view bulk send jobs."
-        />
-      </PageWrapper>
-    );
-  }
+  const pageState = usePageState({
+    permission: "sign:bulk_send:run",
+    isLoading: showSkeleton,
+    isError,
+    error,
+    isEmpty: !jobs?.length,
+  });
 
   return (
+    <>
     <PageWrapper
       title="Bulk Send"
       subtitle="Send one template to a list of people via CSV"
-      actions={
-        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)} disabled={!hasPublished}>
-          New bulk send
-        </AnimatedIconButton>
-      }
-    >
-      {showSkeleton ? (
+      noInternalScroll
+      contentClassName="flex min-h-0 flex-1 flex-col"
+      state={pageState}
+      loading={
         <div className="space-y-3">
           {Array.from({ length: 9 }).map((_, i) => (
             <Skeleton key={i} className="h-16 w-full" />
           ))}
         </div>
-      ) : isError ? (
-        <ErrorState
-          className="flex-1"
-          title="Failed to load bulk send jobs"
-          description={getErrorMessage(error)}
-          onRetry={handleRetry}
-        />
-      ) : !jobs || jobs.length === 0 ? (
+      }
+      onRetry={handleRetry}
+      actions={
+        <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)} disabled={!hasPublished}>
+          New bulk send
+        </AnimatedIconButton>
+      }
+      empty={
         <EmptyState
           access={access}
           illustration={<IllustrationImage name="empty-upload" className="h-40 w-40" />}
           title={hasPublished ? "No bulk send jobs yet" : "Publish a template first"}
           description={hasPublished ? "Upload a CSV of recipients to send one template to everyone at once." : "Bulk send requires a published single-signer template. Save an envelope as a template, then publish it."}
           action={hasPublished ? { label: "New bulk send", onClick: () => setCreateOpen(true) } : undefined}
-          className="flex-1"
+          className="h-full min-h-full flex-1"
         />
-      ) : (
-        <div className="space-y-3">
-          {jobs.map((job) => (
-            <BulkSendJobRow key={job.id} job={job} templateName={templateNameFor(job)} onOpen={setOpenJob} />
-          ))}
-        </div>
-      )}
-      <CreateBulkSendDialog open={createOpen} onOpenChange={setCreateOpen} />
-      <BulkSendJobSheet
-        jobId={openJob?.id}
-        templateName={openJob ? templateNameFor(openJob) : undefined}
-        open={openJob !== null}
-        onOpenChange={handleJobSheetOpenChange}
-      />
+      }
+    >
+      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-hide">
+        {jobs?.map((job) => (
+          <BulkSendJobRow key={job.id} job={job} templateName={templateNameFor(job)} onOpen={setOpenJob} />
+        ))}
+      </div>
     </PageWrapper>
+    <CreateBulkSendDialog open={createOpen} onOpenChange={setCreateOpen} />
+    <BulkSendJobSheet
+      jobId={openJob?.id}
+      templateName={openJob ? templateNameFor(openJob) : undefined}
+      open={openJob !== null}
+      onOpenChange={handleJobSheetOpenChange}
+    />
+    </>
   );
 }

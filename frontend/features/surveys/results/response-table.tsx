@@ -5,11 +5,11 @@ import { toast } from "sonner";
 import { DownloadIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Badge } from "@/components/ui/badge";
-import { DataTable, type DataTableColumn } from "@/components/ui/data-table";
+import { DataTable, DataTableSkeleton, type DataTableColumn } from "@/components/ui/data-table";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { PageState } from "@/components/shared/page-state";
+import { usePageState } from "@/hooks/api/use-page-state";
 import { useSurveyResponses, useExportResponses, type SurveyResponseSession } from "@/hooks/api/surveys/analytics";
 import { ResponseDetailSheet } from "./response-detail-sheet";
 
@@ -62,14 +62,21 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
     if (!open) setSelectedSessionId(null);
   }
 
-  if (responsesQuery.access.denied)
-    return <NoPermissionState permission="surveys:responses:view" compact />;
-
-  if (isError)
-    return <ErrorState title="Couldn't load responses" description={getErrorMessage(error)} onRetry={handleRetry} />;
+  const pageState = usePageState({
+    permission: "surveys:responses:view",
+    isLoading: responsesQuery.access.pending,
+    isError,
+    error,
+  });
 
   return (
-    <div className="flex flex-col gap-3">
+    <PageState
+      resolution={pageState}
+      loading={<DataTableSkeleton rows={6} headers={["Respondent", "Status", "Submitted at", "Score", "Segment"]} />}
+      onRetry={handleRetry}
+      className="min-h-full flex-1"
+    >
+    <div className="flex min-h-full flex-1 flex-col gap-3">
       <div className="flex justify-end">
         <AnimatedIconButton icon={DownloadIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleExport} disabled={exportResponses.isPending}>
           Export CSV
@@ -84,11 +91,12 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
         pagination={{ mode: "server", page, pageSize, total, onPageChange: setPage }}
         emptyState={
           <EmptyState
-            compact
             title="No responses yet"
             description="Responses appear here as people complete this survey."
+            className="h-full min-h-full flex-1"
           />
         }
+        className="min-h-80 flex-1"
       />
       <ResponseDetailSheet
         surveyId={surveyId}
@@ -97,5 +105,6 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
         onOpenChange={handleDetailOpenChange}
       />
     </div>
+    </PageState>
   );
 }
