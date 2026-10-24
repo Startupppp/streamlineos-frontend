@@ -23,9 +23,9 @@
       ],
       "dispatchable": false,
       "readiness": {
-        "status": "NOT_STARTED",
-        "artifact": null,
-        "revision": null,
+        "status": "PUBLISHED",
+        "artifact": "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json",
+        "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
         "summary": "Publish this program interface/write-plan contract before dependent implementation; this milestone is not requirement PASS."
       }
     },
@@ -309,7 +309,36 @@
       }
     }
   ],
-  "children": [],
+  "children": [
+    {
+      "id": "AP-00-C01",
+      "program": "AP-00",
+      "title": "Baseline inventory, gate-scope record and checker negative self-tests",
+      "acceptanceIds": [
+        "AC-ARCH-039-01",
+        "AC-ARCH-039-02",
+        "AC-ARCH-039-03",
+        "AC-ARCH-039-04",
+        "AC-ARCH-040-01",
+        "AC-ARCH-040-02",
+        "AC-ARCH-040-03",
+        "AC-ARCH-040-04"
+      ],
+      "writeSet": [
+        "scripts/hrms-architecture-baseline.mjs",
+        "scripts/check-hrms-architecture-coverage.mjs",
+        "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json",
+        "docs/specs/hrms-payroll-reform/architecture-review/execution-ledger.json"
+      ],
+      "testSet": [
+        "scripts/check-hrms-architecture-coverage.mjs"
+      ],
+      "reservationStatus": "RELEASED",
+      "sourceRevision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+      "reproduction": "ledger had 0 children, no baseline artifact, no ticket set; checker had no baseline/reservation negative tests",
+      "verificationPlan": "checker"
+    }
+  ],
   "requirements": [
     {
       "id": "FR-ARCH-001",
@@ -6142,9 +6171,9 @@
       "requirementId": "FR-ARCH-039",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "PASS",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "Preserve the complete annotated HTML report and map every semantic source unit to one or more FR-ARCH requirements or historical-evidence/reference disposition. Validator fails on missing/duplicate source units, source drift, unknown IDs and unmapped requirements.",
       "requiredEvidence": [
         "source",
@@ -6162,18 +6191,65 @@
           "expected": "Preserve the complete annotated HTML report and map every semantic source unit to one or more FR-ARCH requirements or historical-evidence/reference disposition. Validator fails on missing/duplicate source units, source drift, unknown IDs and unmapped requirements."
         }
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-AP00-UNIT-SELFTEST-20261024170830",
+          "level": "unit",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "checker-fixtures",
+          "expected": "Preserve the complete annotated HTML report and map every semantic source unit to one or more FR-ARCH requirements or historical-evidence/reference disposition. Validator fails on missing/duplicate source units, source drift, unknown IDs and unmapped requirements.",
+          "actual": "29 negative/positive self-tests passed incl. HTML drift, omitted row, evidence weakening, newer failure, baseline overclaim, glob/overlapping reservation, predecessor readiness",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-UNIT-SELFTEST-20261024170830.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:30.185Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs --self-test",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        },
+        {
+          "id": "EV-AP00-SOURCE-DOCS-20261024170832",
+          "level": "source",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "268 HTML points, 40 FR, 158 AC",
+          "expected": "Preserve the complete annotated HTML report and map every semantic source unit to one or more FR-ARCH requirements or historical-evidence/reference disposition. Validator fails on missing/duplicate source units, source drift, unknown IDs and unmapped requirements.",
+          "actual": "documents mode PASS: every HTML unit mapped, every AC has one ledger row with PRD owner/program/evidence levels",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-SOURCE-DOCS-20261024170832.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:32.125Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        }
+      ],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.511Z source+unit evidence recorded by AP-00-C01"
+      ]
     },
     {
       "id": "AC-ARCH-039-02",
       "requirementId": "FR-ARCH-039",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "PASS",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "Record static gate self-tests and real invocation scope/results separately. Cache-shape/bounds passes do not prove semantics; Timesheets request drift does not prove HR; unrelated chat parity failures stay outside the HR defect list.",
       "requiredEvidence": [
         "source",
@@ -6191,18 +6267,65 @@
           "expected": "Record static gate self-tests and real invocation scope/results separately. Cache-shape/bounds passes do not prove semantics; Timesheets request drift does not prove HR; unrelated chat parity failures stay outside the HR defect list."
         }
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-AP00-UNIT-SELFTEST-20261024170830",
+          "level": "unit",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "checker-fixtures",
+          "expected": "Record static gate self-tests and real invocation scope/results separately. Cache-shape/bounds passes do not prove semantics; Timesheets request drift does not prove HR; unrelated chat parity failures stay outside the HR defect list.",
+          "actual": "29 negative/positive self-tests passed incl. HTML drift, omitted row, evidence weakening, newer failure, baseline overclaim, glob/overlapping reservation, predecessor readiness",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-UNIT-SELFTEST-20261024170830.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:30.185Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs --self-test",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        },
+        {
+          "id": "EV-AP00-SOURCE-BASELINE-20261024170833",
+          "level": "source",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "ap-00-baseline.json",
+          "expected": "Record static gate self-tests and real invocation scope/results separately. Cache-shape/bounds passes do not prove semantics; Timesheets request drift does not prove HR; unrelated chat parity failures stay outside the HR defect list.",
+          "actual": "baseline records separate 40-hex frontend/backend heads, dirty paths, 4 historical gate scopes all non-proving, 111 hashed audit paths (0 missing)",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-SOURCE-BASELINE-20261024170833.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:33.010Z",
+          "command": "node -e 'const b=require(\"./docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json\");const ok=/^[0-9a-f]{40}$/.test(b.revisions.frontend.head)&&/^[0-9a-f]{40}$/.test(b.revisions.backend.head)&&b.historicalGateScope.length===4&&b.historicalGateScope.every(g=>g.provesHr!==true&&g.provesSemantics!==true&&g.implementationEvidence!==true)&&b.auditCriticalSources.every(s=>s.state!==\"MISSING\");console.log(b.revisions.frontend.head,b.revisions.backend.head,b.auditCriticalSources.length);process.exit(ok?0:1)'",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        }
+      ],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.511Z source+unit evidence recorded by AP-00-C01"
+      ]
     },
     {
       "id": "AC-ARCH-039-03",
       "requirementId": "FR-ARCH-039",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "PASS",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "Record backend and frontend revisions plus hashes for audit-critical source. Revalidate a changed/resolved finding before implementing; preserve dated audit evidence rather than pretending it is current release proof.",
       "requiredEvidence": [
         "source",
@@ -6220,18 +6343,65 @@
           "expected": "Record backend and frontend revisions plus hashes for audit-critical source. Revalidate a changed/resolved finding before implementing; preserve dated audit evidence rather than pretending it is current release proof."
         }
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-AP00-UNIT-SELFTEST-20261024170830",
+          "level": "unit",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "checker-fixtures",
+          "expected": "Record backend and frontend revisions plus hashes for audit-critical source. Revalidate a changed/resolved finding before implementing; preserve dated audit evidence rather than pretending it is current release proof.",
+          "actual": "29 negative/positive self-tests passed incl. HTML drift, omitted row, evidence weakening, newer failure, baseline overclaim, glob/overlapping reservation, predecessor readiness",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-UNIT-SELFTEST-20261024170830.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:30.185Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs --self-test",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        },
+        {
+          "id": "EV-AP00-SOURCE-BASELINE-20261024170833",
+          "level": "source",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "ap-00-baseline.json",
+          "expected": "Record backend and frontend revisions plus hashes for audit-critical source. Revalidate a changed/resolved finding before implementing; preserve dated audit evidence rather than pretending it is current release proof.",
+          "actual": "baseline records separate 40-hex frontend/backend heads, dirty paths, 4 historical gate scopes all non-proving, 111 hashed audit paths (0 missing)",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-SOURCE-BASELINE-20261024170833.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:33.010Z",
+          "command": "node -e 'const b=require(\"./docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json\");const ok=/^[0-9a-f]{40}$/.test(b.revisions.frontend.head)&&/^[0-9a-f]{40}$/.test(b.revisions.backend.head)&&b.historicalGateScope.length===4&&b.historicalGateScope.every(g=>g.provesHr!==true&&g.provesSemantics!==true&&g.implementationEvidence!==true)&&b.auditCriticalSources.every(s=>s.state!==\"MISSING\");console.log(b.revisions.frontend.head,b.revisions.backend.head,b.auditCriticalSources.length);process.exit(ok?0:1)'",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        }
+      ],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.511Z source+unit evidence recorded by AP-00-C01"
+      ]
     },
     {
       "id": "AC-ARCH-039-04",
       "requirementId": "FR-ARCH-039",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "PASS",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "Run the coverage validator's negative self-tests, documentation validation, implementation-readiness and release modes. A documentation PASS leaves open code/database/browser/provider evidence visibly open.",
       "requiredEvidence": [
         "source",
@@ -6249,18 +6419,65 @@
           "expected": "Run the coverage validator's negative self-tests, documentation validation, implementation-readiness and release modes. A documentation PASS leaves open code/database/browser/provider evidence visibly open."
         }
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-AP00-UNIT-SELFTEST-20261024170830",
+          "level": "unit",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "checker-fixtures",
+          "expected": "Run the coverage validator's negative self-tests, documentation validation, implementation-readiness and release modes. A documentation PASS leaves open code/database/browser/provider evidence visibly open.",
+          "actual": "29 negative/positive self-tests passed incl. HTML drift, omitted row, evidence weakening, newer failure, baseline overclaim, glob/overlapping reservation, predecessor readiness",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-UNIT-SELFTEST-20261024170830.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:30.185Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs --self-test",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        },
+        {
+          "id": "EV-AP00-SOURCE-MODES-20261024170833",
+          "level": "source",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "current ledger",
+          "expected": "Run the coverage validator's negative self-tests, documentation validation, implementation-readiness and release modes. A documentation PASS leaves open code/database/browser/provider evidence visibly open.",
+          "actual": "implementation and release modes both exit nonzero while code criteria remain open; documents mode passes",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-SOURCE-MODES-20261024170833.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:33.669Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs >/dev/null && ! node scripts/check-hrms-architecture-coverage.mjs --implementation 2>/dev/null && ! node scripts/check-hrms-architecture-coverage.mjs --release 2>/dev/null",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        }
+      ],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.511Z source+unit evidence recorded by AP-00-C01"
+      ]
     },
     {
       "id": "AC-ARCH-040-01",
       "requirementId": "FR-ARCH-040",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "PASS",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "Every FR-ARCH acceptance criterion has a stable AC ID, responsible owner, dependency packet, planned test/evidence levels and one authoritative status row; all implementation rows start NOT_STARTED.",
       "requiredEvidence": [
         "source",
@@ -6278,18 +6495,65 @@
           "expected": "Every FR-ARCH acceptance criterion has a stable AC ID, responsible owner, dependency packet, planned test/evidence levels and one authoritative status row; all implementation rows start NOT_STARTED."
         }
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-AP00-UNIT-SELFTEST-20261024170830",
+          "level": "unit",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "checker-fixtures",
+          "expected": "Every FR-ARCH acceptance criterion has a stable AC ID, responsible owner, dependency packet, planned test/evidence levels and one authoritative status row; all implementation rows start NOT_STARTED.",
+          "actual": "29 negative/positive self-tests passed incl. HTML drift, omitted row, evidence weakening, newer failure, baseline overclaim, glob/overlapping reservation, predecessor readiness",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-UNIT-SELFTEST-20261024170830.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:30.185Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs --self-test",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        },
+        {
+          "id": "EV-AP00-SOURCE-DOCS-20261024170832",
+          "level": "source",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "268 HTML points, 40 FR, 158 AC",
+          "expected": "Every FR-ARCH acceptance criterion has a stable AC ID, responsible owner, dependency packet, planned test/evidence levels and one authoritative status row; all implementation rows start NOT_STARTED.",
+          "actual": "documents mode PASS: every HTML unit mapped, every AC has one ledger row with PRD owner/program/evidence levels",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-SOURCE-DOCS-20261024170832.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:32.125Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        }
+      ],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.511Z source+unit evidence recorded by AP-00-C01"
+      ]
     },
     {
       "id": "AC-ARCH-040-02",
       "requirementId": "FR-ARCH-040",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "PASS",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "Claude resumes the first ready open child after re-reading current source, uses exact reserved write/test paths, handles negative cases before success, and continues independent work when one evidence tier is blocked.",
       "requiredEvidence": [
         "source",
@@ -6307,18 +6571,65 @@
           "expected": "Claude resumes the first ready open child after re-reading current source, uses exact reserved write/test paths, handles negative cases before success, and continues independent work when one evidence tier is blocked."
         }
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-AP00-UNIT-SELFTEST-20261024170830",
+          "level": "unit",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "checker-fixtures",
+          "expected": "Claude resumes the first ready open child after re-reading current source, uses exact reserved write/test paths, handles negative cases before success, and continues independent work when one evidence tier is blocked.",
+          "actual": "29 negative/positive self-tests passed incl. HTML drift, omitted row, evidence weakening, newer failure, baseline overclaim, glob/overlapping reservation, predecessor readiness",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-UNIT-SELFTEST-20261024170830.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:30.185Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs --self-test",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        },
+        {
+          "id": "EV-AP00-SOURCE-DOCS-20261024170832",
+          "level": "source",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "268 HTML points, 40 FR, 158 AC",
+          "expected": "Claude resumes the first ready open child after re-reading current source, uses exact reserved write/test paths, handles negative cases before success, and continues independent work when one evidence tier is blocked.",
+          "actual": "documents mode PASS: every HTML unit mapped, every AC has one ledger row with PRD owner/program/evidence levels",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-SOURCE-DOCS-20261024170832.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:32.125Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        }
+      ],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.512Z source+unit evidence recorded by AP-00-C01"
+      ]
     },
     {
       "id": "AC-ARCH-040-03",
       "requirementId": "FR-ARCH-040",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "PASS",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "Only actual applicable evidence can advance a criterion. PASS requires all required evidence tiers; WAIVED requires existing authorized owner approval, expiry and compensating control. Documentation status is not implementation status.",
       "requiredEvidence": [
         "source",
@@ -6336,18 +6647,65 @@
           "expected": "Only actual applicable evidence can advance a criterion. PASS requires all required evidence tiers; WAIVED requires existing authorized owner approval, expiry and compensating control. Documentation status is not implementation status."
         }
       ],
-      "evidence": [],
+      "evidence": [
+        {
+          "id": "EV-AP00-UNIT-SELFTEST-20261024170830",
+          "level": "unit",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "checker-fixtures",
+          "expected": "Only actual applicable evidence can advance a criterion. PASS requires all required evidence tiers; WAIVED requires existing authorized owner approval, expiry and compensating control. Documentation status is not implementation status.",
+          "actual": "29 negative/positive self-tests passed incl. HTML drift, omitted row, evidence weakening, newer failure, baseline overclaim, glob/overlapping reservation, predecessor readiness",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-UNIT-SELFTEST-20261024170830.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:30.185Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs --self-test",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        },
+        {
+          "id": "EV-AP00-SOURCE-DOCS-20261024170832",
+          "level": "source",
+          "status": "PASS",
+          "revision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
+          "environment": "local workstation (win32, node v24.15.0)",
+          "dataset": "268 HTML points, 40 FR, 158 AC",
+          "expected": "Only actual applicable evidence can advance a criterion. PASS requires all required evidence tiers; WAIVED requires existing authorized owner approval, expiry and compensating control. Documentation status is not implementation status.",
+          "actual": "documents mode PASS: every HTML unit mapped, every AC has one ledger row with PRD owner/program/evidence levels",
+          "artifact": "docs/specs/hrms-payroll-reform/architecture-review/evidence/EV-AP00-SOURCE-DOCS-20261024170832.log",
+          "reviewer": "claude-opus-5-5 (agent; not a human sign-off)",
+          "timestamp": "2026-10-24T17:08:32.125Z",
+          "command": "node scripts/check-hrms-architecture-coverage.mjs",
+          "exitCode": 0,
+          "sourceHashes": {
+            "scripts/check-hrms-architecture-coverage.mjs": "42a0d5d5c838abd492c64f2a674427fe07c94cf91ab870b598124bdd1439adca",
+            "docs/specs/hrms-payroll-reform/architecture-review/2026-10-24-architecture-review.html": "b4e10ef1724700b3ff6b27d5acfba277b9bc181184de0cf5b1ed9ce8eba6a30e",
+            "docs/specs/hrms-payroll-reform/architecture-review/html-prd-coverage.json": "5d29be2db63e5e831928ed1c11d3891b30b72eace5f81ca87fdf8c7a62af3e15",
+            "docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json": "bd09c5b731b81c52fcab93c34a24390db40a5c959422f249c47c83a3634d1644",
+            "scripts/hrms-architecture-baseline.mjs": "b6d719183247bb9791cc10dfb385db2b6d139aa142616dafb8188850ccb36702"
+          }
+        }
+      ],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.512Z source+unit evidence recorded by AP-00-C01"
+      ]
     },
     {
       "id": "AC-ARCH-040-04",
       "requirementId": "FR-ARCH-040",
       "program": "AP-00",
       "owner": "06a-operations-release-evidence-prd.md",
-      "status": "NOT_STARTED",
+      "status": "DESIGNED",
       "applicability": "REQUIRED",
-      "childId": null,
+      "childId": "AP-00-C01",
       "expected": "The handoff includes changed/deleted files, reproductions, executed commands and exits, fixed revisions, unresolved criteria and next ready child. All source units and criteria reconcile at completion; no parent closes while a child is open.",
       "requiredEvidence": [
         "source",
@@ -6367,7 +6725,9 @@
       ],
       "evidence": [],
       "waiver": null,
-      "notes": []
+      "notes": [
+        "2026-10-24T17:08:41.586Z closes only at final reconciliation: handoff with changed/deleted files, commands/exits, fixed revisions, zero open criteria"
+      ]
     }
   ]
 }

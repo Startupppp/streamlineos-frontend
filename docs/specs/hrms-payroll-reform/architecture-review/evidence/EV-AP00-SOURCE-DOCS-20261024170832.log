@@ -1,0 +1,4 @@
+$ node scripts/check-hrms-architecture-coverage.mjs
+PASS architecture coverage (documents): 268 HTML points, 40 requirements, 158 acceptance criteria
+
+exit 0

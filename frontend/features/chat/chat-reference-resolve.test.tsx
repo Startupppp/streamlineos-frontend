@@ -27,7 +27,7 @@ function realtimeMessage(id: number, entities: { type: "doc_page" | "employee" |
     metadata: { entities },
     actionStatus: null,
     reactions: {},
-    clientKey: null,
+    clientKey: "ck-reference-1",
     createdAt: "2026-10-21T00:00:00.000Z",
     updatedAt: "2026-10-21T00:00:00.000Z",
     attachments: [],

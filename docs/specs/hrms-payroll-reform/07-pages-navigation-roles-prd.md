@@ -13,6 +13,12 @@ duplicating modules, or turning every capability into a sidebar item.
 
 ## 2. Navigation Principles
 
+HRMS and Payroll are separate parent modules for subscription, sidebar and
+authorization. HRMS submodules remain independently enabled; a Payroll-only
+operator receives only the minimum employment-fact handoff, not HR pages.
+An HRMS-only actor receives no pay, bank, tax or payout facts. The exact
+UI/backend and four-combination access matrix is in [PRD 21](./21-supporting-page-route-disposition-prd.md).
+
 1. Self-service lives under `/me`; administration lives under `/hr` or `/payroll`.
 2. Recruitment lives under `/recruitment`; `/hr/recruitment/**` is not a
    permanent product boundary.
@@ -258,6 +264,12 @@ The [Experience and Content PRD](./07b-experience-content-quality-prd.md)
 defines the interaction, content, visual, and accessibility acceptance for
 these page states and journeys. The PRD 06a evidence ledger maps every retained page to owner, tier, FRs,
 permission/DataScope, read model, commands, state model, and test evidence.
+The page-by-page UI and backend contracts are [self-service PRD 18](./18-self-service-page-ui-backend-prd.md),
+[HR administration PRD 19](./19-hr-administration-page-ui-backend-prd.md),
+[Payroll PRD 20](./20-payroll-page-ui-backend-prd.md), and
+[settings/implementation PRD 21](./21-supporting-page-route-disposition-prd.md).
+The [124 current-route dispositions](./22-current-route-disposition-prd.md)
+are the migration inventory; they do not establish that a route works.
 
 ## 10. Route Consolidation
 

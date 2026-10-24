@@ -1,0 +1,4 @@
+$ node -e 'const b=require("./docs/specs/hrms-payroll-reform/architecture-review/ap-00-baseline.json");const ok=/^[0-9a-f]{40}$/.test(b.revisions.frontend.head)&&/^[0-9a-f]{40}$/.test(b.revisions.backend.head)&&b.historicalGateScope.length===4&&b.historicalGateScope.every(g=>g.provesHr!==true&&g.provesSemantics!==true&&g.implementationEvidence!==true)&&b.auditCriticalSources.every(s=>s.state!=="MISSING");console.log(b.revisions.frontend.head,b.revisions.backend.head,b.auditCriticalSources.length);process.exit(ok?0:1)'
+f856fa2d779687faaf1077abe316c1a18d9276dd ea869b5ef9ed20ecba3a043973a4c9b3e4553ac0 111
+
+exit 0

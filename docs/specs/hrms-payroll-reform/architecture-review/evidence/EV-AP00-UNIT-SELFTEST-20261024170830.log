@@ -1,0 +1,33 @@
+$ node scripts/check-hrms-architecture-coverage.mjs --self-test
+PASS self-test: valid document coverage
+PASS self-test: valid recorded PASS
+PASS self-test: newer failure defeats older PASS
+PASS self-test: later successful rerun restores PASS
+PASS self-test: evidence level weakened
+PASS self-test: ledger owner changed consistently
+PASS self-test: HTML changed
+PASS self-test: coverage row omitted
+PASS self-test: point loses requirement
+PASS self-test: unknown requirement
+PASS self-test: duplicate coverage ID
+PASS self-test: criterion omitted
+PASS self-test: acceptance text drift
+PASS self-test: criterion owner drift
+PASS self-test: requirement assigned twice
+PASS self-test: missing evidence plan
+PASS self-test: PASS without evidence
+PASS self-test: dependency cycle
+PASS self-test: whole program dispatch
+PASS self-test: expired waiver
+PASS self-test: baseline revision missing
+PASS self-test: baseline gate scope overclaims HR proof
+PASS self-test: baseline audit source unhashed
+PASS self-test: glob write reservation
+PASS self-test: overlapping active writes
+PASS self-test: advanced work without reserved child
+PASS self-test: implemented before predecessor readiness
+PASS self-test: implementation stays open
+PASS self-test: release stays open
+29 architecture coverage self-tests passed
+
+exit 0

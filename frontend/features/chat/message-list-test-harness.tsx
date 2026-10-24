@@ -26,6 +26,7 @@ function chatMessage(id: number): Message {
     metadata: null,
     actionStatus: null,
     reactions: {},
+    clientKey: `ck-${id}`,
     createdAt: "2026-10-20T09:00:00.000Z",
     updatedAt: "2026-10-20T09:00:00.000Z",
     attachments: [],

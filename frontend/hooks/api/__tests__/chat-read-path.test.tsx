@@ -60,6 +60,7 @@ function message(over: Partial<Message> = {}): Message {
     attachments: [],
     replyTo: null,
     ...over,
+    clientKey: over.clientKey ?? "ck-1",
   };
 }
 

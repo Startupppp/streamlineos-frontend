@@ -30,6 +30,17 @@ function validate(bundle, mode = "documents", now = Date.now()) {
   const reqIds = [...prd.matchAll(/^### (FR-ARCH-\d{3}):/gm)].map((m) => m[1]);
   const acs = [...prd.matchAll(/^- \*\*(AC-ARCH-\d{3}-\d{2}):\*\* (.+)$/gm)];
   const acText = new Map(acs.map((m) => [m[1], m[2]]));
+  const declared = new Map([...prd.matchAll(/^### (FR-ARCH-\d{3}):[^\n]*\n([\s\S]*?)(?=^### FR-ARCH-|$(?![\s\S]))/gm)].map((m) => [m[1], {
+    owner: m[2].match(/\*\*Owner:\*\* \[([^\]]+)\]/)?.[1],
+    program: m[2].match(/\*\*Program:\*\* (AP-\d{2})/)?.[1],
+    levels: m[2].match(/\*\*Required evidence:\*\* ([^.\n]+)\./)?.[1].split(/,\s*/) ?? [],
+  }]));
+  const sameSet = (a, b) => JSON.stringify([...a].sort()) === JSON.stringify([...b].sort());
+  const latestPass = (ac, level) => {
+    const entries = ac.evidence.filter((e) => e.level === level).sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp));
+    return entries.length > 0 && entries[0].status === "PASS"
+      && !entries.some((e) => Date.parse(e.timestamp) === Date.parse(entries[0].timestamp) && e.status === "FAIL");
+  };
   const reqSet = new Set(reqIds);
   const points = [...html.matchAll(pointPattern)];
   const sourceIds = points.map((m) => m[1]);
@@ -86,7 +97,7 @@ function validate(bundle, mode = "documents", now = Date.now()) {
     fail(!programs.has(child.program), child.id + ": unknown program");
     fail(!child.writeSet?.length, child.id + ": missing exact write set");
     fail(!child.testSet?.length && !present(child.testExemptionReason), child.id + ": no test set or reason");
-    for (const path of [...(child.writeSet ?? []), ...(child.testSet ?? [])]) {
+    for (const path of new Set([...(child.writeSet ?? []), ...(child.testSet ?? [])])) {
       fail(!present(path) || /[*?]/.test(path) || isAbsolute(path) || relative(root, resolve(root, path)).startsWith(".."), child.id + ": unsafe/non-exact path " + path);
       if (child.reservationStatus === "ACTIVE" && (child.writeSet ?? []).includes(path)) {
         fail(activeWrites.has(path), child.id + ": overlapping active write " + path);
@@ -96,6 +107,8 @@ function validate(bundle, mode = "documents", now = Date.now()) {
     for (const id of child.acceptanceIds ?? []) fail(!acText.has(id), child.id + ": unknown acceptance " + id);
   }
   for (const requirement of ledger.requirements) {
+    const contract = declared.get(requirement.id);
+    fail(requirement.owner !== contract?.owner || requirement.program !== contract?.program, requirement.id + ": PRD owner/program mismatch");
     fail(!reqSet.has(requirement.id), requirement.id + ": absent from PRD");
     fail(!programs.has(requirement.program), requirement.id + ": unknown program");
     const assigned = ledger.programs.filter((p) => p.requirements.includes(requirement.id));
@@ -112,6 +125,8 @@ function validate(bundle, mode = "documents", now = Date.now()) {
     fail(!programs.has(ac.program), ac.id + ": invalid program");
     fail(ac.applicability !== "REQUIRED", ac.id + ": applicability changed without governed waiver");
     fail(!ac.requiredEvidence?.length || ac.requiredEvidence.some((v) => !levels.has(v)), ac.id + ": invalid evidence levels");
+    fail(!sameSet(ac.requiredEvidence ?? [], declared.get(ac.requirementId)?.levels ?? []), ac.id + ": evidence levels differ from PRD");
+    unique(ac.evidence.map((e) => e.id), ac.id + " evidence IDs");
     for (const level of ac.requiredEvidence ?? []) fail(!ac.evidencePlan.some((p) => p.level === level && present(p.id) && present(p.expected)), ac.id + ": missing evidence plan " + level);
     if (!["NOT_STARTED", "WAIVED"].includes(ac.status)) {
       const child = children.get(ac.childId);
@@ -130,7 +145,7 @@ function validate(bundle, mode = "documents", now = Date.now()) {
       fail(!Number.isFinite(Date.parse(evidence.timestamp)), ac.id + ": invalid evidence timestamp");
     }
     if (ac.status === "PASS") for (const level of ac.requiredEvidence)
-      fail(!ac.evidence.some((e) => e.level === level && e.status === "PASS"), ac.id + ": PASS missing " + level);
+      fail(!latestPass(ac, level), ac.id + ": latest evidence not PASS for " + level);
     if (ac.status === "WAIVED") {
       for (const field of ["reason", "approvedBy", "approvalArtifact", "expiresAt", "compensatingControl"])
         fail(!present(ac.waiver?.[field]), ac.id + ": waiver missing " + field);
@@ -140,18 +155,42 @@ function validate(bundle, mode = "documents", now = Date.now()) {
     if (mode === "implementation") fail(!["IMPLEMENTED_UNVERIFIED", "PASS", "WAIVED"].includes(ac.status), ac.id + ": implementation open (" + ac.status + ")");
     if (mode === "implementation" && ac.status === "IMPLEMENTED_UNVERIFIED")
       for (const level of ac.requiredEvidence.filter((v) => ["source", "unit", "contract"].includes(v)))
-        fail(!ac.evidence.some((e) => e.level === level && e.status === "PASS"), ac.id + ": implementation missing local proof " + level);
+        fail(!latestPass(ac, level), ac.id + ": implementation missing local proof " + level);
     if (mode === "release") fail(!["PASS", "WAIVED"].includes(ac.status), ac.id + ": release evidence open (" + ac.status + ")");
   }
   for (const id of acText.keys()) fail(!ledger.criteria.some((a) => a.id === id), id + ": missing ledger row");
+  const { baseline } = bundle;
+  const hex = (value) => /^[0-9a-f]{40}$/.test(value ?? "");
+  fail(!hex(baseline?.revisions?.frontend?.head) || !hex(baseline?.revisions?.backend?.head), "baseline: frontend/backend revisions not recorded separately");
+  for (const gate of ["request-drift", "response parity", "static cache-key shape / read bounds", "98 historical focused tests"]) {
+    const row = baseline?.historicalGateScope?.find((g) => g.gate === gate);
+    fail(!row || !present(row.scope) || row.provesHr === true || row.provesSemantics === true || row.implementationEvidence === true, "baseline: historical gate scope overclaimed or missing " + gate);
+  }
+  const auditPaths = baseline?.auditCriticalSources ?? [];
+  fail(auditPaths.length === 0, "baseline: no audit-critical sources");
+  for (const source of auditPaths)
+    fail(source.state === "FILE" ? !/^[0-9a-f]{64}$/.test(source.sha256 ?? "") : !["DIRECTORY", "MISSING"].includes(source.state), "baseline: unhashed audit source " + source.path);
+  for (const p of ledger.programs.filter((p) => p.id === "AP-00" && p.readiness?.status === "PUBLISHED"))
+    fail(auditPaths.some((s) => s.state === "MISSING"), p.id + ": published with unresolved missing audit source");
   for (const file of ["16-architecture-hardening-prd.md", "architecture-review/2026-10-24-architecture-review.html", "architecture-review/html-prd-coverage.json", "architecture-review/execution-ledger.json"])
     fail(!guide.includes(file), "Claude guide missing source pointer " + file);
   return errors;
 }
 
 function selfTest(bundle) {
+  const completedCriterion = (b) => {
+    for (const p of b.ledger.programs) p.readiness = { status: "PUBLISHED", artifact: "self-test://contract", revision: "fixture" };
+    const ac = b.ledger.criteria[0]; ac.status = "PASS"; ac.childId = "self-test-child";
+    b.ledger.children.push({ id: ac.childId, program: ac.program, writeSet: ["self-test/implementation.ts"], testSet: ["self-test/implementation.test.ts"], reservationStatus: "RELEASED", acceptanceIds: [ac.id] });
+    ac.evidence = ac.requiredEvidence.map((level) => ({ id: "fixture-" + level, level, status: "PASS", revision: "fixture", environment: "self-test", dataset: "synthetic", expected: ac.expected, actual: "fixture assertion passed", artifact: "self-test://result", reviewer: "self-test", timestamp: "2026-01-01T00:00:00Z", command: "synthetic fixture", exitCode: 0 }));
+  };
   const tests = [
     ["valid document coverage", () => {}, false, "documents"],
+    ["valid recorded PASS", completedCriterion, false, "documents"],
+    ["newer failure defeats older PASS", (b) => { completedCriterion(b); b.ledger.criteria[0].evidence.push({ ...b.ledger.criteria[0].evidence[0], id: "later-failure", status: "FAIL", exitCode: 1, timestamp: "2026-01-02T00:00:00Z" }); }],
+    ["later successful rerun restores PASS", (b) => { completedCriterion(b); const ac = b.ledger.criteria[0]; ac.evidence.push({ ...ac.evidence[0], id: "old-failure", status: "FAIL", exitCode: 1, timestamp: "2025-12-31T00:00:00Z" }); }, false, "documents"],
+    ["evidence level weakened", (b) => { b.ledger.criteria[0].requiredEvidence = ["source"]; }],
+    ["ledger owner changed consistently", (b) => { b.ledger.requirements[0].owner = "wrong.md"; for (const ac of b.ledger.criteria.filter((a) => a.requirementId === b.ledger.requirements[0].id)) ac.owner = "wrong.md"; }],
     ["HTML changed", (b) => { b.html += "<p>unmapped new point</p>"; }],
     ["coverage row omitted", (b) => { b.coverage.units.pop(); }],
     ["point loses requirement", (b) => { b.coverage.units[0].requirementIds = []; }],
@@ -166,6 +205,13 @@ function selfTest(bundle) {
     ["dependency cycle", (b) => { b.ledger.programs[0].dependsOn = [b.ledger.programs[1].id]; }],
     ["whole program dispatch", (b) => { b.ledger.programs[0].dispatchable = true; }],
     ["expired waiver", (b) => { b.ledger.criteria[0].status = "WAIVED"; b.ledger.criteria[0].waiver = { expiresAt: "2000-01-01" }; }],
+    ["baseline revision missing", (b) => { b.baseline.revisions.backend.head = ""; }],
+    ["baseline gate scope overclaims HR proof", (b) => { b.baseline.historicalGateScope[0].provesHr = true; }],
+    ["baseline audit source unhashed", (b) => { b.baseline.auditCriticalSources[0] = { path: "x.ts", state: "FILE" }; }],
+    ["glob write reservation", (b) => { b.ledger.children.push({ id: "c1", program: "AP-00", writeSet: ["backend/src/**/*.ts"], testSet: ["t.spec.ts"], reservationStatus: "ACTIVE", acceptanceIds: [] }); }],
+    ["overlapping active writes", (b) => { for (const id of ["c1", "c2"]) b.ledger.children.push({ id, program: "AP-00", writeSet: ["same.ts"], testSet: ["t.spec.ts"], reservationStatus: "ACTIVE", acceptanceIds: [] }); }],
+    ["advanced work without reserved child", (b) => { b.ledger.criteria[0].status = "DESIGNED"; }],
+    ["implemented before predecessor readiness", (b) => { const ac = b.ledger.criteria.find((a) => a.program === "AP-01"); ac.status = "IMPLEMENTED_UNVERIFIED"; ac.childId = "c1"; b.ledger.children.push({ id: "c1", program: "AP-01", writeSet: ["x.ts"], testSet: ["x.spec.ts"], reservationStatus: "RELEASED", acceptanceIds: [ac.id] }); }],
     ["implementation stays open", () => {}, true, "implementation"],
     ["release stays open", () => {}, true, "release"],
   ];
@@ -184,6 +230,7 @@ const bundle = {
   coverage: JSON.parse(read("architecture-review/html-prd-coverage.json")),
   ledger: JSON.parse(read("architecture-review/execution-ledger.json")),
   prd: read("16-architecture-hardening-prd.md"), guide: read("17-claude-architecture-execution.md"),
+  baseline: JSON.parse(read("architecture-review/ap-00-baseline.json")),
 };
 if (process.argv.includes("--self-test")) selfTest(bundle);
 else {

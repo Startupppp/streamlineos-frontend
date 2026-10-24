@@ -16,6 +16,7 @@ function message(id: number, replyToId: number | null = null): Message {
     metadata: null,
     actionStatus: null,
     reactions: {},
+    clientKey: `ck-${id}`,
     createdAt: "2026-10-20T09:00:00.000Z",
     updatedAt: "2026-10-20T09:00:00.000Z",
     attachments: [],

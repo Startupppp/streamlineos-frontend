@@ -53,6 +53,7 @@ const source: Message = {
   metadata: null,
   actionStatus: null,
   reactions: {},
+  clientKey: "ck-42",
   createdAt: "2026-09-30T10:00:00.000Z",
   updatedAt: "2026-09-30T10:00:00.000Z",
   sender: { id: "user-2", name: "Bo", image: null },

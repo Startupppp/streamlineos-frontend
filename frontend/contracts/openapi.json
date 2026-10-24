@@ -210151,14 +210151,8 @@
                                 ]
                               },
                               "clientKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
+                                "type": "string",
+                                "minLength": 1
                               },
                               "channelPosition": {
                                 "type": "integer",
@@ -210573,14 +210567,8 @@
                           ]
                         },
                         "clientKey": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "minLength": 1
                         },
                         "channelPosition": {
                           "type": "integer",
@@ -211332,14 +211320,8 @@
                                 ]
                               },
                               "clientKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
+                                "type": "string",
+                                "minLength": 1
                               },
                               "channelPosition": {
                                 "type": "integer",
@@ -212046,14 +212028,8 @@
                               ]
                             },
                             "clientKey": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
+                              "type": "string",
+                              "minLength": 1
                             },
                             "channelPosition": {
                               "type": "integer",
@@ -212381,14 +212357,8 @@
                                 ]
                               },
                               "clientKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
+                                "type": "string",
+                                "minLength": 1
                               },
                               "channelPosition": {
                                 "type": "integer",
@@ -212814,14 +212784,8 @@
                           ]
                         },
                         "clientKey": {
-                          "anyOf": [
-                            {
-                              "type": "string"
-                            },
-                            {
-                              "type": "null"
-                            }
-                          ]
+                          "type": "string",
+                          "minLength": 1
                         },
                         "channelPosition": {
                           "type": "integer",
@@ -213374,14 +213338,8 @@
                                 ]
                               },
                               "clientKey": {
-                                "anyOf": [
-                                  {
-                                    "type": "string"
-                                  },
-                                  {
-                                    "type": "null"
-                                  }
-                                ]
+                                "type": "string",
+                                "minLength": 1
                               },
                               "channelPosition": {
                                 "type": "integer",
@@ -214114,6 +214072,10 @@
                                   "system"
                                 ]
                               },
+                              "clientKey": {
+                                "type": "string",
+                                "minLength": 1
+                              },
                               "channelPosition": {
                                 "type": "integer",
                                 "minimum": -9007199254740991,
@@ -214249,6 +214211,7 @@
                               "isEdited",
                               "isDeleted",
                               "messageType",
+                              "clientKey",
                               "channelPosition",
                               "createdAt",
                               "updatedAt",
@@ -219346,14 +219309,8 @@
                                     ]
                                   },
                                   "clientKey": {
-                                    "anyOf": [
-                                      {
-                                        "type": "string"
-                                      },
-                                      {
-                                        "type": "null"
-                                      }
-                                    ]
+                                    "type": "string",
+                                    "minLength": 1
                                   },
                                   "channelPosition": {
                                     "type": "integer",

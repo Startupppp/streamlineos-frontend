@@ -21,7 +21,7 @@ const WIRE_PIN = {
     messageType: "text",
     metadata: null,
     actionStatus: null,
-    clientKey: null,
+    clientKey: "ck-pin-1",
     channelPosition: 4,
     createdAt: "2026-09-30T10:00:00.000Z",
     updatedAt: "2026-09-30T10:00:00.000Z",

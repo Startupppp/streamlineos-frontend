@@ -129,6 +129,7 @@ const storedMessage = {
   metadata: null,
   actionStatus: null,
   reactions: {},
+  clientKey: "ck-stored-42",
   createdAt: "2026-09-30T10:00:00.000Z",
   updatedAt: "2026-09-30T10:00:00.000Z",
   sender: { id: "user-1", name: "Test User", image: null },

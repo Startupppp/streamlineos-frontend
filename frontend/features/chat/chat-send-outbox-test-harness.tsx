@@ -37,7 +37,7 @@ export function serverRow(body: SendBody) {
     messageType: "text" as const,
     metadata: null,
     actionStatus: null,
-    clientKey: body.clientKey ?? null,
+    clientKey: body.clientKey ?? `test:${nextId}`,
     channelPosition: nextId,
     createdAt: "2026-10-21T10:00:00.000Z",
     updatedAt: "2026-10-21T10:00:00.000Z",

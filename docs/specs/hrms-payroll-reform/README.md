@@ -21,6 +21,16 @@ without flags to check document completeness. Implementation/release modes
 remain red until their actual evidence is supplied. The guide includes the
 copyable implementation prompt, dependency programs and resume protocol.
 
+For page implementation, read [PRD 18 self-service](./18-self-service-page-ui-backend-prd.md),
+[PRD 19 HR administration](./19-hr-administration-page-ui-backend-prd.md),
+[PRD 20 Payroll](./20-payroll-page-ui-backend-prd.md),
+[PRD 21 settings, implementation and module RBAC](./21-supporting-page-route-disposition-prd.md),
+and [PRD 22 live-route disposition](./22-current-route-disposition-prd.md).
+These specify a UI item and backend item for each of the 100 canonical primary
+pages, the secondary configuration/implementation jobs, and every current
+People/Payroll route. Use the local [ticket queue](./tickets/) and validate it
+with `node scripts/check-hrms-architecture-tickets.mjs`.
+
 For the confirmed **startup/SMB, India-first HRMS + Payroll** buyer, start with
 the [24 October consolidated product offer and PRD](./2026-10-24-startup-smb-product-prd.md).
 It lists basic, complete-suite, wow and future capabilities, a proposed simpler

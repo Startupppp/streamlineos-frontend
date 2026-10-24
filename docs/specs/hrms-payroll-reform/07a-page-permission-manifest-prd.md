@@ -12,6 +12,15 @@ DataScope omitted by role labels. Roles are grant bundles; backend permission
 and field policy remain authoritative. A route may render only when entitlement
 and at least one listed read/action permission pass.
 
+The table's HR entitlements are **child entitlements of the HRMS parent module**
+for administration under `/hr`; the Payroll table's entitlements are children
+of the independent Payroll parent module. Neither parent enables the other.
+Narrow `/me` entitlements are assigned per eligible worker job, including
+`payroll-self` separately from Payroll operator access. Cross-module reads
+require the receiving page's grant **and** the source domain's field-purpose
+authorization before query/cache fill. The detailed module matrix and negative
+tests are in [PRD 21](./21-supporting-page-route-disposition-prd.md).
+
 Legend: `self`, `direct`, `hierarchy`, `assigned`, `entity`, `location`,
 `named`, `all`, or a documented intersection. `own:*` means the source domain
 owns commands/read model; the page composes or deep-links.

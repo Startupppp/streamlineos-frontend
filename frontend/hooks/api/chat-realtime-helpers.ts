@@ -21,7 +21,7 @@ export function payloadToMessage(
     metadata: payload.metadata ?? null,
     actionStatus: null,
     reactions: {},
-    clientKey: payload.clientKey ?? null,
+    clientKey: payload.clientKey,
     createdAt,
     updatedAt: createdAt,
     sender: {

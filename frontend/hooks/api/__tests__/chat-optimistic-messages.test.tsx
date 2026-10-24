@@ -86,7 +86,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
     const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const client = freshClient();
     seedTimeline(client, []);
-    mockedPost.mockResolvedValue({ ...serverRow, clientKey: null });
+    mockedPost.mockResolvedValue({ ...serverRow, clientKey: "ck-hello" });
     const { result } = renderHook(() => useSendMessage(), { wrapper: wrapperFor(client) });
     await act(async () => {
       await result.current.mutateAsync({ channelId: CHANNEL_ID, clientKey: "ck-hello", content: "hello" });

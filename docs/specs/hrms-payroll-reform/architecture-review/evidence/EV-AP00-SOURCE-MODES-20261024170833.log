@@ -1,0 +1,3 @@
+$ node scripts/check-hrms-architecture-coverage.mjs >/dev/null && ! node scripts/check-hrms-architecture-coverage.mjs --implementation 2>/dev/null && ! node scripts/check-hrms-architecture-coverage.mjs --release 2>/dev/null
+
+exit 0

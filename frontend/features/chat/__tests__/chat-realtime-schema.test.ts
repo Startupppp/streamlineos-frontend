@@ -9,6 +9,7 @@ const WELL_FORMED = {
   content: "Hello",
   createdAt: "2024-01-01T00:00:00.000Z",
   replyToId: null,
+  clientKey: "ck-42",
 };
 
 function simulateMessageHandler(
@@ -41,6 +42,12 @@ describe("chat-realtime — messagePayloadSchema validation", () => {
     const result = messagePayloadSchema.safeParse(WELL_FORMED);
     expect(result.success).toBe(true);
     if (result.success) expect(result.data.id).toBe(42);
+  });
+
+  it("rejects a realtime message without its deduplication key", () => {
+    const { clientKey: _dropped, ...withoutKey } = WELL_FORMED;
+    expect(messagePayloadSchema.safeParse(withoutKey).success).toBe(false);
+    expect(messagePayloadSchema.safeParse({ ...WELL_FORMED, clientKey: null }).success).toBe(false);
   });
 
   it("accepts a full payload with optional fields", () => {

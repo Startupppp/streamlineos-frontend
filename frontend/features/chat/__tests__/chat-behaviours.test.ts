@@ -24,6 +24,7 @@ function makeMsg(id: number, createdAt: string): Message {
     metadata: null,
     actionStatus: null,
     reactions: {},
+    clientKey: `ck-${id}`,
     createdAt,
     updatedAt: createdAt,
     sender: { id: "u1", name: "Alice", image: null },

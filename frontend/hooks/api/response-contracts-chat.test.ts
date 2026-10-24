@@ -332,7 +332,7 @@ const MESSAGE = {
   messageType: "text",
   metadata: null,
   actionStatus: null,
-  clientKey: null,
+  clientKey: "ck-contract-900",
   channelPosition: 12,
   createdAt: "2026-09-02T12:00:00.000Z",
   updatedAt: "2026-09-02T12:00:00.000Z",

@@ -10,6 +10,8 @@
 2. Read current applicable frontend/backend CLAUDE.md, CONTEXT.md and accepted ADRs in docs/docs/adr. Locate a missing root instruction file rather than inventing its rules. Record the actual frontend/root and backend Git revisions separately.
 3. Read 00a/00c/06a and the exact owner sections and current source/tests for the next ready child. Historical line numbers and audit source hashes are starting evidence, not proof current code still has a defect.
 4. Run the coverage checker self-test and normal mode, then the suite checker self-test and normal mode. A document failure is repaired before source requirements can be silently omitted.
+5. Before page, navigation or RBAC work, read PRDs 07/07a and [18](./18-self-service-page-ui-backend-prd.md), [19](./19-hr-administration-page-ui-backend-prd.md), [20](./20-payroll-page-ui-backend-prd.md), [21](./21-supporting-page-route-disposition-prd.md) and [22](./22-current-route-disposition-prd.md). Treat HRMS and Payroll as independent parent modules, with separate submodule, action, scope and field grants. Reconcile every existing route disposition and every canonical page's UI/backend item.
+6. Use the [local ticket queue](./tickets/) in numeric dependency order. Update each checkbox only when its matching ledger AC has evidence; mark a ticket completed only when its stated completion gate passes. These are local files, not GitHub issues.
 
 `node scripts/check-hrms-architecture-coverage.mjs --self-test`
 
@@ -18,6 +20,10 @@
 `node scripts/check-hrms-execution-plan.mjs --self-test`
 
 `node scripts/check-hrms-execution-plan.mjs`
+
+`node scripts/check-hrms-architecture-tickets.mjs`
+
+`node scripts/check-hrms-page-contracts.mjs`
 
 ## 2. Coordinator and leaf authority
 
@@ -76,6 +82,8 @@ Each executed evidence entry contains: id; level (source/unit/contract/database/
 
 Required evidence levels are planned on each acceptance row. Refine to child-specific tests without weakening the governing evidence requirement. If a level is genuinely inapplicable, record and approve the exact applicability decision under existing domain/release rules; preserve it as a permitted waiver rather than silently deleting a required level. WAIVED requires reason, approvedBy, approvalArtifact, expiresAt, compensatingControl and affectedIds. The agent cannot manufacture an approval or self-waive a security/payment gate.
 
+The checker compares ledger ownership, program and required evidence levels with PRD 16, so editing the ledger alone cannot weaken the contract. For each evidence level, the latest recorded execution must pass; a newer failure invalidates an older pass until a successful rerun. Conflicting results at the same timestamp remain a failure. Preserve failed runs in the history. Implementation aggregation also requires passing local source/unit/contract evidence where the criterion requires it, even when database/browser/provider/human verification remains open.
+
 Program readiness is an earlier interface-publication milestone. Set readiness.status=PUBLISHED only with a concrete artifact and fixed revision; never use that to close unmet criteria. A requirement/program/release roll-up derives from its child acceptance statuses, so a parent cannot be declared complete while a child is open, failed or stale.
 
 ## 7. Completion and resume protocol
@@ -86,7 +94,7 @@ Run document coverage after every relevant document/HTML change. Run implementat
 
 `node scripts/check-hrms-architecture-coverage.mjs --release`
 
-Both modes intentionally fail on this initial handoff because all 158 code criteria are NOT_STARTED. A documentation-only pass is the expected result today. At end of a session, list each advanced AC, exact changed/deleted files, command outputs/exits, evidence levels, fixed revisions, unresolved blockers, readiness milestones and next ready child. On resume, reload this guide and ledger, revalidate changed source and continue; do not restart completed evidence or skip open requirements because the HTML looked finished.
+Implementation and release modes remain failing while required criteria lack their evidence. A documentation-only pass does not establish implementation completion. At end of a session, list each advanced AC, exact changed/deleted files, command outputs/exits, evidence levels, fixed revisions, unresolved blockers, readiness milestones and next ready child. On resume, reload this guide and ledger, revalidate changed source and continue; do not restart completed evidence or skip open requirements because the HTML looked finished.
 
 ## 8. Copy this implementation prompt to Claude
 
@@ -94,6 +102,12 @@ Both modes intentionally fail on this initial handoff because all 158 code crite
 Implement the complete HRMS + Payroll architecture plan in this repository.
 Start with docs/specs/hrms-payroll-reform/17-claude-architecture-execution.md.
 Follow its read order, current repo instructions and dependency programs.
+Work the local docs/specs/hrms-payroll-reform/tickets/ queue in dependency order,
+updating checked items only with the matching execution-ledger evidence.
+For every page, implement the UI item and backend item in PRDs 18, 19, 20 and 21;
+reconcile all 124 current routes through PRD 22 before removal or redirect.
+Enforce separate HRMS and Payroll parent-module RBAC in sidebar, palette,
+direct URLs, APIs, exports, cache, charts, Calendar and AskOS.
 Treat 16-architecture-hardening-prd.md as the additive requirement source,
 architecture-review/2026-10-24-architecture-review.html as the preserved visual/source review,
 html-prd-coverage.json as the no-omission map, and execution-ledger.json as the single status record.
@@ -104,6 +118,7 @@ Preserve unrelated changes and existing Calendar, identity-cache and payout/acco
 For every AC, attach actual evidence at the required level. Keep unmet database,
 browser, provider, legal or human evidence open and continue independent work.
 Run both documentation validators, implementation mode and release mode at the appropriate milestones.
+Run the local ticket and page-contract validators after related changes.
 Report every remaining open criterion and its exact blocker; never mark the whole plan complete
 while a required child is open. Reconcile every HTML source unit and all 158 AC rows before final closure.
 ```

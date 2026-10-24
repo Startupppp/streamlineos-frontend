@@ -91,7 +91,7 @@ const chatMessageCore = {
   metadata: chatMessageMetadataContract,
   actionStatus: z.string().nullable(),
   reactions: z.record(z.string(), z.array(z.string())).default({}),
-  clientKey: z.string().nullable().optional(),
+  clientKey: z.string().min(1),
   channelPosition: z.number().optional(),
   createdAt: z.string(),
   updatedAt: z.string(),

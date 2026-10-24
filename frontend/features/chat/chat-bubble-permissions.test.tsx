@@ -36,6 +36,7 @@ function message(senderId: string): Message {
     metadata: null,
     actionStatus: null,
     reactions: {},
+    clientKey: "ck-42",
     createdAt: "2026-01-01T00:00:00.000Z",
     updatedAt: "2026-01-01T00:00:00.000Z",
     sender: { id: senderId, name: "Ada", image: null },

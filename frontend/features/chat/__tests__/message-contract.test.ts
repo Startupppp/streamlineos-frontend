@@ -68,6 +68,13 @@ describe("list wire — chatMessagesPageContract", () => {
     const result = chatMessageContract.safeParse({ ...MESSAGE_FIXTURE, id: "bad" });
     expect(result.success).toBe(false);
   });
+
+  it("requires a nonempty clientKey on every message response", () => {
+    const { clientKey: _dropped, ...withoutKey } = MESSAGE_FIXTURE;
+    expect(chatMessageContract.safeParse(withoutKey).success).toBe(false);
+    expect(chatMessageContract.safeParse({ ...MESSAGE_FIXTURE, clientKey: null }).success).toBe(false);
+    expect(chatMessageContract.safeParse({ ...MESSAGE_FIXTURE, clientKey: "" }).success).toBe(false);
+  });
 });
 
 describe("send wire — the send response is the list message", () => {
@@ -93,6 +100,7 @@ describe("realtime wire — messagePayloadSchema", () => {
     content: "Realtime message",
     createdAt: "2026-01-03T00:00:00.000Z",
     replyToId: null,
+    clientKey: "uuid-rt-1",
   };
 
   it("parses a well-formed realtime payload", () => {
@@ -110,7 +118,7 @@ describe("realtime wire — messagePayloadSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("parses a payload with optional attachments and clientKey", () => {
+  it("parses a payload with optional attachments", () => {
     const result = messagePayloadSchema.safeParse({
       ...REALTIME_FIXTURE,
       clientKey: "uuid-rt-1",
@@ -119,6 +127,13 @@ describe("realtime wire — messagePayloadSchema", () => {
       ],
     });
     expect(result.success).toBe(true);
+  });
+
+  it("requires a nonempty clientKey on realtime messages", () => {
+    const { clientKey: _dropped, ...withoutKey } = REALTIME_FIXTURE;
+    expect(messagePayloadSchema.safeParse(withoutKey).success).toBe(false);
+    expect(messagePayloadSchema.safeParse({ ...REALTIME_FIXTURE, clientKey: null }).success).toBe(false);
+    expect(messagePayloadSchema.safeParse({ ...REALTIME_FIXTURE, clientKey: "" }).success).toBe(false);
   });
 
   it("rejects a payload missing channelId", () => {

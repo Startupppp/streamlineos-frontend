@@ -25,6 +25,7 @@ function makeMsg(id: number, overrides: Partial<Message> = {}): Message {
     attachments: [],
     replyTo: null,
     ...overrides,
+    clientKey: overrides.clientKey ?? `ck-${id}`,
   };
 }
 
@@ -120,7 +121,7 @@ describe("mergeInboundMessage — the realtime handler's dedup", () => {
     ]);
   });
 
-  it("appends when the frame carries no clientKey, so a blank key matches nothing", () => {
+  it("appends when the reconciliation key is blank, so it matches no optimistic row", () => {
     const data = makeInfiniteData([
       { messages: [makeMsg(-1, { clientKey: "" })] },
     ]);
