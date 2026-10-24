@@ -118,7 +118,6 @@ export function isNavRouteActive(
 }
 
 export const NAV_GROUPS: NavGroup[] = [
-  ...WORKFLOWS_NAV_GROUPS,
   ...HR_NAV_GROUPS,
   ...RECRUITMENT_NAV_GROUPS,
   ...PAYROLL_NAV_GROUPS,
@@ -128,6 +127,7 @@ export const NAV_GROUPS: NavGroup[] = [
   ...WORK_MANAGEMENT_NAV_GROUPS,
   ...KNOWLEDGE_SUPPORT_NAV_GROUPS,
   ...ADMINISTRATION_NAV_GROUPS,
+  ...WORKFLOWS_NAV_GROUPS,
 ];
 
 function matchesPermission(

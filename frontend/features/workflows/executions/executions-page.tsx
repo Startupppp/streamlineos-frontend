@@ -7,10 +7,22 @@ import { toast } from "sonner";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   useAllExecutions,
@@ -18,6 +30,10 @@ import {
   type WorkflowExecution,
   type ExecutionStatus,
 } from "@/hooks/api/workflows";
+import {
+  useExecutionsFilters,
+  type ExecutionStatusFilter,
+} from "./use-executions-filters";
 
 const PAGE_SIZE = 20;
 
@@ -32,8 +48,8 @@ const STATUS_BADGE_CLASS: Record<ExecutionStatus, string> = {
   dead_lettered: "bg-status-danger-surface text-status-danger-ink",
 };
 
-const STATUS_TABS: Array<{ label: string; value: ExecutionStatus | "all" }> = [
-  { label: "All", value: "all" },
+const STATUS_OPTIONS: Array<{ label: string; value: ExecutionStatusFilter }> = [
+  { label: "All statuses", value: "all" },
   { label: "Running", value: "running" },
   { label: "Completed", value: "completed" },
   { label: "Failed", value: "failed" },
@@ -80,7 +96,9 @@ function ExecutionRow({
       <span className="text-sm text-muted-foreground">
         {execution.startedAt ? format(new Date(execution.startedAt), "MMM d, HH:mm") : "—"}
       </span>
-      <span className="text-sm text-muted-foreground">{formatDuration(execution.durationMs)}</span>
+      <span className="text-sm text-muted-foreground tabular-nums">
+        {formatDuration(execution.durationMs)}
+      </span>
       <div className="flex items-center justify-end">
         {canCancel && (
           <Button
@@ -100,29 +118,30 @@ function ExecutionRow({
 }
 
 export function ExecutionsPage() {
-  const [activeStatus, setActiveStatus] = useState<ExecutionStatus | "all">("all");
-  const [cursor, setCursor] = useState<string | null>(null);
+  const { status, cursor, setStatus, setCursor } = useExecutionsFilters();
   const [previousCursors, setPreviousCursors] = useState<Array<string | null>>([]);
 
-  const { data, isLoading, isError, refetch } = useAllExecutions({
+  const { data, isLoading, isError, error, refetch } = useAllExecutions({
     ...(cursor !== null ? { cursor } : {}),
     limit: PAGE_SIZE,
-    ...(activeStatus !== "all" ? { status: activeStatus } : {}),
+    ...(status !== "all" ? { status } : {}),
   });
 
   const cancelExecution = useCancelExecution();
   const pageNumber = previousCursors.length + 1;
 
-  function handleStatusChange(status: ExecutionStatus | "all") {
-    setActiveStatus(status);
-    setCursor(null);
+  function handleStatusChange(value: string) {
+    const next =
+      STATUS_OPTIONS.find((option) => option.value === value)?.value ?? "all";
     setPreviousCursors([]);
+    setStatus(next);
   }
 
   function handlePrevPage() {
     setPreviousCursors((stack) => {
       if (stack.length === 0) return stack;
-      setCursor(stack[stack.length - 1] ?? null);
+      const previous = stack[stack.length - 1] ?? null;
+      setCursor(previous);
       return stack.slice(0, -1);
     });
   }
@@ -139,7 +158,7 @@ export function ExecutionsPage() {
       { workflowId: execution.workflowId, executionId: execution.id },
       {
         onSuccess: () => toast.success("Execution cancelled"),
-        onError: () => toast.error("Failed to cancel execution"),
+        onError: (err) => toast.error(getErrorMessage(err)),
       },
     );
   }
@@ -150,20 +169,22 @@ export function ExecutionsPage() {
 
   const statusFilters = (
     <div className={FILTER_TOOLBAR_ROW}>
-      {STATUS_TABS.map((tab) => (
-        <button
-          key={tab.value}
-          onClick={() => handleStatusChange(tab.value)}
-          className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-md whitespace-nowrap transition-colors",
-            activeStatus === tab.value
-              ? "bg-primary/10 text-foreground border border-primary/20"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted",
-          )}
+      <Select value={status} onValueChange={handleStatusChange}>
+        <SelectTrigger
+          size="sm"
+          className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}
+          aria-label="Filter by status"
         >
-          {tab.label}
-        </button>
-      ))}
+          <SelectValue placeholder="All statuses" />
+        </SelectTrigger>
+        <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+          {STATUS_OPTIONS.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
     </div>
   );
 
@@ -176,7 +197,12 @@ export function ExecutionsPage() {
       {isLoading ? (
         <LoadingState variant="list" rows={12} />
       ) : isError ? (
-        <ErrorState title="Failed to load executions" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />
+        <ErrorState
+          title="Failed to load executions"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          className={CONTENT_FILL_PANEL}
+        />
       ) : !data || data.data.length === 0 ? (
         <EmptyState
           illustration={<EmptyActivityIllustration />}
@@ -206,7 +232,7 @@ export function ExecutionsPage() {
             />
           ))}
           <div className="flex items-center justify-between pt-4 border-t border-border/60">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground tabular-nums">
               Page {pageNumber}
             </p>
             <div className="flex items-center gap-2">

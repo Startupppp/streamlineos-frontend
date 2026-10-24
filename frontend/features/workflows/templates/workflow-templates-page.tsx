@@ -8,10 +8,22 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { SearchInput } from "@/components/ui/search-input";
 import { EmptyState } from "@/components/ui/empty-state";
-import { CONTENT_FILL_PANEL, FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
+import {
+  CONTENT_FILL_PANEL,
+  FILTER_SELECT_TRIGGER,
+  FILTER_TOOLBAR_ROW,
+} from "@/components/ui/content-fill-panel";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { LoadingState } from "@/components/shared/loading-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptySearchIllustration } from "@/components/illustrations";
+import { getErrorMessage } from "@/lib/get-error-message";
 import { cn } from "@/lib/utils";
 import {
   useWorkflowTemplates,
@@ -63,7 +75,7 @@ function TemplateCard({
 
 export function WorkflowTemplatesPage() {
   const router = useRouter();
-  const { data: templates, isLoading, isError, refetch } = useWorkflowTemplates();
+  const { data: templates, isLoading, isError, error, refetch } = useWorkflowTemplates();
   const createWorkflow = useCreateWorkflow();
 
   const [search, setSearch] = useState("");
@@ -104,8 +116,8 @@ export function WorkflowTemplatesPage() {
           toast.success(`Created "${workflow.name}" from template`);
           router.push(`/workflows/${workflow.id}`);
         },
-        onError: () => {
-          toast.error("Failed to create workflow from template");
+        onError: (err) => {
+          toast.error(getErrorMessage(err));
           setUsingTemplateId(null);
         },
       },
@@ -124,33 +136,25 @@ export function WorkflowTemplatesPage() {
   const filtersBar = (
     <div className={FILTER_TOOLBAR_ROW}>
       <SearchInput placeholder="Search templates..." value={search} onValueChange={handleSearchChange} />
-      <div className="flex items-center gap-1">
-        <button
-          onClick={() => handleCategoryChange("all")}
-          className={cn(
-            "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-            activeCategory === "all"
-              ? "bg-primary/10 text-foreground border border-primary/30"
-              : "text-muted-foreground hover:text-foreground hover:bg-muted",
-          )}
-        >
-          All
-        </button>
-        {categories.map((cat) => (
-          <button
-            key={cat}
-            onClick={() => handleCategoryChange(cat)}
-            className={cn(
-              "px-3 py-1.5 text-xs font-medium rounded-md transition-colors",
-              activeCategory === cat
-                ? "bg-primary/10 text-foreground border border-primary/30"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted",
-            )}
+      {categories.length > 0 ? (
+        <Select value={activeCategory} onValueChange={handleCategoryChange}>
+          <SelectTrigger
+            size="sm"
+            className={cn(FILTER_SELECT_TRIGGER, "w-[160px]")}
+            aria-label="Filter by category"
           >
-            {cat}
-          </button>
-        ))}
-      </div>
+            <SelectValue placeholder="All categories" />
+          </SelectTrigger>
+          <SelectContent className="min-w-[var(--radix-select-trigger-width)]">
+            <SelectItem value="all">All categories</SelectItem>
+            {categories.map((cat) => (
+              <SelectItem key={cat} value={cat}>
+                {cat}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      ) : null}
     </div>
   );
 
@@ -163,7 +167,12 @@ export function WorkflowTemplatesPage() {
       {isLoading ? (
         <LoadingState variant="cards" rows={9} />
       ) : isError ? (
-        <ErrorState title="Failed to load templates" onRetry={handleRetry} className={CONTENT_FILL_PANEL} />
+        <ErrorState
+          title="Failed to load templates"
+          description={getErrorMessage(error)}
+          onRetry={handleRetry}
+          className={CONTENT_FILL_PANEL}
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
           illustration={<EmptySearchIllustration />}

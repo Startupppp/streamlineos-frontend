@@ -108,9 +108,11 @@ export function useResolvedReferenceCard(
 }
 
 export function useLinkedRecordPreview(reference: EntityReferenceInput): EntityCard | undefined {
-  return useQuery<EntityCard>({
+  const canRead = useCan("chat:messages:read");
+  const preview = useQuery<EntityCard>({
     queryKey: collaborationQueryKeys.chat.linkedRecordPreview(reference.type, reference.id),
     queryFn: skipToken,
     staleTime: Infinity,
   }).data;
+  return canRead ? preview : undefined;
 }

@@ -2,31 +2,33 @@
 
 import { memo } from "react";
 import Link from "next/link";
-import { Pencil } from "lucide-react";
+import { Pencil, Workflow } from "lucide-react";
 import { CopyIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { formatDistanceToNow } from "date-fns";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { SemanticBadge, type BadgeTone } from "@/components/ui/semantic-badge";
+import { TEXT_ONE_LINE } from "@/lib/text-overflow";
 import { cn } from "@/lib/utils";
-import { type Workflow, type WorkflowStatus } from "@/hooks/api/workflows";
+import { type Workflow as WorkflowRecord, type WorkflowStatus } from "@/hooks/api/workflows";
 
-const STATUS_BADGE_CLASS: Record<WorkflowStatus, string> = {
-  draft: "bg-muted text-muted-foreground",
-  published: "bg-status-success-surface text-status-success-ink",
-  disabled: "bg-status-warning-surface text-status-warning-ink",
-  archived: "bg-status-danger-surface text-status-danger-ink",
+const STATUS_TONE: Record<WorkflowStatus, BadgeTone> = {
+  draft: "neutral",
+  published: "success",
+  disabled: "warning",
+  archived: "danger",
 };
 
-const STATUS_LEFT_BORDER: Record<WorkflowStatus, string> = {
-  draft: "border-l-border",
-  published: "border-l-green-400",
-  disabled: "border-l-yellow-400",
-  archived: "border-l-red-400",
+const STATUS_LABEL: Record<WorkflowStatus, string> = {
+  draft: "Draft",
+  published: "Published",
+  disabled: "Disabled",
+  archived: "Archived",
 };
 
 interface WorkflowCardProps {
-  workflow: Workflow;
+  workflow: WorkflowRecord;
   onDuplicate: () => void;
   onDelete: () => void;
 }
@@ -36,53 +38,63 @@ export const WorkflowCard = memo(function WorkflowCard({
   onDuplicate,
   onDelete,
 }: WorkflowCardProps) {
+  const builderHref = `/workflows/${workflow.id}/builder`;
+  const updatedLabel = formatDistanceToNow(new Date(workflow.updatedAt), {
+    addSuffix: true,
+  });
+
   return (
-    <Card
-      className={cn(
-        "bg-card rounded-xl border border-border shadow-sm border-l-4 transition-all duration-200 hover:shadow-md h-full",
-        STATUS_LEFT_BORDER[workflow.status],
-      )}
-    >
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0 flex-1">
-            <div className="flex min-w-0 flex-nowrap items-center gap-2 overflow-x-auto scrollbar-hide [&>*]:shrink-0">
-              <p className="font-semibold text-sm text-foreground truncate">
-                {workflow.name}
-              </p>
-              <span
-                className={cn(
-                  "inline-flex items-center px-2 py-0.5 rounded-full text-micro font-medium capitalize",
-                  STATUS_BADGE_CLASS[workflow.status],
-                )}
-              >
-                {workflow.status}
-              </span>
-              <span className="text-micro text-muted-foreground bg-muted border border-border px-1.5 py-0.5 rounded">
-                v{workflow.version}
-              </span>
-            </div>
-
-            {workflow.description && (
-              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
-                {workflow.description}
-              </p>
-            )}
-
-            <p className="text-dense text-muted-foreground mt-2">
-              Updated{" "}
-              {formatDistanceToNow(new Date(workflow.updatedAt), {
-                addSuffix: true,
-              })}
-            </p>
+    <Card className="h-full border-border bg-card transition-colors hover:bg-muted/30">
+      <CardContent className="flex h-full flex-col gap-3 p-4">
+        <div className="flex items-start gap-3">
+          <div
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted text-muted-foreground"
+            aria-hidden="true"
+          >
+            <Workflow className="h-4 w-4" />
           </div>
 
-          <div className="flex items-center gap-0.5 shrink-0">
-            <Button asChild size="icon" variant="ghost" className="w-7">
+          <div className="min-w-0 flex-1 space-y-1">
+            <div className="flex items-start justify-between gap-2">
               <Link
-                href={`/workflows/${workflow.id}/builder`}
-                aria-label="Edit workflow in builder"
+                href={builderHref}
+                className={cn(
+                  "min-w-0 text-sm font-semibold text-foreground outline-none transition-colors",
+                  "hover:underline focus-visible:rounded-sm focus-visible:ring-2 focus-visible:ring-ring",
+                  TEXT_ONE_LINE,
+                )}
+                title={workflow.name}
               >
+                {workflow.name}
+              </Link>
+              <SemanticBadge
+                tone={STATUS_TONE[workflow.status]}
+                label={STATUS_LABEL[workflow.status]}
+                size="xs"
+                className="shrink-0"
+              />
+            </div>
+
+            {workflow.description ? (
+              <p className="line-clamp-2 text-pretty text-xs leading-relaxed text-muted-foreground">
+                {workflow.description}
+              </p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="mt-auto flex items-center justify-between gap-2 border-t border-border pt-3">
+          <p className="min-w-0 text-dense text-muted-foreground tabular-nums">
+            <span className="font-medium text-foreground/80">v{workflow.version}</span>
+            <span className="mx-1.5 text-border" aria-hidden="true">
+              ·
+            </span>
+            <span title={`Updated ${updatedLabel}`}>Updated {updatedLabel}</span>
+          </p>
+
+          <div className="flex shrink-0 items-center gap-0.5">
+            <Button asChild size="icon" variant="ghost" className="h-8 w-8">
+              <Link href={builderHref} aria-label="Edit workflow in builder">
                 <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
               </Link>
             </Button>
@@ -91,7 +103,7 @@ export const WorkflowCard = memo(function WorkflowCard({
               iconSize={14}
               size="icon"
               variant="ghost"
-              className="w-7"
+              className="h-8 w-8"
               aria-label="Duplicate workflow"
               onClick={onDuplicate}
             />
@@ -100,7 +112,7 @@ export const WorkflowCard = memo(function WorkflowCard({
               iconSize={14}
               size="icon"
               variant="ghost"
-              className="w-7 text-destructive hover:text-destructive"
+              className="h-8 w-8 text-destructive hover:text-destructive"
               aria-label="Delete workflow"
               onClick={onDelete}
             />
@@ -112,9 +124,9 @@ export const WorkflowCard = memo(function WorkflowCard({
 });
 
 interface WorkflowCardItemProps {
-  workflow: Workflow;
-  onDuplicate: (workflow: Workflow) => void;
-  onDelete: (workflow: Workflow) => void;
+  workflow: WorkflowRecord;
+  onDuplicate: (workflow: WorkflowRecord) => void;
+  onDelete: (workflow: WorkflowRecord) => void;
 }
 
 export function WorkflowCardItem({

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OPENAPI_HASH = "sha256:9573fa7c9f61c9906947aabf5af81bd6a1225ce7c17aebc1cf19abe2a4a72aa5" as const;
+export const OPENAPI_HASH = "sha256:308f569599577c9e0f80514c9f55d776f8f78005716601fd06f577af2e2c9c4d" as const;
 
 export const agentTokensListResponseSchema = z.array(z.object({
   id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
@@ -2469,6 +2469,12 @@ export const managedProductRelationsGetManagedProductSummaryResponseSchema = z.o
       releaseDate: z.string().nullable(),
       recordRevision: z.number().int().gte(-9007199254740991).lte(9007199254740991),
       ownerUserId: z.string().nullable(),
+      ownerUser: z.object({
+        id: z.string(),
+        firstName: z.string().nullable(),
+        lastName: z.string().nullable(),
+        email: z.string(),
+      }).nullable(),
       qaState: z.enum(["pending", "in_review", "approved", "rejected"]).nullable(),
       deploymentEvidenceUrl: z.string().nullable(),
       projectReleaseId: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable(),
@@ -4305,6 +4311,7 @@ export const projectsByIdGetProjectResponseSchema = z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
   }).nullable(),
+  readOnly: z.boolean(),
 });
 export type ProjectsByIdGetProjectResponse = z.infer<typeof projectsByIdGetProjectResponseSchema>;
 
@@ -4377,6 +4384,7 @@ export const projectsByIdUpdateProjectResponseSchema = z.object({
     id: z.number().int().gte(-9007199254740991).lte(9007199254740991),
     name: z.string(),
   }).nullable(),
+  readOnly: z.boolean(),
 });
 export type ProjectsByIdUpdateProjectResponse = z.infer<typeof projectsByIdUpdateProjectResponseSchema>;
 
@@ -6045,6 +6053,7 @@ export const ticketImportExportPreviewImportResponseSchema = z.object({
       startDate: z.string().nullable().optional(),
       dueDate: z.string().nullable().optional(),
       points: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable().optional(),
+      storyPoints: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable().optional(),
       estimate: z.number().int().gte(-9007199254740991).lte(9007199254740991).nullable().optional(),
       completionPercentage: z.number().int().gte(-9007199254740991).lte(9007199254740991).optional(),
       clientVisible: z.boolean().optional(),
@@ -6812,7 +6821,7 @@ export type ProjectResourcesAddMemberResponse = z.infer<typeof projectResourcesA
 
 export const projectResourcesAddMemberBodySchema = z.strictObject({
   userId: z.string(),
-  role: z.string().optional(),
+  role: z.enum(["ADMIN", "MEMBER", "VIEWER", "CONTRIBUTOR"]).optional(),
 });
 export type ProjectResourcesAddMemberBody = z.input<typeof projectResourcesAddMemberBodySchema>;
 
@@ -8629,7 +8638,6 @@ export const projectsTicketAssociationsGetSubtasksResponseSchema = z.array(z.obj
   createdAt: z.iso.datetime({ offset: true }),
   updatedAt: z.iso.datetime({ offset: true }),
   descriptionExcerpt: z.string(),
-  assigneeId: z.string().nullable(),
   assignee: z.object({
     id: z.string(),
     name: z.string().nullable(),
@@ -9581,7 +9589,6 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "DiscoveryReviewsController_deleteOutcomeReview", method: "DELETE", path: "/build/managed-products/{managedProductId}/outcome-reviews/{outcomeReviewId}" },
   { operationId: "ManagedProductRelationsController_listLinkedProjects", method: "GET", path: "/build/managed-products/{managedProductId}/projects", response: "managedProductRelationsListLinkedProjectsResponseSchema" },
   { operationId: "ManagedProductRelationsController_linkProjectSecondary", method: "POST", path: "/build/managed-products/{managedProductId}/projects/{projectId}", response: "managedProductRelationsLinkProjectSecondaryResponseSchema" },
-  { operationId: "ManagedProductRelationsController_unlinkProject", method: "DELETE", path: "/build/managed-products/{managedProductId}/projects/{projectId}" },
   { operationId: "ManagedProductRelationsController_setPrimaryProject", method: "PATCH", path: "/build/managed-products/{managedProductId}/projects/{projectId}/primary", response: "managedProductRelationsSetPrimaryProjectResponseSchema" },
   { operationId: "ManagedProductRelationsController_listReleases", method: "GET", path: "/build/managed-products/{managedProductId}/releases", response: "managedProductRelationsListReleasesResponseSchema" },
   { operationId: "ManagedProductRelationsController_createRelease", method: "POST", path: "/build/managed-products/{managedProductId}/releases", response: "managedProductRelationsCreateReleaseResponseSchema", body: "managedProductRelationsCreateReleaseBodySchema" },
@@ -9632,7 +9639,6 @@ export const BUILD_CONTRACT_OPERATIONS = [
   { operationId: "ProjectsRoadmapController_publishRoadmapItem", method: "PATCH", path: "/build/roadmap-items/{itemId}/publication", response: "projectsRoadmapPublishRoadmapItemResponseSchema", body: "projectsRoadmapPublishRoadmapItemBodySchema" },
   { operationId: "ProjectsRoadmapController_readRoadmapPublication", method: "GET", path: "/build/roadmap-publication", response: "projectsRoadmapReadRoadmapPublicationResponseSchema" },
   { operationId: "ProjectsRoadmapController_publishRoadmap", method: "POST", path: "/build/roadmap-publication", response: "projectsRoadmapPublishRoadmapResponseSchema" },
-  { operationId: "ProjectsRoadmapController_unpublishRoadmap", method: "DELETE", path: "/build/roadmap-publication" },
   { operationId: "ProjectsRoadmapController_getRoadmapItem", method: "GET", path: "/build/roadmap/{itemId}", response: "projectsRoadmapGetRoadmapItemResponseSchema" },
   { operationId: "ProjectsRoadmapController_updateRoadmap", method: "PATCH", path: "/build/roadmap/{itemId}", response: "projectsRoadmapUpdateRoadmapResponseSchema", body: "projectsRoadmapUpdateRoadmapBodySchema" },
   { operationId: "ProjectsRoadmapController_deleteRoadmap", method: "DELETE", path: "/build/roadmap/{itemId}" },

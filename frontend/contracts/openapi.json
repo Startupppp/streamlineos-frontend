@@ -206552,8 +206552,8 @@
           "ChatActions"
         ],
         "x-exposure": "in-service",
-        "x-authorized-in-service": "ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
-        "description": "Exposure: authorized in service — ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
+        "x-authorized-in-service": "ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
+        "description": "Exposure: authorized in service — ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
         "requestBody": {
           "required": true,
           "content": {
@@ -215155,7 +215155,21 @@
             "in": "path",
             "schema": {
               "type": "string",
-              "minLength": 1
+              "enum": [
+                "ticket",
+                "task",
+                "project",
+                "cycle",
+                "release",
+                "incident",
+                "client",
+                "deal",
+                "lead",
+                "employee",
+                "doc_page",
+                "calendar_event",
+                "support_ticket"
+              ]
             }
           },
           {
@@ -215490,7 +215504,21 @@
             "in": "path",
             "schema": {
               "type": "string",
-              "minLength": 1
+              "enum": [
+                "ticket",
+                "task",
+                "project",
+                "cycle",
+                "release",
+                "incident",
+                "client",
+                "deal",
+                "lead",
+                "employee",
+                "doc_page",
+                "calendar_event",
+                "support_ticket"
+              ]
             }
           },
           {
@@ -216862,8 +216890,8 @@
           "ChatEntityActions"
         ],
         "x-exposure": "in-service",
-        "x-authorized-in-service": "ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
-        "description": "Exposure: authorized in service — ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
+        "x-authorized-in-service": "ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
+        "description": "Exposure: authorized in service — ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
         "requestBody": {
           "required": true,
           "content": {
@@ -216981,8 +217009,8 @@
           "ChatEntityActions"
         ],
         "x-exposure": "in-service",
-        "x-authorized-in-service": "ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
-        "description": "Exposure: authorized in service — ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
+        "x-authorized-in-service": "ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
+        "description": "Exposure: authorized in service — ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
         "requestBody": {
           "required": true,
           "content": {
@@ -217077,8 +217105,8 @@
           "ChatEntityActions"
         ],
         "x-exposure": "in-service",
-        "x-authorized-in-service": "ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
-        "description": "Exposure: authorized in service — ChatChannelMembersImplementation.assertChannelMembership, then EntityReferenceService resolves the actor's own access to the target",
+        "x-authorized-in-service": "ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
+        "description": "Exposure: authorized in service — ChatChannelAuthorizationService.assertChannelAccess, then EntityReferenceService resolves the actor's own access to the target",
         "requestBody": {
           "required": true,
           "content": {
