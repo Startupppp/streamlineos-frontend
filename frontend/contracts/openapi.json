@@ -2903,7 +2903,7 @@
             "schema": {
               "default": 1,
               "type": "integer",
-              "exclusiveMinimum": 0,
+              "minimum": 1,
               "maximum": 9007199254740991
             }
           },
@@ -2914,7 +2914,7 @@
             "schema": {
               "default": 50,
               "type": "integer",
-              "exclusiveMinimum": 0,
+              "minimum": 1,
               "maximum": 100
             }
           }
@@ -127059,6 +127059,17 @@
             "schema": {
               "type": "string"
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -144116,7 +144127,8 @@
         "x-permission": "build:managed-products:update",
         "description": "Exposure: permission — build:managed-products:update",
         "x-idempotency-command": "build.managed-products.project-link.add",
-        "x-idempotent": true
+        "x-idempotent": true,
+        "x-bodyless": true
       },
       "delete": {
         "operationId": "ManagedProductRelationsController_unlinkProject",
@@ -144287,7 +144299,8 @@
         "x-permission": "build:managed-products:update",
         "description": "Exposure: permission — build:managed-products:update",
         "x-idempotency-command": "build.managed-products.project-link.set-primary",
-        "x-idempotent": true
+        "x-idempotent": true,
+        "x-bodyless": true
       }
     },
     "/build/managed-products/{managedProductId}/releases": {
@@ -180473,6 +180486,17 @@
             }
           },
           {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          },
+          {
             "name": "bookingId",
             "in": "path",
             "required": true,
@@ -187758,6 +187782,17 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 2048
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           }
         ],
@@ -198843,6 +198878,17 @@
               "format": "uuid",
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -200785,6 +200831,17 @@
             "schema": {
               "type": "string",
               "maxLength": 512
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           }
         ],
@@ -202798,6 +202855,17 @@
               "type": "string",
               "maxLength": 512
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -203026,6 +203094,17 @@
               "type": "string",
               "maxLength": 2048,
               "pattern": "^[A-Za-z0-9_-]+$"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           }
         ],
@@ -205537,7 +205616,8 @@
         ],
         "x-exposure": "permissioned",
         "x-permission": "calendar:read",
-        "description": "Exposure: permission — calendar:read"
+        "description": "Exposure: permission — calendar:read",
+        "x-bodyless": true
       }
     },
     "/calendar/source-actions/proposals/{proposalId}/steps/{stepId}/repair": {
@@ -208460,7 +208540,7 @@
         ],
         "responses": {
           "201": {
-            "description": "Huddle started, or the channel's active huddle joined",
+            "description": "Created",
             "content": {
               "application/json": {
                 "schema": {
@@ -208705,9 +208785,6 @@
           "401": {
             "$ref": "#/components/responses/Unauthorized"
           },
-          "402": {
-            "description": "The organization's plan allows huddles only in direct messages."
-          },
           "403": {
             "$ref": "#/components/responses/Forbidden"
           },
@@ -208717,17 +208794,14 @@
           "409": {
             "$ref": "#/components/responses/Conflict"
           },
-          "412": {
-            "description": "Precondition, never a retry: no usable calendar connection, a connection that needs reconnecting, or a Microsoft calendar that cannot create Teams meetings. The starter connects their own in Calendar, or an admin connects or reconnects a shared one."
-          },
           "422": {
             "$ref": "#/components/responses/UnprocessableEntity"
           },
           "429": {
-            "description": "Rate limited"
+            "$ref": "#/components/responses/TooManyRequests"
           },
           "503": {
-            "description": "Transient or server-side: the integration is unconfigured for this deployment, the meeting provider refused or timed out, or it returned no join link. Nothing was started."
+            "$ref": "#/components/responses/ServiceUnavailable"
           }
         },
         "security": [
@@ -208735,14 +208809,30 @@
             "bearer": []
           }
         ],
-        "summary": "Start a huddle in a channel, or join the one already running, and return its external meeting link",
         "tags": [
           "Chat Huddles & Video"
         ],
         "x-exposure": "permissioned",
         "x-permission": "chat:huddles:start",
         "description": "Exposure: permission — chat:huddles:start",
-        "x-bodyless": true
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {
+                    "type": "integer",
+                    "exclusiveMinimum": 0,
+                    "maximum": 9007199254740991
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          }
+        }
       }
     },
     "/chat/channels/{channelId}/invite-link": {
@@ -217265,6 +217355,249 @@
         "x-exposure": "permissioned",
         "x-permission": "ai:chat:use",
         "description": "Exposure: permission — ai:chat:use"
+      }
+    },
+    "/chat/huddle/accounts": {
+      "get": {
+        "operationId": "ChatHuddlesController_listHuddleAccounts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "Accounts list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "accounts": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "connectionId": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "provider": {
+                                "type": "string",
+                                "enum": [
+                                  "google_meet",
+                                  "microsoft_teams"
+                                ]
+                              },
+                              "label": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "active",
+                                  "needs_reauth"
+                                ]
+                              },
+                              "scope": {
+                                "type": "string",
+                                "enum": [
+                                  "user",
+                                  "org"
+                                ]
+                              },
+                              "isDefault": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "connectionId",
+                              "provider",
+                              "label",
+                              "status",
+                              "scope",
+                              "isDefault"
+                            ]
+                          }
+                        },
+                        "defaultConnectionId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "accounts",
+                        "defaultConnectionId"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "402": {
+            "description": "The organization's plan allows huddles only in direct messages."
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "412": {
+            "description": "Precondition, never a retry: no usable calendar connection, a connection that needs reconnecting, or a Microsoft calendar that cannot create Teams meetings. The starter connects their own in Calendar, or an admin connects or reconnects a shared one."
+          },
+          "429": {
+            "description": "Rate limited"
+          },
+          "503": {
+            "description": "Transient or server-side: the integration is unconfigured for this deployment, the meeting provider refused or timed out, or it returned no join link. Nothing was started."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Start a huddle in a channel, or join the one already running, and return its external meeting link",
+        "tags": [
+          "Chat Huddles & Video"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "chat:huddles:start",
+        "description": "Exposure: permission — chat:huddles:start"
+      }
+    },
+    "/chat/huddle/accounts/default": {
+      "put": {
+        "operationId": "ChatHuddlesController_setHuddleDefault",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "ok": {
+                          "type": "boolean",
+                          "const": true
+                        }
+                      },
+                      "required": [
+                        "ok"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/UnprocessableEntity"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "summary": "Set or clear the caller's chat huddle default account",
+        "tags": [
+          "Chat Huddles & Video"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "chat:huddles:start",
+        "description": "Exposure: permission — chat:huddles:start",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "connectionId": {
+                    "anyOf": [
+                      {
+                        "type": "integer",
+                        "exclusiveMinimum": 0,
+                        "maximum": 9007199254740991
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "connectionId"
+                ],
+                "additionalProperties": false
+              }
+            }
+          }
+        },
+        "x-idempotency-command": "chat.huddle.set-default",
+        "x-idempotent": true
       }
     },
     "/chat/huddles/{huddleId}/heartbeat": {
@@ -227316,6 +227649,17 @@
                 "expired",
                 "suppressed"
               ]
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 100,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           }
         ],
@@ -244877,6 +245221,243 @@
       }
     },
     "/crm/campaigns/{campaignId}": {
+      "get": {
+        "operationId": "CrmCampaignsController_findOne",
+        "parameters": [
+          {
+            "name": "campaignId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "orgId": {
+                          "type": "string"
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "status": {
+                          "type": "string"
+                        },
+                        "channel": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "description": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "startDate": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "endDate": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "targetAudience": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "leads": {
+                          "type": "integer",
+                          "minimum": -9007199254740991,
+                          "maximum": 9007199254740991
+                        },
+                        "spend": {
+                          "type": "string"
+                        },
+                        "roi": {
+                          "type": "string"
+                        },
+                        "budgetAllocated": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "budgetSpent": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "utmCampaignKey": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "ownerId": {
+                          "anyOf": [
+                            {
+                              "type": "string"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "ownerMembershipId": {
+                          "anyOf": [
+                            {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "updatedAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "deletedAt": {
+                          "anyOf": [
+                            {
+                              "type": "string",
+                              "format": "date-time"
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "orgId",
+                        "name",
+                        "status",
+                        "channel",
+                        "description",
+                        "startDate",
+                        "endDate",
+                        "targetAudience",
+                        "leads",
+                        "spend",
+                        "roi",
+                        "budgetAllocated",
+                        "budgetSpent",
+                        "utmCampaignKey",
+                        "ownerId",
+                        "ownerMembershipId",
+                        "createdAt",
+                        "updatedAt",
+                        "deletedAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "CrmCampaigns"
+        ],
+        "x-exposure": "permissioned",
+        "x-permission": "crm:campaigns:view",
+        "description": "Exposure: permission — crm:campaigns:view"
+      },
       "patch": {
         "operationId": "CrmCampaignsController_update",
         "parameters": [
@@ -823853,6 +824434,23 @@
             }
           },
           {
+            "name": "partyId",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
             "name": "limit",
             "in": "query",
             "required": false,
@@ -1070392,6 +1070990,15 @@
             }
           },
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
             "name": "dateFrom",
             "in": "query",
             "required": false,
@@ -1097460,6 +1098067,15 @@
             }
           },
           {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "required": false,
@@ -1118387,6 +1119003,15 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "maxLength": 200
             }
           },
           {
@@ -1151107,37 +1151732,74 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "orgId": {
-                            "type": "string"
-                          },
-                          "name": {
-                            "type": "string"
-                          },
-                          "slug": {
-                            "type": "string"
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "orgId": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "slug": {
+                                "type": "string"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "orgId",
+                              "name",
+                              "slug",
+                              "createdAt"
+                            ]
                           }
                         },
-                        "required": [
-                          "id",
-                          "orgId",
-                          "name",
-                          "slug",
-                          "createdAt"
-                        ]
-                      }
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
                     }
                   },
                   "required": [
@@ -1155578,10 +1156240,21 @@
           },
           {
             "name": "cursor",
-            "required": false,
             "in": "query",
+            "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           }
         ],
@@ -1156187,7 +1156860,8 @@
         "x-permission": "kb:pages:update",
         "description": "Exposure: permission — kb:pages:update",
         "x-idempotency-command": "kb.file.version.restore",
-        "x-idempotent": true
+        "x-idempotent": true,
+        "x-bodyless": true
       }
     },
     "/kb/hr-link/config": {
@@ -1164492,6 +1165166,27 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -1164653,6 +1165348,17 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
             }
           }
         ],
@@ -1169369,6 +1170075,17 @@
               "minLength": 1,
               "maxLength": 512
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -1169753,7 +1170470,8 @@
         "x-permission": "kb:pages:update",
         "description": "Exposure: permission — kb:pages:update",
         "x-idempotency-command": "kb.share-link.rotate",
-        "x-idempotent": true
+        "x-idempotent": true,
+        "x-bodyless": true
       }
     },
     "/kb/pages/{pageId}/unarchive": {
@@ -1174299,7 +1175017,29 @@
     "/kb/pages/recent": {
       "get": {
         "operationId": "KbPagesController_getRecent",
-        "parameters": [],
+        "parameters": [
+          {
+            "name": "cursor",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 512
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1174315,346 +1175055,383 @@
                       ]
                     },
                     "data": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "id": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "orgId": {
-                            "type": "string"
-                          },
-                          "spaceId": {
-                            "anyOf": [
-                              {
+                      "type": "object",
+                      "properties": {
+                        "data": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
                                 "type": "integer",
                                 "minimum": -9007199254740991,
                                 "maximum": 9007199254740991
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "parentPageId": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "sortOrder": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "projectId": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "title": {
-                            "type": "string"
-                          },
-                          "icon": {
-                            "anyOf": [
-                              {
+                              "orgId": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "coverImage": {
-                            "anyOf": [
-                              {
+                              "spaceId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "parentPageId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "sortOrder": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "projectId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "title": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "kind": {
-                            "type": "string",
-                            "enum": [
-                              "document",
-                              "spreadsheet",
-                              "file"
-                            ]
-                          },
-                          "status": {
-                            "type": "string"
-                          },
-                          "contentType": {
-                            "type": "string"
-                          },
-                          "trustState": {
-                            "type": "string"
-                          },
-                          "visibility": {
-                            "type": "string"
-                          },
-                          "publicToken": {
-                            "anyOf": [
-                              {
+                              "icon": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "coverImage": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "document",
+                                  "spreadsheet",
+                                  "file"
+                                ]
+                              },
+                              "status": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "publicSlug": {
-                            "anyOf": [
-                              {
+                              "contentType": {
                                 "type": "string"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "isLocked": {
-                            "type": "boolean"
-                          },
-                          "createdAt": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "updatedAt": {
-                            "type": "string",
-                            "format": "date-time"
-                          },
-                          "deletedAt": {
-                            "anyOf": [
-                              {
+                              "trustState": {
+                                "type": "string"
+                              },
+                              "visibility": {
+                                "type": "string"
+                              },
+                              "publicToken": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "publicSlug": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "isLocked": {
+                                "type": "boolean"
+                              },
+                              "createdAt": {
                                 "type": "string",
                                 "format": "date-time"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "createdByMembershipId": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "lastEditedByMembershipId": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "deletedByMembershipId": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "ownerMembershipId": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "verifiedByMembershipId": {
-                            "anyOf": [
-                              {
-                                "type": "integer",
-                                "minimum": -9007199254740991,
-                                "maximum": 9007199254740991
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "createdById": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "lastEditedById": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "deletedById": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "ownerUserId": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "verifiedById": {
-                            "anyOf": [
-                              {
-                                "type": "string"
-                              },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "verifiedUntil": {
-                            "anyOf": [
-                              {
+                              "updatedAt": {
                                 "type": "string",
                                 "format": "date-time"
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "nextReviewAt": {
-                            "anyOf": [
-                              {
-                                "type": "string",
-                                "format": "date-time"
+                              "deletedAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
-                              {
-                                "type": "null"
-                              }
-                            ]
-                          },
-                          "aclRevision": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "contentRevision": {
-                            "type": "integer",
-                            "minimum": -9007199254740991,
-                            "maximum": 9007199254740991
-                          },
-                          "legalHold": {
-                            "type": "boolean"
-                          },
-                          "legalHoldReason": {
-                            "anyOf": [
-                              {
-                                "type": "string"
+                              "createdByMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               },
-                              {
-                                "type": "null"
+                              "lastEditedByMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "deletedByMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "ownerMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "verifiedByMembershipId": {
+                                "anyOf": [
+                                  {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "createdById": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "lastEditedById": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "deletedById": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "ownerUserId": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "verifiedById": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "verifiedUntil": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "nextReviewAt": {
+                                "anyOf": [
+                                  {
+                                    "type": "string",
+                                    "format": "date-time"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
+                              },
+                              "aclRevision": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "contentRevision": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "legalHold": {
+                                "type": "boolean"
+                              },
+                              "legalHoldReason": {
+                                "anyOf": [
+                                  {
+                                    "type": "string"
+                                  },
+                                  {
+                                    "type": "null"
+                                  }
+                                ]
                               }
+                            },
+                            "required": [
+                              "id",
+                              "orgId",
+                              "spaceId",
+                              "parentPageId",
+                              "sortOrder",
+                              "projectId",
+                              "title",
+                              "icon",
+                              "coverImage",
+                              "kind",
+                              "status",
+                              "contentType",
+                              "trustState",
+                              "visibility",
+                              "publicToken",
+                              "publicSlug",
+                              "isLocked",
+                              "createdAt",
+                              "updatedAt",
+                              "deletedAt",
+                              "createdByMembershipId",
+                              "lastEditedByMembershipId",
+                              "deletedByMembershipId",
+                              "ownerMembershipId",
+                              "verifiedByMembershipId",
+                              "createdById",
+                              "lastEditedById",
+                              "deletedById",
+                              "ownerUserId",
+                              "verifiedById",
+                              "verifiedUntil",
+                              "nextReviewAt",
+                              "aclRevision",
+                              "contentRevision",
+                              "legalHold",
+                              "legalHoldReason"
                             ]
                           }
                         },
-                        "required": [
-                          "id",
-                          "orgId",
-                          "spaceId",
-                          "parentPageId",
-                          "sortOrder",
-                          "projectId",
-                          "title",
-                          "icon",
-                          "coverImage",
-                          "kind",
-                          "status",
-                          "contentType",
-                          "trustState",
-                          "visibility",
-                          "publicToken",
-                          "publicSlug",
-                          "isLocked",
-                          "createdAt",
-                          "updatedAt",
-                          "deletedAt",
-                          "createdByMembershipId",
-                          "lastEditedByMembershipId",
-                          "deletedByMembershipId",
-                          "ownerMembershipId",
-                          "verifiedByMembershipId",
-                          "createdById",
-                          "lastEditedById",
-                          "deletedById",
-                          "ownerUserId",
-                          "verifiedById",
-                          "verifiedUntil",
-                          "nextReviewAt",
-                          "aclRevision",
-                          "contentRevision",
-                          "legalHold",
-                          "legalHoldReason"
-                        ]
-                      }
+                        "pagination": {
+                          "type": "object",
+                          "properties": {
+                            "limit": {
+                              "type": "integer",
+                              "minimum": -9007199254740991,
+                              "maximum": 9007199254740991
+                            },
+                            "hasMore": {
+                              "type": "boolean"
+                            },
+                            "nextCursor": {
+                              "anyOf": [
+                                {
+                                  "type": "string"
+                                },
+                                {
+                                  "type": "null"
+                                }
+                              ]
+                            }
+                          },
+                          "required": [
+                            "limit",
+                            "hasMore",
+                            "nextCursor"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "data",
+                        "pagination"
+                      ]
                     }
                   },
                   "required": [
@@ -1238885,7 +1239662,8 @@
           "Organization"
         ],
         "x-exposure": "universal",
-        "description": "Exposure: universal — any authenticated member, subject from the token"
+        "description": "Exposure: universal — any authenticated member, subject from the token",
+        "x-bodyless": true
       }
     },
     "/organization/invitations/accept": {
@@ -1289944,6 +1290722,17 @@
               "minLength": 1,
               "maxLength": 512
             }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100
+            }
           }
         ],
         "responses": {
@@ -1290255,7 +1291044,8 @@
         ],
         "x-exposure": "in-service",
         "x-authorized-in-service": "PortalJwtAuthGuard, then KbPortalDocsService asserts an active unexpired guest grant per page",
-        "description": "Exposure: authorized in service — PortalJwtAuthGuard, then KbPortalDocsService asserts an active unexpired guest grant per page"
+        "description": "Exposure: authorized in service — PortalJwtAuthGuard, then KbPortalDocsService asserts an active unexpired guest grant per page",
+        "x-bodyless": true
       }
     },
     "/portal/v1/docs/pages/{pageId}/download-url": {
@@ -1290342,7 +1291132,8 @@
         ],
         "x-exposure": "in-service",
         "x-authorized-in-service": "PortalJwtAuthGuard, then KbPortalDocsService asserts an active unexpired guest grant per page",
-        "description": "Exposure: authorized in service — PortalJwtAuthGuard, then KbPortalDocsService asserts an active unexpired guest grant per page"
+        "description": "Exposure: authorized in service — PortalJwtAuthGuard, then KbPortalDocsService asserts an active unexpired guest grant per page",
+        "x-bodyless": true
       }
     },
     "/portal/v1/projects": {
@@ -1293984,8 +1294775,9 @@
           },
           {
             "name": "idempotency-key",
-            "required": true,
+            "required": false,
             "in": "header",
+            "description": "When present, fences the submission against replay; omitting it submits unfenced.",
             "schema": {
               "type": "string"
             }
@@ -1301835,7 +1302627,8 @@
           "KbPublicLinks"
         ],
         "x-exposure": "public",
-        "description": "Exposure: public — unauthenticated"
+        "description": "Exposure: public — unauthenticated",
+        "x-bodyless": true
       }
     },
     "/public/kb/links/{shareToken}/download-url": {
@@ -1301919,7 +1302712,8 @@
           "KbPublicLinks"
         ],
         "x-exposure": "public",
-        "description": "Exposure: public — unauthenticated"
+        "description": "Exposure: public — unauthenticated",
+        "x-bodyless": true
       }
     },
     "/public/kb/stream-ask": {
@@ -1390574,7 +1391368,11 @@
     "/timesheets/team/remind": {
       "post": {
         "operationId": "TeamController_remind",
-        "parameters": [],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/IdempotencyKeyHeader"
+          }
+        ],
         "responses": {
           "200": {
             "description": "OK",
@@ -1390669,7 +1391467,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "timesheets.team.remind",
+        "x-idempotent": true
       }
     },
     "/timesheets/team/week-summary": {

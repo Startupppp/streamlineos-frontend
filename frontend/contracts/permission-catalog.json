@@ -4236,32 +4236,32 @@
     "sign:admin:manage": {
       "resource": "sign:admin",
       "action": "manage",
-      "description": "Manage SignOS admin settings, branding, and watermark policy"
+      "description": "Manage Sign OS admin settings, branding, and watermark policy"
     },
     "sign:audit:view": {
       "resource": "sign:audit",
       "action": "view",
-      "description": "View the SignOS audit trail"
+      "description": "View the Sign OS audit trail"
     },
     "sign:bulk_send:run": {
       "resource": "sign:bulk_send",
       "action": "run",
-      "description": "Run SignOS bulk send jobs"
+      "description": "Run Sign OS bulk send jobs"
     },
     "sign:certificate:download": {
       "resource": "sign:certificate",
       "action": "download",
-      "description": "Download SignOS certificates and final signed PDFs"
+      "description": "Download Sign OS certificates and final signed PDFs"
     },
     "sign:documents:upload": {
       "resource": "sign:documents",
       "action": "upload",
-      "description": "Upload documents to a SignOS envelope"
+      "description": "Upload documents to a Sign OS envelope"
     },
     "sign:documents:view": {
       "resource": "sign:documents",
       "action": "view",
-      "description": "View SignOS documents"
+      "description": "View Sign OS documents"
     },
     "sign:envelope:correct": {
       "resource": "sign:envelope",
@@ -4271,28 +4271,28 @@
     "sign:envelope:create": {
       "resource": "sign:envelope",
       "action": "create",
-      "description": "Create and edit SignOS envelopes"
+      "description": "Create and edit Sign OS envelopes"
     },
     "sign:envelope:send": {
       "resource": "sign:envelope",
       "action": "send",
-      "description": "Send and resend SignOS envelopes"
+      "description": "Send and resend Sign OS envelopes"
     },
     "sign:envelope:view": {
       "resource": "sign:envelope",
       "action": "view",
-      "description": "View SignOS envelopes you sent or were assigned",
+      "description": "View Sign OS envelopes you sent or were assigned",
       "scopable": true
     },
     "sign:envelope:void": {
       "resource": "sign:envelope",
       "action": "void",
-      "description": "Void a sent SignOS envelope"
+      "description": "Void a sent Sign OS envelope"
     },
     "sign:template:manage": {
       "resource": "sign:template",
       "action": "manage",
-      "description": "Create, publish, and manage SignOS templates"
+      "description": "Create, publish, and manage Sign OS templates"
     },
     "storage:files:manage": {
       "resource": "storage:files",

@@ -114,9 +114,9 @@ export function ClockInWidget() {
   if (isLoading) return <ClockInWidgetSkeleton />;
 
   return (
-    <div className="flex w-full min-w-0 items-center justify-between gap-3 sm:w-auto sm:justify-end">
-      <div className="min-w-0 flex-1 sm:flex-none sm:text-right">
-        <div className="flex min-w-0 items-baseline gap-1.5 sm:justify-end">
+    <div className="flex w-full min-w-0 items-center justify-end gap-2.5 sm:w-auto">
+      <div className="min-w-0 text-right">
+        <div className="flex min-w-0 items-baseline justify-end gap-1.5">
           <span className="shrink-0 text-sm font-semibold tabular-nums tracking-tight text-foreground">
             {clockParts?.time ?? "—"}
           </span>
@@ -128,7 +128,7 @@ export function ClockInWidget() {
         </div>
 
         {showSessionMeta || showDailyStats ? (
-          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-xs sm:justify-end">
+          <div className="mt-0.5 flex min-w-0 flex-wrap items-center justify-end gap-x-2 gap-y-0.5 text-xs">
             {showSessionMeta && sessionTime ? (
               <span className="inline-flex items-center gap-1 font-mono font-medium text-primary tabular-nums">
                 <Clock className="size-3 shrink-0" aria-hidden />
@@ -161,7 +161,7 @@ export function ClockInWidget() {
         onClick={handleToggle}
         aria-label={canClockOut ? "Web clock out" : "Web clock in"}
         title={!canClockOut ? LOCATION_HINT : undefined}
-        className="h-9 shrink-0 rounded-md px-3.5 text-sm font-medium shadow-none"
+        className="h-8 shrink-0 rounded-md px-3 text-xs font-semibold sm:h-9 sm:px-3.5 sm:text-sm sm:font-medium shadow-none"
       >
         {isPending ? (
           <Loader2 className="size-4 animate-spin" />
