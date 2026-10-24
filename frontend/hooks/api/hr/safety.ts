@@ -41,10 +41,6 @@ export type IncidentStatus = "open" | "investigating" | "mitigated" | "closed";
 
 export type SafetyIncident = z.infer<typeof safetyIncidentContract>;
 
-interface CursorPage<T> {
-  data: T[];
-  pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
-}
 
 export type ListIncidentsParams = {
   cursor?: string;

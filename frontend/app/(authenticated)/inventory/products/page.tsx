@@ -38,7 +38,6 @@ import { useCan } from "@/hooks/api/access";
 import { MobileFilterDrawer } from "@/features/payroll/shared/mobile-filter-drawer";
 import {
   formatPrice,
-  StatusBadge,
   TrackingBadge,
 } from "@/features/inventory/components/product-row-actions";
 import type { InventoryProduct } from "@/types/inventory";

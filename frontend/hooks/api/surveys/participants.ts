@@ -1,6 +1,6 @@
 "use client";
 
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import type { OffsetPage } from "@/hooks/api/offset-page-schema";
@@ -67,8 +67,8 @@ export interface ParticipantImportRow {
 export function useParticipants(surveyId: number, params?: ListParticipantsParams) {
   return useGatedQuery("surveys:participants:view", {
     queryKey: knowledgeAndSurveysQueryKeys.surveys.participants(surveyId, params),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<SurveyParticipant>>(`/surveys/${surveyId}/participants`, params, signal, surveyParticipantListC)).items,
+    queryFn: ({ signal }) =>
+      apiClient.get<OffsetPage<SurveyParticipant>>(`/surveys/${surveyId}/participants`, params, signal, surveyParticipantListC),
     staleTime: 15_000,
   });
 }

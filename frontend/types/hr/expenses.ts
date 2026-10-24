@@ -27,39 +27,12 @@ export interface ExpenseFilters {
   includeCategories?: boolean;
 }
 
-export interface ExpenseStats {
-  totalAmount: number;
-  pendingAmount: number;
-  approvedAmount: number;
-  rejectedAmount: number;
-  paidAmount: number;
-  totalCount: number;
-  pendingCount: number;
-  approvedCount: number;
-  rejectedCount: number;
-  paidCount: number;
-  avgExpenseAmount: number;
-}
 
-export interface ExpenseCategoryRecord {
-  id: number;
-  name: string;
-  description: string | null;
-  budgetLimit: string | null;
-  budgetPeriod: string | null;
-  isActive: boolean | null;
-}
 
 export type ExpenseWithRelations = z.infer<typeof expensePageDataRowContract>;
 
 export type ExpensePageData = z.infer<typeof expensePageDataContract>;
 
-export type ExpenseStatus =
-  | "PENDING"
-  | "APPROVED"
-  | "REJECTED"
-  | "PAID"
-  | "WITHDRAWN";
 
 export interface CreateExpenseInput {
   category: string;

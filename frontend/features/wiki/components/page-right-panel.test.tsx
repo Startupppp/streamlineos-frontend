@@ -224,46 +224,45 @@ describe("PageRightPanel — backlinks section", () => {
   });
 });
 
-describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112)", () => {
-  it("renders at most 20 backlink buttons when the endpoint returns more than 20 so the panel stays usable at high link counts", async () => {
+describe("PageRightPanel — backlinks with infinite scroll (FE-112, FE-125)", () => {
+  it("renders all backlink buttons returned by the first page without an arbitrary cap", async () => {
     const manyBacklinks = Array.from({ length: 25 }, (_, i) => ({
       id: i + 1,
       title: `Page ${i + 1}`,
       icon: null,
     }));
-    mockUseKbPageBacklinks.mockReturnValue({ data: manyBacklinks });
+    mockUseKbPageBacklinks.mockReturnValue({ data: manyBacklinks, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn() });
     const user = userEvent.setup();
     renderPanel();
     await user.click(openDetailsTrigger());
     const dialog = screen.getByRole("dialog");
-    const backlinkButtons = within(dialog).getAllByRole("button");
-    const navButtons = backlinkButtons.filter(
-      (btn) => btn.hasAttribute("data-page-id"),
-    );
-    expect(navButtons).toHaveLength(20);
+    const navButtons = within(dialog)
+      .getAllByRole("button")
+      .filter((btn) => btn.hasAttribute("data-page-id"));
+    expect(navButtons).toHaveLength(25);
   });
 
-  it("shows the overflow count when more than 20 backlinks exist so the user knows links were truncated", async () => {
-    const manyBacklinks = Array.from({ length: 25 }, (_, i) => ({
+  it("shows a partial count indicator (N+) in the heading when more pages exist", async () => {
+    const firstPage = Array.from({ length: 20 }, (_, i) => ({
       id: i + 1,
       title: `Page ${i + 1}`,
       icon: null,
     }));
-    mockUseKbPageBacklinks.mockReturnValue({ data: manyBacklinks });
+    mockUseKbPageBacklinks.mockReturnValue({ data: firstPage, hasNextPage: true, isFetchingNextPage: false, fetchNextPage: jest.fn() });
     const user = userEvent.setup();
     renderPanel();
     await user.click(openDetailsTrigger());
     const dialog = screen.getByRole("dialog");
-    expect(within(dialog).getByText("+5 more")).toBeInTheDocument();
+    expect(within(dialog).getByText("20+")).toBeInTheDocument();
   });
 
-  it("renders all backlink buttons when the count is at or below the limit — positive control confirming truncation is off at exactly 20", async () => {
-    const exactLimit = Array.from({ length: 20 }, (_, i) => ({
+  it("shows an exact count in the heading when all pages are loaded", async () => {
+    const exactItems = Array.from({ length: 20 }, (_, i) => ({
       id: i + 1,
       title: `Page ${i + 1}`,
       icon: null,
     }));
-    mockUseKbPageBacklinks.mockReturnValue({ data: exactLimit });
+    mockUseKbPageBacklinks.mockReturnValue({ data: exactItems, hasNextPage: false, isFetchingNextPage: false, fetchNextPage: jest.fn() });
     const user = userEvent.setup();
     renderPanel();
     await user.click(openDetailsTrigger());
@@ -273,6 +272,7 @@ describe("PageRightPanel — backlinks bounded at BACKLINK_DISPLAY_LIMIT (FE-112
       .filter((btn) => btn.hasAttribute("data-page-id"));
     expect(navButtons).toHaveLength(20);
     expect(within(dialog).queryByText(/\+\d+ more/)).not.toBeInTheDocument();
+    expect(within(dialog).getByText("20")).toBeInTheDocument();
   });
 });
 

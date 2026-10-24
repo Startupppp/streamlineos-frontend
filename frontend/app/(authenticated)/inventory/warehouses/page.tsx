@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
-import { staggerContainer, useMotionVariants } from "@/lib/motion-variants";
+import { useMotionVariants } from "@/lib/motion-variants";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useWarehouses,

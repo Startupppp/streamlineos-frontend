@@ -3,7 +3,6 @@
 import { type ChangeEvent } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,9 +33,6 @@ import {
   ProductReorderFields,
 } from "@/features/inventory/components/product-edit-fields";
 import {
-  productNameSchema,
-  productSkuSchema,
-  productDescriptionSchema,
   NAME_MAX,
   SKU_MAX,
   DESCRIPTION_MAX,

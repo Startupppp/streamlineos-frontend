@@ -11,14 +11,6 @@ export interface OrgChartNode {
   isTopLevel?: boolean;
 }
 
-export interface OrgChartCursorPage {
-  data: OrgChartNode[];
-  pageInfo: {
-    limit: number;
-    hasMore: boolean;
-    nextCursor: string | null;
-  };
-}
 
 export interface OrgChartQuery {
   parentId?: string;

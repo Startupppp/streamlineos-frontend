@@ -54,7 +54,7 @@ export function useCrmOrganizationsForPicker(search?: string) {
     queryKey: queryKeys.crmOrganizations.list({ picker: true, search: search ?? "" }),
     queryFn: ({ signal }) =>
       apiClient.get<PaginatedCrmOrganizations>("/crm/organizations", {
-        pageSize: 100,
+        pageSize: 25,
         search: search ?? undefined,
       }, signal, crmOrgsListLazy),
     staleTime: 2 * 60_000,

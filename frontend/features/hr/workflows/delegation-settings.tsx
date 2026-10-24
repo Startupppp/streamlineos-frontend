@@ -11,7 +11,6 @@ import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { UserCombobox } from "@/components/ui/user-combobox";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";

@@ -7,9 +7,7 @@ import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
-  TemplateRow,
   TemplatePreviewResult,
-  PaginatedResult,
 } from "@/types/payroll/setup";
 import { templatePreviewContract } from "@/hooks/api/payroll/setup-preview-schema";
 

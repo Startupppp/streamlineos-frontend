@@ -4,7 +4,6 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useGatedQuery } from "@/hooks/api/gated-query";
-import { knowledgeAndSurveysQueryKeys } from "@/lib/query-keys/knowledge-and-surveys";
 import { readErrorExceptNotFoundReachesBoundary } from "@/lib/query-error-policy";
 import { kbLinkedDocumentsQueryOptions, kbLinkedDocumentQueryOptions } from "./kb-read-options";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";

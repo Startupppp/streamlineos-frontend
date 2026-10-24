@@ -31,7 +31,6 @@ import type {
   ComponentType,
   ComponentPayCategory,
   CalcMethod,
-  PaginatedResult,
 } from "@/types/payroll/setup";
 
 type ComponentListParams = {

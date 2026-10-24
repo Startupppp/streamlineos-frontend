@@ -54,14 +54,6 @@ const subscribe = (listener: () => void): (() => void) => {
   };
 };
 
-function useWindowSize(): WindowSize {
-  return useSyncExternalStore(
-    subscribe,
-    () => snapshot,
-    () => SERVER_SNAPSHOT,
-  );
-}
-
 export function useWindowWidth(): number {
   return useSyncExternalStore(
     subscribe,
@@ -70,10 +62,3 @@ export function useWindowWidth(): number {
   );
 }
 
-function useWindowHeight(): number {
-  return useSyncExternalStore(
-    subscribe,
-    () => snapshot.height,
-    () => SERVER_SNAPSHOT.height,
-  );
-}

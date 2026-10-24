@@ -7,8 +7,6 @@ import { useScroll } from "@/features/landing/relay/hooks/smooth-scroll/use-scro
 import { scrollTo } from "@/features/landing/relay/utils/scroll-to";
 import { useShallow } from "zustand/react/shallow";
 
-const scrollSpeed = { current: 1 };
-
 export function ScrollLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="scroll-layout">

@@ -21,20 +21,6 @@ const feedbackCycleContract = z.object({
 export const listCyclesContract = z.array(feedbackCycleContract);
 export const createCycleContract = z.array(feedbackCycleContract);
 
-const feedbackCycleRequestContract = z.object({
-  id: z.number().int(),
-  orgId: z.string().nullable(),
-  cycleId: z.number().int(),
-  subjectId: z.string(),
-  subjectMembershipId: z.number().int().nullable(),
-  reviewerId: z.string(),
-  reviewerMembershipId: z.number().int().nullable(),
-  relationship: z.string(),
-  status: z.string(),
-  submittedAt: z.string().nullable(),
-  createdAt: z.string(),
-});
-
 export const updateCycleStatusContract = z.array(feedbackCycleContract);
 
 export const getMyPendingReviewsContract = z.array(z.object({

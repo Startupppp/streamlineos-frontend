@@ -352,12 +352,9 @@ function AiCreditsPageContent() {
                       creditsUsedLabel={
                         usageLoading
                           ? "—"
-                          : formatCredits(
-                              usageByFeature.reduce(
-                                (s, r) => s + Math.round(r.credits * 100) / 100,
-                                0,
-                              ),
-                            )
+                          : usageTotals
+                            ? formatCredits(usageTotals.credits)
+                            : "—"
                       }
                       onUsageDaysChange={handleUsageDaysChange}
                     />

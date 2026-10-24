@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { toast } from "sonner";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { EntityFormDialog } from "@/components/shared/entity-form-dialog";
@@ -35,7 +36,9 @@ interface RunDialogProps {
 
 export function CalculateCommissionDialog({ onOpenChange }: RunDialogProps) {
   const calculate = useCalculateCommission();
-  const deals = useDeals({ limit: 100 });
+  const [dealSearch, setDealSearch] = useState("");
+  const debouncedDealSearch = useDebouncedValue(dealSearch, 300);
+  const deals = useDeals({ limit: 25, search: debouncedDealSearch || undefined });
   const options = useMemo<ComboboxOption[]>(
     () => (deals.data ?? []).map((deal) => ({ value: String(deal.id), label: deal.name, sublabel: deal.stage })),
     [deals.data],
@@ -73,6 +76,7 @@ export function CalculateCommissionDialog({ onOpenChange }: RunDialogProps) {
                   options={options}
                   value={field.value}
                   onChange={field.onChange}
+                  onSearchChange={setDealSearch}
                   placeholder="Choose a deal…"
                   searchPlaceholder="Search deals…"
                   emptyText="No deals found."

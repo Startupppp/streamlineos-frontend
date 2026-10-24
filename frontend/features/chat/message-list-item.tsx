@@ -31,6 +31,7 @@ interface MessageItemProps {
     userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
+  resolveReactionNames?: (userIds: string[]) => string;
 }
 
 export const MessageItem = memo(function MessageItem({
@@ -57,6 +58,7 @@ export const MessageItem = memo(function MessageItem({
   onUnsaveMsg,
   onForward,
   resolveUserName,
+  resolveReactionNames,
 }: MessageItemProps) {
   const handleStartEdit = useCallback(
     () => onStartEdit(msg),
@@ -109,6 +111,7 @@ export const MessageItem = memo(function MessageItem({
       onUnsaveMsg={handleUnsaveMsg}
       onForward={handleForward}
       resolveUserName={resolveUserName}
+      resolveReactionNames={resolveReactionNames}
     />
   );
 });

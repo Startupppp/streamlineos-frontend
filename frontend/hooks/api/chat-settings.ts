@@ -15,6 +15,7 @@ import {
 } from "@/hooks/api/chat-channel-cache";
 import { markStale } from "@/hooks/api/chat-channel-rows";
 import { applyOptimisticUnread, patchOwnMember } from "@/hooks/api/chat-read-cache";
+import { suppressAutoMarkRead } from "@/hooks/api/chat-mark-read-suppress";
 
 const chatOkContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.chatOkContract),
@@ -116,6 +117,7 @@ export function useMarkChannelUnread() {
       ),
     onMutate: async (channelId) => {
       await cancelChatChannelQueries(queryClient, channelId);
+      suppressAutoMarkRead(channelId);
       return { rollback: applyOptimisticUnread(queryClient, channelId) };
     },
     onError: (_error, _channelId, context) => context?.rollback(),

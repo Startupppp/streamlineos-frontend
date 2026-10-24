@@ -25,7 +25,7 @@ import { useIsChatPanelNarrow } from "./use-chat-mobile";
 import { useChatTypingText } from "./use-chat-typing-text";
 import { useMessageComposer } from "./use-message-composer";
 import { chatDraftKey } from "./composer-draft";
-import { resolveDirectPartner } from "./channel-member-lookup";
+import { findOwnMember, resolveDirectPartner } from "./channel-member-lookup";
 import { useChatReadMarker } from "./use-chat-read-marker";
 import { useChatOfflineQueue } from "./use-chat-offline-queue";
 import { useHuddleAutoStart } from "./use-huddle-auto-start";
@@ -142,6 +142,26 @@ export function useMessagePanelData({
       resolveChatUserName(userId, embedded, chatUserMap),
     [chatUserMap],
   );
+  const resolveReactionNames = useCallback(
+    (userIds: string[]) =>
+      userIds
+        .map((userId) =>
+          userId === currentUserId
+            ? "You"
+            : resolveUserName(
+                userId,
+                channel?.members.find(
+                  (member) => member.userId === userId || member.user?.id === userId,
+                )?.user ?? null,
+              ),
+        )
+        .join(", "),
+    [channel?.members, currentUserId, resolveUserName],
+  );
+  const viewerIsMember = useMemo(
+    () => Boolean(findOwnMember(channel?.members, currentUserId)),
+    [channel?.members, currentUserId],
+  );
   const scrollToBottomRef = useRef<(behavior?: ScrollBehavior) => void>(() => undefined);
   const { messageInput, setMessageInput, replyTo, setReplyTo, editingMessage, setEditingMessage, editInput, setEditInput, pendingAttachments, setPendingAttachments, uploading, showEmojiPicker, setShowEmojiPicker, showMentions, setShowMentions, mentionIndex, filteredMentions, mentionPrompt, dismissMentionPrompt, recordPicker, selectRecord, linkedRecords, removeLinkedRecord, inputRef, fileInputRef, emojiRef, handleFileSelect, handlePastedFiles, insertEmoji, insertMention, handleSend, handleEdit, handleInputChange, handleKeyDown, flushMessageQueue } = useMessageComposer({ channelId, draftKey, isOnline, sendMessage, editMessage, markRead, scrollToBottom: (behavior) => scrollToBottomRef.current(behavior), publishTyping, channel, currentUserId });
   useEffect(() => {
@@ -187,7 +207,7 @@ export function useMessagePanelData({
     channelId,
     newestMessageId: mainMessages.at(-1)?.id,
     markRead,
-    enabled: history.isSuccess,
+    enabled: history.isSuccess && viewerIsMember,
   });
 
   scrollToBottomRef.current = scrollToBottom;
@@ -231,9 +251,9 @@ export function useMessagePanelData({
     return map;
   }, [messages]);
 
-  const handleHuddle = useCallback(() => {
+  const handleHuddle = useCallback((connectionId?: number) => {
     if (activeHuddle) { joinHuddle.mutate({ huddleId: activeHuddle.id, channelId }); return; }
-    startHuddle.mutate(channelId);
+    startHuddle.mutate({ channelId, connectionId });
   }, [activeHuddle, channelId, joinHuddle, startHuddle]);
 
   const handleStartEdit = useCallback((msg: Message) => {
@@ -263,7 +283,8 @@ export function useMessagePanelData({
   return {
     header: { onBack, displayName, channel, otherMember, isOtherOnline, memberCount, activeHuddle, isInHuddle, onHuddle: handleHuddle, huddleStartPending: startHuddle.isPending, huddleJoinPending: joinHuddle.isPending, canUseAi, summarizeAction, onToggleSaved: handleToggleSaved, onToggleInfo, showInfoPanel },
     workspace: {
-      messageList: { ...timelineList, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, joinRequired, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, scrollToMessageId },
+      messageList: { ...timelineList, isError: messagesError, errorMessage: messagesError ? getErrorMessage(messagesErrorValue) : undefined, onRetry: handleRetryMessages, joinRequired, currentUserId, channelId, displayName, channelType: channel?.type, editingMessage, editInput, pinnedMessageIds, savedMessageIds, replyCountMap, onEditInputChange: setEditInput, onStartEdit: handleStartEdit, onCancelEdit: handleCancelEdit, onSaveEdit: handleEdit, onReply: handleReply, onOpenThread: handleOpenThread, onDelete: handleDelete, onReact: handleReact, onPin: handlePin, onUnpin: handleUnpin, onSave: handleSave, onUnsaveMsg: handleUnsaveMsg, onForward: handleForward, resolveUserName, resolveReactionNames, scrollToMessageId },
+      viewerIsMember,
       messageInput: { channelId, displayName, channelType: channel?.type, messageInput, setMessageInput, inputRef, fileInputRef, replyTo, setReplyTo, pendingAttachments, setPendingAttachments, uploading, onFileSelect: handleFileSelect, showEmojiPicker, setShowEmojiPicker, emojiRef, insertEmoji, showMentions, setShowMentions, mentionIndex, filteredMentions, insertMention, mentionPrompt, onDismissMentionPrompt: dismissMentionPrompt, recordPicker, onSelectRecord: selectRecord, linkedRecords, onRemoveLinkedRecord: removeLinkedRecord, typingText, onSend: handleSend, onKeyDown: handleKeyDown, onInputChange: handleInputChange, onFilesSelected: handlePastedFiles },
       huddle: activeHuddle && isInHuddle ? { huddle: activeHuddle, channelId, currentUserId } : undefined,
     },

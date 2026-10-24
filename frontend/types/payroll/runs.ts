@@ -1,6 +1,5 @@
 import type { z } from "zod";
 import type { runVarianceResponseContract } from "@/hooks/api/payroll/run-employees-schema";
-import type { profileDetailResponseContract } from "@/hooks/api/payroll/employees-schema";
 export type PayrollRunStatus =
   | "PREPARING"
   | "DRAFT"
@@ -64,16 +63,6 @@ export interface CalcExplainStep {
   sources?: PayrollSourceRef[];
 }
 
-export interface CalculationSnapshotLine {
-  code: string;
-  name: string;
-  category: SalaryComponentType;
-  amount: string;
-  calcMethod: string;
-  taxable: boolean;
-  sortOrder: number;
-  explain: CalcExplainStep;
-}
 
 export interface CalculationSnapshot {
   policyVersionId: number | null;
@@ -142,40 +131,8 @@ export interface PayrollRunListItem {
   createdAt: string;
 }
 
-export interface RunEmployee {
-  id: number;
-  userId: string;
-  workerType: PayrollWorkerType;
-  currency: string;
-  gross: string;
-  totalDeductions: string;
-  net: string;
-  status: string;
-  holdReason: string | null;
-  userName: string;
-  userEmail: string;
-}
 
-export interface RunEmployeeDetail extends RunEmployee {
-  calculationSnapshot?: CalculationSnapshot;
-}
 
-export interface RunInput {
-  id: number;
-  runId: number;
-  userId: string;
-  userName?: string;
-  source: PayrollInputSource;
-  scheduledDays: string;
-  paidDays: string;
-  lopDays: string;
-  halfDays: string;
-  overtimeHours: string;
-  billableHours?: string;
-  isOverride: boolean;
-  overrideReason: string | null;
-  updatedAt: string;
-}
 
 export interface EmployeeSalaryProfile {
   id: number;

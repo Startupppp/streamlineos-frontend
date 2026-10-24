@@ -17,11 +17,6 @@ export interface KbAttachment {
   createdAt: string | null;
 }
 
-interface StorageUploadResult {
-  key: string;
-  size: number;
-  mimeType: string;
-}
 
 export interface KbAttachmentDownloadResult {
   fileName: string;

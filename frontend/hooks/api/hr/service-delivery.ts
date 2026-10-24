@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { useCan } from "@/hooks/api/access";
-import { serviceDeliveryKeys, serviceDeliveryOpsInboxQueryOptions, serviceDeliveryMyItemsQueryOptions } from "@/hooks/api/hr/service-delivery-read-options";
+import { serviceDeliveryOpsInboxQueryOptions, serviceDeliveryMyItemsQueryOptions } from "@/hooks/api/hr/service-delivery-read-options";
 
 const opsInboxContract = lazyContract(() =>
   import("@/hooks/api/hr/service-delivery-schema").then((m) => m.opsInboxContract),

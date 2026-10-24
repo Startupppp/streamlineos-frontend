@@ -10,11 +10,7 @@ import type {
   CreateExpenseInput,
   UpdateExpenseStatusInput,
 } from "@/types/hr";
-import type {
-  ExpenseWithRelations,
-  ExpenseCategoryRecord,
-  ExpenseStats,
-} from "@/types/hr/expenses";
+
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { expensePageDataQueryOptions } from "./expenses-read-options";
 

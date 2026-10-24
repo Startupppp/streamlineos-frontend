@@ -131,6 +131,7 @@ export function DashboardDeferredBody({
 
   const accountingEnabled = useModuleEnabled("accounting");
   const canViewExpenses = useCan("hr:expenses:view");
+  const canViewCalendar = useCan("calendar:read");
   const expensesEnabled = accountingEnabled && canViewExpenses;
 
   const [deferredVisible, setDeferredVisible] = useState(false);
@@ -263,6 +264,8 @@ export function DashboardDeferredBody({
         <HomeWidgetGrid
           projectsEnabled={projectsEnabled}
           hrEnabled={hrEnabled}
+          canViewLeaves={canViewLeaves}
+          canViewCalendar={canViewCalendar}
           canViewExecutive={canViewExecutive}
           canSelfAttendance={canSelfAttendance}
           crmEnabled={crmEnabled}

@@ -22,9 +22,6 @@ const profileHistoryC = lazyContract(() =>
 const profileCreateC = lazyContract(() =>
   import("@/hooks/api/payroll/employees-schema").then((m) => m.profileCreateResponseContract),
 );
-const idResponseC = lazyContract(() =>
-  import("@/hooks/api/payroll/employees-schema").then((m) => m.idResponseContract),
-);
 const okResponseC = lazyContract(() =>
   import("@/hooks/api/payroll/employees-schema").then((m) => m.okResponseContract),
 );

@@ -6,7 +6,7 @@ import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import type { OrgChartCursorPage, OrgChartQuery } from "./types";
+import type { OrgChartQuery } from "./types";
 
 const orgChartPageContract = lazyContract(() =>
   import("@/features/hr/org-chart/org-chart-schema").then((m) => m.orgChartPageContract),

@@ -10,9 +10,9 @@ import { formatShortDate } from "@/lib/date-utils";
 import { useAssessmentAttempts, useSurveyCertificates } from "@/hooks/api/surveys/assessment";
 
 export function AssessmentResultsCard({ surveyId }: { surveyId: number }) {
-  const attemptsQuery = useAssessmentAttempts(surveyId, { pageSize: 100 });
+  const attemptsQuery = useAssessmentAttempts(surveyId);
   const certificatesQuery = useSurveyCertificates(surveyId);
-  const attempts = attemptsQuery.data;
+  const attempts = attemptsQuery.data?.items;
   const certificates = certificatesQuery.data;
 
   function handleRetry() {

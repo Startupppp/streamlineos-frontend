@@ -158,15 +158,11 @@ export type StatutoryPackConfig = {
   complianceChecklist: ComplianceChecklistItem[];
 };
 
-export type PolicyCurrentResult = {
-  policy: PolicyRow | null;
   activeVersion: VersionRow | null;
   taxRegimeApplicable: boolean;
   statutoryPack: StatutoryPackConfig | null;
 };
 
-export type ToggleImpactResult = {
-  toggle: ToggleKey;
   affectedEmployeeCount: number;
   affectedStatutoryCodes: string[];
   affectedEmployeeNames: string[];
@@ -180,8 +176,6 @@ export type ActivateChecklistItem = {
   detail: string | null;
 };
 
-export type ActivateResult = {
-  policyVersion: VersionRow;
   componentCount: number;
   checklist: ActivateChecklistItem[];
 };
@@ -210,7 +204,5 @@ export type SalaryComponent = {
   effectiveTo: string | null;
 };
 
-export type PaginatedResult<T> = {
-  items: T[];
   total: number;
 };

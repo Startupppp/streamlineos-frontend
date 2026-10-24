@@ -36,6 +36,10 @@ export function huddleConnectCopy(
   return { message: `Reconnect ${name} to start a meeting`, actionLabel: `Reconnect ${name}` };
 }
 
+export function providerDisplayName(provider: "google_meet" | "microsoft_teams"): string {
+  return PROVIDER_ACCOUNT_NAME[provider];
+}
+
 export function huddleEndedCopy(providerSyncStatus: "confirmed" | "failed"): string {
   if (providerSyncStatus === "confirmed") return "Huddle ended";
   return "Huddle ended in StreamlineOS — the external meeting may still be open";

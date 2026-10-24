@@ -27,6 +27,7 @@ function access(over: Partial<DashboardAccess> = {}): DashboardAccess {
     canViewTickets: true,
     canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: false,
+    canViewCalendar: true,
     ...over,
   };
 }

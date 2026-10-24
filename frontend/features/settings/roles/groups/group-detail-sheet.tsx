@@ -120,7 +120,7 @@ function RoleSearch({
   memberCount: number;
 }) {
   const [search, setSearch] = useState("");
-  const { data: roles } = useRoles();
+  const { data: roles, isLoading, isError, refetch, isFetching } = useRoles();
   const assignRole = useAssignGroupRole(groupId);
 
   const filtered = (roles ?? []).filter(
@@ -139,6 +139,32 @@ function RoleSearch({
     [assignRole, memberCount],
   );
 
+  if (isLoading || (isFetching && !roles)) {
+    return (
+      <p className="rounded-lg border border-border px-3 py-2 text-sm text-muted-foreground">
+        Loading roles…
+      </p>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
+        <p className="text-sm text-destructive">Couldn&apos;t load roles</p>
+        <Button
+          type="button"
+          size="sm"
+          variant="ghost"
+          onClick={() => {
+            void refetch();
+          }}
+        >
+          Retry
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <Command shouldFilter={false} className="rounded-lg border border-border">
       <CommandInput
@@ -147,7 +173,11 @@ function RoleSearch({
         onValueChange={setSearch}
       />
       <CommandList className="max-h-40">
-        <CommandEmpty>No roles found</CommandEmpty>
+        <CommandEmpty>
+          {(roles?.length ?? 0) === 0
+            ? "No roles in this organisation yet"
+            : "No matching roles"}
+        </CommandEmpty>
         <CommandGroup>
           {filtered.map((r) => (
             <CommandItem

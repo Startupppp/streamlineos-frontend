@@ -1,4 +1,5 @@
 import { act, renderHook } from "@testing-library/react";
+import { suppressAutoMarkRead } from "@/hooks/api/chat-mark-read-suppress";
 import { useChatReadMarker } from "../use-chat-read-marker";
 
 const CHANNEL_ID = 7;
@@ -143,6 +144,20 @@ describe("a message arriving while the reader is looking at the channel", () => 
       jest.advanceTimersByTime(1_000);
     });
 
+    expect(markRead.mutate).not.toHaveBeenCalled();
+  });
+});
+
+describe("mark as unread suppresses auto mark-read on the open channel", () => {
+  it("does not mark read while suppression is active", () => {
+    const markRead = { mutate: jest.fn() };
+    const { rerender } = mount(markRead);
+    markRead.mutate.mockClear();
+    suppressAutoMarkRead(CHANNEL_ID, 5_000);
+    rerender({ channelId: CHANNEL_ID, newestMessageId: 101 });
+    act(() => {
+      jest.advanceTimersByTime(1_000);
+    });
     expect(markRead.mutate).not.toHaveBeenCalled();
   });
 });

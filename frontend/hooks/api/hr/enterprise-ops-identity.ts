@@ -39,10 +39,6 @@ export interface ProvisioningTemplate {
   updatedAt: string;
 }
 
-interface PaginatedResult<T> {
-  data: T[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
 
 const BASE = "/hr/enterprise/ops/identity";
 

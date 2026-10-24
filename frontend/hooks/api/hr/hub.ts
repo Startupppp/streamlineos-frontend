@@ -1,10 +1,9 @@
 "use client";
 
-import { queryOptions, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
-import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import type { HrHubSection, HrHubSnapshot } from "./hub-types";
 import { localDateKey, hrHubQueryOptions } from "@/hooks/api/hr/hub-read-options";

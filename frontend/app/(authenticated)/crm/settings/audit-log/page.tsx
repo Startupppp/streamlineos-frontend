@@ -23,14 +23,16 @@ import {
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { RecordList } from "@/components/renderer";
-import { DensityToggle, useDensity } from "@/components/renderer/density-toggle";
+import {
+  DensityToggle,
+  useDensity,
+} from "@/components/renderer/density-toggle";
 import { useTenantLayout } from "@/components/renderer/use-tenant-layout";
 import {
   AUDIT_ENTRY_LAYOUT,
   auditEntryFields,
 } from "@/lib/renderer/crm/settings/audit-entry-layout";
 import { useAuditLogs } from "@/hooks/api/audit-log";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { useCan } from "@/hooks/api/access";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
 

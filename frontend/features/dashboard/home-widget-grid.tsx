@@ -93,6 +93,8 @@ const TodayActivitiesWidget = dynamic(
 export interface HomeWidgetGridProps {
   projectsEnabled: boolean;
   hrEnabled: boolean;
+  canViewLeaves: boolean;
+  canViewCalendar: boolean;
   canViewExecutive: boolean;
   canSelfAttendance: boolean;
   crmEnabled: boolean;
@@ -106,6 +108,8 @@ export interface HomeWidgetGridProps {
 export function HomeWidgetGrid({
   projectsEnabled,
   hrEnabled,
+  canViewLeaves,
+  canViewCalendar,
   canViewExecutive,
   canSelfAttendance,
   crmEnabled,
@@ -124,10 +128,18 @@ export function HomeWidgetGrid({
     const candidates: Array<WidgetOption & { visible: boolean }> = [
       { id: "My tasks", label: "My tasks", visible: projectsEnabled },
       { id: "Timesheet", label: "Timesheet", visible: projectsEnabled },
-      { id: "Leave balance", label: "Leave balance", visible: hrEnabled },
+      {
+        id: "Leave balance",
+        label: "Leave balance",
+        visible: hrEnabled && canViewLeaves,
+      },
       { id: "Alerts", label: "Alerts", visible: true },
       { id: "Announcements", label: "Announcements", visible: true },
-      { id: "Upcoming events", label: "Upcoming events", visible: true },
+      {
+        id: "Upcoming events",
+        label: "Upcoming events",
+        visible: canViewCalendar,
+      },
       {
         id: "Business pulse",
         label: "Business pulse",
@@ -152,6 +164,8 @@ export function HomeWidgetGrid({
   }, [
     projectsEnabled,
     hrEnabled,
+    canViewLeaves,
+    canViewCalendar,
     canViewExecutive,
     canSelfAttendance,
     crmEnabled,

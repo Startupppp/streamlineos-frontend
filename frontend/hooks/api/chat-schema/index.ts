@@ -9,8 +9,12 @@ export type { ChatChannelMemberWire } from "./channel-schema";
 export {
   chatActiveHuddleContract,
   chatHuddleContract,
+  huddleAccountContract,
+  huddleAccountsListContract,
+  huddleAlternativeContract,
   leaveHuddleResponseContract,
 } from "./huddle-schema";
+export type { HuddleAccount, HuddleAccountsList, HuddleAlternative } from "./huddle-schema";
 export {
   chatMessageContextContract,
   chatMessageContract,

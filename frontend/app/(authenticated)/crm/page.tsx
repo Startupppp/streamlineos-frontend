@@ -58,7 +58,7 @@ export default function CrmHubPage() {
   const {
     data: leadStats,
     isLoading: statsLoading,
-    error: statsError,
+    error:,
     refetch: refetchStats,
   } = useLeadStats();
   const {

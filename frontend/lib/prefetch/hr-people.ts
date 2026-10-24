@@ -64,7 +64,6 @@ const DOC_TYPES_LIMIT = 20;
 const EXIT_LIST_LIMIT = 20;
 const PROBATION_LIMIT = 20;
 const DOC_REVIEW_LIMIT = 20;
-const DOC_TEMPLATES_LIMIT = 20;
 
 export async function prefetchHrEmployees() {
   try {

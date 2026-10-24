@@ -55,6 +55,7 @@ export function ChannelItemMenu({
     [channel.members, currentUserId],
   );
   const isAdmin = myMembership?.role === "ADMIN";
+  const isMultiMemberChannel = channel.type !== "DIRECT";
   const isFavorite = Boolean(myMembership?.isFavorite);
   const isMuted = Boolean(myMembership?.mutedUntil && new Date(myMembership.mutedUntil) > new Date());
   const notificationPreference = myMembership?.notificationPreference ?? "DEFAULT";
@@ -158,11 +159,15 @@ export function ChannelItemMenu({
               Mark as unread
             </DropdownMenuItem>
           )}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onSelect={handleOpenInvite}>
-            <UserPlus className="h-4 w-4" />
-            Invite People
-          </DropdownMenuItem>
+          {isAdmin && isMultiMemberChannel && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onSelect={handleOpenInvite}>
+                <UserPlus className="h-4 w-4" />
+                Invite People
+              </DropdownMenuItem>
+            </>
+          )}
           <DropdownMenuItem onSelect={handleToggleFavorite}>
             <Star className={isFavorite ? "h-4 w-4 fill-amber-400 text-status-warning-ink" : "h-4 w-4"} />
             {isFavorite ? "Remove from Starred" : "Add to Starred"}

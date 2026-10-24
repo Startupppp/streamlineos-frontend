@@ -23,6 +23,7 @@ import {
   findChannelRow,
   moveChannelRowToTop,
   patchLastMessageAfterDelete,
+  patchLastMessageIfLatest,
 } from "@/hooks/api/chat-channel-cache";
 import {
   applyOptimisticRead,
@@ -186,11 +187,21 @@ export function useEditMessage() {
       ),
     onMutate: async ({ channelId, messageId, content }) => {
       await cancelChatMessageQueries(queryClient, channelId);
+      const msgRollback = patchChatMessage(queryClient, channelId, messageId, {
+        content,
+        isEdited: true,
+      });
+      const previewRollback = patchLastMessageIfLatest(
+        queryClient,
+        channelId,
+        messageId,
+        content,
+      );
       return {
-        rollback: patchChatMessage(queryClient, channelId, messageId, {
-          content,
-          isEdited: true,
-        }),
+        rollback: () => {
+          msgRollback();
+          previewRollback();
+        },
       };
     },
     onError: (_error, _variables, context) => context?.rollback(),

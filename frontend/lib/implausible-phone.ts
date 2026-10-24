@@ -8,9 +8,6 @@ export function nationalDigitsOf(value: string): string {
   return digits;
 }
 
-const IMPLAUSIBLE_PHONE_MESSAGE =
-  "That looks like a placeholder rather than a real number. Enter a number someone answers, or leave it blank.";
-
 export function isImplausiblePhone(value: string | null | undefined): boolean {
   if (!value) return false;
   const digits = nationalDigitsOf(value);

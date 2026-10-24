@@ -6,7 +6,7 @@ import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { PayslipTemplate, PayslipLayout, PayslipTemplateConfig } from "@/types/payroll";
+import type { PayslipLayoutConfig } from "@/types/payroll";
 
 const payslipTemplateListC = lazyContract(() =>
   import("@/hooks/api/payroll/payslip-templates-schema").then((m) => m.payslipTemplateListContract),

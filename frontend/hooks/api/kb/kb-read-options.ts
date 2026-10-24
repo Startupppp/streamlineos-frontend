@@ -12,6 +12,8 @@ const nextIdCursorOf = (last: { nextCursor: number | null }) =>
 export const kbPagesRecentQueryOptions = {
   queryKey: kb.pagesRecent(),
   staleTime: 30_000,
+  initialPageParam: NO_CURSOR_YET,
+  getNextPageParam: nextCursorOf,
 } as const;
 
 export const kbPagesFavoritesQueryOptions = {

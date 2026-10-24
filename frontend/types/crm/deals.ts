@@ -112,6 +112,8 @@ export interface UpdateDealStageInput {
 export interface DealFilters {
   stage?: DealStage;
   assignedToId?: string;
+  partyId?: string;
+  search?: string;
   limit?: number;
   offset?: number;
 }

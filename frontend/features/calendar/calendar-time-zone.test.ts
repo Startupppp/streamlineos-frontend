@@ -109,6 +109,28 @@ describe("CAL-B-001 the calendar renders in the account zone whatever the device
     expect(label).not.toContain("UTC");
   });
 
+  it("treats Asia/Calcutta and Asia/Kolkata as the same reader zone", () => {
+    const label = formatEventTimeRange(
+      "2026-10-21T04:30:00.000Z",
+      "2026-10-21T05:30:00.000Z",
+      "Asia/Calcutta",
+      "Asia/Kolkata",
+    );
+    expect(label).toContain("Asia/Kolkata");
+    expect(label).not.toMatch(/\(/);
+  });
+
+  it("normalizes Etc/UTC secondary labels to UTC", () => {
+    const label = formatEventTimeRange(
+      "2026-10-21T04:30:00.000Z",
+      "2026-10-21T05:30:00.000Z",
+      "Etc/UTC",
+      IST,
+    );
+    expect(label).toContain("UTC");
+    expect(label).not.toContain("Etc/UTC");
+  });
+
   it("names the clash time in the account zone", () => {
     expect(describeEventConflicts({
       eventConflicts: [{ eventId: 1, title: "TZ probe", startDate: "2026-10-21T04:30:00.000Z", endDate: "2026-10-21T05:30:00.000Z", allDay: false, timezone: IST }],

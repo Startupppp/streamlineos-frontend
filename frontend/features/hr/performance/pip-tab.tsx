@@ -316,15 +316,7 @@ export function PIPTab() {
       return next;
     });
   }, []);
-
-  const handlePipUserIdChange = useCallback((id: string) => {
-    setPipUserId(id);
-    setFieldErrors((prev) => {
-      const next = { ...prev };
-      delete next.userId;
-      return next;
-    });
-  }, []);
+
 
   const pipStartBounds = planningStartPickerProps({
     existingValue: editingPip ? startDate : undefined,

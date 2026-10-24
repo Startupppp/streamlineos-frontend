@@ -137,6 +137,23 @@ export function useMessageComposer({
     else localStorage.removeItem(key);
   }, [linkState]);
 
+  useEffect(() => {
+    setMessageInput(readDraftText(draftKey));
+    setReplyTo(null);
+    setEditingMessage(null);
+    setEditInput("");
+    setPendingAttachments([]);
+    setShowEmojiPicker(false);
+    setShowMentions(false);
+    setMentionQuery("");
+    setMentionIndex(0);
+    setPendingPrompt(null);
+    setRecordQuery(null);
+    setRecordIndex(0);
+    setLinkState({ draftKey, records: readDraftLinks(draftKey) });
+    pendingMentionsRef.current = new Map();
+  }, [draftKey]);
+
   const uploadFiles = useCallback(async (files: File[]) => {
     setUploading(true);
     try {

@@ -1,12 +1,17 @@
 import { QueryClient, type InfiniteData } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 import {
+  patchLastMessageAfterDelete,
+  patchLastMessageIfLatest,
+} from "@/hooks/api/chat-channel-cache";
+import {
   applyDeletedUnread,
   applyOptimisticUnread,
   invalidateChatReconnect,
   patchOwnMember,
   patchUnreadTotal,
 } from "@/hooks/api/chat-read-cache";
+import type { Message, MessagesPage } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import type { Channel, ChannelPage } from "@/types/chat";
 
@@ -224,5 +229,53 @@ describe("applyDeletedUnread — a deleted message stops counting as unread", ()
     applyDeletedUnread(client, { ...unseen, createdAt: "2026-10-03T00:00:00.000Z", senderId: "user-1" }, "user-1");
     expect(firstRow(client)?.unreadCount).toBe(2);
     expect(client.getQueryData(PROBES.unreadTotal)).toEqual({ total: 4 });
+  });
+});
+
+function seedMessages(client: QueryClient, messages: Message[]) {
+  const data: InfiniteData<MessagesPage> = {
+    pages: [{ messages, nextCursor: null }],
+    pageParams: [null],
+  };
+  client.setQueryData(PROBES.editedMessages, data);
+}
+
+describe("sidebar lastMessage preview patches", () => {
+  const latest: Message = {
+    id: 20,
+    channelId: EDITED_CHANNEL,
+    senderId: "user-2",
+    content: "old",
+    replyToId: null,
+    isEdited: false,
+    isDeleted: false,
+    messageType: "text",
+    metadata: null,
+    actionStatus: null,
+    reactions: {},
+    createdAt: "2026-10-01T10:00:00.000Z",
+    updatedAt: "2026-10-01T10:00:00.000Z",
+    sender: { id: "user-2", name: "Bo", image: null },
+    attachments: [],
+    replyTo: null,
+  };
+
+  it("patchLastMessageIfLatest updates the preview when the edited message is newest", () => {
+    const client = freshClient();
+    seedRows(client, [row()]);
+    seedMessages(client, [latest]);
+    patchLastMessageIfLatest(client, EDITED_CHANNEL, 20, "edited");
+    expect(firstRow(client)?.lastMessage?.content).toBe("edited");
+  });
+
+  it("patchLastMessageAfterDelete rewinds the preview to the previous message", () => {
+    const client = freshClient();
+    seedRows(client, [row({ lastMessage: { content: "old", senderName: "Bo", createdAt: latest.createdAt } })]);
+    seedMessages(client, [
+      { ...latest, id: 19, content: "earlier" },
+      latest,
+    ]);
+    patchLastMessageAfterDelete(client, EDITED_CHANNEL, 20);
+    expect(firstRow(client)?.lastMessage?.content).toBe("earlier");
   });
 });

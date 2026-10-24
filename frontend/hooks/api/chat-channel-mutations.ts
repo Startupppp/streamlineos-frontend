@@ -140,13 +140,18 @@ export function useJoinChannel() {
 
 export function useLeaveChannel() {
   const queryClient = useQueryClient();
+  const { data: session } = useSession();
+  const currentUserId = session?.user?.id;
   return useAuthorizedMutation<{ ok: boolean }, Error, number, RollbackContext>("chat:channels:write", {
     mutationKey: ["chat", "channels", "leave"],
     mutationFn: (channelId) =>
       apiClient.post<{ ok: boolean }>(`/chat/channels/${channelId}/leave`, undefined, undefined, chatOkContract),
     onMutate: async (channelId) => {
       await cancelChatChannelQueries(queryClient, channelId);
-      return { rollback: removeMembership(queryClient, channelId) };
+      const rollbacks = [removeMembership(queryClient, channelId)];
+      if (currentUserId)
+        rollbacks.push(...adjustMembers(queryClient, channelId, currentUserId));
+      return { rollback: () => runRollbacks(rollbacks) };
     },
     onError: (_error, _channelId, context) => context?.rollback(),
     onSuccess: () => {

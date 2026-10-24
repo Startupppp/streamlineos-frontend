@@ -21,8 +21,6 @@ import {
 } from "@/components/ui/content-fill-panel";
 import { EmptyReportIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
-import { ErrorState } from "@/components/shared/error-state";
-import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { PageState } from "@/components/shared/page-state";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { RecordList, asRecordValues } from "@/components/renderer";
@@ -85,7 +83,7 @@ export function CampaignListPage() {
   const campaigns = data?.items ?? [];
   const total = data?.total ?? 0;
   const isFiltered = statusFilter !== "all";
-  const statusFilterLabel =
+  const =
     STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? statusFilter;
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);

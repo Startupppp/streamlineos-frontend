@@ -2,7 +2,6 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { OffsetFooter } from "./table-pagination-offset-footer";
 import {
@@ -123,10 +122,3 @@ export function TablePagination(props: TablePaginationProps) {
   return <OffsetFooter {...props} />;
 }
 
-function TablePaginationSkeleton({ className }: { className?: string }) {
-  return (
-    <div className={cn(SHELL_CLASS, className)} aria-label="Loading pagination">
-      <Skeleton className="col-start-2 h-8 w-[12.5rem] justify-self-center rounded-md" />
-    </div>
-  );
-}

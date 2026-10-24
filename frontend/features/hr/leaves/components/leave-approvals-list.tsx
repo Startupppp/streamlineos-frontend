@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 
 import type { LeaveRequest } from "./leaves-shared";
 import { LeaveApprovalItem } from "./leave-approval-item";

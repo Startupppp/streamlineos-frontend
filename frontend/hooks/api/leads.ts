@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query";
+import { useQuery, useQueryClient, keepPreviousData } from "@tanstack/react-query";
 import { useCan } from "@/hooks/api/access";
 import { apiClient } from "@/lib/api-client";
 import { accessAndCrmQueryKeys } from "@/lib/query-keys/access-and-crm";
@@ -32,7 +32,6 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { lazyContract } from "@/lib/api-envelope";
 
 const leadListLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadListContract));
-const leadPartyLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadPartyContract));
 const leadDetailLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadDetailContract));
 const leadBoardLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadBoardContract));
 const leadStatsLazy = lazyContract(() => import("@/hooks/api/leads-schema").then((m) => m.leadStatsContract));

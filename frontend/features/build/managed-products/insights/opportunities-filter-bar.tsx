@@ -63,6 +63,8 @@ export interface OpportunitiesFilterBarProps {
   search?: string;
   segmentOptions: Array<{ label: string; value: string }>;
   ownerOptions: Array<{ label: string; value: string }>;
+  ownerSearch?: string;
+  onOwnerSearchChange?: (v: string) => void;
   themeOptions?: Array<{ label: string; value: string }>;
   onStateValuesChange: (values: string[]) => void;
   onSortChange: (v: string) => void;
@@ -91,6 +93,8 @@ export function OpportunitiesFilterBar({
   search = "",
   segmentOptions,
   ownerOptions,
+  ownerSearch,
+  onOwnerSearchChange,
   themeOptions,
   onStateValuesChange,
   onSortChange,
@@ -151,7 +155,7 @@ export function OpportunitiesFilterBar({
       ),
     });
   }
-  if (ownerOptions.length > 0) {
+  if (ownerOptions.length > 0 || ownerSearch) {
     filters.push({
       id: "oppOwner",
       label: "Owner",
@@ -162,6 +166,8 @@ export function OpportunitiesFilterBar({
           values={ownerValues}
           onValuesChange={onOwnerValuesChange}
           options={ownerOptions}
+          searchValue={ownerSearch}
+          onSearchChange={onOwnerSearchChange}
         />
       ),
     });

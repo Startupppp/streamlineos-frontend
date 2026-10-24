@@ -10,9 +10,6 @@ import { lazyContract } from "@/lib/api-envelope";
 const onboardingSessionContract = lazyContract(() =>
   import("@/hooks/api/onboarding-flow-schema").then((m) => m.onboardingFlowSessionContract),
 );
-const moduleChecklistListContract = lazyContract(() =>
-  import("@/hooks/api/onboarding-flow-schema").then((m) => m.moduleChecklistListContract),
-);
 const checklistProgressContract = lazyContract(() =>
   import("@/hooks/api/onboarding-flow-schema").then((m) => m.checklistProgressContract),
 );

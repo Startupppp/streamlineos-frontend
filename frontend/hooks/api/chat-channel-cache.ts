@@ -1,6 +1,6 @@
 import type { InfiniteData, QueryClient, QueryKey } from "@tanstack/react-query";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
-import type { Channel, ChannelPage, MessagesPage, PublicChannel } from "@/types/chat";
+import type { Channel, ChannelPage, Message, MessagesPage, PublicChannel } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import {
   cancelLoadedQueries,
@@ -210,6 +210,32 @@ export function moveChannelRowToTop(
   return () => runRollbacks([rollback, undoInsert]);
 }
 
+function latestVisibleMessageFromPages(
+  messagesData: InfiniteData<MessagesPage> | undefined,
+  excludeMessageId?: number,
+): Message | null {
+  if (!messagesData) return null;
+  const remaining = messagesData.pages
+    .flatMap((p) => p.messages)
+    .filter(
+      (m) =>
+        m.id > 0 &&
+        !m.isDeleted &&
+        (excludeMessageId === undefined || m.id !== excludeMessageId),
+    );
+  if (remaining.length === 0) return null;
+  return remaining.reduce((max, m) => (m.id > max.id ? m : max));
+}
+
+function lastMessageFromMessage(message: Message | null) {
+  if (!message) return null;
+  return {
+    content: message.content,
+    senderName: message.sender.name ?? null,
+    createdAt: message.createdAt,
+  };
+}
+
 export function patchLastMessageAfterDelete(
   queryClient: QueryClient,
   channelId: number,
@@ -217,6 +243,7 @@ export function patchLastMessageAfterDelete(
 ): ChatCacheRollback {
   const messagesKey = collaborationQueryKeys.chat.messages(channelId);
   const messagesData = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
+  const latest = latestVisibleMessageFromPages(messagesData, deletedMessageId);
 
   if (!messagesData) {
     void queryClient.invalidateQueries({
@@ -227,24 +254,29 @@ export function patchLastMessageAfterDelete(
     return () => undefined;
   }
 
-  const allMessages = messagesData.pages.flatMap((p) => p.messages);
-  const remaining = allMessages.filter(
-    (m) => m.id !== deletedMessageId && !m.isDeleted && m.id > 0,
-  );
-  const latest =
-    remaining.length > 0
-      ? remaining.reduce((max, m) => (m.id > max.id ? m : max))
-      : null;
-
   return patchChannelRow(queryClient, channelId, (channel) => ({
     ...channel,
-    lastMessage: latest
-      ? {
-          content: latest.content,
-          senderName: latest.sender.name ?? null,
-          createdAt: latest.createdAt,
-        }
-      : null,
+    lastMessage: lastMessageFromMessage(latest),
+  }));
+}
+
+export function patchLastMessageIfLatest(
+  queryClient: QueryClient,
+  channelId: number,
+  messageId: number,
+  content: string | null,
+): ChatCacheRollback {
+  const messagesKey = collaborationQueryKeys.chat.messages(channelId);
+  const messagesData = queryClient.getQueryData<InfiniteData<MessagesPage>>(messagesKey);
+  const latest = latestVisibleMessageFromPages(messagesData);
+  if (!latest || latest.id !== messageId) return () => undefined;
+  return patchChannelRow(queryClient, channelId, (channel) => ({
+    ...channel,
+    lastMessage: {
+      content,
+      senderName: latest.sender.name ?? channel.lastMessage?.senderName ?? null,
+      createdAt: latest.createdAt,
+    },
   }));
 }
 

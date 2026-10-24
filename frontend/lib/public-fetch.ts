@@ -2,7 +2,6 @@ import type { z } from "zod";
 import type {
   publicKbListContract,
   publicKbArticleContract,
-  publicWikiPageContract,
   publicApplicationStatusContract,
   publicOfferDetailContract,
   publicReferrerPortalContract,

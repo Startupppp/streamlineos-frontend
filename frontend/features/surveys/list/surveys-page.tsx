@@ -11,6 +11,7 @@ import { EmptyReportIllustration } from "@/components/illustrations";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useSurveys, type SurveyMode, type SurveyStatus } from "@/hooks/api/surveys/forms";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { TablePagination } from "@/components/ui/table-pagination";
 import { SurveyCard } from "./survey-card";
 import { SurveyListFilters } from "./survey-list-filters";
 import { SurveyListSkeleton } from "./survey-list-skeleton";
@@ -19,18 +20,21 @@ export function SurveysPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<SurveyStatus | "all">("all");
   const [mode, setMode] = useState<SurveyMode | "all">("all");
+  const [page, setPage] = useState(1);
   const debouncedSearch = useDebouncedValue(search, 300);
 
   const surveysQuery = useSurveys({
     search: debouncedSearch || undefined,
     status: status === "all" ? undefined : status,
     mode: mode === "all" ? undefined : mode,
-    pageSize: 100,
+    page,
   });
-  const { data: surveys, isLoading, isError, error, refetch } = surveysQuery;
+  const { data: surveysPage, isLoading, isError, error, refetch } = surveysQuery;
 
+  const rows = surveysPage?.items ?? [];
+  const total = surveysPage?.total ?? 0;
+  const pageSize = surveysPage?.pageSize ?? 50;
   const filtersActive = Boolean(debouncedSearch) || status !== "all" || mode !== "all";
-  const rows = surveys ?? [];
   const hasAnySurveys = rows.length > 0 || filtersActive;
 
   const pageState = usePageState({
@@ -48,7 +52,12 @@ export function SurveysPage() {
     setSearch("");
     setStatus("all");
     setMode("all");
+    setPage(1);
   }, []);
+
+  function handlePageChange(next: number) {
+    setPage(next);
+  }
 
   return (
     <DashboardGate permission="surveys:view">
@@ -72,14 +81,14 @@ export function SurveysPage() {
                 search={search}
                 onSearchChange={setSearch}
                 status={status}
-                onStatusChange={setStatus}
+                onStatusChange={(s) => { setStatus(s); setPage(1); }}
                 mode={mode}
-                onModeChange={setMode}
+                onModeChange={(m) => { setMode(m); setPage(1); }}
               />
             ) : undefined
           }
         >
-          <div className="flex flex-1 min-h-0 flex-col">
+          <div className="flex flex-1 min-h-0 flex-col gap-4">
             <PageState
               resolution={pageState}
               loading={<SurveyListSkeleton />}
@@ -105,6 +114,14 @@ export function SurveysPage() {
                 ))}
               </div>
             </PageState>
+            {total > pageSize && (
+              <TablePagination
+                page={page}
+                pageSize={pageSize}
+                total={total}
+                onPageChange={handlePageChange}
+              />
+            )}
           </div>
         </PageWrapper>
       </RequireModule>

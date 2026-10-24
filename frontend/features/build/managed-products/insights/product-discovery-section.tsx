@@ -43,6 +43,8 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
     confidenceValues,
     segmentOptions,
     ownerOptions,
+    ownerSearch,
+    handleOwnerSearchChange,
     themeOptions,
     oppQueryParams,
     themeParams,
@@ -206,6 +208,8 @@ export function ProductDiscoverySection({ managedProductId }: ProductDiscoverySe
       search={search}
       segmentOptions={segmentOptions}
       ownerOptions={ownerOptions}
+      ownerSearch={ownerSearch}
+      onOwnerSearchChange={handleOwnerSearchChange}
       themeOptions={themeOptions}
       onStateValuesChange={handleStateValuesChange}
       onSortChange={handleSortChange}

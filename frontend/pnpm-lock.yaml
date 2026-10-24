@@ -355,9 +355,6 @@ importers:
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      spring-text-engine:
-        specifier: ^0.1.5
-        version: 0.1.5(@react-spring/web@10.1.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       three:
         specifier: ^0.186.1
         version: 0.186.1
@@ -7894,13 +7891,6 @@ packages:
 
   space-separated-tokens@2.0.2:
     resolution: {integrity: sha512-PEGlAwrG8yXGXRjW32fGbg66JAlOAwbObuqVoJpv/mRgoWDQfgH1wDPvtzWyUSNAXBGSk8h755YDbbcEy3SH2Q==}
-
-  spring-text-engine@0.1.5:
-    resolution: {integrity: sha512-1zNFDOfM0J2+QBp+vebb1fplSSrV/KHV3xZscu9u4EfQmTDWEUxaHdkuGhSe7WTfad8JyYgPRzMwP29Fd72O9Q==}
-    peerDependencies:
-      '@react-spring/web': '>=9.0.0'
-      react: '>=17.0.0'
-      react-dom: '>=17.0.0'
 
   stable-hash@0.0.5:
     resolution: {integrity: sha512-+L3ccpzibovGXFK+Ap/f8LOS0ahMrHTf3xu7mMLSpEGU0EO9ucaysSylKo9eRDFNhWve/y275iPmIZ4z39a9iA==}
@@ -17151,13 +17141,6 @@ snapshots:
   source-map@0.6.1: {}
 
   space-separated-tokens@2.0.2: {}
-
-  spring-text-engine@0.1.5(@react-spring/web@10.1.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(react-dom@19.2.0(react@19.2.0))(react@19.2.0):
-    dependencies:
-      '@react-spring/web': 10.1.2(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
-      react: 19.2.0
-      react-dom: 19.2.0(react@19.2.0)
-      resize-observer-polyfill: 1.5.1
 
   stable-hash@0.0.5: {}
 

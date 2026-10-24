@@ -40,3 +40,35 @@ export const leaveHuddleResponseContract = z
     providerSyncStatus: z.enum(["pending", "skipped"]).optional(),
   })
   .strict();
+
+export const huddleAccountContract = z
+  .object({
+    connectionId: z.number().int(),
+    provider: z.enum(["google_meet", "microsoft_teams"]),
+    label: z.string(),
+    status: z.enum(["active", "needs_reauth"]),
+    scope: z.enum(["user", "org"]),
+    isDefault: z.boolean(),
+  })
+  .strict();
+
+export type HuddleAccount = z.infer<typeof huddleAccountContract>;
+
+export const huddleAccountsListContract = z
+  .object({
+    accounts: z.array(huddleAccountContract),
+    defaultConnectionId: z.number().int().nullable(),
+  })
+  .strict();
+
+export type HuddleAccountsList = z.infer<typeof huddleAccountsListContract>;
+
+export const huddleAlternativeContract = z
+  .object({
+    connectionId: z.number().int(),
+    provider: z.enum(["google_meet", "microsoft_teams"]),
+    label: z.string(),
+  })
+  .strict();
+
+export type HuddleAlternative = z.infer<typeof huddleAlternativeContract>;

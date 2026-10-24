@@ -30,6 +30,7 @@ export interface DashboardAccess {
   canRunPayroll: boolean;
   canViewPayslips: boolean;
   canViewSignEnvelopes: boolean;
+  canViewCalendar: boolean;
 }
 
 export function useDashboardAccess(): DashboardAccess {
@@ -76,6 +77,7 @@ export function useDashboardAccess(): DashboardAccess {
       canRunPayroll: can("payroll:runs:update"),
       canViewPayslips: can("payroll:payslips:view"),
       canViewSignEnvelopes: can("sign:envelope:view"),
+      canViewCalendar: can("calendar:read"),
     };
   }, [data, isLoading, refetch, enabledModules]);
 }

@@ -7,7 +7,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { RunInput } from "@/types/payroll/runs";
 
 const inputsListC = lazyContract(() =>
   import("@/hooks/api/payroll/run-inputs-schema").then((m) => m.inputsListContract),

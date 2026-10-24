@@ -45,7 +45,7 @@ export function useHuddleAutoStart({
     if (activeHuddle) {
       joinHuddle.mutate({ huddleId: activeHuddle.id, channelId });
     } else {
-      startHuddle.mutate(channelId);
+      startHuddle.mutate({ channelId });
     }
     onAutoStartHandled?.();
   }, [

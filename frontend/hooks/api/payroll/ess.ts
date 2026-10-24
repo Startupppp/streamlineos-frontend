@@ -60,7 +60,6 @@ const essLoanC = lazyContract(() =>
 import type {
   EssOverview,
   EssTaxDeclarationResponse,
-  EssBankDetails,
   EssFnfSettlement,
   ManagerInbox,
   TotalRewardsStatement,

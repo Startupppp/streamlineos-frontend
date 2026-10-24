@@ -67,8 +67,15 @@ export function DelegationsPage() {
     Array<string | undefined>
   >([undefined]);
 
-  const activeTab: DelegationListKind =
+  const urlTab: DelegationListKind =
     searchParams.get("tab") === "granted" ? "granted" : "received";
+  const [tabOverride, setTabOverride] = useState<DelegationListKind | null>(
+    null,
+  );
+  const activeTab = tabOverride ?? urlTab;
+  useEffect(() => {
+    if (tabOverride !== null && tabOverride === urlTab) setTabOverride(null);
+  }, [tabOverride, urlTab]);
   const receivedState = readDelegationListState(searchParams, "received");
   const grantedState = readDelegationListState(searchParams, "granted");
   const [receivedSearchInput, setReceivedSearchInput] = useState(
@@ -212,6 +219,7 @@ export function DelegationsPage() {
   const handleTabChange = useCallback(
     (value: string) => {
       if (value !== "received" && value !== "granted") return;
+      setTabOverride(value);
       updateParams({ tab: value === "received" ? null : value });
     },
     [updateParams],

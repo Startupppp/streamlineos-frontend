@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { isForgedServerFrame, safeSubscribe, safeUnsubscribe } from "@/lib/ably-safe-subscribe";
 import { chatChannelName, notificationsChannelName } from "@/lib/ably-channels";
 import { reauthorizeAblyClients } from "@/lib/ably";
-import type { Channel } from "@/types/chat";
 import { isRecord } from "@/lib/is-record";
 import {
   forgetChannelUnread,
@@ -30,11 +29,60 @@ import {
   patchUnreadTotal,
   recordInboundChannelMessage,
 } from "@/hooks/api/chat-read-cache";
+import {
+  patchLastMessageAfterDelete,
+  patchLastMessageIfLatest,
+} from "@/hooks/api/chat-channel-cache";
 import { findCachedMessage, patchChatMessage } from "@/hooks/api/chat-message-cache";
-import { messageDeletedPayloadSchema } from "@/hooks/api/chat-realtime-schema";
+import {
+  messageDeletedPayloadSchema,
+  messageUpdatedPayloadSchema,
+} from "@/hooks/api/chat-realtime-schema";
+import type { Channel } from "@/types/chat";
 import { collaborationQueryKeys } from "@/lib/query-keys/collaboration";
 
 type BackgroundChannelEvent = "message" | "message:deleted" | "message:updated" | "reaction:updated";
+
+function dmPartnerDisplayName(
+  members: Channel["members"] | undefined,
+  currentUserId: string | undefined,
+): string | null {
+  const partner = members?.find(
+    (member) => member.user?.id && member.user.id !== currentUserId,
+  );
+  return partner?.user?.name ?? null;
+}
+
+function inboundToastCopy(
+  channelType: Channel["type"] | undefined,
+  channelDisplayName: string | null | undefined,
+  members: Channel["members"] | undefined,
+  currentUserId: string | undefined,
+  senderName: string | null,
+  content: string | null,
+): { title: string; body: string } {
+  const partnerName = dmPartnerDisplayName(members, currentUserId);
+  const resolvedSender =
+    senderName?.trim() ||
+    (channelType === "DIRECT" ? partnerName : null) ||
+    "Someone";
+  const title =
+    channelType === "DIRECT"
+      ? resolvedSender === "Direct message" && partnerName
+        ? partnerName
+        : resolvedSender
+      : `#${channelDisplayName ?? "channel"}`;
+  const snippet = content?.trim() ?? "";
+  const genericDmSnippet =
+    channelType === "DIRECT" &&
+    (!snippet || snippet === "Direct message" || snippet === resolvedSender);
+  const body = genericDmSnippet
+    ? "Sent you a message"
+    : snippet
+      ? snippet.slice(0, 80)
+      : "Sent an attachment";
+  return { title, body };
+}
 
 export function useChatGlobalNotifications(
   channels: Channel[] | undefined,
@@ -120,12 +168,14 @@ export function useChatGlobalNotifications(
           });
           if (!chatAlertIsRaised(decision)) return;
 
-          const senderName = payload.senderName ?? "Someone";
-          const title =
-            channelType === "DIRECT"
-              ? senderName
-              : `#${channelDisplayName ?? "channel"}`;
-          const body = payload.content?.slice(0, 80) ?? "Sent an attachment";
+          const { title, body } = inboundToastCopy(
+            channelType,
+            channelDisplayName,
+            current?.members,
+            currentUserIdRef.current,
+            payload.senderName,
+            payload.content,
+          );
 
           toast(title, { description: body, duration: 5_000 });
 
@@ -156,10 +206,29 @@ export function useChatGlobalNotifications(
             );
           }
           patchChatMessage(queryClient, channelId, messageId, { isDeleted: true, content: null });
+          patchLastMessageAfterDelete(queryClient, channelId, messageId);
         };
 
-        const changedHandler = (event: "message:updated" | "reaction:updated") => (msg: InboundMessage) => {
-          if (isForgedServerFrame(event, msg.clientId)) return;
+        const messageUpdatedHandler = (msg: InboundMessage) => {
+          if (isForgedServerFrame("message:updated", msg.clientId)) return;
+          if (channelId === activeChannelIdRef.current) return;
+          const parsed = messageUpdatedPayloadSchema.safeParse(msg.data);
+          if (!parsed.success) {
+            markChannelTimelineStale(queryClient, channelId);
+            return;
+          }
+          markChannelTimelineStale(queryClient, channelId);
+          const { id, content, updatedAt } = parsed.data;
+          patchChatMessage(queryClient, channelId, id, {
+            content,
+            isEdited: true,
+            updatedAt,
+          });
+          patchLastMessageIfLatest(queryClient, channelId, id, content);
+        };
+
+        const reactionUpdatedHandler = (msg: InboundMessage) => {
+          if (isForgedServerFrame("reaction:updated", msg.clientId)) return;
           if (channelId === activeChannelIdRef.current) return;
           markChannelTimelineStale(queryClient, channelId);
         };
@@ -167,8 +236,8 @@ export function useChatGlobalNotifications(
         for (const [event, h] of [
           ["message", handler],
           ["message:deleted", deletedHandler],
-          ["message:updated", changedHandler("message:updated")],
-          ["reaction:updated", changedHandler("reaction:updated")],
+          ["message:updated", messageUpdatedHandler],
+          ["reaction:updated", reactionUpdatedHandler],
         ] as const) {
           const ok = await safeSubscribe(ablyChannel, event, h);
           if (cancelled) {

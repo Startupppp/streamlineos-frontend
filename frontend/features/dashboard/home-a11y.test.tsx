@@ -126,6 +126,7 @@ const dashboardAccess = {
   canViewTickets: true,
   canViewPayrollSelf: true, canRunPayroll: false, canViewPayslips: false,
   canViewSignEnvelopes: true,
+    canViewCalendar: true,
 };
 
 jest.mock("./use-dashboard-access", () => ({
@@ -239,6 +240,8 @@ async function renderGrid() {
       <HomeWidgetGrid
         projectsEnabled
         hrEnabled
+        canViewLeaves
+        canViewCalendar
         canViewExecutive
         canSelfAttendance
         crmEnabled

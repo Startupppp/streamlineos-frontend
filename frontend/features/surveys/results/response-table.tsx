@@ -14,11 +14,16 @@ import { useSurveyResponses, useExportResponses, type SurveyResponseSession } fr
 import { ResponseDetailSheet } from "./response-detail-sheet";
 
 export function ResponseTable({ surveyId }: { surveyId: number }) {
-  const responsesQuery = useSurveyResponses(surveyId, { pageSize: 100 });
-  const { data: responses, isError, error, refetch } = responsesQuery;
+  const [page, setPage] = useState(1);
+  const responsesQuery = useSurveyResponses(surveyId, { page });
+  const { data: responsesPage, isError, error, refetch } = responsesQuery;
   const isLoading = responsesQuery.isLoading || responsesQuery.access.pending;
   const exportResponses = useExportResponses(surveyId);
   const [selectedSessionId, setSelectedSessionId] = useState<number | null>(null);
+
+  const responses = responsesPage?.items ?? [];
+  const total = responsesPage?.total ?? 0;
+  const pageSize = responsesPage?.pageSize ?? 50;
 
   const columns: DataTableColumn<SurveyResponseSession>[] = useMemo(
     () => [
@@ -71,11 +76,12 @@ export function ResponseTable({ surveyId }: { surveyId: number }) {
         </AnimatedIconButton>
       </div>
       <DataTable
-        data={responses ?? []}
+        data={responses}
         columns={columns}
         getRowKey={(row) => row.id}
         isLoading={isLoading}
         onRowClick={handleRowClick}
+        pagination={{ mode: "server", page, pageSize, total, onPageChange: setPage }}
         emptyState={
           <EmptyState
             compact

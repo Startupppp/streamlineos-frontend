@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import {
+  clearAutoMarkReadSuppress,
+  isAutoMarkReadSuppressed,
+} from "@/hooks/api/chat-mark-read-suppress";
 
 const MARK_READ_DEBOUNCE_MS = 1_000;
 
@@ -28,7 +32,8 @@ export function useChatReadMarker({
   useEffect(() => {
     if (enabled && channelId > 0 && openedChannelRef.current !== channelId) {
       openedChannelRef.current = channelId;
-      markRead.mutate({ channelId });
+      clearAutoMarkReadSuppress(channelId);
+      if (!isAutoMarkReadSuppressed(channelId)) markRead.mutate({ channelId });
     }
   }, [channelId, markRead, enabled]);
 
@@ -42,6 +47,7 @@ export function useChatReadMarker({
     }
     const mark = () => {
       if (document.visibilityState !== "visible") return;
+      if (isAutoMarkReadSuppressed(channelId)) return;
       const markedId = markedNewestRef.current?.messageId;
       if (markedId !== undefined && newestMessageId <= markedId) return;
       markedNewestRef.current = { channelId, messageId: newestMessageId };

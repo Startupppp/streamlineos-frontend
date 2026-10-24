@@ -99,8 +99,8 @@ function invalidateSurveyLists(qc: ReturnType<typeof useQueryClient>) {
 export function useSurveys(params?: ListSurveysParams) {
   return useGatedQuery("surveys:view", {
     queryKey: knowledgeAndSurveysQueryKeys.surveys.list(params),
-    queryFn: async ({ signal }) =>
-      (await apiClient.get<OffsetPage<SurveyForm>>("/surveys", params, signal, surveyFormListC)).items,
+    queryFn: ({ signal }) =>
+      apiClient.get<OffsetPage<SurveyForm>>("/surveys", params, signal, surveyFormListC),
     staleTime: 30_000,
   });
 }

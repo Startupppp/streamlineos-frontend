@@ -12,13 +12,6 @@ const recruiterActivityListC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/recruiters-schema").then((m) => m.recruiterActivityListContract),
 );
 
-type RecruiterActivityAction =
-  | "CALL_MADE"
-  | "EMAIL_SENT"
-  | "CANDIDATE_ADDED"
-  | "NOTE_ADDED"
-  | "INTERVIEW_SCHEDULED";
-
 export interface RecruiterSummary {
   userId: string;
   name: string | null;

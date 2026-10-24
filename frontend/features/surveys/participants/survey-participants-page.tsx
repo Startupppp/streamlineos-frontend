@@ -33,13 +33,18 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
   const surveyId = Number(surveyIdParam);
 
   const [status, setStatus] = useState<ParticipantStatus | "all">("all");
+  const [page, setPage] = useState(1);
   const [selected, setSelected] = useState<Set<string | number>>(new Set());
   const [addOpen, setAddOpen] = useState(false);
 
-  const { data: participants, isLoading, isError, refetch } = useParticipants(surveyId, {
+  const { data: participantsPage, isLoading, isError, refetch } = useParticipants(surveyId, {
     status: status === "all" ? undefined : status,
-    pageSize: 100,
+    page,
   });
+
+  const participants = participantsPage?.items ?? [];
+  const total = participantsPage?.total ?? 0;
+  const pageSize = participantsPage?.pageSize ?? 50;
   const invite = useInviteParticipants(surveyId);
   const remind = useRemindParticipants(surveyId);
 
@@ -80,7 +85,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
     }
   }
 
-  const hasParticipants = (participants?.length ?? 0) > 0;
+  const hasParticipants = participants.length > 0 || isLoading;
 
   return (
     <DashboardGate permission="surveys:participants:view">
@@ -105,7 +110,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
                   </AnimatedIconButton>
                 </>
               )}
-              <Select value={status} onValueChange={(v) => setStatus(v as ParticipantStatus | "all")}>
+              <Select value={status} onValueChange={(v) => { setStatus(v as ParticipantStatus | "all"); setPage(1); }}>
                 <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-40")}><SelectValue placeholder="Status" /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All statuses</SelectItem>
@@ -129,7 +134,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
           ) : hasParticipants ? (
             <DataTable
               className="flex-1 min-h-0"
-              data={participants ?? []}
+              data={participants}
               columns={columns}
               getRowKey={(row) => row.id}
               isLoading={isLoading}
@@ -138,6 +143,7 @@ export function SurveyParticipantsPage({ surveyId: surveyIdParam }: SurveyPartic
                 onChange: setSelected,
                 getRowLabel: (row) => row.name ?? row.email ?? "",
               }}
+              pagination={{ mode: "server", page, pageSize, total, onPageChange: setPage }}
             />
           ) : (
             <EmptyState

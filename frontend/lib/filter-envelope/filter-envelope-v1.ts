@@ -17,8 +17,6 @@ export const FILTER_OPERATORS = [
   "is-not-empty",
 ] as const;
 
-type FilterOperator = (typeof FILTER_OPERATORS)[number];
-
 export const TICKET_FILTER_FIELDS = [
   "status",
   "priority",
@@ -79,8 +77,6 @@ const filterValueSchema = z.union([
   z.null(),
   z.array(z.union([z.string(), z.number()])),
 ]);
-
-type FilterValue = z.infer<typeof filterValueSchema>;
 
 const filterClauseSchema = z
   .object({

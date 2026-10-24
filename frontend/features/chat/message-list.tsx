@@ -57,6 +57,7 @@ interface MessageListProps {
     userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
+  resolveReactionNames?: (userIds: string[]) => string;
   showScrollBtn: boolean;
   latestLabel?: string;
   scrollToBottom: () => void;
@@ -145,6 +146,7 @@ export function MessageList({
   onUnsaveMsg,
   onForward,
   resolveUserName,
+  resolveReactionNames,
   showScrollBtn,
   latestLabel = "New messages",
   scrollToBottom,
@@ -335,6 +337,7 @@ export function MessageList({
                               onUnsaveMsg={onUnsaveMsg}
                               onForward={onForward}
                               resolveUserName={resolveUserName}
+                              resolveReactionNames={resolveReactionNames}
                             />
                           </div>
                         </Fragment>

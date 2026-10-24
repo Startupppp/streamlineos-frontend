@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -85,7 +86,13 @@ function RemoveLineButton({ index, onRemove }: RemoveLineButtonProps) {
 }
 
 export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps) {
-  const vendorsQuery = useVendors({ isActive: true, limit: 100 });
+  const [vendorSearch, setVendorSearch] = useState("");
+  const debouncedVendorSearch = useDebouncedValue(vendorSearch, 300);
+  const vendorsQuery = useVendors({ isActive: true, limit: 25, search: debouncedVendorSearch || undefined });
+  const vendorOptions: ComboboxOption[] = (vendorsQuery.data?.items ?? []).map((v) => ({
+    value: String(v.id),
+    label: v.name,
+  }));
   const warehousesQuery = useWarehouses();
   const createMutation = useCreateVendorReturn();
   const purchaseOrdersQuery = usePurchaseOrders({ pageSize: 100 });
@@ -187,22 +194,18 @@ export function VendorReturnSheet({ open, onOpenChange }: VendorReturnSheetProps
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Vendor *</FormLabel>
-                <Select
-                  value={field.value ? String(field.value) : ""}
-                  onValueChange={(v) => field.onChange(Number(v))}
-                  disabled={vendorsQuery.isLoading}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select vendor" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent className="max-h-72">
-                    {(vendorsQuery.data?.items ?? []).map((v) => (
-                      <SelectItem key={v.id} value={String(v.id)}>{v.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Combobox
+                    options={vendorOptions}
+                    value={field.value ? String(field.value) : ""}
+                    onChange={(val) => field.onChange(val ? Number(val) : undefined)}
+                    onSearchChange={setVendorSearch}
+                    placeholder="Search vendors…"
+                    searchPlaceholder="Type to search…"
+                    emptyText="No vendors found"
+                    disabled={vendorsQuery.isLoading}
+                  />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}

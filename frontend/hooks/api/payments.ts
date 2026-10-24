@@ -1,7 +1,7 @@
 "use client";
 
 import type { z } from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
 import { useCan } from "@/hooks/api/access";
 import { platformCoreQueryKeys } from "@/lib/query-keys/platform-core";

@@ -25,10 +25,11 @@ import {
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyActivityIllustration } from "@/components/illustrations";
-import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { getGreeting, getFirstName } from "@/lib/format-utils";
+import { formatInZone, resolveOrgTimeZone } from "@/lib/date-utils";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
 import { useHydrated } from "@/hooks/common/use-hydrated";
 import { FocusStrip } from "@/features/dashboard/focus-strip";
 import { useDashboardAccess } from "@/features/dashboard/use-dashboard-access";
@@ -66,13 +67,18 @@ export function DashboardClient({
   const firstName = getFirstName(session);
   const access = useDashboardAccess();
   const accessDeadlineElapsed = useSettleDeadline(HOME_ACCESS_DEADLINE_MS);
-  const { hrEnabled, canViewExecutive } = access;
+  const { hrEnabled, canSelfAttendance, canViewExecutive } = access;
+  const orgTz = useOrgTimeZone();
 
   const hydrated = useHydrated();
   const headerClock = hydrated
     ? {
         greeting: getGreeting(),
-        todayFormatted: format(new Date(), "EEEE, MMMM do, yyyy"),
+        todayFormatted: formatInZone(
+          new Date(),
+          resolveOrgTimeZone(orgTz),
+          "EEEE, MMMM do, yyyy",
+        ),
       }
     : null;
 
@@ -164,7 +170,9 @@ export function DashboardClient({
       <PageWrapper
         title={pageTitle}
         subtitle={pageSubtitle}
-        actions={hrEnabled ? <ClockInWidget /> : undefined}
+        actions={
+          hrEnabled && canSelfAttendance ? <ClockInWidget /> : undefined
+        }
       >
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <PageState

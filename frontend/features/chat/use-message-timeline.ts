@@ -217,7 +217,10 @@ export function useMessageTimeline({
   const arrivalBaseline = inContext ? context.dataUpdatedAt : 0;
   const arrivedSinceAnchor = anchored && arrivedAt > arrivalBaseline;
   const firstUnreadMessageId =
-    firstUnreadIndex >= 0 ? messages[firstUnreadIndex]?.id : undefined;
+    firstUnreadIndex >= 0 &&
+    messages[firstUnreadIndex]?.senderId !== currentUserId
+      ? messages[firstUnreadIndex]?.id
+      : undefined;
   const contextHasOlder = context.hasNextPage;
   const contextFetchingOlder = context.isFetchingNextPage;
   const list = useMemo(

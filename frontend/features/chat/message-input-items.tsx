@@ -141,7 +141,9 @@ export function ChatReplyPreview({ replyTo, onCancel }: ChatReplyPreviewProps) {
                 Replying to {replyTo.sender?.name}
               </p>
               <p className="text-xs text-muted-foreground truncate">
-                {replyTo.content}
+                {replyTo.isDeleted
+                  ? "Original message deleted"
+                  : replyTo.content}
               </p>
             </div>
             <button

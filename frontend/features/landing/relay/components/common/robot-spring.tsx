@@ -1,17 +1,6 @@
 "use client";
 
-import {
-  createElement,
-  forwardRef,
-  type ComponentProps,
-  type CSSProperties,
-} from "react";
-
-import { Spring as MotionSpring } from "@/features/landing/relay/components/animation/springs/spring";
-
-import { useRobot } from "./robot-view";
-
-type SpringProps = ComponentProps<typeof MotionSpring>;
+import { type CSSProperties } from "react";
 
 const TRANSFORM = new Set(["x", "y", "z", "scale", "scaleX", "scaleY", "rotate", "rotateX", "rotateY", "rotateZ"]);
 const px = (v: unknown) => (typeof v === "number" ? `${v}px` : String(v));
@@ -35,24 +24,3 @@ export const restStyle = (to: Record<string, unknown> = {}, style?: CSSPropertie
   return out as CSSProperties;
 };
 
-const Spring = forwardRef<HTMLElement, SpringProps>(function RobotAwareSpring(props, ref) {
-  const robot = useRobot();
-  if (!robot) return <MotionSpring ref={ref} {...props} />;
-  const {
-    tag = "div",
-    children,
-    from,
-    to,
-    mode,
-    config: _config,
-    delayIn: _delayIn,
-    delayOut: _delayOut,
-    enabled,
-    disableOnMobile: _disableOnMobile,
-    immediateOut: _immediateOut,
-    style,
-    ...rest
-  } = props;
-  const resting = mode === "always" && enabled === false ? from : to;
-  return createElement(tag as string, { ...rest, ref, style: restStyle(resting, style) }, children);
-});

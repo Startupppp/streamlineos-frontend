@@ -32,6 +32,7 @@ function unresolvedAccess(): DashboardAccess {
     canViewTickets: false,
     canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: false,
+    canViewCalendar: true,
   };
 }
 

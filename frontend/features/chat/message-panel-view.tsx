@@ -23,6 +23,8 @@ import type { ChannelMember, Huddle } from "@/types/chat";
 import type { ChatChannelDetailWire } from "@/hooks/api/chat-extra-schema";
 import { getInitials } from "@/lib/format-utils";
 import { huddleProviderPresentation } from "./huddle-provider";
+import { HuddleAccountPicker } from "./huddle-account-picker";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const HuddlePanel = dynamic(
   () => import("./huddle-panel").then((m) => ({ default: m.HuddlePanel })),
@@ -41,7 +43,7 @@ interface PanelHeaderProps {
   memberCount: number;
   activeHuddle: Huddle | null | undefined;
   isInHuddle: boolean;
-  onHuddle: () => void;
+  onHuddle: (connectionId?: number) => void;
   huddleStartPending: boolean;
   huddleJoinPending: boolean;
   canUseAi: boolean;
@@ -54,6 +56,7 @@ interface PanelHeaderProps {
 interface WorkspaceProps {
   messageList: React.ComponentProps<typeof MessageList>;
   messageInput: React.ComponentProps<typeof MessageInput>;
+  viewerIsMember: boolean;
   huddle?: React.ComponentProps<typeof HuddlePanelType>;
 }
 
@@ -223,35 +226,32 @@ export function MessagePanelView({
                 )}
               </div>
             )}
-            {!isInHuddle && (
+            {!isInHuddle && activeHuddle && (
               <AnimatedIconButton
                 icon={MicIcon}
                 iconSize={14}
                 iconClassName="mr-0"
                 variant="ghost"
                 size="sm"
-                className={cn(
-                  "h-8 gap-1.5 rounded-lg px-2 text-xs font-medium",
-                  activeHuddle
-                    ? "text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
-                    : "text-muted-foreground hover:text-foreground",
-                )}
-                onClick={onHuddle}
-                disabled={huddleStartPending || huddleJoinPending}
-                aria-label={
-                  activeHuddle
-                    ? `${huddleProviderPresentation(activeHuddle.meetingProvider).joinLabel}, ${activeHuddle.participants.length} joined through StreamlineOS`
-                    : "Start huddle"
-                }
+                className="h-8 gap-1.5 rounded-lg px-2 text-xs font-medium text-status-success-ink hover:text-status-success-ink hover:bg-status-success-surface"
+                onClick={() => onHuddle()}
+                disabled={huddleJoinPending}
+                aria-label={`${huddleProviderPresentation(activeHuddle.meetingProvider).joinLabel}, ${activeHuddle.participants.length} joined through StreamlineOS`}
               >
-                {activeHuddle ? (
-                  <span>
-                    {huddleProviderPresentation(activeHuddle.meetingProvider).joinLabel} ({activeHuddle.participants.length})
-                  </span>
-                ) : (
-                  <span>Huddle</span>
-                )}
+                <span>
+                  {huddleProviderPresentation(activeHuddle.meetingProvider).joinLabel} ({activeHuddle.participants.length})
+                </span>
               </AnimatedIconButton>
+            )}
+            {!isInHuddle && !activeHuddle && (
+              <HuddleAccountPicker
+                onStart={onHuddle}
+                disabled={huddleStartPending}
+                className="h-8 gap-1.5 rounded-lg px-2 text-xs font-medium text-muted-foreground hover:text-foreground"
+                iconSize={14}
+                iconClassName="mr-0"
+                label="Huddle"
+              />
             )}
             <ConversationOverflowMenu
               canUseAi={canUseAi}
@@ -282,8 +282,12 @@ export function MessagePanelView({
             Reconnecting to live chat…
           </div>
         ) : null}
-        <MessageList {...workspace.messageList} />
-        {workspace.messageList.joinRequired ? null : <MessageInput {...workspace.messageInput} />}
+        <TooltipProvider delayDuration={300}>
+          <MessageList {...workspace.messageList} />
+        </TooltipProvider>
+        {workspace.messageList.joinRequired || !workspace.viewerIsMember ? null : (
+          <MessageInput key={workspace.messageInput.channelId} {...workspace.messageInput} />
+        )}
         {workspace.huddle ? <HuddlePanel {...workspace.huddle} /> : null}
       </div>
 

@@ -78,6 +78,7 @@ function access(): DashboardAccess {
     canViewTickets: true,
     canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: false,
+    canViewCalendar: true,
   };
 }
 

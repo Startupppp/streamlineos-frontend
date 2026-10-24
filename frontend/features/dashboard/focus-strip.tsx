@@ -9,9 +9,7 @@ import {
   ListChecks,
   CalendarClock,
   ChevronRight,
-  AlertTriangle,
-  RefreshCw,
-} from "lucide-react";
+  } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOnlineStatus } from "@/hooks/common/use-online-status";
 import {

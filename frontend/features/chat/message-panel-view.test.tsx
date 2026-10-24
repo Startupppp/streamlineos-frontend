@@ -63,7 +63,8 @@ function makeProps(overrides: Partial<ViewProps["header"]> = {}): ViewProps {
     },
     workspace: {
       messageList: {} as ViewProps["workspace"]["messageList"],
-      messageInput: {} as ViewProps["workspace"]["messageInput"],
+      messageInput: { channelId: 9 } as ViewProps["workspace"]["messageInput"],
+      viewerIsMember: true,
     },
     thread: { messageId: null, channelId: 9, currentUserId: "user-1", onClose: jest.fn() },
     sidePanels: {

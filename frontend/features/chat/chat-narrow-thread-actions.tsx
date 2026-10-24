@@ -7,11 +7,12 @@ import { cn } from "@/lib/utils";
 import type { AiAction } from "@/components/ai";
 import type { Huddle } from "@/types/chat";
 import { ConversationOverflowMenu } from "./message-panel-actions";
+import { HuddleAccountPicker } from "./huddle-account-picker";
 
 interface ChatNarrowThreadActionsProps {
   activeHuddle: Huddle | null | undefined;
   isInHuddle: boolean;
-  onHuddle: () => void;
+  onHuddle: (connectionId?: number) => void;
   huddleStartPending: boolean;
   huddleJoinPending: boolean;
   canUseAi: boolean;
@@ -43,7 +44,7 @@ export function ChatNarrowThreadActions({
       aria-label="Conversation actions"
       className="flex shrink-0 items-center gap-0.5"
     >
-      {!isInHuddle && (
+      {!isInHuddle && activeHuddle && (
         <AnimatedIconButton
           type="button"
           icon={MicIcon}
@@ -51,13 +52,18 @@ export function ChatNarrowThreadActions({
           iconClassName="mr-0"
           variant="ghost"
           size="icon"
-          className={cn(
-            NARROW_ICON_CLASS,
-            activeHuddle && "text-status-success-ink hover:text-status-success-ink",
-          )}
-          onClick={onHuddle}
-          disabled={huddleStartPending || huddleJoinPending}
-          aria-label={activeHuddle ? "Join huddle" : "Start huddle"}
+          className={cn(NARROW_ICON_CLASS, "text-status-success-ink hover:text-status-success-ink")}
+          onClick={() => onHuddle()}
+          disabled={huddleJoinPending}
+          aria-label="Join huddle"
+        />
+      )}
+      {!isInHuddle && !activeHuddle && (
+        <HuddleAccountPicker
+          onStart={onHuddle}
+          disabled={huddleStartPending}
+          className={NARROW_ICON_CLASS}
+          iconSize={16}
         />
       )}
       <ConversationOverflowMenu

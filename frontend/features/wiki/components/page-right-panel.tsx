@@ -20,6 +20,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { useKbPageBacklinks } from "@/hooks/api/kb/pages";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import { useKbPageActivity } from "@/hooks/api/kb/activity";
 import { useKbPageRecordLinks } from "@/hooks/api/kb/record-links";
 import { useOrgMembersByIds } from "@/hooks/api/organization";
@@ -35,7 +36,6 @@ import { PageFlagBadges } from "./page-flag-badges";
 import { getUserDisplayName, getUserInitials } from "@/lib/person-display";
 import { cn } from "@/lib/utils";
 
-const BACKLINK_DISPLAY_LIMIT = 20;
 const RECORD_LINK_DISPLAY_LIMIT = 20;
 
 const VISIBILITY_LABELS: Record<string, string> = {
@@ -141,6 +141,9 @@ function PanelContent({
     isError: backlinksError,
     error: backlinksReadError,
     refetch: refetchBacklinks,
+    hasNextPage: hasMoreBacklinks,
+    fetchNextPage: loadMoreBacklinks,
+    isFetchingNextPage: backlinksLoadingMore,
   } = useKbPageBacklinks(pageId);
   const { data: recordLinks = [], hasNextPage: hasMoreRecordLinks } =
     useKbPageRecordLinks(pageId);
@@ -165,7 +168,8 @@ function PanelContent({
   const memberIds = [page.lastEditedById, page.ownerUserId].filter(
     (id): id is string => id !== null && id !== undefined,
   );
-  const { data: membersPage, isLoading: membersLoading } = useOrgMembersByIds(memberIds);
+  const { data: membersPage, isLoading: membersLoading } =
+    useOrgMembersByIds(memberIds);
   const members = membersPage?.data ?? [];
 
   function handleBacklinkClick(event: React.MouseEvent<HTMLButtonElement>) {
@@ -210,7 +214,10 @@ function PanelContent({
               {page.trustState ? (
                 <TrustBadge trustState={page.trustState} />
               ) : null}
-              <PageFlagBadges isLocked={page.isLocked} isFavorite={page.isFavorite} />
+              <PageFlagBadges
+                isLocked={page.isLocked}
+                isFavorite={page.isFavorite}
+              />
             </div>
           </PropertyRow>
           <PropertyRow label="Visibility">{visibilityValue}</PropertyRow>
@@ -260,7 +267,7 @@ function PanelContent({
           title="Backlinks"
           count={
             backlinksState.kind === "ready" || backlinksState.kind === "empty"
-              ? backlinks.length
+              ? `${backlinks.length}${hasMoreBacklinks ? "+" : ""}`
               : undefined
           }
         />
@@ -275,7 +282,7 @@ function PanelContent({
         >
           <>
             <ul className="flex flex-col gap-0.5">
-              {backlinks.slice(0, BACKLINK_DISPLAY_LIMIT).map((bl) => (
+              {backlinks.map((bl) => (
                 <li key={bl.id}>
                   <button
                     type="button"
@@ -293,13 +300,17 @@ function PanelContent({
                 </li>
               ))}
             </ul>
-            {backlinks.length > BACKLINK_DISPLAY_LIMIT ? (
-              <p className="mt-1 px-1.5 text-xs text-muted-foreground">
-                +{backlinks.length - BACKLINK_DISPLAY_LIMIT} more
-              </p>
-            ) : null}
+            <InfiniteScrollSentinel
+              hasNextPage={hasMoreBacklinks ?? false}
+              isFetchingNextPage={backlinksLoadingMore}
+              onLoadMore={loadMoreBacklinks}
+              label="Load more backlinks"
+            />
             {backlinksError && (
-              <div role="alert" className="mt-2 space-y-2 text-xs text-destructive">
+              <div
+                role="alert"
+                className="mt-2 space-y-2 text-xs text-destructive"
+              >
                 <p>Could not refresh backlinks.</p>
                 <ErrorReference error={backlinksReadError} />
                 <Button
@@ -388,9 +399,7 @@ export default function PageRightPanel({
     <Sheet open={mobileSheetOpen} onOpenChange={handleMobileSheetChange}>
       <SheetContent side="right" className="gap-0 p-0 sm:max-w-sm">
         <SheetHeader className="border-b border-border px-4 py-3 pr-12">
-          <SheetDescription className="text-xs">
-            Page details
-          </SheetDescription>
+          <SheetDescription className="text-xs">Page details</SheetDescription>
           <SheetTitle className="truncate text-base leading-tight">
             {title}
           </SheetTitle>

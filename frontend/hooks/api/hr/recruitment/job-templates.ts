@@ -5,6 +5,7 @@ import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
+import { DEFAULT_PAGE_SIZE } from "@/lib/list-pagination";
 
 const jobTemplatePageC = lazyContract(() =>
   import("@/hooks/api/hr/recruitment/job-templates-schema").then(
@@ -77,7 +78,6 @@ export interface AppliedJobTemplate {
   draft: JobTemplateDraft;
 }
 
-const TEMPLATES_PREFIX = humanResourcesQueryKeys.hr.jobTemplates();
 
 function templateQueryParams(params: JobTemplatesParams | undefined, limit: number) {
   const queryParams: Record<string, unknown> = { limit };
@@ -87,7 +87,7 @@ function templateQueryParams(params: JobTemplatesParams | undefined, limit: numb
 }
 
 export function useJobTemplates(params?: JobTemplatesParams) {
-  const queryParams = templateQueryParams(params, params?.limit ?? 100);
+  const queryParams = templateQueryParams(params, params?.limit ?? DEFAULT_PAGE_SIZE);
 
   return useGatedQuery("hr:requisitions:view", {
     queryKey: humanResourcesQueryKeys.hr.jobTemplates(queryParams),

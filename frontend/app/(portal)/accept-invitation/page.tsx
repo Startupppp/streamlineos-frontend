@@ -8,7 +8,7 @@ import { useAcceptInvitation } from "@/hooks/api/portal/use-accept-invitation";
 import { setPortalToken } from "@/lib/portal-api-client";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { BRAND_SUPPORT_EMAIL } from "@/lib/branding";
-import { ErrorView, LoadingView, MissingTokenView, StatusLayout } from "./accept-invitation-views";
+import { LoadingView, MissingTokenView, StatusLayout } from "./accept-invitation-views";
 
 export default function AcceptInvitationPage() {
   const searchParams = useSearchParams();

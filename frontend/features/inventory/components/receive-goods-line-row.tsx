@@ -23,7 +23,7 @@ import {
   GRN_DISCREPANCY_LABEL,
   type GrnDiscrepancyReason,
 } from "@/features/inventory/lib/inventory-status";
-import { type DraftLineMeta, type GrnLineRowProps } from "./receive-goods-types";
+import { type GrnLineRowProps } from "./receive-goods-types";
 
 const DISCREPANCY_OPTIONS: GrnDiscrepancyReason[] = ["SHORT", "OVER", "DAMAGED", "WRONG_ITEM"];
 

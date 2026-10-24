@@ -120,25 +120,6 @@ export interface Ticket {
   customer?: { id: number; name: string } | null;
 }
 
-interface TimeEntry {
-  id: number;
-  orgId: string;
-  userId: string | null;
-  ticketId: number | null;
-  date: string;
-  hours: string | null;
-  description: string | null;
-  imageUrl: string | null;
-  workLink: string | null;
-  status: string | null;
-  approvedBy: string | null;
-  approvedAt: string | Date | null;
-  rejectionReason: string | null;
-  isBillable: boolean | null;
-  createdAt: string | Date | null;
-  updatedAt: string | Date | null;
-}
-
 export interface CreateTicketInput {
   projectId: number;
   title: string;

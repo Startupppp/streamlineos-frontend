@@ -21,7 +21,7 @@ import { ErrorState } from "@/components/shared/error-state";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
-  useCampaigns,
+  useCampaign,
   useCampaignRoi,
   useCampaignLeads,
   useFirstTouchAttribution,
@@ -63,8 +63,7 @@ export function CampaignDetailPage({ campaignId }: CampaignDetailPageProps) {
     [leadLayout],
   );
 
-  const { data: listData, isLoading: listLoading, isError: listError, error: listQueryError, refetch: refetchList } = useCampaigns({ limit: 200 });
-  const campaign = listData?.items.find((c) => c.id === campaignId);
+  const { data: campaign, isLoading: listLoading, isError: listError, error: listQueryError, refetch: refetchList } = useCampaign(campaignId);
 
   const { data: roi, isLoading: roiLoading } = useCampaignRoi(campaignId);
   const { data: leadsData, isLoading: leadsLoading } = useCampaignLeads(campaignId, {

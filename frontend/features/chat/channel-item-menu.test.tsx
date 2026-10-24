@@ -43,6 +43,15 @@ beforeEach(() => {
   mockArchive.mockReset().mockResolvedValue(undefined);
 });
 
+describe("ChannelItemMenu — invite is admin-only", () => {
+  it("does not offer Invite People to a non-admin member", async () => {
+    const user = userEvent.setup();
+    render(<ChannelItemMenu channel={channel} currentUserId="u1" />);
+    await user.click(screen.getByRole("button", { name: "Conversation options" }));
+    expect(screen.queryByRole("menuitem", { name: "Invite People" })).toBeNull();
+  });
+});
+
 describe("ChannelItemMenu — hide is confirmed", () => {
   it("names the conversation and cancelling performs no mutation", async () => {
     const user = userEvent.setup();

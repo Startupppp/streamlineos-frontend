@@ -7,6 +7,7 @@ import { useProjectMembers } from "@/hooks/api/build/project-members";
 import { useModuleMemberCandidates } from "@/hooks/api/module-access/members";
 import { useCan } from "@/hooks/api/access";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
+import { DEFAULT_PAGE_SIZE } from "@/lib/list-pagination";
 
 export interface DirectoryMember {
   id: string;
@@ -64,7 +65,7 @@ export function useMemberDirectory(
   });
 
   const { data: buildData, isLoading: buildLoading } = useBuildMembers(
-    { limit: 200, search: debouncedSearch || undefined },
+    { limit: DEFAULT_PAGE_SIZE, search: debouncedSearch || undefined },
     {
       enabled: useBuildScope || useBuildFallback,
       staleTime: 30_000,

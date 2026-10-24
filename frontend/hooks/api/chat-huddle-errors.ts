@@ -2,8 +2,9 @@ import { toast } from "sonner";
 import { isApiError } from "@/lib/api-envelope";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { isRecord } from "@/lib/is-record";
-import { huddleConnectCopy } from "@/features/chat/huddle-provider";
+import { huddleConnectCopy, providerDisplayName } from "@/features/chat/huddle-provider";
 import type { Huddle } from "@/types/chat";
+import type { HuddleAlternative } from "@/hooks/api/chat-schema";
 
 const DEFAULT_CONNECT_PATH = "/calendar?accounts=1";
 const FREE_PLAN_COPY =
@@ -42,7 +43,24 @@ function detailProvider(error: unknown): Huddle["meetingProvider"] {
   return value === "google_meet" || value === "microsoft_teams" ? value : null;
 }
 
-export function reportHuddleStartError(error: unknown, retry: () => void): void {
+function detailAlternatives(error: unknown): HuddleAlternative[] {
+  if (!isApiError(error) || !isRecord(error.details)) return [];
+  const { alternatives } = error.details;
+  if (!Array.isArray(alternatives)) return [];
+  return alternatives.filter(
+    (a): a is HuddleAlternative =>
+      isRecord(a) &&
+      typeof a.connectionId === "number" &&
+      (a.provider === "google_meet" || a.provider === "microsoft_teams") &&
+      typeof a.label === "string",
+  );
+}
+
+export function reportHuddleStartError(
+  error: unknown,
+  retry: () => void,
+  retryWithConnection?: (connectionId: number) => void,
+): void {
   const code = huddleErrorCode(error);
   if (code === "HUDDLE_NO_CONNECTION" || code === "HUDDLE_RECONNECT") {
     const copy = huddleConnectCopy(
@@ -56,10 +74,23 @@ export function reportHuddleStartError(error: unknown, retry: () => void): void 
     return;
   }
   if (code === "HUDDLE_TEAMS_UNSUPPORTED") {
-    toast.error(
-      "Microsoft Teams for Business is required to start a huddle from this account. Connect a different calendar account.",
-      { duration: Number.POSITIVE_INFINITY, action: connectAction("Connect a calendar account", error) },
-    );
+    const alternatives = detailAlternatives(error);
+    const first = alternatives[0];
+    if (first !== undefined && retryWithConnection !== undefined) {
+      const label = `Start with ${providerDisplayName(first.provider)} instead`;
+      toast.error(
+        "Microsoft Teams for Business is required to start a huddle from this account.",
+        {
+          duration: Number.POSITIVE_INFINITY,
+          action: { label, onClick: () => retryWithConnection(first.connectionId) },
+        },
+      );
+    } else {
+      toast.error(
+        "Microsoft Teams for Business is required to start a huddle from this account. Connect a different calendar account.",
+        { duration: Number.POSITIVE_INFINITY, action: connectAction("Connect a calendar account", error) },
+      );
+    }
     return;
   }
   if (code === "HUDDLE_PROVIDER_UNAVAILABLE") {

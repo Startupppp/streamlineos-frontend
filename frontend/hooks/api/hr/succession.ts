@@ -36,10 +36,6 @@ export interface SuccessionPlan {
   updatedAt: string;
 }
 
-interface SuccessionPage {
-  items: SuccessionPlan[];
-  nextCursor: string | null;
-}
 
 export function useSuccessionPlans() {
   const canView = useCan("hr:succession:view");

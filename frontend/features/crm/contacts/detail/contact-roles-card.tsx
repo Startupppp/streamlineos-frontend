@@ -23,12 +23,13 @@ import {
   packEntityRef,
   unpackEntityRef,
 } from "@/lib/renderer/crm/contact-role-layout";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import {
   useContactRoles,
   useAddContactRole,
   useRemoveContactRole,
   useDeals,
-  useCrmOrganizations,
+  useCrmOrganizationsForPicker,
 } from "@/hooks/api/crm";
 import { useCan, useCanState } from "@/hooks/api/access";
 import { useAnimatedIcon } from "@/hooks/common/use-animated-icon";
@@ -44,13 +45,15 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
   const { iconRef, hoverHandlers } = useAnimatedIcon();
 
   const [addOpen, setAddOpen] = useState(false);
+  const [entitySearch, setEntitySearch] = useState("");
+  const debouncedEntitySearch = useDebouncedValue(entitySearch, 300);
 
   const { data: roles, isLoading, isError, error, refetch } = useContactRoles(contactId);
   const addRole = useAddContactRole();
   const removeRole = useRemoveContactRole();
 
-  const { data: deals = [] } = useDeals({ limit: 100 });
-  const { data: orgsData } = useCrmOrganizations({ pageSize: 100 });
+  const { data: deals = [] } = useDeals({ limit: 25, search: debouncedEntitySearch || undefined });
+  const { data: orgsData } = useCrmOrganizationsForPicker(debouncedEntitySearch || undefined);
 
   const entityOptions = useMemo<ComboboxOption[]>(
     () => [
@@ -209,6 +212,7 @@ export function ContactRolesCard({ contactId }: ContactRolesCardProps) {
                   options={entityOptions}
                   value={control.value}
                   onChange={control.onChange}
+                  onSearchChange={setEntitySearch}
                   disabled={control.disabled}
                   placeholder="Select a deal or company"
                   searchPlaceholder="Search deals and companies"

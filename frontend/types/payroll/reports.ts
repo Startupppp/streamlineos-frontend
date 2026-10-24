@@ -28,7 +28,6 @@ export type PayrollReportType =
   | "journal"
   | "pay-compression";
 
-export type PayrollSummaryReport = z.infer<typeof summaryReportContract>;
 
 export type EmployeeRegisterRow = z.infer<typeof registerReportContract>["rows"][number];
 

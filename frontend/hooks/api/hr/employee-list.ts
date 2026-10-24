@@ -5,6 +5,7 @@ import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { DEFAULT_PAGE_SIZE } from "@/lib/list-pagination";
 import { employeeListQueryOptions } from "./employee-list-read-options";
 
 const employeeListPageLazy = lazyContract(() =>
@@ -178,9 +179,9 @@ export function useHrEmployeeOptions(
 ) {
   const canView = useCan("hr:employees:view");
   const { enabled, ...rest } = params ?? {};
-  const merged = { limit: 100, isActive: "current" as const, ...rest };
+  const merged = { limit: DEFAULT_PAGE_SIZE, isActive: "current" as const, ...rest };
   const query = useHrEmployees(
-    { ...merged, limit: Math.min(merged.limit, 100) },
+    { ...merged, limit: Math.min(merged.limit, DEFAULT_PAGE_SIZE) },
     { enabled: canView && (enabled ?? true) },
   );
   return {

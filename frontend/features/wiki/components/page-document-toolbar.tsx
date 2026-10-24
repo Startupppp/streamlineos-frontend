@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { TruncatedText } from "@/components/ui/truncated-text";
+import { InfiniteScrollSentinel } from "@/components/ui/infinite-scroll-sentinel";
 import {
   useToggleFavoriteKbPage,
   useDuplicateKbPage,
@@ -88,7 +89,12 @@ export function PageDocumentToolbar({
   const lockPage = useLockKbPage();
   const exportPage = useExportKbPage();
   const exportInFlightRef = useRef(false);
-  const { data: backlinks = [] } = useKbPageBacklinks(pageId);
+  const {
+    data: backlinks = [],
+    hasNextPage: hasMoreBacklinks,
+    fetchNextPage: loadMoreBacklinks,
+    isFetchingNextPage: backlinksLoadingMore,
+  } = useKbPageBacklinks(pageId);
 
   const actions = resolveKbPageActions(
     {
@@ -212,22 +218,31 @@ export function PageDocumentToolbar({
                       <KbLink2Icon className="mr-2 h-4 w-4" />
                       {action.label}
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent className="w-56">
+                    <DropdownMenuSubContent className="w-56 max-h-72 overflow-y-auto">
                       {backlinks.length === 0 ? (
                         <div className="px-2 py-1.5 text-xs text-muted-foreground">
                           No files link here yet.
                         </div>
                       ) : (
-                        backlinks.map((bl) => (
-                          <DropdownMenuItem
-                            key={bl.id}
-                            data-page-id={String(bl.id)}
-                            onSelect={handleBacklinkSelect}
-                          >
-                            <span className="mr-2 shrink-0">{bl.icon ?? "📄"}</span>
-                            <TruncatedText text={bl.title || "Untitled"} />
-                          </DropdownMenuItem>
-                        ))
+                        <>
+                          {backlinks.map((bl) => (
+                            <DropdownMenuItem
+                              key={bl.id}
+                              data-page-id={String(bl.id)}
+                              onSelect={handleBacklinkSelect}
+                            >
+                              <span className="mr-2 shrink-0">{bl.icon ?? "📄"}</span>
+                              <TruncatedText text={bl.title || "Untitled"} />
+                            </DropdownMenuItem>
+                          ))}
+                          <InfiniteScrollSentinel
+                            hasNextPage={hasMoreBacklinks ?? false}
+                            isFetchingNextPage={backlinksLoadingMore}
+                            onLoadMore={loadMoreBacklinks}
+                            label="Load more backlinks"
+                            rootMargin="0px"
+                          />
+                        </>
                       )}
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>

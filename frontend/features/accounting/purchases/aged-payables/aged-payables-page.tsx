@@ -10,7 +10,6 @@ import { PageState } from "@/components/shared/page-state";
 import { FILTER_TOOLBAR_ROW } from "@/components/ui/content-fill-panel";
 import { STANDARD_PAGE_SIZE_OPTIONS } from "@/lib/list-pagination";
 import { formatMinorMoney } from "@/lib/accounting/money";
-import { useCan } from "@/hooks/api/access";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { useApAging } from "@/hooks/api/accounting/ap";
 import {

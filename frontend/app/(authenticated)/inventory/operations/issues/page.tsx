@@ -25,11 +25,7 @@ const TYPE_BADGE: Record<string, string> = {
 
 const ISSUES_READ_KEY = "inventory:stock:read";
 
-function formatDate(value: string | null | undefined): string {
-  if (!value) return "—";
-  const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString();
-}
+
 
 function TypeBadge({ type }: { type: string }) {
   const cls = TYPE_BADGE[type] ?? "bg-muted text-muted-foreground border-border";

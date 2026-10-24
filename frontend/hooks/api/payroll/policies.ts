@@ -8,11 +8,7 @@ import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import type {
   PolicyRow,
-  PolicyCurrentResult,
-  ToggleImpactResult,
   PolicyPreviewResult,
-  ActivateResult,
-  VersionRow,
 } from "@/types/payroll/setup";
 import { policyPreviewContract } from "@/hooks/api/payroll/setup-preview-schema";
 

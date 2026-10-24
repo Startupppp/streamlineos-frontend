@@ -41,12 +41,6 @@ function resolveProductHref(key: ModuleKey): string {
   return manifestModule?.route ?? `/${key}`;
 }
 
-const manifestModuleKeys = new Set(
-  MANIFEST.modules
-    .filter((m) => m.moduleKey !== null)
-    .map((m) => m.moduleKey as string),
-);
-
 export const MODULE_SWITCHER_ORDER: readonly ModuleKey[] = [
   "home",
   "documents",

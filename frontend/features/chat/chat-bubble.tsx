@@ -1,6 +1,12 @@
 "use client";
 
+import { Fragment } from "react";
 import { Forward, MessageSquare, Trash2 } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { cn, resolveImageUrl } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { TruncatedText } from "@/components/ui/truncated-text";
@@ -38,6 +44,7 @@ export function ChatBubble({
   onUnsaveMsg,
   onForward,
   resolveUserName,
+  resolveReactionNames,
 }: {
   message: Message;
   isOwn: boolean;
@@ -65,6 +72,7 @@ export function ChatBubble({
     userId: string | null,
     embedded?: { name?: string | null; email?: string | null } | null,
   ) => string;
+  resolveReactionNames?: (userIds: string[]) => string;
 }) {
   const bubbleMeta = message.metadata;
   const senderName = resolveUserName
@@ -85,6 +93,16 @@ export function ChatBubble({
     message.content,
     bubbleMeta?.forwardCount,
   );
+
+  if (message.messageType === "system") {
+    return (
+      <div className="flex justify-center px-4 my-2">
+        <p className="text-center text-dense text-muted-foreground italic">
+          {message.content}
+        </p>
+      </div>
+    );
+  }
 
   if (message.isDeleted) {
     return (
@@ -164,11 +182,14 @@ export function ChatBubble({
               className={cn(
                 "truncate",
                 isOwn ? "text-primary-foreground/70" : "text-muted-foreground",
+                message.replyTo.isDeleted && "italic",
               )}
             >
-              {message.replyTo.content
-                ? renderFormattedContent(message.replyTo.content, isOwn)
-                : null}
+              {message.replyTo.isDeleted
+                ? "Original message deleted"
+                : message.replyTo.content
+                  ? renderFormattedContent(message.replyTo.content, isOwn)
+                  : null}
             </p>
           </div>
         )}
@@ -251,9 +272,10 @@ export function ChatBubble({
             {Object.entries(message.reactions).map(([emoji, userIds]) => {
               const hasReacted = userIds.includes(currentUserId);
               const handleReactClick = () => onReact(emoji);
-              return (
+              const reactorLabel = resolveReactionNames?.(userIds);
+              const chip = (
                 <button
-                  key={emoji}
+                  type="button"
                   onClick={handleReactClick}
                   className={cn(
                     "flex items-center gap-1 px-2 py-0.5 rounded-full border text-xs transition-colors",
@@ -267,6 +289,15 @@ export function ChatBubble({
                     {userIds.length}
                   </span>
                 </button>
+              );
+              if (!reactorLabel) return <Fragment key={emoji}>{chip}</Fragment>;
+              return (
+                <Tooltip key={emoji}>
+                  <TooltipTrigger asChild>{chip}</TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-xs text-xs">
+                    {reactorLabel}
+                  </TooltipContent>
+                </Tooltip>
               );
             })}
           </div>

@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Popover,
   PopoverContent,
@@ -18,6 +19,9 @@ export interface BuildMultiFilterSelectProps {
   options: readonly BuildFilterOption[];
   disabled?: boolean;
   className?: string;
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+  searchPlaceholder?: string;
 }
 
 export function BuildMultiFilterSelect({
@@ -27,6 +31,9 @@ export function BuildMultiFilterSelect({
   options,
   disabled,
   className,
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
 }: BuildMultiFilterSelectProps) {
   const toggle = useCallback(
     (value: string) => {
@@ -61,6 +68,17 @@ export function BuildMultiFilterSelect({
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-52 p-1">
+        {onSearchChange && (
+          <div className="px-1 pb-1">
+            <Input
+              value={searchValue ?? ""}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={searchPlaceholder ?? `Search ${label.toLowerCase()}…`}
+              className="h-7 text-xs"
+              autoFocus
+            />
+          </div>
+        )}
         {options.map((option) => {
           const checked = values.includes(option.value);
           return (

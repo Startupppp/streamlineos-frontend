@@ -6,7 +6,6 @@ import { lazyContract } from "@/lib/api-envelope";
 import { payrollQueryKeys } from "@/lib/query-keys/payroll";
 import { useCan } from "@/hooks/api/access";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
-import type { OffsetPage } from "@/hooks/api/offset-page-schema";
 
 const loanListC = lazyContract(() =>
   import("@/hooks/api/payroll/loans-admin-schema").then((m) => m.loanListResponseContract),

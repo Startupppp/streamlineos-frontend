@@ -74,7 +74,6 @@ const verifySubscriptionContract = lazyContract(() =>
 const updateBillingProfileContract = lazyContract(() =>
   import("@/hooks/api/subscription-schema").then((m) => m.billingProfileContract),
 );
-const verifySubscriptionRequestContract = lazyContract(() =>
   import("@/hooks/api/subscription-schema").then((m) => m.verifySubscriptionRequestContract),
 );
 

@@ -229,6 +229,46 @@ describe("a muted channel raises no alert", () => {
   });
 });
 
+describe("direct message toast copy", () => {
+  it("uses the partner name and a snippet instead of repeating Direct message", async () => {
+    const dmChannel: Channel = {
+      ...channelWith({}),
+      type: "DIRECT",
+      name: "Direct message",
+      members: [
+        member({ userId: CURRENT_USER_ID }),
+        {
+          ...member({ userId: "user-2" }),
+          user: { id: "user-2", name: "Bob", image: null },
+        },
+      ],
+    };
+    const ably = makeAblyMock();
+    useAbly.mockReturnValue(ably);
+    const { unmount } = renderHook(
+      () => useChatGlobalNotifications([dmChannel], null, CURRENT_USER_ID),
+      { wrapper: makeWrapper(freshClient()) },
+    );
+    await waitFor(() => {
+      expect(ably.handlers.get(`${CHAT_CHANNEL}::message`)?.length).toBe(1);
+    });
+    act(() => {
+      ably.handlers.get(`${CHAT_CHANNEL}::message`)?.[0]?.({
+        data: {
+          ...INBOUND_MESSAGE,
+          senderName: "Direct message",
+          content: "Direct message",
+        },
+      });
+    });
+    expect(toast).toHaveBeenCalledWith("Bob", {
+      description: "Sent you a message",
+      duration: 5_000,
+    });
+    unmount();
+  });
+});
+
 describe("the notification preference suppresses general alerts", () => {
   it("shows no toast when the viewer chose NOTHING", async () => {
     const unmount = await deliverToGlobalNotifications(

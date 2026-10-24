@@ -231,15 +231,20 @@ export default function PageDocument({
 
   const handleDiscardMine = useCallback(() => {
     setIsReloading(true);
-    void refetch()
+    void refetch({ cancelRefetch: true })
       .then(
         (result) => {
+          if (!result.isSuccess || !result.data) {
+            toast.error(
+              "Couldn't load the latest file version. Your edits are still here.",
+            );
+            return;
+          }
+          const expected = conflict?.currentContentRevision;
           if (
-            !result.isSuccess ||
-            !result.data ||
-            (conflict?.currentContentRevision !== null &&
-              conflict?.currentContentRevision !== undefined &&
-              result.data.contentRevision < conflict.currentContentRevision)
+            expected !== null &&
+            expected !== undefined &&
+            result.data.contentRevision < expected
           ) {
             toast.error(
               "Couldn't load the latest file version. Your edits are still here.",
@@ -251,6 +256,7 @@ export default function PageDocument({
           setEditorDraft(null);
           editorSnapshotRef.current = null;
           setReloadNonce(nextReload);
+          toast.success("Loaded their version");
         },
         () => {
           toast.error(

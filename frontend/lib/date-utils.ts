@@ -157,13 +157,36 @@ export function endOfDayInTimeZone(now: Date, zone: string | null | undefined): 
   return new Date(wallEnd - zoneOffsetMs(guess, timeZone));
 }
 
+function canonicalizeTimeZone(zone: string): string {
+  const normalized = zone.trim();
+  if (
+    normalized === "UTC" ||
+    normalized === "GMT" ||
+    normalized === "Etc/UTC" ||
+    normalized === "Etc/GMT" ||
+    normalized === "Etc/GMT+0" ||
+    normalized === "Etc/GMT-0"
+  ) {
+    return "UTC";
+  }
+  if (normalized === "Asia/Calcutta") return "Asia/Kolkata";
+  return normalized;
+}
+
+function displayTimeZone(zone: string): string {
+  const canonical = canonicalizeTimeZone(zone);
+  return canonical === "UTC" ? "UTC" : canonical;
+}
+
 function resolveTimeZone(zone: string | null | undefined, fallback: string): string {
-  if (!zone) return fallback;
+  const fallbackCanonical = canonicalizeTimeZone(fallback);
+  if (!zone) return fallbackCanonical;
+  const canonical = canonicalizeTimeZone(zone);
   try {
-    new Intl.DateTimeFormat("en-IN", { timeZone: zone });
-    return zone;
+    new Intl.DateTimeFormat("en-IN", { timeZone: canonical });
+    return canonical;
   } catch {
-    return fallback;
+    return fallbackCanonical;
   }
 }
 
@@ -176,15 +199,17 @@ export function formatEventTimeRange(
   const from = start instanceof Date ? start : new Date(start);
   const to = end instanceof Date ? end : new Date(end);
   if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return "";
-  const reader = readerZone ?? readerTimeZone();
-  const zone = resolveTimeZone(timezone, reader);
+  const readerRaw = readerZone ?? readerTimeZone();
+  const reader = canonicalizeTimeZone(resolveTimeZone(readerRaw, readerRaw));
+  const zone = canonicalizeTimeZone(resolveTimeZone(timezone, reader));
+  const readerLabel = displayTimeZone(reader);
   const date = new Intl.DateTimeFormat("en-IN", { ...EVENT_DATE_PARTS, timeZone: reader }).format(from);
   const fromTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: reader }).format(from);
   const toTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: reader }).format(to);
-  const primary = `${date}, ${fromTime} – ${toTime} · ${reader}`;
+  const primary = `${date}, ${fromTime} – ${toTime} · ${readerLabel}`;
   if (zone === reader) return primary;
   const sourceTime = new Intl.DateTimeFormat("en-IN", { ...EVENT_TIME_PARTS, timeZone: zone }).format(from);
-  return `${primary} (${sourceTime} ${zone})`;
+  return `${primary} (${sourceTime} ${displayTimeZone(zone)})`;
 }
 
 export function formatEventDate(value: string | Date, timezone?: string | null): string {

@@ -4,7 +4,6 @@ import type { essOverviewContract } from "@/hooks/api/payroll/ess-overview-schem
 import type { totalRewardsStatementContract } from "@/hooks/api/payroll/ess-overview-schema";
 
 export type {
-  EssBankDetails,
   EssPayslip,
 } from "@/hooks/api/payroll/ess-schema";
 

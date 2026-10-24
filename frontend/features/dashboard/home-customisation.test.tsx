@@ -87,6 +87,7 @@ jest.mock("@/features/dashboard/use-dashboard-access", () => ({
     canViewTickets: true,
     canViewPayrollSelf: true, canRunPayroll: false, canViewPayslips: false,
     canViewSignEnvelopes: true,
+    canViewCalendar: true,
   }),
 }));
 
@@ -120,6 +121,7 @@ jest.mock("next-auth/react", () => ({
 
 const allEnabled: HomeWidgetGridProps = {
   projectsEnabled: true, hrEnabled: true,
+  canViewLeaves: true, canViewCalendar: true,
   canViewExecutive: true, canSelfAttendance: true,
   crmEnabled: true, canViewCrmLeads: true,
   payrollEnabled: true, canViewPayrollSelf: true,

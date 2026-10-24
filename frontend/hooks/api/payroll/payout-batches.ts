@@ -52,9 +52,7 @@ export function usePayoutValidation(runId: number) {
   });
 }
 
-type PayoutBatchesPage = {
-  data: PayoutBatch[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
+
 };
 
 export function usePayoutBatches(runId?: number) {

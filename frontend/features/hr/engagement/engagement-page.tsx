@@ -26,7 +26,9 @@ import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
 
 const recognitionRowContract = lazyContract(() =>
-  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionContract),
+  import("@/features/hr/engagement/engagement-schema").then(
+    (m) => m.recognitionContract,
+  ),
 );
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
@@ -37,7 +39,11 @@ import { usePageState } from "@/hooks/api/use-page-state";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
-import { useEngagementOverview, useMyMoodHistory, useOrgMoodAggregate } from "@/hooks/api/hr/engagement";
+import {
+  useEngagementOverview,
+  useMyMoodHistory,
+  useOrgMoodAggregate,
+} from "@/hooks/api/hr/engagement";
 import { recognitionQueryOptions } from "@/hooks/api/hr/engagement-read-options";
 import { useOrgMembers } from "@/hooks/api/organization";
 import {
@@ -58,30 +64,43 @@ import { PollsTab } from "@/features/hr/engagement/polls-tab";
 import { CommunitiesTab } from "@/features/hr/engagement/communities-tab";
 import { CampaignsTab } from "@/features/hr/engagement/campaigns-tab";
 
-type Tab = "overview" | "recognition" | "mood" | "polls" | "communities" | "campaigns";
+type Tab =
+  | "overview"
+  | "recognition"
+  | "mood"
+  | "polls"
+  | "communities"
+  | "campaigns";
 
 const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: "overview", label: "Overview", icon: <TrendingUp className="h-3.5 w-3.5" /> },
-  { id: "recognition", label: "Recognition", icon: <Heart className="h-3.5 w-3.5" /> },
+  {
+    id: "overview",
+    label: "Overview",
+    icon: <TrendingUp className="h-3.5 w-3.5" />,
+  },
+  {
+    id: "recognition",
+    label: "Recognition",
+    icon: <Heart className="h-3.5 w-3.5" />,
+  },
   { id: "mood", label: "Mood", icon: <Smile className="h-3.5 w-3.5" /> },
   { id: "polls", label: "Polls", icon: <BarChart3 className="h-3.5 w-3.5" /> },
-  { id: "communities", label: "Communities", icon: <Users className="h-3.5 w-3.5" /> },
-  { id: "campaigns", label: "Campaigns", icon: <Megaphone className="h-3.5 w-3.5" /> },
+  {
+    id: "communities",
+    label: "Communities",
+    icon: <Users className="h-3.5 w-3.5" />,
+  },
+  {
+    id: "campaigns",
+    label: "Campaigns",
+    icon: <Megaphone className="h-3.5 w-3.5" />,
+  },
 ];
 
-interface Recognition {
-  id: number;
-  fromUserId: string;
-  toUserId: string;
-  message: string;
-  category: string;
-  createdAt: string;
-  fromUser?: { name: string | null; email: string | null };
-  toUser?: { name: string | null; email: string | null };
-}
-
 const recognitionListC = lazyContract(() =>
-  import("@/features/hr/engagement/engagement-schema").then((m) => m.recognitionListContract),
+  import("@/features/hr/engagement/engagement-schema").then(
+    (m) => m.recognitionListContract,
+  ),
 );
 
 function useRecognitions() {
@@ -100,9 +119,21 @@ function useCreateRecognition() {
   const qc = useQueryClient();
   return useAuthorizedMutation("hr:engagement:view", {
     mutationKey: ["hr", "recognition", "create"],
-    mutationFn: (data: { toUserId: string; message: string; category: string }) =>
-      apiClient.post("/hr/recognition", data, undefined, recognitionRowContract),
-    onSuccess: () => qc.invalidateQueries({ queryKey: humanResourcesQueryKeys.hr.hrRecognition }),
+    mutationFn: (data: {
+      toUserId: string;
+      message: string;
+      category: string;
+    }) =>
+      apiClient.post(
+        "/hr/recognition",
+        data,
+        undefined,
+        recognitionRowContract,
+      ),
+    onSuccess: () =>
+      qc.invalidateQueries({
+        queryKey: humanResourcesQueryKeys.hr.hrRecognition,
+      }),
   });
 }
 
@@ -110,17 +141,31 @@ function MoodIcon({ mood }: { mood: number }) {
   const entry = MOODS.find((m) => m.value === mood);
   if (!entry) return null;
   const Icon = entry.icon;
-  return <Icon className="h-5 w-5 shrink-0 text-foreground" aria-label={entry.label} role="img" />;
+  return (
+    <Icon
+      className="h-5 w-5 shrink-0 text-foreground"
+      aria-label={entry.label}
+      role="img"
+    />
+  );
 }
 
-function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) {
+function MoodSparkline({
+  data,
+}: {
+  data: { date: string; avgMood: number }[];
+}) {
   if (data.length === 0) return null;
   const last14 = data.slice(-14);
   const max = 5;
   const h = 40;
 
   return (
-    <svg viewBox={`0 0 ${last14.length * 12} ${h}`} className="w-full h-10" preserveAspectRatio="none">
+    <svg
+      viewBox={`0 0 ${last14.length * 12} ${h}`}
+      className="w-full h-10"
+      preserveAspectRatio="none"
+    >
       <polyline
         fill="none"
         stroke="var(--primary)"
@@ -137,9 +182,25 @@ function MoodSparkline({ data }: { data: { date: string; avgMood: number }[] }) 
 
 function OverviewTab() {
   const { staggerContainer, fadeUp } = useMotionVariants();
-  const { data: overview, isLoading, isError, error, refetch } = useEngagementOverview();
-  const { data: moodData, isLoading: moodLoading, isError: moodError, error: moodErrorData, refetch: refetchMood } = useOrgMoodAggregate();
-  const { data: recognitions, isLoading: recLoading, isError: recError } = useRecognitions();
+  const {
+    data: overview,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useEngagementOverview();
+  const {
+    data: moodData,
+    isLoading: moodLoading,
+    isError: moodError,
+    error: moodErrorData,
+    refetch: refetchMood,
+  } = useOrgMoodAggregate();
+  const {
+    data: recognitions,
+    isLoading: recLoading,
+    isError: recError,
+  } = useRecognitions();
   const { data: membersData } = useOrgMembers(1, 200);
   const canManage = useCan("hr:engagement:manage");
 
@@ -155,7 +216,11 @@ function OverviewTab() {
   const recentCount = recognitions?.length ?? 0;
   const eom = overview?.employeeOfMonth?.top;
   const eomMember = eom ? memberById.get(eom.userId) : undefined;
-  const eomName = eomMember ? getUserDisplayName(eomMember) : eom ? "Unknown" : null;
+  const eomName = eomMember
+    ? getUserDisplayName(eomMember)
+    : eom
+      ? "Unknown"
+      : null;
   const eomInitials = eomMember ? getUserInitials(eomMember) : eom ? "?" : null;
 
   function handleRetry(): void {
@@ -167,7 +232,13 @@ function OverviewTab() {
   }
 
   if (isError)
-    return <ErrorState title="Couldn't load engagement data" description={getErrorMessage(error)} onRetry={handleRetry} />;
+    return (
+      <ErrorState
+        title="Couldn't load engagement data"
+        description={getErrorMessage(error)}
+        onRetry={handleRetry}
+      />
+    );
 
   return (
     <div className="space-y-4">
@@ -197,7 +268,9 @@ function OverviewTab() {
             />
             <StatCard
               label="Mood responses"
-              value={moodData ? moodPoints.reduce((acc, d) => acc + d.count, 0) : "—"}
+              value={
+                moodData ? moodPoints.reduce((acc, d) => acc + d.count, 0) : "—"
+              }
               hint={moodError ? "Couldn't load" : "Aggregated"}
               icon={Smile}
               tone="blue"
@@ -207,7 +280,10 @@ function OverviewTab() {
               label="Avg mood"
               value={
                 recentMoodPoints.length > 0
-                  ? (recentMoodPoints.reduce((s, d) => s + d.avgMood, 0) / recentMoodPoints.length).toFixed(1)
+                  ? (
+                      recentMoodPoints.reduce((s, d) => s + d.avgMood, 0) /
+                      recentMoodPoints.length
+                    ).toFixed(1)
                   : "—"
               }
               hint={moodError ? "Couldn't load" : "Last 7 days"}
@@ -222,22 +298,34 @@ function OverviewTab() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {canManage && (
           <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-            <p className="text-sm font-semibold text-foreground">Mood trend (14 days)</p>
+            <p className="text-sm font-semibold text-foreground">
+              Mood trend (14 days)
+            </p>
             {moodLoading || (!moodData && !moodError) ? (
               <Skeleton className="h-10 w-full" />
             ) : moodError || !moodData ? (
-              <ErrorState compact title="Couldn't load the mood trend" description={getErrorMessage(moodErrorData)} onRetry={handleRetryMood} />
+              <ErrorState
+                compact
+                title="Couldn't load the mood trend"
+                description={getErrorMessage(moodErrorData)}
+                onRetry={handleRetryMood}
+              />
             ) : moodPoints.length > 0 ? (
               <MoodSparkline data={moodPoints} />
             ) : moodData.suppressedDays > 0 ? (
               <AnonymitySuppressedNotice minResponses={moodData.minResponses} />
             ) : (
-              <p className="text-xs text-muted-foreground py-4 text-center">No mood check-ins yet</p>
+              <p className="text-xs text-muted-foreground py-4 text-center">
+                No mood check-ins yet
+              </p>
             )}
             {moodData && moodPoints.length > 0 ? (
               <p className="text-dense text-muted-foreground">
-                Aggregated — days with fewer than {moodData.minResponses} responses are hidden to protect anonymity
-                {moodData.suppressedDays > 0 ? ` (${moodData.suppressedDays} hidden)` : ""}
+                Aggregated — days with fewer than {moodData.minResponses}{" "}
+                responses are hidden to protect anonymity
+                {moodData.suppressedDays > 0
+                  ? ` (${moodData.suppressedDays} hidden)`
+                  : ""}
               </p>
             ) : null}
           </div>
@@ -245,7 +333,9 @@ function OverviewTab() {
 
         <div className="bg-card border border-border rounded-xl p-4 space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-semibold text-foreground">Employee of the Month</p>
+            <p className="text-sm font-semibold text-foreground">
+              Employee of the Month
+            </p>
             <Badge variant="secondary" className="text-micro">
               {overview?.employeeOfMonth?.period ?? "—"}
             </Badge>
@@ -264,14 +354,18 @@ function OverviewTab() {
                 {eomInitials}
               </div>
               <div>
-                <p className="text-xs font-semibold text-foreground">{eomName}</p>
+                <p className="text-xs font-semibold text-foreground">
+                  {eomName}
+                </p>
                 <p className="text-dense text-muted-foreground">
                   {eom.recognitions} kudos · {eom.points} pts
                 </p>
               </div>
             </div>
           ) : (
-            <p className="text-xs text-muted-foreground py-4 text-center">No data for this period</p>
+            <p className="text-xs text-muted-foreground py-4 text-center">
+              No data for this period
+            </p>
           )}
         </div>
       </div>
@@ -300,7 +394,11 @@ function RecognitionTab() {
     setKudosOpen(true);
   }
 
-  function handleKudosSubmit(data: { toUserId: string; message: string; category: string }): void {
+  function handleKudosSubmit(data: {
+    toUserId: string;
+    message: string;
+    category: string;
+  }): void {
     toast.promise(createRecognition.mutateAsync(data), {
       loading: "Sending kudos...",
       success: () => {
@@ -355,7 +453,13 @@ function RecognitionTab() {
 }
 
 function MoodTab() {
-  const { data: history, isLoading, isError, error, refetch } = useMyMoodHistory();
+  const {
+    data: history,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useMyMoodHistory();
 
   function handleRetry(): void {
     void refetch();
@@ -374,16 +478,33 @@ function MoodTab() {
             ))}
           </div>
         ) : isError ? (
-          <ErrorState compact title="Couldn't load mood history" description={getErrorMessage(error)} onRetry={handleRetry} />
+          <ErrorState
+            compact
+            title="Couldn't load mood history"
+            description={getErrorMessage(error)}
+            onRetry={handleRetry}
+          />
         ) : !history || history.length === 0 ? (
-          <p className="text-xs text-muted-foreground text-center py-6">No mood check-ins yet</p>
+          <p className="text-xs text-muted-foreground text-center py-6">
+            No mood check-ins yet
+          </p>
         ) : (
           <div className="space-y-1">
             {history.slice(0, 14).map((entry) => (
-              <div key={entry.id} className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-muted/50">
+              <div
+                key={entry.id}
+                className="flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-muted/50"
+              >
                 <MoodIcon mood={entry.mood} />
-                <span className="text-xs text-muted-foreground w-24 shrink-0">{entry.date}</span>
-                {entry.note && <TruncatedText text={entry.note} className="text-xs text-foreground" />}
+                <span className="text-xs text-muted-foreground w-24 shrink-0">
+                  {entry.date}
+                </span>
+                {entry.note && (
+                  <TruncatedText
+                    text={entry.note}
+                    className="text-xs text-foreground"
+                  />
+                )}
               </div>
             ))}
           </div>
@@ -399,7 +520,11 @@ interface EngagementTabPillProps {
   onSelect: (id: Tab) => void;
 }
 
-function EngagementTabPill({ tab, activeTab, onSelect }: EngagementTabPillProps) {
+function EngagementTabPill({
+  tab,
+  activeTab,
+  onSelect,
+}: EngagementTabPillProps) {
   function handleClick(): void {
     onSelect(tab.id);
   }
@@ -416,16 +541,26 @@ export function HrEngagementPage() {
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const { data: session } = useSession();
   const currentUserId = session?.user?.id ?? "";
-  const pageState = usePageState({ permission: "hr:engagement:view", isLoading: false, isError: false });
+  const pageState = usePageState({
+    permission: "hr:engagement:view",
+    isLoading: false,
+    isError: false,
+  });
 
   const tabContent = (() => {
     switch (activeTab) {
-      case "overview": return <OverviewTab />;
-      case "recognition": return <RecognitionTab />;
-      case "mood": return <MoodTab />;
-      case "polls": return <PollsTab />;
-      case "communities": return <CommunitiesTab currentUserId={currentUserId} />;
-      case "campaigns": return <CampaignsTab />;
+      case "overview":
+        return <OverviewTab />;
+      case "recognition":
+        return <RecognitionTab />;
+      case "mood":
+        return <MoodTab />;
+      case "polls":
+        return <PollsTab />;
+      case "communities":
+        return <CommunitiesTab currentUserId={currentUserId} />;
+      case "campaigns":
+        return <CampaignsTab />;
     }
   })();
 
@@ -438,7 +573,12 @@ export function HrEngagementPage() {
         <div className="flex flex-1 min-h-0 flex-col gap-4">
           <FilterPillGroup className="flex-wrap overflow-x-visible">
             {TABS.map((tab) => (
-              <EngagementTabPill key={tab.id} tab={tab} activeTab={activeTab} onSelect={setActiveTab} />
+              <EngagementTabPill
+                key={tab.id}
+                tab={tab}
+                activeTab={activeTab}
+                onSelect={setActiveTab}
+              />
             ))}
           </FilterPillGroup>
 

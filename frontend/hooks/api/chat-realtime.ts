@@ -25,7 +25,11 @@ import {
   findCachedMessage,
   patchChatMessage,
 } from "@/hooks/api/chat-message-cache";
-import { patchChannelRow, patchLastMessageAfterDelete } from "@/hooks/api/chat-channel-cache";
+import {
+  patchChannelRow,
+  patchLastMessageAfterDelete,
+  patchLastMessageIfLatest,
+} from "@/hooks/api/chat-channel-cache";
 import { useAblyConnection } from "@/features/chat/use-ably-connection";
 import { recordChatArrival } from "@/features/chat/chat-arrivals";
 import {
@@ -170,6 +174,7 @@ export function useChatRealtime(
         isEdited: true,
         updatedAt,
       });
+      patchLastMessageIfLatest(queryClient, channelId, id, content);
     };
 
     const messageDeletedHandler = (msg: InboundMessage) => {

@@ -82,10 +82,22 @@ jest.mock("@/features/dashboard/use-dashboard-access", () => ({
     crmEnabled: true,
     projectsEnabled: true,
     payrollEnabled: true,
-    canViewExecutive: true,
+    signEnabled: true,
+    canViewEmployees: true,
+    canCreateEmployees: true,
+    canViewAttendance: true,
     canSelfAttendance: true,
+    canViewLeaves: true,
+    canApproveLeaves: true,
+    canViewExecutive: true,
     canViewCrmLeads: true,
+    canViewCrmReports: true,
+    canViewTickets: true,
     canViewPayrollSelf: true,
+    canRunPayroll: false,
+    canViewPayslips: false,
+    canViewSignEnvelopes: true,
+    canViewCalendar: true,
   }),
 }));
 
@@ -141,6 +153,8 @@ jest.mock("@/features/hr/expenses/components/create-expense-dialog", () => ({
 const allEnabled: HomeWidgetGridProps = {
   projectsEnabled: true,
   hrEnabled: true,
+  canViewLeaves: true,
+  canViewCalendar: true,
   canViewExecutive: true,
   canSelfAttendance: true,
   crmEnabled: true,
@@ -297,6 +311,7 @@ function makeAccess(overrides: Partial<DashboardAccess> = {}): DashboardAccess {
     canViewLeaves: false, canApproveLeaves: false,
     canViewExecutive: false, canViewCrmLeads: false, canViewCrmReports: false,
     canViewTickets: false, canViewPayrollSelf: false, canRunPayroll: false, canViewPayslips: false, canViewSignEnvelopes: false,
+    canViewCalendar: true,
     ...overrides,
   };
 }

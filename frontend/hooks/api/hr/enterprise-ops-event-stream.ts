@@ -25,10 +25,6 @@ export interface EventCatalogEntry {
   entityTypes: string[];
 }
 
-interface PaginatedResult<T> {
-  data: T[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
 
 export interface ListEventsParams {
   cursor?: string;

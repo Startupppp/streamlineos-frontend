@@ -258,33 +258,34 @@ export function ChannelInfoPanel({
                       : `Started ${formatDistanceToNow(new Date(channel.createdAt), { addSuffix: true })}`}
                   </p>
                 )}
-                {isArchivedForMe ? (
-                  <LoadingButton
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-full text-xs"
-                    onClick={handleUnarchive}
-                    isPending={unarchiveChannel.isPending}
-                  >
-                    {!unarchiveChannel.isPending && (
-                      <ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />
-                    )}
-                    Unarchive chat
-                  </LoadingButton>
-                ) : (
-                  <LoadingButton
-                    variant="outline"
-                    size="sm"
-                    className="h-9 w-full text-xs"
-                    onClick={handleRequestArchive}
-                    isPending={archiveChannel.isPending}
-                  >
-                    {!archiveChannel.isPending && (
-                      <Archive className="mr-1.5 h-3.5 w-3.5" />
-                    )}
-                    Archive chat
-                  </LoadingButton>
-                )}
+                {isAdmin &&
+                  (isArchivedForMe ? (
+                    <LoadingButton
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-full text-xs"
+                      onClick={handleUnarchive}
+                      isPending={unarchiveChannel.isPending}
+                    >
+                      {!unarchiveChannel.isPending && (
+                        <ArchiveRestore className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Unarchive chat
+                    </LoadingButton>
+                  ) : (
+                    <LoadingButton
+                      variant="outline"
+                      size="sm"
+                      className="h-9 w-full text-xs"
+                      onClick={handleRequestArchive}
+                      isPending={archiveChannel.isPending}
+                    >
+                      {!archiveChannel.isPending && (
+                        <Archive className="mr-1.5 h-3.5 w-3.5" />
+                      )}
+                      Archive chat
+                    </LoadingButton>
+                  ))}
               </div>
             </div>
           </ScrollArea>

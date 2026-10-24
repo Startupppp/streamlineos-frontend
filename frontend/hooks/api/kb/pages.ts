@@ -64,9 +64,6 @@ const kbPageWithAncestorsContract = lazyContract(() =>
 const kbPageContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageContract),
 );
-const kbPageListContract = lazyContract(() =>
-  import("@/hooks/api/kb/kb-pages-schema").then((m) => m.kbPageListContract),
-);
 const kbFavoritePageListContract = lazyContract(() =>
   import("@/hooks/api/kb/kb-pages-schema").then(
     (m) => m.kbFavoritePageListContract,
@@ -198,16 +195,17 @@ export function useKbPageChildrenLevel(
 
 export function useKbPagesRecent() {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     ...kbPagesRecentQueryOptions,
-    queryFn: ({ signal }) =>
-      apiClient.get<KbPageListItem[]>(
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbPageListItem>>(
         "/kb/pages/recent",
-        undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
-        kbPageListContract,
+        kbFavoritePageListContract,
       ),
+    select: selectFlatPages,
     enabled: canView,
   });
 }
@@ -416,25 +414,21 @@ export function useKbPage(pageId: number) {
 
 export function useKbPageBacklinks(pageId: number) {
   const canView = useCan("kb:pages:view");
-  return useQuery({
+  return useInfiniteQuery({
     ...INLINE_READ_ERROR,
     queryKey: knowledgeAndSurveysQueryKeys.kb.pageBacklinks(pageId),
-    queryFn: async ({ signal }) => {
-      const page = await apiClient.get<{
-        data: KbPageBacklink[];
-        pagination: {
-          limit: number;
-          hasMore: boolean;
-          nextCursor: string | null;
-        };
-      }>(
+    initialPageParam: NO_CURSOR_YET,
+    getNextPageParam: (last: {
+      pagination: { nextCursor: string | null };
+    }) => last.pagination.nextCursor ?? undefined,
+    queryFn: ({ signal, pageParam }) =>
+      apiClient.get<Page<KbPageBacklink>>(
         `/kb/pages/${pageId}/backlinks`,
-        undefined,
+        pageParam !== undefined ? { cursor: pageParam } : undefined,
         signal,
         kbPageBacklinkContract,
-      );
-      return page.data;
-    },
+      ),
+    select: selectFlatPages,
     staleTime: 60_000,
     enabled: canView && Number.isFinite(pageId) && pageId > 0,
   });

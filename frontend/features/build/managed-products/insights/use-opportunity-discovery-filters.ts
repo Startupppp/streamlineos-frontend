@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useTransition } from "react";
+import { useCallback, useMemo, useState, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
   useBuildListFilters,
@@ -10,6 +10,7 @@ import { useFeedbucketSubmissionFacets } from "@/hooks/api/feedbucket";
 import { useOrgMembers } from "@/hooks/api/organization";
 import { useEvidenceThemes } from "@/hooks/api/build/product-discovery";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 
 export const OPP_CURSOR_PARAM = "opp_cursor";
 export const OPP_PREV_PARAM = "opp_prev";
@@ -58,17 +59,35 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     withSearch: true as const,
   });
 
+  const [ownerSearch, setOwnerSearch] = useState("");
+  const debouncedOwnerSearch = useDebouncedValue(ownerSearch);
+
   const filtersValue = filters.value;
   const sortFilter = filtersValue("oppSort");
   const themePeriod = filtersValue("oppThemePeriod");
   const evidenceAgeFilter = filtersValue("oppEvidenceAge");
   const scoreMinFilter = filtersValue("oppScoreMin");
   const scoreMaxFilter = filtersValue("oppScoreMax");
-  const stateValues = useMemo(() => splitMulti(filtersValue("oppState")), [filtersValue]);
-  const segmentValues = useMemo(() => splitMulti(filtersValue("oppSegment")), [filtersValue]);
-  const ownerValues = useMemo(() => splitMulti(filtersValue("oppOwner")), [filtersValue]);
-  const themeValues = useMemo(() => splitMulti(filtersValue("oppTheme")), [filtersValue]);
-  const confidenceValues = useMemo(() => splitMulti(filtersValue("oppConfidence")), [filtersValue]);
+  const stateValues = useMemo(
+    () => splitMulti(filtersValue("oppState")),
+    [filtersValue],
+  );
+  const segmentValues = useMemo(
+    () => splitMulti(filtersValue("oppSegment")),
+    [filtersValue],
+  );
+  const ownerValues = useMemo(
+    () => splitMulti(filtersValue("oppOwner")),
+    [filtersValue],
+  );
+  const themeValues = useMemo(
+    () => splitMulti(filtersValue("oppTheme")),
+    [filtersValue],
+  );
+  const confidenceValues = useMemo(
+    () => splitMulti(filtersValue("oppConfidence")),
+    [filtersValue],
+  );
 
   const cursorValue = searchParams.get(OPP_CURSOR_PARAM);
   const prevParamValue = searchParams.get(OPP_PREV_PARAM);
@@ -99,13 +118,22 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
   const filtersSetValues = filters.setValues;
   const setFilterFromFirstPage = useCallback(
     (param: string, value: string) => {
-      filtersSetValues({ [param]: value, [OPP_CURSOR_PARAM]: "", [OPP_PREV_PARAM]: "" });
+      filtersSetValues({
+        [param]: value,
+        [OPP_CURSOR_PARAM]: "",
+        [OPP_PREV_PARAM]: "",
+      });
     },
     [filtersSetValues],
   );
 
   const facetsQuery = useFeedbucketSubmissionFacets({ managedProductId });
-  const membersQuery = useOrgMembers(1, 100, undefined, INLINE_READ_ERROR);
+  const membersQuery = useOrgMembers(
+    1,
+    20,
+    debouncedOwnerSearch || undefined,
+    INLINE_READ_ERROR,
+  );
   const themesQuery = useEvidenceThemes(managedProductId);
 
   const segmentOptions = useMemo(
@@ -150,8 +178,10 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     if (confidenceValues.length > 0) p.confidence = confidenceValues.join(",");
     if (evidenceAgeFilter && evidenceAgeFilter !== BUILD_FILTER_ALL)
       p.evidenceAgeDays = evidenceAgeFilter;
-    if (scoreMinFilter && scoreMinFilter !== BUILD_FILTER_ALL) p.scoreMin = scoreMinFilter;
-    if (scoreMaxFilter && scoreMaxFilter !== BUILD_FILTER_ALL) p.scoreMax = scoreMaxFilter;
+    if (scoreMinFilter && scoreMinFilter !== BUILD_FILTER_ALL)
+      p.scoreMin = scoreMinFilter;
+    if (scoreMaxFilter && scoreMaxFilter !== BUILD_FILTER_ALL)
+      p.scoreMax = scoreMaxFilter;
     if (filtersSearch.debouncedSearch) p.search = filtersSearch.debouncedSearch;
     return p;
   }, [
@@ -218,7 +248,10 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
 
   const handleStateValuesChange = useCallback(
     (values: string[]) => {
-      setFilterFromFirstPage("oppState", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
+      setFilterFromFirstPage(
+        "oppState",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      );
     },
     [setFilterFromFirstPage],
   );
@@ -235,25 +268,37 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
   );
   const handleSegmentValuesChange = useCallback(
     (values: string[]) => {
-      setFilterFromFirstPage("oppSegment", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
+      setFilterFromFirstPage(
+        "oppSegment",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      );
     },
     [setFilterFromFirstPage],
   );
   const handleOwnerValuesChange = useCallback(
     (values: string[]) => {
-      setFilterFromFirstPage("oppOwner", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
+      setFilterFromFirstPage(
+        "oppOwner",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      );
     },
     [setFilterFromFirstPage],
   );
   const handleThemeValuesChange = useCallback(
     (values: string[]) => {
-      setFilterFromFirstPage("oppTheme", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
+      setFilterFromFirstPage(
+        "oppTheme",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      );
     },
     [setFilterFromFirstPage],
   );
   const handleConfidenceValuesChange = useCallback(
     (values: string[]) => {
-      setFilterFromFirstPage("oppConfidence", values.length > 0 ? values.join(",") : BUILD_FILTER_ALL);
+      setFilterFromFirstPage(
+        "oppConfidence",
+        values.length > 0 ? values.join(",") : BUILD_FILTER_ALL,
+      );
     },
     [setFilterFromFirstPage],
   );
@@ -296,6 +341,8 @@ export function useOpportunityDiscoveryFilters(managedProductId: number) {
     confidenceValues,
     segmentOptions,
     ownerOptions,
+    ownerSearch,
+    handleOwnerSearchChange: setOwnerSearch,
     themeOptions,
     oppQueryParams,
     themeParams,

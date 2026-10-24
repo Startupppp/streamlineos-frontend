@@ -40,6 +40,9 @@ const chatOkContract = lazyContract(() =>
 const leaveHuddleContract = lazyContract(() =>
   import("@/hooks/api/chat-schema").then((m) => m.leaveHuddleResponseContract),
 );
+const huddleAccountsContract = lazyContract(() =>
+  import("@/hooks/api/chat-schema").then((m) => m.huddleAccountsListContract),
+);
 
 const PROVIDER_END_WAIT_MS = 15_000;
 
@@ -111,19 +114,21 @@ export function useActiveHuddle(channelId: number, enabled = true) {
   });
 }
 
+type StartHuddleVars = { channelId: number; connectionId?: number };
+
 export function useStartHuddle() {
   const queryClient = useQueryClient();
-  const retryRef = useRef<(channelId: number) => void>(() => undefined);
+  const retryRef = useRef<(vars: StartHuddleVars) => void>(() => undefined);
   const startHuddle = useAuthorizedMutation("chat:huddles:start", {
     mutationKey: ["chat", "huddle", "start"],
-    mutationFn: (channelId: number) =>
+    mutationFn: ({ channelId, connectionId }: StartHuddleVars) =>
       apiClient.post<Huddle>(
         `/chat/channels/${channelId}/huddle/start`,
-        undefined,
+        connectionId !== undefined ? { connectionId } : undefined,
         undefined,
         huddleContract,
       ),
-    onSuccess: async (huddle, channelId) => {
+    onSuccess: async (huddle, { channelId }) => {
       const queryKey = collaborationQueryKeys.chat.huddle(channelId);
       await queryClient.cancelQueries({ queryKey, exact: true });
       queryClient.setQueryData(queryKey, huddle);
@@ -132,8 +137,12 @@ export function useStartHuddle() {
         exact: false,
       });
     },
-    onError: (error, channelId) => {
-      reportHuddleStartError(error, () => retryRef.current(channelId));
+    onError: (error, vars) => {
+      reportHuddleStartError(
+        error,
+        () => retryRef.current(vars),
+        (connectionId) => retryRef.current({ channelId: vars.channelId, connectionId }),
+      );
     },
   });
   const { mutate: startMutate } = startHuddle;
@@ -141,6 +150,45 @@ export function useStartHuddle() {
     retryRef.current = startMutate;
   }, [startMutate]);
   return startHuddle;
+}
+
+export function useHuddleAccounts() {
+  const canStart = useCan("chat:huddles:start");
+  return useQuery({
+    queryKey: collaborationQueryKeys.chat.huddleAccounts(),
+    queryFn: ({ signal }) =>
+      apiClient.get(
+        "/chat/huddle/accounts",
+        undefined,
+        signal,
+        huddleAccountsContract,
+      ),
+    enabled: canStart,
+    staleTime: 30_000,
+    ...INLINE_READ_ERROR,
+  });
+}
+
+export function useSetHuddleDefault() {
+  const queryClient = useQueryClient();
+  const operation = useIdempotentOperation();
+  return useAuthorizedMutation("chat:huddles:start", {
+    mutationKey: ["chat", "huddle", "set-default"],
+    mutationFn: ({ connectionId }: { connectionId: number | null }) =>
+      apiClient.put<{ ok: true }>(
+        "/chat/huddle/accounts/default",
+        { connectionId },
+        operation.configFor({ connectionId }),
+        chatOkContract,
+      ),
+    onSuccess: () => {
+      operation.settle();
+      queryClient.invalidateQueries({
+        queryKey: collaborationQueryKeys.chat.huddleAccounts(),
+        exact: true,
+      });
+    },
+  });
 }
 
 export function useJoinHuddle() {

@@ -22,10 +22,6 @@ export interface SimulationRecord {
   createdAt: string;
 }
 
-interface PaginatedResult<T> {
-  data: T[];
-  pagination: { limit: number; nextCursor: string | null; hasMore: boolean };
-}
 
 const BASE = "/hr/enterprise/ops/simulator";
 

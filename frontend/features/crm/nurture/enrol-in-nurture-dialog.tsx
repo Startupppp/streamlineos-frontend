@@ -38,13 +38,20 @@ export function EnrolInNurtureDialog({
   onOpenChange,
 }: EnrolInNurtureDialogProps) {
   const [partySearch, setPartySearch] = useState("");
+  const [dealSearch, setDealSearch] = useState("");
+  const [selectedPartyId, setSelectedPartyId] = useState("");
   const debouncedPartySearch = useDebouncedValue(partySearch, 300);
+  const debouncedDealSearch = useDebouncedValue(dealSearch, 300);
 
   const parties = useParties({
     limit: 20,
     ...(debouncedPartySearch ? { search: debouncedPartySearch } : {}),
   });
-  const deals = useDeals({ limit: 100 });
+  const deals = useDeals({
+    limit: 25,
+    ...(selectedPartyId ? { partyId: selectedPartyId } : {}),
+    ...(debouncedDealSearch ? { search: debouncedDealSearch } : {}),
+  });
   const enrol = useEnrolInNurtureSequence();
 
   const partyOptions: ComboboxOption[] = (parties.data?.data ?? []).map((party) => ({
@@ -81,9 +88,11 @@ export function EnrolInNurtureDialog({
     >
       {(form) => {
         const partyId = form.watch("partyId");
-        const dealOptions: ComboboxOption[] = (deals.data ?? [])
-          .filter((deal) => deal.partyId !== null && deal.partyId === partyId)
-          .map((deal) => ({ value: String(deal.id), label: deal.name, sublabel: deal.stage }));
+        const dealOptions: ComboboxOption[] = (deals.data ?? []).map((deal) => ({
+          value: String(deal.id),
+          label: deal.name,
+          sublabel: deal.stage,
+        }));
 
         return (
           <>
@@ -97,7 +106,7 @@ export function EnrolInNurtureDialog({
                     <Combobox
                       options={partyOptions}
                       value={field.value}
-                      onChange={field.onChange}
+                      onChange={(val) => { field.onChange(val); setSelectedPartyId(val); }}
                       placeholder="Choose a customer…"
                       searchPlaceholder="Search customers…"
                       emptyText="No customers found."
@@ -120,6 +129,7 @@ export function EnrolInNurtureDialog({
                       options={dealOptions}
                       value={field.value}
                       onChange={field.onChange}
+                      onSearchChange={setDealSearch}
                       placeholder={partyId ? "Choose a deal…" : "Choose a customer first"}
                       searchPlaceholder="Search deals…"
                       emptyText="No open deals for this customer."

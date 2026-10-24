@@ -63,6 +63,15 @@ export function useCampaigns(params?: CampaignListParams) {
   });
 }
 
+export function useCampaign(id: number) {
+  return useGatedQuery("crm:campaigns:view", {
+    queryKey: queryKeys.crmCampaigns.detail(id),
+    queryFn: ({ signal }) => apiClient.get<CrmCampaign>(`/crm/campaigns/${id}`, undefined, signal, campaignLazy),
+    staleTime: 2 * 60_000,
+    enabled: id > 0,
+  });
+}
+
 export function useCreateCampaign() {
   const qc = useQueryClient();
   return useAuthorizedMutation("crm:campaigns:manage", {

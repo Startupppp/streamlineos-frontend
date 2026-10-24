@@ -8,7 +8,6 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingButton } from "@/components/ui/loading-button";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { useCursorPagination } from "@/hooks/common/use-cursor-pagination";
 import { SearchInput } from "@/components/ui/search-input";
 import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
 import { CursorPageControls } from "@/components/ui/cursor-page-controls";
@@ -97,7 +96,7 @@ export function ContactListPage() {
 
   const currentCursor = cursorHistory[cursorHistory.length - 1];
 
-  const { data, isLoading, isError, error, refetch, access, isFetching } = useContacts({
+  const { data, isLoading, isError, error, refetch, isFetching } = useContacts({
     search: apiSearch || undefined,
     limit: PAGE_SIZE,
     cursor: currentCursor,

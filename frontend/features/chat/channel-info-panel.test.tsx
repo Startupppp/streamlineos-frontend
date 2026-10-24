@@ -164,6 +164,28 @@ describe("ChannelInfoPanel — lifecycle actions are confirmed", () => {
   });
 });
 
+describe("ChannelInfoPanel — archive is admin-only", () => {
+  it("hides Archive chat from a non-admin member", () => {
+    mockChannel.mockReturnValue({
+      ...channel(null),
+      members: [
+        {
+          userId: "user-1",
+          role: "MEMBER",
+          archivedAt: null,
+          mutedUntil: null,
+          notificationPreference: "ALL",
+          user: { id: "user-1", name: "Ada", image: null },
+        },
+      ],
+    });
+    render(
+      <ChannelInfoPanel channelId={9} currentUserId="user-1" onClose={jest.fn()} />,
+    );
+    expect(screen.queryByRole("button", { name: "Archive chat" })).toBeNull();
+  });
+});
+
 describe("ChannelInfoPanel — unpin follows chat:messages:pin", () => {
   it("offers Unpin to a user who holds the pin permission", () => {
     renderPanel();
