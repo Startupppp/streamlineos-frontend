@@ -1,10 +1,11 @@
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
 import { Send, Pause, Lock, Archive, Copy, Users, Radio } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,8 +40,10 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
   const archive = useArchiveSurvey();
   const duplicate = useDuplicateSurvey();
   const createLiveSession = useCreateLiveSession(survey.id);
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
 
   const modeMeta = SURVEY_MODE_META[survey.mode];
+  const canArchive = canDelete && survey.status !== "archived";
 
   const handlePublish = useCallback(async () => {
     try {
@@ -72,11 +75,14 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
   const handleArchive = useCallback(async () => {
     try {
       await archive.mutateAsync(survey.id);
+      setConfirmArchiveOpen(false);
       toast.success("Survey archived");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   }, [archive, survey.id]);
+
+  const handleRequestArchive = useCallback(() => setConfirmArchiveOpen(true), []);
 
   const handleDuplicate = useCallback(async () => {
     try {
@@ -126,7 +132,7 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
             <Radio className="h-3.5 w-3.5" /> Start Live Session
           </Button>
         )}
-        {(canCreate || canPublish || canDelete) && <DropdownMenu>
+        {(canCreate || canPublish || canArchive) && <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="outline" size="icon" className="h-8 w-8" disabled={isBusy} aria-label="Survey actions" />
           </DropdownMenuTrigger>
@@ -141,14 +147,25 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
                 <Lock className="h-3.5 w-3.5" /> Close
               </DropdownMenuItem>
             )}
-            {canDelete && <DropdownMenuSeparator />}
-            {canDelete && (
-              <DropdownMenuItem onClick={handleArchive} variant="destructive">
+            {canArchive && <DropdownMenuSeparator />}
+            {canArchive && (
+              <DropdownMenuItem onClick={handleRequestArchive} variant="destructive">
                 <Archive className="h-3.5 w-3.5" /> Archive
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
         </DropdownMenu>}
+        <ConfirmDialog
+          open={confirmArchiveOpen}
+          onOpenChange={setConfirmArchiveOpen}
+          title="Archive this survey?"
+          description="Its links stop accepting responses. Existing responses and results are kept."
+          confirmLabel="Archive survey"
+          destructive
+          isPending={archive.isPending}
+          keepOpenOnConfirm
+          onConfirm={handleArchive}
+        />
       </div>
     </div>
   );

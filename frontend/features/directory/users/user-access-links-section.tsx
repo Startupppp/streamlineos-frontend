@@ -15,7 +15,7 @@ const MODULE_ACCESS_LINKS = [
   { key: "support", label: "Support", permission: "support:access:view" },
   { key: "surveys", label: "Surveys", permission: "surveys:access:view" },
   { key: "payroll", label: "Payroll", permission: "payroll:access:view" },
-  { key: "sign", label: "SignOS", permission: "sign:access:view" },
+  { key: "sign", label: "Sign OS", permission: "sign:access:view" },
   { key: "timesheets", label: "Timesheets", permission: "timesheets:access:view" },
 ] as const satisfies readonly { key: string; label: string; permission: PermissionKey }[];
 

@@ -25,7 +25,7 @@ export function ReportsPage() {
     return (
       <PageWrapper
         title="Reports"
-        subtitle="Envelope activity, completion rates, and usage across SignOS"
+        subtitle="Envelope activity, completion rates, and usage across Sign OS"
       >
         <ErrorState
           title="Failed to load reports"
@@ -40,7 +40,7 @@ export function ReportsPage() {
     return (
       <PageWrapper
         title="Reports"
-        subtitle="Envelope activity, completion rates, and usage across SignOS"
+        subtitle="Envelope activity, completion rates, and usage across Sign OS"
       >
         <StatCardGridSkeleton cols={4} />
       </PageWrapper>
@@ -50,7 +50,7 @@ export function ReportsPage() {
   return (
     <PageWrapper
       title="Reports"
-      subtitle="Envelope activity, completion rates, and usage across SignOS"
+      subtitle="Envelope activity, completion rates, and usage across Sign OS"
     >
       <div className="space-y-6">
         <StatCardGrid cols={4}>

@@ -14,6 +14,9 @@ const surveyPublicSurveyC = lazyContract(() =>
 const surveyPublicSessionRowC = lazyContract(() =>
   import("./survey-public-schema").then((m) => m.surveyPublicSessionRowContract),
 );
+const surveyStartedSessionC = lazyContract(() =>
+  import("./survey-public-schema").then((m) => m.surveyStartedSessionContract),
+);
 const publicSuccessC = lazyContract(() =>
   import("./survey-public-schema").then((m) => m.publicSuccessContract),
 );
@@ -65,6 +68,15 @@ export interface StartSessionResponse {
   status: string;
 }
 
+interface StartedSessionResponse extends StartSessionResponse {
+  respondentKey: string;
+}
+
+interface RespondentAnswersInput {
+  respondentKey: string;
+  answers?: Array<{ questionId: number } & AnswerValue>;
+}
+
 export function usePublicSurvey(collectorToken: string) {
   return useQuery({
     queryKey: knowledgeAndSurveysQueryKeys.surveys.publicSurvey(collectorToken),
@@ -79,17 +91,17 @@ export function useStartSurveySession(collectorToken: string) {
   return useMutation({
     mutationKey: ["surveys", "public", "start", collectorToken] as const,
     mutationFn: (input: { accessToken?: string; participantEmail?: string; metadata?: Record<string, unknown> }) =>
-      apiClient.post<StartSessionResponse>(`/public/surveys/${collectorToken}/start`, input, undefined, surveyPublicSessionRowC),
+      apiClient.post<StartedSessionResponse>(`/public/surveys/${collectorToken}/start`, input, undefined, surveyStartedSessionC),
   });
 }
 
 export function useSaveSurveyAnswers(collectorToken: string, sessionId: number | undefined) {
   return useMutation({
     mutationKey: ["surveys", "public", "save", collectorToken, sessionId] as const,
-    mutationFn: (answers: Array<{ questionId: number } & AnswerValue>) =>
+    mutationFn: (input: RespondentAnswersInput) =>
       apiClient.patch(
         `/public/surveys/${collectorToken}/session/${sessionId}`,
-        { answers },
+        input,
         undefined,
         publicSuccessC,
       ),
@@ -99,10 +111,10 @@ export function useSaveSurveyAnswers(collectorToken: string, sessionId: number |
 export function useSubmitSurveySession(collectorToken: string, sessionId: number | undefined) {
   return useMutation({
     mutationKey: ["surveys", "public", "submit", collectorToken, sessionId] as const,
-    mutationFn: (answers?: Array<{ questionId: number } & AnswerValue>) =>
+    mutationFn: (input: RespondentAnswersInput) =>
       apiClient.post<StartSessionResponse>(
         `/public/surveys/${collectorToken}/session/${sessionId}/submit`,
-        { answers },
+        input,
         undefined,
         surveyPublicSessionRowC,
       ),

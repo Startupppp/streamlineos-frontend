@@ -42,6 +42,7 @@ export interface CreateCollectorInput {
 export interface PatchCollectorInput {
   name?: string;
   status?: CollectorStatus;
+  settings?: Record<string, unknown>;
   expiresAt?: string | null;
 }
 

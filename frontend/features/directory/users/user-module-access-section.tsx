@@ -26,7 +26,7 @@ const MODULE_LABELS: Record<string, string> = {
   support: "Support",
   surveys: "Surveys",
   payroll: "Payroll",
-  sign: "SignOS",
+  sign: "Sign OS",
   timesheets: "Timesheets",
 };
 

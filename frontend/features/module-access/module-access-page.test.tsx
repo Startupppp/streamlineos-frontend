@@ -3,6 +3,7 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { ModuleAccessPage } from "./module-access-page";
 
 const mockUseModuleMyPermissions = jest.fn();
+const mockUseCan = jest.fn();
 
 jest.mock("next/navigation", () => ({
   useSearchParams: () => new URLSearchParams(),
@@ -10,6 +11,10 @@ jest.mock("next/navigation", () => ({
 
 jest.mock("@/hooks/api/module-access", () => ({
   useModuleMyPermissions: () => mockUseModuleMyPermissions(),
+}));
+
+jest.mock("@/hooks/api/access", () => ({
+  useCan: (key: string) => mockUseCan(key),
 }));
 
 jest.mock("@/components/ui/page-wrapper", () => ({
@@ -76,9 +81,12 @@ const NO_PRIVILEGES: PermissionFlags = {
   isModuleAdmin: false,
 };
 
-function renderPage(flags?: Partial<PermissionFlags>) {
+function renderPage(
+  flags?: Partial<PermissionFlags>,
+  permissions: Array<{ key: string; scope: string }> = [],
+) {
   mockUseModuleMyPermissions.mockReturnValue({
-    data: flags ? { ...NO_PRIVILEGES, ...flags, permissions: [] } : undefined,
+    data: flags ? { ...NO_PRIVILEGES, ...flags, permissions } : undefined,
   });
   return render(<ModuleAccessPage moduleKey="hr" title="HR Access" />);
 }
@@ -93,6 +101,8 @@ function selectTab(name: string) {
 describe("ModuleAccessPage authorization UX", () => {
   beforeEach(() => {
     mockUseModuleMyPermissions.mockReset();
+    mockUseCan.mockReset();
+    mockUseCan.mockReturnValue(false);
   });
 
   it.each([
@@ -148,5 +158,44 @@ describe("ModuleAccessPage authorization UX", () => {
 
     expect(screen.queryByText("Admin access required")).not.toBeInTheDocument();
     expect(screen.getByTestId("roles-policy")).toBeInTheDocument();
+  });
+
+  it.each(["hr:access:view", "hr:access:manage"])(
+    "shows a read-only members list to a %s holder without admin standing",
+    (key) => {
+      renderPage({}, [{ key, scope: "org" }]);
+
+      expect(screen.queryByText("Admin access required")).not.toBeInTheDocument();
+      expect(screen.getByTestId("members-policy")).toHaveTextContent("false");
+      expect(screen.queryByRole("tab", { name: "Roles" })).not.toBeInTheDocument();
+      expect(screen.queryByTestId("roles-policy")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Add member" })).not.toBeInTheDocument();
+    },
+  );
+
+  it("still denies a view key whose scope is none", () => {
+    renderPage({}, [{ key: "hr:access:view", scope: "none" }]);
+
+    expect(screen.getByText("Admin access required")).toBeInTheDocument();
+    expect(screen.queryByTestId("members-policy")).not.toBeInTheDocument();
+  });
+
+  it("offers the organisation invite only to admins who can invite", () => {
+    mockUseCan.mockImplementation((key: string) => key === "settings:organization:manage");
+    renderPage({ isModuleAdmin: true });
+    selectTab("Members");
+
+    expect(screen.getByRole("link", { name: "Invite to organisation" })).toHaveAttribute(
+      "href",
+      "/settings/users?create=1",
+    );
+  });
+
+  it("hides the organisation invite from module admins who cannot invite", () => {
+    renderPage({ isModuleAdmin: true });
+    selectTab("Members");
+
+    expect(screen.getByRole("button", { name: "Add member" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Invite to organisation" })).not.toBeInTheDocument();
   });
 });

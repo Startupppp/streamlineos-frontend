@@ -14,6 +14,7 @@ import { PageState } from "@/components/shared/page-state";
 import { pageStateFromError } from "@/lib/page-state/resolve-page-state";
 import { isTransientNetworkError } from "@/lib/query-error-policy";
 import { isApiError } from "@/lib/api-envelope";
+import { ErrorReference } from "@/components/shared/error-reference";
 
 interface NetworkRetryBudget {
   readonly attempts: number;
@@ -152,6 +153,7 @@ export function RouteErrorBoundary({
         {resolvedTitle}
       </h1>
       <p className="w-full max-w-md break-words px-4 text-sm text-muted-foreground [overflow-wrap:anywhere]">{displayMessage}</p>
+      <ErrorReference error={error} />
       {!isAutoRetrying && (
         <Button onClick={handleRetry} variant="outline">
           <RefreshCw className="mr-2 h-4 w-4" aria-hidden="true" />

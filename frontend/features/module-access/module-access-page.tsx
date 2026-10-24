@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useCallback } from "react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { ClipboardList, UserPlus } from "lucide-react";
+import { ClipboardList, Mail, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tabs,
@@ -16,6 +17,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useModuleMyPermissions } from "@/hooks/api/module-access";
+import { manageKey, viewKey } from "@/hooks/api/module-access/types";
+import { useCan } from "@/hooks/api/access";
 import { RolesTab } from "@/features/module-access/components/roles-tab";
 import { ModuleMembersTab } from "@/features/module-access/components/module-members-tab";
 import { OwnershipSection } from "@/features/module-access/components/ownership-section";
@@ -46,6 +49,15 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
     myPerms?.isOrgAdmin === true ||
     isModuleOwner ||
     myPerms?.isModuleAdmin === true;
+  const canView =
+    canManage ||
+    (myPerms?.permissions ?? []).some(
+      (permission) =>
+        (permission.key === viewKey(moduleKey) || permission.key === manageKey(moduleKey)) &&
+        permission.scope !== "none",
+    );
+  const viewOnly = !canManage && canView;
+  const canInvite = useCan("settings:organization:manage");
 
   const [tab, setTab] = useState(focusUserId ? "members" : "roles");
   const [addMemberOpen, setAddMemberOpen] = useState(false);
@@ -63,7 +75,11 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
     void refetchMyPermissions();
   }, [refetchMyPermissions]);
   const canViewOwnership = isModuleOwner;
-  const visibleTab = tab === "ownership" && !canViewOwnership ? "roles" : tab;
+  const visibleTab = viewOnly
+    ? "members"
+    : tab === "ownership" && !canViewOwnership
+      ? "roles"
+      : tab;
 
   return (
     <Tabs
@@ -73,7 +89,11 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
     >
       <PageWrapper
         title={title}
-        subtitle="Manage role groups, members, and permissions for this module."
+        subtitle={
+          viewOnly
+            ? "See who can use this module. Module admins and owners can change it."
+            : "Manage role groups, members, and permissions for this module."
+        }
         noInternalScroll
         contentClassName="flex min-h-0 flex-1 flex-col"
         actions={
@@ -88,7 +108,7 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
         filters={
           <>
             <TabsList className="w-full shrink-0 md:w-auto">
-              <TabsTrigger value="roles">Roles</TabsTrigger>
+              {viewOnly ? null : <TabsTrigger value="roles">Roles</TabsTrigger>}
               <TabsTrigger value="members">Members</TabsTrigger>
               {canViewOwnership ? (
                 <TabsTrigger value="ownership">Ownership</TabsTrigger>
@@ -96,6 +116,14 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
             </TabsList>
 
             <div className="ml-auto flex shrink-0 items-center gap-2">
+              {visibleTab === "members" && canManage && canInvite ? (
+                <Button asChild variant="outline" size="sm" className="h-8 gap-1.5">
+                  <Link href="/settings/users?create=1">
+                    <Mail className="h-3.5 w-3.5" />
+                    Invite to organisation
+                  </Link>
+                </Button>
+              ) : null}
               {visibleTab === "members" && canManage ? (
                 <Button size="sm" className="h-8 gap-1.5" onClick={handleOpenAddMember}>
                   <UserPlus className="h-3.5 w-3.5" />
@@ -112,16 +140,18 @@ export function ModuleAccessPage({ moduleKey, title }: ModuleAccessPageProps) {
               description={getErrorMessage(myPermissionsQuery.error)}
               onRetry={handleRetryPermissions}
             />
-          ) : !myPermissionsQuery.isLoading && !canManage ? (
+          ) : !myPermissionsQuery.isLoading && !canView ? (
             <NoPermissionState
               title="Admin access required"
               description="You need module admin or owner standing to manage access for this module."
             />
           ) : (
             <>
-              <TabsContent value="roles" className={TAB_PANEL_CLASS}>
-                <RolesTab moduleKey={moduleKey} canManage={canManage} />
-              </TabsContent>
+              {viewOnly ? null : (
+                <TabsContent value="roles" className={TAB_PANEL_CLASS}>
+                  <RolesTab moduleKey={moduleKey} canManage={canManage} />
+                </TabsContent>
+              )}
 
               <TabsContent value="members" className={TAB_PANEL_CLASS}>
                 <ModuleMembersTab

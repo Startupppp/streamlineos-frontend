@@ -13,8 +13,10 @@ import {
   Sun,
   Monitor,
   Sparkles,
+  FileSignature,
+  Files,
 } from "lucide-react";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useModuleEnabled } from "@/hooks/api/access";
 import { useAppTheme } from "@/components/theme/app-theme-provider";
 import { useHrmsCommands } from "./command-palette-hrms-commands";
 import type { CommandPaletteCommand } from "./command-palette-command-types";
@@ -35,11 +37,32 @@ export function useCommandRegistry({
   const canCreateTicket = useCan("build:tickets:create");
   const canUseAiChat = useCan("ai:chat:use");
   const hrmsCommands = useHrmsCommands(handleSelect);
+  const signEnabled = useModuleEnabled("sign");
+  const canCreateEnvelope = useCan("sign:envelope:create");
+  const canViewEnvelopes = useCan("sign:envelope:view");
   const { setMode } = useAppTheme();
 
   return useMemo<CommandPaletteCommand[]>(
     () => [
       ...hrmsCommands,
+      {
+        id: "sign-new-envelope",
+        label: "New envelope",
+        group: "actions",
+        keywords: ["sign", "signature", "envelope", "send for signature", "esign", "document"],
+        icon: FileSignature,
+        isAvailable: signEnabled && canCreateEnvelope,
+        execute: () => handleSelect("/sign/envelopes?create=1"),
+      },
+      {
+        id: "sign-envelopes",
+        label: "Open envelopes",
+        group: "actions",
+        keywords: ["sign", "signature", "envelopes", "esign", "signed", "pending signature"],
+        icon: Files,
+        isAvailable: signEnabled && canViewEnvelopes,
+        execute: () => handleSelect("/sign/envelopes"),
+      },
       {
         id: "open-ask-os",
         label: "Ask OS",
@@ -166,6 +189,6 @@ export function useCommandRegistry({
         execute: () => handleSelect("/build/my-work"),
       },
     ],
-    [canCreateTicket, canUseAiChat, hrmsCommands, projectId, handleSelect, handleCreateTicket, onOpenAskOs, setMode],
+    [canCreateTicket, canUseAiChat, hrmsCommands, signEnabled, canCreateEnvelope, canViewEnvelopes, projectId, handleSelect, handleCreateTicket, onOpenAskOs, setMode],
   );
 }

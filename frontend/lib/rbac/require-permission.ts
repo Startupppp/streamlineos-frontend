@@ -1,10 +1,10 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { Session } from "next-auth";
 import { getServerAuth } from "@/lib/get-server-auth";
-import { signInPathForMissingSession } from "@/lib/auth-session-cookies";
+import { isSessionCookieName, signInPathForMissingSession } from "@/lib/auth-session-cookies";
 import { getServerAccessResult } from "@/lib/rbac/get-server-access";
 import { resolveRequestPath } from "@/lib/rbac/request-path";
 import { grantsPermission } from "@/lib/rbac/permission-gate";
@@ -55,9 +55,23 @@ async function getCurrentCallbackPath(): Promise<string | null> {
   }
 }
 
+async function hadSessionCookie(): Promise<boolean> {
+  try {
+    return (await cookies()).getAll().some((cookie) => isSessionCookieName(cookie.name));
+  } catch {
+    return true;
+  }
+}
+
+async function redirectToSignIn(): Promise<never> {
+  const callbackPath = await getCurrentCallbackPath();
+  redirect(signInPathForMissingSession(callbackPath ?? undefined, await hadSessionCookie()));
+}
+
 export async function requireSession(): Promise<Session> {
   const session = await getServerAuth();
-  if (!session?.user || session.user.isActive === false) {
+  if (!session?.user) return redirectToSignIn();
+  if (session.user.isActive === false) {
     const callbackPath = await getCurrentCallbackPath();
     redirect(signInPathForMissingSession(callbackPath ?? undefined));
   }
@@ -71,8 +85,7 @@ export async function requirePermission(
   const session = await getServerAuth();
   if (!session?.user) {
     if (options.redirectTo) redirect(options.redirectTo);
-    const callbackPath = await getCurrentCallbackPath();
-    redirect(signInPathForMissingSession(callbackPath ?? undefined));
+    return redirectToSignIn();
   }
   if (session.user.isActive === false) {
     const callbackPath = await getCurrentCallbackPath();

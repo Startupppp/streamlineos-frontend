@@ -553,9 +553,8 @@ const nextConfig: NextConfig = {
       process.env.NEXT_PUBLIC_API_URL ||
       ""
     ).replace(/\/$/, "");
-    return api
-      ? [{ source: "/blogs/rss.xml", destination: `${api}/blog/rss.xml` }]
-      : [];
+    const favicon = { source: "/favicon.ico", destination: "/icon" };
+    return api ? [favicon, { source: "/blogs/rss.xml", destination: `${api}/blog/rss.xml` }] : [favicon];
   },
   headers: async () => [
     {
@@ -612,6 +611,14 @@ const nextConfig: NextConfig = {
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
       ],
     },
+    {
+      source: "/:respondent(s|nps|live|forms)/:path*",
+      headers: [
+        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        { key: "X-Robots-Tag", value: "noindex, nofollow" },
+      ],
+    },
+    { source: "/sign/:recipientToken([0-9a-fA-F]{64})", headers: [{ key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" }] },
   ],
 };
 

@@ -6,8 +6,8 @@ export default function SignError(props: { error: Error & { digest?: string }; r
   return (
     <ReportingRouteErrorBoundary
       {...props}
-      title="SignOS Error"
-      fallbackMessage="Failed to load SignOS. Please try again."
+      title="Sign OS Error"
+      fallbackMessage="Failed to load Sign OS. Please try again."
     />
   );
 }

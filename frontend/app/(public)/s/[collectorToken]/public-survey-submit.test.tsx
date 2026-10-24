@@ -8,6 +8,7 @@ import PublicSurveyPage from "./page";
 
 const COLLECTOR_TOKEN = "tok-123";
 const SESSION_ID = 51;
+const RESPONDENT_KEY = "respondent-key-0123456789abcdef";
 
 const SURVEY_PATH = `/public/surveys/${COLLECTOR_TOKEN}`;
 const START_PATH = `/public/surveys/${COLLECTOR_TOKEN}/start`;
@@ -109,6 +110,7 @@ async function reachTheLastQuestion(): Promise<void> {
 let consoleError: jest.SpyInstance;
 
 beforeEach(() => {
+  window.sessionStorage.clear();
   mockedGet.mockReset();
   mockedPost.mockReset();
   (toast.error as jest.Mock).mockReset();
@@ -128,7 +130,7 @@ describe("the public survey Submit reports its own progress", () => {
     let resolveSubmit: ((value: unknown) => void) | undefined;
     mockedPost.mockImplementation((path: string) => {
       if (path === START_PATH)
-        return Promise.resolve({ id: SESSION_ID, status: "in_progress" });
+        return Promise.resolve({ id: SESSION_ID, status: "in_progress", respondentKey: RESPONDENT_KEY });
       if (path === SUBMIT_PATH)
         return new Promise((resolve) => {
           resolveSubmit = resolve;
@@ -151,7 +153,7 @@ describe("the public survey Submit reports its own progress", () => {
     let resolveSubmit: ((value: unknown) => void) | undefined;
     mockedPost.mockImplementation((path: string) => {
       if (path === START_PATH)
-        return Promise.resolve({ id: SESSION_ID, status: "in_progress" });
+        return Promise.resolve({ id: SESSION_ID, status: "in_progress", respondentKey: RESPONDENT_KEY });
       if (path === SUBMIT_PATH)
         return new Promise((resolve) => {
           resolveSubmit = resolve;
@@ -176,7 +178,7 @@ describe("the public survey Submit reports its own progress", () => {
     let resolveSubmit: ((value: unknown) => void) | undefined;
     mockedPost.mockImplementation((path: string) => {
       if (path === START_PATH)
-        return Promise.resolve({ id: SESSION_ID, status: "in_progress" });
+        return Promise.resolve({ id: SESSION_ID, status: "in_progress", respondentKey: RESPONDENT_KEY });
       if (path === SUBMIT_PATH)
         return new Promise((resolve) => {
           resolveSubmit = resolve;
@@ -199,7 +201,7 @@ describe("the public survey Submit reports its own progress", () => {
   it("re-enables Submit and explains the failure so the respondent can retry", async () => {
     mockedPost.mockImplementation((path: string) => {
       if (path === START_PATH)
-        return Promise.resolve({ id: SESSION_ID, status: "in_progress" });
+        return Promise.resolve({ id: SESSION_ID, status: "in_progress", respondentKey: RESPONDENT_KEY });
       if (path === SUBMIT_PATH)
         return Promise.reject(new ApiError("Survey temporarily unavailable", 503));
       return new Promise(() => {});
@@ -214,5 +216,67 @@ describe("the public survey Submit reports its own progress", () => {
     const submit = await screen.findByRole("button", { name: /submit/i });
     await waitFor(() => expect(submit).not.toBeDisabled());
     expect(screen.queryByText("Thank you!")).not.toBeInTheDocument();
+  });
+});
+
+describe("a respondent keeps one response session, proven by its respondent key", () => {
+  function startThenHang() {
+    mockedPost.mockImplementation((path: string) => {
+      if (path === START_PATH)
+        return Promise.resolve({ id: SESSION_ID, status: "in_progress", respondentKey: RESPONDENT_KEY });
+      return new Promise(() => {});
+    });
+  }
+
+  it("sends the respondent key with the submit", async () => {
+    startThenHang();
+    renderPage();
+    await reachTheLastQuestion();
+
+    fireEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+    await waitFor(() => expect(submitCallCount()).toBe(1));
+    const submitCall = mockedPost.mock.calls.find((call) => call[0] === SUBMIT_PATH);
+    expect(submitCall?.[1]).toEqual({ respondentKey: RESPONDENT_KEY });
+  });
+
+  it("resumes the same session after a refresh instead of starting a new one", async () => {
+    startThenHang();
+    const first = renderPage();
+    await reachTheLastQuestion();
+    first.unmount();
+
+    renderPage();
+
+    expect(await screen.findByText("How did onboarding go?")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /start survey/i })).not.toBeInTheDocument();
+    expect(mockedPost.mock.calls.filter((call) => call[0] === START_PATH)).toHaveLength(1);
+  });
+
+  it("sends the respondent back to the start when the server no longer recognises the session", async () => {
+    mockedPost.mockImplementation((path: string) => {
+      if (path === START_PATH)
+        return Promise.resolve({ id: SESSION_ID, status: "in_progress", respondentKey: RESPONDENT_KEY });
+      if (path === SUBMIT_PATH) return Promise.reject(new ApiError("Response session not found", 404));
+      return new Promise(() => {});
+    });
+    renderPage();
+    await reachTheLastQuestion();
+
+    fireEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+    expect(await screen.findByRole("button", { name: /start survey/i })).toBeInTheDocument();
+    expect(toast.error).toHaveBeenCalledWith("Your response session has expired. Please start again.");
+    expect(window.sessionStorage.length).toBe(0);
+  });
+
+  it("puts keyboard focus in the answer field of the first question, inside a group named by the question", async () => {
+    startThenHang();
+    renderPage();
+    await reachTheLastQuestion();
+
+    const group = screen.getByRole("group", { name: "How did onboarding go?" });
+    await waitFor(() => expect(group.contains(document.activeElement)).toBe(true));
+    expect(document.activeElement?.tagName).toMatch(/INPUT|TEXTAREA/);
   });
 });

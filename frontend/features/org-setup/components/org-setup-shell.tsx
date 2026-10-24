@@ -25,7 +25,7 @@ type OrgSetupShellProps = {
 const SYNC_STATUS_LABEL: Record<SyncStatus, string> = {
   synced: "Saved",
   saving: "Saving…",
-  unsynced: "Unsaved",
+  unsynced: "Saving…",
   error: "Save failed",
 };
 
@@ -77,7 +77,7 @@ export function OrgSetupShell({
                   Retry
                 </Button>
               </span>
-            ) : syncStatus && syncStatus !== "synced" && (
+            ) : syncStatus && (
               <span
                 aria-live="polite"
                 className={

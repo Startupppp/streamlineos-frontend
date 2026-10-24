@@ -6,6 +6,7 @@ import { apiClient, clearBackendTokenCache } from "@/lib/api-client";
 import { clearGateCookies } from "@/lib/onboarding-gate";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { ApiError } from "@/lib/api-envelope";
 import { useSignOut } from "./auth-hooks";
 
 jest.mock("next-auth/react", () => ({
@@ -32,6 +33,8 @@ jest.mock("@/lib/onboarding-gate", () => ({
 
 jest.mock("@/lib/api-envelope", () => ({
   lazyContract: jest.fn((loader: () => unknown) => loader),
+  isApiError: jest.requireActual("@/lib/api-envelope").isApiError,
+  ApiError: jest.requireActual("@/lib/api-envelope").ApiError,
 }));
 
 jest.mock("next/navigation", () => ({
@@ -202,5 +205,35 @@ describe("Logout gap — useSignOut distinguishes local from server revocation",
     expect(message).not.toMatch(/signed out everywhere/i);
     expect(message).not.toMatch(/all devices/i);
     expect(message).toMatch(/other devices may still be signed in/i);
+  });
+
+  it("treats a 401 from logout as already signed out, so no false 'other devices' warning shows", async () => {
+    mockPost.mockRejectedValueOnce(new ApiError("Unauthorized", 401, "UNAUTHORIZED"));
+
+    const client = makeClient();
+    const { result } = renderHook(() => useSignOut(), { wrapper: makeWrapper(client) });
+
+    act(() => {
+      result.current.mutate();
+    });
+
+    await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith("/signin"));
+    expect(mockToastError).not.toHaveBeenCalled();
+    expect(result.current.data?.serverRevocationCompleted).toBe(true);
+  });
+
+  it("clears the new organisation name kept for the welcome toast, so the next person on this tab never sees it", async () => {
+    mockPost.mockResolvedValueOnce({ success: true });
+    window.sessionStorage.setItem("org-setup-welcome-name", "QA-TEST-SURVEY-OrgA");
+
+    const client = makeClient();
+    const { result } = renderHook(() => useSignOut(), { wrapper: makeWrapper(client) });
+
+    act(() => {
+      result.current.mutate();
+    });
+
+    await waitFor(() => expect(mockRouterPush).toHaveBeenCalledWith("/signin"));
+    expect(window.sessionStorage.getItem("org-setup-welcome-name")).toBeNull();
   });
 });

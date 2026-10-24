@@ -109,7 +109,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
     ],
   },
 {
-    label: "SignOS",
+    label: "Sign OS",
     module: "sign",
     requiredPermission: [
       "sign:envelope:view",

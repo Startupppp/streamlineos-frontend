@@ -5,7 +5,7 @@ export default function SignSettingsLoading() {
   return (
     <PageWrapper
       title="Settings"
-      subtitle="Tenant-wide defaults, branding, and watermark policy for SignOS."
+      subtitle="Tenant-wide defaults, branding, and watermark policy for Sign OS."
     >
       <div className="flex flex-col gap-4">
         <div className="flex gap-1 border-b border-border pb-0">

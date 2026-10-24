@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
@@ -13,15 +13,14 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { ErrorState } from "@/components/shared/error-state";
 import { EmptyState } from "@/components/ui/empty-state";
 import { DataTable } from "@/components/ui/data-table";
-import { TruncatedText } from "@/components/ui/truncated-text";
+import { SearchInput } from "@/components/ui/search-input";
+import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { formatShortDate } from "@/lib/date-utils";
 import { useQueryParamOpen } from "@/hooks/common/use-query-param-open";
-import { useDeleteSignEnvelope, useSignEnvelopes } from "@/hooks/api/sign/envelopes";
+import { useDeleteSignEnvelope, useSignEnvelopes, type SignEnvelopeSortField } from "@/hooks/api/sign/envelopes";
 import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
-import { EnvelopeStatusBadge } from "../components/envelope-status-badge";
-import { envelopeColumns } from "./envelope-list-columns";
+import { envelopeColumns, envelopeMobileCard } from "./envelope-list-columns";
 import type { SignEnvelope } from "@/types/sign";
 import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
@@ -39,6 +38,8 @@ const STATUS_FILTERS = [
 
 const STATUS_VALUES = new Set<string>(STATUS_FILTERS.map((f) => f.value));
 
+const SORT_FIELDS: readonly SignEnvelopeSortField[] = ["title", "status", "sentAt", "expiresAt"];
+
 export function EnvelopeList() {
   const router = useRouter();
   const pathname = usePathname();
@@ -48,11 +49,19 @@ export function EnvelopeList() {
   const status = STATUS_VALUES.has(statusParam) ? statusParam : "all";
   const page = parsePage(searchParams.get("page"));
   const pageSize = parsePageSize(searchParams.get("size"));
+  const searchQuery = searchParams.get("search") ?? "";
+  const sortField = SORT_FIELDS.find((field) => field === searchParams.get("sort")) ?? null;
+  const sortDirection = searchParams.get("dir") === "asc" ? "asc" : "desc";
+  const [search, setSearch] = useState(searchQuery);
+  const debouncedSearch = useDebouncedValue(search.trim(), 300);
   const { open: createOpen, onOpenChange: setCreateOpen, setOpen: openCreate } = useQueryParamOpen("create");
   const [editEnvelope, setEditEnvelope] = useState<SignEnvelope | null>(null);
   const [deleteEnvelope, setDeleteEnvelope] = useState<SignEnvelope | null>(null);
   const { data, isLoading, isError, error, refetch } = useSignEnvelopes({
     status: status === "all" ? undefined : status,
+    search: searchQuery || undefined,
+    sort: sortField ?? undefined,
+    direction: sortField ? sortDirection : undefined,
     page,
     limit: pageSize,
   });
@@ -70,6 +79,27 @@ export function EnvelopeList() {
     },
     [router, pathname, searchParams],
   );
+
+  useEffect(() => {
+    if (debouncedSearch === searchQuery) return;
+    replaceParams((params) => {
+      if (debouncedSearch) params.set("search", debouncedSearch);
+      else params.delete("search");
+      params.delete("page");
+    });
+  }, [debouncedSearch, searchQuery, replaceParams]);
+
+  function handleSortChange(field: string, direction: "asc" | "desc") {
+    replaceParams((params) => {
+      params.set("sort", field);
+      params.set("dir", direction);
+      params.delete("page");
+    });
+  }
+
+  function handleClearSearch() {
+    setSearch("");
+  }
 
   function handleStatusChange(value: string) {
     replaceParams((params) => {
@@ -139,7 +169,15 @@ export function EnvelopeList() {
 
   const activeFilter = STATUS_FILTERS.find((f) => f.value === status && status !== "all");
 
-  const emptyState = activeFilter ? (
+  const emptyState = searchQuery ? (
+    <EmptyState
+      illustrationPreset="search"
+      title="No envelopes match your search"
+      description="Search looks at the envelope title and each signer's name and email."
+      action={{ label: "Clear search", onClick: handleClearSearch }}
+      className="border-0 bg-transparent min-h-[40vh]"
+    />
+  ) : activeFilter ? (
     <EmptyState
       illustrationPreset="search"
       title={`No ${activeFilter.label.toLowerCase()} envelopes`}
@@ -177,18 +215,27 @@ export function EnvelopeList() {
         ) : undefined
       }
       filters={
-        <Select value={status} onValueChange={handleStatusChange}>
-          <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")} aria-label="Status">
-            <SelectValue placeholder="All statuses" />
-          </SelectTrigger>
-          <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
-            {STATUS_FILTERS.map((f) => (
-              <SelectItem key={f.value} value={f.value}>
-                {f.value === "all" ? "All statuses" : f.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-2">
+          <SearchInput
+            placeholder="Search title or signer"
+            aria-label="Search envelopes"
+            value={search}
+            onValueChange={setSearch}
+            className="w-full sm:w-64"
+          />
+          <Select value={status} onValueChange={handleStatusChange}>
+            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-44")} aria-label="Status">
+              <SelectValue placeholder="All statuses" />
+            </SelectTrigger>
+            <SelectContent className={FIELD_SELECT_CONTENT_CLASS}>
+              {STATUS_FILTERS.map((f) => (
+                <SelectItem key={f.value} value={f.value}>
+                  {f.value === "all" ? "All statuses" : f.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       }
     >
       <div className="flex min-h-0 flex-1 flex-col gap-4">
@@ -208,25 +255,14 @@ export function EnvelopeList() {
             isLoading={isLoading}
             emptyState={emptyState}
             onRowClick={handleRowClick}
+            sortState={{
+              fields: SORT_FIELDS,
+              field: sortField,
+              direction: sortDirection,
+              onChange: handleSortChange,
+            }}
             minWidth="720px"
-            mobileCard={(envelope) => (
-              <div className="flex flex-col gap-2 p-3 border-b border-border last:border-b-0">
-                <div className="flex items-center justify-between gap-2">
-                  <TruncatedText text={envelope.title} className="font-medium text-sm flex-1" />
-                  <EnvelopeStatusBadge status={envelope.status} />
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
-                  <div>
-                    <span className="font-medium">Sent:</span>{" "}
-                    {envelope.sentAt ? formatShortDate(envelope.sentAt) : "—"}
-                  </div>
-                  <div>
-                    <span className="font-medium">Expires:</span>{" "}
-                    {envelope.expiresAt ? formatShortDate(envelope.expiresAt) : "—"}
-                  </div>
-                </div>
-              </div>
-            )}
+            mobileCard={envelopeMobileCard}
             pagination={{
               mode: "server",
               page,

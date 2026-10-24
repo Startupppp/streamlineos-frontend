@@ -92,6 +92,7 @@ export function UserAvatarMenuBody({
 }: UserAvatarMenuBodyProps) {
   const canViewSettings = useCan("settings:view");
   const canManageSettings = useCan("settings:manage");
+  const canViewBilling = useCan("billing:subscription:view");
   const canManagePersonalTokens = useCan("settings:api-tokens:read");
   const canManageRbac = useCan("settings:rbac:manage");
   const canViewAiCredits = useCan("billing:ai-credits:view");
@@ -101,6 +102,7 @@ export function UserAvatarMenuBody({
 
   const entries = buildMenuEntries({
     canManageSettings,
+    canViewBilling,
     canManagePersonalTokens,
     canViewAiCredits,
     canSeeOrgPeople,

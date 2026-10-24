@@ -110,6 +110,7 @@ describe("Settings → Notifications route access declarations", () => {
 describe("Avatar menu — notification preferences link points at the canonical URL", () => {
   const entries = buildMenuEntries({
     canManageSettings: false,
+    canViewBilling: false,
     canManagePersonalTokens: false,
     canViewAiCredits: false,
     canSeeOrgPeople: false,

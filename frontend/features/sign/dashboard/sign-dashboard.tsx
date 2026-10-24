@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/shared/error-state";
 import { StatCard, StatCardGrid, StatCardGridSkeleton } from "@/components/ui/stat-card";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useSignDashboard } from "@/hooks/api/sign/reports";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatDateTimeInOrgTz } from "@/lib/date-utils";
 import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 
 function formatEventType(eventType: string): string {
@@ -23,6 +25,7 @@ export function SignDashboard() {
   const { staggerContainer, fadeUp } = useMotionVariants();
   const [createOpen, setCreateOpen] = useState(false);
   const { data, isLoading, isError, error, refetch } = useSignDashboard();
+  const orgTimeZone = useOrgTimeZone();
 
   function handleRetry() {
     void refetch();
@@ -30,9 +33,9 @@ export function SignDashboard() {
 
   if (isError) {
     return (
-      <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
+      <PageWrapper title="Sign OS" subtitle="Envelopes, signatures, and completion status at a glance">
         <ErrorState
-          title="Failed to load SignOS dashboard"
+          title="Failed to load Sign OS dashboard"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
@@ -42,7 +45,7 @@ export function SignDashboard() {
 
   if (isLoading || !data) {
     return (
-      <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
+      <PageWrapper title="Sign OS" subtitle="Envelopes, signatures, and completion status at a glance">
         <StatCardGridSkeleton cols={4} />
       </PageWrapper>
     );
@@ -50,7 +53,7 @@ export function SignDashboard() {
 
   return (
     <PageWrapper
-      title="SignOS"
+      title="Sign OS"
       subtitle="Envelopes, signatures, and completion status at a glance"
       actions={
         <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)}>
@@ -123,7 +126,7 @@ export function SignDashboard() {
                     <li key={event.id} className="flex items-center justify-between gap-3 text-sm border-b border-border/60 pb-3 last:border-0 last:pb-0">
                       <span className="text-foreground">{formatEventType(event.eventType)}</span>
                       <span className="text-xs text-muted-foreground shrink-0">
-                        {event.actorName ?? "System"} · {new Date(event.createdAt).toLocaleString()}
+                        {event.actorName ?? "System"} · {formatDateTimeInOrgTz(event.createdAt, orgTimeZone)}
                       </span>
                     </li>
                   ))}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { addDays, format, startOfDay, subDays } from "date-fns";
+import { format, startOfDay, subDays } from "date-fns";
 import { ArrowRight, CalendarDays } from "lucide-react";
 import { CommandGroup, CommandItem } from "@/components/ui/command";
 import { useCalendarSearch } from "@/hooks/api/calendar-search";
@@ -15,6 +15,12 @@ import {
 
 const CALENDAR_SEARCH_MIN_LENGTH = 2;
 const CALENDAR_SEARCH_RESULTS = 8;
+const SEARCH_SPAN_MS = 120 * 24 * 60 * 60 * 1000;
+
+export function paletteSearchWindow(now: Date): { start: string; end: string } {
+  const from = subDays(startOfDay(now), 30);
+  return { start: from.toISOString(), end: new Date(from.getTime() + SEARCH_SPAN_MS).toISOString() };
+}
 
 function calendarEventHref(event: CalendarListItem): string {
   const params = new URLSearchParams({ mode: "list", date: format(new Date(event.start), "yyyy-MM-dd") });
@@ -61,10 +67,7 @@ export function PaletteCalendarGroup({
   query: string;
   onSelect: (href: string) => void;
 }) {
-  const [searchWindow] = useState(() => {
-    const from = subDays(startOfDay(new Date()), 30);
-    return { start: from.toISOString(), end: addDays(from, 120).toISOString() };
-  });
+  const [searchWindow] = useState(() => paletteSearchWindow(new Date()));
   const trimmed = query.trim();
   const search = useCalendarSearch(
     { start: searchWindow.start, end: searchWindow.end, query: trimmed },

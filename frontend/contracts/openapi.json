@@ -53416,36 +53416,6 @@
                                 "status": {
                                   "type": "string"
                                 },
-                                "razorpaySubscriptionId": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
-                                "razorpayCustomerId": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
-                                "razorpayPlanId": {
-                                  "anyOf": [
-                                    {
-                                      "type": "string"
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
                                 "currentPeriodStart": {
                                   "anyOf": [
                                     {
@@ -53490,20 +53460,6 @@
                                     }
                                   ]
                                 },
-                                "metadata": {
-                                  "anyOf": [
-                                    {
-                                      "type": "object",
-                                      "propertyNames": {
-                                        "type": "string"
-                                      },
-                                      "additionalProperties": {}
-                                    },
-                                    {
-                                      "type": "null"
-                                    }
-                                  ]
-                                },
                                 "createdAt": {
                                   "type": "string",
                                   "format": "date-time"
@@ -53531,16 +53487,6 @@
                                         "maximum": 9007199254740991
                                       },
                                       "razorpayPaymentId": {
-                                        "anyOf": [
-                                          {
-                                            "type": "string"
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
-                                      "razorpayOrderId": {
                                         "anyOf": [
                                           {
                                             "type": "string"
@@ -53582,20 +53528,6 @@
                                           }
                                         ]
                                       },
-                                      "metadata": {
-                                        "anyOf": [
-                                          {
-                                            "type": "object",
-                                            "propertyNames": {
-                                              "type": "string"
-                                            },
-                                            "additionalProperties": {}
-                                          },
-                                          {
-                                            "type": "null"
-                                          }
-                                        ]
-                                      },
                                       "createdAt": {
                                         "type": "string",
                                         "format": "date-time"
@@ -53606,13 +53538,11 @@
                                       "orgId",
                                       "subscriptionId",
                                       "razorpayPaymentId",
-                                      "razorpayOrderId",
                                       "amount",
                                       "amountPaise",
                                       "currency",
                                       "status",
                                       "paidAt",
-                                      "metadata",
                                       "createdAt"
                                     ]
                                   }
@@ -53623,14 +53553,10 @@
                                 "orgId",
                                 "plan",
                                 "status",
-                                "razorpaySubscriptionId",
-                                "razorpayCustomerId",
-                                "razorpayPlanId",
                                 "currentPeriodStart",
                                 "currentPeriodEnd",
                                 "trialEndsAt",
                                 "cancelledAt",
-                                "metadata",
                                 "createdAt",
                                 "updatedAt",
                                 "payments"
@@ -1306178,7 +1306104,18 @@
                           "type": "object",
                           "properties": {
                             "state": {
-                              "type": "string"
+                              "type": "string",
+                              "enum": [
+                                "not_your_turn",
+                                "expired",
+                                "revoked",
+                                "recipient_completed",
+                                "recipient_declined",
+                                "envelope_voided",
+                                "envelope_expired",
+                                "envelope_declined",
+                                "envelope_completed"
+                              ]
                             },
                             "envelopeTitle": {
                               "type": "string"
@@ -1306365,10 +1306302,91 @@
         "description": "Exposure: public — unauthenticated"
       }
     },
+    "/public/surveys/{collectorToken}/embed-origin": {
+      "get": {
+        "operationId": "SurveyPublicController_embedOrigins",
+        "parameters": [
+          {
+            "name": "collectorToken",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "allowedOrigins": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        }
+                      },
+                      "required": [
+                        "allowedOrigins"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success",
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "429": {
+            "$ref": "#/components/responses/TooManyRequests"
+          },
+          "503": {
+            "$ref": "#/components/responses/ServiceUnavailable"
+          }
+        },
+        "tags": [
+          "SurveyPublic"
+        ],
+        "x-exposure": "public",
+        "description": "Exposure: public — unauthenticated"
+      }
+    },
     "/public/surveys/{collectorToken}/session/{sessionId}": {
       "patch": {
         "operationId": "SurveyPublicController_saveAnswers",
         "parameters": [
+          {
+            "name": "collectorToken",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
           {
             "name": "sessionId",
             "required": true,
@@ -1306377,15 +1306395,6 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "collectorToken",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 1
             }
           }
         ],
@@ -1306440,6 +1306449,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "respondentKey": {
+                    "type": "string",
+                    "minLength": 16,
+                    "maxLength": 128
+                  },
                   "answers": {
                     "minItems": 1,
                     "maxItems": 200,
@@ -1306474,6 +1306488,7 @@
                   }
                 },
                 "required": [
+                  "respondentKey",
                   "answers"
                 ],
                 "additionalProperties": false
@@ -1306488,6 +1306503,15 @@
         "operationId": "SurveyPublicController_submit",
         "parameters": [
           {
+            "name": "collectorToken",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          {
             "name": "sessionId",
             "required": true,
             "in": "path",
@@ -1306495,15 +1306519,6 @@
               "type": "integer",
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
-            }
-          },
-          {
-            "name": "collectorToken",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "minLength": 1
             }
           }
         ],
@@ -1306705,6 +1306720,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
+                  "respondentKey": {
+                    "type": "string",
+                    "minLength": 16,
+                    "maxLength": 128
+                  },
                   "answers": {
                     "type": "array",
                     "items": {
@@ -1306736,6 +1306756,9 @@
                     }
                   }
                 },
+                "required": [
+                  "respondentKey"
+                ],
                 "additionalProperties": false
               }
             }
@@ -1306894,6 +1306917,9 @@
                             "excluded",
                             "deleted_by_policy"
                           ]
+                        },
+                        "respondentKey": {
+                          "type": "string"
                         }
                       },
                       "required": [
@@ -1306911,7 +1306937,8 @@
                         "passed",
                         "segment",
                         "metadata",
-                        "status"
+                        "status",
+                        "respondentKey"
                       ]
                     }
                   },
@@ -1325379,62 +1325406,154 @@
                       ]
                     },
                     "data": {
-                      "type": "object",
-                      "properties": {
-                        "job": {
+                      "anyOf": [
+                        {
                           "type": "object",
                           "properties": {
-                            "id": {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            "orgId": {
-                              "type": "string"
-                            },
-                            "templateId": {
-                              "type": "integer",
-                              "minimum": -9007199254740991,
-                              "maximum": 9007199254740991
-                            },
-                            "senderMembershipId": {
-                              "anyOf": [
-                                {
+                            "job": {
+                              "type": "object",
+                              "properties": {
+                                "id": {
                                   "type": "integer",
                                   "minimum": -9007199254740991,
                                   "maximum": 9007199254740991
                                 },
-                                {
-                                  "type": "null"
+                                "orgId": {
+                                  "type": "string"
+                                },
+                                "templateId": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "senderMembershipId": {
+                                  "anyOf": [
+                                    {
+                                      "type": "integer",
+                                      "minimum": -9007199254740991,
+                                      "maximum": 9007199254740991
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "status": {
+                                  "type": "string",
+                                  "enum": [
+                                    "pending",
+                                    "validating",
+                                    "running",
+                                    "completed",
+                                    "failed",
+                                    "cancelled"
+                                  ]
+                                },
+                                "columnMappingJson": {
+                                  "type": "object",
+                                  "propertyNames": {
+                                    "type": "string"
+                                  },
+                                  "additionalProperties": {
+                                    "type": "string"
+                                  }
+                                },
+                                "totalCount": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "successCount": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "failedCount": {
+                                  "type": "integer",
+                                  "minimum": -9007199254740991,
+                                  "maximum": 9007199254740991
+                                },
+                                "csvFileKey": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "errorReportFileKey": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
+                                },
+                                "createdAt": {
+                                  "type": "string",
+                                  "format": "date-time"
+                                },
+                                "completedAt": {
+                                  "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "format": "date-time"
+                                    },
+                                    {
+                                      "type": "null"
+                                    }
+                                  ]
                                 }
-                              ]
-                            },
-                            "status": {
-                              "type": "string",
-                              "enum": [
-                                "pending",
-                                "validating",
-                                "running",
-                                "completed",
-                                "failed",
-                                "cancelled"
-                              ]
-                            },
-                            "columnMappingJson": {
-                              "type": "object",
-                              "propertyNames": {
-                                "type": "string"
                               },
-                              "additionalProperties": {
-                                "type": "string"
-                              }
+                              "required": [
+                                "id",
+                                "orgId",
+                                "templateId",
+                                "senderMembershipId",
+                                "status",
+                                "columnMappingJson",
+                                "totalCount",
+                                "successCount",
+                                "failedCount",
+                                "csvFileKey",
+                                "errorReportFileKey",
+                                "createdAt",
+                                "completedAt"
+                              ]
                             },
+                            "dryRun": {
+                              "type": "boolean",
+                              "const": false
+                            },
+                            "queued": {
+                              "type": "boolean",
+                              "const": true
+                            }
+                          },
+                          "required": [
+                            "job",
+                            "dryRun",
+                            "queued"
+                          ]
+                        },
+                        {
+                          "type": "object",
+                          "properties": {
+                            "dryRun": {
+                              "type": "boolean",
+                              "const": true
+                            },
+                            "preview": {},
                             "totalCount": {
                               "type": "integer",
                               "minimum": -9007199254740991,
                               "maximum": 9007199254740991
                             },
-                            "successCount": {
+                            "validCount": {
                               "type": "integer",
                               "minimum": -9007199254740991,
                               "maximum": 9007199254740991
@@ -1325443,67 +1325562,16 @@
                               "type": "integer",
                               "minimum": -9007199254740991,
                               "maximum": 9007199254740991
-                            },
-                            "csvFileKey": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            },
-                            "errorReportFileKey": {
-                              "anyOf": [
-                                {
-                                  "type": "string"
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
-                            },
-                            "createdAt": {
-                              "type": "string",
-                              "format": "date-time"
-                            },
-                            "completedAt": {
-                              "anyOf": [
-                                {
-                                  "type": "string",
-                                  "format": "date-time"
-                                },
-                                {
-                                  "type": "null"
-                                }
-                              ]
                             }
                           },
                           "required": [
-                            "id",
-                            "orgId",
-                            "templateId",
-                            "senderMembershipId",
-                            "status",
-                            "columnMappingJson",
+                            "dryRun",
+                            "preview",
                             "totalCount",
-                            "successCount",
-                            "failedCount",
-                            "csvFileKey",
-                            "errorReportFileKey",
-                            "createdAt",
-                            "completedAt"
+                            "validCount",
+                            "failedCount"
                           ]
-                        },
-                        "dryRun": {
-                          "type": "boolean"
-                        },
-                        "preview": {}
-                      },
-                      "required": [
-                        "job",
-                        "dryRun"
+                        }
                       ]
                     }
                   },
@@ -1327405,6 +1327473,45 @@
             "required": false,
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200
+            }
+          },
+          {
+            "name": "sort",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "createdAt",
+              "type": "string",
+              "enum": [
+                "createdAt",
+                "sentAt",
+                "expiresAt",
+                "title",
+                "status"
+              ]
+            }
+          },
+          {
+            "name": "direction",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "default": "desc",
+              "type": "string",
+              "enum": [
+                "asc",
+                "desc"
+              ]
             }
           },
           {
@@ -1331188,6 +1331295,9 @@
               "exclusiveMinimum": 0,
               "maximum": 9007199254740991
             }
+          },
+          {
+            "$ref": "#/components/parameters/OptionalIdempotencyKeyHeader"
           }
         ],
         "responses": {
@@ -1331612,7 +1331722,9 @@
               }
             }
           }
-        }
+        },
+        "x-idempotency-command": "sign:field.create",
+        "x-idempotent": true
       },
       "get": {
         "operationId": "SignFieldsController_list",
@@ -1332424,7 +1332536,7 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 80,
-                    "pattern": "^[A-Za-z][A-Za-z\\s'.-]{1,79}$"
+                    "pattern": "^[\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N}\\s'.,&()-]{1,79}$"
                   },
                   "email": {
                     "type": "string",
@@ -1335250,7 +1335362,7 @@
                     "type": "string",
                     "minLength": 2,
                     "maxLength": 80,
-                    "pattern": "^[A-Za-z][A-Za-z\\s'.-]{1,79}$"
+                    "pattern": "^[\\p{L}\\p{N}][\\p{L}\\p{M}\\p{N}\\s'.,&()-]{1,79}$"
                   },
                   "email": {
                     "type": "string",
@@ -1365156,8 +1365268,14 @@
                   },
                   "settings": {
                     "type": "object",
-                    "propertyNames": {
-                      "type": "string"
+                    "properties": {
+                      "allowedOrigins": {
+                        "maxItems": 10,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
                     },
                     "additionalProperties": {}
                   },
@@ -1365402,8 +1365520,14 @@
                   },
                   "settings": {
                     "type": "object",
-                    "propertyNames": {
-                      "type": "string"
+                    "properties": {
+                      "allowedOrigins": {
+                        "maxItems": 10,
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
                     },
                     "additionalProperties": {}
                   },

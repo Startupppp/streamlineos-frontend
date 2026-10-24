@@ -158,7 +158,7 @@ function AuditLogBody({ moduleKey, open }: AuditLogBodyProps) {
         <EmptyState
           illustrationPreset="permissions"
           title="No access changes yet"
-          description="This log records changes to who can use this module: role groups, members, grants and ownership. Day-to-day work inside the module is not listed here; see Settings → Audit log."
+          description="This log records changes to who can use this module: role groups, members, grants and ownership. Day-to-day work inside the module is not listed here; see Administration → Security → Audit Logs."
           compact
           className="border-0 bg-transparent flex-1"
         />

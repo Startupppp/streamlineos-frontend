@@ -42,7 +42,7 @@ describe("invite create → captured mail → accept → role landing", () => {
     );
   });
 
-  it("lands a Build Member on the Command Center after accept (happy path)", () => {
+  it("lands a Build Member on the dashboard after accept, like every invitee (SIGN-017)", () => {
     expect(
       resolveInvitationLanding(
         access({
@@ -51,6 +51,6 @@ describe("invite create → captured mail → accept → role landing", () => {
         }),
         null,
       ),
-    ).toBe("/build/command-center");
+    ).toBe("/dashboard");
   });
 });

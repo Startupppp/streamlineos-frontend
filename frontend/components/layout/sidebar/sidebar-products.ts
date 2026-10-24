@@ -139,7 +139,7 @@ export const PRODUCT_DEFINITIONS: ProductDefinition[] = [
   },
   {
     key: "sign",
-    label: "SignOS",
+    label: "Sign OS",
     href: resolveProductHref("sign"),
     icon: PenTool,
   },
