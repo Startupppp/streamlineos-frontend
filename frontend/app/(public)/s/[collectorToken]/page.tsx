@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getErrorMessage } from "@/lib/get-error-message";
+import { isApiError } from "@/lib/api-envelope";
 import {
   usePublicSurvey,
   useStartSurveySession,
@@ -19,6 +20,7 @@ import { PublicSurveyShell } from "@/features/surveys/respondent/public-survey-s
 import { WelcomeScreen } from "@/features/surveys/respondent/welcome-screen";
 import { RuntimeFlow } from "@/features/surveys/respondent/runtime-flow";
 import { ThankYouScreen } from "@/features/surveys/respondent/thank-you-screen";
+import { useRespondentSession } from "@/features/surveys/respondent/use-respondent-session";
 
 interface SurveyMessages {
   welcomeMessage?: string;
@@ -59,11 +61,12 @@ export default function PublicSurveyPage() {
 
   const surveyQuery = usePublicSurvey(collectorToken);
   const startSession = useStartSurveySession(collectorToken);
-  const [sessionId, setSessionId] = useState<number | undefined>(undefined);
-  const saveAnswers = useSaveSurveyAnswers(collectorToken, sessionId);
-  const submitSession = useSubmitSurveySession(collectorToken, sessionId);
+  const [respondentSession, setRespondentSession] = useRespondentSession(collectorToken);
+  const saveAnswers = useSaveSurveyAnswers(collectorToken, respondentSession?.sessionId);
+  const submitSession = useSubmitSurveySession(collectorToken, respondentSession?.sessionId);
 
   const [phase, setPhase] = useState<Phase>("welcome");
+  const activePhase: Phase = phase === "welcome" && respondentSession ? "running" : phase;
   const [outcome, setOutcome] = useState<"completed" | "disqualified">("completed");
   const [result, setResult] = useState<{ score: number | null; passed: boolean | null } | null>(
     null,
@@ -77,25 +80,43 @@ export default function PublicSurveyPage() {
   async function handleStart() {
     try {
       const session = await startSession.mutateAsync({});
-      setSessionId(session.id);
+      setRespondentSession({ sessionId: session.id, respondentKey: session.respondentKey });
       setPhase("running");
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
   }
 
+  function restartIfSessionLost(error: unknown): boolean {
+    if (!isApiError(error) || error.status !== 404) return false;
+    setRespondentSession(null);
+    setPhase("welcome");
+    toast.error("Your response session has expired. Please start again.");
+    return true;
+  }
+
   async function handleSaveAnswer(questionId: number, answer: AnswerValue) {
-    await saveAnswers.mutateAsync([{ questionId, ...answer }]);
+    if (!respondentSession) return;
+    try {
+      await saveAnswers.mutateAsync({
+        respondentKey: respondentSession.respondentKey,
+        answers: [{ questionId, ...answer }],
+      });
+    } catch (error) {
+      if (!restartIfSessionLost(error)) throw error;
+    }
   }
 
   async function handleFinish(finishOutcome: "completed" | "disqualified") {
+    if (!respondentSession) return;
     try {
-      const submitted = await submitSession.mutateAsync(undefined);
+      const submitted = await submitSession.mutateAsync({ respondentKey: respondentSession.respondentKey });
+      setRespondentSession(null);
       setResult(hasScore(submitted) ? { score: submitted.score, passed: submitted.passed } : null);
       setOutcome(finishOutcome);
       setPhase("done");
     } catch (error) {
-      toast.error(getErrorMessage(error));
+      if (!restartIfSessionLost(error)) toast.error(getErrorMessage(error));
     }
   }
 
@@ -117,7 +138,7 @@ export default function PublicSurveyPage() {
     return <SurveyLoadingState />;
   }
 
-  if (phase === "welcome") {
+  if (activePhase === "welcome") {
     return (
       <PublicSurveyShell title={data.survey.title}>
         <WelcomeScreen
@@ -131,7 +152,7 @@ export default function PublicSurveyPage() {
     );
   }
 
-  if (phase === "running" && parsedSchema) {
+  if (activePhase === "running" && parsedSchema) {
     return (
       <PublicSurveyShell mode="form">
         <RuntimeFlow

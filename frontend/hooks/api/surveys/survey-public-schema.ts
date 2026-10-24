@@ -31,4 +31,8 @@ export const surveyPublicSessionRowContract = z.object({
   status: z.enum(["in_progress", "submitted", "invalid", "excluded", "deleted_by_policy"]),
 });
 
+export const surveyStartedSessionContract = surveyPublicSessionRowContract.extend({
+  respondentKey: z.string(),
+});
+
 export const publicSuccessContract = z.object({ success: z.literal(true) });

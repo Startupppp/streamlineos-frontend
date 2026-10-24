@@ -612,6 +612,13 @@ const nextConfig: NextConfig = {
         { key: "Cross-Origin-Resource-Policy", value: "same-origin" },
       ],
     },
+    {
+      source: "/:respondent(s|nps|live|forms)/:path*",
+      headers: [
+        { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+        { key: "X-Robots-Tag", value: "noindex, nofollow" },
+      ],
+    },
   ],
 };
 

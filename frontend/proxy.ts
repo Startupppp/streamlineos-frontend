@@ -101,12 +101,11 @@ function validFrameAncestor(value: unknown): string | null {
   }
 }
 
-async function bookingFrameAncestor(token: string): Promise<string | null> {
+async function fetchPublicData(path: string): Promise<object | null> {
   const apiUrl = process.env.API_INTERNAL_URL ?? process.env.NEXT_PUBLIC_API_URL;
   if (!apiUrl) return null;
   try {
-    const url = new URL(`/public/calendar/booking/${encodeURIComponent(token)}/embed-origin`, apiUrl);
-    const response = await fetch(url, {
+    const response = await fetch(new URL(path, apiUrl), {
       cache: "no-store",
       redirect: "error",
       signal: AbortSignal.timeout(3000),
@@ -115,11 +114,23 @@ async function bookingFrameAncestor(token: string): Promise<string | null> {
     const payload: unknown = await response.json();
     if (!payload || typeof payload !== "object" || !("data" in payload)) return null;
     const data = payload.data;
-    if (!data || typeof data !== "object" || !("allowedOrigin" in data)) return null;
-    return validFrameAncestor(data.allowedOrigin);
+    return data && typeof data === "object" ? data : null;
   } catch {
     return null;
   }
+}
+
+async function bookingFrameAncestor(token: string): Promise<string | null> {
+  const data = await fetchPublicData(`/public/calendar/booking/${encodeURIComponent(token)}/embed-origin`);
+  if (!data || !("allowedOrigin" in data)) return null;
+  return validFrameAncestor(data.allowedOrigin);
+}
+
+async function surveyFrameAncestors(token: string): Promise<string | null> {
+  const data = await fetchPublicData(`/public/surveys/${encodeURIComponent(token)}/embed-origin`);
+  if (!data || !("allowedOrigins" in data) || !Array.isArray(data.allowedOrigins)) return null;
+  const origins = data.allowedOrigins.flatMap((origin: unknown) => validFrameAncestor(origin) ?? []);
+  return origins.length > 0 ? origins.join(" ") : null;
 }
 
 const PROTECTED_ROUTES = [
@@ -306,9 +317,14 @@ export async function proxy(req: NextRequest) {
     request: { headers: requestHeaders },
   });
   const bookingMatch = /^\/calendar\/book\/([^/]+)\/?$/.exec(pathname);
+  const surveyEmbedMatch = req.nextUrl.searchParams.has("embed")
+    ? /^\/s\/([^/]+)\/?$/.exec(pathname)
+    : null;
   const frameAncestor = bookingMatch
     ? await bookingFrameAncestor(bookingMatch[1])
-    : null;
+    : surveyEmbedMatch
+      ? await surveyFrameAncestors(surveyEmbedMatch[1])
+      : null;
   response.headers.set(
     "Content-Security-Policy",
     buildCsp(nonce, process.env.NEXT_PUBLIC_API_URL, frameAncestor ?? undefined),
