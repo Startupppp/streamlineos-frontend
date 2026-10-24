@@ -25,6 +25,7 @@ jest.mock("next/dynamic", () => () => {
 jest.mock("@/hooks/api/access", () => ({
   useCan: (key: string) => mockUseCan(key),
   useScope: (key: string) => mockUseScope(key),
+  useCanState: () => "denied",
 }));
 jest.mock("@/hooks/api/hr", () => ({
   useHrEmployeeStats: () => ({ data: undefined, isLoading: false }),

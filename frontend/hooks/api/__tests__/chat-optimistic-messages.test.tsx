@@ -52,23 +52,16 @@ installRandomUuid();
 beforeEach(() => jest.clearAllMocks());
 
 describe("useSendMessage — instant send with in-place reconciliation", () => {
-  const serverRow = {
+  const serverRow = message({
     id: 501,
-    orgId: "org-1",
-    channelId: CHANNEL_ID,
-    senderMembershipId: 11,
+    senderId: "user-1",
+    sender: { id: "user-1", name: "Me", image: null },
     content: "hello",
-    replyToId: null,
-    isEdited: false,
-    isDeleted: false,
-    messageType: "text" as const,
-    metadata: null,
-    actionStatus: null,
     clientKey: "ck-1",
     channelPosition: 9,
     createdAt: "2026-09-30T11:00:00.000Z",
     updatedAt: "2026-09-30T11:00:00.000Z",
-  };
+  });
 
   it("appends an optimistic copy with an empty reactions map before the server answers", async () => {
     const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
@@ -96,7 +89,7 @@ describe("useSendMessage — instant send with in-place reconciliation", () => {
     mockedPost.mockResolvedValue({ ...serverRow, clientKey: null });
     const { result } = renderHook(() => useSendMessage(), { wrapper: wrapperFor(client) });
     await act(async () => {
-      await result.current.mutateAsync({ channelId: CHANNEL_ID, content: "hello" });
+      await result.current.mutateAsync({ channelId: CHANNEL_ID, clientKey: "ck-hello", content: "hello" });
     });
     const [, body] = mockedPost.mock.calls[0];
     expect(body).toEqual(expect.objectContaining({ clientKey: expect.any(String) }));
@@ -189,26 +182,22 @@ describe("a sent attachment gets its server id from the realtime echo", () => {
   const file = { fileName: "a.png", fileUrl: "u", fileKey: "k", fileSize: 3, mimeType: "image/png" };
   const echoed = [{ id: 77, ...file }];
 
-  it("replaces the temporary attachment ids in the timeline, so the attachment URL query can run", async () => {
+  it("takes the server attachment ids from the send response, so the attachment URL query can run without waiting for the realtime echo", async () => {
     const { useSendMessage } = await import("@/hooks/api/chat-message-mutations");
     const { mergeInboundMessage } = await import("@/features/chat/message-page-merge");
     const { useAttachmentUrl } = await import("@/hooks/api/chat-shared");
     const client = freshClient();
     seedTimeline(client, []);
-    mockedPost.mockResolvedValue({
-      id: 501, orgId: "org-1", channelId: CHANNEL_ID, senderMembershipId: 11, content: "pic", replyToId: null,
-      isEdited: false, isDeleted: false, messageType: "text", metadata: null, actionStatus: null, clientKey: "ck-f",
-      channelPosition: 9, createdAt: "2026-09-30T11:00:00.000Z", updatedAt: "2026-09-30T11:00:00.000Z",
-    });
+    mockedPost.mockResolvedValue(message({ id: 501, content: "pic", clientKey: "ck-f", attachments: echoed }));
     const send = renderHook(() => useSendMessage(), { wrapper: wrapperFor(client) });
     await act(async () => {
       await send.result.current.mutateAsync({ channelId: CHANNEL_ID, content: "pic", clientKey: "ck-f", attachments: [file] });
     });
-    expect(timeline(client)[0].attachments[0].id).toBeLessThan(0);
+    expect(timeline(client)[0].attachments).toEqual(echoed);
     client.setQueryData<InfiniteData<MessagesPage>>(messagesKey, (old) =>
       old && mergeInboundMessage(old, message({ id: 501, attachments: echoed }), "ck-f"),
     );
-    expect(timeline(client)[0].attachments).toEqual(echoed);
+    expect(timeline(client).map((m) => m.id)).toEqual([501]);
     const mockedGet = jest.mocked(apiClient.get);
     mockedGet.mockResolvedValue({ url: "https://files/a.png" });
     const url = renderHook(() => useAttachmentUrl(CHANNEL_ID, timeline(client)[0].attachments[0].id), {

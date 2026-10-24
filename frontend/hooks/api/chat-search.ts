@@ -50,7 +50,6 @@ import {
 import {
   chatSendRetry,
   optimisticMessage,
-  sendClientKey,
 } from "@/hooks/api/chat-send-policy";
 import { abandonChatSend, beginChatSend, chatSendVisible } from "@/hooks/api/chat-telemetry";
 import type {
@@ -207,17 +206,17 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
     mutationFn: (body) =>
       apiClient.post<Message>(
         `/chat/channels/${channelId}/messages/${parentMessageId}/thread`,
-        { ...body, clientKey: sendClientKey(body) },
+        { ...body, clientKey: body.clientKey },
         undefined,
         chatMessageContract,
       ),
     onMutate: async (body) => {
       await cancelLoadedQueries(queryClient, [threadKey]);
-      beginChatSend(sendClientKey(body));
+      beginChatSend(body.clientKey);
       const optimistic = optimisticMessage({
         ...body,
         channelId,
-        clientKey: sendClientKey(body),
+        clientKey: body.clientKey,
         author: user,
         replyToId: parentMessageId,
       });
@@ -230,14 +229,14 @@ export function useSendThreadReply(channelId: number, parentMessageId: number) {
       };
     },
     onError: (_error, body, context) => {
-      abandonChatSend(sendClientKey(body));
+      abandonChatSend(body.clientKey);
       context?.rollback();
     },
     onSuccess: (row, body) => {
       queryClient.setQueryData<InfiniteData<ThreadPage>>(threadKey, (old) =>
-        reconcileThreadReply(old, sendClientKey(body), () => row),
+        reconcileThreadReply(old, body.clientKey, () => row),
       );
-      chatSendVisible(sendClientKey(body));
+      chatSendVisible(body.clientKey);
     },
   });
 }

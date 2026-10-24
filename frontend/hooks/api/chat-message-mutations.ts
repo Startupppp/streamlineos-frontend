@@ -40,7 +40,6 @@ import {
   keepsFailedSendRow,
   pendingSendMessage,
   releaseSendTurn,
-  sendClientKey,
 } from "@/hooks/api/chat-send-policy";
 import type {
   EditMessageInput,
@@ -84,21 +83,21 @@ export function useSendMessage() {
     mutationKey: CHAT_SEND_MUTATION_KEY,
     mutationFn: async (variables) => {
       const { channelId, ...body } = variables;
-      await awaitSendTurn(sendClientKey(variables));
+      await awaitSendTurn(variables.clientKey);
       return apiClient
         .post<Message>(
           `/chat/channels/${channelId}/messages`,
-          { ...body, clientKey: sendClientKey(variables) },
+          { ...body, clientKey: variables.clientKey },
           undefined,
           chatMessageContract,
         )
         .catch((error: unknown) => {
-          countTransientSendFailure(sendClientKey(variables), error);
+          countTransientSendFailure(variables.clientKey, error);
           throw error;
         });
     },
     onMutate: async (variables) => {
-      const clientKey = sendClientKey(variables);
+      const clientKey = variables.clientKey;
       const { channelId } = variables;
       claimSendTurn(queryClient, channelId, clientKey);
       await Promise.all([
@@ -133,11 +132,11 @@ export function useSendMessage() {
       return { rollback: undoRow };
     },
     onError: (_error, variables, context) => {
-      abandonChatSend(sendClientKey(variables));
-      if (!keepsFailedSendRow(sendClientKey(variables)))
+      abandonChatSend(variables.clientKey);
+      if (!keepsFailedSendRow(variables.clientKey))
         queryClient.setQueryData<InfiniteData<MessagesPage>>(
           collaborationQueryKeys.chat.messages(variables.channelId),
-          (old) => removeOptimisticMessage(old, sendClientKey(variables)),
+          (old) => removeOptimisticMessage(old, variables.clientKey),
         );
       context?.rollback();
     },
@@ -147,11 +146,11 @@ export function useSendMessage() {
         (old) =>
           replaceOptimisticMessage(
             old,
-            sendClientKey(variables),
+            variables.clientKey,
             () => row,
           ),
       );
-      chatSendVisible(sendClientKey(variables));
+      chatSendVisible(variables.clientKey);
       if ((variables.attachments?.length ?? 0) > 0)
         void queryClient.invalidateQueries({
           queryKey: collaborationQueryKeys.chat.channelFiles(
@@ -162,8 +161,8 @@ export function useSendMessage() {
         });
     },
     onSettled: (_data, _error, variables) => {
-      clearTransientSendFailures(sendClientKey(variables));
-      releaseSendTurn(sendClientKey(variables));
+      clearTransientSendFailures(variables.clientKey);
+      releaseSendTurn(variables.clientKey);
     },
   });
 }

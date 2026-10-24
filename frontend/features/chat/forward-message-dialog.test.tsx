@@ -57,6 +57,18 @@ async function forward(message: ForwardableMessage) {
   return mockMutateAsync.mock.calls[0]?.[0];
 }
 
+beforeAll(() => {
+  if (typeof globalThis.crypto?.randomUUID === "function") return;
+  let n = 0;
+  Object.defineProperty(globalThis.crypto, "randomUUID", {
+    configurable: true,
+    value: () => {
+      n += 1;
+      return `00000000-0000-4000-8000-${String(n).padStart(12, "0")}`;
+    },
+  });
+});
+
 describe("ForwardMessageDialog", () => {
   beforeEach(() => {
     mockMutateAsync.mockReset();
@@ -68,6 +80,7 @@ describe("ForwardMessageDialog", () => {
 
     expect(sent).toEqual({
       channelId: 7,
+      clientKey: expect.any(String),
       content: undefined,
       metadata: {
         forwardCount: 1,

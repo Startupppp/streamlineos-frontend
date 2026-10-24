@@ -145,7 +145,7 @@ describe("chat message cache — a context-window message is patched like any ot
     mockedPost.mockReturnValue(new Promise(() => undefined));
     const { result } = renderHook(() => useSendMessage(), { wrapper: Wrapper });
     act(() => {
-      result.current.mutate({ channelId: CHANNEL_ID, content: "answering", replyToId: 42 });
+      result.current.mutate({ channelId: CHANNEL_ID, clientKey: "ck-answer", content: "answering", replyToId: 42 });
     });
     await waitFor(() => {
       const sent = client

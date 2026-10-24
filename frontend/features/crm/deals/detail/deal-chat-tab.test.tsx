@@ -1,9 +1,8 @@
-import { render, screen } from "@testing-library/react";
+import { render } from "@testing-library/react";
 import {
   baseChannelResult,
   mockUseCanState,
   mockUseCan,
-  mockUseChatOutboxDrain,
   mockUseCreateEntityChannel,
   mockUseEntityChannel,
   mockUsePageState,

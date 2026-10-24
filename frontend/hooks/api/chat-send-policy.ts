@@ -16,10 +16,6 @@ import type {
 
 export const CHAT_SEND_MUTATION_KEY = ["chat", "messages", "send"];
 
-export function sendClientKey(variables: { clientKey: string }): string {
-  return variables.clientKey;
-}
-
 export function isTransientSendError(error: unknown): boolean {
   if (!isApiError(error)) return false;
   if (error.code === "NETWORK_ERROR" || error.code === "TIMEOUT") return true;

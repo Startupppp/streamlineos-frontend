@@ -131,6 +131,7 @@ export function ForwardMessageDialog({ message, open, onOpenChange }: ForwardMes
     try {
       await sendMessage.mutateAsync({
         channelId: selectedChannelId,
+        clientKey: crypto.randomUUID(),
         content: content || undefined,
         metadata: entities.length ? { forwardCount, entities } : { forwardCount },
         attachments: message.attachments?.map((a) => ({

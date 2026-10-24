@@ -63,8 +63,8 @@ describe("F1 — the message contract keeps reactions", () => {
   });
 });
 
-describe("F2 — a thread reply parses the raw row the endpoint answers", () => {
-  it("posts the clientKey and accepts a response with no sender/attachments/replyTo", async () => {
+describe("F2 — a thread reply parses the same message contract as the list", () => {
+  it("posts the clientKey and accepts the list-shaped reply while rejecting the old raw row", async () => {
     const { useSendThreadReply } = await import("@/hooks/api/chat-search");
     mockedPost.mockResolvedValue({});
     const { result } = renderHook(() => useSendThreadReply(CHANNEL_ID, 1), { wrapper: wrapperFor(freshClient()) });
@@ -80,7 +80,8 @@ describe("F2 — a thread reply parses the raw row the endpoint answers", () => 
       isEdited: false, isDeleted: false, messageType: "text", metadata: null, actionStatus: null,
       clientKey: "ck-1", channelPosition: 4, createdAt: "2026-09-30T10:00:00.000Z", updatedAt: "2026-09-30T10:00:00.000Z",
     };
-    expect(schema?.safeParse(raw).success).toBe(true);
+    expect(schema?.safeParse(raw).success).toBe(false);
+    expect(schema?.safeParse({ ...raw, senderId: "user-1", sender: { id: "user-1", name: "Ada", image: null }, reactions: {}, attachments: [], replyTo: null }).success).toBe(true);
   });
 });
 

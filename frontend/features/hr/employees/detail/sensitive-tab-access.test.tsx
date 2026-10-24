@@ -273,7 +273,7 @@ import { Tabs } from "@/components/ui/tabs";
 function renderTabsList(props: { showSensitiveTab: boolean; showEditTab: boolean; isSelf: boolean }) {
   render(
     <Tabs value="overview">
-      <EmployeeTabsList {...props} />
+      <EmployeeTabsList {...props} showChatTab={false} />
     </Tabs>,
   );
 }

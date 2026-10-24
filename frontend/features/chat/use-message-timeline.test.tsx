@@ -210,7 +210,7 @@ describe("useMessageTimeline — an old ?message renders its own context window,
   it("sending a message leaves context mode, so the sent message is visible with the newest ones", async () => {
     const { result } = await landOnOldMessage();
     act(() => {
-      void result.current.timeline.sendMessage.mutateAsync({ channelId: CHANNEL_ID, content: "hello from the past" });
+      void result.current.timeline.sendMessage.mutateAsync({ channelId: CHANNEL_ID, clientKey: "ck-past", content: "hello from the past" });
     });
     expect(result.current.anchor).toBeNull();
     await waitFor(() =>
