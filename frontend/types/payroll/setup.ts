@@ -158,26 +158,12 @@ export type StatutoryPackConfig = {
   complianceChecklist: ComplianceChecklistItem[];
 };
 
-  activeVersion: VersionRow | null;
-  taxRegimeApplicable: boolean;
-  statutoryPack: StatutoryPackConfig | null;
-};
-
-  affectedEmployeeCount: number;
-  affectedStatutoryCodes: string[];
-  affectedEmployeeNames: string[];
-};
-
 export type ActivateChecklistItem = {
   key: string;
   label: string;
   done: boolean;
   href: string;
   detail: string | null;
-};
-
-  componentCount: number;
-  checklist: ActivateChecklistItem[];
 };
 
 export type ComponentPayCategory =
@@ -202,7 +188,4 @@ export type SalaryComponent = {
   isActive: boolean;
   effectiveFrom: string | null;
   effectiveTo: string | null;
-};
-
-  total: number;
 };

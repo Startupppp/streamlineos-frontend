@@ -52,9 +52,6 @@ export function usePayoutValidation(runId: number) {
   });
 }
 
-
-};
-
 export function usePayoutBatches(runId?: number) {
   const canManage = useCan("payroll:bank:manage");
   return useQuery({

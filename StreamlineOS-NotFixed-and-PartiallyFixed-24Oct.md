@@ -1,56 +1,26 @@
-# StreamlineOS: Not fixed and partially fixed issues (as of 24 Oct 2026)
+# StreamlineOS: backend still pending (24 Oct 2026)
 
-Tested in the ADitay CAhala org (owner) on production at https://www.streamlineos.in, with FE patches re-verified locally on 24 Oct where noted. This list covers remaining open items from the earlier 74 plus the two-sided chat test.
+Frontend items from this list were fixed and checked locally on 24 Oct. What remains needs backend work.
 
-| Group | Count | IDs |
+| ID | Sev | Why it is still backend |
 |---|---|---|
-| Not fixed (from the original 74) | 2 | DOC-004, RBAC-007 |
-| Partially fixed (from the original 74) | 3 | ASKOS-001, ADM-011, RBAC-005 |
-| New, not fixed (two-sided chat test) | 1 | CHAT2-01 |
-| FE patched — pending two-sided retest | 10 | CHAT2-02–CHAT2-11 |
-| Smaller observations | 2 | Mail trash toast; Ask OS "Degraded" |
+| ASKOS-001 | High | `getMyCalendarEvents` builds the day from the actor timezone and `eventsAggregate.getEvents`. It still skips synced and already-past items, and it can mix IST with the browser's day. The UI only renders that answer. |
+| RBAC-007 | Low | A member with no module access still received the owner's Google- and Outlook-synced events. Dashboard widgets for leave, attendance clock-in, payroll, expenses, and upcoming events are now permission-gated. The leftover leak is the calendar read returning another member's synced events. |
+| CHAT2-01 | Medium | Read receipts stay "Delivered". The message UI has no peer read state to turn that into "Seen". |
 
-**Removed after 100% local verify (24 Oct):** BILL-005, CAL-007, DLG-01, dashboard greeting/clock day mismatch.
+## Also backend, not a separate ticket
 
-## 1. Not fixed (2)
+- Ask OS can label a correct answer "Degraded". That label follows the server evidence status.
 
-| ID | Sev | Issue | Current behaviour (24 Oct) | Repro |
-|---|---|---|---|---|
-| DOC-004 | Medium | The "Load theirs" button in the document conflict banner does nothing | Two tabs edited the same doc, and tab 1 got a 409 and the conflict banner. Clicking "Load theirs" left the banner up and kept tab 1's local text, with no toast after more than 8 s. Only a page reload showed tab 2's version. It also failed on 23 Oct. | 1/1 |
-| RBAC-007 | Low (needs triage) | A member with "No module access" sees org data on the dashboard | The test member had no module access but still saw the owner's Google- and Outlook-synced calendar events ("Calendar Ticket19 …" on 26, 27 and 30 Oct). They also saw HR widgets: Leave balance, Attendance with Web Clock-in, Payroll and Expenses. FE now gates Leave / Upcoming / Clock-in on permissions; remaining event leakage may be API/backend. | 1/1 |
+## Checked and removed (frontend)
 
-## 2. Partially fixed (3)
+Verified in the app or by unit tests on 24 Oct, then removed from this list:
 
-| ID | Sev | What's fixed | What's still wrong |
-|---|---|---|---|
-| ASKOS-001 | High | Ask OS finds a native event created for today. | Before that event existed, it said "You don't have any meetings scheduled for today" while the calendar showed 5 items that day. It skips synced and already-past events. It also mixes IST times with the browser's Los Angeles day. Backend/tooling. |
-| ADM-011 | Low | Directory now says "Person records for this org — not the same as team members." | Directory still shows 3 records while Users and Dashboard show 5. This may be by design and needs a product decision. |
-| RBAC-005 | Low | Groups → Manage now has Members and Roles tabs. Role search shows loading/error instead of an immediate empty state. | Still needs a live check that roles appear for an admin; if the API returns none, assignment stays blocked. |
-
-## 3. New issues from the two-sided chat test
-
-### Still open (needs backend or two-sided proof)
-
-| ID | Sev | Issue | Steps | Expected | Actual | Repro |
-|---|---|---|---|---|---|---|
-| CHAT2-01 | Medium | Read receipt never becomes "Seen" | A sends a DM, B opens it, A waits 10 s and reloads | "Seen" or read ticks | Always "Delivered" | 2/2 |
-
-### FE patched — pending two-sided retest (do not treat as closed until re-run)
-
-| ID | Sev | Issue | FE change (local) |
-|---|---|---|---|
-| CHAT2-03 | High | Deleted message text stays in the receiver's sidebar preview | Inactive-tab delete now calls `patchLastMessageAfterDelete` |
-| CHAT2-02 | Medium | An edit doesn't update the receiver's sidebar preview | `patchLastMessageIfLatest` on edit (realtime + notifications + optimistic) |
-| CHAT2-04 | Medium | Quote block keeps a deleted message's text | Quote UI shows "Original message deleted" |
-| CHAT2-08 | Medium | Leaving a channel shows as a normal message, and the composer stays | System line + hide composer when not a member |
-| CHAT2-09 | Medium | A plain member sees "Archive chat" and "Invite People" | Admin-gated; unit tests pass |
-| CHAT2-05 | Low | Reactions don't show who reacted | Reaction chip tooltips with member names |
-| CHAT2-06 | Low | The new-message toast is generic | DM toast uses partner name + snippet |
-| CHAT2-07 | Low | "Mark as unread" has no visible effect | Suppress auto mark-read after mark-unread; unit tests pass |
-| CHAT2-10 | Low | Draft text carries across conversations | Composer resets on channel/`draftKey` change |
-| CHAT2-11 | Low | A stray "New Messages" divider appears above your own message | Skip divider when first unread is from self |
-
-## Smaller observations (not yet logged as bugs)
-
-- Moving mail to Trash showed an error toast even though the move worked.
-- Ask OS showed a "Degraded" label on a correct answer.
+- DOC-004 — Load theirs closes the confirm dialog, refetches, and toasts on success or failure
+- BILL-005 — credits headline uses the usage total
+- CAL-007 — list times use one zone label (`Asia/Kolkata`, secondary `UTC`)
+- DLG-01 — Granted tab shows the granted list on the first click
+- RBAC-005 — Groups → Manage → Roles lists org roles (Accounting Module Admin and the rest), not "No roles found"
+- ADM-011 — directory copy already says person records are not team members; the 3 vs 5 count is that split, not a backend defect
+- CHAT2-02, CHAT2-03, CHAT2-04, CHAT2-05, CHAT2-06, CHAT2-07, CHAT2-08, CHAT2-09, CHAT2-10, CHAT2-11 — sidebar preview, deleted quotes, reaction names, DM toast, mark-unread, drafts, own-message divider, system leave line, and admin-only archive/invite
+- Dashboard greeting date matches the org-timezone clock

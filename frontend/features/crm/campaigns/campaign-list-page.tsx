@@ -83,8 +83,6 @@ export function CampaignListPage() {
   const campaigns = data?.items ?? [];
   const total = data?.total ?? 0;
   const isFiltered = statusFilter !== "all";
-  const =
-    STATUS_OPTIONS.find((option) => option.value === statusFilter)?.label ?? statusFilter;
 
   const handleOpenSheet = useCallback(() => setSheetOpen(true), []);
   const handleClearFilters = useCallback(() => {

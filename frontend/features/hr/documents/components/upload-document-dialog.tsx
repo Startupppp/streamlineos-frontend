@@ -59,10 +59,6 @@ export function uploadRejectionReason(file: Pick<File, "name" | "size">): string
   return null;
 }
 
- KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-}
-
 function RemoveFileButton({
   index,
   onClick,
