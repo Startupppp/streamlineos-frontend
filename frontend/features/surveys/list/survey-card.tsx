@@ -32,6 +32,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { SurveyStatusBadge } from "./survey-status-badge";
 import { SURVEY_MODE_META } from "@/features/surveys/shared/survey-mode-meta";
@@ -161,85 +163,86 @@ export function SurveyCard({ survey }: { survey: SurveyForm }) {
         </div>
       </CardContent>
 
-      <CardFooter className="mt-auto flex-wrap gap-2 border-t border-border/60">
-        <Button type="button" variant="outline" size="sm" className="gap-1.5" asChild>
+      <CardFooter className="mt-auto flex-wrap items-center gap-1 border-t border-border/60">
+        <TooltipIconButton label="Open" variant="outline" asChild>
           <Link href={href}>
             <ExternalLink className="size-4" aria-hidden="true" />
-            Open
           </Link>
-        </Button>
+        </TooltipIconButton>
         {canViewParticipants ? (
-          <Button type="button" variant="ghost" size="sm" className="gap-1.5" asChild>
+          <TooltipIconButton label="Share" variant="ghost" asChild>
             <Link href={participantsHref}>
               <Users className="size-4" aria-hidden="true" />
-              Share
             </Link>
-          </Button>
+          </TooltipIconButton>
         ) : null}
-        {canPublishNow ? (
-          <Button
-            type="button"
-            size="sm"
-            className="ml-auto gap-1.5"
-            onClick={handlePublish}
-            disabled={isBusy}
-          >
-            <Send className="size-4" aria-hidden="true" />
-            Publish
-          </Button>
-        ) : null}
-        {canPauseNow ? (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="ml-auto gap-1.5"
-            onClick={handlePause}
-            disabled={isBusy}
-          >
-            <Pause className="size-4" aria-hidden="true" />
-            Pause
-          </Button>
-        ) : null}
-        {showMenu ? (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className={canPublishNow || canPauseNow ? undefined : "ml-auto"}
+        {canPublishNow || canPauseNow || showMenu ? (
+          <div className="ml-auto flex items-center gap-1">
+            {canPublishNow ? (
+              <TooltipIconButton
+                label="Publish"
+                variant="default"
+                onClick={handlePublish}
                 disabled={isBusy}
-                aria-label={`Actions for ${survey.title}`}
               >
-                <MoreHorizontal className="size-4" aria-hidden="true" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              {canCreate ? (
-                <DropdownMenuItem onClick={handleDuplicate}>
-                  <Copy className="size-4" />
-                  Duplicate
-                </DropdownMenuItem>
-              ) : null}
-              {canCloseNow ? (
-                <DropdownMenuItem onClick={handleClose}>
-                  <Lock className="size-4" />
-                  Close
-                </DropdownMenuItem>
-              ) : null}
-              {canArchive ? <DropdownMenuSeparator /> : null}
-              {canArchive ? (
-                <DropdownMenuItem
-                  variant="destructive"
-                  onClick={() => setConfirmArchiveOpen(true)}
-                >
-                  <Archive className="size-4" />
-                  Archive
-                </DropdownMenuItem>
-              ) : null}
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <Send className="size-4" aria-hidden="true" />
+              </TooltipIconButton>
+            ) : null}
+            {canPauseNow ? (
+              <TooltipIconButton
+                label="Pause"
+                variant="outline"
+                onClick={handlePause}
+                disabled={isBusy}
+              >
+                <Pause className="size-4" aria-hidden="true" />
+              </TooltipIconButton>
+            ) : null}
+            {showMenu ? (
+              <DropdownMenu>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        disabled={isBusy}
+                        aria-label={`More actions for ${survey.title}`}
+                      >
+                        <MoreHorizontal className="size-4" aria-hidden="true" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                  </TooltipTrigger>
+                  <TooltipContent>More actions</TooltipContent>
+                </Tooltip>
+                <DropdownMenuContent align="end" className="w-44">
+                  {canCreate ? (
+                    <DropdownMenuItem onClick={handleDuplicate}>
+                      <Copy className="size-4" />
+                      Duplicate
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canCloseNow ? (
+                    <DropdownMenuItem onClick={handleClose}>
+                      <Lock className="size-4" />
+                      Close
+                    </DropdownMenuItem>
+                  ) : null}
+                  {canArchive ? <DropdownMenuSeparator /> : null}
+                  {canArchive ? (
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => setConfirmArchiveOpen(true)}
+                    >
+                      <Archive className="size-4" />
+                      Archive
+                    </DropdownMenuItem>
+                  ) : null}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+          </div>
         ) : null}
       </CardFooter>
 

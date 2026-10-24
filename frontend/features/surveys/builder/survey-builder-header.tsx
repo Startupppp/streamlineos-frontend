@@ -19,7 +19,7 @@ import {
   ResponsiveIconLabelText,
 } from "@/components/ui/responsive-icon-label";
 import { cn } from "@/lib/utils";
-import { SurveyActivityInfo } from "@/features/surveys/builder/survey-activity-panel";
+import { SurveyActivityMenuSection } from "@/features/surveys/builder/survey-activity-panel";
 import { SurveyStatusBadge } from "@/features/surveys/list/survey-status-badge";
 import { SURVEY_MODE_META } from "@/features/surveys/shared/survey-mode-meta";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -128,7 +128,6 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
       <div className="flex min-w-0 items-center gap-2">
         <SurveyStatusBadge status={survey.status} />
         <span className="truncate text-sm text-muted-foreground">{modeMeta.label}</span>
-        <SurveyActivityInfo survey={survey} />
       </div>
       <div className="flex min-w-0 flex-wrap items-center gap-2 sm:ml-auto">
         {canViewParticipants ? (
@@ -183,42 +182,42 @@ export function SurveyBuilderHeader({ survey }: { survey: SurveyForm }) {
             </Button>
           </MobileOnlyLabelTooltip>
         ) : null}
-        {(canCreate || canPublish || canArchive) && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <AnimatedIconButton
-                icon={EllipsisIcon}
-                iconSize={16}
-                variant="outline"
-                size="icon"
-                className="size-9 shrink-0"
-                disabled={isBusy}
-                aria-label="Survey actions"
-              />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              {canCreate && (
-                <DropdownMenuItem onClick={handleDuplicate}>
-                  <Copy className="size-4" />
-                  Duplicate
-                </DropdownMenuItem>
-              )}
-              {canPublish && (survey.status === "published" || survey.status === "paused") && (
-                <DropdownMenuItem onClick={handleClose}>
-                  <Lock className="size-4" />
-                  Close
-                </DropdownMenuItem>
-              )}
-              {canArchive && <DropdownMenuSeparator />}
-              {canArchive && (
-                <DropdownMenuItem onClick={handleRequestArchive} variant="destructive">
-                  <Archive className="size-4" />
-                  Archive
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <AnimatedIconButton
+              icon={EllipsisIcon}
+              iconSize={16}
+              variant="outline"
+              size="icon"
+              className="size-9 shrink-0"
+              disabled={isBusy}
+              aria-label="Survey actions"
+            />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <SurveyActivityMenuSection survey={survey} />
+            {(canCreate || canPublish || canArchive) && <DropdownMenuSeparator />}
+            {canCreate && (
+              <DropdownMenuItem onClick={handleDuplicate}>
+                <Copy className="size-4" />
+                Duplicate
+              </DropdownMenuItem>
+            )}
+            {canPublish && (survey.status === "published" || survey.status === "paused") && (
+              <DropdownMenuItem onClick={handleClose}>
+                <Lock className="size-4" />
+                Close
+              </DropdownMenuItem>
+            )}
+            {canArchive && (canCreate || canPublish) && <DropdownMenuSeparator />}
+            {canArchive && (
+              <DropdownMenuItem onClick={handleRequestArchive} variant="destructive">
+                <Archive className="size-4" />
+                Archive
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
         <ConfirmDialog
           open={confirmArchiveOpen}
           onOpenChange={setConfirmArchiveOpen}

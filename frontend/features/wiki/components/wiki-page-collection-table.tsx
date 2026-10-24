@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  Fragment,
+  type ReactNode,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import { useKbPageCollection } from "@/hooks/api/kb/page-collection";
 import type {
@@ -16,14 +23,25 @@ import { DataTable } from "@/components/ui/data-table";
 import type { DataTableColumn } from "@/components/ui/data-table.types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { CONTENT_FILL_PANEL } from "@/components/ui/content-fill-panel";
-import { WikiFillTable, WikiPageCardsSkeleton } from "./wiki-collection-skeletons";
+import {
+  WikiFillTable,
+  WikiPageCardsSkeleton,
+} from "./wiki-collection-skeletons";
 import { SearchInput } from "@/components/ui/search-input";
-import { TablePagination, useCursorPager } from "@/components/ui/table-pagination";
+import {
+  TablePagination,
+  useCursorPager,
+} from "@/components/ui/table-pagination";
 import { useUrlFilters, parseEnum } from "@/lib/url-state/use-url-filters";
 import { pageHref, projectPageHref } from "@/lib/knowledge-routes";
 import { WIKI_PAGE_CARD_GRID_CLASS } from "@/features/wiki/components/wiki-page-card";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
 import { getUserDisplayName } from "@/lib/person-display";
+import {
+  DEFAULT_PAGE_SIZE,
+  STANDARD_PAGE_SIZE_OPTIONS,
+  parsePageSize,
+} from "@/lib/list-pagination";
 import { KbAlertCircleIcon } from "@/features/wiki/lib/kb-icons";
 import { buildColumns, buildMobileCard } from "./wiki-page-collection-columns";
 import {
@@ -48,8 +66,8 @@ export function collectionCountSubtitle(
 }
 
 export const KB_PAGE_CURSOR_PARAM = "cursor";
+export const KB_PAGE_SIZE_PARAM = "size";
 
-const PAGE_LIMIT = 50;
 const SORT_VALUES = ["updated_desc", "created_desc", "title_asc"] as const;
 
 export interface WikiPageCollectionTableProps {
@@ -69,6 +87,7 @@ export interface WikiPageCollectionTableProps {
   onRowsChange?: (rows: readonly KbPageCollectionItem[]) => void;
   onItemCountChange?: (count: number) => void;
   onDocumentCountLabelChange?: (label: string | null) => void;
+  stickyToolbarHeader?: ReactNode;
 }
 
 export function WikiPageCollectionTable({
@@ -85,6 +104,7 @@ export function WikiPageCollectionTable({
   onRowsChange,
   onItemCountChange,
   onDocumentCountLabelChange,
+  stickyToolbarHeader,
 }: WikiPageCollectionTableProps) {
   const searchParams = useSearchParams();
   const { update } = useUrlFilters({ pageParam: KB_PAGE_CURSOR_PARAM });
@@ -104,7 +124,8 @@ export function WikiPageCollectionTable({
   const status = searchParams.get("status") ?? "";
   const spaceParam = searchParams.get("space") ?? "";
   const rawSpaceId = spaceParam !== "" ? Number(spaceParam) : NaN;
-  const urlSpaceId = Number.isInteger(rawSpaceId) && rawSpaceId > 0 ? rawSpaceId : undefined;
+  const urlSpaceId =
+    Number.isInteger(rawSpaceId) && rawSpaceId > 0 ? rawSpaceId : undefined;
   const spaceId = fixedParams.spaceId ?? urlSpaceId;
   const view = parseEnum(searchParams.get("view"), VIEW_VALUES, "list");
   const ownerParam = searchParams.get("owner") ?? "";
@@ -113,13 +134,14 @@ export function WikiPageCollectionTable({
   const kind: "document" | "spreadsheet" | undefined =
     rawKind === "document" || rawKind === "spreadsheet" ? rawKind : undefined;
   const urlCursor = searchParams.get(KB_PAGE_CURSOR_PARAM) ?? "";
+  const pageSize = parsePageSize(searchParams.get(KB_PAGE_SIZE_PARAM));
 
   const debouncedSearch = useDebouncedValue(rawSearch, 300);
 
   const { data: spacesPage } = useKbSpaces();
   const spaces = spacesPage?.data;
 
-  const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}|${owner ?? ""}|${kind ?? ""}`;
+  const filterKey = `${debouncedSearch}|${sort}|${status}|${spaceParam}|${owner ?? ""}|${kind ?? ""}|${pageSize}`;
 
   const handleCursorChange = useCallback(
     (nextCursor: string | undefined) => {
@@ -143,7 +165,7 @@ export function WikiPageCollectionTable({
     owner,
     kind,
     cursor: pager.cursor,
-    limit: PAGE_LIMIT,
+    limit: pageSize,
   };
 
   const { data, isLoading, isError, error, refetch } =
@@ -152,15 +174,23 @@ export function WikiPageCollectionTable({
   const rows = useMemo(() => data?.data ?? [], [data?.data]);
 
   const ownerUserIds = useMemo(
-    () =>
-      [...new Set(rows.map((r) => r.ownerUserId).filter((id): id is string => id !== null))],
+    () => [
+      ...new Set(
+        rows
+          .map((r) => r.ownerUserId)
+          .filter((id): id is string => id !== null),
+      ),
+    ],
     [rows],
   );
   const { data: ownersPage } = useOrgMembersByIds(ownerUserIds);
   const ownerNames = useMemo(() => {
     const map = new Map<string, string>();
     for (const member of ownersPage?.data ?? []) {
-      map.set(member.userId, getUserDisplayName({ name: member.name, email: member.email }));
+      map.set(
+        member.userId,
+        getUserDisplayName({ name: member.name, email: member.email }),
+      );
     }
     return map;
   }, [ownersPage]);
@@ -185,7 +215,11 @@ export function WikiPageCollectionTable({
 
   const isEmpty = data !== undefined && data.data.length === 0;
   const accessLost =
-    hadData && isEmpty && !filtersActive && !pager.hasPrevious && accessLostTitle !== undefined;
+    hadData &&
+    isEmpty &&
+    !filtersActive &&
+    !pager.hasPrevious &&
+    accessLostTitle !== undefined;
 
   const pageState = usePageState({
     permission: "kb:pages:view",
@@ -212,7 +246,14 @@ export function WikiPageCollectionTable({
   );
 
   function handleClearFilters() {
-    update({ q: null, status: null, sort: null, space: null, owner: null, kind: null });
+    update({
+      q: null,
+      status: null,
+      sort: null,
+      space: null,
+      owner: null,
+      kind: null,
+    });
   }
 
   function handleSearchChange(value: string) {
@@ -241,6 +282,13 @@ export function WikiPageCollectionTable({
 
   function handleViewChange(next: CollectionView) {
     update({ view: next === "list" ? null : next });
+  }
+
+  function handlePageSizeChange(nextSize: number) {
+    update({
+      [KB_PAGE_SIZE_PARAM]:
+        nextSize === DEFAULT_PAGE_SIZE ? null : String(nextSize),
+    });
   }
 
   const activeFilterCount =
@@ -283,7 +331,13 @@ export function WikiPageCollectionTable({
 
   const renderMobileCard = useCallback(
     (row: KbPageCollectionItem) =>
-      buildMobileCard(row, resolveHref, ownerNames, contextRowId, setContextRowId),
+      buildMobileCard(
+        row,
+        resolveHref,
+        ownerNames,
+        contextRowId,
+        setContextRowId,
+      ),
     [resolveHref, ownerNames, contextRowId],
   );
 
@@ -318,6 +372,40 @@ export function WikiPageCollectionTable({
     />
   );
 
+  const toolbarRow = (
+    <div className="flex w-full min-w-0 items-center gap-2">
+      {searchPlaceholder !== null && (
+        <SearchInput
+          value={rawSearch}
+          onValueChange={handleSearchChange}
+          placeholder={searchPlaceholder}
+          className="h-9 !w-auto !min-w-0 max-w-full flex-1 basis-0 sm:max-w-xs"
+        />
+      )}
+      <div className="ml-auto flex shrink-0 items-center gap-2">
+        <WikiPageCollectionToolbar
+          status={status}
+          kind={kind}
+          owner={owner}
+          showOwnerFilter={fixedParams.owner === undefined}
+          spaceParam={spaceParam}
+          spaces={spaces}
+          showSpaceFilter={fixedParams.spaceId === undefined}
+          sort={sort}
+          view={view}
+          activeFilterCount={activeFilterCount}
+          onStatusChange={handleStatusChange}
+          onKindChange={handleKindChange}
+          onOwnerChange={handleOwnerChange}
+          onSpaceChange={handleSpaceChange}
+          onSortChange={handleSortChange}
+          onViewChange={handleViewChange}
+          onClearFilters={handleClearFilters}
+        />
+      </div>
+    </div>
+  );
+
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-3">
       {isOffline && (
@@ -329,36 +417,9 @@ export function WikiPageCollectionTable({
           Offline — data may be stale
         </span>
       )}
-      <div className="flex w-full min-w-0 items-center gap-2">
-        {searchPlaceholder !== null && (
-          <SearchInput
-            value={rawSearch}
-            onValueChange={handleSearchChange}
-            placeholder={searchPlaceholder}
-            className="h-9 !w-auto !min-w-0 max-w-full flex-1 basis-0 sm:max-w-xs"
-          />
-        )}
-        <div className="ml-auto flex shrink-0 items-center gap-2">
-          <WikiPageCollectionToolbar
-            status={status}
-            kind={kind}
-            owner={owner}
-            showOwnerFilter={fixedParams.owner === undefined}
-            spaceParam={spaceParam}
-            spaces={spaces}
-            showSpaceFilter={fixedParams.spaceId === undefined}
-            sort={sort}
-            view={view}
-            activeFilterCount={activeFilterCount}
-            onStatusChange={handleStatusChange}
-            onKindChange={handleKindChange}
-            onOwnerChange={handleOwnerChange}
-            onSpaceChange={handleSpaceChange}
-            onSortChange={handleSortChange}
-            onViewChange={handleViewChange}
-            onClearFilters={handleClearFilters}
-          />
-        </div>
+      <div className="flex shrink-0 flex-col gap-3">
+        {stickyToolbarHeader}
+        {toolbarRow}
       </div>
       <PageState
         resolution={pageState}
@@ -377,15 +438,21 @@ export function WikiPageCollectionTable({
           rows.length === 0 ? (
             emptyNode
           ) : (
-            <div className="flex flex-col gap-3">
-              <div className={WIKI_PAGE_CARD_GRID_CLASS}>
-                {rows.map((row) => (
-                  <Fragment key={row.id}>{renderMobileCard(row)}</Fragment>
-                ))}
+            <div className="flex min-h-0 flex-1 flex-col gap-3">
+              <div className="min-h-0 flex-1 overflow-y-auto scrollbar-hide">
+                <div className={WIKI_PAGE_CARD_GRID_CLASS}>
+                  {rows.map((row) => (
+                    <Fragment key={row.id}>{renderMobileCard(row)}</Fragment>
+                  ))}
+                </div>
               </div>
               <TablePagination
                 mode="cursor"
                 rowCount={rows.length}
+                pageNumber={pager.pageNumber}
+                pageSize={pageSize}
+                pageSizeOptions={STANDARD_PAGE_SIZE_OPTIONS}
+                onPageSizeChange={handlePageSizeChange}
                 hasMore={data?.pagination.hasMore ?? false}
                 hasPrevious={pager.hasPrevious}
                 onNext={handleNext}
@@ -395,15 +462,20 @@ export function WikiPageCollectionTable({
           )
         ) : (
           <DataTable
+            className="h-full min-h-0 flex-1"
             data={rows}
             columns={columns}
             getRowKey={(row) => row.id}
             onRowContextMenu={handleRowContextMenu}
             emptyState={emptyNode}
             mobileCard={renderMobileCard}
+            scrollRegionLabel="Documents"
             pagination={{
               mode: "cursor",
-              pageSize: PAGE_LIMIT,
+              pageSize,
+              pageNumber: pager.pageNumber,
+              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+              onPageSizeChange: handlePageSizeChange,
               hasMore: data?.pagination.hasMore ?? false,
               hasPrevious: pager.hasPrevious,
               onNext: handleNext,

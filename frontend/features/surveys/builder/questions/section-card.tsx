@@ -1,4 +1,4 @@
-import { useState } from "react";
+import type { ChangeEvent } from "react";
 import { Draggable, Droppable } from "@hello-pangea/dnd";
 import { GripVertical } from "lucide-react";
 import { PlusIcon, Trash2Icon } from "@animateicons/react/lucide";
@@ -6,6 +6,7 @@ import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { useSourceOverride } from "@/hooks/common/use-source-override";
 import { QuestionRow } from "./question-row";
 import { QUESTION_DND_TYPE, questionDroppableId, sectionDragId } from "./questions-reorder";
 import type { SurveyBuilderViewQuestion, SurveyBuilderViewSection } from "@/hooks/api/surveys/builder";
@@ -35,10 +36,24 @@ export function SectionCard({
   onMoveQuestionUp,
   onMoveQuestionDown,
 }: SectionCardProps) {
-  const [title, setTitle] = useState(section.title);
+  const [title, setTitle] = useSourceOverride(section.title, section.title);
+
+  function handleTitleChange(event: ChangeEvent<HTMLInputElement>) {
+    setTitle(event.target.value);
+  }
 
   function commitTitle() {
-    if (title.trim() && title !== section.title) onRenameSection(section.id, title.trim());
+    if (title.trim() && title !== section.title) {
+      onRenameSection(section.id, title.trim());
+    }
+  }
+
+  function handleAddQuestion() {
+    onAddQuestion(section.id);
+  }
+
+  function handleDeleteSection() {
+    onDeleteSection(section.id);
   }
 
   const questions = [...section.questions].sort((a, b) => a.sortOrder - b.sortOrder);
@@ -48,7 +63,7 @@ export function SectionCard({
       {(provided, snapshot) => (
         <div ref={provided.innerRef} {...provided.draggableProps}>
           <Card className={cn("min-w-0", snapshot.isDragging && "shadow-lg ring-1 ring-primary/30")}>
-            <CardHeader className="flex flex-col gap-2 space-y-0 sm:flex-row sm:items-center">
+            <CardHeader className="flex flex-row items-center gap-2 space-y-0">
               <div className="flex min-w-0 flex-1 items-center gap-1">
                 <button
                   type="button"
@@ -60,16 +75,28 @@ export function SectionCard({
                 </button>
                 <Input
                   value={title}
-                  onChange={(event) => setTitle(event.target.value)}
+                  onChange={handleTitleChange}
                   onBlur={commitTitle}
-                  className="w-full min-w-0 font-semibold sm:max-w-xs"
+                  className="w-full min-w-0 font-semibold"
                 />
               </div>
-              <div className="flex shrink-0 items-center gap-2 sm:ml-auto">
-                <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={() => onAddQuestion(section.id)}>
-                  Add question
-                </AnimatedIconButton>
-                <AnimatedIconButton icon={Trash2Icon} iconSize={16} iconClassName="text-destructive" variant="ghost" size="icon" aria-label="Delete section" onClick={() => onDeleteSection(section.id)} />
+              <div className="flex shrink-0 items-center gap-1.5">
+                <AnimatedIconButton
+                  icon={PlusIcon}
+                  iconSize={16}
+                  variant="outline"
+                  size="icon"
+                  aria-label="Add question"
+                  onClick={handleAddQuestion}
+                />
+                <AnimatedIconButton
+                  icon={Trash2Icon}
+                  iconSize={16}
+                  variant="destructive"
+                  size="icon"
+                  aria-label="Delete section"
+                  onClick={handleDeleteSection}
+                />
               </div>
             </CardHeader>
             <CardContent className="min-w-0 space-y-2">

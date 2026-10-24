@@ -1,6 +1,5 @@
 "use client";
 
-import { EmptyChartIllustration } from "@/components/illustrations";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/shared";
 import { PageState } from "@/components/shared/page-state";
@@ -115,11 +114,8 @@ export function ResultsTab({ survey }: { survey: SurveyForm }) {
       className="h-full min-h-0 flex-1"
       empty={
         <EmptyState
-          illustration={
-            <div className="h-28 w-28">
-              <EmptyChartIllustration />
-            </div>
-          }
+          illustrationPreset="chart"
+          illustrationSize="lg"
           title="No responses yet"
           description="Results, question analytics, and exports will appear here once responses come in."
           className="h-full min-h-full flex-1"

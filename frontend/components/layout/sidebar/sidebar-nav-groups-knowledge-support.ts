@@ -184,6 +184,7 @@ export const KNOWLEDGE_SUPPORT_NAV_GROUPS: NavGroup[] = [
         label: "Surveys",
         icon: ClipboardList,
         href: "/surveys",
+        inactivePrefixes: ["/surveys/access"],
         requiredPermission: "surveys:view",
       },
       {

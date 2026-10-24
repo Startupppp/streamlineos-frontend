@@ -53,7 +53,9 @@ export function RecipientsPanel({ envelopeId, recipients, editable }: Recipients
                 if (e.key === "Enter" || e.key === " ") setSelectedRecipientId(recipient.id);
               }}
               className={`w-full flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors cursor-pointer ${
-                isSelected ? "border-foreground bg-muted" : "border-border hover:bg-muted/50"
+                isSelected
+                  ? "border-foreground bg-muted"
+                  : "border-border bg-card hover:bg-muted/50"
               }`}
             >
               <span className={`size-2.5 rounded-full shrink-0 ${color.solid}`} />

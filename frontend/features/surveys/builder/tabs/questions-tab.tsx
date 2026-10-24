@@ -197,12 +197,31 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
         />
       }
     >
-      <div className="flex h-full min-h-0 flex-1 flex-col">
+      <div className="flex h-full min-h-0 flex-1 flex-col gap-3">
+        <div className="flex shrink-0 justify-stretch sm:justify-end">
+          <AnimatedIconButton
+            icon={PlusIcon}
+            iconSize={14}
+            iconClassName="mr-1.5"
+            variant="outline"
+            size="sm"
+            className="w-full sm:w-auto"
+            aria-label="Add section"
+            onClick={handleAddSection}
+            disabled={createSection.isPending}
+          >
+            Add section
+          </AnimatedIconButton>
+        </div>
         <ScrollArea fill className="min-h-0 flex-1">
           <DragDropContext onDragEnd={handleDragEnd}>
             <Droppable droppableId={SECTIONS_DROPPABLE_ID} type={SECTION_DND_TYPE}>
               {(provided) => (
-                <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-4 pr-3 pb-1">
+                <div
+                  ref={provided.innerRef}
+                  {...provided.droppableProps}
+                  className="space-y-4 pr-3 pb-1"
+                >
                   {sections.map((section, index) => (
                     <SectionCard
                       key={section.id}
@@ -214,8 +233,12 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
                       onEditQuestion={openEditQuestion}
                       onDuplicateQuestion={handleDuplicateQuestion}
                       onDeleteQuestion={handleDeleteQuestion}
-                      onMoveQuestionUp={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, -1)}
-                      onMoveQuestionDown={(sectionId, questionId) => handleMoveQuestion(sectionId, questionId, 1)}
+                      onMoveQuestionUp={(sectionId, questionId) =>
+                        handleMoveQuestion(sectionId, questionId, -1)
+                      }
+                      onMoveQuestionDown={(sectionId, questionId) =>
+                        handleMoveQuestion(sectionId, questionId, 1)
+                      }
                     />
                   ))}
                   {provided.placeholder}
@@ -224,11 +247,6 @@ export function QuestionsTab({ survey }: { survey: SurveyForm }) {
             </Droppable>
           </DragDropContext>
         </ScrollArea>
-        <div className="flex shrink-0 justify-end border-t border-border pt-3">
-          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleAddSection}>
-            Add section
-          </AnimatedIconButton>
-        </div>
         {builder ? (
           <QuestionEditorSheet
             surveyId={surveyId}

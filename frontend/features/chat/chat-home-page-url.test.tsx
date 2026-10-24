@@ -115,13 +115,14 @@ describe("ChatHomePage — one owner for New DM / New channel / search", () => {
     expect(screen.queryByTestId("page-new-group-dialog")).toBeNull();
   });
 
-  it("?dm=1 is consumed once on mount: the URL drops dm (keeping other params) while the sidebar's New DM dialog stays open", async () => {
+  it("?dm=1 is consumed once on mount: the URL converts dm to dialog=dm (keeping other params) while the sidebar's New DM dialog stays open", async () => {
     mockNav.searchParams = new URLSearchParams("dm=1&inbox=unread");
     const { rerender } = render(<ChatHomePage />);
     await act(async () => {});
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("dm");
     const params = lastUrl(mockNav.replace);
     expect(params.has("dm")).toBe(false);
+    expect(params.get("dialog")).toBe("dm");
     expect(params.get("inbox")).toBe("unread");
     expect(mockNav.push).not.toHaveBeenCalled();
 
@@ -130,30 +131,58 @@ describe("ChatHomePage — one owner for New DM / New channel / search", () => {
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("dm");
 
     fireEvent.click(screen.getByTestId("close-create"));
+    const closedParams = lastUrl(mockNav.replace);
+    expect(closedParams.has("dialog")).toBe(false);
+    mockNav.searchParams = closedParams;
+    rerender(<ChatHomePage />);
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("none");
   });
 
-  it("empty-state actions open the sidebar's dialogs", async () => {
+  it("?dialog=dm on mount opens the DM dialog without any URL rewrite", async () => {
+    mockNav.searchParams = new URLSearchParams("dialog=dm&inbox=unread");
     render(<ChatHomePage />);
     await act(async () => {});
-    fireEvent.click(screen.getByText("empty new dm"));
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("dm");
+    expect(mockNav.replace).not.toHaveBeenCalled();
+    expect(mockNav.push).not.toHaveBeenCalled();
+  });
+
+  it("empty-state actions write ?dialog to the URL, and the sidebar renders the matching dialog", async () => {
+    const { rerender } = render(<ChatHomePage />);
+    await act(async () => {});
+    fireEvent.click(screen.getByText("empty new dm"));
+    expect(lastUrl(mockNav.replace).get("dialog")).toBe("dm");
+    mockNav.searchParams = lastUrl(mockNav.replace);
+    rerender(<ChatHomePage />);
+    expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("dm");
+
     fireEvent.click(screen.getByText("empty new channel"));
+    expect(lastUrl(mockNav.replace).get("dialog")).toBe("channel");
+    mockNav.searchParams = lastUrl(mockNav.replace);
+    rerender(<ChatHomePage />);
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("channel");
+
     fireEvent.click(screen.getByText("empty search"));
     expect(lastUrl(mockNav.replace).get("search")).toBe("messages");
   });
 
-  it("chat:open-new-dm and chat:open-new-channel route into the sidebar's dialog state", async () => {
-    render(<ChatHomePage />);
+  it("chat:open-new-dm and chat:open-new-channel write ?dialog to the URL and the sidebar reflects it", async () => {
+    const { rerender } = render(<ChatHomePage />);
     await act(async () => {});
     act(() => {
       window.dispatchEvent(new Event("chat:open-new-channel"));
     });
+    expect(lastUrl(mockNav.replace).get("dialog")).toBe("channel");
+    mockNav.searchParams = lastUrl(mockNav.replace);
+    rerender(<ChatHomePage />);
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("channel");
+
     act(() => {
       window.dispatchEvent(new Event("chat:open-new-dm"));
     });
+    expect(lastUrl(mockNav.replace).get("dialog")).toBe("dm");
+    mockNav.searchParams = lastUrl(mockNav.replace);
+    rerender(<ChatHomePage />);
     expect(screen.getByTestId("sidebar-create-dialog")).toHaveTextContent("dm");
   });
 

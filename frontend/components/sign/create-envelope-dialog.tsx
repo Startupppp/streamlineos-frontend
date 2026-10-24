@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { EntityFormSheet } from "@/components/shared/entity-form-sheet";
+import { EntityFormDialog } from "@/components/shared";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { useCreateSignEnvelope } from "@/hooks/api/sign/envelopes";
 import { envelopeSchema, type EnvelopeValues } from "@/components/sign/envelope-schema";
@@ -52,7 +52,7 @@ export function CreateEnvelopeDialog({
   }
 
   return (
-    <EntityFormSheet<EnvelopeValues>
+    <EntityFormDialog<EnvelopeValues>
       open={open}
       onOpenChange={onOpenChange}
       title={dialogTitle ?? "New envelope"}
@@ -89,7 +89,11 @@ export function CreateEnvelopeDialog({
               <FormItem>
                 <FormLabel>Message to signers (optional)</FormLabel>
                 <FormControl>
-                  <Textarea rows={3} placeholder="A short note included in the signing email" {...field} />
+                  <Textarea
+                    rows={3}
+                    placeholder="A short note included in the signing email"
+                    {...field}
+                  />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -97,6 +101,6 @@ export function CreateEnvelopeDialog({
           />
         </div>
       )}
-    </EntityFormSheet>
+    </EntityFormDialog>
   );
 }

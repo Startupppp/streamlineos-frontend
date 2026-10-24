@@ -1,9 +1,8 @@
 "use client";
 
-import { Info } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
+import { DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import type { SurveyForm } from "@/hooks/api/surveys/forms";
 
 function relativeTime(value: string | null | undefined): string | null {
@@ -13,31 +12,21 @@ function relativeTime(value: string | null | undefined): string | null {
   return formatDistanceToNow(date, { addSuffix: true });
 }
 
-export function SurveyActivityInfo({ survey }: { survey: SurveyForm }) {
+export function SurveyActivityMenuSection({ survey }: { survey: SurveyForm }) {
   const created = relativeTime(survey.createdAt);
   const updated = relativeTime(survey.updatedAt);
   const archived = relativeTime(survey.archivedAt);
 
+  if (!created && !updated && !archived) return null;
+
   return (
-    <TooltipProvider delayDuration={200}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            className="size-9 shrink-0 text-muted-foreground"
-            aria-label="Survey activity"
-          >
-            <Info className="size-4" aria-hidden="true" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent side="bottom" align="start" className="space-y-0.5 px-3 py-2">
-          {created ? <p>Created {created}</p> : null}
-          {updated ? <p>Last updated {updated}</p> : null}
-          {archived ? <p>Archived {archived}</p> : null}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <DropdownMenuLabel className="flex items-start gap-2 font-normal text-muted-foreground">
+      <Info className="mt-0.5 size-4 shrink-0" aria-hidden="true" />
+      <span className="space-y-0.5">
+        {created ? <p>Created {created}</p> : null}
+        {updated ? <p>Last updated {updated}</p> : null}
+        {archived ? <p>Archived {archived}</p> : null}
+      </span>
+    </DropdownMenuLabel>
   );
 }

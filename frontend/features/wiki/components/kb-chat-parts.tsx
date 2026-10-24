@@ -1,14 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, CheckCircle2, Clock, Copy, Flag, HelpCircle, MessageSquareWarning, ThumbsDown, ThumbsUp } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Clock,
+  Copy,
+  Flag,
+  HelpCircle,
+  MessageSquareWarning,
+  ThumbsDown,
+  ThumbsUp,
+} from "lucide-react";
 import { toast } from "sonner";
 import { AnimatedLogo } from "@/components/brand/animated-logo";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Input } from "@/components/ui/input";
 import { statusToneClasses } from "@/lib/design-tokens";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { useKbAiAnswerFeedback, useCreateKbKnowledgeGap } from "@/hooks/api/kb/ask";
+import {
+  useKbAiAnswerFeedback,
+  useCreateKbKnowledgeGap,
+} from "@/hooks/api/kb/ask";
 import type { ChatMessage } from "@/components/kb/kb-chat-bubble";
 import type { KbAskCitationWithParts } from "@/hooks/api/kb/ask-result-schema";
 
@@ -32,7 +45,8 @@ function dayKey(iso: string): string {
 function dayLabel(iso: string): string {
   const d = new Date(iso);
   const now = new Date();
-  const startOf = (x: Date) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const startOf = (x: Date) =>
+    new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
   const diff = Math.round((startOf(now) - startOf(d)) / 86_400_000);
   if (diff === 0) return "Today";
   if (diff === 1) return "Yesterday";
@@ -50,7 +64,11 @@ export function buildKbHistoryRows(messages: ChatMessage[]): KbHistoryRow[] {
     if (message.createdAt) {
       const key = dayKey(message.createdAt);
       if (key !== lastDay) {
-        rows.push({ type: "sep", id: `sep-${key}-${message.id}`, label: dayLabel(message.createdAt) });
+        rows.push({
+          type: "sep",
+          id: `sep-${key}-${message.id}`,
+          label: dayLabel(message.createdAt),
+        });
         lastDay = key;
       }
     }
@@ -59,7 +77,9 @@ export function buildKbHistoryRows(messages: ChatMessage[]): KbHistoryRow[] {
   return rows;
 }
 
-export function questionForAssistantId(messages: ChatMessage[]): Map<string, string> {
+export function questionForAssistantId(
+  messages: ChatMessage[],
+): Map<string, string> {
   const questionById = new Map<string, string>();
   let lastQuestion: string | null = null;
   for (const message of messages) {
@@ -95,7 +115,9 @@ export function EmptyChat({
         <AnimatedLogo size={28} gradient className="rounded-xl" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-foreground">Ask your knowledge base</p>
+        <p className="text-sm font-semibold text-foreground">
+          Ask your knowledge base
+        </p>
         <p className="mx-auto mt-1 max-w-xs text-xs text-muted-foreground">
           Answers are grounded in your uploaded files, notes and docs.
         </p>
@@ -135,7 +157,13 @@ export function ChatFollowUpButton({
   );
 }
 
-export function CreateKnowledgeGapButton({ question, spaceId }: { question: string; spaceId?: number }) {
+export function CreateKnowledgeGapButton({
+  question,
+  spaceId,
+}: {
+  question: string;
+  spaceId?: number;
+}) {
   const createGap = useCreateKbKnowledgeGap();
   const [created, setCreated] = useState(false);
 
@@ -153,7 +181,11 @@ export function CreateKnowledgeGapButton({ question, spaceId }: { question: stri
   }
 
   if (created) {
-    return <span className="text-micro text-muted-foreground">Knowledge gap flagged</span>;
+    return (
+      <span className="text-micro text-muted-foreground">
+        Knowledge gap flagged
+      </span>
+    );
   }
 
   return (
@@ -170,18 +202,28 @@ export function CreateKnowledgeGapButton({ question, spaceId }: { question: stri
   );
 }
 
-export function InsufficientEvidenceBanner({ question, spaceId }: { question?: string; spaceId?: number }) {
+export function InsufficientEvidenceBanner({
+  question,
+  spaceId,
+}: {
+  question?: string;
+  spaceId?: number;
+}) {
   return (
     <div
       role="status"
       aria-live="polite"
       className={`flex items-start gap-3 rounded-xl border px-4 py-3 text-sm ${warningTone.rule} ${warningTone.surface} ${warningTone.inkStrong}`}
     >
-      <MessageSquareWarning className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+      <MessageSquareWarning
+        className="mt-0.5 h-4 w-4 shrink-0"
+        aria-hidden="true"
+      />
       <div>
         <p className="font-semibold">No relevant content found</p>
         <p className={`mt-0.5 text-xs ${warningTone.ink}`}>
-          The knowledge base does not contain anything that answers this question. Consider uploading relevant files or adding a note.
+          The knowledge base does not contain anything that answers this
+          question. Consider uploading relevant files or adding a note.
         </p>
         {question ? (
           <div className="mt-1.5">
@@ -220,7 +262,9 @@ export function CitationPassage({ citation, index }: CitationPassageProps) {
   return (
     <blockquote className="mt-1.5 border-l-2 border-accent/40 pl-3 text-xs text-muted-foreground italic">
       {citation.passage}
-      <span className="not-italic text-dense text-accent ml-1">— source {index + 1}</span>
+      <span className="not-italic text-dense text-accent ml-1">
+        — source {index + 1}
+      </span>
     </blockquote>
   );
 }
@@ -236,13 +280,14 @@ export function FreshnessTag({ updatedAt }: FreshnessTagProps) {
   const ageMs = now - date.getTime();
   const ageDays = Math.floor(ageMs / 86_400_000);
   const stale = ageDays > 90;
-  const label = ageDays === 0
-    ? "Updated today"
-    : ageDays === 1
-    ? "Updated yesterday"
-    : ageDays < 30
-    ? `Updated ${ageDays}d ago`
-    : `Updated ${date.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
+  const label =
+    ageDays === 0
+      ? "Updated today"
+      : ageDays === 1
+        ? "Updated yesterday"
+        : ageDays < 30
+          ? `Updated ${ageDays}d ago`
+          : `Updated ${date.toLocaleDateString(undefined, { month: "short", year: "numeric" })}`;
   return (
     <span
       aria-label={label}
@@ -259,27 +304,48 @@ interface VerificationBadgeProps {
 }
 
 export function VerificationBadge({ verified }: VerificationBadgeProps) {
-  const label = verified === true ? "Verified" : verified === false ? "Not verified" : "Verification unavailable";
-  const accessibleLabel = verified === true ? "Verified source" : verified === false ? "Not verified source" : label;
+  const label =
+    verified === true
+      ? "Verified"
+      : verified === false
+        ? "Not verified"
+        : "Verification unavailable";
+  const accessibleLabel =
+    verified === true
+      ? "Verified source"
+      : verified === false
+        ? "Not verified source"
+        : label;
   return (
     <span
       aria-label={accessibleLabel}
       className={`inline-flex items-center gap-0.5 text-micro ${verified === true ? successTone.ink : warningTone.ink}`}
     >
-      {verified === true ? <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" /> : <HelpCircle className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />}
+      {verified === true ? (
+        <CheckCircle2 className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+      ) : (
+        <HelpCircle className="h-2.5 w-2.5 shrink-0" aria-hidden="true" />
+      )}
       {label}
     </span>
   );
 }
 
 function citationEvidenceKey(citation: KbAskCitationWithParts): string {
-  if (citation.kind === "page") return `page-${citation.pageId}-${citation.passage ?? ""}`;
-  if (citation.kind === "source") return `source-${citation.sourceId}-${citation.passage ?? ""}`;
-  if (citation.kind === "document") return `document-${citation.linkedDocumentId}-${citation.passage ?? ""}`;
+  if (citation.kind === "page")
+    return `page-${citation.pageId}-${citation.passage ?? ""}`;
+  if (citation.kind === "source")
+    return `source-${citation.sourceId}-${citation.passage ?? ""}`;
+  if (citation.kind === "document")
+    return `document-${citation.linkedDocumentId}-${citation.passage ?? ""}`;
   return `article-${citation.articleId}-${citation.passage ?? ""}`;
 }
 
-export function CitationEvidenceList({ citations }: { citations: KbAskCitationWithParts[] }) {
+export function CitationEvidenceList({
+  citations,
+}: {
+  citations: KbAskCitationWithParts[];
+}) {
   if (citations.length === 0) return null;
   const seen = new Set<string>();
   const evidence = citations.filter((citation) => {
@@ -295,7 +361,9 @@ export function CitationEvidenceList({ citations }: { citations: KbAskCitationWi
       {evidence.map((citation, index) => (
         <li key={citationEvidenceKey(citation)}>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-dense font-medium text-foreground">{citation.title}</span>
+            <span className="text-dense font-medium text-foreground">
+              {citation.title}
+            </span>
             <FreshnessTag updatedAt={citation.updatedAt} />
             <VerificationBadge verified={citation.verified} />
           </div>
@@ -316,8 +384,13 @@ export function DisagreementBanner({ summary }: DisagreementBannerProps) {
       role="note"
       className={`flex items-start gap-2 rounded-lg border px-3 py-2 text-xs ${warningTone.rule} ${warningTone.surface} ${warningTone.ink}`}
     >
-      <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-      <span><span className="font-semibold">Sources disagree:</span> {summary}</span>
+      <AlertTriangle
+        className="mt-0.5 h-3.5 w-3.5 shrink-0"
+        aria-hidden="true"
+      />
+      <span>
+        <span className="font-semibold">Sources disagree:</span> {summary}
+      </span>
     </div>
   );
 }
@@ -341,7 +414,8 @@ export function CopyAnswerButton({ text }: { text: string }) {
     navigator.clipboard.writeText(text).then(
       () => {
         if (!mounted.current || sequence !== copySequence.current) return;
-        if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
+        if (resetTimer.current !== null)
+          window.clearTimeout(resetTimer.current);
         setCopied(true);
         resetTimer.current = window.setTimeout(() => {
           resetTimer.current = null;
@@ -382,9 +456,9 @@ export function AnswerFeedbackBar({
   onSubmitted?: () => void;
 }) {
   const feedback = useKbAiAnswerFeedback();
+  const reportReasonRef = useRef<HTMLInputElement>(null);
   const [given, setGiven] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
-  const [reportReason, setReportReason] = useState("");
 
   function submit(rating: AnswerFeedbackRating, comment?: string) {
     feedback.mutate(
@@ -413,25 +487,22 @@ export function AnswerFeedbackBar({
   }
 
   function handleReportDialogOpenChange(open: boolean) {
-    if (!open) {
-      setReportOpen(false);
-      setReportReason("");
-    }
-  }
-
-  function handleReportReasonChange(e: React.ChangeEvent<HTMLInputElement>) {
-    setReportReason(e.target.value);
+    setReportOpen(open);
   }
 
   function handleReportConfirm() {
-    submit("not_helpful", reportReason.trim() || "Reported as wrong or stale");
+    const reason =
+      reportReasonRef.current?.value.trim() || "Reported as wrong or stale";
+    submit("not_helpful", reason);
     setReportOpen(false);
-    setReportReason("");
   }
 
-  if (given) {
-    return <p className="pt-1 text-micro text-muted-foreground">Thanks for the feedback</p>;
-  }
+  if (given)
+    return (
+      <p className="pt-1 text-micro text-muted-foreground">
+        Thanks for the feedback
+      </p>
+    );
 
   return (
     <>
@@ -475,8 +546,9 @@ export function AnswerFeedbackBar({
         isPending={feedback.isPending}
         content={
           <Input
-            value={reportReason}
-            onChange={handleReportReasonChange}
+            key={reportOpen ? "report-open" : "report-closed"}
+            ref={reportReasonRef}
+            defaultValue=""
             placeholder="Describe the issue (optional)"
             className="mt-2"
           />

@@ -26,7 +26,9 @@ export function FieldPalette({ hasRecipient, editable }: { hasRecipient: boolean
               onClick={() => setPlacingFieldType(isActive ? null : meta.type)}
               className={cn(
                 "flex flex-col items-center gap-1 rounded-lg border p-2.5 text-xs transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
-                isActive ? "border-foreground bg-muted" : "border-border hover:bg-muted/50",
+                isActive
+                  ? "border-foreground bg-muted"
+                  : "border-border bg-card hover:bg-muted/50",
               )}
             >
               <Icon className="size-4" />

@@ -220,6 +220,7 @@ function renderTopBar(
         envelope={makeEnvelope(status, options?.expiresAt ?? null)}
         recipients={options?.recipients ?? RECIPIENTS}
         onShowAudit={jest.fn()}
+        onShowFieldSettings={jest.fn()}
       />
     </TooltipProvider>,
   );
@@ -393,12 +394,15 @@ describe("BuilderTopBar void control", () => {
   it("hides send, reminder and save-as-template from roles without their keys", () => {
     renderTopBar("draft");
     expect(screen.queryByRole("button", { name: /^Send$/ })).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Save as template/ })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Document actions" }));
+    expect(screen.queryByRole("menuitem", { name: /Save as template/ })).not.toBeInTheDocument();
 
     grantedKeys.add("sign:envelope:send");
     grantedKeys.add("sign:template:manage");
     renderTopBar("draft");
     expect(screen.getByRole("button", { name: /^Send$/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Save as template/ })).toBeInTheDocument();
+    const actions = screen.getAllByRole("button", { name: "Document actions" }).at(-1);
+    fireEvent.click(actions as HTMLElement);
+    expect(screen.getByRole("menuitem", { name: /Save as template/ })).toBeInTheDocument();
   });
 });

@@ -152,12 +152,14 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
             : "Files, documents and decisions for your team"
         }
         actions={headerActions}
+        noInternalScroll
+        contentClassName="flex min-h-0 flex-1 flex-col"
       >
         <div className="flex min-h-0 flex-1 flex-col gap-4">
           <form
             onSubmit={handleSearchFormSubmit}
             role="search"
-            className="w-full max-w-md"
+            className="w-full max-w-md shrink-0"
           >
             <SearchInput
               ref={searchInputRef}
@@ -173,7 +175,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
           </form>
 
           {!isProjectScoped && recentPreview.length > 0 && (
-            <section className="min-w-0">
+            <section className="min-w-0 shrink-0">
               <div className="mb-2 flex items-center gap-2">
                 <KbClockIcon className="h-4 w-4 text-muted-foreground" />
                 <h2 className="text-sm font-semibold text-foreground">
@@ -198,7 +200,7 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
 
           {!isProjectScoped &&
             (favoritePreview.length > 0 || favoritesQuery.isError) && (
-              <section className="min-w-0">
+              <section className="min-w-0 shrink-0">
                 <div className="mb-2 flex items-center gap-2">
                   <KbStarIcon className="h-4 w-4 text-muted-foreground" />
                   <h2 className="text-sm font-semibold text-foreground">
@@ -242,23 +244,25 @@ export default function WikiHomePage({ projectId }: WikiHomePageProps) {
               </aside>
             )}
             <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-              {!isProjectScoped && (
-                <div className="mb-3 flex min-w-0 items-baseline gap-2">
-                  <h2 className="text-sm font-semibold text-foreground">
-                    All documents
-                  </h2>
-                  {documentCountLabel ? (
-                    <p className="text-sm text-muted-foreground tabular-nums">
-                      {documentCountLabel}
-                    </p>
-                  ) : null}
-                </div>
-              )}
               <WikiPageCollectionTable
                 fixedParams={{
                   projectId: isProjectScoped ? projectId : undefined,
                 }}
                 searchPlaceholder={null}
+                stickyToolbarHeader={
+                  !isProjectScoped ? (
+                    <div className="flex min-w-0 items-baseline gap-2">
+                      <h2 className="text-sm font-semibold text-foreground">
+                        All documents
+                      </h2>
+                      {documentCountLabel ? (
+                        <p className="text-sm text-muted-foreground tabular-nums">
+                          {documentCountLabel}
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : null
+                }
                 emptyTitle="Your Docs workspace starts here"
                 emptyDescription="Create your first document to give your team one place for current knowledge."
                 emptyAction={

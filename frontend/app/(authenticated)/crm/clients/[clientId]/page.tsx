@@ -18,8 +18,10 @@ import { useMotionVariants } from "@/lib/motion-variants";
 import { cn } from "@/lib/utils";
 import { useClientAccount } from "@/hooks/api/crm/clients";
 import { useClient360 } from "@/hooks/api/crm";
+import { useCanState } from "@/hooks/api/access";
 import { ErrorState } from "@/components/shared/error-state";
 import { NoPermissionState } from "@/components/shared/no-permission-state";
+import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
 import { ClientOverviewTab } from "@/features/crm/clients/client-overview-tab";
 import { ClientTimelineTab } from "@/features/crm/clients/client-timeline-tab";
 import { ClientOpportunitiesTab } from "@/features/crm/clients/client-opportunities-tab";
@@ -59,6 +61,7 @@ export default function ClientDetailPage({
   } = useClientAccount(clientId);
 
   const { data: client360, isLoading: client360Loading } = useClient360(clientId);
+  const chatAccess = useCanState("chat:channels:read");
 
   const { staggerContainer, fadeUp } = useMotionVariants();
   const handleRetry = useCallback(() => void refetch(), [refetch]);
@@ -172,6 +175,9 @@ export default function ClientDetailPage({
               <TabsTrigger value="opportunities">Opportunities</TabsTrigger>
               <TabsTrigger value="onboarding">Onboarding</TabsTrigger>
               <TabsTrigger value="customer360">Customer 360</TabsTrigger>
+              {chatAccess !== "denied" && (
+                <TabsTrigger value="chat">Chat</TabsTrigger>
+              )}
             </TabsList>
 
             <TabsContent value="overview">
@@ -213,6 +219,17 @@ export default function ClientDetailPage({
             <TabsContent value="customer360">
               <Customer360Section data={client360} isLoading={client360Loading} />
             </TabsContent>
+
+            {chatAccess !== "denied" && (
+              <TabsContent value="chat" className="flex flex-col min-h-[520px]">
+                <RecordConversationPanel
+                  entityType="client"
+                  entityId={String(clientId)}
+                  emptyDescriptionWrite="This client does not have an associated chat channel yet. Create one to start the conversation."
+                  emptyDescriptionReadOnly="This client does not have an associated chat channel yet. Ask an admin to link one."
+                />
+              </TabsContent>
+            )}
           </Tabs>
         </motion.div>
       </motion.div>

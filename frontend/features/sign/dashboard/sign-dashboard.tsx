@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { motion } from "framer-motion";
-import { Inbox, Send, CheckCircle2, Clock, AlertTriangle, FileStack, UploadCloud } from "lucide-react";
+import { Inbox, Send, CheckCircle2, Clock, AlertTriangle } from "lucide-react";
 import { PlusIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,8 +107,6 @@ export function SignDashboard() {
     <PageWrapper
       title="Sign OS"
       subtitle="Envelopes, signatures, and completion status at a glance"
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide"
       state={pageResolution(dashboardState, reportsState)}
       loading={<SignDashboardSkeleton />}
       onRetry={handleRetry}
@@ -134,51 +131,6 @@ export function SignDashboard() {
                 <StatCard label="Expiring soon" value={data.expiringSoon} icon={Clock} tone="amber" />
                 <StatCard label="Failed / bounced" value={data.failedOrBounced} icon={AlertTriangle} tone="red" />
               </StatCardGrid>
-            </motion.div>
-
-            <motion.div
-              variants={fadeUp}
-              className={canCreateEnvelope ? "grid gap-4 md:grid-cols-3" : "grid gap-4 md:grid-cols-2"}
-            >
-              {canCreateEnvelope ? (
-                <Card className="cursor-pointer transition-shadow hover:shadow-md" onClick={handleCreateOpen}>
-                  <CardContent className="flex items-center gap-3 pt-6">
-                    <div className="rounded-lg bg-primary/10 p-2.5">
-                      <UploadCloud className="size-5 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">Upload &amp; send</p>
-                      <p className="text-sm text-muted-foreground">Start a new envelope from a PDF</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ) : null}
-              <Link href="/sign/templates">
-                <Card className="cursor-pointer transition-shadow hover:shadow-md">
-                  <CardContent className="flex items-center gap-3 pt-6">
-                    <div className="rounded-lg bg-primary/10 p-2.5">
-                      <FileStack className="size-5 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">Browse templates</p>
-                      <p className="text-sm text-muted-foreground">Reuse a saved envelope layout</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
-              <Link href="/sign/bulk-send">
-                <Card className="cursor-pointer transition-shadow hover:shadow-md">
-                  <CardContent className="flex items-center gap-3 pt-6">
-                    <div className="rounded-lg bg-primary/10 p-2.5">
-                      <Send className="size-5 text-primary" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">Bulk send</p>
-                      <p className="text-sm text-muted-foreground">Send one template to many people</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </Link>
             </motion.div>
 
             <motion.div variants={fadeUp}>

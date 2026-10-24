@@ -10,8 +10,8 @@ import { BuilderProvider, useBuilder } from "./builder-context";
 import { BuilderTopBar } from "./builder-top-bar";
 import { BuilderLeftPanel } from "./builder-left-panel";
 import { BuilderCanvasArea } from "./builder-canvas-area";
-import { FieldSettingsPanel } from "./field-settings-panel";
 import { AuditTrailSheet } from "./audit-trail-sheet";
+import { FieldSettingsSheet } from "./field-settings-sheet";
 import { EnvelopeBuilderSkeleton } from "./envelope-builder-skeleton";
 
 const EDITABLE_STATUSES = new Set(["draft", "ready_to_send"]);
@@ -19,7 +19,6 @@ const EDITABLE_STATUSES = new Set(["draft", "ready_to_send"]);
 const BUILDER_PANES = [
   { value: "setup", label: "Setup" },
   { value: "document", label: "Document" },
-  { value: "field", label: "Field" },
 ] as const;
 
 type BuilderPane = (typeof BUILDER_PANES)[number]["value"];
@@ -83,39 +82,6 @@ function BuilderPaneSwitch({
   );
 }
 
-function BuilderRightPanel({
-  envelopeId,
-  className,
-}: {
-  envelopeId: number;
-  className?: string;
-}) {
-  const { selectedFieldId } = useBuilder();
-  const { data } = useSignEnvelope(envelopeId);
-  const field = data?.fields.find((f) => f.id === selectedFieldId);
-
-  return (
-    <div
-      className={cn(
-        "min-h-0 w-full flex-1 overflow-y-auto border-border p-4 lg:w-72 lg:flex-none lg:shrink-0 lg:border-l",
-        className,
-      )}
-    >
-      {field ? (
-        <FieldSettingsPanel envelopeId={envelopeId} field={field} />
-      ) : (
-        <div className="text-sm text-muted-foreground">
-          <p className="font-medium text-foreground mb-1">No field selected</p>
-          <p>
-            Click a field on the document to edit its settings, or place a new
-            one from the Fields tab.
-          </p>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function BuilderContent({ envelopeId }: { envelopeId: number }) {
   const { data, isLoading, isError, error, refetch } =
     useSignEnvelope(envelopeId);
@@ -130,9 +96,14 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
     void refetch();
   }
   const [auditOpen, setAuditOpen] = useState(false);
+  const [fieldSettingsOpen, setFieldSettingsOpen] = useState(false);
 
   function handleShowAudit() {
     setAuditOpen(true);
+  }
+
+  function handleShowFieldSettings() {
+    setFieldSettingsOpen(true);
   }
 
   const { selectedDocumentId } = useBuilder();
@@ -168,6 +139,9 @@ function BuilderContent({ envelopeId }: { envelopeId: number }) {
       auditOpen={auditOpen}
       onAuditOpenChange={setAuditOpen}
       onShowAudit={handleShowAudit}
+      fieldSettingsOpen={fieldSettingsOpen}
+      onFieldSettingsOpenChange={setFieldSettingsOpen}
+      onShowFieldSettings={handleShowFieldSettings}
     />
   );
 }
@@ -181,6 +155,9 @@ function BuilderWorkspace({
   auditOpen,
   onAuditOpenChange,
   onShowAudit,
+  fieldSettingsOpen,
+  onFieldSettingsOpenChange,
+  onShowFieldSettings,
 }: {
   envelopeId: number;
   data: NonNullable<ReturnType<typeof useSignEnvelope>["data"]>;
@@ -194,6 +171,9 @@ function BuilderWorkspace({
   auditOpen: boolean;
   onAuditOpenChange: (open: boolean) => void;
   onShowAudit: () => void;
+  fieldSettingsOpen: boolean;
+  onFieldSettingsOpenChange: (open: boolean) => void;
+  onShowFieldSettings: () => void;
 }) {
   const [pane, setPane] = useState<BuilderPane>("document");
 
@@ -203,6 +183,7 @@ function BuilderWorkspace({
         fields={data.fields}
         envelope={data.envelope}
         onShowAudit={onShowAudit}
+        onShowFieldSettings={onShowFieldSettings}
         documents={data.documents}
         recipients={data.recipients}
       />
@@ -224,15 +205,16 @@ function BuilderWorkspace({
           recipients={data.recipients}
           className={pane === "document" ? undefined : "max-lg:hidden"}
         />
-        <BuilderRightPanel
-          envelopeId={envelopeId}
-          className={pane === "field" ? undefined : "max-lg:hidden"}
-        />
       </div>
       <AuditTrailSheet
         open={auditOpen}
         envelopeId={envelopeId}
         onOpenChange={onAuditOpenChange}
+      />
+      <FieldSettingsSheet
+        open={fieldSettingsOpen}
+        envelopeId={envelopeId}
+        onOpenChange={onFieldSettingsOpenChange}
       />
     </div>
   );

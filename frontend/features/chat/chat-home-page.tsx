@@ -4,10 +4,8 @@ import { useState, useCallback, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
-import {
-  ChannelSidebar,
-  type ChatCreateDialog,
-} from "@/features/chat/channel-sidebar";
+import { ChannelSidebar } from "@/features/chat/channel-sidebar";
+import type { ChatCreateDialog } from "@/features/chat/use-chat-home-url";
 import { EmptyChatState } from "@/features/chat/empty-chat-state";
 import {
   ChatShell,
@@ -69,12 +67,14 @@ export function ChatHomePage() {
     searchScope,
     dmRequested,
     joinHuddleRequested,
+    createDialog,
     navigateToConversation,
     setSearchScope: handleSearchScopeChange,
-    clearDmParam,
     clearJoinHuddleParam,
     closeConversation,
     leaveMessage,
+    openDialog,
+    closeDialog,
   } = useChatHomeUrl();
   const showConversationList = activeChannelId === null;
 
@@ -83,10 +83,6 @@ export function ChatHomePage() {
     channelId: number;
     type: "huddle";
   } | null>(null);
-  const [createDialogOverride, setCreateDialogOverride] =
-    useState<ChatCreateDialog | null>(() => (dmRequested ? "dm" : null));
-  const createDialog =
-    createDialogOverride ?? (dmRequested ? "dm" : null);
   const { sidebarCollapsed, handleToggleSidebar } = useChatSidebarCollapse();
   const isPanelNarrow = useIsChatPanelNarrow();
 
@@ -107,7 +103,6 @@ export function ChatHomePage() {
 
   const openConversation = useCallback(
     (channelId: number, targetMessageId: number | null) => {
-      setCreateDialogOverride(null);
       navigateToConversation(channelId, targetMessageId);
     },
     [navigateToConversation],
@@ -126,10 +121,10 @@ export function ChatHomePage() {
 
   const handleCreateDialogChange = useCallback(
     (dialog: ChatCreateDialog | null) => {
-      setCreateDialogOverride(dialog);
-      if (dmRequested) clearDmParam();
+      if (dialog) openDialog(dialog);
+      else closeDialog();
     },
-    [dmRequested, clearDmParam],
+    [openDialog, closeDialog],
   );
 
   const handleBack = useCallback(() => closeConversation("push"), [closeConversation]);
@@ -159,20 +154,16 @@ export function ChatHomePage() {
   const handleToggleInfo = useCallback(() => setShowInfoPanel((p) => !p), []);
   const handleCloseInfo = useCallback(() => setShowInfoPanel(false), []);
   useMobilePanelBack(showInfoPanel && activeChannelId !== null, handleCloseInfo);
-  const handleOpenNewDM = useCallback(() => setCreateDialogOverride("dm"), []);
-  const handleOpenNewChannel = useCallback(
-    () => setCreateDialogOverride("channel"),
-    [],
-  );
+  const handleOpenNewDM = useCallback(() => openDialog("dm"), [openDialog]);
+  const handleOpenNewChannel = useCallback(() => openDialog("channel"), [openDialog]);
   const handleOpenSearch = useCallback(
     () => handleSearchScopeChange("messages"),
     [handleSearchScopeChange],
   );
 
-  const consumeDmParam = dmRequested && createDialogOverride === "dm";
   useEffect(() => {
-    if (consumeDmParam) clearDmParam();
-  }, [consumeDmParam, clearDmParam]);
+    if (dmRequested) openDialog("dm");
+  }, [dmRequested, openDialog]);
 
   useEffect(() => {
     window.dispatchEvent(

@@ -21,6 +21,6 @@ describe("token expiry follows the organization time zone (ORG-B-016)", () => {
 
   it("labels the zone the expiry is entered in", () => {
     render(<TokenExpiresAtField value="2026-11-01T23:59" onChange={jest.fn()} maxDays={90} />);
-    expect(screen.getByText("Time zone: Asia/Calcutta")).toBeInTheDocument();
+    expect(screen.getByText("Time zone: Asia/Kolkata")).toBeInTheDocument();
   });
 });

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Archive, CheckCircle2, Plus } from "lucide-react";
+import { Archive, CheckCircle2, FileStack, Plus } from "lucide-react";
 import { EllipsisIcon, SendIcon, CopyIcon } from "@animateicons/react/lucide";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +14,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipIconButton } from "@/components/ui/tooltip-icon-button";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePageState } from "@/hooks/api/use-page-state";
 import {
@@ -45,7 +47,6 @@ function TemplateRow({ template }: { template: SignTemplate }) {
   const [createOpen, setCreateOpen] = useState(false);
   const duplicate = useDuplicateSignTemplate();
   const update = useUpdateSignTemplate(template.id);
-  const { iconRef: sendRef, hoverHandlers: sendHover } = useAnimatedIcon();
   const { iconRef: ellipsisRef, hoverHandlers: ellipsisHover } =
     useAnimatedIcon();
 
@@ -81,74 +82,92 @@ function TemplateRow({ template }: { template: SignTemplate }) {
     void handleStatusChange("archived");
   }
 
+  const meta = [
+    `v${template.version}`,
+    template.category || null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5">
+      <div
+        className="flex size-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted"
+        aria-hidden="true"
+      >
+        <FileStack className="size-4 text-muted-foreground" />
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
-          <TruncatedText text={template.name} className="font-medium text-sm" />
-          <Badge variant={STATUS_VARIANT[template.status]}>
+          <TruncatedText
+            text={template.name}
+            className="text-sm font-medium"
+          />
+          <Badge variant={STATUS_VARIANT[template.status]} className="shrink-0">
             {template.status}
           </Badge>
         </div>
-        {template.description && (
-          <TruncatedText
-            text={template.description}
-            className="text-xs text-muted-foreground mt-0.5"
-          />
-        )}
-        <p className="text-xs text-muted-foreground mt-0.5">
-          v{template.version}
-          {template.category ? ` · ${template.category}` : ""}
+        <p className="truncate text-xs text-muted-foreground">
+          {template.description ? `${template.description} · ${meta}` : meta}
         </p>
       </div>
-      <div className="flex items-center gap-2 sm:shrink-0">
-        {canCreateEnvelope && template.status === "published" && (
-          <Button size="sm" onClick={handleCreateOpen} {...sendHover}>
-            <SendIcon ref={sendRef} className="size-4" />
-            New envelope
-          </Button>
-        )}
-        {canManageTemplates && (
+      <div className="flex shrink-0 items-center gap-1">
+        {canCreateEnvelope && template.status === "published" ? (
+          <TooltipIconButton
+            label="New envelope"
+            icon={SendIcon}
+            iconSize={16}
+            variant="default"
+            onClick={handleCreateOpen}
+          />
+        ) : null}
+        {canManageTemplates ? (
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8"
-                aria-label="Template actions"
-                {...ellipsisHover}
-              >
-                <EllipsisIcon ref={ellipsisRef} className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="size-8"
+                    aria-label={`More actions for ${template.name}`}
+                    {...ellipsisHover}
+                  >
+                    <EllipsisIcon ref={ellipsisRef} className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>More actions</TooltipContent>
+            </Tooltip>
             <DropdownMenuContent align="end">
               <DropdownMenuItem onClick={handleDuplicate}>
                 <CopyIcon className="size-4" />
                 Duplicate
               </DropdownMenuItem>
-              {template.status !== "published" && (
+              {template.status !== "published" ? (
                 <DropdownMenuItem onClick={handlePublish}>
                   <CheckCircle2 className="size-4" />
                   Publish
                 </DropdownMenuItem>
-              )}
-              {template.status !== "archived" && (
+              ) : null}
+              {template.status !== "archived" ? (
                 <DropdownMenuItem onClick={handleArchive} variant="destructive">
                   <Archive className="size-4" />
                   Archive
                 </DropdownMenuItem>
-              )}
+              ) : null}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
+        ) : null}
       </div>
-      {canCreateEnvelope && (
+      {canCreateEnvelope ? (
         <CreateEnvelopeFromTemplateDialog
           template={template}
           open={createOpen}
           onOpenChange={setCreateOpen}
         />
-      )}
+      ) : null}
     </div>
   );
 }
@@ -189,8 +208,6 @@ export function TemplateList() {
       <PageWrapper
         title="Templates"
         subtitle="Reusable envelope layouts you can send again and again"
-        noInternalScroll
-        contentClassName="flex min-h-0 flex-1 flex-col"
         state={pageState}
         loading={<TemplateListSkeleton />}
         onRetry={handleRetry}
@@ -217,7 +234,7 @@ export function TemplateList() {
           />
         }
       >
-        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-hide">
+        <div className="flex flex-col gap-2">
           {templates?.map((template) => (
             <TemplateRow key={template.id} template={template} />
           ))}

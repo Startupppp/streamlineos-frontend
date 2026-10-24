@@ -13,9 +13,12 @@ import {
 
 type UrlWrite = "push" | "replace";
 
+export type ChatCreateDialog = "dm" | "channel";
+
 function dropActionParams(next: URLSearchParams) {
   next.delete("search");
   next.delete("dm");
+  next.delete("dialog");
 }
 
 function dropConversationParams(next: URLSearchParams) {
@@ -41,6 +44,13 @@ export function useChatHomeUrl() {
   const searchScope = readChatSearchScope(searchParams.get("search"));
   const dmRequested = searchParams.get("dm") === "1";
   const joinHuddleRequested = searchParams.get("joinHuddle") === "1";
+  const dialogParam = searchParams.get("dialog");
+  const createDialog: ChatCreateDialog | null =
+    dialogParam === "dm" || dialogParam === "channel"
+      ? dialogParam
+      : dmRequested
+        ? "dm"
+        : null;
 
   const writeUrl = useCallback(
     (mode: UrlWrite, update: (next: URLSearchParams) => void) => {
@@ -56,7 +66,8 @@ export function useChatHomeUrl() {
 
   const navigateToConversation = useCallback(
     (channelId: number, targetMessageId: number | null) => {
-      const hasActionParams = searchParams.has("search") || searchParams.has("dm");
+      const hasActionParams =
+        searchParams.has("search") || searchParams.has("dm") || searchParams.has("dialog");
       if (hasActionParams) writeUrl("replace", dropActionParams);
       const unchanged =
         channelId === activeChannelId &&
@@ -87,6 +98,22 @@ export function useChatHomeUrl() {
     writeUrl("replace", (next) => next.delete("dm"));
   }, [writeUrl]);
 
+  const openDialog = useCallback(
+    (dialog: ChatCreateDialog) => {
+      writeUrl("replace", (next) => {
+        next.delete("dm");
+        next.set("dialog", dialog);
+      });
+    },
+    [writeUrl],
+  );
+
+  const closeDialog = useCallback(() => {
+    writeUrl("replace", (next) => {
+      next.delete("dialog");
+    });
+  }, [writeUrl]);
+
   const clearJoinHuddleParam = useCallback(() => {
     writeUrl("replace", (next) => next.delete("joinHuddle"));
   }, [writeUrl]);
@@ -106,11 +133,14 @@ export function useChatHomeUrl() {
     searchScope,
     dmRequested,
     joinHuddleRequested,
+    createDialog,
     navigateToConversation,
     setSearchScope,
     clearDmParam,
     clearJoinHuddleParam,
     closeConversation,
     leaveMessage,
+    openDialog,
+    closeDialog,
   };
 }

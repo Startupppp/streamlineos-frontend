@@ -2,16 +2,17 @@
 
 import { forwardRef } from "react";
 import { TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Briefcase, Clock, FileCheck, Shield, UserCircle } from "lucide-react";
+import { Briefcase, Clock, FileCheck, MessageCircle, Shield, UserCircle } from "lucide-react";
 
 interface EmployeeTabsListProps {
   showSensitiveTab: boolean;
   showEditTab: boolean;
   isSelf: boolean;
+  showChatTab: boolean;
 }
 
 export const EmployeeTabsList = forwardRef<HTMLDivElement, EmployeeTabsListProps>(
-  function EmployeeTabsList({ showSensitiveTab, showEditTab, isSelf }, ref) {
+  function EmployeeTabsList({ showSensitiveTab, showEditTab, isSelf, showChatTab }, ref) {
     return (
       <TabsList
         ref={ref}
@@ -61,6 +62,14 @@ export const EmployeeTabsList = forwardRef<HTMLDivElement, EmployeeTabsListProps
         >
           <FileCheck className="h-3 w-3" />
           Edit details
+        </TabsTrigger>
+        <TabsTrigger
+          value="chat"
+          hidden={!showChatTab}
+          className="gap-1.5 px-2.5 text-xs"
+        >
+          <MessageCircle className="h-3 w-3" />
+          Chat
         </TabsTrigger>
       </TabsList>
     );

@@ -155,7 +155,7 @@ describe("PeopleDirectoryPage access states", () => {
     );
 
     expect(
-      screen.getByText(/Person records from Directory or HR onboarding/),
+      screen.getByText(/Person records from Directory or HR — not the same as team members/),
     ).toBeInTheDocument();
     expect(await screen.findByText("No person records yet")).toBeInTheDocument();
     expect(screen.getByText(/Add people here, or onboard them in HR/)).toBeInTheDocument();

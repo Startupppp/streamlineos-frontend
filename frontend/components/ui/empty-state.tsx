@@ -21,7 +21,7 @@ interface ActionProps {
 interface EmptyStateProps {
   illustration?: React.ReactNode;
   illustrationPreset?: StateIllustrationPreset;
-  illustrationSize?: "xs" | "sm" | "md";
+  illustrationSize?: "xs" | "sm" | "md" | "lg";
   title?: string;
   description?: string;
   descriptionClassName?: string;
@@ -74,10 +74,11 @@ function ActionButton({
 
 const FILTERED_EMPTY_TITLE = "No results match your filters.";
 
-const ILLUSTRATION_BOX_CLASS: Record<"xs" | "sm" | "md", string> = {
+const ILLUSTRATION_BOX_CLASS: Record<"xs" | "sm" | "md" | "lg", string> = {
   xs: "mb-1 size-10",
   sm: "mb-2 size-24",
   md: "mb-5 size-48 sm:size-56",
+  lg: "mb-6 size-64 sm:size-72",
 };
 
 export function EmptyState({

@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { usePatchSurvey, type SurveyForm } from "@/hooks/api/surveys/forms";
-import { numericFieldChangeOr } from "@/lib/numeric-field";
+import {
+  assessmentScoringSchema,
+  type AssessmentScoringValues,
+} from "./assessment-scoring-schema";
 
 interface AssessmentSettings {
   passScore?: number;
@@ -19,24 +30,34 @@ interface AssessmentSettings {
   certificateOnPass?: boolean;
 }
 
-export function AssessmentScoringCard({ survey, className }: { survey: SurveyForm; className?: string }) {
+export function AssessmentScoringCard({
+  survey,
+  className,
+}: {
+  survey: SurveyForm;
+  className?: string;
+}) {
   const patchSurvey = usePatchSurvey(survey.id);
   const existing = (survey.settings as AssessmentSettings | undefined) ?? {};
+  const form = useForm<AssessmentScoringValues>({
+    resolver: zodResolver(assessmentScoringSchema),
+    defaultValues: {
+      passScore: existing.passScore ?? 0,
+      attemptsAllowed: existing.attemptsAllowed ?? 0,
+      timeLimitMinutes: existing.timeLimitMinutes ?? 0,
+      certificateOnPass: existing.certificateOnPass ?? false,
+    },
+  });
 
-  const [passScore, setPassScore] = useState(existing.passScore ?? 0);
-  const [attemptsAllowed, setAttemptsAllowed] = useState(existing.attemptsAllowed ?? 0);
-  const [timeLimitMinutes, setTimeLimitMinutes] = useState(existing.timeLimitMinutes ?? 0);
-  const [certificateOnPass, setCertificateOnPass] = useState(existing.certificateOnPass ?? false);
-
-  async function handleSave() {
+  async function handleSave(values: AssessmentScoringValues) {
     try {
       await patchSurvey.mutateAsync({
         settings: {
           ...survey.settings,
-          passScore,
-          attemptsAllowed: attemptsAllowed || undefined,
-          timeLimitMinutes: timeLimitMinutes || undefined,
-          certificateOnPass,
+          passScore: values.passScore,
+          attemptsAllowed: values.attemptsAllowed || undefined,
+          timeLimitMinutes: values.timeLimitMinutes || undefined,
+          certificateOnPass: values.certificateOnPass,
         },
       });
       toast.success("Assessment settings saved");
@@ -50,38 +71,89 @@ export function AssessmentScoringCard({ survey, className }: { survey: SurveyFor
       <CardHeader>
         <CardTitle className="text-sm">Time & scoring</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-wrap gap-3">
-          <div className="space-y-1.5">
-            <Label>Pass score</Label>
-            <Input type="number" value={passScore} onChange={numericFieldChangeOr(setPassScore, 0)} className="w-28" />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Attempts allowed</Label>
-            <Input
-              type="number"
-              value={attemptsAllowed || ""}
-              onChange={numericFieldChangeOr(setAttemptsAllowed, 0)}
-              placeholder="Unlimited"
-              className="w-28"
+      <CardContent>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSave)}
+            className="space-y-4"
+          >
+            <div className="flex flex-wrap gap-3">
+              <FormField
+                control={form.control}
+                name="passScore"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel>Pass score</FormLabel>
+                    <FormControl>
+                      <Input type="number" className="w-28" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="attemptsAllowed"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel>Attempts allowed</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="Unlimited"
+                        className="w-28"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="timeLimitMinutes"
+                render={({ field }) => (
+                  <FormItem className="space-y-1.5">
+                    <FormLabel>Time limit (min)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        placeholder="None"
+                        className="w-28"
+                        {...field}
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+            <FormField
+              control={form.control}
+              name="certificateOnPass"
+              render={({ field }) => (
+                <FormItem className="flex items-center justify-between">
+                  <FormLabel htmlFor="certificate-on-pass">
+                    Issue certificate on pass
+                  </FormLabel>
+                  <FormControl>
+                    <Switch
+                      id="certificate-on-pass"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label>Time limit (min)</Label>
-            <Input
-              type="number"
-              value={timeLimitMinutes || ""}
-              onChange={numericFieldChangeOr(setTimeLimitMinutes, 0)}
-              placeholder="None"
-              className="w-28"
-            />
-          </div>
-        </div>
-        <div className="flex items-center justify-between">
-          <Label htmlFor="certificate-on-pass">Issue certificate on pass</Label>
-          <Switch id="certificate-on-pass" checked={certificateOnPass} onCheckedChange={setCertificateOnPass} />
-        </div>
-        <Button size="sm" onClick={handleSave} disabled={patchSurvey.isPending}>Save</Button>
+            <LoadingButton type="submit" size="sm" isPending={patchSurvey.isPending}>
+              Save
+            </LoadingButton>
+          </form>
+        </Form>
       </CardContent>
     </Card>
   );

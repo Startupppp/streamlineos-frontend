@@ -93,8 +93,10 @@ export function DocumentPanel({ envelopeId, documents, editable }: DocumentPanel
             tabIndex={0}
             onClick={selectDocument(doc.id)}
             onKeyDown={selectDocumentOnActivationKey(doc.id)}
-            className={`w-full flex items-center gap-2 rounded-lg border p-2.5 text-left transition-colors cursor-pointer ${
-              activeDocumentId === doc.id ? "border-foreground bg-muted" : "border-border hover:bg-muted/50"
+            className={`flex w-full cursor-pointer items-center gap-2 rounded-lg border p-2.5 text-left transition-colors ${
+              activeDocumentId === doc.id
+                ? "border-foreground bg-muted"
+                : "border-border bg-card hover:bg-muted/50"
             }`}
           >
             <FileText className="size-4 shrink-0 text-muted-foreground" />

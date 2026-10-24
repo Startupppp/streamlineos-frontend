@@ -50,6 +50,7 @@ const NO_PARAMS = new URLSearchParams();
 const GRANTED_KEYS = [
   "settings:manage",
   "settings:view",
+  "settings:organization:manage",
   "settings:webhooks:manage",
   "settings:rbac:manage",
   "audit-log:read",

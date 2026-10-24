@@ -1,46 +1,65 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { CopyIcon, PlusIcon } from "@animateicons/react/lucide";
+import { Info, Plus } from "lucide-react";
+import { CopyIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormMessage,
+} from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { getErrorMessage } from "@/lib/get-error-message";
 import { ErrorState } from "@/components/shared/error-state";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { CollectorEmbedSettings } from "./collector-embed-settings";
-import { useCollectors, useCreateCollector, usePatchCollector, type CollectorType, type CollectorStatus } from "@/hooks/api/surveys/collectors";
+import {
+  useCollectors,
+  useCreateCollector,
+  usePatchCollector,
+  type CollectorStatus,
+} from "@/hooks/api/surveys/collectors";
+import {
+  COLLECTOR_TYPES,
+  COLLECTOR_TYPE_LABELS,
+  collectorCreateSchema,
+  type CollectorCreateValues,
+} from "./collector-create-schema";
 
-const COLLECTOR_TYPES = [
-  "public_link",
-  "email",
-  "qr",
-  "embed",
-  "popup",
-  "crm_campaign",
-  "hr_audience",
-] as const satisfies readonly CollectorType[];
-
-const COLLECTOR_TYPE_LABELS: Record<CollectorType, string> = {
-  public_link: "Public link",
-  email: "Email invitation",
-  qr: "QR code",
-  embed: "Website embed",
-  popup: "Popup",
-  crm_campaign: "CRM campaign",
-  hr_audience: "HR employee audience",
-  support_trigger: "Support ticket trigger",
-  live_session: "Live session",
-  manual_access_code: "Manual access code",
-};
-
-const STATUS_VARIANT: Record<CollectorStatus, "default" | "secondary" | "outline"> = {
+const STATUS_VARIANT: Record<
+  CollectorStatus,
+  "default" | "secondary" | "outline"
+> = {
   active: "default",
   paused: "outline",
   closed: "secondary",
@@ -53,14 +72,21 @@ function publicLinkFor(token: string): string {
 }
 
 export function CollectorsCard({ surveyId }: { surveyId: number }) {
-  const { data: collectors, isLoading, isError, error, refetch } = useCollectors(surveyId);
+  const { data: collectors, isLoading, isError, error, refetch } =
+    useCollectors(surveyId);
   const createCollector = useCreateCollector(surveyId);
   const patchCollector = usePatchCollector(surveyId);
-  const [newType, setNewType] = useState<CollectorType>("public_link");
+  const form = useForm<CollectorCreateValues>({
+    resolver: zodResolver(collectorCreateSchema),
+    defaultValues: { collectorType: "public_link" },
+  });
 
-  async function handleCreate() {
+  async function handleCreate(values: CollectorCreateValues) {
     try {
-      await createCollector.mutateAsync({ collectorType: newType, name: COLLECTOR_TYPE_LABELS[newType] });
+      await createCollector.mutateAsync({
+        collectorType: values.collectorType,
+        name: COLLECTOR_TYPE_LABELS[values.collectorType],
+      });
       toast.success("Collector created");
     } catch (error) {
       toast.error(getErrorMessage(error));
@@ -72,14 +98,15 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
     toast.success("Link copied");
   }
 
-  function handleNewTypeChange(v: string): void {
-    const next = COLLECTOR_TYPES.find((candidate) => candidate === v);
-    if (next) setNewType(next);
-  }
-
-  async function handleToggleStatus(collectorId: number, status: CollectorStatus) {
+  async function handleToggleStatus(
+    collectorId: number,
+    status: CollectorStatus,
+  ) {
     try {
-      await patchCollector.mutateAsync({ collectorId, input: { status: status === "active" ? "paused" : "active" } });
+      await patchCollector.mutateAsync({
+        collectorId,
+        input: { status: status === "active" ? "paused" : "active" },
+      });
     } catch (error) {
       toast.error(getErrorMessage(error));
     }
@@ -104,7 +131,70 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-sm">Collectors</CardTitle>
+        <CardTitle className="flex items-center gap-1.5 text-sm">
+          Collectors
+          <TooltipProvider delayDuration={200}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex size-7 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="About privacy and collectors"
+                >
+                  <Info className="size-3.5" aria-hidden="true" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" align="start" className="max-w-xs text-left">
+                A response is identified when someone uses a participant link or
+                email, and anonymous otherwise. One-per-email and expiry are set
+                on each collector.
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </CardTitle>
+        <CardAction className="col-span-full row-start-2 mt-2 w-full justify-self-stretch @md/card-header:col-span-1 @md/card-header:col-start-2 @md/card-header:row-span-2 @md/card-header:row-start-1 @md/card-header:mt-0 @md/card-header:w-auto @md/card-header:justify-self-end">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleCreate)}
+              className="flex w-full flex-col gap-2 sm:flex-row sm:items-center"
+            >
+              <FormField
+                control={form.control}
+                name="collectorType"
+                render={({ field }) => (
+                  <FormItem className="min-w-0 flex-1 sm:flex-none">
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger
+                          className={cn(FILTER_SELECT_TRIGGER, "w-full sm:w-52")}
+                          aria-label="Collector type"
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {COLLECTOR_TYPES.map((type) => (
+                          <SelectItem key={type} value={type}>
+                            {COLLECTOR_TYPE_LABELS[type]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <LoadingButton
+                type="submit"
+                size="sm"
+                isPending={createCollector.isPending}
+              >
+                <Plus className="size-3.5" />
+                Add collector
+              </LoadingButton>
+            </form>
+          </Form>
+        </CardAction>
       </CardHeader>
       <CardContent className="space-y-3">
         {isLoading ? (
@@ -127,13 +217,25 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
             </div>
           </div>
         ) : isError ? (
-          <ErrorState compact title="Couldn't load collectors" description={getErrorMessage(error)} onRetry={handleRetryCollectors} />
+          <ErrorState
+            compact
+            title="Couldn't load collectors"
+            description={getErrorMessage(error)}
+            onRetry={handleRetryCollectors}
+          />
         ) : (
           collectors?.map((collector) => (
-            <div key={collector.id} className="flex flex-col gap-2 rounded-md border border-border p-3">
+            <div
+              key={collector.id}
+              className="flex flex-col gap-2 rounded-md border border-border p-3"
+            >
               <div className="flex flex-wrap items-center gap-2">
-                <span className="min-w-0 text-sm font-medium">{collector.name}</span>
-                <Badge variant={STATUS_VARIANT[collector.status]}>{collector.status}</Badge>
+                <span className="min-w-0 text-sm font-medium">
+                  {collector.name}
+                </span>
+                <Badge variant={STATUS_VARIANT[collector.status]}>
+                  {collector.status}
+                </Badge>
                 <div className="flex w-full flex-wrap gap-x-2 gap-y-1 text-xs text-muted-foreground sm:ml-auto sm:w-auto">
                   <span>{collector.opens} opens</span>
                   <span>{collector.starts} starts</span>
@@ -141,35 +243,38 @@ export function CollectorsCard({ surveyId }: { surveyId: number }) {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Input readOnly value={publicLinkFor(collector.token)} className="min-w-0 flex-1 basis-full sm:basis-auto" />
-                <AnimatedIconButton icon={CopyIcon} iconSize={14} variant="outline" size="icon" className="size-9 shrink-0" aria-label="Copy survey link" onClick={copyLinkHandler(collector.token)} />
-                <Button variant="outline" size="sm" onClick={toggleStatusHandler(collector.id, collector.status)}>
+                <Input
+                  readOnly
+                  value={publicLinkFor(collector.token)}
+                  className="min-w-0 flex-1 basis-full sm:basis-auto"
+                />
+                <AnimatedIconButton
+                  icon={CopyIcon}
+                  iconSize={14}
+                  variant="outline"
+                  size="icon"
+                  className="size-9 shrink-0"
+                  aria-label="Copy survey link"
+                  onClick={copyLinkHandler(collector.token)}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={toggleStatusHandler(collector.id, collector.status)}
+                >
                   {collector.status === "active" ? "Pause" : "Activate"}
                 </Button>
               </div>
-              {(collector.collectorType === "embed" || collector.collectorType === "popup") && (
-                <CollectorEmbedSettings surveyId={surveyId} collector={collector} />
+              {(collector.collectorType === "embed" ||
+                collector.collectorType === "popup") && (
+                <CollectorEmbedSettings
+                  surveyId={surveyId}
+                  collector={collector}
+                />
               )}
             </div>
           ))
         )}
-
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Select
-            value={newType}
-            onValueChange={handleNewTypeChange}
-          >
-            <SelectTrigger className={cn(FILTER_SELECT_TRIGGER, "w-full sm:w-52")}><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {COLLECTOR_TYPES.map((type) => (
-                <SelectItem key={type} value={type}>{COLLECTOR_TYPE_LABELS[type]}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <AnimatedIconButton icon={PlusIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={handleCreate} disabled={createCollector.isPending}>
-            Add collector
-          </AnimatedIconButton>
-        </div>
       </CardContent>
     </Card>
   );

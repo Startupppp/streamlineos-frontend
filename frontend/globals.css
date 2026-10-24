@@ -780,13 +780,14 @@ a.ask-documents-cta {
   border-style: solid;
   border-width: 1.5px;
   border-color: transparent;
-  color: var(--foreground);
+  color: var(--primary-foreground);
   background-color: transparent;
   background-image:
     linear-gradient(
       135deg,
-      color-mix(in srgb, var(--brand-core) 16%, var(--card)) 0%,
-      color-mix(in srgb, var(--brand-cyan) 14%, var(--card)) 100%
+      color-mix(in srgb, var(--primary) 92%, var(--brand-cyan)) 0%,
+      var(--primary) 55%,
+      color-mix(in srgb, var(--primary) 88%, var(--brand-core)) 100%
     ),
     linear-gradient(
       120deg,
@@ -806,12 +807,13 @@ a.ask-documents-cta {
     0 0,
     0% 50%;
   box-shadow:
-    0 0 0 0 color-mix(in srgb, var(--brand-cyan) 0%, transparent),
-    0 1px 2px color-mix(in srgb, var(--brand-deep) 12%, transparent);
-  animation: goal-everything-border 2s ease-in-out infinite;
+    0 0 0 0 color-mix(in srgb, var(--primary) 0%, transparent),
+    0 2px 8px color-mix(in srgb, var(--primary) 28%, transparent);
+  animation: goal-everything-border 1.8s ease-in-out infinite;
   transition:
     box-shadow 200ms ease-out,
-    color 180ms ease-out;
+    filter 200ms ease-out,
+    transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 a.ask-documents-cta::before {
@@ -823,68 +825,119 @@ a.ask-documents-cta::before {
   pointer-events: none;
   background: linear-gradient(
     105deg,
-    transparent 32%,
-    color-mix(in srgb, var(--brand-cyan) 28%, transparent) 50%,
-    transparent 68%
+    transparent 28%,
+    color-mix(in srgb, var(--primary-foreground) 38%, transparent) 50%,
+    transparent 72%
   );
   background-size: 220% 100%;
   background-position: 120% 0;
-  animation: goal-everything-sheen 2.2s ease-in-out infinite;
+  animation: goal-everything-sheen 1.8s ease-in-out infinite;
 }
 
 a.ask-documents-cta::after {
   content: "";
   position: absolute;
-  inset: -1px;
+  inset: -2px;
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  opacity: 0.55;
+  opacity: 0.7;
   background: radial-gradient(
-    120% 80% at 50% 120%,
-    color-mix(in srgb, var(--brand-cyan) 35%, transparent),
-    transparent 70%
+    130% 90% at 50% 120%,
+    color-mix(in srgb, var(--primary) 45%, transparent),
+    transparent 72%
   );
-  transform: translateY(2px) scale(0.96);
+  transform: translateY(2px) scale(0.94);
   transition:
     opacity 200ms ease-out,
     transform 200ms ease-out;
 }
 
 a.ask-documents-cta:hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px) scale(1.03);
   box-shadow:
-    0 0 0 3px color-mix(in srgb, var(--brand-cyan) 18%, transparent),
-    0 8px 20px color-mix(in srgb, var(--brand-deep) 18%, transparent);
+    0 0 0 4px color-mix(in srgb, var(--primary) 22%, transparent),
+    0 10px 28px color-mix(in srgb, var(--primary) 36%, transparent);
+}
+
+a.ask-documents-cta:active {
+  transform: translateY(0) scale(0.97);
 }
 
 a.ask-documents-cta:hover::after {
-  opacity: 0.9;
-  transform: translateY(4px) scale(1);
+  opacity: 1;
+  transform: translateY(5px) scale(1.02);
 }
 
 a.ask-documents-cta .ask-documents-cta__label {
-  background-image: linear-gradient(
-    120deg,
-    var(--brand-deep),
-    var(--brand-core) 40%,
-    var(--brand-cyan) 70%,
-    var(--brand-deep)
-  );
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  animation: goal-everything-border 2.4s ease-in-out infinite;
+  color: var(--primary-foreground);
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
 
-.dark a.ask-documents-cta .ask-documents-cta__label {
-  background-image: linear-gradient(
-    120deg,
-    var(--brand-cyan),
-    var(--brand-bright) 45%,
-    var(--brand-core) 75%,
-    var(--brand-cyan)
-  );
+a.ask-documents-cta .ask-documents-cta__icon {
+  color: var(--primary-foreground);
+  animation: ask-documents-icon-wiggle 2.2s ease-in-out infinite;
+}
+
+a.ask-documents-cta .ask-documents-cta__spark {
+  position: absolute;
+  bottom: 0.25rem;
+  z-index: 1;
+  width: 0.35rem;
+  height: 0.35rem;
+  border-radius: 9999px;
+  background: var(--primary-foreground);
+  opacity: 0;
+  pointer-events: none;
+  animation: ask-documents-spark 1.25s ease-out infinite;
+}
+
+a.ask-documents-cta .ask-documents-cta__spark--1 {
+  left: 18%;
+  animation-delay: 0s;
+}
+
+a.ask-documents-cta .ask-documents-cta__spark--2 {
+  left: 52%;
+  animation-delay: 0.12s;
+}
+
+a.ask-documents-cta .ask-documents-cta__spark--3 {
+  left: 78%;
+  animation-delay: 0.24s;
+}
+
+@keyframes ask-documents-icon-wiggle {
+  0%,
+  100% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(-12deg) scale(1.12);
+  }
+  50% {
+    transform: rotate(10deg) scale(1.05);
+  }
+  75% {
+    transform: rotate(-6deg) scale(1.1);
+  }
+}
+
+@keyframes ask-documents-spark {
+  0% {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.3);
+  }
+  35% {
+    opacity: 0.95;
+    transform: translate3d(0, -0.75rem, 0) scale(1.05);
+  }
+  100% {
+    opacity: 0;
+    transform: translate3d(0, -1.5rem, 0) scale(0.2);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -916,12 +969,9 @@ a.ask-documents-cta .ask-documents-cta__label {
 
   a.ask-documents-cta {
     animation: none;
+    filter: none;
     background-image:
-      linear-gradient(
-        135deg,
-        color-mix(in srgb, var(--brand-core) 16%, var(--card)) 0%,
-        color-mix(in srgb, var(--brand-cyan) 14%, var(--card)) 100%
-      ),
+      linear-gradient(135deg, var(--primary), var(--primary)),
       linear-gradient(
         135deg,
         var(--brand-deep),
@@ -940,12 +990,14 @@ a.ask-documents-cta .ask-documents-cta__label {
     display: none;
   }
 
-  a.ask-documents-cta .ask-documents-cta__label {
+  a.ask-documents-cta:hover,
+  a.ask-documents-cta:active {
+    transform: none;
+  }
+
+  a.ask-documents-cta .ask-documents-cta__icon,
+  a.ask-documents-cta .ask-documents-cta__spark {
     animation: none;
-    background-image: none;
-    background-clip: unset;
-    -webkit-background-clip: unset;
-    color: var(--foreground);
   }
 
   button.goal-everything-chip[aria-checked="true"] {

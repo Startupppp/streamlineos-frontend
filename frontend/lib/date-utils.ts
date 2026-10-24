@@ -98,7 +98,7 @@ const EVENT_TIME_PARTS: Intl.DateTimeFormatOptions = {
 };
 
 export function readerTimeZone(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone;
+  return canonicalizeTimeZone(Intl.DateTimeFormat().resolvedOptions().timeZone);
 }
 
 function zoneOffsetMs(instant: Date, timeZone: string): number {

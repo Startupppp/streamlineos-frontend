@@ -1,22 +1,21 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageWrapper } from "@/components/ui/page-wrapper";
-import { DataTableSkeleton } from "@/components/ui/data-table-skeleton";
+import { EnvelopeListSkeleton } from "@/features/sign/envelopes/envelope-list-skeleton";
 
 export default function SignEnvelopesLoading() {
   return (
     <PageWrapper
       title="Envelopes"
-      subtitle="Every signing request you've sent, organized by status."
-      actions={<Skeleton className="h-9 w-36 rounded-md" />}
-    >
-      <div className="flex flex-col gap-3">
-        <div className="flex min-w-0 shrink-0 gap-1 overflow-x-auto border-b border-border pb-0 scrollbar-hide">
-          {Array.from({ length: 7 }).map((_, i) => (
-            <Skeleton key={i} className="h-9 w-20 rounded-t-md" />
-          ))}
+      subtitle="Every signing request you've sent, organized by status"
+      actions={<Skeleton className="h-9 w-36 max-w-full rounded-md" />}
+      filters={
+        <div className="flex flex-wrap items-center gap-2">
+          <Skeleton className="h-9 w-full max-w-full rounded-md sm:w-64" />
+          <Skeleton className="h-9 w-44 shrink-0 rounded-md" />
         </div>
-        <DataTableSkeleton rows={12} columns={5} />
-      </div>
+      }
+    >
+      <EnvelopeListSkeleton />
     </PageWrapper>
   );
 }

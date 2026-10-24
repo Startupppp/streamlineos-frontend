@@ -79,8 +79,12 @@ export function MessagesTab({ survey }: { survey: SurveyForm }) {
             <CardHeader>
               <CardTitle className="text-sm">Messages</CardTitle>
               <CardDescription>Copy respondents see before they start and after they finish.</CardDescription>
-              <CardAction>
-                <LoadingButton type="submit" isPending={patchSurvey.isPending}>
+              <CardAction className="max-sm:col-span-full max-sm:row-start-3 max-sm:mt-2 max-sm:w-full max-sm:justify-self-stretch">
+                <LoadingButton
+                  type="submit"
+                  isPending={patchSurvey.isPending}
+                  className="w-full sm:w-auto"
+                >
                   Save
                 </LoadingButton>
               </CardAction>

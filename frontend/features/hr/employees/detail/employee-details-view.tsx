@@ -25,7 +25,8 @@ import { ArrowLeft, UserX, UserCheck, Download } from "lucide-react";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useCan, useScope } from "@/hooks/api/access";
+import { useCan, useCanState, useScope } from "@/hooks/api/access";
+import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
 import { canDeleteEmployee } from "@/features/hr/employees/hr-types";
 import { AiActionsMenu } from "@/components/ai";
 import type { AiAction } from "@/components/ai";
@@ -98,6 +99,8 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
     (hydrated && sensitiveScope !== "none" && (isSelf || sensitiveScope !== "own"));
   const showEditTab =
     serverActions?.has("update") ?? (hydrated && canUpdateEmployee && (isSelf || manageScope === "all"));
+  const chatAccess = useCanState("chat:channels:read");
+  const showChatTab = chatAccess !== "denied";
   const employeeName = getUserDisplayName(employee);
 
   const scrollActiveTabIntoView = useCallback(() => {
@@ -352,6 +355,7 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             showSensitiveTab={showSensitiveTab}
             showEditTab={showEditTab}
             isSelf={isSelf}
+            showChatTab={showChatTab}
           />
         </ScrollEdgeFade>
 
@@ -421,6 +425,17 @@ export function EmployeeDetailsView({ employee }: { employee: EmployeeData }) {
             }
           />
         </TabsContent>
+
+        {showChatTab && (
+          <TabsContent value="chat" className="mt-0 flex flex-col min-h-[520px]">
+            <RecordConversationPanel
+              entityType="employee"
+              entityId={employee.id}
+              emptyDescriptionWrite="This employee does not have an associated chat channel yet. Create one to start the conversation."
+              emptyDescriptionReadOnly="This employee does not have an associated chat channel yet. Ask an admin to link one."
+            />
+          </TabsContent>
+        )}
       </Tabs>
       {canRehire && rehireOpen && (
         <RehireEmployeeDialog

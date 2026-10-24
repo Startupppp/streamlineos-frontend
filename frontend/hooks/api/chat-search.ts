@@ -195,7 +195,7 @@ export function useThreadReplies(channelId: number, messageId: number) {
   });
 }
 
-type ThreadReplyInput = { content?: string; attachments?: AttachmentInput[]; clientKey?: string };
+type ThreadReplyInput = { content?: string; attachments?: AttachmentInput[]; clientKey: string };
 
 export function useSendThreadReply(channelId: number, parentMessageId: number) {
   const queryClient = useQueryClient();

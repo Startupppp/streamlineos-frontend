@@ -68,7 +68,7 @@ function BulkSendJobRow({ job, templateName, onOpen }: BulkSendJobRowProps) {
   }
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4 transition-all hover:border-primary/40 hover:shadow-md sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2.5 transition-colors hover:border-primary/40">
       <div className="min-w-0 flex-1">
         <button
           type="button"
@@ -77,27 +77,37 @@ function BulkSendJobRow({ job, templateName, onOpen }: BulkSendJobRowProps) {
           aria-label={`Open bulk send job ${job.id}`}
         >
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <p className="min-w-0 font-medium text-sm">{templateName ?? `Job #${job.id}`}</p>
-            <Badge variant={STATUS_VARIANT[job.status]}>{STATUS_LABEL[job.status]}</Badge>
+            <p className="min-w-0 text-sm font-medium">
+              {templateName ?? `Job #${job.id}`}
+            </p>
+            <Badge variant={STATUS_VARIANT[job.status]} className="shrink-0">
+              {STATUS_LABEL[job.status]}
+            </Badge>
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5 tabular-nums">
+          <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
             {job.successCount}/{job.totalCount} sent · {job.failedCount} failed
           </p>
         </button>
-        {isActive && (
+        {isActive ? (
           <Progress
             value={percent}
             valueLabel={`${settled} of ${job.totalCount} rows processed`}
             className="mt-2 h-1.5"
           />
-        )}
+        ) : null}
       </div>
-      {isActive && (
-        <Button variant="ghost" size="sm" onClick={handleCancel}>
+      {isActive ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-8 shrink-0"
+          onClick={handleCancel}
+          aria-label="Cancel bulk send"
+        >
           <Ban className="size-4" />
-          Cancel
         </Button>
-      )}
+      ) : null}
     </div>
   );
 }
@@ -140,8 +150,6 @@ export function BulkSendList() {
     <PageWrapper
       title="Bulk Send"
       subtitle="Send one template to a list of people via CSV"
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col"
       state={pageState}
       loading={<BulkSendListSkeleton />}
       onRetry={handleRetry}
@@ -161,7 +169,7 @@ export function BulkSendList() {
         />
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto scrollbar-hide">
+      <div className="flex flex-col gap-2">
         {jobs?.map((job) => (
           <BulkSendJobRow key={job.id} job={job} templateName={templateNameFor(job)} onOpen={setOpenJob} />
         ))}

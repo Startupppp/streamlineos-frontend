@@ -138,6 +138,8 @@ export function WatermarkPoliciesPanel() {
       <SettingsSurface
         title="Watermarks"
         description="Stamped on previews, and on the finished PDF when a policy says so."
+        className="h-full min-h-full flex-1"
+        bodyClassName="min-h-80"
         action={
           <AnimatedIconButton size="sm" icon={PlusIcon} iconClassName="mr-1.5" onClick={handleCreateOpen}>
             New policy
@@ -146,6 +148,7 @@ export function WatermarkPoliciesPanel() {
       >
         <PageState
           resolution={panelState}
+          className="h-full min-h-0 flex-1"
           loading={
             <div className="divide-y divide-border">
               <Skeleton className="h-16 w-full rounded-none" />
@@ -153,13 +156,11 @@ export function WatermarkPoliciesPanel() {
             </div>
           }
           onRetry={handleRetry}
-          compact
           empty={
             <EmptyState
-              compact
-              illustrationSize="xs"
               title="No watermark policies"
               description="Add a policy to stamp a watermark on previews or the final PDF."
+              className="h-full min-h-full flex-1 rounded-none border-0 bg-transparent"
             />
           }
         >

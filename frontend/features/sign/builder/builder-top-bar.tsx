@@ -3,12 +3,17 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { ArrowLeft, ShieldCheck, Send, History, Download, FileCheck, ScrollText, PenLine } from "lucide-react";
+import { ArrowLeft, Bell, ShieldCheck, Send, History, Download, FileCheck, ScrollText, PenLine, SlidersHorizontal } from "lucide-react";
 import { EllipsisIcon } from "@animateicons/react/lucide";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";
 import { LoadingButton } from "@/components/ui/loading-button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getErrorMessage } from "@/lib/get-error-message";
 import {
   useDownloadSignEnvelopeFinalPdf,
@@ -38,9 +43,17 @@ interface BuilderTopBarProps {
   documents?: SignDocument[];
   fields?: SignField[];
   onShowAudit: () => void;
+  onShowFieldSettings: () => void;
 }
 
-export function BuilderTopBar({ envelope, recipients, documents = [], fields = [], onShowAudit }: BuilderTopBarProps) {
+export function BuilderTopBar({
+  envelope,
+  recipients,
+  documents = [],
+  fields = [],
+  onShowAudit,
+  onShowFieldSettings,
+}: BuilderTopBarProps) {
   const router = useRouter();
   const [validationErrors, setValidationErrors] = useState<string[] | null>(null);
   const [certificateOpen, setCertificateOpen] = useState(false);
@@ -48,6 +61,7 @@ export function BuilderTopBar({ envelope, recipients, documents = [], fields = [
   const [voidOpen, setVoidOpen] = useState(false);
   const [templateOpen, setTemplateOpen] = useState(false);
   const canViewCertificate = useCan("sign:certificate:download");
+  const canViewAudit = useCan("sign:audit:view");
   const canCorrect = useCan("sign:envelope:correct");
   const canSend = useCan("sign:envelope:send");
   const canVoid = useCan("sign:envelope:void");
@@ -180,53 +194,86 @@ export function BuilderTopBar({ envelope, recipients, documents = [], fields = [
         <EnvelopeExpiryControl envelope={envelope} />
       </div>
 
-      <div className="flex min-w-0 flex-wrap items-center gap-2">
-        {isDraft && canManageTemplates && envelope.templateId != null && (
-          <LoadingButton variant="outline" onClick={handleSaveToTemplate} isPending={updateTemplate.isPending} loadingText="Saving…">
-            Save to template
-          </LoadingButton>
-        )}
-        {isDraft && canManageTemplates && envelope.templateId == null && (
-          <Button variant="outline" onClick={handleSaveAsTemplate}>
-            Save as template
-          </Button>
-        )}
+      <div className="flex min-w-0 flex-1 flex-wrap items-center justify-end gap-2 sm:flex-none">
         {isDraft && canSend && (
-          <LoadingButton onClick={handleSend} isPending={validate.isPending || send.isPending} loadingText="Sending…">
+          <LoadingButton
+            className="min-w-0 flex-1 sm:flex-none"
+            onClick={handleSend}
+            isPending={validate.isPending || send.isPending}
+            loadingText="Sending…"
+          >
             <Send className="size-4" />
             Send
           </LoadingButton>
         )}
         {isActive && canSend && (
-          <LoadingButton variant="outline" size="sm" onClick={handleReminder} isPending={sendReminder.isPending} loadingText="Sending…">
-            Send reminder
+          <LoadingButton
+            variant="outline"
+            size="icon"
+            className="size-9 shrink-0 sm:h-9 sm:w-auto sm:px-3"
+            onClick={handleReminder}
+            isPending={sendReminder.isPending}
+            loadingText="Sending…"
+            aria-label="Send reminder"
+          >
+            <Bell className="size-4" />
+            <span className="hidden sm:inline">Send reminder</span>
           </LoadingButton>
         )}
         {isCompleted && canViewCertificate && (
-          <LoadingButton variant="outline" size="sm" onClick={handleDownload} isPending={downloadFinalPdf.isPending} loadingText="Preparing…">
+          <LoadingButton
+            variant="outline"
+            size="icon"
+            className="size-9 shrink-0 sm:h-9 sm:w-auto sm:px-3"
+            onClick={handleDownload}
+            isPending={downloadFinalPdf.isPending}
+            loadingText="Preparing…"
+            aria-label="Download signed PDF"
+          >
             <Download className="size-4" />
-            Download signed PDF
+            <span className="hidden sm:inline">Download signed PDF</span>
           </LoadingButton>
         )}
         {isCompleted && canViewCertificate && (
-          <LoadingButton variant="outline" size="sm" onClick={handleDownloadCertificate} isPending={downloadCertificate.isPending} loadingText="Preparing…">
+          <LoadingButton
+            variant="outline"
+            size="icon"
+            className="size-9 shrink-0 sm:h-9 sm:w-auto sm:px-3"
+            onClick={handleDownloadCertificate}
+            isPending={downloadCertificate.isPending}
+            loadingText="Preparing…"
+            aria-label="Certificate"
+          >
             <FileCheck className="size-4" />
-            Certificate
+            <span className="hidden sm:inline">Certificate</span>
           </LoadingButton>
         )}
         <EnvelopeAiMenu envelopeId={envelope.id} />
-        <Button variant="ghost" size="sm" onClick={onShowAudit}>
-          <History className="size-4" />
-          Audit trail
-        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <AnimatedIconButton icon={EllipsisIcon} iconSize={16} variant="ghost" size="icon" className="size-8" aria-label="Document actions" />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            {canManageTemplates && envelope.templateId != null && (
-              <DropdownMenuItem onClick={handleSaveAsTemplate}>Save as a new template</DropdownMenuItem>
-            )}
+            <DropdownMenuItem onClick={onShowFieldSettings}>
+              <SlidersHorizontal className="size-4" />
+              Field settings
+            </DropdownMenuItem>
+            {canViewAudit ? (
+              <DropdownMenuItem onClick={onShowAudit}>
+                <History className="size-4" />
+                Audit trail
+              </DropdownMenuItem>
+            ) : null}
+            {isDraft && canManageTemplates && envelope.templateId != null ? (
+              <DropdownMenuItem onClick={handleSaveToTemplate} disabled={updateTemplate.isPending}>
+                Save to template
+              </DropdownMenuItem>
+            ) : null}
+            {isDraft && canManageTemplates ? (
+              <DropdownMenuItem onClick={handleSaveAsTemplate}>
+                {envelope.templateId != null ? "Save as a new template" : "Save as template"}
+              </DropdownMenuItem>
+            ) : null}
             {canViewCertificate && (
               <DropdownMenuItem onClick={handleShowCertificate} disabled={!isCompleted}>
                 <ScrollText className="size-4" />

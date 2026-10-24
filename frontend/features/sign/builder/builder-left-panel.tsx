@@ -17,28 +17,55 @@ interface BuilderLeftPanelProps {
   className?: string;
 }
 
-export function BuilderLeftPanel({ envelopeId, documents, recipients, editable, className }: BuilderLeftPanelProps) {
+export function BuilderLeftPanel({
+  envelopeId,
+  documents,
+  recipients,
+  editable,
+  className,
+}: BuilderLeftPanelProps) {
   const { selectedRecipientId } = useBuilder();
 
   return (
-    <div className={cn("flex h-full min-h-0 w-full flex-1 flex-col border-border lg:w-72 lg:flex-none lg:shrink-0 lg:border-r", className)}>
-      <Tabs defaultValue="recipients" className="flex-1 flex flex-col min-h-0">
-        <TabsList className="mx-3 mt-3">
-          <TabsTrigger value="documents">Docs</TabsTrigger>
-          <TabsTrigger value="recipients">Signers</TabsTrigger>
-          <TabsTrigger value="fields">Fields</TabsTrigger>
-        </TabsList>
-        <ScrollArea hideScrollbar className="flex-1 min-h-0">
-          <div className="p-3">
-          <TabsContent value="documents" className="mt-0">
-            <DocumentPanel envelopeId={envelopeId} documents={documents} editable={editable} />
-          </TabsContent>
-          <TabsContent value="recipients" className="mt-0">
-            <RecipientsPanel envelopeId={envelopeId} recipients={recipients} editable={editable} />
-          </TabsContent>
-          <TabsContent value="fields" className="mt-0">
-            <FieldPalette hasRecipient={selectedRecipientId !== null} editable={editable} />
-          </TabsContent>
+    <div
+      className={cn(
+        "flex h-full min-h-0 w-full flex-1 flex-col border-border bg-background lg:w-72 lg:flex-none lg:shrink-0 lg:border-r",
+        className,
+      )}
+    >
+      <Tabs
+        defaultValue="recipients"
+        className="flex min-h-0 flex-1 flex-col gap-0"
+      >
+        <div className="shrink-0 px-3 pt-3">
+          <TabsList className="w-full max-w-full md:w-full" aria-label="Builder panels">
+            <TabsTrigger value="documents">Docs</TabsTrigger>
+            <TabsTrigger value="recipients">Signers</TabsTrigger>
+            <TabsTrigger value="fields">Fields</TabsTrigger>
+          </TabsList>
+        </div>
+        <ScrollArea hideScrollbar className="min-h-0 flex-1">
+          <div className="p-3 pt-4">
+            <TabsContent value="documents" className="mt-0">
+              <DocumentPanel
+                envelopeId={envelopeId}
+                documents={documents}
+                editable={editable}
+              />
+            </TabsContent>
+            <TabsContent value="recipients" className="mt-0">
+              <RecipientsPanel
+                envelopeId={envelopeId}
+                recipients={recipients}
+                editable={editable}
+              />
+            </TabsContent>
+            <TabsContent value="fields" className="mt-0">
+              <FieldPalette
+                hasRecipient={selectedRecipientId !== null}
+                editable={editable}
+              />
+            </TabsContent>
           </div>
         </ScrollArea>
       </Tabs>

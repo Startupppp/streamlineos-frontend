@@ -64,22 +64,28 @@ export function SignSettingsPage() {
       loading={<SignSettingsSkeleton />}
       onRetry={handleRetry}
     >
-      <Tabs defaultValue="general" className="gap-0">
-        <div className="sticky top-0 z-10 bg-background pb-4">
+      <Tabs
+        defaultValue="general"
+        className="flex min-h-0 flex-1 flex-col gap-0"
+      >
+        <div className="sticky top-0 z-10 shrink-0 bg-background pb-4">
           <TabsList>
             <TabsTrigger value="general">General</TabsTrigger>
             <TabsTrigger value="branding">Branding</TabsTrigger>
             <TabsTrigger value="watermarks">Watermarks</TabsTrigger>
           </TabsList>
         </div>
-        <TabsContent value="general" className="space-y-4">
+        <TabsContent value="general" className="mt-0 space-y-4">
           <GeneralSettingsForm />
           <SweepStatusPanel />
         </TabsContent>
-        <TabsContent value="branding">
+        <TabsContent value="branding" className="mt-0">
           <BrandingSettingsForm />
         </TabsContent>
-        <TabsContent value="watermarks">
+        <TabsContent
+          value="watermarks"
+          className="mt-0 flex min-h-0 flex-1 flex-col data-[state=active]:flex"
+        >
           <WatermarkPoliciesPanel />
         </TabsContent>
       </Tabs>

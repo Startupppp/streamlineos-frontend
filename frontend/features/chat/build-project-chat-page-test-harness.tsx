@@ -94,6 +94,8 @@ jest.mock("./use-chat-mobile", () => ({
 export const mockUseEntityChannel = jest.fn();
 export const mockUseCreateEntityChannel = jest.fn();
 export const mockUseCan = jest.fn();
+export const mockUseCanState = jest.fn();
+export const mockUseScope = jest.fn();
 
 jest.mock("@/hooks/api/chat-entities", () => ({
   useEntityChannel: (...args: unknown[]) => mockUseEntityChannel(...args),
@@ -102,6 +104,8 @@ jest.mock("@/hooks/api/chat-entities", () => ({
 
 jest.mock("@/hooks/api/access", () => ({
   useCan: (permission: string) => mockUseCan(permission),
+  useCanState: (permission: string) => mockUseCanState(permission),
+  useScope: (permission: string) => mockUseScope(permission),
 }));
 
 jest.mock("@/lib/get-error-message", () => ({

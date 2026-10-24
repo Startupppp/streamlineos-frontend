@@ -11,7 +11,7 @@ import { FIELD_SELECT_CONTENT_CLASS } from "@/components/ui/field-control";
 import { FILTER_SELECT_TRIGGER } from "@/components/ui/content-fill-panel";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
-import { DataTable, DataTableSkeleton } from "@/components/ui/data-table";
+import { DataTable } from "@/components/ui/data-table";
 import { usePageState } from "@/hooks/api/use-page-state";
 import { SearchInput } from "@/components/ui/search-input";
 import { useDebouncedValue } from "@/hooks/common/use-debounce";
@@ -21,6 +21,7 @@ import { useDeleteSignEnvelope, useSignEnvelopes, type SignEnvelopeSortField } f
 import { CreateEnvelopeDialog } from "@/components/sign/create-envelope-dialog";
 import { EditEnvelopeSheet } from "../components/edit-envelope-sheet";
 import { envelopeColumns, envelopeMobileCard } from "./envelope-list-columns";
+import { EnvelopeListSkeleton } from "./envelope-list-skeleton";
 import type { SignEnvelope } from "@/types/sign";
 import { useCan } from "@/hooks/api/access";
 import { cn } from "@/lib/utils";
@@ -213,10 +214,8 @@ export function EnvelopeList() {
     <PageWrapper
       title="Envelopes"
       subtitle="Every signing request you've sent, organized by status"
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col"
       state={pageState}
-      loading={<DataTableSkeleton rows={8} headers={["Title", "Status", "Sent", "Expires"]} fill />}
+      loading={<EnvelopeListSkeleton />}
       onRetry={handleRetry}
       actions={
         canCreateEnvelope ? (
@@ -250,34 +249,31 @@ export function EnvelopeList() {
         </div>
       }
     >
-      <div className="flex min-h-0 flex-1 flex-col gap-4">
-          <DataTable
-            className="h-full min-h-0 flex-1"
-            data={envelopes}
-            columns={columns}
-            getRowKey={(envelope) => envelope.id}
-            isLoading={isLoading}
-            emptyState={emptyState}
-            onRowClick={handleRowClick}
-            sortState={{
-              fields: SORT_FIELDS,
-              field: sortField,
-              direction: sortDirection,
-              onChange: handleSortChange,
-            }}
-            minWidth="720px"
-            mobileCard={envelopeMobileCard}
-            pagination={{
-              mode: "server",
-              page,
-              pageSize,
-              total,
-              onPageChange: handlePageChange,
-              onPageSizeChange: handlePageSizeChange,
-              pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
-            }}
-          />
-      </div>
+      <DataTable
+        data={envelopes}
+        columns={columns}
+        getRowKey={(envelope) => envelope.id}
+        isLoading={isLoading}
+        emptyState={emptyState}
+        onRowClick={handleRowClick}
+        sortState={{
+          fields: SORT_FIELDS,
+          field: sortField,
+          direction: sortDirection,
+          onChange: handleSortChange,
+        }}
+        minWidth="720px"
+        mobileCard={envelopeMobileCard}
+        pagination={{
+          mode: "server",
+          page,
+          pageSize,
+          total,
+          onPageChange: handlePageChange,
+          onPageSizeChange: handlePageSizeChange,
+          pageSizeOptions: STANDARD_PAGE_SIZE_OPTIONS,
+        }}
+      />
 
       <CreateEnvelopeDialog open={createOpen} onOpenChange={setCreateOpen} />
       {editEnvelope && (

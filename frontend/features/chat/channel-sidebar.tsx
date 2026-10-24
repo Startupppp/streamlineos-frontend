@@ -26,6 +26,7 @@ import {
   type ChatInboxFilter,
 } from "./chat-inbox-filter";
 import type { ChatSearchScope } from "./chat-search-scope";
+import type { ChatCreateDialog } from "./use-chat-home-url";
 
 const NewDMDialog = dynamic(
   () => import("./new-dm-dialog").then((m) => ({ default: m.NewDMDialog })),
@@ -54,8 +55,6 @@ const ChatSearchDialog = dynamic(
     loading: () => <ChatOverlayFallback label="Loading chat search" />,
   },
 );
-
-export type ChatCreateDialog = "dm" | "channel";
 
 interface ChannelSidebarProps {
   activeChannelId: number | null;

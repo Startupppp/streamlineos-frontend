@@ -31,11 +31,13 @@ function SurveyCardSkeleton() {
           <Skeleton className="h-4 w-36 max-w-full" />
         </div>
       </CardContent>
-      <CardFooter className="mt-auto flex-wrap gap-2 border-t border-border/60">
-        <Skeleton className="h-9 w-16 rounded-md" />
-        <Skeleton className="h-9 w-16 rounded-md" />
-        <Skeleton className="h-9 w-20 rounded-md sm:ml-auto" />
+      <CardFooter className="mt-auto flex-wrap items-center gap-1 border-t border-border/60">
         <Skeleton className="size-9 rounded-md" />
+        <Skeleton className="size-9 rounded-md" />
+        <div className="ml-auto flex items-center gap-1">
+          <Skeleton className="size-9 rounded-md" />
+          <Skeleton className="size-9 rounded-md" />
+        </div>
       </CardFooter>
     </Card>
   );

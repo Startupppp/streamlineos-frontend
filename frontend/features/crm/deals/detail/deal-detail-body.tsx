@@ -3,8 +3,10 @@
 import { motion } from "framer-motion";
 import { ChevronRight, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { useMotionVariants } from "@/lib/motion-variants";
+import { useCanState } from "@/hooks/api/access";
 import { RecordDetail, asRecordValue } from "@/components/renderer";
 import { dealRecordFields } from "@/lib/renderer/crm/deal-layout";
 import { useDealLayout } from "@/features/crm/deals/use-deal-layout";
@@ -21,6 +23,7 @@ import { DealStageHistory } from "./deal-stage-history";
 import { DealCustomFieldsCard } from "./deal-custom-fields-card";
 import { DealLinkedProjectCard } from "./deal-linked-project-card";
 import { DealQuotesSection } from "@/features/crm/deals/deal-quotes-section";
+import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
 
 interface DealDetailBodyProps {
   deal: Deal;
@@ -68,6 +71,7 @@ export function DealDetailBody({
   const { staggerContainer, fadeUp } = useMotionVariants();
   const layout = useDealLayout();
   const money = useOrgDisplay();
+  const chatAccess = useCanState("chat:channels:read");
 
   const keyDates = [
     { label: "Created", value: deal.createdAt },
@@ -122,67 +126,89 @@ export function DealDetailBody({
         })}
       </motion.div>
 
-      <div className="grid gap-4 lg:grid-cols-5">
-        <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
-          {isEditing ? (
-            <DealEditForm
-              deal={deal}
-              isPending={isUpdating}
-              onSubmit={onEditSubmit}
-              onCancel={onCancelEdit}
-            />
-          ) : (
-            <>
-              <RecordDetail
-                layout={layout}
-                record={asRecordValue(dealRecordFields(deal))}
-                money={money}
-                showTitle={false}
-              />
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={onClone}
-                disabled={isCloning}
-                className="w-full"
-              >
-                <Copy className="h-3.5 w-3.5 mr-1.5" />
-                Clone Deal
-              </Button>
-              <DealCustomFieldsCard dealId={dealId} customData={deal.customData} />
-            </>
+      <Tabs defaultValue="details">
+        <TabsList>
+          <TabsTrigger value="details">Details</TabsTrigger>
+          {chatAccess !== "denied" && (
+            <TabsTrigger value="chat">Chat</TabsTrigger>
           )}
-        </motion.div>
+        </TabsList>
 
-        <motion.div variants={fadeUp} className="lg:col-span-2 space-y-4">
-          <DealSidebarCards
-            dealId={dealId}
-            dealName={deal.name}
-            assignedTo={deal.assignedTo}
-            lead={deal.lead}
-            client={deal.client}
-            keyDates={keyDates}
-            meetings={meetings}
-            meetingsLoading={meetingsLoading}
-            meetingsError={meetingsError}
-            onRetryMeetings={onRetryMeetings}
-            onQuickActionClick={onQuickActionClick}
-            onAddMeeting={onAddMeeting}
-            onDeleteMeeting={onDeleteMeeting}
-            healthScore={deal.healthScore}
-            nextStep={deal.nextStep}
-            pipelineId={deal.pipelineId}
-          />
-          <DealForecastScoreCard dealId={dealId} />
-          <DealLinkedRecordsCard
-            partyId={deal.partyId}
-            subjectId={deal.subjectId}
-          />
-          <DealLinkedProjectCard dealId={dealId} />
-          <DealStageHistory dealId={dealId} card />
-          <DealQuotesSection dealId={dealId} />
-        </motion.div>
-      </div>
+        <TabsContent value="details">
+          <div className="grid gap-4 lg:grid-cols-5 mt-4">
+            <motion.div variants={fadeUp} className="lg:col-span-3 space-y-4">
+              {isEditing ? (
+                <DealEditForm
+                  deal={deal}
+                  isPending={isUpdating}
+                  onSubmit={onEditSubmit}
+                  onCancel={onCancelEdit}
+                />
+              ) : (
+                <>
+                  <RecordDetail
+                    layout={layout}
+                    record={asRecordValue(dealRecordFields(deal))}
+                    money={money}
+                    showTitle={false}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onClone}
+                    disabled={isCloning}
+                    className="w-full"
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1.5" />
+                    Clone Deal
+                  </Button>
+                  <DealCustomFieldsCard dealId={dealId} customData={deal.customData} />
+                </>
+              )}
+            </motion.div>
+
+            <motion.div variants={fadeUp} className="lg:col-span-2 space-y-4">
+              <DealSidebarCards
+                dealId={dealId}
+                dealName={deal.name}
+                assignedTo={deal.assignedTo}
+                lead={deal.lead}
+                client={deal.client}
+                keyDates={keyDates}
+                meetings={meetings}
+                meetingsLoading={meetingsLoading}
+                meetingsError={meetingsError}
+                onRetryMeetings={onRetryMeetings}
+                onQuickActionClick={onQuickActionClick}
+                onAddMeeting={onAddMeeting}
+                onDeleteMeeting={onDeleteMeeting}
+                healthScore={deal.healthScore}
+                nextStep={deal.nextStep}
+                pipelineId={deal.pipelineId}
+              />
+              <DealForecastScoreCard dealId={dealId} />
+              <DealLinkedRecordsCard
+                partyId={deal.partyId}
+                subjectId={deal.subjectId}
+              />
+              <DealLinkedProjectCard dealId={dealId} />
+              <DealStageHistory dealId={dealId} card />
+              <DealQuotesSection dealId={dealId} />
+            </motion.div>
+          </div>
+        </TabsContent>
+
+        {chatAccess !== "denied" && (
+          <TabsContent value="chat" className="flex flex-col min-h-[520px] mt-4">
+            <RecordConversationPanel
+              entityType="deal"
+              entityId={String(dealId)}
+              emptyDescriptionWrite="This deal does not have an associated chat channel yet. Create one to start the conversation."
+              emptyDescriptionReadOnly="This deal does not have an associated chat channel yet. Ask an admin to link one."
+            />
+          </TabsContent>
+        )}
+      </Tabs>
     </motion.div>
   );
 }

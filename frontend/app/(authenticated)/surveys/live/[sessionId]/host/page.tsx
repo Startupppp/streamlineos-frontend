@@ -8,7 +8,6 @@ import { PageWrapper } from "@/components/ui/page-wrapper";
 import { Button } from "@/components/ui/button";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorState } from "@/components/shared/error-state";
 import { DashboardGate } from "@/components/shared/dashboard-gate";
 import { RequireModule } from "@/components/auth/require-module";
@@ -22,6 +21,7 @@ import {
   useEndLiveSession,
 } from "@/hooks/api/surveys/live-session";
 import { LiveResultBars } from "@/features/surveys/live/live-result-bars";
+import { LiveSessionHostSkeleton } from "@/features/surveys/live/live-session-host-skeleton";
 
 function joinUrlFor(code: string): string {
   if (typeof window === "undefined") return `/live/${code}`;
@@ -67,7 +67,10 @@ export default function LiveSessionHostPage() {
   return (
     <DashboardGate permission="surveys:live:host">
       <RequireModule module="surveys">
-        <PageWrapper title="Live session" backHref={`/surveys/${session?.surveyId ?? ""}`}>
+        <PageWrapper
+          title="Live session"
+          backHref={`/surveys/${session?.surveyId ?? ""}`}
+        >
           <div className="flex flex-1 min-h-0 flex-col">
             {sessionQuery.isError ? (
               <ErrorState
@@ -77,41 +80,32 @@ export default function LiveSessionHostPage() {
                 onRetry={handleSessionRetry}
               />
             ) : isLoading || !session ? (
-              <div className="flex flex-col gap-3">
-                <Card>
-                  <CardContent className="flex flex-wrap items-center gap-3 pt-4">
-                    <div className="space-y-1">
-                      <Skeleton className="h-3 w-16" />
-                      <Skeleton className="h-8 w-40" />
-                    </div>
-                    <Skeleton className="h-9 w-32 rounded-md" />
-                    <Skeleton className="ml-auto h-4 w-16" />
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="flex flex-col gap-3 pt-4">
-                    <div className="flex flex-wrap gap-2">
-                      <Skeleton className="h-9 w-20 rounded-md" />
-                      <Skeleton className="h-9 w-28 rounded-md" />
-                      <Skeleton className="h-9 w-24 rounded-md" />
-                    </div>
-                    <Skeleton className="h-32 w-full rounded-md" />
-                  </CardContent>
-                </Card>
-              </div>
+              <LiveSessionHostSkeleton />
             ) : (
               <div className="flex flex-col gap-3">
                 <Card>
                   <CardContent className="flex flex-wrap items-center gap-3 pt-4">
                     <div>
                       <p className="text-xs text-muted-foreground">Join code</p>
-                      <p className="font-mono text-2xl font-bold tracking-widest">{session.sessionCode}</p>
+                      <p className="font-mono text-2xl font-bold tracking-widest">
+                        {session.sessionCode}
+                      </p>
                     </div>
-                    <AnimatedIconButton icon={CopyIcon} iconSize={14} iconClassName="mr-1.5" variant="outline" size="sm" onClick={handleCopyLink}>
+                    <AnimatedIconButton
+                      icon={CopyIcon}
+                      iconSize={14}
+                      iconClassName="mr-1.5"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleCopyLink}
+                    >
                       Copy join link
                     </AnimatedIconButton>
                     <div className="ml-auto text-sm text-muted-foreground">
-                      {resultsQuery.isError ? "—" : results?.participantCount ?? 0} joined
+                      {resultsQuery.isError
+                        ? "—"
+                        : (results?.participantCount ?? 0)}{" "}
+                      joined
                     </div>
                   </CardContent>
                 </Card>
@@ -119,20 +113,47 @@ export default function LiveSessionHostPage() {
                 <Card>
                   <CardContent className="flex flex-col gap-3 pt-4">
                     <div className="flex flex-wrap gap-2">
-                      {session.status !== "active" && session.status !== "ended" && (
-                        <AnimatedIconButton icon={PlayIcon} iconSize={14} iconClassName="mr-1.5" size="sm" onClick={() => run(start, "start")} disabled={start.isPending}>
-                          Start
-                        </AnimatedIconButton>
-                      )}
+                      {session.status !== "active" &&
+                        session.status !== "ended" && (
+                          <AnimatedIconButton
+                            icon={PlayIcon}
+                            iconSize={14}
+                            iconClassName="mr-1.5"
+                            size="sm"
+                            onClick={() => run(start, "start")}
+                            disabled={start.isPending}
+                          >
+                            Start
+                          </AnimatedIconButton>
+                        )}
                       {session.status === "active" && (
                         <>
-                          <Button size="sm" variant="outline" onClick={() => run(next, "advance")} disabled={next.isPending}>
-                            <SkipForward className="h-3.5 w-3.5" /> Next question
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => run(next, "advance")}
+                            disabled={next.isPending}
+                          >
+                            <SkipForward className="h-3.5 w-3.5" /> Next
+                            question
                           </Button>
-                          <AnimatedIconButton icon={EyeIcon} iconSize={14} iconClassName="mr-1.5" size="sm" variant="outline" onClick={() => run(reveal, "reveal")} disabled={reveal.isPending}>
+                          <AnimatedIconButton
+                            icon={EyeIcon}
+                            iconSize={14}
+                            iconClassName="mr-1.5"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => run(reveal, "reveal")}
+                            disabled={reveal.isPending}
+                          >
                             Reveal
                           </AnimatedIconButton>
-                          <Button size="sm" variant="destructive" onClick={() => run(end, "end")} disabled={end.isPending}>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            onClick={() => run(end, "end")}
+                            disabled={end.isPending}
+                          >
                             <Square className="h-3.5 w-3.5" /> End session
                           </Button>
                         </>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import {
   Sheet,
@@ -11,24 +12,44 @@ import {
   SheetFooter,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { LoadingButton } from "@/components/ui/loading-button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 import { getErrorMessage } from "@/lib/get-error-message";
-import { QUESTION_TYPE_LIST, QUESTION_TYPE_META, type SurveyQuestionType } from "@/features/surveys/shared/question-type-meta";
+import {
+  QUESTION_TYPE_LIST,
+  QUESTION_TYPE_META,
+} from "@/features/surveys/shared/question-type-meta";
 import { ChoicesEditor } from "./choices-editor";
 import { QuestionTypeSettings } from "./question-type-settings";
 import { LogicRulesSection } from "./logic-rules-section";
 import {
   useCreateQuestion,
   usePatchQuestion,
-  type ChoiceInput,
   type SurveyBuilderViewQuestion,
   type SurveyBuilderViewSection,
   type SurveyBuilderLogicRule,
 } from "@/hooks/api/surveys/builder";
+import {
+  questionEditorSchema,
+  type QuestionEditorValues,
+} from "./question-editor-schema";
 
 interface QuestionEditorSheetProps {
   surveyId: number;
@@ -58,67 +79,60 @@ export function QuestionEditorSheet(props: QuestionEditorSheetProps) {
   );
 }
 
-function QuestionEditorSheetBody({ surveyId, sectionId, question, sections, logicRules, open, onOpenChange }: QuestionEditorSheetProps) {
+function QuestionEditorSheetBody({
+  surveyId,
+  sectionId,
+  question,
+  sections,
+  logicRules,
+  open,
+  onOpenChange,
+}: QuestionEditorSheetProps) {
   const createQuestion = useCreateQuestion(surveyId);
   const patchQuestion = usePatchQuestion(surveyId);
-
-  const [title, setTitle] = useState(question?.title ?? "");
-  const [description, setDescription] = useState(question?.description ?? "");
-  const [type, setType] = useState<SurveyQuestionType>(question?.type ?? "short_text");
-  const [required, setRequired] = useState(question?.required ?? false);
-  const [variableName, setVariableName] = useState(question?.variableName ?? "");
-  const [choices, setChoices] = useState<ChoiceInput[]>(() =>
-    question?.choices.map((choice) => ({
-      choiceKey: choice.choiceKey,
-      label: choice.label,
-      value: choice.value ?? undefined,
-      score: choice.score ?? undefined,
-      isCorrect: choice.isCorrect,
-    })) ?? [],
-  );
-  const [settings, setSettings] = useState<Record<string, unknown>>(
-    () => question?.settings ?? {},
-  );
-  const [titleError, setTitleError] = useState<string | null>(null);
-
-  function handleTypeChange(v: string): void {
-    const next = QUESTION_TYPE_LIST.find((candidate) => candidate === v);
-    if (next) setType(next);
-  }
-
+  const form = useForm<QuestionEditorValues>({
+    resolver: zodResolver(questionEditorSchema),
+    defaultValues: {
+      type: question?.type ?? "short_text",
+      title: question?.title ?? "",
+      description: question?.description ?? "",
+      required: question?.required ?? false,
+      variableName: question?.variableName ?? "",
+      choices:
+        question?.choices.map((choice) => ({
+          choiceKey: choice.choiceKey,
+          label: choice.label,
+          value: choice.value ?? undefined,
+          score: choice.score ?? undefined,
+          isCorrect: choice.isCorrect,
+        })) ?? [],
+      settings: question?.settings ?? {},
+    },
+  });
+  const type = form.watch("type");
   const meta = QUESTION_TYPE_META[type];
   const isBusy = createQuestion.isPending || patchQuestion.isPending;
 
-  async function handleSave() {
-    if (!title.trim() && !meta.isContentOnly) {
-      setTitleError("Title is required");
-      return;
-    }
-    setTitleError(null);
+  async function handleSave(values: QuestionEditorValues) {
+    const input = {
+      title: values.title,
+      description: values.description || undefined,
+      type: values.type,
+      required: values.required,
+      variableName: values.variableName || undefined,
+      choices: meta.hasChoices ? values.choices : undefined,
+      settings: values.settings,
+    };
     try {
       if (question) {
         await patchQuestion.mutateAsync({
           questionId: question.id,
-          input: {
-            title,
-            description: description || undefined,
-            type,
-            required,
-            variableName: variableName || undefined,
-            choices: meta.hasChoices ? choices : undefined,
-            settings,
-          },
+          input,
         });
       } else if (sectionId) {
         await createQuestion.mutateAsync({
           sectionId,
-          title,
-          description: description || undefined,
-          type,
-          required,
-          variableName: variableName || undefined,
-          choices: meta.hasChoices ? choices : undefined,
-          settings,
+          ...input,
         });
       }
       onOpenChange(false);
@@ -127,86 +141,195 @@ function QuestionEditorSheetBody({ surveyId, sectionId, question, sections, logi
     }
   }
 
+  function handleCancel() {
+    onOpenChange(false);
+  }
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="flex flex-col gap-0 overflow-hidden p-0 sm:max-w-md">
-        <SheetHeader className="shrink-0 px-4 py-4 border-b">
+        <SheetHeader className="shrink-0 border-b px-4 py-4">
           <SheetTitle>{question ? "Edit question" : "Add question"}</SheetTitle>
         </SheetHeader>
-        <SheetBody className="space-y-4 px-4 py-4">
-          <div className="space-y-1.5">
-            <Label>Type</Label>
-            <Select
-              value={type}
-              onValueChange={handleTypeChange}
-            >
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {QUESTION_TYPE_LIST.map((t) => (
-                  <SelectItem key={t} value={t}>{QUESTION_TYPE_META[t].label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="question-title" className={titleError ? "text-destructive" : undefined}>
-              {meta.isContentOnly ? "Content" : "Question title"}
-            </Label>
-            <Textarea
-              id="question-title"
-              value={title}
-              onChange={(e) => {
-                setTitle(e.target.value);
-                if (titleError) setTitleError(null);
-              }}
-              rows={2}
-              aria-invalid={!!titleError}
-              aria-describedby={titleError ? "question-title-error" : undefined}
-              className={titleError ? "border-destructive focus-visible:ring-destructive" : undefined}
-            />
-            {titleError && (
-              <p id="question-title-error" className="text-xs text-destructive" role="alert">
-                {titleError}
-              </p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label>Description / help text</Label>
-            <Textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={2} />
-          </div>
-          {meta.hasChoices && type !== "matrix" && (
-            <div className="space-y-1.5">
-              <Label>Options</Label>
-              <ChoicesEditor choices={choices} onChange={setChoices} showCorrectAnswer showScore />
-            </div>
-          )}
-          {meta.hasChoices && type === "matrix" && (
-            <div className="space-y-1.5">
-              <Label>Columns</Label>
-              <ChoicesEditor choices={choices} onChange={setChoices} />
-            </div>
-          )}
-          <QuestionTypeSettings type={type} settings={settings} onChange={setSettings} />
-          {!meta.isContentOnly && (
-            <>
-              <div className="space-y-1.5">
-                <Label>Variable name</Label>
-                <Input value={variableName} onChange={(e) => setVariableName(e.target.value)} placeholder="e.g. first_name" />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="question-required">Required</Label>
-                <Switch id="question-required" checked={required} onCheckedChange={setRequired} />
-              </div>
-            </>
-          )}
-          {question && (
-            <LogicRulesSection surveyId={surveyId} question={question} sections={sections} rules={logicRules} />
-          )}
-        </SheetBody>
-        <SheetFooter className="shrink-0 flex-row justify-end gap-2 border-t px-4 py-3">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isBusy}>Save</Button>
-        </SheetFooter>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(handleSave)}
+            className="flex min-h-0 flex-1 flex-col"
+          >
+            <SheetBody className="space-y-4 px-4 py-4">
+              <FormField
+                control={form.control}
+                name="type"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Type</FormLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {QUESTION_TYPE_LIST.map((questionType) => (
+                          <SelectItem key={questionType} value={questionType}>
+                            {QUESTION_TYPE_META[questionType].label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>
+                      {meta.isContentOnly ? "Content" : "Question title"}
+                    </FormLabel>
+                    <FormControl>
+                      <Textarea rows={2} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description / help text</FormLabel>
+                    <FormControl>
+                      <Textarea rows={2} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {meta.hasChoices && type !== "matrix" ? (
+                <FormField
+                  control={form.control}
+                  name="choices"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Options</FormLabel>
+                      <FormControl>
+                        <ChoicesEditor
+                          choices={field.value}
+                          onChange={field.onChange}
+                          showCorrectAnswer
+                          showScore
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+              {meta.hasChoices && type === "matrix" ? (
+                <FormField
+                  control={form.control}
+                  name="choices"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Columns</FormLabel>
+                      <FormControl>
+                        <ChoicesEditor
+                          choices={field.value}
+                          onChange={field.onChange}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              ) : null}
+              <FormField
+                control={form.control}
+                name="settings"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormControl>
+                      <QuestionTypeSettings
+                        type={type}
+                        settings={field.value}
+                        onChange={field.onChange}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              {!meta.isContentOnly ? (
+                <>
+                  <FormField
+                    control={form.control}
+                    name="variableName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Variable name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g. first_name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="required"
+                    render={({ field }) => (
+                      <FormItem className="flex items-center justify-between">
+                        <FormLabel htmlFor="question-required">
+                          Required
+                        </FormLabel>
+                        <FormControl>
+                          <Switch
+                            id="question-required"
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              ) : null}
+              {question ? (
+                <LogicRulesSection
+                  surveyId={surveyId}
+                  question={question}
+                  sections={sections}
+                  rules={logicRules}
+                />
+              ) : null}
+            </SheetBody>
+            <SheetFooter className="shrink-0 w-full flex-row gap-2 border-t px-4 py-3">
+              <LoadingButton
+                type="submit"
+                isPending={isBusy}
+                className="min-w-0 flex-1"
+              >
+                Save
+              </LoadingButton>
+              <Button
+                type="button"
+                variant="outline"
+                className="min-w-0 flex-1"
+                onClick={handleCancel}
+              >
+                Cancel
+              </Button>
+            </SheetFooter>
+          </form>
+        </Form>
       </SheetContent>
     </Sheet>
   );

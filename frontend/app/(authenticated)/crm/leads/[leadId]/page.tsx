@@ -3,10 +3,12 @@
 import { use, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { PageWrapper } from "@/components/ui/page-wrapper";
 import { ErrorState } from "@/components/shared/error-state";
 import { useMotionVariants } from "@/lib/motion-variants";
 import { useLeadDetail, useLeadTimeline, useUpdateLeadStatus } from "@/hooks/api/leads";
+import { useCanState } from "@/hooks/api/access";
 import { toast } from "sonner";
 import { getErrorMessage } from "@/lib/get-error-message";
 
@@ -16,6 +18,7 @@ import { LeadInfoCard } from "@/features/crm/leads/detail/lead-info-card";
 import { LeadQuickActions } from "@/features/crm/leads/detail/lead-quick-actions";
 import { LeadSidebar } from "@/features/crm/leads/detail/lead-sidebar";
 import { LeadQualificationPanel } from "@/features/crm/leads/detail/lead-qualification-panel";
+import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
 import {
   type QuickAction,
   type PipelineStatus,
@@ -45,6 +48,7 @@ export default function LeadDetailPage({
   const [emailDraft, setEmailDraft] = useState(NO_DRAFT);
 
   const updateStatusMutation = useUpdateLeadStatus();
+  const chatAccess = useCanState("chat:channels:read");
 
   const handleStatusChange = useCallback(
     (status: PipelineStatus) => {
@@ -144,39 +148,61 @@ export default function LeadDetailPage({
           />
         </motion.div>
 
-        <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
-          <div className="lg:col-span-3 space-y-4">
-            <LeadInfoCard
-              lead={lead}
-              entityId={leadId}
-              isEditing={isEditing}
-              onEditingDone={handleCancelEdit}
-            />
+        <Tabs defaultValue="overview" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            {chatAccess !== "denied" && (
+              <TabsTrigger value="chat">Chat</TabsTrigger>
+            )}
+          </TabsList>
 
-            <LeadQuickActions
-              leadId={leadId}
-              activeAction={activeAction}
-              onSetActiveAction={setActiveAction}
-              leadName={lead.name}
-              leadEmail={lead.email ?? ""}
-              leadContext={[lead.status, lead.priority, lead.potentialValue]
-                .filter(Boolean)
-                .join(", ")}
-              emailDraftSubject={emailDraft.subject}
-              emailDraftBody={emailDraft.body}
-              onDraftEmail={handleDraftEmail}
-            />
-          </div>
+          <TabsContent value="overview">
+            <motion.div variants={fadeUp} className="grid gap-4 lg:grid-cols-5">
+              <div className="lg:col-span-3 space-y-4">
+                <LeadInfoCard
+                  lead={lead}
+                  entityId={leadId}
+                  isEditing={isEditing}
+                  onEditingDone={handleCancelEdit}
+                />
 
-          <div className="lg:col-span-2 space-y-4">
-            <LeadSidebar
-              lead={lead}
-              timeline={timeline}
-              timelineLoading={timelineLoading}
-            />
-            <LeadQualificationPanel leadId={leadId} customData={lead.customData} />
-          </div>
-        </motion.div>
+                <LeadQuickActions
+                  leadId={leadId}
+                  activeAction={activeAction}
+                  onSetActiveAction={setActiveAction}
+                  leadName={lead.name}
+                  leadEmail={lead.email ?? ""}
+                  leadContext={[lead.status, lead.priority, lead.potentialValue]
+                    .filter(Boolean)
+                    .join(", ")}
+                  emailDraftSubject={emailDraft.subject}
+                  emailDraftBody={emailDraft.body}
+                  onDraftEmail={handleDraftEmail}
+                />
+              </div>
+
+              <div className="lg:col-span-2 space-y-4">
+                <LeadSidebar
+                  lead={lead}
+                  timeline={timeline}
+                  timelineLoading={timelineLoading}
+                />
+                <LeadQualificationPanel leadId={leadId} customData={lead.customData} />
+              </div>
+            </motion.div>
+          </TabsContent>
+
+          {chatAccess !== "denied" && (
+            <TabsContent value="chat" className="flex flex-col min-h-[520px]">
+              <RecordConversationPanel
+                entityType="lead"
+                entityId={String(leadId)}
+                emptyDescriptionWrite="This lead does not have an associated chat channel yet. Create one to start the conversation."
+                emptyDescriptionReadOnly="This lead does not have an associated chat channel yet. Ask an admin to link one."
+              />
+            </TabsContent>
+          )}
+        </Tabs>
       </motion.div>
     </PageWrapper>
   );

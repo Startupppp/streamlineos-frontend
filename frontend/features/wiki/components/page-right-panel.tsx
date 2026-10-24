@@ -4,13 +4,16 @@ import { useState } from "react";
 import { KbFileTextIcon } from "@/features/wiki/lib/kb-icons";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { PageState } from "@/components/shared/page-state";
 import { ErrorReference } from "@/components/shared/error-reference";
 import { usePageState } from "@/hooks/api/use-page-state";
+import { useCanState } from "@/hooks/api/access";
 import { isApiError } from "@/lib/api-envelope";
+import { RecordConversationPanel } from "@/features/chat/record-conversation-page";
 import {
   Sheet,
   SheetBody,
@@ -389,6 +392,7 @@ export default function PageRightPanel({
   const mobileSheetOpen = isMobileControlled
     ? Boolean(mobileOpen)
     : uncontrolledMobileOpen;
+  const chatAccess = useCanState("chat:channels:read");
 
   function handleMobileSheetChange(open: boolean) {
     if (isMobileControlled) onMobileOpenChange?.(open);
@@ -404,13 +408,38 @@ export default function PageRightPanel({
             {title}
           </SheetTitle>
         </SheetHeader>
-        <SheetBody>
-          <PanelContent
-            pageId={pageId}
-            page={page}
-            wordCount={wordCount}
-            onNavigate={onNavigate}
-          />
+        <SheetBody className="flex flex-col p-0">
+          {chatAccess !== "denied" ? (
+            <Tabs defaultValue="details" className="flex flex-col flex-1 min-h-0">
+              <TabsList className="shrink-0 mx-4 mt-3 mb-0 self-start">
+                <TabsTrigger value="details" className="text-xs px-3">Details</TabsTrigger>
+                <TabsTrigger value="chat" className="text-xs px-3">Chat</TabsTrigger>
+              </TabsList>
+              <TabsContent value="details" className="flex-1 overflow-y-auto">
+                <PanelContent
+                  pageId={pageId}
+                  page={page}
+                  wordCount={wordCount}
+                  onNavigate={onNavigate}
+                />
+              </TabsContent>
+              <TabsContent value="chat" className="flex flex-col flex-1 min-h-[400px]">
+                <RecordConversationPanel
+                  entityType="doc_page"
+                  entityId={String(pageId)}
+                  emptyDescriptionWrite="This document does not have an associated chat channel yet. Create one to start the conversation."
+                  emptyDescriptionReadOnly="This document does not have an associated chat channel yet. Ask an admin to link one."
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <PanelContent
+              pageId={pageId}
+              page={page}
+              wordCount={wordCount}
+              onNavigate={onNavigate}
+            />
+          )}
         </SheetBody>
       </SheetContent>
     </Sheet>

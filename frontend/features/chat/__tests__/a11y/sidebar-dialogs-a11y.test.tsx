@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { axeViolationIds, expectNoAxeViolations } from "@/test-utils/axe";
-import type { ChatCreateDialog } from "../../channel-sidebar";
+import type { ChatCreateDialog } from "../../use-chat-home-url";
 import type { ChatSearchScope } from "../../chat-search-scope";
 
 jest.mock("next/navigation", () => ({

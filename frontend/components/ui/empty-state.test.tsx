@@ -263,4 +263,10 @@ describe("EmptyState — xs illustration size", () => {
     const box = screen.getByTestId("state-illustration").parentElement;
     expect(box).toHaveClass("size-24");
   });
+
+  it("wraps the illustration in a size-64 box when illustrationSize is lg, for full-height empty regions", () => {
+    render(<EmptyState illustrationSize="lg" title="test" />);
+    const box = screen.getByTestId("state-illustration").parentElement;
+    expect(box).toHaveClass("size-64");
+  });
 });

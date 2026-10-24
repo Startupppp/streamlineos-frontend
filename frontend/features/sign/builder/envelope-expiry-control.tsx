@@ -66,9 +66,18 @@ export function EnvelopeExpiryControl({ envelope }: { envelope: SignEnvelope }) 
     return (
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="text-xs text-muted-foreground tabular-nums whitespace-nowrap">
-            {envelope.expiresAt ? label : "Expiry not extendable"}
-          </span>
+          <button
+            type="button"
+            className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground sm:size-auto sm:px-1.5"
+            aria-label={
+              envelope.expiresAt ? label : "Expiry not extendable"
+            }
+          >
+            <CalendarClock className="size-3.5 sm:hidden" aria-hidden="true" />
+            <span className="hidden text-xs tabular-nums whitespace-nowrap sm:inline">
+              {envelope.expiresAt ? label : "Expiry not extendable"}
+            </span>
+          </button>
         </TooltipTrigger>
         <TooltipContent>{notExtendableReason(envelope.status)}</TooltipContent>
       </Tooltip>

@@ -7,8 +7,6 @@ export default function SignDashboardLoading() {
     <PageWrapper
       title="Sign OS"
       subtitle="Envelopes, signatures, and completion status at a glance"
-      noInternalScroll
-      contentClassName="flex min-h-0 flex-1 flex-col overflow-y-auto scrollbar-hide"
       actions={<Skeleton className="h-9 w-36 rounded-md" />}
     >
       <SignDashboardSkeleton />

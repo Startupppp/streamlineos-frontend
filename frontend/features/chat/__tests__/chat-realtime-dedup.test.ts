@@ -2,6 +2,7 @@ import type { InfiniteData } from "@tanstack/react-query";
 import type { Message, MessagesPage } from "@/types/chat";
 import {
   flattenMessagePages,
+  keepConfirmedMessages,
   mergeInboundMessage,
 } from "../message-page-merge";
 
@@ -136,5 +137,40 @@ describe("mergeInboundMessage — the realtime handler's dedup", () => {
     expect(idsIn(mergeInboundMessage(data, makeMsg(99), "key-z"))).toEqual([
       1, 99,
     ]);
+  });
+});
+
+describe("clientKey dedup — optimistic + realtime + refetch yields exactly one message", () => {
+  it("realtime echo replaces the optimistic, then refetch yields the same single row", () => {
+    let data = makeInfiniteData([
+      { messages: [makeMsg(1), makeMsg(-1, { clientKey: "key-a" })] },
+    ]);
+
+    data = mergeInboundMessage(data, makeMsg(42, { clientKey: "key-a" }), "key-a");
+    expect(idsIn(data)).toEqual([1, 42]);
+
+    const serverRefetch = makeInfiniteData([{ messages: [makeMsg(1), makeMsg(42)] }]);
+    const final = keepConfirmedMessages(data, serverRefetch) as InfiniteData<MessagesPage>;
+    expect(idsIn(final)).toEqual([1, 42]);
+  });
+
+  it("refetch alone (no realtime) drops the optimistic row and installs the confirmed one", () => {
+    const previous = makeInfiniteData([
+      { messages: [makeMsg(1), makeMsg(-1, { clientKey: "key-b" })] },
+    ]);
+    const serverRefetch = makeInfiniteData([{ messages: [makeMsg(1), makeMsg(43)] }]);
+    const final = keepConfirmedMessages(previous, serverRefetch) as InfiniteData<MessagesPage>;
+    expect(idsIn(final)).toEqual([1, 43]);
+    expect(idsIn(final).includes(-1)).toBe(false);
+  });
+
+  it("messages arrived via realtime after the refetch snapshot are carried forward", () => {
+    const previous = makeInfiniteData([
+      { messages: [makeMsg(1), makeMsg(50), makeMsg(51)] },
+    ]);
+    const serverRefetch = makeInfiniteData([{ messages: [makeMsg(1)] }]);
+    const final = keepConfirmedMessages(previous, serverRefetch) as InfiniteData<MessagesPage>;
+    expect(idsIn(final)).toContain(50);
+    expect(idsIn(final)).toContain(51);
   });
 });

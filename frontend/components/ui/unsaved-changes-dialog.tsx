@@ -65,10 +65,7 @@ export function UnsavedChangesDialog({
             type="button"
             variant="outline"
             className="h-10 w-full text-destructive hover:bg-destructive/10 hover:text-destructive sm:h-9 sm:w-auto"
-            onClick={() => {
-              onOpenChange(false);
-              onDiscard();
-            }}
+            onClick={onDiscard}
             disabled={isSaving}
           >
             {discardLabel}

@@ -17,18 +17,8 @@ import type { ChatSendResponse } from "@/hooks/api/chat-schema";
 
 export const CHAT_SEND_MUTATION_KEY = ["chat", "messages", "send"];
 
-const mintedClientKeys = new WeakMap<object, string>();
-
-export function sendClientKey(variables: { clientKey?: string }): string {
-  if (variables.clientKey) return variables.clientKey;
-  const existing = mintedClientKeys.get(variables);
-  if (existing) return existing;
-  const minted =
-    typeof globalThis.crypto?.randomUUID === "function"
-      ? globalThis.crypto.randomUUID()
-      : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-  mintedClientKeys.set(variables, minted);
-  return minted;
+export function sendClientKey(variables: { clientKey: string }): string {
+  return variables.clientKey;
 }
 
 export function isTransientSendError(error: unknown): boolean {

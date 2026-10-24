@@ -109,7 +109,7 @@ export interface SendMessageInput {
   replyToId?: number;
   attachments?: AttachmentInput[];
   metadata?: MessageMetadata;
-  clientKey?: string;
+  clientKey: string;
 }
 
 export interface EditMessageInput {
