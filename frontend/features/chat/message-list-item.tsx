@@ -9,6 +9,7 @@ interface MessageItemProps {
   isOwn: boolean;
   showHeader: boolean;
   currentUserId: string;
+  readReceipt?: string;
   editingMessageId: number | undefined;
   editInput: string;
   pinnedMessageIds: Set<number>;
@@ -39,6 +40,7 @@ export const MessageItem = memo(function MessageItem({
   isOwn,
   showHeader,
   currentUserId,
+  readReceipt,
   editingMessageId,
   editInput,
   pinnedMessageIds,
@@ -92,6 +94,7 @@ export const MessageItem = memo(function MessageItem({
       isOwn={isOwn}
       showSender={showHeader}
       currentUserId={currentUserId}
+      readReceipt={readReceipt}
       isEditing={editingMessageId === msg.id}
       editInput={editingMessageId === msg.id ? editInput : ""}
       isPinned={pinnedMessageIds.has(msg.id)}

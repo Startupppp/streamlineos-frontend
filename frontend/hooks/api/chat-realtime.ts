@@ -14,6 +14,7 @@ import {
 import { chatChannelName } from "@/lib/ably-channels";
 import {
   applyDeletedUnread,
+  applyPeerRead,
   invalidateChatReconnect,
 } from "@/hooks/api/chat-read-cache";
 import {
@@ -26,6 +27,7 @@ import {
   patchChatMessage,
 } from "@/hooks/api/chat-message-cache";
 import {
+  patchChannelDetail,
   patchChannelRow,
   patchLastMessageAfterDelete,
   patchLastMessageIfLatest,
@@ -52,6 +54,7 @@ import {
   messageEntitiesUpdatedPayloadSchema,
   messageDeletedPayloadSchema,
   reactionUpdatedPayloadSchema,
+  memberReadPayloadSchema,
 } from "./chat-realtime-schema";
 import { useChatTyping } from "./chat-realtime-typing";
 
@@ -60,6 +63,7 @@ const CHAT_EVENTS = [
   "message:updated",
   "message:deleted",
   "reaction:updated",
+  "member:read",
 ] as const;
 type ChatEvent = (typeof CHAT_EVENTS)[number];
 
@@ -199,11 +203,20 @@ export function useChatRealtime(
       patchChatMessage(queryClient, channelId, messageId, { reactions });
     };
 
+    const memberReadHandler = (msg: InboundMessage) => {
+      const parsed = memberReadPayloadSchema.safeParse(msg.data);
+      if (!parsed.success || parsed.data.userId === currentUserId) return;
+      patchChannelDetail(queryClient, channelId, (detail) =>
+        applyPeerRead(detail, parsed.data),
+      );
+    };
+
     const handlers: Record<ChatEvent, (msg: InboundMessage) => void> = {
       message: messageHandler,
       "message:updated": messageUpdatedHandler,
       "message:deleted": messageDeletedHandler,
       "reaction:updated": reactionUpdatedHandler,
+      "member:read": memberReadHandler,
     };
 
     const guardedHandlers = new Map<ChatEvent, (msg: InboundMessage) => void>();

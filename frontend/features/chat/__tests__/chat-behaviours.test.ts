@@ -8,6 +8,7 @@ import {
 import {
   chatChannelReadEnabled,
   resolveFirstUnreadIndex,
+  resolveReadReceipt,
 } from "../chat-read-position";
 
 function makeMsg(id: number, createdAt: string): Message {
@@ -230,5 +231,33 @@ describe("ITEM C — channel/thread access suppression", () => {
 
     for (const [canRead, channelId, expected] of cases)
       expect(chatChannelReadEnabled(canRead, channelId)).toBe(expected);
+  });
+});
+
+describe("read receipts on own messages", () => {
+  const sent = { channelPosition: 5, createdAt: "2026-10-24T08:00:00.000Z" };
+  const peer = (lastReadPosition: number, lastReadAt = "2026-10-24T08:05:00.000Z") => ({
+    userId: `u${lastReadPosition}`,
+    lastReadPosition,
+    lastReadAt,
+  });
+
+  it("reads Delivered until a peer has read up to the message", () => {
+    expect(resolveReadReceipt(sent, [peer(4)], "DIRECT")).toBe("Delivered");
+    expect(resolveReadReceipt(sent, undefined, "DIRECT")).toBe("Delivered");
+  });
+
+  it("reads Seen in a DM once the other person's position reaches the message", () => {
+    expect(resolveReadReceipt(sent, [peer(5)], "DIRECT")).toBe("Seen");
+  });
+
+  it("counts readers in a group channel", () => {
+    expect(resolveReadReceipt(sent, [peer(5), peer(9), peer(2)], "GROUP")).toBe("Seen by 2");
+  });
+
+  it("falls back to read time for a message whose position the client has not learned yet", () => {
+    const live = { channelPosition: undefined, createdAt: "2026-10-24T08:00:00.000Z" };
+    expect(resolveReadReceipt(live, [peer(1, "2026-10-24T08:01:00.000Z")], "DIRECT")).toBe("Seen");
+    expect(resolveReadReceipt(live, [peer(1, "2026-10-24T07:59:00.000Z")], "DIRECT")).toBe("Delivered");
   });
 });

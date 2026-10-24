@@ -7,6 +7,7 @@ import {
   messageEntitiesUpdatedPayloadSchema,
   messageDeletedPayloadSchema,
   reactionUpdatedPayloadSchema,
+  memberReadPayloadSchema,
 } from "@/hooks/api/chat-realtime-schema";
 
 type JsonSchema = { properties?: Record<string, JsonSchema>; required?: string[]; anyOf?: JsonSchema[]; type?: string };
@@ -19,6 +20,7 @@ const FRONTEND: Record<string, z.ZodType> = {
   "message.entities-updated": messageEntitiesUpdatedPayloadSchema,
   "message.deleted": messageDeletedPayloadSchema,
   "reaction.updated": reactionUpdatedPayloadSchema,
+  "member.read": memberReadPayloadSchema,
 };
 
 function nullable(schema: JsonSchema | undefined): boolean {
@@ -41,7 +43,7 @@ describe("frontend realtime schemas accept everything the backend emits", () => 
   const backend = JSON.parse(fs.readFileSync(SNAPSHOT, "utf8")) as Record<string, { schema: JsonSchema }>;
 
   it("covers every chat-scope event kind the backend snapshot publishes", () => {
-    expect(Object.keys(backend).filter((kind) => kind.startsWith("message.") || kind.startsWith("reaction.")).sort()).toEqual(
+    expect(Object.keys(backend).filter((kind) => kind.startsWith("message.") || kind.startsWith("reaction.") || kind.startsWith("member.")).sort()).toEqual(
       Object.keys(FRONTEND).sort(),
     );
   });

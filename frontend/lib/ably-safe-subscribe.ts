@@ -18,6 +18,7 @@ const SERVER_AUTHORED_EVENTS: ReadonlySet<string> = new Set([
   "message:updated",
   "message:deleted",
   "reaction:updated",
+  "member:read",
   "huddle:started",
   "huddle:user_joined",
   "huddle:user_left",

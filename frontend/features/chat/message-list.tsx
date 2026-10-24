@@ -8,6 +8,7 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import type { Message } from "@/types/chat";
 import { MessageItem } from "./message-list-item";
+import { resolveReadReceipt, type PeerRead } from "./chat-read-position";
 import { useOlderHistoryLoader } from "./use-chat-scroll";
 import { ErrorState } from "@/components/shared/error-state";
 import { EntityActionsProvider } from "./entity-actions-context";
@@ -34,6 +35,7 @@ interface MessageListProps {
   channelId: number;
   displayName: string;
   channelType: string | undefined;
+  peerReads?: readonly PeerRead[];
   editingMessage: Message | null;
   editInput: string;
   pinnedMessageIds: Set<number>;
@@ -126,6 +128,7 @@ export function MessageList({
   channelId,
   displayName,
   channelType,
+  peerReads,
   editingMessage,
   editInput,
   pinnedMessageIds,
@@ -318,6 +321,11 @@ export function MessageList({
                               isOwn={isOwn}
                               showHeader={showHeader}
                               currentUserId={currentUserId}
+                              readReceipt={
+                                isOwn
+                                  ? resolveReadReceipt(msg, peerReads, channelType)
+                                  : undefined
+                              }
                               editingMessageId={editingMessage?.id}
                               editInput={editInput}
                               pinnedMessageIds={pinnedMessageIds}

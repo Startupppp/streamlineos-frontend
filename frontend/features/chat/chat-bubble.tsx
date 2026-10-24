@@ -27,6 +27,7 @@ export function ChatBubble({
   isEditing,
   editInput,
   currentUserId,
+  readReceipt,
   isPinned,
   replyCount,
   onEditInputChange,
@@ -52,6 +53,7 @@ export function ChatBubble({
   isEditing: boolean;
   editInput: string;
   currentUserId: string;
+  readReceipt?: string;
   isPinned?: boolean;
   replyCount?: number;
   onEditInputChange: (v: string) => void;
@@ -241,6 +243,7 @@ export function ChatBubble({
               isOwn={isOwn}
               isPinned={isPinned}
               isPendingSend={isPendingSend}
+              readReceipt={readReceipt}
             />
           </div>
         )}

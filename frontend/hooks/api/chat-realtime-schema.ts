@@ -45,4 +45,11 @@ export const reactionUpdatedPayloadSchema = z.object({
   reactions: z.record(z.string(), z.array(z.string())),
 });
 
+export const memberReadPayloadSchema = z.object({
+  channelId: z.number(),
+  userId: z.string(),
+  lastReadPosition: z.number(),
+  lastReadAt: z.string(),
+});
+
 export type MessagePayload = z.infer<typeof messagePayloadSchema>;

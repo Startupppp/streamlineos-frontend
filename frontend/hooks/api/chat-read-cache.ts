@@ -72,6 +72,16 @@ function newestPersistedAt(queryClient: QueryClient, channelId: number): string 
   return newest;
 }
 
+export function applyPeerRead(
+  detail: ChatChannelDetailWire,
+  read: { userId: string; lastReadPosition: number; lastReadAt: string },
+): ChatChannelDetailWire {
+  const others = (detail.peerReads ?? []).filter((peer) => peer.userId !== read.userId);
+  const known = detail.peerReads?.find((peer) => peer.userId === read.userId);
+  if (known && known.lastReadPosition >= read.lastReadPosition) return detail;
+  return { ...detail, peerReads: [...others, read] };
+}
+
 export function applyOptimisticRead(
   queryClient: QueryClient,
   channelId: number,

@@ -7,6 +7,7 @@ import {
 import {
   applyDeletedUnread,
   applyOptimisticUnread,
+  applyPeerRead,
   invalidateChatReconnect,
   patchOwnMember,
   patchUnreadTotal,
@@ -277,5 +278,23 @@ describe("sidebar lastMessage preview patches", () => {
     ]);
     patchLastMessageAfterDelete(client, EDITED_CHANNEL, 20);
     expect(firstRow(client)?.lastMessage?.content).toBe("earlier");
+  });
+});
+
+describe("applyPeerRead", () => {
+  const detail = { id: 7, members: [], peerReads: [{ userId: "peer", lastReadPosition: 3, lastReadAt: "2026-10-24T08:00:00.000Z" }] } as unknown as ChatChannelDetailWire;
+
+  it("moves a peer's read position forward", () => {
+    const next = applyPeerRead(detail, { userId: "peer", lastReadPosition: 6, lastReadAt: "2026-10-24T08:10:00.000Z" });
+    expect(next.peerReads).toEqual([{ userId: "peer", lastReadPosition: 6, lastReadAt: "2026-10-24T08:10:00.000Z" }]);
+  });
+
+  it("ignores a stale event that would move a peer backwards", () => {
+    expect(applyPeerRead(detail, { userId: "peer", lastReadPosition: 2, lastReadAt: "2026-10-24T07:00:00.000Z" })).toBe(detail);
+  });
+
+  it("adds a peer the cached detail did not know about", () => {
+    const next = applyPeerRead(detail, { userId: "new", lastReadPosition: 1, lastReadAt: "2026-10-24T08:20:00.000Z" });
+    expect(next.peerReads?.map((peer) => peer.userId)).toEqual(["peer", "new"]);
   });
 });

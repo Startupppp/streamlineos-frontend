@@ -19,6 +19,15 @@ export const chatChannelDetailContract = z.object({
   updatedAt: z.string(),
   memberCount: z.number().int().optional(),
   members: z.array(chatChannelMemberContract),
+  peerReads: z
+    .array(
+      z.object({
+        userId: z.string(),
+        lastReadPosition: z.number().int(),
+        lastReadAt: z.string(),
+      }),
+    )
+    .optional(),
 });
 
 export type ChatChannelDetailWire = z.infer<typeof chatChannelDetailContract>;

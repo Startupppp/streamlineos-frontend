@@ -206384,6 +206384,11 @@
                       "optionId"
                     ],
                     "additionalProperties": false
+                  },
+                  "timeZone": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64
                   }
                 },
                 "required": [
@@ -207639,6 +207644,31 @@
                               "user"
                             ]
                           }
+                        },
+                        "peerReads": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "userId": {
+                                "type": "string"
+                              },
+                              "lastReadPosition": {
+                                "type": "integer",
+                                "minimum": -9007199254740991,
+                                "maximum": 9007199254740991
+                              },
+                              "lastReadAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "userId",
+                              "lastReadPosition",
+                              "lastReadAt"
+                            ]
+                          }
                         }
                       },
                       "required": [
@@ -207657,7 +207687,8 @@
                         "lastMessageAt",
                         "createdAt",
                         "updatedAt",
-                        "members"
+                        "members",
+                        "peerReads"
                       ]
                     }
                   },
@@ -210273,6 +210304,9 @@
                                           }
                                         ]
                                       },
+                                      "isDeleted": {
+                                        "type": "boolean"
+                                      },
                                       "senderId": {
                                         "anyOf": [
                                           {
@@ -210327,6 +210361,7 @@
                                     "required": [
                                       "id",
                                       "content",
+                                      "isDeleted",
                                       "senderId",
                                       "sender"
                                     ],
@@ -211244,6 +211279,9 @@
                                           }
                                         ]
                                       },
+                                      "isDeleted": {
+                                        "type": "boolean"
+                                      },
                                       "senderId": {
                                         "anyOf": [
                                           {
@@ -211298,6 +211336,7 @@
                                     "required": [
                                       "id",
                                       "content",
+                                      "isDeleted",
                                       "senderId",
                                       "sender"
                                     ],
@@ -211954,6 +211993,9 @@
                                         }
                                       ]
                                     },
+                                    "isDeleted": {
+                                      "type": "boolean"
+                                    },
                                     "senderId": {
                                       "anyOf": [
                                         {
@@ -212008,6 +212050,7 @@
                                   "required": [
                                     "id",
                                     "content",
+                                    "isDeleted",
                                     "senderId",
                                     "sender"
                                   ],
@@ -212285,6 +212328,9 @@
                                           }
                                         ]
                                       },
+                                      "isDeleted": {
+                                        "type": "boolean"
+                                      },
                                       "senderId": {
                                         "anyOf": [
                                           {
@@ -212339,6 +212385,7 @@
                                     "required": [
                                       "id",
                                       "content",
+                                      "isDeleted",
                                       "senderId",
                                       "sender"
                                     ],
@@ -213068,6 +213115,9 @@
                                           }
                                         ]
                                       },
+                                      "isDeleted": {
+                                        "type": "boolean"
+                                      },
                                       "senderId": {
                                         "anyOf": [
                                           {
@@ -213122,6 +213172,7 @@
                                     "required": [
                                       "id",
                                       "content",
+                                      "isDeleted",
                                       "senderId",
                                       "sender"
                                     ],
@@ -219043,6 +219094,9 @@
                                               }
                                             ]
                                           },
+                                          "isDeleted": {
+                                            "type": "boolean"
+                                          },
                                           "senderId": {
                                             "anyOf": [
                                               {
@@ -219097,6 +219151,7 @@
                                         "required": [
                                           "id",
                                           "content",
+                                          "isDeleted",
                                           "senderId",
                                           "sender"
                                         ],

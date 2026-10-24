@@ -10,9 +10,10 @@ interface ChatBubbleMetaProps {
   isOwn: boolean;
   isPinned?: boolean;
   isPendingSend: boolean;
+  readReceipt?: string;
 }
 
-export function ChatBubbleMeta({ message, isOwn, isPinned, isPendingSend }: ChatBubbleMetaProps) {
+export function ChatBubbleMeta({ message, isOwn, isPinned, isPendingSend, readReceipt = "Delivered" }: ChatBubbleMetaProps) {
   const isDelivered = message.id > 0;
   return (
     <div
@@ -46,11 +47,14 @@ export function ChatBubbleMeta({ message, isOwn, isPinned, isPendingSend }: Chat
         </span>
       )}
       {isOwn && isDelivered && (
-        <CheckCheck
-          className="h-3.5 w-3.5 text-primary-foreground/70"
-          aria-label="Delivered"
-          role="img"
-        />
+        <span className="flex items-center gap-0.5 text-dense text-primary-foreground/80" title={readReceipt}>
+          <CheckCheck
+            className={cn("h-3.5 w-3.5", readReceipt === "Delivered" ? "text-primary-foreground/70" : "text-primary-foreground")}
+            aria-label={readReceipt}
+            role="img"
+          />
+          {readReceipt === "Delivered" ? null : <span>{readReceipt}</span>}
+        </span>
       )}
       {isPinned && isDelivered && (
         <Pin
