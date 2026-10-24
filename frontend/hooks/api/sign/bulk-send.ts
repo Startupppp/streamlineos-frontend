@@ -16,12 +16,9 @@ export interface CreateBulkSendJobInput {
   dryRun?: boolean;
 }
 
-export interface BulkSendJobResult {
-  job: SignBulkSendJob;
-  preview?: unknown;
-  dryRun: boolean;
-  queued?: boolean;
-}
+export type BulkSendJobResult =
+  | { dryRun: true; preview: unknown; totalCount: number; validCount: number; failedCount: number }
+  | { job: SignBulkSendJob; preview?: unknown; dryRun: boolean; queued?: boolean };
 
 const signBulkJobCreateContract = lazyContract(() =>
   import("@/hooks/api/sign/sign-schema").then((m) => m.signBulkJobCreateContract),
@@ -59,6 +56,7 @@ export function useCreateBulkSendJob() {
         headers: { "Idempotency-Key": idempotencyKey },
       }, signBulkJobCreateContract),
     onSuccess: (data) => {
+      if (!("job" in data)) return;
       qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.job(data.job.id) });
       qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signBulkSend.all });
     },

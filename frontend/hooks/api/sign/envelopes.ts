@@ -83,7 +83,16 @@ function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, id: number) {
   qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.audit(id) });
 }
 
-export function useSignEnvelopes(params?: { status?: string; page?: number; limit?: number }) {
+export type SignEnvelopeSortField = "title" | "status" | "sentAt" | "expiresAt";
+
+export function useSignEnvelopes(params?: {
+  status?: string;
+  search?: string;
+  sort?: SignEnvelopeSortField;
+  direction?: "asc" | "desc";
+  page?: number;
+  limit?: number;
+}) {
   return useGatedQuery("sign:envelope:view", {
     queryKey: growthAndSignQueryKeys.signEnvelopes.list(params),
     queryFn: ({ signal }) =>

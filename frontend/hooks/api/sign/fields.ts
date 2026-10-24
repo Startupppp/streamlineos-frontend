@@ -2,10 +2,11 @@
 
 import { useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/lib/api-client";
-import { lazyContract } from "@/lib/api-envelope";
+import { getApiErrorCode, lazyContract } from "@/lib/api-envelope";
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignField, SignFieldType } from "@/types/sign";
 import { useAuthorizedMutation } from "@/hooks/api/authorized-mutation";
+import { useAuthorizedIdempotentMutation } from "@/hooks/api/inventory/use-idempotent-mutation";
 
 export interface CreateSignFieldInput {
   documentId: number;
@@ -33,15 +34,21 @@ const signSuccessContract = lazyContract(() =>
   import("@/hooks/api/sign/sign-schema").then((m) => m.signSuccessContract),
 );
 
+function retryAfterNetworkError(failureCount: number, error: Error): boolean {
+  return failureCount < 2 && getApiErrorCode(error) === "NETWORK_ERROR";
+}
+
 function invalidateEnvelope(qc: ReturnType<typeof useQueryClient>, envelopeId: number) {
   qc.invalidateQueries({ queryKey: growthAndSignQueryKeys.signEnvelopes.detail(envelopeId) });
 }
 
 export function useAddSignField(envelopeId: number) {
   const qc = useQueryClient();
-  return useAuthorizedMutation("sign:envelope:create", {
+  return useAuthorizedIdempotentMutation<SignField, Error, CreateSignFieldInput>("sign:envelope:create", {
     mutationKey: ["signFields", "add", envelopeId],
-    mutationFn: (input: CreateSignFieldInput) => apiClient.post<SignField>(`/sign/envelopes/${envelopeId}/fields`, input, undefined, signFieldMutationContract),
+    mutationFn: (input, idempotencyKey) =>
+      apiClient.post<SignField>(`/sign/envelopes/${envelopeId}/fields`, input, { headers: { "Idempotency-Key": idempotencyKey } }, signFieldMutationContract),
+    retry: retryAfterNetworkError,
     onSuccess: () => invalidateEnvelope(qc, envelopeId),
   });
 }

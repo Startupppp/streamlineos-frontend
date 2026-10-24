@@ -324,6 +324,13 @@ describe("BuilderTopBar expiry control", () => {
     expect(screen.getByText(/^Expires \d{1,2} Mar 2026$/)).toBeInTheDocument();
   });
 
+  it("shows no expiry at all on a voided envelope, which has no signing window", () => {
+    grantedKeys.add("sign:envelope:correct");
+    renderTopBar("voided", { expiresAt: "2026-03-20T18:29:59.999Z" });
+
+    expect(screen.queryByText(/Expires/)).not.toBeInTheDocument();
+  });
+
   it("hides the picker from a role without the correct permission", () => {
     renderTopBar("sent", { expiresAt: "2026-03-20T18:29:59.999Z" });
 

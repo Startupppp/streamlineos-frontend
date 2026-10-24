@@ -96,7 +96,9 @@ export function CreateBulkSendDialog({ open, onOpenChange }: { open: boolean; on
         dryRun,
       });
       toast.success(
-        dryRun
+        "validCount" in result
+          ? `Dry run: ${result.validCount}/${result.totalCount} rows valid`
+          : result.dryRun
           ? `Dry run: ${result.job.successCount}/${result.job.totalCount} rows valid`
           : `Bulk send queued: ${result.job.totalCount} rows will be sent in the background`,
       );

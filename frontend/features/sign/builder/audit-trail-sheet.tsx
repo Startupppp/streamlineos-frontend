@@ -4,6 +4,8 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useSignEnvelopeAudit } from "@/hooks/api/sign/envelopes";
+import { useOrgTimeZone } from "@/hooks/api/org-display";
+import { formatDateTimeInOrgTz, resolveOrgTimeZone } from "@/lib/date-utils";
 
 function formatEventType(eventType: string): string {
   return eventType.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
@@ -11,6 +13,8 @@ function formatEventType(eventType: string): string {
 
 export function AuditTrailSheet({ envelopeId, open, onOpenChange }: { envelopeId: number; open: boolean; onOpenChange: (open: boolean) => void }) {
   const { data: events, isLoading } = useSignEnvelopeAudit(open ? envelopeId : undefined);
+  const orgTimeZone = useOrgTimeZone();
+  const zone = resolveOrgTimeZone(orgTimeZone);
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -33,7 +37,7 @@ export function AuditTrailSheet({ envelopeId, open, onOpenChange }: { envelopeId
                 <li key={event.id} className="border-b border-border/60 pb-3 last:border-0">
                   <p className="text-sm font-medium">{formatEventType(event.eventType)}</p>
                   <p className="text-xs text-muted-foreground">
-                    {event.actorName ?? "System"} {event.actorEmail ? `(${event.actorEmail})` : ""} · {new Date(event.createdAt).toLocaleString()}
+                    {event.actorName ?? "System"} {event.actorEmail ? `(${event.actorEmail})` : ""} · {formatDateTimeInOrgTz(event.createdAt, orgTimeZone)} ({zone})
                   </p>
                   {event.ipAddress && <p className="text-xs text-muted-foreground">IP: {event.ipAddress}</p>}
                 </li>
