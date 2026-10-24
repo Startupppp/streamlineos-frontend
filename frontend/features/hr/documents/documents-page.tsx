@@ -298,7 +298,7 @@ export function DocumentsPage() {
           sourceEntityType="document"
           sourceEntityId={signatureDocument ? String(signatureDocument.id) : undefined}
           dialogTitle="Send for e-signature"
-          dialogDescription="Creates a SignOS envelope linked to this document — you'll upload the PDF and add signers next."
+          dialogDescription="Creates a Sign OS envelope linked to this document — you'll upload the PDF and add signers next."
         />
         <LetterGenerationSheet
           open={isLetterGenOpen}

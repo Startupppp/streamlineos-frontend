@@ -13,6 +13,7 @@ import {
 import { growthAndSignQueryKeys } from "@/lib/query-keys/growth-and-sign";
 import type { SignPublicSession } from "@/types/sign";
 import { withCorrelation } from "@/lib/observability/with-correlation";
+import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 
 const signPublicSessionContract = lazyContract(() =>
   import("@/hooks/api/sign/sign-schema").then((m) => m.signPublicSessionContract),
@@ -70,6 +71,7 @@ async function publicPost<T>(path: string, body: unknown, fallback: string): Pro
 
 export function useSignPublicSession(token: string) {
   return useQuery({
+    ...INLINE_READ_ERROR,
     queryKey: growthAndSignQueryKeys.signPublic.session(token),
     queryFn: () =>
       publicGet<SignPublicSession>(

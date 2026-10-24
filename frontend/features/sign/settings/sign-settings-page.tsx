@@ -9,7 +9,7 @@ import { SweepStatusPanel } from "./sweep-status-panel";
 
 export function SignSettingsPage() {
   return (
-    <PageWrapper title="Settings" subtitle="Tenant-wide defaults, branding, and watermark policy for SignOS">
+    <PageWrapper title="Settings" subtitle="Tenant-wide defaults, branding, and watermark policy for Sign OS">
       <Tabs defaultValue="general" className="space-y-4">
         <TabsList>
           <TabsTrigger value="general">General</TabsTrigger>

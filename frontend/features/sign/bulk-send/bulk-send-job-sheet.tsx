@@ -106,7 +106,7 @@ export function BulkSendJobSheet({ jobId, templateName, open, onOpenChange }: Bu
       {!canRun ? (
         <EmptyState
           title="You cannot view bulk send jobs"
-          description="Opening a bulk send job needs the SignOS bulk send permission."
+          description="Opening a bulk send job needs the Sign OS bulk send permission."
           compact
         />
       ) : detail.isLoading ? (

@@ -10,6 +10,7 @@ interface FieldBoxProps {
   scale: number;
   color: { bg: string; border: string; text: string };
   isSelected: boolean;
+  editable: boolean;
   onSelect: () => void;
   onMove: (x: number, y: number) => void;
   onResize: (width: number, height: number) => void;
@@ -20,6 +21,7 @@ export function FieldBox({
   scale,
   color,
   isSelected,
+  editable,
   onSelect,
   onMove,
   onResize,
@@ -66,6 +68,7 @@ export function FieldBox({
   function handleDragStart(e: React.MouseEvent) {
     e.stopPropagation();
     onSelect();
+    if (!editable) return;
     dragStart.current = {
       mouseX: e.clientX,
       mouseY: e.clientY,
@@ -123,7 +126,8 @@ export function FieldBox({
   return (
     <div
       className={cn(
-        "absolute flex items-center justify-center rounded border-2 cursor-move select-none text-micro font-medium",
+        "absolute flex items-center justify-center rounded border-2 select-none text-micro font-medium",
+        editable ? "cursor-move" : "cursor-default",
         color.bg,
         isSelected ? "border-foreground" : color.border,
         color.text,
@@ -140,7 +144,7 @@ export function FieldBox({
         {field.label || meta.label}
         {field.required && <span className="text-destructive"> *</span>}
       </span>
-      {isSelected && (
+      {isSelected && editable && (
         <div
           className="absolute -right-1 -bottom-1 size-3 rounded-full bg-foreground cursor-nwse-resize"
           onMouseDown={handleResizeStart}

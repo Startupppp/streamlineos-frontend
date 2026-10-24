@@ -22,7 +22,7 @@ export const MODULE_LABELS: Record<string, string> = {
   branch: "Branches",
   dm: "Digital Marketing",
   payroll: "Payroll",
-  sign: "SignOS",
+  sign: "Sign OS",
   surveys: "Surveys",
   timesheets: "Timesheets",
 };

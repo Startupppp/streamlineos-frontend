@@ -35,7 +35,7 @@ export function BuilderLeftPanel({ envelopeId, documents, recipients, editable }
             <RecipientsPanel envelopeId={envelopeId} recipients={recipients} editable={editable} />
           </TabsContent>
           <TabsContent value="fields" className="mt-0">
-            <FieldPalette hasRecipient={selectedRecipientId !== null} />
+            <FieldPalette hasRecipient={selectedRecipientId !== null} editable={editable} />
           </TabsContent>
           </div>
         </ScrollArea>

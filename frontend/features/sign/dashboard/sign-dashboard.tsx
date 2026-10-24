@@ -33,9 +33,9 @@ export function SignDashboard() {
 
   if (isError) {
     return (
-      <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
+      <PageWrapper title="Sign OS" subtitle="Envelopes, signatures, and completion status at a glance">
         <ErrorState
-          title="Failed to load SignOS dashboard"
+          title="Failed to load Sign OS dashboard"
           description={getErrorMessage(error)}
           onRetry={handleRetry}
         />
@@ -45,7 +45,7 @@ export function SignDashboard() {
 
   if (isLoading || !data) {
     return (
-      <PageWrapper title="SignOS" subtitle="Envelopes, signatures, and completion status at a glance">
+      <PageWrapper title="Sign OS" subtitle="Envelopes, signatures, and completion status at a glance">
         <StatCardGridSkeleton cols={4} />
       </PageWrapper>
     );
@@ -53,7 +53,7 @@ export function SignDashboard() {
 
   return (
     <PageWrapper
-      title="SignOS"
+      title="Sign OS"
       subtitle="Envelopes, signatures, and completion status at a glance"
       actions={
         <AnimatedIconButton icon={PlusIcon} iconClassName="mr-1.5" onClick={() => setCreateOpen(true)}>

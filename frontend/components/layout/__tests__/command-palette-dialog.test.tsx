@@ -7,6 +7,7 @@ import { CommandPaletteDialogBody } from "../command-palette-dialog";
 jest.mock("@/hooks/api/access", () => ({
   useAccess: () => ({ data: { isOrgOwner: false, scopes: [] } }),
   useCan: jest.fn(),
+  useModuleEnabled: () => false,
 }));
 
 jest.mock("@/hooks/api/access/org-modules", () => ({

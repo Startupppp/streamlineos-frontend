@@ -78,7 +78,7 @@ function CertificateBody({ details }: { details: CertificateDetails }) {
         <p className={cn("mt-2 rounded-md border p-3 text-xs", neutral.surface, neutral.rule, neutral.ink)}>
           Re-hash a copy of the file and compare it with the SHA-256 above to show the copy is
           byte-identical to the one this envelope completed with. These are content hashes, not a
-          digital signature issued by a certifying authority — SignOS does not perform Aadhaar eSign
+          digital signature issued by a certifying authority — Sign OS does not perform Aadhaar eSign
           or issue CA-backed DSCs.
         </p>
       </section>
@@ -185,7 +185,7 @@ export function CompletionCertificateSheet({ envelopeId, open, onOpenChange }: C
       {!canDownload ? (
         <EmptyState
           title="You cannot view certificates"
-          description="Viewing a completion certificate needs the SignOS certificate download permission."
+          description="Viewing a completion certificate needs the Sign OS certificate download permission."
           compact
         />
       ) : certificate.isLoading ? (

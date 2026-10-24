@@ -27,3 +27,7 @@ export function failedRowsCsv(rows: SignBulkSendRow[], mapping: Record<string, s
   });
   return [header, ...body].join("\n");
 }
+
+export function matchingHeader(headers: string[], field: "name" | "email" | "phone"): string {
+  return headers.find((header) => header.trim().toLowerCase() === field) ?? "";
+}

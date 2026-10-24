@@ -91,9 +91,8 @@ export function ConfirmWithReasonSheet({
             value={reason}
             onChange={(e) => {
               setReason(e.target.value);
-              if (touched) setTouched(false);
+              setTouched(true);
             }}
-            onBlur={() => setTouched(true)}
             rows={4}
             maxLength={1000}
             className="resize-none w-full"
