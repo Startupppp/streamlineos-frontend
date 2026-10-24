@@ -1,7 +1,10 @@
 import { getRetryAfterSeconds, isApiError } from "@/lib/api-envelope";
 import { queryRetryDelay } from "@/lib/query-error-policy";
 import type { InfiniteData, QueryClient } from "@tanstack/react-query";
-import { findCachedMessage, nextChatTempId } from "@/hooks/api/chat-message-cache";
+import {
+  findCachedMessage,
+  nextChatTempId,
+} from "@/hooks/api/chat-message-cache";
 import { appendTimelineMessage } from "@/features/chat/message-page-merge";
 import type {
   AttachmentInput,
@@ -47,11 +50,15 @@ function isRateLimited(error: unknown): boolean {
 const transientFailures = new Map<string, number>();
 const transientAttemptByError = new WeakMap<object, number>();
 
-export function countTransientSendFailure(clientKey: string, error: unknown): void {
+export function countTransientSendFailure(
+  clientKey: string,
+  error: unknown,
+): void {
   if (!isTransientSendError(error) || isRateLimited(error)) return;
   const count = (transientFailures.get(clientKey) ?? 0) + 1;
   transientFailures.set(clientKey, count);
-  if (typeof error === "object" && error !== null) transientAttemptByError.set(error, count);
+  if (typeof error === "object" && error !== null)
+    transientAttemptByError.set(error, count);
 }
 
 export function clearTransientSendFailures(clientKey: string): void {
@@ -59,19 +66,25 @@ export function clearTransientSendFailures(clientKey: string): void {
 }
 
 function transientAttempts(failureCount: number, error: unknown): number {
-  const counted = typeof error === "object" && error !== null ? transientAttemptByError.get(error) : undefined;
+  const counted =
+    typeof error === "object" && error !== null
+      ? transientAttemptByError.get(error)
+      : undefined;
   return counted ?? failureCount + 1;
 }
 
 export const chatSendRetry = {
   retry: (failureCount: number, error: unknown) =>
     isRateLimited(error) ||
-    (isTransientSendError(error) && transientAttempts(failureCount, error) < MAX_TRANSIENT_SEND_ATTEMPTS),
+    (isTransientSendError(error) &&
+      transientAttempts(failureCount, error) < MAX_TRANSIENT_SEND_ATTEMPTS),
   retryDelay: (failureCount: number, error: unknown) => {
     const retryAfter = getRetryAfterSeconds(error);
     if (retryAfter === undefined) return queryRetryDelay(failureCount, error);
     const delay = Math.max(1_000, retryAfter * 1_000);
-    return isRateLimited(error) ? delay : Math.min(TRANSIENT_RETRY_AFTER_CEILING_MS, delay);
+    return isRateLimited(error)
+      ? delay
+      : Math.min(TRANSIENT_RETRY_AFTER_CEILING_MS, delay);
   },
 };
 
@@ -138,7 +151,11 @@ export function pendingSendMessage(
     author,
     replyTo:
       variables.replyToId !== undefined
-        ? findCachedMessage(queryClient, variables.channelId, variables.replyToId)
+        ? findCachedMessage(
+            queryClient,
+            variables.channelId,
+            variables.replyToId,
+          )
         : undefined,
   });
 }
@@ -148,7 +165,9 @@ export function appendPendingSend(
   message: Message,
 ): InfiniteData<MessagesPage> | undefined {
   const held = data?.pages.some((page) =>
-    page.messages.some((existing) => existing.id < 0 && existing.clientKey === message.clientKey),
+    page.messages.some(
+      (existing) => existing.id < 0 && existing.clientKey === message.clientKey,
+    ),
   );
   return held ? data : appendTimelineMessage(data, message);
 }
@@ -215,7 +234,12 @@ export function optimisticMessage(input: OptimisticMessageInput): Message {
       id: nextChatTempId(),
     })),
     replyTo: replyTo
-      ? { id: replyTo.id, content: replyTo.content, sender: replyTo.sender }
+      ? {
+          id: replyTo.id,
+          content: replyTo.content,
+          sender: replyTo.sender,
+          isDeleted: replyTo.isDeleted,
+        }
       : null,
   };
 }

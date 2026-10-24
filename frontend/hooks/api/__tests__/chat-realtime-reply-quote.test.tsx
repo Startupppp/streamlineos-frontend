@@ -56,7 +56,7 @@ describe("a live reply keeps its quote", () => {
   });
 
   it("keeps the optimistic quote when the echo replaces the sender's copy without one", () => {
-    const quote = { id: 1, content: "the parent", sender: parent.sender };
+    const quote = { id: 1, content: "the parent", sender: parent.sender, isDeleted: false };
     const optimistic = message({ id: -5, clientKey: "k-1", replyToId: 1, replyTo: quote });
     const echo = message({ id: 9, clientKey: "k-1", replyToId: 1, replyTo: null });
     const merged = mergeInboundMessage(page([optimistic]), echo, "k-1");

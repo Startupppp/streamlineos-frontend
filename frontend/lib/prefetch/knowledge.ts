@@ -27,7 +27,6 @@ import {
   kbSharingSettingsQueryOptions,
 } from "@/hooks/api/kb/kb-read-options";
 import {
-  kbPageListContract,
   kbFavoritePageListContract,
   kbTrashPageListContract,
   kbPageWithAncestorsContract,
@@ -54,7 +53,6 @@ import {
 import { kbConversationListPageContract } from "@/hooks/api/kb/kb-chat-schema";
 import { sharingSettingsContract } from "@/hooks/api/kb/kb-sharing-schema";
 
-type KbPageList = z.infer<typeof kbPageListContract>;
 type KbFavoritePageList = z.infer<typeof kbFavoritePageListContract>;
 type KbSpaceListPage = z.infer<typeof kbSpaceListPageContract>;
 type KbAnalyticsOverview = z.infer<typeof kbAnalyticsOverviewContract>;
@@ -83,10 +81,11 @@ export async function prefetchKbHome() {
     if (!gate.can("kb:pages:view"))
       return dehydrate(await createServerQueryClient());
     await Promise.all([
-      queryClient.prefetchQuery({
+      queryClient.prefetchInfiniteQuery({
         ...kbPagesRecentQueryOptions,
         queryFn: () =>
-          serverGet<KbPageList>("/kb/pages/recent", kbPageListContract),
+          serverGet<KbFavoritePageList>("/kb/pages/recent", kbFavoritePageListContract),
+        pages: 1,
       }),
       queryClient.prefetchInfiniteQuery({
         ...kbPagesFavoritesQueryOptions,

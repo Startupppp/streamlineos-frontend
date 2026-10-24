@@ -1,5 +1,7 @@
 import type { z } from "zod";
-import type { runVarianceResponseContract } from "@/hooks/api/payroll/run-employees-schema";
+import type { runVarianceResponseContract, CalculationSnapshot } from "@/hooks/api/payroll/run-employees-schema";
+
+export type CalculationSnapshotLine = NonNullable<CalculationSnapshot>["lines"][number];
 export type PayrollRunStatus =
   | "PREPARING"
   | "DRAFT"

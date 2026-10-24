@@ -152,7 +152,7 @@ describe("chat mutation hooks — throw without permission", () => {
       wrapper: makeWrapper(client),
     });
     await act(async () => {
-      await expect(result.current.mutateAsync(1)).rejects.toThrow(
+      await expect(result.current.mutateAsync({ channelId: 1 })).rejects.toThrow(
         "Missing permission: chat:huddles:start",
       );
     });

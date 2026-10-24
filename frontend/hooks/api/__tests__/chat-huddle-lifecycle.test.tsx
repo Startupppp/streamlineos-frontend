@@ -175,7 +175,7 @@ describe("huddle cache patching", () => {
     (apiClient.post as jest.Mock).mockResolvedValue(started);
     const { result } = renderHook(() => useStartHuddle(), { wrapper });
     await act(async () => {
-      await result.current.mutateAsync(CHANNEL);
+      await result.current.mutateAsync({ channelId: CHANNEL });
     });
     expect(client.getQueryData<Huddle>(KEY)).toEqual(started);
     expect(apiClient.get).not.toHaveBeenCalled();
@@ -187,7 +187,7 @@ describe("huddle cache patching", () => {
     (apiClient.post as jest.Mock).mockResolvedValue(huddle([participant(1, "u-me")]));
     const { result } = renderHook(() => useStartHuddle(), { wrapper });
     await act(async () => {
-      await result.current.mutateAsync(CHANNEL);
+      await result.current.mutateAsync({ channelId: CHANNEL });
     });
     expect(cancel).toHaveBeenCalledWith({ queryKey: KEY, exact: true });
   });

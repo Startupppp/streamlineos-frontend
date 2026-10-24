@@ -4,7 +4,10 @@ import { flattenMessagePages } from "@/features/chat/message-page-merge";
 import type { Message, MessagesPage } from "@/types/chat";
 import type { MessagePayload } from "./chat-realtime-schema";
 
-export function payloadToMessage(payload: MessagePayload, parent: Message | undefined): Message {
+export function payloadToMessage(
+  payload: MessagePayload,
+  parent: Message | undefined,
+): Message {
   const createdAt = payload.createdAt ?? new Date().toISOString();
   return {
     id: payload.id,
@@ -27,7 +30,14 @@ export function payloadToMessage(payload: MessagePayload, parent: Message | unde
       image: payload.senderImage ?? null,
     },
     attachments: payload.attachments ?? [],
-    replyTo: parent ? { id: parent.id, content: parent.content, sender: parent.sender } : null,
+    replyTo: parent
+      ? {
+          id: parent.id,
+          content: parent.content,
+          sender: parent.sender,
+          isDeleted: parent.isDeleted,
+        }
+      : null,
   };
 }
 
@@ -37,9 +47,13 @@ export function messagesAddedByResync(
 ): number {
   const known = flattenMessagePages(before);
   const ids = new Set(known.map((message) => message.id));
-  const clientKeys = new Set(known.flatMap((message) => (message.clientKey ? [message.clientKey] : [])));
+  const clientKeys = new Set(
+    known.flatMap((message) => (message.clientKey ? [message.clientKey] : [])),
+  );
   return flattenMessagePages(after).filter(
-    (message) => !ids.has(message.id) && !(message.clientKey && clientKeys.has(message.clientKey)),
+    (message) =>
+      !ids.has(message.id) &&
+      !(message.clientKey && clientKeys.has(message.clientKey)),
   ).length;
 }
 
@@ -52,7 +66,9 @@ function isCapabilityRefusal(error: unknown): boolean {
   );
 }
 
-export async function reviveFailedChannel(channel: RealtimeChannel): Promise<void> {
+export async function reviveFailedChannel(
+  channel: RealtimeChannel,
+): Promise<void> {
   if (channel.state !== "failed") return;
   try {
     await channel.attach();

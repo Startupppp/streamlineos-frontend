@@ -38,7 +38,7 @@ async function failStart(error: ApiError) {
   );
   const hook = renderHook(() => useStartHuddle(), { wrapper });
   await act(async () => {
-    await hook.result.current.mutateAsync(7).catch(() => undefined);
+    await hook.result.current.mutateAsync({ channelId: 7 }).catch(() => undefined);
   });
   const [message, options] = (toast.error as jest.Mock).mock.calls[0] as [string, ToastOptions | undefined];
   return { message, options };

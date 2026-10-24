@@ -1,6 +1,7 @@
 "use client";
 
-import { MicIcon, ChevronDownIcon } from "lucide-react";
+import { MicIcon } from "@animateicons/react/lucide";
+import { ChevronDownIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AnimatedIconButton } from "@/components/ui/animated-icon-button";
 import { Button } from "@/components/ui/button";

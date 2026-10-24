@@ -147,7 +147,7 @@ export function useMessageComposer({
     setShowMentions(false);
     setMentionQuery("");
     setMentionIndex(0);
-    setPendingPrompt(null);
+    setMentionPrompt(null);
     setRecordQuery(null);
     setRecordIndex(0);
     setLinkState({ draftKey, records: readDraftLinks(draftKey) });

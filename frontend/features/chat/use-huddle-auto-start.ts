@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 
 interface HuddleStarter {
-  mutate: (channelId: number) => void;
+  mutate: (vars: { channelId: number; connectionId?: number }) => void;
 }
 
 interface HuddleJoiner {
