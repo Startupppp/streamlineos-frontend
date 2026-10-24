@@ -337,6 +337,63 @@
       "sourceRevision": "frontend f856fa2d7796+worktree; backend ea869b5ef9ed",
       "reproduction": "ledger had 0 children, no baseline artifact, no ticket set; checker had no baseline/reservation negative tests",
       "verificationPlan": "checker"
+    },
+    {
+      "id": "AP-01-C01",
+      "program": "AP-01",
+      "title": "Authorized people insights: salary-free analytics projection, department/period predicate, governed metric meaning, canonical AskOS department ID",
+      "acceptanceIds": [
+        "AC-ARCH-001-01",
+        "AC-ARCH-001-02",
+        "AC-ARCH-001-03",
+        "AC-ARCH-001-04",
+        "AC-ARCH-002-01",
+        "AC-ARCH-002-02",
+        "AC-ARCH-002-03",
+        "AC-ARCH-002-04",
+        "AC-ARCH-003-01",
+        "AC-ARCH-003-02",
+        "AC-ARCH-003-03"
+      ],
+      "writeSet": [
+        "backend/src/modules/hr/analytics-plus/dto/hr-analytics-plus.schemas.ts",
+        "backend/src/modules/hr/analytics-plus/dto/analytics-plus-response.schemas.ts",
+        "backend/src/modules/hr/analytics-plus/hr-analytics-plus-metric-definitions.ts",
+        "backend/src/modules/hr/analytics-plus/hr-command-center-metrics.ts",
+        "backend/src/modules/hr/analytics-plus/hr-command-center-analytics.service.ts",
+        "backend/src/modules/hr/analytics-plus/hr-analytics-plus.service.ts",
+        "backend/src/modules/hr/analytics-plus/hr-analytics-plus.controller.ts",
+        "backend/src/modules/hr/analytics-plus/hr-analytics-plus-trends.ts",
+        "backend/src/modules/hr/hub/hr-hub.service.ts",
+        "backend/src/modules/hr/lifecycle/hr-analytics.service.ts",
+        "backend/src/modules/hr/lifecycle/dto/lifecycle-response.schemas.ts",
+        "backend/src/modules/ai/core/tools/hr-copilot-tools.ts",
+        "backend/src/modules/ai/core/ai.module.ts",
+        "backend/openapi.json",
+        "frontend/contracts/openapi.json",
+        "frontend/hooks/api/hr/analytics-schema.ts",
+        "frontend/hooks/api/hr/analytics.ts",
+        "frontend/lib/query-keys/human-resources.ts",
+        "frontend/features/hr/analytics/command-center-section.tsx",
+        "frontend/features/hr/analytics/analytics-page-client.tsx",
+        "frontend/features/hr/analytics/analytics-export-button.tsx",
+        "frontend/features/hr/hub/hr-hub-metrics.tsx"
+      ],
+      "testSet": [
+        "backend/src/modules/hr/analytics-plus/hr-analytics-plus-authorization.spec.ts",
+        "backend/src/modules/hr/analytics-plus/hr-analytics-plus-authorization.db.spec.ts",
+        "backend/src/modules/hr/analytics-plus/hr-analytics-plus-tenant-isolation.spec.ts",
+        "backend/src/modules/hr/analytics-plus/__tests__/command-center-headcount.spec.ts",
+        "backend/src/modules/ai/core/tools/hr-copilot-tools.spec.ts",
+        "backend/test/security/rbac-matrix/cells/hr-scenarios.ts",
+        "frontend/features/hr/analytics/analytics-export-button.test.tsx",
+        "frontend/features/hr/analytics/analytics-inline-error.test.tsx",
+        "frontend/features/hr/analytics/analytics-sections-honesty.test.tsx"
+      ],
+      "reservationStatus": "ACTIVE",
+      "sourceRevision": "frontend 6a8fc59205aa+worktree; backend 9c3504346dc1+worktree",
+      "reproduction": "payrollCostLastMonth returned under hr:analytics:read; departmentId in cache key but not SQL; payroll-cost gate Map.has (own/team see org totals); payroll cost summed drafts/reopened; attrition byDepartment/byReason ignored dept; overview + CSV export carried payroll.totalCostYTD; AskOS departmentId numeric vs text UUID column; FE sent numeric dept and divided rupees by 100",
+      "verificationPlan": "negative-first unit spec, app-role tenant-GUC db spec, AskOS spec, FE contract/component tests, typecheck/lint/gates, openapi regen, browser at 375/768/1280 light+dark"
     }
   ],
   "requirements": [

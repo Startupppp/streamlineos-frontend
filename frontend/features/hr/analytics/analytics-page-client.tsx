@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { AnalyticsExportButton } from "./analytics-export-button";
 import {
   useHrAnalytics,
@@ -37,8 +37,9 @@ import { AttendanceSection } from "@/features/hr/analytics/attendance-section";
 import { LeaveSection } from "@/features/hr/analytics/leave-section";
 import { AttritionSection } from "@/features/hr/analytics/attrition-section";
 import { CommandCenterSection } from "@/features/hr/analytics/command-center-section";
+import type { InsightRange } from "@/hooks/api/hr/analytics";
 
-type DateRange = "month" | "quarter" | "year";
+type DateRange = InsightRange;
 type SectionTab = "command-center" | "workforce" | "attendance" | "leaves" | "attrition";
 
 const NOW = new Date();
@@ -154,15 +155,23 @@ function DateRangeSelector({
 }
 
 export function AnalyticsPageClient() {
-  const [dateRange, setDateRange] = useState<DateRange>("month");
-  const [activeSection, setActiveSection] = useState<SectionTab>("command-center");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const rangeParam = searchParams.get("range") ?? "";
+  const viewParam = searchParams.get("view") ?? "";
+  const dateRange: DateRange = isDateRange(rangeParam) ? rangeParam : "month";
+  const activeSection: SectionTab = isSectionTab(viewParam) ? viewParam : "command-center";
 
-  const analyticsMonth =
-    dateRange === "month"
-      ? CURRENT_MONTH
-      : dateRange === "quarter"
-        ? Math.ceil(CURRENT_MONTH / 3) * 3 - 2
-        : 1;
+  function replaceParam(key: "range" | "view", value: string) {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set(key, value);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+  }
+
+  function handleDateRangeChange(value: DateRange) {
+    replaceParam("range", value);
+  }
 
   const {
     data,
@@ -189,7 +198,7 @@ export function AnalyticsPageClient() {
   const attendanceLogs = data ? data.attendance.totalLogsThisMonth : UNMEASURED;
 
   function handleSectionChange(v: string) {
-    if (isSectionTab(v)) setActiveSection(v);
+    if (isSectionTab(v)) replaceParam("view", v);
   }
 
   const pageState = usePageState({
@@ -247,7 +256,7 @@ export function AnalyticsPageClient() {
                   ))}
                 </TabsList>
               }
-              filters={<DateRangeSelector value={dateRange} onChange={setDateRange} />}
+              filters={activeSection === "command-center" ? <DateRangeSelector value={dateRange} onChange={handleDateRangeChange} /> : undefined}
             />
 
             <div className="rounded-2xl border border-border/70 bg-card/90 shadow-card overflow-hidden flex min-h-0 flex-1 flex-col">
@@ -265,7 +274,7 @@ export function AnalyticsPageClient() {
 
               <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-4">
                 <TabsContent value="command-center" className="mt-0 flex-none">
-                  <CommandCenterSection />
+                  <CommandCenterSection range={dateRange} />
                 </TabsContent>
 
                 <TabsContent value="workforce" className="mt-0 flex-none">
@@ -275,7 +284,7 @@ export function AnalyticsPageClient() {
                 <TabsContent value="attendance" className="mt-0 flex-none">
                   <AttendanceSection
                     year={CURRENT_YEAR}
-                    month={analyticsMonth}
+                    month={CURRENT_MONTH}
                   />
                 </TabsContent>
 

@@ -7,7 +7,7 @@ import type {
   TeamAttendanceStatusResponse,
   WfhRequest,
 } from "@/types/hr";
-import type { HrCommandCenterData } from "./analytics";
+import type { HrCommandCenterData } from "./analytics-schema";
 import type {
   HrDashboardMetrics,
   HrLeaveCalendarEntry,

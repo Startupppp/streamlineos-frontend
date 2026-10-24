@@ -33,48 +33,47 @@ export function HrHubMetrics({
   if (error) return <ErrorRetry error={error} onRetry={onRetry} />;
   if (!data) return null;
 
-  const attritionPct = `${data.attritionRate12mo.toFixed(1)}%`;
-  const attendancePct = `${data.attendanceRatePct.toFixed(0)}%`;
-  const leavePct = `${data.leaveUtilizationPct.toFixed(0)}%`;
+  const { headcount, attritionRate, attendanceRatePct, leaveUtilizationPct, openCasesCount } = data.metrics;
+  const percent = (value: number | null, digits: number) => (value === null ? "—" : `${value.toFixed(digits)}%`);
 
   return (
     <StatCardGrid cols={6}>
       <StatCard
         label="Headcount"
-        value={data.headcount.total}
+        value={headcount.value?.total ?? "—"}
         icon={Users}
         tone="default"
       />
       <StatCard
         label="Active"
-        value={data.headcount.active}
+        value={headcount.value?.active ?? "—"}
         icon={UserCheck}
         tone="emerald"
-        hint={`${data.headcount.probation} on probation`}
+        hint={headcount.value ? `${headcount.value.probation} on probation` : undefined}
       />
       <StatCard
-        label="Attrition 12mo"
-        value={attritionPct}
+        label="Attrition this month"
+        value={percent(attritionRate.value, 1)}
         icon={TrendingDown}
-        tone={data.attritionRate12mo > 15 ? "amber" : "default"}
+        tone={(attritionRate.value ?? 0) > 15 ? "amber" : "default"}
       />
       <StatCard
-        label="Attendance rate"
-        value={attendancePct}
+        label="Attendance this month"
+        value={percent(attendanceRatePct.value, 0)}
         icon={ClipboardList}
-        tone={data.attendanceRatePct < 80 ? "amber" : "emerald"}
+        tone={attendanceRatePct.value !== null && attendanceRatePct.value < 80 ? "amber" : "emerald"}
       />
       <StatCard
-        label="Leave utilization"
-        value={leavePct}
+        label="Leave utilization this month"
+        value={percent(leaveUtilizationPct.value, 0)}
         icon={BarChart2}
         tone="default"
       />
       <StatCard
         label="Open cases"
-        value={data.openCasesCount}
+        value={openCasesCount.value ?? "—"}
         icon={Inbox}
-        tone={data.openCasesCount > 0 ? "amber" : "default"}
+        tone={(openCasesCount.value ?? 0) > 0 ? "amber" : "default"}
       />
     </StatCardGrid>
   );

@@ -26,6 +26,7 @@ export function message(id: number, over: Partial<Message> = {}): Message {
     attachments: [],
     replyTo: null,
     ...over,
+    clientKey: over.clientKey ?? `ck-${id}`,
   };
 }
 

@@ -4,6 +4,13 @@ export const humanResourcesQueryKeys = {
   hr: {
     all: [...base, "hr"] as const,
     hub: (today: string) => [...base, "hr", "hub", today] as const,
+    analyticsCommandCenter: (params: {
+      departmentId: string | null;
+      range: string;
+      anchor: string | null;
+    }) => [...base, "hr", "analytics", "commandCenter", params] as const,
+    analyticsPayrollCost: () =>
+      [...base, "hr", "analytics", "payrollCost"] as const,
     departments: () => [...base, "hr", "departments"] as const,
     employees: (params?: QueryKeyParams) =>
       params === undefined

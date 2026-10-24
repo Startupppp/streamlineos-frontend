@@ -18,7 +18,6 @@ export function toAnalyticsCsvRows(data: HrAnalyticsData): AnalyticsCsvRow[] {
     { section: "Attendance", metric: "Logs this month", value: data.attendance.totalLogsThisMonth },
     ...Object.entries(data.leaves.byStatus).map(([status, count]) => ({ section: "Leave by status", metric: status, value: count })),
     ...data.leaves.byMonth.map((m) => ({ section: "Leave by month", metric: m.month, value: m.count })),
-    { section: "Payroll", metric: "Total cost YTD", value: data.payroll.totalCostYTD },
     { section: "Expenses", metric: "Approved YTD", value: data.expenses.approvedYTD },
     ...data.joiningExitsTrend.flatMap((t) => [
       { section: "Joins", metric: t.month, value: t.joins },

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, type ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
@@ -16,8 +16,9 @@ import {
   Target,
   Shield,
 } from "lucide-react";
-import { useCan } from "@/hooks/api/access";
+import { format, parseISO, subDays } from "date-fns";
 import {
+  useCanViewOrganizationPayrollCost,
   useHrCommandCenter,
   useHrAttritionPlus,
   useHrLeaveTrends,
@@ -25,7 +26,9 @@ import {
   useHrPerformanceDist,
   useHrComplianceGaps,
   useHrPayrollCost,
+  type InsightRange,
 } from "@/hooks/api/hr/analytics";
+import type { HrCommandCenterData } from "@/hooks/api/hr/analytics-schema";
 import {
   AnalyticsChartCard,
   SectionSkeleton,
@@ -35,6 +38,7 @@ import { DrilldownSheet } from "./drilldown-sheet";
 import { TruncatedText } from "@/components/ui/truncated-text";
 import { useOrgDisplay } from "@/hooks/api/org-display";
 import { formatMoneyCompact } from "@/lib/format-utils";
+import { formatCalendarDate } from "@/lib/date-utils";
 import { activationProps } from "@/lib/keyboard-activation";
 import { ErrorState } from "@/components/shared/error-state";
 import { getErrorMessage } from "@/lib/get-error-message";
@@ -94,8 +98,23 @@ function DrillableStatCard({ label, value, hint, icon, tone = "default", onClick
 }
 
 
+type InsightMetric = HrCommandCenterData["metrics"][keyof HrCommandCenterData["metrics"]];
+
+const UNAVAILABLE = "—";
+
 function formatPct(val: number): string {
   return `${val.toFixed(1)}%`;
+}
+
+function metricHint(metric: InsightMetric): string {
+  if (metric.coverage === "unavailable") return "No data for this period";
+  if (!metric.period) return "As of today";
+  const lastDay = format(subDays(parseISO(metric.period.end), 1), "yyyy-MM-dd");
+  return `${formatCalendarDate(metric.period.start)} – ${formatCalendarDate(lastDay)}`;
+}
+
+function metricValue(value: number | null, render: (value: number) => string): string {
+  return value === null ? UNAVAILABLE : render(value);
 }
 
 function formatTenure(months: number): string {
@@ -109,16 +128,13 @@ interface DrilldownState {
 }
 
 interface CommandCenterSectionProps {
-  departmentId?: number;
+  range: InsightRange;
+  departmentId?: string;
 }
 
-export function CommandCenterSection({ departmentId }: CommandCenterSectionProps) {
-  const canViewPayroll = useCan("hr:payroll:view");
+export function CommandCenterSection({ range, departmentId }: CommandCenterSectionProps) {
+  const canViewPayroll = useCanViewOrganizationPayrollCost();
   const display = useOrgDisplay();
-  const formatCurrency = useCallback(
-    (cents: number) => formatMoneyCompact(cents / 100, display),
-    [display],
-  );
 
   const {
     data: kpis,
@@ -126,13 +142,19 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     isError: kpisIsError,
     error: kpisError,
     refetch: refetchKpis,
-  } = useHrCommandCenter(departmentId);
+  } = useHrCommandCenter({ departmentId, range });
   const { data: attrition, isLoading: attritionLoading } = useHrAttritionPlus(departmentId);
   const { data: leaveTrends, isLoading: leaveLoading } = useHrLeaveTrends(departmentId);
   const { data: engagement, isLoading: engagementLoading } = useHrEngagement();
   const { data: perfDist, isLoading: perfLoading } = useHrPerformanceDist();
   const { data: complianceGaps, isLoading: complianceLoading } = useHrComplianceGaps(departmentId);
-  const { data: payrollCost, isLoading: payrollLoading } = useHrPayrollCost({ enabled: canViewPayroll });
+  const { data: payrollCost, isLoading: payrollLoading } = useHrPayrollCost();
+  const payrollDisplay = { ...display, currency: payrollCost?.currency ?? display.currency };
+  function formatPayroll(amount: number | string): string {
+    return formatMoneyCompact(amount, payrollDisplay);
+  }
+  const latestPayroll = payrollCost?.monthly[0];
+  const payrollChartData = payrollCost?.monthly.map((row) => ({ month: row.month, grossTotal: Number(row.grossTotal) })).reverse() ?? [];
 
   const [drilldown, setDrilldown] = useState<DrilldownState>({
     open: false,
@@ -140,29 +162,22 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     title: "",
   });
 
-  const openDrilldown = useCallback((metric: string, title: string) => {
+  function openDrilldown(metric: string, title: string) {
     setDrilldown({ open: true, metric, title });
-  }, []);
+  }
 
-  const closeDrilldown = useCallback(() => {
+  function closeDrilldown() {
     setDrilldown((prev) => ({ ...prev, open: false }));
-  }, []);
+  }
 
-  const leaveStackData = useMemo(() => {
-    if (!leaveTrends) return [];
-    const byMonth = new Map<string, Record<string, number>>();
-    for (const row of leaveTrends.byTypeAndMonth) {
-      const existing = byMonth.get(row.month) ?? {};
-      existing[row.leaveTypeName] = (existing[row.leaveTypeName] ?? 0) + row.days;
-      byMonth.set(row.month, existing);
-    }
-    return Array.from(byMonth.entries()).map(([month, types]) => ({ month, ...types }));
-  }, [leaveTrends]);
-
-  const leaveTypeKeys = useMemo(
-    () => leaveTrends?.totalByType.map((t) => t.leaveTypeName) ?? [],
-    [leaveTrends],
-  );
+  const leaveByMonth = new Map<string, Record<string, number>>();
+  for (const row of leaveTrends?.byTypeAndMonth ?? []) {
+    const existing = leaveByMonth.get(row.month) ?? {};
+    existing[row.leaveTypeName] = (existing[row.leaveTypeName] ?? 0) + row.days;
+    leaveByMonth.set(row.month, existing);
+  }
+  const leaveStackData = Array.from(leaveByMonth.entries()).map(([month, types]) => ({ month, ...types }));
+  const leaveTypeKeys = leaveTrends?.totalByType.map((t) => t.leaveTypeName) ?? [];
 
   const leaveTypeColors = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var(--chart-4)", "var(--status-success-fill)"];
 
@@ -199,60 +214,68 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
     );
   }
 
+  const metrics = kpis.metrics;
+
   return (
     <div className="space-y-6">
       <StatCardGrid cols={4}>
         <DrillableStatCard
-          label="Active Employees"
-          value={String(kpis?.headcount.active ?? 0)}
-          hint={`${kpis?.headcount.probation ?? 0} probation · ${kpis?.headcount.notice ?? 0} notice`}
+          label="Active employees"
+          value={metricValue(metrics.headcount.value?.active ?? null, String)}
+          hint={metrics.headcount.value ? `${metrics.headcount.value.probation} probation · ${metrics.headcount.value.notice} notice · as of today` : metricHint(metrics.headcount)}
           icon={Users}
           tone="blue"
         />
         <DrillableStatCard
-          label="12-Mo Attrition"
-          value={formatPct(kpis?.attritionRate12mo ?? 0)}
+          label="Attrition"
+          value={metricValue(metrics.attritionRate.value, formatPct)}
+          hint={metricHint(metrics.attritionRate)}
           icon={TrendingDown}
           tone="red"
           onClick={handleAttritionDrilldown}
         />
         <DrillableStatCard
-          label="Avg Tenure"
-          value={formatTenure(kpis?.avgTenureMonths ?? 0)}
+          label="Avg tenure"
+          value={metricValue(metrics.avgTenureMonths.value, formatTenure)}
+          hint={metricHint(metrics.avgTenureMonths)}
           icon={Clock}
         />
         <DrillableStatCard
-          label="Leave Utilization"
-          value={formatPct(kpis?.leaveUtilizationPct ?? 0)}
+          label="Leave utilization"
+          value={metricValue(metrics.leaveUtilizationPct.value, formatPct)}
+          hint={metricHint(metrics.leaveUtilizationPct)}
           icon={Target}
           tone="blue"
           onClick={handleLeaveDrilldown}
         />
         <DrillableStatCard
-          label="Attendance Rate"
-          value={formatPct(kpis?.attendanceRatePct ?? 0)}
+          label="Attendance rate"
+          value={metricValue(metrics.attendanceRatePct.value, formatPct)}
+          hint={metricHint(metrics.attendanceRatePct)}
           icon={CheckCircle}
           tone="emerald"
         />
         <DrillableStatCard
-          label="Open Cases"
-          value={String(kpis?.openCasesCount ?? 0)}
+          label="Open cases"
+          value={metricValue(metrics.openCasesCount.value, String)}
+          hint={metricHint(metrics.openCasesCount)}
           icon={AlertTriangle}
           tone="amber"
           onClick={handleComplianceDrilldown}
         />
         <DrillableStatCard
-          label="Avg Mood Score"
-          value={kpis?.avgMood !== null && kpis?.avgMood !== undefined ? kpis.avgMood.toFixed(1) : "—"}
-          hint="out of 5"
+          label="Avg mood score"
+          value={metricValue(metrics.avgMood.value, (mood) => `${mood.toFixed(1)} / 5`)}
+          hint={metricHint(metrics.avgMood)}
           icon={Shield}
           tone="blue"
           onClick={handleEngagementDrilldown}
         />
-        {canViewPayroll && kpis?.payrollCostLastMonth !== null ? (
+        {canViewPayroll && latestPayroll ? (
           <DrillableStatCard
-            label="Payroll Last Month"
-            value={kpis?.payrollCostLastMonth !== null && kpis?.payrollCostLastMonth !== undefined ? formatCurrency(kpis.payrollCostLastMonth) : "—"}
+            label={`Payroll gross · ${latestPayroll.month}`}
+            value={formatPayroll(latestPayroll.grossTotal)}
+            hint={payrollCost?.coverage === "partial" ? "Finalized runs only · some runs reopened" : "Finalized runs only"}
             icon={DollarSign}
             tone="blue"
           />
@@ -357,10 +380,10 @@ export function CommandCenterSection({ departmentId }: CommandCenterSectionProps
           <AnalyticsChartCard title="Payroll Cost Trend">
             {payrollLoading ? (
               <SectionSkeleton rows={8} />
-            ) : !payrollCost?.monthly.length ? (
-              <EmptyChart label="No payroll data" />
+            ) : !payrollChartData.length ? (
+              <EmptyChart label="No finalized payroll in the last 12 months" />
             ) : (
-              <PayrollCostChart data={payrollCost.monthly} formatCurrency={formatCurrency} />
+              <PayrollCostChart data={payrollChartData} formatCurrency={formatPayroll} />
             )}
           </AnalyticsChartCard>
         ) : null}

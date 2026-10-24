@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import { useHrAttendanceAnalytics } from "@/hooks/api/hr/analytics";
 import { StatCard, StatCardGrid } from "@/components/ui/stat-card";
 import { Clock, Building2, CalendarCheck } from "lucide-react";
@@ -64,7 +65,7 @@ export function AttendanceSection({ year, month }: AttendanceSectionProps) {
     <section className="space-y-4">
       <AnalyticsSectionHeader
         title="Attendance Analytics"
-        description="Check-in volume by department and day for the selected period."
+        description={`Check-in volume by department and day for ${format(new Date(Date.UTC(year, month - 1, 1)), "MMMM yyyy")}.`}
       />
       <StatCardGrid cols={3}>
         <StatCard

@@ -14,7 +14,6 @@ export const hrAnalyticsOverviewContract = z.object({
     byStatus: z.record(z.string(), z.number()),
     byMonth: z.array(z.object({ month: z.string(), count: z.number() })),
   }),
-  payroll: z.object({ totalCostYTD: z.string() }),
   expenses: z.object({ approvedYTD: z.string() }),
   joiningExitsTrend: z.array(z.object({ month: z.string(), joins: z.number(), exits: z.number() })),
 });
@@ -34,21 +33,46 @@ export const hrAttritionContract = z.object({
   byMonth: z.array(z.object({ month: z.string(), count: z.number() })),
 });
 
-export const hrCommandCenterContract = z.object({
-  headcount: z.object({
-    total: z.number(),
-    active: z.number(),
-    probation: z.number(),
-    notice: z.number(),
-  }),
-  attritionRate12mo: z.number(),
-  avgTenureMonths: z.number(),
-  leaveUtilizationPct: z.number(),
-  attendanceRatePct: z.number(),
-  openCasesCount: z.number(),
-  avgMood: z.number().nullable(),
-  payrollCostLastMonth: z.number().nullable(),
+const insightPeriodContract = z.object({
+  range: z.enum(["month", "quarter", "year"]),
+  start: z.iso.date(),
+  end: z.iso.date(),
 });
+
+const insightMetricContract = <T extends z.ZodType>(value: T) => z.object({
+  value: value.nullable(),
+  unit: z.enum(["count", "percent", "months", "score"]),
+  window: z.enum(["selected-period", "current"]),
+  sensitivity: z.literal("internal"),
+  coverage: z.enum(["complete", "unavailable"]),
+  period: z.object({ start: z.iso.date(), end: z.iso.date() }).nullable(),
+});
+
+export const hrCommandCenterContract = z.object({
+  schemaVersion: z.literal(2),
+  definitionVersion: z.string(),
+  asOf: z.iso.datetime(),
+  scope: z.object({
+    departmentId: z.string().nullable(),
+    period: insightPeriodContract,
+  }),
+  metrics: z.object({
+    headcount: insightMetricContract(z.object({
+      total: z.number().int(),
+      active: z.number().int(),
+      probation: z.number().int(),
+      notice: z.number().int(),
+    })),
+    attritionRate: insightMetricContract(z.number()),
+    avgTenureMonths: insightMetricContract(z.number()),
+    leaveUtilizationPct: insightMetricContract(z.number()),
+    attendanceRatePct: insightMetricContract(z.number()),
+    openCasesCount: insightMetricContract(z.number().int()),
+    avgMood: insightMetricContract(z.number()),
+  }),
+});
+
+export type HrCommandCenterData = z.infer<typeof hrCommandCenterContract>;
 
 export const hrAttritionPlusContract = z.object({
   joinsVsExits: z.array(z.object({ month: z.string(), joins: z.number(), exits: z.number() })),
@@ -65,8 +89,16 @@ export const hrLeaveTrendsContract = z.object({
 });
 
 export const hrPayrollCostContract = z.object({
-  monthly: z.array(z.object({ month: z.string(), grossTotal: z.number() })),
+  schemaVersion: z.literal(1),
+  currency: z.literal("INR"),
+  window: z.literal("trailing-12-months"),
+  contributingStatuses: z.array(z.string()),
+  coverage: z.enum(["complete", "partial"]),
+  excludedRuns: z.array(z.object({ runId: z.number().int(), month: z.string(), status: z.string() })),
+  monthly: z.array(z.object({ month: z.string(), grossTotal: z.string().regex(/^-?\d+\.\d{2}$/), runCount: z.number().int() })),
 });
+
+export type HrPayrollCostData = z.infer<typeof hrPayrollCostContract>;
 
 export const hrEngagementContract = z.object({
   moodByMonth: z.array(z.object({ month: z.string(), avgMood: z.number() })),

@@ -1,44 +1,71 @@
 "use client";
 
-import { queryOptions, useInfiniteQuery, useQuery } from "@tanstack/react-query";
+import {
+  queryOptions,
+  useInfiniteQuery,
+  useQuery,
+} from "@tanstack/react-query";
 import { NULL_CURSOR_YET } from "@/hooks/api/cursor-page-param";
 import { apiClient } from "@/lib/api-client";
 import { lazyContract } from "@/lib/api-envelope";
 import { humanResourcesQueryKeys } from "@/lib/query-keys/human-resources";
-import { useCan } from "@/hooks/api/access";
+import { useCan, useScope } from "@/hooks/api/access";
 import { INLINE_READ_ERROR } from "@/lib/query-error-policy";
 import { hrAnalyticsQueryOptions } from "@/hooks/api/hr/analytics-read-options";
-import { type RawLeaveTrendsResponse, normalizeLeaveTrends } from "./analytics-normalize";
+import {
+  type RawLeaveTrendsResponse,
+  normalizeLeaveTrends,
+} from "./analytics-normalize";
+import type {
+  HrCommandCenterData,
+  HrPayrollCostData,
+} from "./analytics-schema";
 
 const hrAnalyticsOverviewC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrAnalyticsOverviewContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrAnalyticsOverviewContract,
+  ),
 );
 const hrAttendanceAnalyticsC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrAttendanceAnalyticsContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrAttendanceAnalyticsContract,
+  ),
 );
 const hrAttritionC = lazyContract(() =>
   import("@/hooks/api/hr/analytics-schema").then((m) => m.hrAttritionContract),
 );
 const hrCommandCenterC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrCommandCenterContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrCommandCenterContract,
+  ),
 );
 const hrAttritionPlusC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrAttritionPlusContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrAttritionPlusContract,
+  ),
 );
 const hrLeaveTrendsC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrLeaveTrendsContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrLeaveTrendsContract,
+  ),
 );
 const hrPayrollCostC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrPayrollCostContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrPayrollCostContract,
+  ),
 );
 const hrEngagementC = lazyContract(() =>
   import("@/hooks/api/hr/analytics-schema").then((m) => m.hrEngagementContract),
 );
 const hrPerformanceDistC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrPerformanceDistContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrPerformanceDistContract,
+  ),
 );
 const hrComplianceGapsC = lazyContract(() =>
-  import("@/hooks/api/hr/analytics-schema").then((m) => m.hrComplianceGapsContract),
+  import("@/hooks/api/hr/analytics-schema").then(
+    (m) => m.hrComplianceGapsContract,
+  ),
 );
 const hrDrilldownC = lazyContract(() =>
   import("@/hooks/api/hr/analytics-schema").then((m) => m.hrDrilldownContract),
@@ -58,7 +85,6 @@ export interface HrAnalyticsData {
     byStatus: Record<string, number>;
     byMonth: { month: string; count: number }[];
   };
-  payroll: { totalCostYTD: string };
   expenses: { approvedYTD: string };
   joiningExitsTrend: { month: string; joins: number; exits: number }[];
 }
@@ -68,7 +94,12 @@ export function useHrAnalytics() {
   return useQuery({
     ...hrAnalyticsQueryOptions(),
     queryFn: ({ signal }) =>
-      apiClient.get<HrAnalyticsData>("/hr/analytics", undefined, signal, hrAnalyticsOverviewC),
+      apiClient.get<HrAnalyticsData>(
+        "/hr/analytics",
+        undefined,
+        signal,
+        hrAnalyticsOverviewC,
+      ),
     enabled: canAnalytics,
     ...INLINE_READ_ERROR,
   });
@@ -85,12 +116,22 @@ export interface HrAttendanceAnalytics {
 export function useHrAttendanceAnalytics(year: number, month: number) {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "analyticsAttendance", year, month] as const,
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.all,
+      "analyticsAttendance",
+      year,
+      month,
+    ] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<HrAttendanceAnalytics>("/hr/analytics/attendance", {
-        year: String(year),
-        month: String(month),
-      }, signal, hrAttendanceAnalyticsC),
+      apiClient.get<HrAttendanceAnalytics>(
+        "/hr/analytics/attendance",
+        {
+          year: String(year),
+          month: String(month),
+        },
+        signal,
+        hrAttendanceAnalyticsC,
+      ),
     staleTime: 60_000,
     enabled: canAnalytics,
     ...INLINE_READ_ERROR,
@@ -107,34 +148,50 @@ export interface HrAttritionAnalytics {
 export function useHrAttritionAnalytics() {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "analyticsAttrition"] as const,
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.all,
+      "analyticsAttrition",
+    ] as const,
     queryFn: ({ signal }) =>
-      apiClient.get<HrAttritionAnalytics>("/hr/analytics/attrition", undefined, signal, hrAttritionC),
+      apiClient.get<HrAttritionAnalytics>(
+        "/hr/analytics/attrition",
+        undefined,
+        signal,
+        hrAttritionC,
+      ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
     ...INLINE_READ_ERROR,
   });
 }
 
-export interface HrCommandCenterData {
-  headcount: { total: number; active: number; probation: number; notice: number };
-  attritionRate12mo: number;
-  avgTenureMonths: number;
-  leaveUtilizationPct: number;
-  attendanceRatePct: number;
-  openCasesCount: number;
-  avgMood: number | null;
-  payrollCostLastMonth: number | null;
+export type InsightRange = "month" | "quarter" | "year";
+
+export interface HrCommandCenterFilters {
+  departmentId?: string;
+  range: InsightRange;
+  anchor?: string;
 }
 
-export function useHrCommandCenter(departmentId?: number) {
+export function useHrCommandCenter(filters: HrCommandCenterFilters) {
   const canAnalytics = useCan("hr:analytics:read");
+  const params = {
+    departmentId: filters.departmentId ?? null,
+    range: filters.range,
+    anchor: filters.anchor ?? null,
+  };
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "commandCenter", departmentId] as const,
+    queryKey: humanResourcesQueryKeys.hr.analyticsCommandCenter(params),
     queryFn: ({ signal }) =>
       apiClient.get<HrCommandCenterData>(
         "/hr/analytics-plus",
-        departmentId ? { departmentId: String(departmentId) } : undefined, signal, hrCommandCenterC,
+        {
+          range: params.range,
+          ...(params.departmentId ? { departmentId: params.departmentId } : {}),
+          ...(params.anchor ? { anchor: params.anchor } : {}),
+        },
+        signal,
+        hrCommandCenterC,
       ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
@@ -148,14 +205,20 @@ export interface HrAttritionPlusData {
   byReason: { reason: string; count: number }[];
 }
 
-export function useHrAttritionPlus(departmentId?: number) {
+export function useHrAttritionPlus(departmentId?: string) {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "attritionPlus", departmentId] as const,
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.all,
+      "attritionPlus",
+      departmentId,
+    ] as const,
     queryFn: ({ signal }) =>
       apiClient.get<HrAttritionPlusData>(
         "/hr/analytics-plus/attrition",
-        departmentId ? { departmentId: String(departmentId) } : undefined, signal, hrAttritionPlusC,
+        departmentId ? { departmentId } : undefined,
+        signal,
+        hrAttritionPlusC,
       ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
@@ -163,14 +226,20 @@ export function useHrAttritionPlus(departmentId?: number) {
   });
 }
 
-export function useHrLeaveTrends(departmentId?: number) {
+export function useHrLeaveTrends(departmentId?: string) {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "leaveTrends", departmentId] as const,
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.all,
+      "leaveTrends",
+      departmentId,
+    ] as const,
     queryFn: async ({ signal }) => {
       const raw = await apiClient.get<RawLeaveTrendsResponse>(
         "/hr/analytics-plus/leave-trends",
-        departmentId ? { departmentId: String(departmentId) } : undefined, signal, hrLeaveTrendsC,
+        departmentId ? { departmentId } : undefined,
+        signal,
+        hrLeaveTrendsC,
       );
       return normalizeLeaveTrends(raw);
     },
@@ -180,17 +249,26 @@ export function useHrLeaveTrends(departmentId?: number) {
   });
 }
 
-export interface HrPayrollCostData {
-  monthly: { month: string; grossTotal: number }[];
+export function useCanViewOrganizationPayrollCost(): boolean {
+  const salary = useScope("hr:salary:view");
+  const payroll = useScope("hr:payroll:view");
+  return salary === "all" || payroll === "all";
 }
 
-export function useHrPayrollCost(options?: { enabled?: boolean }) {
+export function useHrPayrollCost() {
   const canAnalytics = useCan("hr:analytics:read");
+  const canViewPayrollCost = useCanViewOrganizationPayrollCost();
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "payrollCost"] as const,
-    queryFn: ({ signal }) => apiClient.get<HrPayrollCostData>("/hr/analytics-plus/payroll-cost", undefined, signal, hrPayrollCostC),
+    queryKey: humanResourcesQueryKeys.hr.analyticsPayrollCost(),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrPayrollCostData>(
+        "/hr/analytics-plus/payroll-cost",
+        undefined,
+        signal,
+        hrPayrollCostC,
+      ),
     staleTime: 10 * 60_000,
-    enabled: canAnalytics && (options?.enabled ?? true),
+    enabled: canAnalytics && canViewPayrollCost,
     ...INLINE_READ_ERROR,
   });
 }
@@ -203,7 +281,13 @@ export function useHrEngagement() {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
     queryKey: [...humanResourcesQueryKeys.hr.all, "engagement"] as const,
-    queryFn: ({ signal }) => apiClient.get<HrEngagementData>("/hr/analytics-plus/engagement", undefined, signal, hrEngagementC),
+    queryFn: ({ signal }) =>
+      apiClient.get<HrEngagementData>(
+        "/hr/analytics-plus/engagement",
+        undefined,
+        signal,
+        hrEngagementC,
+      ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
     ...INLINE_READ_ERROR,
@@ -217,11 +301,17 @@ export interface HrPerformanceDistData {
 export function useHrPerformanceDist(cycleId?: number) {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "performanceDist", cycleId] as const,
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.all,
+      "performanceDist",
+      cycleId,
+    ] as const,
     queryFn: ({ signal }) =>
       apiClient.get<HrPerformanceDistData>(
         "/hr/analytics-plus/performance-distribution",
-        cycleId ? { cycleId: String(cycleId) } : undefined, signal, hrPerformanceDistC,
+        cycleId ? { cycleId: String(cycleId) } : undefined,
+        signal,
+        hrPerformanceDistC,
       ),
     staleTime: 10 * 60_000,
     enabled: canAnalytics,
@@ -233,14 +323,20 @@ export interface HrComplianceGapsData {
   openCases: { category: string; count: number }[];
 }
 
-export function useHrComplianceGaps(departmentId?: number) {
+export function useHrComplianceGaps(departmentId?: string) {
   const canAnalytics = useCan("hr:analytics:read");
   return useQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "complianceGaps", departmentId] as const,
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.all,
+      "complianceGaps",
+      departmentId,
+    ] as const,
     queryFn: ({ signal }) =>
       apiClient.get<HrComplianceGapsData>(
         "/hr/analytics-plus/compliance-gaps",
-        departmentId ? { departmentId: String(departmentId) } : undefined, signal, hrComplianceGapsC,
+        departmentId ? { departmentId } : undefined,
+        signal,
+        hrComplianceGapsC,
       ),
     staleTime: 5 * 60_000,
     enabled: canAnalytics,
@@ -253,17 +349,32 @@ export interface HrDrilldownPage {
   pagination: { limit: number; hasMore: boolean; nextCursor: string | null };
 }
 
-export function useHrDrilldown(metric: string, departmentId?: number, limit = 20) {
+export function useHrDrilldown(
+  metric: string,
+  departmentId?: string,
+  limit = 20,
+) {
   const canAnalytics = useCan("hr:analytics:read");
   return useInfiniteQuery({
-    queryKey: [...humanResourcesQueryKeys.hr.all, "drilldown", metric, departmentId, limit] as const,
+    queryKey: [
+      ...humanResourcesQueryKeys.hr.all,
+      "drilldown",
+      metric,
+      departmentId,
+      limit,
+    ] as const,
     queryFn: ({ pageParam, signal }) =>
-      apiClient.get<HrDrilldownPage>("/hr/analytics-plus/drilldown", {
-        metric,
-        limit: String(limit),
-        ...(pageParam !== null ? { cursor: pageParam } : {}),
-        ...(departmentId ? { departmentId: String(departmentId) } : {}),
-      }, signal, hrDrilldownC),
+      apiClient.get<HrDrilldownPage>(
+        "/hr/analytics-plus/drilldown",
+        {
+          metric,
+          limit: String(limit),
+          ...(pageParam !== null ? { cursor: pageParam } : {}),
+          ...(departmentId ? { departmentId } : {}),
+        },
+        signal,
+        hrDrilldownC,
+      ),
     initialPageParam: NULL_CURSOR_YET,
     getNextPageParam: (page) => page.pagination.nextCursor ?? undefined,
     staleTime: 60_000,
